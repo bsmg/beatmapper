@@ -52,7 +52,7 @@ const MapVisualization = () => {
 
       <PlacementGrid
         width={BLOCK_COLUMN_WIDTH * 4}
-        height={BLOCK_COLUMN_WIDTH * 3}
+        height={BLOCK_COLUMN_WIDTH * 4}
         gridPosition={GRID_POSITION}
       />
     </>
