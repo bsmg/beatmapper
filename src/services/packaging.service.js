@@ -220,14 +220,14 @@ export function createBeatmapContents(
 
   // We need to sort all notes, obstacles, and events, since the game can be
   // funny when things aren't in order.
-  const sortByTime = (a, b) => a._time - b._time;
+  const sortByTime = (a, b) => a.b - b.b;
   const sortByTimeAndPosition = (a, b) => {
-    if (a._time === b._time && a._lineLayer === b._lineLayer) {
-      return a._lineIndex - b._lineIndex;
+    if (a.b === b.b && a.y === b.y) {
+      return a.x - b.x;
     }
 
-    if (a._time === b._time) {
-      return a._lineLayer - b._lineLayer;
+    if (a.b === b.b) {
+      return a.y - b.y;
     }
 
     return sortByTime(a, b);
@@ -244,9 +244,9 @@ export function createBeatmapContents(
   // rounded
   sortedNotes = sortedNotes.map(note => ({
     ...note,
-    _lineIndex: Math.round(note._lineIndex),
-    _lineLayer: Math.round(note._lineLayer),
-    _cutDirection: Math.round(note._cutDirection),
+    x: Math.round(note.x),
+    y: Math.round(note.y),
+    d: Math.round(note.d),
   }));
 
   // Remove 'selected' property
@@ -263,10 +263,10 @@ export function createBeatmapContents(
 
   if (meta.version === 2) {
     contents = {
-      _version: '2.0.0',
-      _events: sortedEvents,
-      _notes: sortedNotes,
-      _obstacles: sortedObstacles,
+      version: '3.0.0',
+      basicBeatmapEvents: sortedEvents,
+      colorNotes: sortedNotes,
+      obstacles: sortedObstacles,
       _customData: {
         _bookmarks: bookmarks,
       },
