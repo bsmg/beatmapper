@@ -1,53 +1,42 @@
-import React from 'react';
-import styled from 'styled-components';
+import styled from "styled-components";
 
-import { DIFFICULTY_COLORS } from '../../constants';
-import { getLabelForDifficulty } from '../../helpers/song.helpers';
+import { DIFFICULTY_COLORS } from "$/constants";
+import { getLabelForDifficulty } from "$/helpers/song.helpers";
+import type { Difficulty } from "$/types";
 
-import UnstyledButton from '../UnstyledButton';
-
-import { Difficulty } from '../../types';
+import UnstyledButton from "../UnstyledButton";
 
 interface Props {
-  difficulty: Difficulty;
-  width?: number;
-  onSelect: (difficulty: Difficulty) => void;
-  disabled?: boolean;
-  isSelected: boolean;
+	difficulty: Difficulty;
+	width?: number;
+	onSelect: (difficulty: Difficulty) => void;
+	disabled?: boolean;
+	isSelected: boolean;
 }
 
 const noop = () => {};
 
-const DifficultyTag = ({
-  difficulty,
-  width = 80,
-  isSelected,
-  onSelect = noop,
-  disabled,
-  ...delegated
-}: Props) => {
-  const difficultyColor = DIFFICULTY_COLORS[difficulty];
+const DifficultyTag = ({ difficulty, width = 80, isSelected, onSelect = noop, disabled, ...delegated }: Props) => {
+	const difficultyColor = DIFFICULTY_COLORS[difficulty];
 
-  const border = isSelected
-    ? `2px solid ${difficultyColor}`
-    : '2px solid rgba(255, 255, 255, 0.35)';
+	const border = isSelected ? `2px solid ${difficultyColor}` : "2px solid rgba(255, 255, 255, 0.35)";
 
-  const textColor = isSelected ? difficultyColor : '#FFF';
+	const textColor = isSelected ? difficultyColor : "#FFF";
 
-  return (
-    <Wrapper
-      disabled={disabled}
-      style={{ width, border, color: textColor }}
-      onClick={ev => {
-        ev.preventDefault();
+	return (
+		<Wrapper
+			disabled={disabled}
+			style={{ width, border, color: textColor }}
+			onClick={(ev) => {
+				ev.preventDefault();
 
-        onSelect(difficulty);
-      }}
-      {...delegated}
-    >
-      {getLabelForDifficulty(difficulty)}
-    </Wrapper>
-  );
+				onSelect(difficulty);
+			}}
+			{...delegated}
+		>
+			{getLabelForDifficulty(difficulty)}
+		</Wrapper>
+	);
 };
 
 const Wrapper = styled(UnstyledButton)`

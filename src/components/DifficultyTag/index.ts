@@ -1,1 +1,1 @@
-export { default } from './DifficultyTag';
+export { default } from "./DifficultyTag";

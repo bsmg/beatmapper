@@ -1,39 +1,27 @@
 # Beatmapper
 
-## A 3D editor for creating Beat Saber maps
+Beatmapper is a web-based _level editor_ for Beat Saber.
 
-![Beatmapper preview](https://github.com/bsmg/beatmapper/blob/master/preview.png?raw=true)
+![Beatmapper preview](preview.png?raw=true)
 
-[![Docker Build](https://github.com/bsmg/beatmapper/actions/workflows/docker.yml/badge.svg)](https://github.com/bsmg/beatmapper/actions/workflows/docker.yml)
+### Getting Started
 
-Beatmapper is a _map editor_ for Beat Saber, a VR rhythm game. It allows you to create your own maps, for use in the game.
+Beatmapper works entirely in the browser; there is nothing to download, nor is there a backend. You can get started now at https://beatmapper.app. On your first visit, you'll be able to play around with a demo map to get a feel for the editor.
 
-### Status: On hold
-
-Unfortunately, I've had to put Beatmapper on the back burner. I do hope to resume work on this project in the future, but for now, you may wish to use an alternative editor.
-
-At the time of writing (February 2021), I was able to create, test, and publish a map, but I know some folks have had issues, and I don't have the bandwidth to explore them right now. So **please do test that your map works on your headset** before sinking a lot of time and effort into it!
-
-### Getting started
-
-Beatmapper works entirely in-browser; there is nothing to download, nor is there a backend. You can get started now at https://beatmapper.app. On your first visit, you'll be able to play around with a demo song, to get a feel for the editor.
-
-Documentation is available [at beatmapper.app/docs](https://beatmapper.app/docs/docs/manual.html).
-
-### Donations
-
-Beatmapper is a single-person side-project. I've already invested many, many, many hours in it. If you derive value from it, I'd appreciate donations:
-
-- [One-time donation](https://ko-fi.com/joshwcomeau)
-- [Become a patron](https://www.patreon.com/joshwcomeau)
+Documentation is available at https://beatmapper.app/docs.
 
 ### Why?
 
-There are several editors already in existence, including an official one. Why make another one?
+There are many superior editors available for mapping nowadays, including the official editor. Here are some reasons why you may want to use this one:
 
-- Cross-platform support. This editor is the only editor that works on MacOS and Linux (some other editors don't even work in a Windows VM!)
-- Get started effortlessly. Requires <1mb of total download including assets. It even comes with a demo track, so you can start playing around immediately.
-- No "memes".
-- Full compatibility. Beatmapper exports both available Beat Saber file formats, which means you can transfer exported maps directly to your Beat Saber device, or import them into other editors. You can also import existing maps in both formats.
+- Works on any platform with a web browser (including Windows, Mac, and Linux).
+- Requires about 1 MB of total download including assets.
+- Comes with a demo track, so you can start playing around immediately.
 
-I'm creating Beatmapper primarily for myself, for fun. Bug reports and feature requests are appreciated, but please understand, **I work on this when I want to**. If you don't like the editor, you do not have to use it.
+That said, there's many capabilities other editors have that Beatmapper can't and likely won't be able to support. If that's a dealbreaker for you, we recommend using a more feature-rich editor like [ChroMapper](https://github.com/Caeden117/ChroMapper) or the official editor for a better experience.
+
+### Credits
+
+Beatmapper was originally a single-person side-project made by Josh Comeau for fun. If you derive value from it, feel free to show your support to the original author:
+
+[Website](https://joshwcomeau.com) | [Ko-Fi](https://ko-fi.com/joshwcomeau) | [Patreon](https://www.patreon.com/joshwcomeau)

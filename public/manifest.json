@@ -1,20 +1,20 @@
 {
-  "short_name": "Beatmapper",
-  "name": "Beatmapper",
-  "icons": [
-    {
-      "src": "favicon.png",
-      "sizes": "64x64",
-      "type": "image/png"
-    },
-    {
-      "src": "pwa-icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "hsl(222, 25%, 12%)",
-  "background_color": "hsl(222, 30%, 7%)"
+	"short_name": "Beatmapper",
+	"name": "Beatmapper",
+	"icons": [
+		{
+			"src": "favicon.png",
+			"sizes": "64x64",
+			"type": "image/png"
+		},
+		{
+			"src": "pwa-icon.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	],
+	"start_url": ".",
+	"display": "standalone",
+	"theme_color": "hsl(222, 25%, 12%)",
+	"background_color": "hsl(222, 30%, 7%)"
 }

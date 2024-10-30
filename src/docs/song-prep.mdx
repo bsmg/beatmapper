@@ -9,7 +9,7 @@ This guide walks through three main steps:
 
 - Converting our songs to `.ogg` format
 - Calculating the BPM and Offset
-- Editing our songs <subtle>(optional)</subtle>
+- Editing our songs <Subtle>(optional)</Subtle>
 
 This guide _does not_ cover how to download pirated/copyrighted music. There's a lot of wonderful public-domain music you can find online, on sites like [freepd.com](https://freepd.com/).
 
@@ -27,19 +27,11 @@ The [Audacity Downloads page](https://www.audacityteam.org/download/) has all th
 
 To open files in Audacity, you can use the platform-appropriate shortcut (`ctrl + O` / `⌘ + O`), or use `File -> Open…` from the top menu. After selecting your MP3 or WAV file, you should see a view like this:
 
-import audacityIntroSrc from './images/audacity-intro.png';
-
-<img
-  src={audacityIntroSrc}
-  caption="This guide was written using MacOS, but the instructions should be the same for any OS"
-  width={2308 / 2}
-/>
+![](./images/audacity-intro.png "This guide was written using MacOS, but the instructions should be the same for any OS")
 
 To save the file as `.ogg`, you can choose `File -> Export -> Export as OGG`:
 
-import audacityExportSrc from './images/audacity-export.png';
-
-<img src={audacityExportSrc} width={1290 / 2} />
+![](./images/audacity-export.png)
 
 You can name the file whatever you'd like.
 
@@ -62,7 +54,7 @@ In house music and other genres, a "beat" can be marked by the kick and snare dr
 
 For example, Beatmapper comes with a demo track, a modified version of [Only Now by Geoxor](https://soundcloud.com/geoxor_official/only-now). Let's listen to how this song starts:
 
-import AudioSample from '../components/Docs/AudioSample';
+import AudioSample from '$/components/Docs/AudioSample';
 import explainOffsetSrc from './audio/explain-offset.mp3';
 
 <AudioSample url={explainOffsetSrc} fadeOutLength={500} />
@@ -75,9 +67,7 @@ When should the first beat occur? In my opinion, it should be right at the drop,
 
 In Audacity, This section of the song looks like this:
 
-import onlyNowIntroSrc from './images/only-now-intro.png';
-
-<img src={onlyNowIntroSrc} />
+![](./images/only-now-intro.png)
 
 If you haven't worked with waveforms before, this might be a pretty confusing view. The shape represents the sound, and the larger the shape, the louder the sound is. Along the top, numbers represent the timestamps, so that you can identify where things happen.
 
@@ -85,9 +75,7 @@ In this case, the drop stands out since it gets so much louder. It happens right
 
 First, click as close to the drop as you can to set the cursor to that location. Then, you can zoom in to that point using `View -> Zoom -> Zoom In`. After zooming in a couple times, here's what it looks like:
 
-import onlyNowZoomedSrc from './images/only-now-zoomed.png';
-
-<img src={onlyNowZoomedSrc} />
+![](./images/only-now-zoomed.png)
 
 I made sure to click the waveform so that the cursor would be right on the drop. Then, I can see at the bottom of the window, the "Audio Position" is `00h 00m 01.543s`. In other words, the drop is 1.543 seconds from the initial position.
 
@@ -111,15 +99,11 @@ BPM is a bit harder to calculate, since Audacity doesn't have any way of determi
 
 In many cases, another human has done this work for you already. If your song is house, dubstep, or another EDM genre, it's likely for sale on the online music store [Beatport](http://beatport.com), and Beatport lists the BPM for every song in its inventory. If I was mapping deadmau5's iconic "Not Exactly", I would search "deadmau5 not exactly" and click the first "track" result, to wind up on this page:
 
-import beatportBpmSrc from './images/beatport-bpm.jpg';
-
-<img src={beatportBpmSrc} caption="'BPM' is highlighted under the waveform" />
+![](./images/beatport-bpm.jpg "'BPM' is highlighted under the waveform")
 
 If the song you're searching for isn't in the EDM realm, you can try googling the track name + "BPM". If I wanted to map Oasis' Wonderwall, a google search reveals that it runs at 87 BPM:
 
-import wonderwallBpmSrc from './images/wonderwall-bpm.png';
-
-<img src={wonderwallBpmSrc} width={830} />
+![](./images/wonderwall-bpm.png)
 
 > Note that the internet can be wrong! The more obscure the music, the more likely the information is to be incorrect. If you notice the notes "drifting" in your song, with the first few being relatively on-beat but progressively getting less so, your BPM is wrong.
 
@@ -129,9 +113,7 @@ There will be times where the BPM displayed online is wrong, or where it doesn't
 
 The simplest method I've found is to tap out the BPM using an online tool like [Beats Per Minute online](http://www.beatsperminuteonline.com/). This tool gives you a big button to press. While playing the song in the background, tap once for every beat:
 
-import bpmSrc from './images/bpm-calc.gif';
-
-<img src={bpmSrc} width={400} />
+![](./images/bpm-calc.gif)
 
 This is very much something that gets easier with practice; at first, **don't be scared to tap out 30+ seconds, and to try multiple times**. It's easy to accidentally be off by 1 BPM, which will have a noticeable effect in the quality of your map. If you get to the same number 3 times in a row, tapping for at least 20 seconds each time, you can feel pretty confident you've nailed the BPM.
 
@@ -167,9 +149,7 @@ The simplest way to shorten a song is to decide to end it sooner. Many songs wil
 
 Our demo track, Only Now, has a few breakdowns. Let's say we want to end our song right after that first drop, around 55 seconds in:
 
-import onlyNowZoomedOutSrc from './images/only-now-zoomed-out.png';
-
-<img src={onlyNowZoomedOutSrc} />
+![](./images/only-now-zoomed-out.png)
 
 The first step is to delete a big chunk of the song. I clicked on a spot a few seconds after the start of the breakdown. With the cursor at the right spot, you can choose `Select -> Region -> Cursor to Track End` to select everything after the cursor, and then `Edit -> Delete` to remove the selection.
 
@@ -193,9 +173,7 @@ This is a tricky proposition in Audacity, because timing in Audacity is based on
 
 The first thing we need to do is identify the range we want to cut out. In my case, maybe I want to cut everything between these two similar-sounding sections of the drop:
 
-import selectionSrc from './images/selection.png';
-
-<img src={selectionSrc} />
+![](./images/selection.png)
 
 Deciding where to place these markers is more art than science; listen to the song, and see if you can imagine it jumping from one marker to the other. Are the sections similar enough for it to work?
 
@@ -203,9 +181,7 @@ Once you've locked down the position for the markers, we need to select and dele
 
 First, let's zoom wayyyy in on the start marker position. We want to be as precise as possible here, since any errors will cause all blocks after the edit to be slightly off-beat. Here's about how far I typically zoom:
 
-import superzoomSrc from './images/superzoom.png';
-
-<img src={superzoomSrc} />
+![](./images/superzoom.png)
 
 When the marker is right at the point you want to cut, choose `Select -> Store Cursor Position`. You won't notice any change, since all we've done is stored a piece of data.
 
@@ -225,15 +201,11 @@ One of my favourite tricks is to halve the length of sections. The difficulty of
 
 Let's consider the fantastic song [4Me by Bad Computer](https://open.spotify.com/album/6D4GGf00svu54pPkpe8ma1):
 
-import badComputerWaveformSrc from './images/bad-computer-waveform.png';
-
-<img src={badComputerWaveformSrc} />
+![](./images/bad-computer-waveform.png)
 
 This song has 16 bars of intro, and then 32 bars of "drop", with 4 clear similar-sounding sections, before the song's breakdown / buildup / second drop:
 
-import badComputerWaveformAnnotatedSrc from './images/bad-computer-waveform-annotated.png';
-
-<img src={badComputerWaveformAnnotatedSrc} />
+![](./images/bad-computer-waveform-annotated.png)
 
 > It really helps to think of music in terms of "chunks" like this - it gives you a much clearer understanding of the types of edits that are possible!
 
@@ -241,9 +213,7 @@ While the song is great, in a Beat Saber context I wish the drop wasn't quite so
 
 The simplest approach would be to snip out Drop sections A+B, or C+D. The thing is, most music has some big sound effect on the drop, at the start of section A. Also, many songs will feature some increasing tension at the end of section D. So the best-sounding edit is to snip out **B and C**, connecting A directly to D:
 
-import badComputerWaveformTweakedSrc from './images/bad-computer-waveform-tweaked.png';
-
-<img src={badComputerWaveformTweakedSrc} />
+![](./images/bad-computer-waveform-tweaked.png)
 
 This edit is absolutely seamless, and it helps guarantee a fun, replayable map. We could repeat this same trick for the second drop, which also looks a bit long, or simply fade out during the buildup!
 
@@ -255,6 +225,6 @@ You can use these tricks in combination, and there are many other tricks as well
 
 ## Using this information in your map
 
-Now that you've gotten an appropriate `.ogg` song track, and you know its BPM and offset, it's time to start mapping! Our [User Manual](/docs/getting-started#creating-our-song) picks up from this point.
+Now that you've gotten an appropriate `.ogg` song track, and you know its BPM and offset, it's time to start mapping! Our [User Manual](/docs/manual/getting-started#creating-our-song) picks up from this point.
 
 Happy mapping!
