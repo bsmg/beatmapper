@@ -1,0 +1,37 @@
+name: Code Quality
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [$default-branch]
+  pull_request:
+
+env:
+  NODE_VERSION: 20.x
+
+jobs:
+  check:
+    name: Run Quality Checks (Biome)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+      - name: Run Biome
+        run: biome ci .
+  test:
+    name: Run Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Run Vitest
+        run: yarn test run
