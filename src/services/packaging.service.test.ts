@@ -96,6 +96,7 @@ describe("packaging.service", () => {
 						_lastEditedBy: "Beatmapper",
 						Beatmapper: {
 							version: version,
+							editorSettings: {},
 						},
 					},
 				},

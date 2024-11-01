@@ -30,6 +30,7 @@ export function smoothScrollTo(selector: Parameters<typeof document.querySelecto
 }
 
 function getIsMac() {
+	if (!navigator) return false;
 	return !navigator.userAgent.includes("Win");
 }
 
