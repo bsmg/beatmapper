@@ -16,25 +16,26 @@ const KeyboardShortcuts = () => {
 	});
 
 	const handleKeyDown = (ev: KeyboardEvent) => {
+		const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 		switch (ev.code) {
 			case "Digit1":
 				// Ignore meta+number, since that's used for snapping intervals
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 				return dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.LEFT_NOTE }));
 			case "Digit2":
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 				return dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.RIGHT_NOTE }));
 			case "Digit3":
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 				return dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.BOMB_NOTE }));
 			case "Digit4":
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 				return dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.OBSTACLE }));
@@ -44,7 +45,7 @@ const KeyboardShortcuts = () => {
 			}
 			case "KeyV": {
 				// If the user is pasting with Meta+V, ignore.
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 				return dispatch(swapSelectedNotes({ axis: "vertical" }));
@@ -68,7 +69,7 @@ const KeyboardShortcuts = () => {
 				if (ev.shiftKey) {
 					return;
 				}
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					ev.preventDefault();
 					return dispatch(toggleSelectAll({ view: View.BEATMAP }));
 				}

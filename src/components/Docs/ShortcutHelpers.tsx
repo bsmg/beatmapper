@@ -45,10 +45,10 @@ export const Plus = () => (
 );
 
 export const MetaKey = () => {
-	return getMetaKeyLabel();
+	return getMetaKeyLabel(navigator);
 };
 export const OptionKey = () => {
-	return getOptionKeyLabel();
+	return getOptionKeyLabel(navigator);
 };
 
 export const IconRow = styled.div`

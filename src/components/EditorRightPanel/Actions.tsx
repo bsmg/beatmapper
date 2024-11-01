@@ -35,7 +35,7 @@ const Actions = ({ song, handleGridConfigClick }: Props) => {
 
 			<Spacer size={UNIT} />
 
-			<Tooltip delay={1000} title={`Paste previously-copied notes (${getMetaKeyLabel()} + V)`}>
+			<Tooltip delay={1000} title={`Paste previously-copied notes (${getMetaKeyLabel(navigator)} + V)`}>
 				<MiniButton disabled={!hasCopiedNotes} width={ACTION_WIDTH} onClick={() => dispatch(pasteSelection({ view: View.BEATMAP }))}>
 					Paste Selection
 				</MiniButton>

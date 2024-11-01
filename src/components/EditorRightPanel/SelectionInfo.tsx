@@ -65,7 +65,7 @@ const SelectionInfo = ({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedO
 
 	numbers = interleave(numbers, ", ");
 
-	const metaKeyLabel = getMetaKeyLabel();
+	const metaKeyLabel = getMetaKeyLabel(navigator);
 
 	return (
 		<Wrapper>

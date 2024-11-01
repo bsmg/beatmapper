@@ -18,13 +18,13 @@ const UndoRedo = () => {
 
 	return (
 		<Row>
-			<Tooltip delay={1000} title={`(${getMetaKeyLabel()} + Z)`}>
+			<Tooltip delay={1000} title={`(${getMetaKeyLabel(navigator)} + Z)`}>
 				<MiniButton width={HALF_ACTION_WIDTH} disabled={!canUndo} onClick={() => dispatch(undoNotes())}>
 					Undo
 				</MiniButton>
 			</Tooltip>
 			<Spacer size={UNIT} />
-			<Tooltip delay={1000} title={`(Shift + ${getMetaKeyLabel()} + Z)`}>
+			<Tooltip delay={1000} title={`(Shift + ${getMetaKeyLabel(navigator)} + Z)`}>
 				<MiniButton width={HALF_ACTION_WIDTH} disabled={!canRedo} onClick={() => dispatch(redoNotes())}>
 					Redo
 				</MiniButton>

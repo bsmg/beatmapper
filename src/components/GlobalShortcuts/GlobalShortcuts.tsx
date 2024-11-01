@@ -72,8 +72,9 @@ const GlobalShortcuts = ({ view }: Props) => {
 	const handleScrollThrottled = throttle(handleScroll, 50);
 
 	const handleKeyDown = (ev: KeyboardEvent) => {
+		const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 		// If the control key and a number is pressed, we want to update snapping.
-		if (isMetaKeyPressed(ev) && !Number.isNaN(Number(ev.key))) {
+		if (metaKeyPressed && !Number.isNaN(Number(ev.key))) {
 			ev.preventDefault();
 
 			const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === Number(ev.key));
@@ -109,11 +110,11 @@ const GlobalShortcuts = ({ view }: Props) => {
 
 			case "ArrowUp":
 			case "ArrowRight": {
-				return handleScrollThrottled("forwards", isMetaKeyPressed(ev), ev.altKey);
+				return handleScrollThrottled("forwards", metaKeyPressed, ev.altKey);
 			}
 			case "ArrowDown":
 			case "ArrowLeft": {
-				return handleScrollThrottled("backwards", isMetaKeyPressed(ev), ev.altKey);
+				return handleScrollThrottled("backwards", metaKeyPressed, ev.altKey);
 			}
 
 			case "PageUp": {
@@ -142,20 +143,20 @@ const GlobalShortcuts = ({ view }: Props) => {
 			}
 
 			case "KeyX": {
-				if (!isMetaKeyPressed(ev)) {
+				if (!metaKeyPressed) {
 					return;
 				}
 
 				return dispatch(cutSelection({ view }));
 			}
 			case "KeyC": {
-				if (!isMetaKeyPressed(ev)) {
+				if (!metaKeyPressed) {
 					return;
 				}
 				return dispatch(copySelection({ view }));
 			}
 			case "KeyV": {
-				if (!isMetaKeyPressed(ev)) {
+				if (!metaKeyPressed) {
 					return;
 				}
 				return dispatch(pasteSelection({ view }));
@@ -172,7 +173,7 @@ const GlobalShortcuts = ({ view }: Props) => {
 				return dispatch(selectColor({ view, color: "red" }));
 			}
 			case "KeyB": {
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					// If they're holding cmd, create a bookmark
 					const name = window.prompt("Enter a name for this bookmark");
 
@@ -187,7 +188,7 @@ const GlobalShortcuts = ({ view }: Props) => {
 			}
 
 			case "KeyZ": {
-				if (!isMetaKeyPressed(ev)) {
+				if (!metaKeyPressed) {
 					return;
 				}
 
@@ -201,7 +202,7 @@ const GlobalShortcuts = ({ view }: Props) => {
 			}
 
 			case "KeyS": {
-				if (!isMetaKeyPressed(ev)) {
+				if (!metaKeyPressed) {
 					return;
 				}
 
@@ -241,9 +242,11 @@ const GlobalShortcuts = ({ view }: Props) => {
 	});
 
 	useMousewheel((ev) => {
+		const metaKeyPressed = isMetaKeyPressed(ev, navigator);
+
 		const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 
-		handleScroll(direction, isMetaKeyPressed(ev), ev.altKey);
+		handleScroll(direction, metaKeyPressed, ev.altKey);
 	});
 
 	return null;

@@ -29,20 +29,20 @@ export function smoothScrollTo(selector: Parameters<typeof document.querySelecto
 	});
 }
 
-function getIsMac() {
+function getIsMac(navigator?: Navigator) {
 	if (!navigator) return false;
 	return !navigator.userAgent.includes("Win");
 }
 
-export function isMetaKeyPressed<T extends KeyboardEvent | MouseEvent>(ev: T) {
+export function isMetaKeyPressed<T extends KeyboardEvent | MouseEvent>(ev: T, navigator?: Navigator) {
 	// On windows, we want to listen for the Control key.
 	// On Mac, it's ⌘ (command).
-	return getIsMac() ? ev.metaKey : ev.ctrlKey;
+	return getIsMac(navigator) ? ev.metaKey : ev.ctrlKey;
 }
 
-export function getMetaKeyLabel() {
-	return getIsMac() ? "⌘" : "ctrl";
+export function getMetaKeyLabel(navigator?: Navigator) {
+	return getIsMac(navigator) ? "⌘" : "ctrl";
 }
-export function getOptionKeyLabel() {
-	return getIsMac() ? "⌥" : "alt";
+export function getOptionKeyLabel(navigator?: Navigator) {
+	return getIsMac(navigator) ? "⌥" : "alt";
 }

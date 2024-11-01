@@ -9,6 +9,7 @@ const KeyboardShortcuts = () => {
 	const dispatch = useAppDispatch();
 
 	const handleKeyDown = (ev: KeyboardEvent) => {
+		const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 		switch (ev.code) {
 			case "NumpadSubtract":
 			case "Minus": {
@@ -27,7 +28,7 @@ const KeyboardShortcuts = () => {
 			}
 
 			case "KeyA": {
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					ev.preventDefault();
 					return dispatch(toggleSelectAll({ view: View.LIGHTSHOW }));
 				}
@@ -40,7 +41,7 @@ const KeyboardShortcuts = () => {
 			}
 
 			case "KeyZ": {
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 
@@ -49,7 +50,7 @@ const KeyboardShortcuts = () => {
 			}
 
 			case "KeyX": {
-				if (isMetaKeyPressed(ev)) {
+				if (metaKeyPressed) {
 					return;
 				}
 

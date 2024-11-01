@@ -16,7 +16,7 @@ import UnstyledButton from "../UnstyledButton";
 const BLOCK_WIDTH = 7;
 
 function getBackgroundForEvent(event: App.Event, song: App.Song) {
-	const color = getColorForItem(isLightEvent(event) ? event.colorType ?? event.type : event.type, song);
+	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, song);
 
 	switch (event.type) {
 		case App.EventType.ON:
