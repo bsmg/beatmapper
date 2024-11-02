@@ -1,0 +1,6 @@
+pre-commit:
+  commands:
+    check:
+      glob: "*.{js,ts,cjs,mjs,cts,mts,jsx,tsx,json,jsonc}"
+      run: yarn check --write --colors=off {staged_files}
+      stage_fixed: true

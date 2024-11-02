@@ -1,3 +1,25 @@
 {
-  "editor.formatOnSave": true
+	"editor.defaultFormatter": "biomejs.biome",
+	"editor.formatOnSave": true,
+	"editor.formatOnSaveMode": "file",
+	"explorer.fileNesting.enabled": true,
+	"explorer.fileNesting.patterns": {
+		"*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts, ${capture}.test.js",
+		"*.ts": "${capture}.js, ${capture}.test.ts",
+		"*.jsx": "${capture}.js",
+		"*.tsx": "${capture}.ts",
+		".gitignore": "*ignore",
+		"package.json": "yarn.lock, .yarnrc.yml, biome.json, lefthook.yml",
+		"README.md": "*.md, AUTHORS*, BACKERS*, CHANGELOG*, CODEOWNERS*, CONTRIBUTING*, CONTRIBUTORS*, CODE_OF_CONDUCT*, GOVERNANCE*, HISTORY*, LICENSE*, MAINTAINERS*, SECURITY*, SPONSORS*, TODO*, *.todo",
+		"tsconfig.json": "tsconfig.*.json",
+		"vite.config.ts": "*.config.js, *.config.cjs, *.config.mjs, *.config.ts"
+	},
+	"files.exclude": {
+		"**/.git": true,
+		"**/.yarn/install-state.gz": true,
+		"**/.yarn/releases": true,
+		"**/node_modules": true,
+		"**/yarn.lock": true
+	},
+	"typescript.tsdk": "node_modules\\typescript\\lib"
 }

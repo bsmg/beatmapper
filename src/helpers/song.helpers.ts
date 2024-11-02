@@ -1,27 +1,25 @@
-import slugify from 'slugify';
+import slugify from "slugify";
 
-import { Difficulty } from '../types';
+import { DIFFICULTIES } from "$/constants";
+import { type BeatmapId, Difficulty } from "$/types";
 
-export const getSongIdFromName = (songName: string): string => {
-  const songId = slugify(songName).toLowerCase();
+export function getSongIdFromName(songName: string): string {
+	const songId = slugify(songName).toLowerCase();
 
-  return songId;
-};
+	return songId;
+}
 
-export const getLabelForDifficulty = (difficulty: Difficulty) => {
-  if (difficulty === 'ExpertPlus') {
-    return 'Expert+';
-  } else {
-    return difficulty;
-  }
-};
+export function getLabelForDifficulty(difficulty: BeatmapId) {
+	if (difficulty === Difficulty.EXPERT_PLUS) {
+		return "Expert+";
+	}
+	return difficulty;
+}
 
-export const sortDifficultyIds = (difficultyIds: Array<Difficulty>) => {
-  const order = ['Easy', 'Normal', 'Hard', 'Expert', 'ExpertPlus'];
-  return difficultyIds.sort((a, b) => {
-    const aIndex = order.indexOf(a);
-    const bIndex = order.indexOf(b);
-
-    return aIndex > bIndex ? 1 : -1;
-  });
-};
+export function sortDifficultyIds(difficultyIds: BeatmapId[]) {
+	return difficultyIds.sort((a, b) => {
+		const aIndex = DIFFICULTIES.indexOf(a as Difficulty);
+		const bIndex = DIFFICULTIES.indexOf(b as Difficulty);
+		return aIndex > bIndex ? 1 : -1;
+	});
+}

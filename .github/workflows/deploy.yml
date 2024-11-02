@@ -1,40 +1,52 @@
-name: Deploy
+name: Deployment
+
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Code Quality"]
+    branches: [$default-branch]
+    types: [completed]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: production
+  cancel-in-progress: false
 
 env:
-  NODE_VERSION: 16.x
+  NODE_VERSION: 20.x
 
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
+    if: ${{ (github.event.workflow_run.conclusion == 'success') && (github.repository_owner == 'bsmg') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
-      - name: Install packages
+      - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v3
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v2
+        run: |
+          yarn build
+          cp ./dist/index.html ./dist/404.html
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: build
-      - name: Deploy
+          path: ./dist
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
