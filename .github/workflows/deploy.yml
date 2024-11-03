@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows: ["Code Quality"]
-    branches: [$default-branch]
+    branches: [master]
     types: [completed]
 
 permissions:
