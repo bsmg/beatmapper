@@ -33,8 +33,8 @@ export function createAllSharedMiddlewares(engine: StorageEngine) {
 		demoMiddleware,
 		historyMiddleware,
 		// We have two middlewares related to persistence:
-		// - Storage middleware persists the current redux state to localforage
-		// - Backup middleware saves the editor entities as beatmap files, also in localforage.
+		// - Storage middleware persists the current redux state to indexeddb
+		// - Backup middleware saves the editor entities as beatmap files, also in indexeddb.
 		// It's important that this stuff happens last, after all the other middlewares have fully affected the state.
 		storageMiddleware,
 		backupMiddleware,

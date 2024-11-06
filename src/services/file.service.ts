@@ -1,7 +1,8 @@
-import localforage from "localforage";
+import { createStorage } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
 import type { App, BeatmapId, Json, Member, SongId } from "$/types";
+import { type LegacyStorageSchema, createDriver } from "./storage.service";
 
 // These are the types of things we'll need to save.
 export const FileType = {
@@ -15,31 +16,31 @@ export type FileType = Member<typeof FileType>;
 // These are the types of things we're able to save
 export type Saveable = File | Blob | ArrayBuffer | string;
 
-// All functions that save a file should return a promise that resolves to an array of the filename and its file (or blob).
-type SaveReturn<T extends Saveable> = Promise<[string, T]>;
-
-const filestore = localforage.createInstance({
-	name: "BeatMapper files",
+export const driver = createDriver<LegacyStorageSchema>({
+	name: "beat-mapper-files",
+	version: 2,
+	async upgrade(idb, current, next, tx) {
+		await idb.createStore("keyvaluepairs", tx);
+		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
+		await idb.removeStore("local-forage-detect-blob-support", tx);
+	},
 });
 
-filestore.config({
-	driver: localforage.INDEXEDDB,
-	name: "beat-mapper-files",
+const filestore = createStorage({
+	driver: driver({ name: "keyvaluepairs" }),
 });
 
 //////////////////////// LOW-LEVEL UTILS ////////////////////////
 // Low-level generic utilities.
 // Ideally, shouldn't be used outside this file.
 
-export async function saveFile<T extends Saveable>(filename: string, file: T): SaveReturn<T> {
-	await filestore.setItem(filename, file);
-	return [filename, file];
+export async function saveFile(filename: string, file: Saveable) {
+	await filestore.setItemRaw(filename, file);
+	return [filename, file] as [filename: string, contents: typeof file];
 }
-
 export function getFile<T extends Saveable>(filename: string): Promise<T | null> {
-	return filestore.getItem(filename);
+	return filestore.getItemRaw<T>(filename);
 }
-
 export function deleteFile(filename: string): Promise<void> {
 	return filestore.removeItem(filename);
 }
@@ -102,7 +103,9 @@ export function getFilenameForThing(songId: SongId, type: FileType, metadata: Me
 
 export async function getBeatmap(songId: SongId, difficulty: BeatmapId): Promise<Json.Beatmap> {
 	// Start by getting the entities (notes, events, etc) for this map
-	const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, { difficulty });
+	const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, {
+		difficulty,
+	});
 
 	const beatmapContents = await getFile(beatmapFilename);
 	if (!beatmapContents) throw new Error(`No beatmap file found for ${songId}/${difficulty}`);
@@ -117,7 +120,7 @@ export function saveSongFile(songId: SongId, songFile: File | Blob) {
 	return saveFile(songFilename, songFile);
 }
 
-async function saveBackupCoverArt(songId: SongId): SaveReturn<Blob> {
+async function saveBackupCoverArt() {
 	// If the user doesn't have a cover image yet, we'll supply a default.
 	// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
 	// I need to convert the file URL I have into a Blob, and then save that to indexedDB.
@@ -130,7 +133,7 @@ async function saveBackupCoverArt(songId: SongId): SaveReturn<Blob> {
 	return await saveFile(coverArtFilename, blob);
 }
 
-export function saveLocalCoverArtFile(songId: SongId, coverArtFile?: File): SaveReturn<Blob> {
+export function saveLocalCoverArtFile(songId: SongId, coverArtFile?: File) {
 	if (coverArtFile) {
 		const extension = getExtension(coverArtFile.name, "unknown");
 		const coverArtFilename = getFilenameForThing(songId, FileType.COVER, {
@@ -139,10 +142,10 @@ export function saveLocalCoverArtFile(songId: SongId, coverArtFile?: File): Save
 
 		return saveFile(coverArtFilename, coverArtFile);
 	}
-	return saveBackupCoverArt(songId);
+	return saveBackupCoverArt();
 }
 
-export function saveCoverArtFromBlob(songId: SongId, coverArtBlob?: Blob, originalCoverArtFilename?: string): SaveReturn<Blob> {
+export function saveCoverArtFromBlob(songId: SongId, coverArtBlob?: Blob, originalCoverArtFilename?: string) {
 	if (coverArtBlob) {
 		// When uploading a .zip file, we don't have a File object for the image, we get a Blob instead.
 		// Blobs don't have a `name` property, so instead we need it to be passed as a 5th parameter.
@@ -150,15 +153,19 @@ export function saveCoverArtFromBlob(songId: SongId, coverArtBlob?: Blob, origin
 
 		const extension = getExtension(originalCoverArtFilename, "unknown");
 
-		const coverArtFilename = getFilenameForThing(songId, FileType.COVER, { extension });
+		const coverArtFilename = getFilenameForThing(songId, FileType.COVER, {
+			extension,
+		});
 
 		return saveFile(coverArtFilename, coverArtBlob);
 	}
-	return saveBackupCoverArt(songId);
+	return saveBackupCoverArt();
 }
 
 export function saveBeatmap(songId: SongId, difficulty: BeatmapId, beatmapContents: string) {
-	const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, { difficulty });
+	const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, {
+		difficulty,
+	});
 
 	// Make sure we're saving a stringified object.
 	let beatmapContentsString = beatmapContents;
@@ -187,7 +194,9 @@ export async function deleteAllSongFiles(song: App.Song) {
 
 	const infoDatName = getFilenameForThing(id, FileType.INFO);
 	const beatmapFilenames = Object.keys(difficultiesById).map((difficultyId) => {
-		return getFilenameForThing(id, FileType.BEATMAP, { difficulty: difficultyId });
+		return getFilenameForThing(id, FileType.BEATMAP, {
+			difficulty: difficultyId,
+		});
 	});
 
 	try {

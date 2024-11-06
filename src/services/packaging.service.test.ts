@@ -27,13 +27,8 @@ const DEFAULT_SONG = {
 	modSettings: {},
 };
 
-vi.mock("localforage", () => {
-	const instance = vi.fn(() => {
-		return { config: vi.fn() };
-	});
-	return {
-		default: { createInstance: instance },
-	};
+vi.mock("idb", () => {
+	return { openDB: vi.fn(() => ({ createObjectStore: vi.fn() })) };
 });
 
 describe("packaging.service", () => {
