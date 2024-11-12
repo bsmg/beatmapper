@@ -38,13 +38,13 @@ export async function saveFile(filename: string, file: Saveable) {
 	await filestore.setItemRaw(filename, file);
 	return [filename, file] as [filename: string, contents: typeof file];
 }
-export function getFile<T extends Saveable>(filename: string): Promise<T | null> {
+export async function getFile<T extends Saveable>(filename: string): Promise<T | null> {
 	return filestore.getItemRaw<T>(filename);
 }
-export function deleteFile(filename: string): Promise<void> {
+export async function deleteFile(filename: string): Promise<void> {
 	return filestore.removeItem(filename);
 }
-export function deleteFiles(filenames: Array<string>): Promise<Array<void>> {
+export async function deleteFiles(filenames: Array<string>): Promise<Array<void>> {
 	return Promise.all(filenames.map((filename) => filestore.removeItem(filename)));
 }
 

@@ -28,32 +28,33 @@ export function createEngine(whitelist: FilterList = []) {
 	// https://raw.githubusercontent.com/mathieudutour/redux-storage-engine-localforage/master/src/index.js
 	const driver = createDriver<LegacyStorageSchema>({
 		name: "beat-mapper-state",
-		version: 2,
+		version: 3,
 		async upgrade(idb, current, next, tx) {
 			await idb.createStore("keyvaluepairs", tx);
 			// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
 			await idb.removeStore("local-forage-detect-blob-support", tx);
+
+			if (next && next >= 3) {
+				await idb.update("keyvaluepairs", key, (value: string) => JSON.parse(value), tx);
+			}
 		},
 	});
+
 	const storage = createStorage({ driver: driver({ name: "keyvaluepairs" }) });
+
 	let engine: StorageEngine = {
 		async load<T>(): Promise<T> {
-			const raw = await storage.getItemRaw<string>(key);
-			const result = raw ? JSON.parse(raw) : {};
-			return result;
+			const raw = await storage.getItemRaw<T>(key);
+			return raw as T;
 		},
-		async save<T>(state: T): Promise<string> {
-			const raw = JSON.stringify(state);
-			await storage.setItemRaw(key, raw);
-			return raw;
+		async save<T>(state: T): Promise<T> {
+			// @ts-ignore
+			await storage.setItemRaw<T>(key, state);
+			return state;
 		},
 	};
 
-	// TODO: Add migrations here, if/when necessary
-	// engine = handleMigrations(engine)
-
 	engine = debounce(engine, 250);
-
 	engine = filter(engine, whitelist);
 
 	return engine;

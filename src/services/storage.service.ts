@@ -1,3 +1,4 @@
+import { withResolvers } from "$/utils";
 import { type DBSchema, type IDBPDatabase, type IDBPTransaction, type StoreKey, type StoreNames, type StoreValue, deleteDB, openDB } from "idb";
 import { type StorageValue, defineDriver } from "unstorage";
 
@@ -18,14 +19,25 @@ type IDBPWritableTransaction<S extends DBSchema> = IDBPTransaction<S, ArrayLike<
 // the latter of which is more of a necessity for properly maintaining updates to persistable state and files in future app updates
 
 export class IDB<S extends DBSchema> {
+	processing: boolean;
 	instance: Promise<IDBPDatabase<S>>;
 
 	constructor({ name, version, upgrade }: IDBOptions<S>) {
+		this.processing = false;
+		const migration = withResolvers<void>();
 		this.instance = openDB<S>(name, version, {
 			upgrade: async (_, oldVersion, newVersion, transaction) => {
+				this.processing = true;
 				if (upgrade) await upgrade(this, oldVersion, newVersion, transaction);
 				console.log(`Migrated ${transaction.db.name} from version ${oldVersion} to ${newVersion}.`);
+				migration.resolve();
 			},
+		}).then(async (db) => {
+			if (this.processing) {
+				await migration.promise;
+				this.processing = false;
+			}
+			return db;
 		});
 	}
 
@@ -37,49 +49,46 @@ export class IDB<S extends DBSchema> {
 	async removeStore(name: StoreNames<S>, transaction?: IDBPWritableTransaction<S>) {
 		const db = transaction?.db ?? (await this.instance);
 		if (!db.objectStoreNames.contains(name)) return;
-		return db.createObjectStore(name);
-	}
-
-	async keys(store: StoreNames<S>, transaction?: IDBPReadableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		return db.getAllKeys(store);
-	}
-	async has(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPReadableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		const exists = await db.getKey(store, key);
-		return !!exists;
-	}
-	async get(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPReadableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		return db.get(store, key);
-	}
-	async set(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, value: StoreValue<S, StoreNames<S>>, transaction?: IDBPWritableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		return db.put(store, value, key);
-	}
-	async delete(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPWritableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		return db.delete(store, key);
-	}
-	async clear(store: StoreNames<S>, transaction?: IDBPWritableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		return db.clear(store);
+		return db.deleteObjectStore(name);
 	}
 	async dispose() {
 		const db = await this.instance;
 		return deleteDB(db.name);
 	}
 
-	async remap<T extends StoreValue<S, StoreNames<S>>, K extends StoreKey<S, StoreNames<S>>>(store: StoreNames<S>, mapper: (value: StoreValue<S, StoreNames<S>>, key: StoreKey<S, StoreNames<S>>) => Promise<[K, T]>, transaction?: IDBPWritableTransaction<S>) {
-		const db = transaction?.db ?? (await this.instance);
-		const keys = await db.getAllKeys(store);
-		for (const key of keys) {
-			const value = await db.get(store, key);
-			if (!value) return;
-			const [newKey, newValue] = await mapper(value, key);
-			if (key !== newKey) await db.delete(store, key);
-			await db.put(store, newValue as T, newKey as K);
-		}
+	async keys(store: StoreNames<S>, transaction?: IDBPReadableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readonly").objectStore(store);
+		return tx.getAllKeys();
+	}
+	async has(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPReadableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readonly").objectStore(store);
+		const exists = await tx.getKey(key);
+		return !!exists;
+	}
+	async get(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPReadableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readonly").objectStore(store);
+		return tx.get(key);
+	}
+	async set(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, value: StoreValue<S, StoreNames<S>>, transaction?: IDBPWritableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
+		return tx.put(value, key);
+	}
+	async delete(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPWritableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
+		return tx.delete(key);
+	}
+	async clear(store: StoreNames<S>, transaction?: IDBPWritableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
+		return tx.clear();
+	}
+
+	async update<T extends StoreValue<S, StoreNames<S>>, R extends StoreValue<S, StoreNames<S>> = StoreValue<S, StoreNames<S>>>(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, updater: (value: T) => R, transaction?: IDBPWritableTransaction<S>) {
+		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
+		const current = await tx.get(key);
+		if (!current) return undefined;
+		const updated = updater(current);
+		await tx.put(updated, key);
+		return updated;
 	}
 }
 
