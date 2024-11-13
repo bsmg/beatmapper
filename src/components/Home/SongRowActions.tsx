@@ -20,7 +20,7 @@ const SongRowActions = ({ songId, size }: Props) => {
 
 	const handleDelete = () => {
 		if (window.confirm("Are you sure? This action cannot be undone 😱")) {
-			dispatch(deleteSong({ songId }));
+			dispatch(deleteSong({ songId, coverArtFilename: song.coverArtFilename, songFilename: song.songFilename, difficultiesById: song.difficultiesById }));
 		}
 	};
 

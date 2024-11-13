@@ -182,7 +182,7 @@ export function saveInfoDat(songId: SongId, infoContent: string) {
  *   - All difficulty beatmaps
  *   - Info.dat
  */
-export async function deleteAllSongFiles(song: App.Song) {
+export async function deleteAllSongFiles(song: Pick<App.Song, "id" | "songFilename" | "coverArtFilename" | "difficultiesById">) {
 	const { id, songFilename, coverArtFilename, difficultiesById } = song;
 
 	const infoDatName = getFilenameForThing(id, FileType.INFO);

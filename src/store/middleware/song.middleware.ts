@@ -469,11 +469,9 @@ export default function createSongMiddleware() {
 	});
 	instance.startListening({
 		actionCreator: deleteSong,
-		effect: (action, api) => {
-			const state = api.getState();
-			const { songId } = action.payload;
-			const song = getSongById(state, songId);
-			deleteAllSongFiles(song);
+		effect: async (action) => {
+			const { songId: id, difficultiesById, songFilename, coverArtFilename } = action.payload;
+			await deleteAllSongFiles({ id, difficultiesById, songFilename, coverArtFilename });
 		},
 	});
 
