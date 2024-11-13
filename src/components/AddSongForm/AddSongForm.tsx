@@ -6,7 +6,7 @@ import { COLORS, DIFFICULTIES, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
 import { getSongIdFromName } from "$/helpers/song.helpers";
 import { saveLocalCoverArtFile, saveSongFile } from "$/services/file.service";
 import { createNewSong } from "$/store/actions";
-import { useAppSelector } from "$/store/hooks";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { getAllSongIds } from "$/store/selectors";
 
 import Button from "../Button";
@@ -21,6 +21,7 @@ import SongPicker from "./SongPicker";
 
 const AddSongForm = () => {
 	const currentSongIds = useAppSelector(getAllSongIds);
+	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 
 	// These files are sent to the redux middleware.
@@ -72,7 +73,7 @@ const AddSongForm = () => {
 			const [coverArtFilename] = await saveLocalCoverArtFile(songId, coverArtFile);
 			const [songFilename] = await saveSongFile(songId, songFile);
 
-			createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name, subName, artistName, bpm, offset, selectedDifficulty });
+			dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name, subName, artistName, bpm, offset, selectedDifficulty }));
 
 			// Wait for the `createNewSong` action to flush, and then redirect the user to the new song page!
 			window.requestAnimationFrame(() => {
