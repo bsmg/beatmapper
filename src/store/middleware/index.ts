@@ -3,12 +3,13 @@ import { SAVE, type StorageEngine, createMiddleware as createStorageMiddleware }
 
 import { downloadMapFiles, pausePlaying, startPlaying, stopPlaying, togglePlaying } from "$/store/actions";
 
+import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";
+import createFileMiddleware from "./file.middleware";
 import createHistoryMiddleware from "./history.middleware";
 import createPackagingMiddleware from "./packaging.middleware";
 import createSelectionMiddleware from "./selection.middleware";
-import createSongMiddleware from "./song.middleware";
 
 export function createAllSharedMiddlewares(engine: StorageEngine) {
 	const stateSyncMiddleware = createStateSyncMiddleware({
@@ -16,7 +17,8 @@ export function createAllSharedMiddlewares(engine: StorageEngine) {
 		blacklist: [SAVE, startPlaying.type, pausePlaying.type, stopPlaying.type, togglePlaying.type, downloadMapFiles.type],
 	});
 
-	const songMiddleware = createSongMiddleware();
+	const audioMiddleware = createAudioMiddleware();
+	const fileMiddleware = createFileMiddleware();
 	const selectionMiddleware = createSelectionMiddleware();
 	const downloadMiddleware = createPackagingMiddleware();
 	const backupMiddleware = createBackupMiddleware();
@@ -27,7 +29,8 @@ export function createAllSharedMiddlewares(engine: StorageEngine) {
 	return [
 		// For unknown reasons, things crash when `stateSyncMiddleware` is further down.
 		stateSyncMiddleware,
-		songMiddleware,
+		audioMiddleware,
+		fileMiddleware,
 		selectionMiddleware,
 		downloadMiddleware,
 		demoMiddleware,
