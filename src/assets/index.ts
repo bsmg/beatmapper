@@ -1,4 +1,4 @@
-export { default as defaultSfxPath } from "./audio/tick.mp3";
+export { default as defaultSfxPath } from "./audio/tick-alt.mp3";
 
 export { default as oswaldGlyphs } from "./fonts/oswald.json";
 
