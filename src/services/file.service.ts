@@ -1,8 +1,6 @@
-import { createStorage } from "unstorage";
-
 import { defaultCoverArtPath } from "$/assets";
+import { filestore } from "$/setup";
 import type { App, BeatmapId, Json, Member, SongId } from "$/types";
-import { type LegacyStorageSchema, createDriver } from "./storage.service";
 
 // These are the types of things we'll need to save.
 export const FileType = {
@@ -15,20 +13,6 @@ export type FileType = Member<typeof FileType>;
 
 // These are the types of things we're able to save
 export type Saveable = File | Blob | ArrayBuffer | string;
-
-export const driver = createDriver<LegacyStorageSchema>({
-	name: "beat-mapper-files",
-	version: 2,
-	async upgrade(idb, current, next, tx) {
-		await idb.createStore("keyvaluepairs", tx);
-		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
-		await idb.removeStore("local-forage-detect-blob-support", tx);
-	},
-});
-
-const filestore = createStorage({
-	driver: driver({ name: "keyvaluepairs" }),
-});
 
 //////////////////////// LOW-LEVEL UTILS ////////////////////////
 // Low-level generic utilities.

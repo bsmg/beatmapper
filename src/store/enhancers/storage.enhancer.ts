@@ -1,17 +1,11 @@
-import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
-import type { StoreEnhancer } from "@reduxjs/toolkit";
-import type { Reducer } from "redux";
+import type { Reducer, StoreEnhancer } from "@reduxjs/toolkit";
 import { type StorageEngine, createLoader, reducer as storageReducer } from "redux-storage";
 import debounce from "redux-storage-decorator-debounce";
 import { type FilterList, default as filter } from "redux-storage-decorator-filter";
-import { createStorage } from "unstorage";
+import type { Storage } from "unstorage";
 
-const key = import.meta.env.DEV ? "redux-state-dev" : "redux-state";
-
-/**
- * Store redux state in local-storage, so that the app can be rehydrated when the page is refreshed.
- */
-export function enhancer(engine: StorageEngine): StoreEnhancer {
+/** Store redux state in local-storage, so that the app can be rehydrated when the page is refreshed. */
+export function storageEnhancer(engine: StorageEngine): StoreEnhancer {
 	return (createStore) => {
 		return (reducer, initial) => {
 			const newReducer = storageReducer(reducer as Reducer) as typeof reducer;
@@ -23,25 +17,15 @@ export function enhancer(engine: StorageEngine): StoreEnhancer {
 	};
 }
 
-export function createEngine(whitelist: FilterList = []) {
+interface StorageEngineOptions {
+	key: string;
+	storage: Storage;
+	debounceTime?: number;
+	whitelist?: FilterList;
+}
+export function createStorageEngine({ key, storage, debounceTime, whitelist }: StorageEngineOptions) {
 	// This `createEngine` function modified (incorporates unstorage for more flexibility over preferred drivers)
 	// https://raw.githubusercontent.com/mathieudutour/redux-storage-engine-localforage/master/src/index.js
-	const driver = createDriver<LegacyStorageSchema>({
-		name: "beat-mapper-state",
-		version: 3,
-		async upgrade(idb, current, next, tx) {
-			await idb.createStore("keyvaluepairs", tx);
-			// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
-			await idb.removeStore("local-forage-detect-blob-support", tx);
-
-			if (next && next >= 3) {
-				await idb.update("keyvaluepairs", key, (value: string) => JSON.parse(value), tx);
-			}
-		},
-	});
-
-	const storage = createStorage({ driver: driver({ name: "keyvaluepairs" }) });
-
 	let engine: StorageEngine = {
 		async load<T>(): Promise<T> {
 			const raw = await storage.getItemRaw<T>(key);
@@ -54,8 +38,8 @@ export function createEngine(whitelist: FilterList = []) {
 		},
 	};
 
-	engine = debounce(engine, 250);
-	engine = filter(engine, whitelist);
+	if (debounceTime) engine = debounce(engine, debounceTime);
+	if (whitelist) engine = filter(engine, whitelist);
 
 	return engine;
 }

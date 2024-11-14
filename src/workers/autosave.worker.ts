@@ -28,6 +28,6 @@ export function save(state: RootState) {
 	});
 }
 
-export default () => {
-	return { save };
-};
+export function createAutosaveWorker() {
+	return { save: (state: RootState) => save(state) };
+}

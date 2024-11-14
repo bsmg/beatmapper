@@ -28,7 +28,8 @@ const DEFAULT_SONG = {
 };
 
 vi.mock("idb", () => {
-	return { openDB: vi.fn(() => ({ createObjectStore: vi.fn() })) };
+	// biome-ignore lint/suspicious/noThenProperty: valid for mocking
+	return { openDB: vi.fn(() => ({ createObjectStore: vi.fn(), then: vi.fn() })) };
 });
 
 describe("packaging.service", () => {

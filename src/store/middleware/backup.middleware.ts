@@ -5,12 +5,12 @@ import { saveBeatmap } from "$/services/file.service";
 import { createBeatmapContentsFromState } from "$/services/packaging.service";
 import { getDifficulty, getSelectedSong } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { autosaveWorker } from "$/workers";
+import type { createAutosaveWorker } from "$/workers";
 
-// Saving is a significantly expensive operation, and it's one that is done very often, so it makes sense to do it in a web worker.
-const worker = autosaveWorker();
-
-export default function createBackupMiddleware() {
+interface Options {
+	worker: ReturnType<typeof createAutosaveWorker>;
+}
+export default function createBackupMiddleware({ worker }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
