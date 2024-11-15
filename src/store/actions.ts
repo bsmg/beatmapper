@@ -6,6 +6,7 @@ import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
 import { type App, type BeatmapId, type Direction, type EventColor, type EventEditMode, type EventTool, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Json, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
+import { createStorageActions } from "./middleware/storage.middleware";
 import {
 	getAllEventsAsArray,
 	getCopiedData,
@@ -25,7 +26,9 @@ import {
 	getStartAndEndBeat,
 	getStickyMapAuthorName,
 } from "./selectors";
-import type { RootState } from "./setup";
+import type { RootState, SnapshotStorageObservers } from "./setup";
+
+export const { load: loadSnapshot, save: saveSnapshot, hydrate: hydrateSnapshot } = createStorageActions<RootState, SnapshotStorageObservers>("snapshot");
 
 export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 

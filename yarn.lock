@@ -2964,15 +2964,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/redux-storage@npm:^4.1.3":
-  version: 4.1.3
-  resolution: "@types/redux-storage@npm:4.1.3"
-  dependencies:
-    redux: "npm:^3.6.0 || ^4.0.0"
-  checksum: 10/52ff5fe9bfcd412d7e5037ef19734eb0ff0d6989362438b759224256cb8d7266d6c6403d925f65dc76851feeb985759a735bb13bbae53cab452850cf5da96338
-  languageName: node
-  linkType: hard
-
 "@types/resolve@npm:1.20.2":
   version: 1.20.2
   resolution: "@types/resolve@npm:1.20.2"
@@ -3469,7 +3460,6 @@ __metadata:
     "@types/react-outside-click-handler": "npm:^1.3.4"
     "@types/react-transition-group": "npm:^4.4.11"
     "@types/redux-state-sync": "npm:^3.1.10"
-    "@types/redux-storage": "npm:^4.1.3"
     "@types/three": "npm:^0.169.0"
     "@vitejs/plugin-react": "npm:^4.3.3"
     color: "npm:^4.2.3"
@@ -3494,9 +3484,6 @@ __metadata:
     react-tippy: "npm:^1.4.0"
     react-transition-group: "npm:^4.4.5"
     redux-state-sync: "npm:^3.1.4"
-    redux-storage: "npm:^4.1.2"
-    redux-storage-decorator-debounce: "npm:^1.1.3"
-    redux-storage-decorator-filter: "npm:^1.1.8"
     redux-thunk: "npm:^3.1.0"
     redux-undo: "npm:^1.1.0"
     rehype-mdx-import-media: "npm:^1.2.0"
@@ -6226,59 +6213,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.get@npm:^4.1.2":
-  version: 4.4.2
-  resolution: "lodash.get@npm:4.4.2"
-  checksum: 10/2a4925f6e89bc2c010a77a802d1ba357e17ed1ea03c2ddf6a146429f2856a216663e694a6aa3549a318cbbba3fd8b7decb392db457e6ac0b83dc745ed0a17380
-  languageName: node
-  linkType: hard
-
-"lodash.isfunction@npm:^3.0.7, lodash.isfunction@npm:^3.0.8":
-  version: 3.0.9
-  resolution: "lodash.isfunction@npm:3.0.9"
-  checksum: 10/99e54c34b1e8a9ba75c034deb39cedbd2aca7af685815e67a2a8ec4f73ec9748cda6ebee5a07d7de4b938e90d421fd280e9c385cc190f903ac217ac8aff30314
-  languageName: node
-  linkType: hard
-
-"lodash.isobject@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "lodash.isobject@npm:3.0.2"
-  checksum: 10/6c1667cbc4494d0a13a3617a4b23278d6d02dac520311f2bbb43f16f2cf71d2e6eb9dec8057315b77459df4890c756a256a087d3f4baa44a79ab5d6c968b060e
-  languageName: node
-  linkType: hard
-
-"lodash.merge@npm:^4.3.1":
-  version: 4.6.2
-  resolution: "lodash.merge@npm:4.6.2"
-  checksum: 10/d0ea2dd0097e6201be083865d50c3fb54fbfbdb247d9cc5950e086c991f448b7ab0cdab0d57eacccb43473d3f2acd21e134db39f22dac2d6c9ba6bf26978e3d6
-  languageName: node
-  linkType: hard
-
-"lodash.reduce@npm:^4.3.0":
-  version: 4.6.0
-  resolution: "lodash.reduce@npm:4.6.0"
-  checksum: 10/1cfefb3dd1a71a567526b6a3ea5127ce52312e60a24e7cc141236927429dc2cb6f196a814e880a74382a7a0931b63986e3f7ec3d0fd373d9247adc017101fc75
-  languageName: node
-  linkType: hard
-
-"lodash.set@npm:^4.0.0":
-  version: 4.3.2
-  resolution: "lodash.set@npm:4.3.2"
-  checksum: 10/f0968109bca5625c8ce1f1beab758634484443604d3950477e46d8d2631562e5ceae4465b9ce8a393fd47f5a411329f9bacf956c7c95530af1290db1a20343ba
-  languageName: node
-  linkType: hard
-
 "lodash.sortby@npm:^4.7.0":
   version: 4.7.0
   resolution: "lodash.sortby@npm:4.7.0"
   checksum: 10/38df19ae28608af2c50ac342fc1f414508309d53e1d58ed9adfb2c3cd17c3af290058c0a0478028d932c5404df3d53349d19fa364ef6bed6145a6bc21320399e
-  languageName: node
-  linkType: hard
-
-"lodash.unset@npm:^4.1.0":
-  version: 4.5.2
-  resolution: "lodash.unset@npm:4.5.2"
-  checksum: 10/24eb187c55177ceb5114d95f594544642f590af1265f1f795df6bed1279b99c2cc63476204d0de9626000103b8b626dba1dbab9f018efcd49c738ccbe037894c
   languageName: node
   linkType: hard
 
@@ -6310,7 +6248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loose-envify@npm:^1.1.0, loose-envify@npm:^1.2.0, loose-envify@npm:^1.4.0":
+"loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
   dependencies:
@@ -8150,22 +8088,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"reduce-reducers@npm:^0.1.0":
-  version: 0.1.5
-  resolution: "reduce-reducers@npm:0.1.5"
-  checksum: 10/e0f2aa9cc7cf2089db26853d02bdc649cfb4304df07a1a111ce12dd4128f9eea42eed364b59bff48ee37339afee63468354887a26e46c809ef6277671df09b9d
-  languageName: node
-  linkType: hard
-
-"redux-actions@npm:^0.10.1":
-  version: 0.10.1
-  resolution: "redux-actions@npm:0.10.1"
-  dependencies:
-    reduce-reducers: "npm:^0.1.0"
-  checksum: 10/480d7bb3cc25057841930265fd5fc3ec4a2947f354866e8615f2f1fec9e8df30ae0198d46a87a2a389b8a90719f382c0800d174e1e6210938a6f9778c0464580
-  languageName: node
-  linkType: hard
-
 "redux-ignore@npm:^1.2.5":
   version: 1.2.5
   resolution: "redux-ignore@npm:1.2.5"
@@ -8181,52 +8103,6 @@ __metadata:
   dependencies:
     broadcast-channel: "npm:^3.1.0"
   checksum: 10/de409b48fbbb5b7daa9f394c34edd3ec64fe68302fec0a8532ae903719ca69e7cad11e9928c93dcd753682a3dd72355d07c62f368afbcf6fd938a609bab6fbdc
-  languageName: node
-  linkType: hard
-
-"redux-storage-decorator-debounce@npm:^1.1.3":
-  version: 1.1.3
-  resolution: "redux-storage-decorator-debounce@npm:1.1.3"
-  checksum: 10/9467e919541200304b1c835d1c9efeb3f0554e13cc1c937c66da05d6a5d5c67cb3ba877d32ffe7dcfb621514436d3032e95e4e83c4e47ed34967de20bdddf332
-  languageName: node
-  linkType: hard
-
-"redux-storage-decorator-filter@npm:^1.1.8":
-  version: 1.1.8
-  resolution: "redux-storage-decorator-filter@npm:1.1.8"
-  dependencies:
-    lodash.get: "npm:^4.1.2"
-    lodash.isfunction: "npm:^3.0.7"
-    lodash.isobject: "npm:^3.0.2"
-    lodash.reduce: "npm:^4.3.0"
-    lodash.set: "npm:^4.0.0"
-    lodash.unset: "npm:^4.1.0"
-  checksum: 10/b419c661b18858572b8db447b6757784bfc2efd91ce13896bc626e85dea480715b166aaab0343e20eb0272896e03f4015cfbe29fce66cfc2403d7847d0844db3
-  languageName: node
-  linkType: hard
-
-"redux-storage-merger-simple@npm:^1.0.2":
-  version: 1.0.5
-  resolution: "redux-storage-merger-simple@npm:1.0.5"
-  dependencies:
-    lodash.isobject: "npm:^3.0.2"
-    lodash.merge: "npm:^4.3.1"
-  checksum: 10/c2ee8476afa53c2c643304093772c110f698b809bb646b2259183b31dfac8392fb16676a5952681f5fb32168cec7143cac41c378c0acd3f2e7dd2412b49b6161
-  languageName: node
-  linkType: hard
-
-"redux-storage@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "redux-storage@npm:4.1.2"
-  dependencies:
-    lodash.isfunction: "npm:^3.0.8"
-    lodash.isobject: "npm:^3.0.2"
-    loose-envify: "npm:^1.2.0"
-    redux-actions: "npm:^0.10.1"
-    redux-storage-merger-simple: "npm:^1.0.2"
-  peerDependencies:
-    redux: ^3.0.0 || ^2.0.0 || ^1.0.0 || 1.0.0-alpha || 1.0.0-rc
-  checksum: 10/4380fead72d24687862be859f18860515f5c22b527ba98727382774da25ae5e3288ee9c30f7e3ba979f58a29d5668183a7152697c989b1cab749f9be512ab1e1
   languageName: node
   linkType: hard
 

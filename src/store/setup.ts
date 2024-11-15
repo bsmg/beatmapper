@@ -5,14 +5,18 @@ import { type LegacyStorageSchema, createDriver } from "$/services/storage.servi
 import { autosaveWorker, filestore } from "$/setup";
 import type { App, SongId } from "$/types";
 
-import { moveMouseAcrossEventsGrid, tick } from "./actions";
-import { createStorageEngine, storageEnhancer } from "./enhancers";
+import { loadSnapshot, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
-import { createAllSharedMiddleware } from "./middleware";
+import { selectSnapshot } from "./helpers";
+import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
 
-const key = import.meta.env.DEV ? "redux-state-dev" : "redux-state";
+export const STORAGE_KEY = import.meta.env.DEV ? "redux-state-dev" : "redux-state";
 
-type Snapshot = Pick<RootState, "user" | "editor"> & { songs: Pick<RootState["songs"], "byId">; navigation: Pick<RootState["navigation"], "snapTo" | "beatDepth" | "volume" | "playNoteTick"> };
+type Snapshot = ReturnType<typeof selectSnapshot>;
+
+export type SnapshotStorageObservers = {
+	[Key in "redux-state-dev" | "redux-state"]: StorageObserver<Snapshot, RootState>;
+};
 
 const driver = createDriver<LegacyStorageSchema>({
 	name: "beat-mapper-state",
@@ -39,23 +43,30 @@ const driver = createDriver<LegacyStorageSchema>({
 				);
 				return { ...snapshot, songs: { byId: allSongs } };
 			}
-			await idb.update("keyvaluepairs", key, (value) => rewrite(value), tx);
+			await idb.update("keyvaluepairs", STORAGE_KEY, (value) => rewrite(value), tx);
 		}
 	},
 });
 
 export function createAppStore() {
-	const engine = createStorageEngine({
-		key: key,
-		storage: createStorage({ driver: driver({ name: "keyvaluepairs" }) }),
-		debounceTime: 250,
-		whitelist: ["user", "editor", ["songs", "byId"], ["navigation", "snapTo"], ["navigation", "beatDepth"], ["navigation", "volume"], ["navigation", "playNoteTick"]],
-	});
-
 	const middleware = createAllSharedMiddleware({
 		filestore: filestore,
 		autosaveWorker: autosaveWorker,
-		reduxStorageEngine: engine,
+	});
+
+	const snapshotStorageMiddleware = createStorageMiddleware<RootState, SnapshotStorageObservers>({
+		namespace: "snapshot",
+		storage: createStorage({ driver: driver({ name: "keyvaluepairs" }) }),
+		observers: {
+			"redux-state": {
+				selector: selectSnapshot,
+				condition: import.meta.env.PROD,
+			},
+			"redux-state-dev": {
+				selector: selectSnapshot,
+				condition: import.meta.env.DEV,
+			},
+		},
 	});
 
 	const devTools: DevToolsEnhancerOptions = {
@@ -65,9 +76,11 @@ export function createAppStore() {
 	const store = configureStore({
 		reducer: root.reducer,
 		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
-		middleware: (native) => native({ serializableCheck: false, immutableCheck: false }).concat(...middleware),
-		enhancers: (native) => native().concat(storageEnhancer(engine)),
+		middleware: (native) => native({ serializableCheck: false, immutableCheck: false }).concat(...middleware, snapshotStorageMiddleware),
+		enhancers: (native) => native(),
 	});
+
+	store.dispatch(loadSnapshot());
 
 	return store;
 }

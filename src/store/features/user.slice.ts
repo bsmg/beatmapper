@@ -1,7 +1,8 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { createNewSong, dismissPrompt, finishLoadingSong, importExistingSong, updateGraphicsLevel, updateProcessingDelay, updateSongDetails } from "$/store/actions";
+import { createNewSong, dismissPrompt, finishLoadingSong, hydrateSnapshot, importExistingSong, updateGraphicsLevel, updateProcessingDelay, updateSongDetails } from "$/store/actions";
 import { Quality } from "$/types";
+import { STORAGE_KEY } from "../setup";
 
 const initialState = {
 	isNewUser: true,
@@ -23,6 +24,10 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
+		builder.addCase(hydrateSnapshot, (state, action) => {
+			const hydrated = action.payload[STORAGE_KEY]?.user ?? state;
+			return { ...state, ...hydrated };
+		});
 		builder.addCase(importExistingSong, (state, action) => {
 			const { songData } = action.payload;
 			if (songData.demo) return state;
