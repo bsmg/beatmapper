@@ -223,7 +223,7 @@ const slice = createSlice({
 			currentBeatmapDifficulty.customLabel = customLabel;
 		});
 		builder.addCase(deleteSong, (state, action) => {
-			const { songId } = action.payload;
+			const { id: songId } = action.payload;
 			delete state.byId[songId];
 		});
 		builder.addCase(toggleModForSong, (state, action) => {

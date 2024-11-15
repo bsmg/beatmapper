@@ -1,16 +1,17 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { SAVE } from "redux-storage";
 
-import { saveBeatmap } from "$/services/file.service";
+import type { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContentsFromState } from "$/services/packaging.service";
 import { getDifficulty, getSelectedSong } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { createAutosaveWorker } from "$/workers";
 
 interface Options {
+	filestore: BeatmapFilestore;
 	worker: ReturnType<typeof createAutosaveWorker>;
 }
-export default function createBackupMiddleware({ worker }: Options) {
+export default function createBackupMiddleware({ filestore, worker }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
@@ -27,7 +28,7 @@ export default function createBackupMiddleware({ worker }: Options) {
 				// We only want to autosave when a song is currently selected
 				if (!song || !difficulty) return;
 				const beatmapContents = createBeatmapContentsFromState(state, song);
-				saveBeatmap(song.id, difficulty, beatmapContents).catch((err) => {
+				filestore.saveBeatmapFile(song.id, difficulty, beatmapContents).catch((err) => {
 					console.error("Could not run backup for beatmap file", err);
 				});
 			}

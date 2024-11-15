@@ -1,4 +1,4 @@
-import { saveBeatmap } from "$/services/file.service";
+import type { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContentsFromState } from "$/services/packaging.service";
 import { getDifficulty, getSelectedSong } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -12,7 +12,7 @@ import type { RootState } from "$/store/setup";
 // it's because the user can have dozens or hundreds of songs, and each song can have thousands of notes. It's too much to keep in RAM.
 // So I store non-loaded songs to disk, stored in indexeddb. It uses the same mechanism as Redux Storage, but it's treated separately.)
 
-export function save(state: RootState) {
+export function save(state: RootState, filestore: BeatmapFilestore) {
 	const song = getSelectedSong(state);
 	const difficulty = getDifficulty(state);
 
@@ -23,11 +23,16 @@ export function save(state: RootState) {
 
 	const beatmapContents = createBeatmapContentsFromState(state, song);
 
-	saveBeatmap(song.id, difficulty, beatmapContents).catch((err) => {
+	filestore.saveBeatmapFile(song.id, difficulty, beatmapContents).catch((err) => {
 		console.error("Could not run backup for beatmap file", err);
 	});
 }
 
-export function createAutosaveWorker() {
-	return { save: (state: RootState) => save(state) };
+interface Options {
+	filestore: BeatmapFilestore;
+}
+export function createAutosaveWorker({ filestore }: Options) {
+	return {
+		save: (state: RootState) => save(state, filestore),
+	};
 }

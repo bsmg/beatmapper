@@ -12,11 +12,11 @@ import { convertEventsToExportableJson } from "$/helpers/events.helpers";
 import { convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
 import { getSongIdFromName, sortDifficultyIds } from "$/helpers/song.helpers";
-import { getAllEventsAsArray, getNotes, getObstacles, getSelectedSong, getSelectedSongDifficultyIds } from "$/store/selectors";
+import { filestore } from "$/setup";
+import { getAllEventsAsArray, getNotes, getObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { App, Difficulty, type Json, type SongId } from "$/types";
 import { isEmpty, omit } from "$/utils";
-import { FileType, getFile, getFilenameForThing, saveCoverArtFromBlob, saveFile, saveSongFile } from "./file.service";
 import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getDifficultyRankForDifficulty, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
 
 const LIGHTSHOW_FILENAME = "EasyLightshow.dat";
@@ -163,7 +163,7 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 		throw new Error(`Unrecognized version: ${meta.version}`);
 	}
 
-	return JSON.stringify(contents, null, 2);
+	return contents;
 }
 
 /**
@@ -249,7 +249,7 @@ export function createBeatmapContents(
 		throw new Error(`unrecognized version: ${meta.version}`);
 	}
 
-	return JSON.stringify(contents, null, 2);
+	return contents;
 }
 
 export function createBeatmapContentsFromState(state: RootState, song: Pick<App.Song, "offset" | "bpm" | "modSettings">) {
@@ -299,14 +299,14 @@ export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blo
 	zip.file("song.ogg", songFile, { binary: true });
 	zip.file("cover.jpg", coverArtFile, { binary: true });
 	if (version === 2) {
-		zip.file("Info.dat", infoContent, { binary: false });
+		zip.file("Info.dat", JSON.stringify(infoContent), { binary: false });
 	} else {
-		zip.file("info.json", infoContent, { binary: false });
+		zip.file("info.json", JSON.stringify(infoContent), { binary: false });
 	}
 
 	const difficultyContents = await Promise.all(
 		Object.keys(song.difficultiesById).map((difficulty) =>
-			getFile<string>(getFilenameForThing(song.id, FileType.BEATMAP, { difficulty: difficulty })).then((fileContents) => ({
+			filestore.loadBeatmapFile(song.id, difficulty).then((fileContents) => ({
 				difficulty,
 				fileContents,
 			})),
@@ -316,18 +316,18 @@ export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blo
 	for (const { difficulty, fileContents } of difficultyContents) {
 		if (!fileContents) throw new Error("No file.");
 		if (version === 2 && fileContents) {
-			zip.file(`${difficulty}.dat`, fileContents, { binary: false });
+			zip.file(`${difficulty}.dat`, JSON.stringify(fileContents), { binary: false });
 		} else {
 			// Our files are stored on disk as v2, since this is the modern actually-used format.
 			// I also need to save the v1 difficulties so that folks can edit their map in other mapping software, and this is annoying because it requires totally different info.
-			const beatmapData = JSON.parse(fileContents);
+			const beatmapData = fileContents;
 
 			const legacyFileContents = createBeatmapContents(
 				{
 					notes: beatmapData._notes,
 					obstacles: beatmapData._obstacles,
 					events: beatmapData._events,
-					bookmarks: beatmapData._bookmarks,
+					bookmarks: beatmapData._customData?._bookmarks ?? [],
 				},
 				{ version: 1 },
 				song.bpm,
@@ -335,7 +335,7 @@ export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blo
 				song.swingAmount,
 				song.swingPeriod,
 			);
-			zip.file(`${difficulty}.json`, legacyFileContents, { binary: false });
+			zip.file(`${difficulty}.json`, JSON.stringify(legacyFileContents), { binary: false });
 		}
 	}
 
@@ -344,11 +344,11 @@ export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blo
 		const { fileContents } = difficultyContents[0];
 		if (!fileContents) throw new Error("No file.");
 
-		const events = JSON.parse(fileContents)._events;
+		const events = fileContents._events;
 
 		const lightshowFileContents = createBeatmapContents({ events }, { version: 2 });
 
-		zip.file(LIGHTSHOW_FILENAME, lightshowFileContents, { binary: false });
+		zip.file(LIGHTSHOW_FILENAME, JSON.stringify(lightshowFileContents), { binary: false });
 	}
 
 	zip
@@ -412,7 +412,7 @@ export async function convertLegacyArchive(archive: JSZip) {
 				{ version: 2 },
 			);
 
-			zip.file(`${level.difficulty}.dat`, newFileContents, { binary: false });
+			zip.file(`${level.difficulty}.dat`, JSON.stringify(newFileContents), { binary: false });
 
 			return {
 				id: level.difficulty,
@@ -441,7 +441,7 @@ export async function convertLegacyArchive(archive: JSZip) {
 	} as App.Song;
 
 	const newInfoContent = createInfoContent(fakeSong, { version: 2 });
-	zip.file("Info.dat", newInfoContent, { binary: false });
+	zip.file("Info.dat", JSON.stringify(newInfoContent), { binary: false });
 
 	return zip;
 }
@@ -473,8 +473,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	}
 
 	// Save the Info.dat (Not 100% sure that this is necessary, but better to have and not need)
-	const infoFilename = getFilenameForThing(songId, FileType.INFO);
-	await saveFile(infoFilename, infoDatString);
+	await filestore.saveInfoFile(songId, JSON.parse(infoDatString));
 
 	// Save the assets - cover art and song file - to our local store
 	const song = getFileFromArchive(archive, infoDatJson._songFilename);
@@ -484,9 +483,11 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	if (!coverArt) throw new Error("No cover file.");
 	const uncompressedCoverArtFile = await coverArt.async("blob");
 
-	// TODO: I could parallelize these two processes if I felt like it
-	const [songFilename, songFile] = await saveSongFile(songId, uncompressedSongFile);
-	const [coverArtFilename, coverArtFile] = await saveCoverArtFromBlob(songId, uncompressedCoverArtFile, infoDatJson._coverImageFilename);
+	const [{ filename: songFilename, contents: songFile }, { filename: coverArtFilename, contents: coverArtFile }] = await Promise.all([
+		await filestore.saveSongFile(songId, uncompressedSongFile, "audio/ogg", infoDatJson._songFilename),
+		await filestore.saveCoverFile(songId, uncompressedCoverArtFile, "image/jpeg", infoDatJson._coverImageFilename),
+		//
+	]);
 
 	// Tackle the difficulties and their entities (notes, obstacles, events).
 	// We won't load any of them into redux; instead we'll write it all to disk using our local persistence layer, so that it can be loaded like any other song from the list.
@@ -503,10 +504,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 			if (!file) throw new Error(`No level file for ${beatmap._beatmapFilename}`);
 			const fileContents = await file.async("string");
 			// TODO: Should I do any cleanup, to verify that the data is legit?
-			const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, {
-				difficulty: beatmap._difficulty,
-			});
-			await saveFile(beatmapFilename, fileContents);
+			await filestore.saveBeatmapFile(songId, beatmap._difficulty, JSON.parse(fileContents));
 			const beatmapData = {
 				id: beatmap._difficulty,
 				noteJumpSpeed: beatmap._noteJumpMovementSpeed,
@@ -564,35 +562,4 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		modSettings,
 		enabledLightshow,
 	};
-}
-
-export function saveEventsToAllDifficulties(state: RootState) {
-	const song = getSelectedSong(state);
-	const difficulties = getSelectedSongDifficultyIds(state);
-
-	const events = convertEventsToExportableJson(getAllEventsAsArray(state));
-	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
-
-	return Promise.all(
-		difficulties.map(
-			(difficulty) =>
-				new Promise((resolve) => {
-					const beatmapFilename = getFilenameForThing(song.id, FileType.BEATMAP, {
-						difficulty,
-					});
-
-					getFile<string>(beatmapFilename)
-						.then((fileContents) => {
-							if (!fileContents) throw new Error(`No level file for ${beatmapFilename}.`);
-							const data = JSON.parse(fileContents);
-							data._events = shiftedEvents;
-
-							return saveFile(beatmapFilename, JSON.stringify(data));
-						})
-						.then((data) => {
-							resolve(data);
-						});
-				}),
-		),
-	);
 }

@@ -1,195 +1,112 @@
+import type { Storage, StorageValue } from "unstorage";
+
 import { defaultCoverArtPath } from "$/assets";
-import { filestore } from "$/setup";
-import type { App, BeatmapId, Json, Member, SongId } from "$/types";
+import { resolveExtension } from "$/helpers/file.helpers";
+import type { BeatmapId, Json, SongId } from "$/types";
 
-// These are the types of things we'll need to save.
-export const FileType = {
-	INFO: "info",
-	BEATMAP: "beatmap",
-	SONG: "song",
-	COVER: "cover-art",
-} as const;
-export type FileType = Member<typeof FileType>;
+type MaybeDefined<T> = T extends any ? T : any;
 
-// These are the types of things we're able to save
-export type Saveable = File | Blob | ArrayBuffer | string;
+type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
-//////////////////////// LOW-LEVEL UTILS ////////////////////////
-// Low-level generic utilities.
-// Ideally, shouldn't be used outside this file.
-
-export async function saveFile(filename: string, file: Saveable) {
-	await filestore.setItemRaw(filename, file);
-	return [filename, file] as [filename: string, contents: typeof file];
+export interface FilestoreOptions {
+	storage: Storage;
 }
-export async function getFile<T extends Saveable>(filename: string): Promise<T | null> {
-	return filestore.getItemRaw<T>(filename);
-}
-export async function deleteFile(filename: string): Promise<void> {
-	return filestore.removeItem(filename);
-}
-export async function deleteFiles(filenames: Array<string>): Promise<Array<void>> {
-	return Promise.all(filenames.map((filename) => filestore.removeItem(filename)));
-}
+export class Filestore {
+	storage: Storage;
+	constructor({ storage }: FilestoreOptions) {
+		this.storage = storage;
+	}
 
-function getExtension(filename: string, defaultExtension = "") {
-	const match = filename.match(/\.[a-zA-Z]+$/);
-
-	if (!match) return defaultExtension;
-
-	return match[0].slice(1);
-}
-
-//////////////////////// HELPERS ////////////////////////
-
-type Metadata = { extension?: string; difficulty?: BeatmapId };
-
-/**
- * Name looker-upper.
- *
- * @example getFilenameForThing(123, 'song')
- *  -> `123_song.ogg`
- * @example getFilenameForThing(123, 'cover-art', { extension: 'jpg' })
- *  -> `123_cover.jpg`
- * @example getFilenameForThing(123, 'beatmap', { difficulty: 'ExpertPlus' })
- *  -> `123_ExpertPlus.dat`
- */
-export function getFilenameForThing(songId: SongId, type: FileType, metadata: Metadata = {}) {
-	switch (type) {
-		case FileType.SONG: {
-			return `${songId}_song.ogg`;
-		}
-
-		case FileType.COVER: {
-			if (!metadata.extension) throw new Error("Must supply a file extension for cover art.");
-
-			return `${songId}_cover.${metadata.extension}`;
-		}
-
-		case FileType.INFO: {
-			return `${songId}_Info.dat`;
-		}
-
-		case FileType.BEATMAP: {
-			if (!metadata.difficulty) throw new Error("Must supply a difficulty for beatmaps.");
-
-			return `${songId}_${metadata.difficulty}.dat`;
-		}
-
-		default:
-			throw new Error(`Unrecognized type: ${type}`);
+	async loadFile<T>(filename: string) {
+		return this.storage.getItemRaw<T>(filename);
+	}
+	async saveFile<T extends Saveable>(filename: string, contents: T) {
+		await this.storage.setItemRaw<T>(filename, contents as MaybeDefined<T>);
+		return { filename, contents };
+	}
+	async removeFile(filename: string) {
+		return this.storage.removeItem(filename);
 	}
 }
 
-//////////////////////// PERSISTENCE AND RETRIEVAL METHODS ////////////////////////
-// Sugar around `saveFile` and `getFile`.
-// Ideally, the app should use these helpers so that all of the concerns around filename resolution happens in one place, and isn't spread across the app.
+type BeatmapFileType = "info" | "song" | "cover" | "beatmap";
+type BeatmapFileOptions<T extends BeatmapFileType> = T extends "song" | "cover" ? { extension: string } : T extends "beatmap" ? { id: BeatmapId } : Record<string, never>;
+type BeatmapFileImplicitReturn<T extends BeatmapFileType> = T extends "song" | "cover" ? File | Blob : T extends "beatmap" ? Json.Beatmap : Saveable;
 
-export async function getBeatmap(songId: SongId, difficulty: BeatmapId): Promise<Json.Beatmap> {
-	// Start by getting the entities (notes, events, etc) for this map
-	const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, {
-		difficulty,
-	});
-
-	const beatmapContents = await getFile(beatmapFilename);
-	if (!beatmapContents) throw new Error(`No beatmap file found for ${songId}/${difficulty}`);
-
-	if (typeof beatmapContents === "string") return JSON.parse(beatmapContents);
-
-	throw new Error(`Expected beatmapFilename to load a string, loaded: ${typeof beatmapContents}`);
-}
-
-export function saveSongFile(songId: SongId, songFile: File | Blob) {
-	const songFilename = getFilenameForThing(songId, FileType.SONG);
-	return saveFile(songFilename, songFile);
-}
-
-async function saveBackupCoverArt() {
-	// If the user doesn't have a cover image yet, we'll supply a default.
-	// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
-	// I need to convert the file URL I have into a Blob, and then save that to indexedDB.
-	// TODO: I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
-	const pathPieces = defaultCoverArtPath.split("/");
-	const coverArtFilename = pathPieces[pathPieces.length - 1];
-
-	const res = await window.fetch(defaultCoverArtPath);
-	const blob = await res.blob();
-	return await saveFile(coverArtFilename, blob);
-}
-
-export function saveLocalCoverArtFile(songId: SongId, coverArtFile?: File) {
-	if (coverArtFile) {
-		const extension = getExtension(coverArtFile.name, "unknown");
-		const coverArtFilename = getFilenameForThing(songId, FileType.COVER, {
-			extension,
-		});
-
-		return saveFile(coverArtFilename, coverArtFile);
-	}
-	return saveBackupCoverArt();
-}
-
-export function saveCoverArtFromBlob(songId: SongId, coverArtBlob?: Blob, originalCoverArtFilename?: string) {
-	if (coverArtBlob) {
-		// When uploading a .zip file, we don't have a File object for the image, we get a Blob instead.
-		// Blobs don't have a `name` property, so instead we need it to be passed as a 5th parameter.
-		if (typeof originalCoverArtFilename === "undefined") throw new Error("You must supply an original filename when saving cover art as a Blob instead of a File.");
-
-		const extension = getExtension(originalCoverArtFilename, "unknown");
-
-		const coverArtFilename = getFilenameForThing(songId, FileType.COVER, {
-			extension,
-		});
-
-		return saveFile(coverArtFilename, coverArtBlob);
-	}
-	return saveBackupCoverArt();
-}
-
-export function saveBeatmap(songId: SongId, difficulty: BeatmapId, beatmapContents: string) {
-	const beatmapFilename = getFilenameForThing(songId, FileType.BEATMAP, {
-		difficulty,
-	});
-
-	// Make sure we're saving a stringified object.
-	let beatmapContentsString = beatmapContents;
-	if (typeof beatmapContents === "object") {
-		beatmapContentsString = JSON.stringify(beatmapContents);
+export class BeatmapFilestore extends Filestore {
+	static resolveFilename<T extends BeatmapFileType>(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
+		switch (type) {
+			case "info": {
+				return `${songId}.Info.dat`;
+			}
+			case "song":
+			case "cover": {
+				const { extension } = options as BeatmapFileOptions<"song" | "cover">;
+				if (!extension) throw new Error(`Must supply a file extension for ${type}.`);
+				return `${songId}.${type}.${extension}`;
+			}
+			case "beatmap": {
+				const { id } = options as BeatmapFileOptions<"beatmap">;
+				if (!id) throw new Error(`Must supply an id for ${type}.`);
+				return `${songId}.${id}.${type}.dat`;
+			}
+			default: {
+				throw new Error(`Unrecognized type: ${type}`);
+			}
+		}
 	}
 
-	return saveFile(beatmapFilename, beatmapContentsString);
-}
+	private async saveBackupCoverFile() {
+		// If the user doesn't have a cover image yet, we'll supply a default.
+		// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
+		const pathPieces = defaultCoverArtPath.split("/");
+		const coverArtFilename = pathPieces[pathPieces.length - 1];
+		// I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
+		if (await this.storage.hasItem(coverArtFilename)) {
+			const file = this.loadFile<File>(coverArtFilename);
+			if (!file) throw new Error("An unexpected error occured.");
+			return { filename: coverArtFilename, contents: file };
+		}
+		// I need to convert the file URL I have into a Blob, and then save that to indexedDB.
+		const res = await window.fetch(defaultCoverArtPath);
+		const blob = await res.blob();
+		return await this.saveFile(coverArtFilename, blob);
+	}
 
-export function saveInfoDat(songId: SongId, infoContent: string) {
-	const infoDatFilename = getFilenameForThing(songId, FileType.INFO);
+	async loadBeatmapFile(songId: SongId, beatmapId: BeatmapId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
+		return this.loadFile<BeatmapFileImplicitReturn<"beatmap">>(filename);
+	}
 
-	return saveFile(infoDatFilename, infoContent);
-}
+	async saveInfoFile<T extends BeatmapFileImplicitReturn<"info">>(songId: SongId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
+		return this.saveFile<T>(filename, contents);
+	}
+	async saveSongFile<T extends BeatmapFileImplicitReturn<"song">>(songId: SongId, contents: T, type?: string, overrideFilename?: string) {
+		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
+		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
+		const filename = BeatmapFilestore.resolveFilename(songId, "song", { extension });
+		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
+	}
+	async saveCoverFile<T extends BeatmapFileImplicitReturn<"cover">>(songId: SongId, contents?: T, type?: string, overrideFilename?: string) {
+		if (!contents) return this.saveBackupCoverFile();
+		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
+		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
+		const filename = BeatmapFilestore.resolveFilename(songId, "cover", { extension });
+		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
+	}
+	async saveBeatmapFile<T extends BeatmapFileImplicitReturn<"beatmap">>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
+		return this.saveFile<T>(filename, contents);
+	}
 
-/**
- * If the user deletes a song, we have a lot of stuff to get rid of:
- *   - Song file (.ogg)
- *   - Cover art
- *   - All difficulty beatmaps
- *   - Info.dat
- */
-export async function deleteAllSongFiles(song: App.Song) {
-	const { id, songFilename, coverArtFilename, difficultiesById } = song;
-
-	const infoDatName = getFilenameForThing(id, FileType.INFO);
-	const beatmapFilenames = Object.keys(difficultiesById).map((difficultyId) => {
-		return getFilenameForThing(id, FileType.BEATMAP, {
-			difficulty: difficultyId,
-		});
-	});
-
-	try {
-		await deleteFile(songFilename);
-		await deleteFile(coverArtFilename);
-		await deleteFile(infoDatName);
-		await deleteFiles(beatmapFilenames);
-		console.info(`Successfully deleted all files related to ${id}.`);
-	} catch (err) {
-		console.error("Could not delete all files for song:", err);
+	async removeAllFilesForSong(songId: SongId, songFilename: string, coverFilename: string, beatmapIds: BeatmapId[]) {
+		return Promise.all([
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "info", {})),
+			this.removeFile(songFilename),
+			this.removeFile(coverFilename),
+			...beatmapIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: id }))),
+			//
+		]);
 	}
 }

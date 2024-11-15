@@ -1,12 +1,34 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
-import { getFile, saveBeatmap, saveInfoDat } from "$/services/file.service";
-import { createBeatmapContentsFromState, createInfoContent, saveEventsToAllDifficulties, zipFiles } from "$/services/packaging.service";
+import { convertEventsToExportableJson } from "$/helpers/events.helpers";
+import type { BeatmapFilestore } from "$/services/file.service";
+import { createBeatmapContentsFromState, createInfoContent, zipFiles } from "$/services/packaging.service";
+import { shiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { downloadMapFiles } from "$/store/actions";
-import { getDifficulty, getSelectedSong, getSongById } from "$/store/selectors";
+import { getAllEventsAsArray, getDifficulty, getSelectedSong, getSelectedSongDifficultyIds, getSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 
-export default function createPackagingMiddleware() {
+function saveEventsToAllDifficulties(state: RootState, filestore: BeatmapFilestore) {
+	const song = getSelectedSong(state);
+	const difficulties = getSelectedSongDifficultyIds(state);
+
+	const events = convertEventsToExportableJson(getAllEventsAsArray(state));
+	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
+
+	return Promise.all(
+		difficulties.map(async (difficulty) => {
+			const fileContents = await filestore.loadBeatmapFile(song.id, difficulty);
+			if (!fileContents) throw new Error(`No beatmap file for ${song.id}/${difficulty}.`);
+			fileContents._events = shiftedEvents;
+			return filestore.saveBeatmapFile(song.id, difficulty, fileContents);
+		}),
+	);
+}
+
+interface Options {
+	filestore: BeatmapFilestore;
+}
+export default function createPackagingMiddleware({ filestore }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
@@ -27,16 +49,16 @@ export default function createPackagingMiddleware() {
 			if (selectedSong) {
 				const difficulty = getDifficulty(state);
 				// Persist the Info.dat and the currently-edited difficulty.
-				await saveInfoDat(song.id, infoContent);
-				if (difficulty) await saveBeatmap(song.id, difficulty, beatmapContent);
+				await filestore.saveInfoFile(song.id, infoContent);
+				if (difficulty) await filestore.saveBeatmapFile(song.id, difficulty, beatmapContent);
 				// We also want to share events between all difficulties.
 				// Copy the events currently in state to the non-loaded beatmaps.
-				await saveEventsToAllDifficulties(state);
+				await saveEventsToAllDifficulties(state, filestore);
 			}
 			// Next, I need to fetch all relevant files from disk.
 			// TODO: Parallelize this if it takes too long
-			const songFile = await getFile<Blob>(song.songFilename);
-			const coverArtFile = await getFile<Blob>(song.coverArtFilename);
+			const songFile = await filestore.loadFile<Blob>(song.songFilename);
+			const coverArtFile = await filestore.loadFile<Blob>(song.coverArtFilename);
 			if (!songFile || !coverArtFile) return;
 			await zipFiles(song, songFile, coverArtFile, version);
 		},

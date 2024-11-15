@@ -2,6 +2,8 @@ import { type DevToolsEnhancerOptions, configureStore } from "@reduxjs/toolkit";
 import { createStorage } from "unstorage";
 
 import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
+import { autosaveWorker, filestore } from "$/setup";
+import type { App, SongId } from "$/types";
 
 import { moveMouseAcrossEventsGrid, tick } from "./actions";
 import { createStorageEngine, storageEnhancer } from "./enhancers";
@@ -9,6 +11,8 @@ import { default as root } from "./features";
 import { createAllSharedMiddleware } from "./middleware";
 
 const key = import.meta.env.DEV ? "redux-state-dev" : "redux-state";
+
+type Snapshot = Pick<RootState, "user" | "editor"> & { songs: Pick<RootState["songs"], "byId">; navigation: Pick<RootState["navigation"], "snapTo" | "beatDepth" | "volume" | "playNoteTick"> };
 
 const driver = createDriver<LegacyStorageSchema>({
 	name: "beat-mapper-state",
@@ -19,7 +23,23 @@ const driver = createDriver<LegacyStorageSchema>({
 		await idb.removeStore("local-forage-detect-blob-support", tx);
 
 		if (next && next >= 3) {
-			await idb.update("keyvaluepairs", key, (value: string) => JSON.parse(value), tx);
+			function rewrite(value: unknown) {
+				const snapshot = typeof value === "string" ? JSON.parse(value) : value;
+				const { songs } = snapshot as Snapshot;
+				const allSongs = Object.values(songs.byId).reduce(
+					(acc, song) => {
+						acc[song.id] = {
+							...song,
+							songFilename: song.songFilename.replace("_", "."),
+							coverArtFilename: song.coverArtFilename.replace("_", "."),
+						};
+						return acc;
+					},
+					{} as Record<SongId, App.Song>,
+				);
+				return { ...snapshot, songs: { byId: allSongs } };
+			}
+			await idb.update("keyvaluepairs", key, (value) => rewrite(value), tx);
 		}
 	},
 });
@@ -32,7 +52,11 @@ export function createAppStore() {
 		whitelist: ["user", "editor", ["songs", "byId"], ["navigation", "snapTo"], ["navigation", "beatDepth"], ["navigation", "volume"], ["navigation", "playNoteTick"]],
 	});
 
-	const middleware = createAllSharedMiddleware({ reduxStorageEngine: engine });
+	const middleware = createAllSharedMiddleware({
+		filestore: filestore,
+		autosaveWorker: autosaveWorker,
+		reduxStorageEngine: engine,
+	});
 
 	const devTools: DevToolsEnhancerOptions = {
 		actionsDenylist: [tick.type, moveMouseAcrossEventsGrid.type],

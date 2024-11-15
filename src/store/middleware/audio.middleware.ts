@@ -3,7 +3,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import { AudioSample } from "$/services/audio.service";
-import { getFile } from "$/services/file.service";
+import type { BeatmapFilestore } from "$/services/file.service";
 import { Sfx } from "$/services/sfx.service";
 import {
 	adjustCursorPosition,
@@ -67,8 +67,11 @@ function calculateIfPlaybackShouldBeCommandeered(state: RootState, currentBeat: 
 	}
 }
 
+interface Options {
+	filestore: BeatmapFilestore;
+}
 /** This middleware manages playback concerns. */
-export default function createAudioMiddleware() {
+export default function createAudioMiddleware({ filestore }: Options) {
 	let animationFrameId: number;
 
 	const ticker = new Sfx();
@@ -89,7 +92,7 @@ export default function createAudioMiddleware() {
 				console.error(`Song "${songId}" not found. Current state:`, state);
 				return;
 			}
-			const file = await getFile<Blob>(song.songFilename);
+			const file = await filestore.loadFile<Blob>(song.songFilename);
 			if (!file) return;
 			const arrayBuffer = await convertFileToArrayBuffer(file);
 			await audioSample.load(arrayBuffer);
@@ -171,7 +174,7 @@ export default function createAudioMiddleware() {
 			api.unsubscribe();
 			const { songFilename, offset } = action.payload;
 			if (songFilename) {
-				const file = await getFile<Blob>(songFilename);
+				const file = await filestore.loadFile<Blob>(songFilename);
 				if (!file) return;
 				const arrayBuffer = await convertFileToArrayBuffer(file);
 				await audioSample.load(arrayBuffer);

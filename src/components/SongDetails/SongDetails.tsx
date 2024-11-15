@@ -5,8 +5,8 @@ import styled from "styled-components";
 import { COLORS, ENVIRONMENT_DISPLAY_MAP, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
 import { sortDifficultyIds } from "$/helpers/song.helpers";
 import { useMount } from "$/hooks";
-import { getFile, saveInfoDat, saveLocalCoverArtFile, saveSongFile } from "$/services/file.service";
 import { createInfoContent } from "$/services/packaging.service";
+import { filestore } from "$/setup";
 import { stopPlaying, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { getEnabledFastWalls, getEnabledLightshow, getSelectedSong } from "$/store/selectors";
@@ -60,13 +60,13 @@ const SongDetails = () => {
 		dispatch(stopPlaying({ offset: song.offset }));
 
 		if (song.songFilename) {
-			getFile<File>(song.songFilename).then((initialSongFile) => {
+			filestore.loadFile<File>(song.songFilename).then((initialSongFile) => {
 				setSongFile(initialSongFile);
 			});
 		}
 
 		if (song.coverArtFilename) {
-			getFile<File>(song.coverArtFilename).then((initialSongFile) => {
+			filestore.loadFile<File>(song.coverArtFilename).then((initialSongFile) => {
 				setCoverArtFile(initialSongFile);
 			});
 		}
@@ -94,13 +94,13 @@ const SongDetails = () => {
 		const shouldSaveCoverArt = coverArtFile?.name;
 
 		if (shouldSaveCoverArt) {
-			const [coverArtFilename] = await saveLocalCoverArtFile(song.id, coverArtFile);
+			const { filename: coverArtFilename } = await filestore.saveCoverFile(song.id, coverArtFile);
 
 			newSongObject.coverArtFilename = coverArtFilename;
 		}
 
 		if (songFile) {
-			const [songFilename] = await saveSongFile(song.id, songFile);
+			const { filename: songFilename } = await filestore.saveSongFile(song.id, songFile);
 
 			newSongObject.songFilename = songFilename;
 		}
@@ -109,12 +109,7 @@ const SongDetails = () => {
 		dispatch(updateSongDetails({ songId: song.id, songData: newSongObject }));
 
 		// Back up our latest data!
-		await saveInfoDat(
-			song.id,
-			createInfoContent(newSongObject, {
-				version: 2,
-			}),
-		);
+		await filestore.saveInfoFile(song.id, createInfoContent(newSongObject, { version: 2 }));
 
 		setIsDirty(false);
 

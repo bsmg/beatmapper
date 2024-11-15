@@ -1,6 +1,7 @@
 import { createStateSyncMiddleware } from "redux-state-sync";
 import { SAVE, type StorageEngine, createMiddleware as createStorageMiddleware } from "redux-storage";
 
+import type { BeatmapFilestore } from "$/services/file.service";
 import { downloadMapFiles, pausePlaying, startPlaying, stopPlaying, togglePlaying } from "$/store/actions";
 import type { createAutosaveWorker } from "$/workers";
 
@@ -13,20 +14,21 @@ import createPackagingMiddleware from "./packaging.middleware";
 import createSelectionMiddleware from "./selection.middleware";
 
 interface Options {
+	filestore: BeatmapFilestore;
 	autosaveWorker: ReturnType<typeof createAutosaveWorker>;
 	reduxStorageEngine: StorageEngine;
 }
-export function createAllSharedMiddleware({ autosaveWorker, reduxStorageEngine: engine }: Options) {
+export function createAllSharedMiddleware({ filestore, autosaveWorker, reduxStorageEngine: engine }: Options) {
 	const stateSyncMiddleware = createStateSyncMiddleware({
 		// We don't need to save in other tabs
 		blacklist: [SAVE, startPlaying.type, pausePlaying.type, stopPlaying.type, togglePlaying.type, downloadMapFiles.type],
 	});
 
-	const audioMiddleware = createAudioMiddleware();
-	const fileMiddleware = createFileMiddleware();
+	const audioMiddleware = createAudioMiddleware({ filestore });
+	const fileMiddleware = createFileMiddleware({ filestore });
 	const selectionMiddleware = createSelectionMiddleware();
-	const downloadMiddleware = createPackagingMiddleware();
-	const backupMiddleware = createBackupMiddleware({ worker: autosaveWorker });
+	const downloadMiddleware = createPackagingMiddleware({ filestore });
+	const backupMiddleware = createBackupMiddleware({ filestore, worker: autosaveWorker });
 	const demoMiddleware = createDemoMiddleware();
 	const historyMiddleware = createHistoryMiddleware();
 	const storageMiddleware = createStorageMiddleware(engine);

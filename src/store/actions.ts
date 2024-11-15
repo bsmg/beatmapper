@@ -372,7 +372,7 @@ export const undoEvents = createAction("UNDO_EVENTS");
 
 export const redoEvents = createAction("REDO_EVENTS");
 
-export const deleteSong = createAction("DELETE_SONG", (args: { songId: SongId }) => {
+export const deleteSong = createAction("DELETE_SONG", (args: Pick<App.Song, "id" | "difficultiesById" | "songFilename" | "coverArtFilename">) => {
 	return { payload: { ...args } };
 });
 
