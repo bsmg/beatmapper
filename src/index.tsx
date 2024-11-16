@@ -8,7 +8,7 @@ import { createAppStore } from "./store/setup";
 
 import App from "./components/App";
 
-const store = createAppStore();
+const store = await createAppStore();
 
 const root = document.getElementById("root");
 if (!root) throw new Error("No root element.");

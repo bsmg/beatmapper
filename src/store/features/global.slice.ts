@@ -1,6 +1,6 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
-import { loadSnapshot } from "$/store/actions";
+import { finishInitializing } from "$/store/actions";
 
 const initialState = {
 	hasInitialized: false,
@@ -14,7 +14,7 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addMatcher(isAnyOf(loadSnapshot), (state) => {
+		builder.addCase(finishInitializing, (state) => {
 			return { ...state, hasInitialized: true };
 		});
 		builder.addDefaultCase((state) => state);

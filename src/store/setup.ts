@@ -5,7 +5,7 @@ import { type LegacyStorageSchema, createDriver } from "$/services/storage.servi
 import { autosaveWorker, filestore } from "$/setup";
 import type { App, SongId } from "$/types";
 
-import { loadSnapshot, moveMouseAcrossEventsGrid, tick } from "./actions";
+import { finishInitializing, loadSnapshot, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
 import { selectSnapshot } from "./helpers";
 import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
@@ -48,7 +48,7 @@ const driver = createDriver<LegacyStorageSchema>({
 	},
 });
 
-export function createAppStore() {
+export async function createAppStore() {
 	const middleware = createAllSharedMiddleware({
 		filestore: filestore,
 		autosaveWorker: autosaveWorker,
@@ -61,10 +61,12 @@ export function createAppStore() {
 			"redux-state": {
 				selector: selectSnapshot,
 				condition: import.meta.env.PROD,
+				asRaw: true,
 			},
 			"redux-state-dev": {
 				selector: selectSnapshot,
 				condition: import.meta.env.DEV,
+				asRaw: true,
 			},
 		},
 	});
@@ -80,10 +82,15 @@ export function createAppStore() {
 		enhancers: (native) => native(),
 	});
 
-	store.dispatch(loadSnapshot());
+	await Promise.all([
+		store.dispatch(loadSnapshot()),
+		//
+	]).then(() => {
+		store.dispatch(finishInitializing());
+	});
 
 	return store;
 }
 
 export type RootState = ReturnType<typeof root.reducer>;
-export type AppDispatch = ReturnType<typeof createAppStore>["dispatch"];
+export type AppDispatch = Awaited<ReturnType<typeof createAppStore>>["dispatch"];
