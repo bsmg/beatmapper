@@ -1,7 +1,8 @@
-import { type Middleware, createAction, isAction } from "@reduxjs/toolkit";
+import { type EntityId, type Middleware, createAction, isAction } from "@reduxjs/toolkit";
 import type { Storage, StorageValue } from "unstorage";
 
-import { isStrictlyEqual } from "$/utils";
+import type { MaybeDefined } from "$/types";
+import { isStrictlyEqual, uniq } from "$/utils";
 
 // the common architecture other packages use for persisting redux state is to clone the entire state object into storage and then hydrate the redux store all at once.
 // this is a really bad means of persistence for many reasons:
@@ -123,6 +124,113 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 				).then(({ key, value }) => {
 					// if there was a change, dispatch a save action with the updated field
 					if (key) dispatch(save({ key, value: value ?? null }));
+				});
+			}
+		};
+	};
+}
+
+// for entities, we don't know what the keys are ahead of time since they are dynamically referenced in state, so we need to make some adjustments to the logic:
+
+interface EntityStorageObserver<T extends StorageValue, State> extends Omit<StorageObserver<T, State>, "selector"> {
+	/** The key selector (selectIds). Used to generate the keys on initialization and observe for new entries to add on hydration. */
+	keys: (state: State) => string[];
+	/** The entity selector (selectById). */
+	selector: (state: State, key: string) => T;
+}
+
+export function createEntityStorageActions<T, K extends EntityId>(namespace: string) {
+	return {
+		/** Runs when all hydrations are complete. */
+		load: createAction(`@@STORAGE/LOAD/${namespace}`),
+		/** Runs when an observed state is updated. */
+		save: createAction(`@@STORAGE/SAVE/${namespace}`, (payload: { key: K; value: T | null }) => {
+			return { payload: payload };
+		}),
+		/** Applies a persisted value into the state. Returns the entry from the storage. */
+		hydrate: createAction(`@@STORAGE/HYDRATE/${namespace}`, (payload: Record<K, T>) => {
+			return { payload: payload };
+		}),
+	};
+}
+
+interface EntityStorageMiddlewareOptions<T extends StorageValue, State> extends Omit<StorageMiddlewareOptions<State>, "observers"> {
+	/** The entity observer. Uses selectors to dynamically define key-value pairs based on an entity state. Pairs nicely with RTK's entity adapters */
+	observer: EntityStorageObserver<T, State>;
+}
+export function createEntityStorageMiddleware<T extends StorageValue, State>({ namespace, observer, storage }: EntityStorageMiddlewareOptions<T, State>): Middleware {
+	const { load, save, hydrate } = createEntityStorageActions<T, EntityId>(namespace);
+	let processing = false;
+	return ({ dispatch, getState }) => {
+		return (next) => async (action) => {
+			const state = getState();
+			// we don't want to be observing changes until the state is initialized
+			if (processing) {
+				return next(action);
+			}
+
+			if (load.match(action)) {
+				processing = true;
+				// we don't know the keys ahead of time, but we'll process the ones we already have
+				const keys = await storage.getKeys();
+				return Promise.all(
+					keys.map(async (key) => {
+						const { condition: enabled, selector, asRaw } = observer;
+						// if the observer is not enabled, abort early
+						if (enabled === false) return;
+						const value = (asRaw ? await storage.getItemRaw(key) : await storage.getItem(key)) ?? selector(state, key);
+						// if the value doesn't exist, it was probably already removed, so we can clear it now
+						if (value === undefined) await storage.removeItem(key);
+						// dispatch a hydrate action with the injected value
+						return dispatch(hydrate({ [key]: value }));
+					}),
+				).then((dispatched) => {
+					processing = false;
+					// don't dispatch the load action if nothing was actually loaded
+					if (!dispatched) return;
+					// once all processing is complete, dispatch the load action to trigger side-effects
+					return next(action);
+				});
+			}
+
+			// if we're saving, we don't want to cascade updates in other storage middleware
+			// this only really applies when we have two observers watching the same state
+			if (isAction(action) && action.type.startsWith("@@STORAGE/HYDRATE")) {
+				return next(action);
+			}
+
+			next(action);
+			const nextState = getState();
+			// if the two states aren't equal, time to figure out what changed
+			if (!isStrictlyEqual(nextState, state)) {
+				// we need to reference old keys in order to remove storage entries for removed entities
+				const allKeys = uniq([...observer.keys(nextState), ...observer.keys(state)]);
+				return Promise.resolve(
+					Object.values(allKeys).reduce(
+						(acc: { key: EntityId | undefined; value: T | undefined }, key) => {
+							const { condition: enabled, selector, asRaw } = observer;
+							// if the observer is not enabled, abort early
+							if (enabled === false) return acc;
+							const value = selector(nextState, key);
+							// only save if the observed state changes
+							if (isStrictlyEqual(value, selector(state, key))) return acc;
+							// if the value doesn't exist, clear it from storage
+							if (value === undefined) {
+								storage.removeItem(key.toString());
+								return { key, value: undefined };
+							}
+							if (asRaw) {
+								storage.setItemRaw<T>(key, value as MaybeDefined<T>);
+							} else {
+								storage.setItem<T>(key, value);
+							}
+							return { key, value };
+						},
+						{ key: undefined, value: undefined },
+					),
+				).then(({ key, value }) => {
+					// if there was a change, dispatch a save action with the updated field
+					if (key) dispatch(save({ key: key, value: value ?? null }));
 				});
 			}
 		};

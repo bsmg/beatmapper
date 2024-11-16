@@ -2,9 +2,7 @@ import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
 import { resolveExtension } from "$/helpers/file.helpers";
-import type { BeatmapId, Json, SongId } from "$/types";
-
-type MaybeDefined<T> = T extends any ? T : any;
+import type { BeatmapId, Json, MaybeDefined, SongId } from "$/types";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
