@@ -1,6 +1,7 @@
 import { type EntityId, type Middleware, createAction, isAction } from "@reduxjs/toolkit";
 import type { Storage, StorageValue } from "unstorage";
 
+import { rehydrate } from "$/store/actions";
 import type { MaybeDefined } from "$/types";
 import { isStrictlyEqual, uniq } from "$/utils";
 
@@ -61,6 +62,10 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 			// we don't want to be observing changes until the state is initialized
 			if (processing) {
 				return next(action);
+			}
+
+			if (rehydrate.match(action)) {
+				dispatch(load());
 			}
 
 			if (load.match(action)) {
