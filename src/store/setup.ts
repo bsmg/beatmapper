@@ -5,17 +5,15 @@ import { type LegacyStorageSchema, createDriver } from "$/services/storage.servi
 import { autosaveWorker, filestore } from "$/setup";
 import type { App, SongId } from "$/types";
 
-import { finishInitializing, loadSnapshot, moveMouseAcrossEventsGrid, tick } from "./actions";
+import { init, loadSnapshot, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
-import { selectSnapshot } from "./helpers";
+import { type Snapshot, selectSnapshot } from "./helpers";
 import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
 
-export const STORAGE_KEY = import.meta.env.DEV ? "redux-state-dev" : "redux-state";
-
-type Snapshot = ReturnType<typeof selectSnapshot>;
+export const SNAPSHOT_KEY = import.meta.env.DEV ? "redux-state-dev" : "redux-state";
 
 export type SnapshotStorageObservers = {
-	[Key in "redux-state-dev" | "redux-state"]: StorageObserver<Snapshot, RootState>;
+	[Key in "redux-state-dev" | "redux-state"]: StorageObserver<RootState, Snapshot>;
 };
 
 const driver = createDriver<LegacyStorageSchema>({
@@ -43,7 +41,7 @@ const driver = createDriver<LegacyStorageSchema>({
 				);
 				return { ...snapshot, songs: { byId: allSongs } };
 			}
-			await idb.update("keyvaluepairs", STORAGE_KEY, (value) => rewrite(value), tx);
+			await idb.update("keyvaluepairs", SNAPSHOT_KEY, (value) => rewrite(value), tx);
 		}
 	},
 });
@@ -54,7 +52,7 @@ export async function createAppStore() {
 		autosaveWorker: autosaveWorker,
 	});
 
-	const snapshotStorageMiddleware = createStorageMiddleware<RootState, SnapshotStorageObservers>({
+	const snapshotMiddleware = createStorageMiddleware<RootState, SnapshotStorageObservers>({
 		namespace: "snapshot",
 		storage: createStorage({ driver: driver({ name: "keyvaluepairs" }) }),
 		observers: {
@@ -78,7 +76,7 @@ export async function createAppStore() {
 	const store = configureStore({
 		reducer: root.reducer,
 		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
-		middleware: (native) => native({ serializableCheck: false, immutableCheck: false }).concat(...middleware, snapshotStorageMiddleware),
+		middleware: (native) => native({ serializableCheck: false, immutableCheck: false }).concat(...middleware, snapshotMiddleware),
 		enhancers: (native) => native(),
 	});
 
@@ -86,7 +84,7 @@ export async function createAppStore() {
 		store.dispatch(loadSnapshot()),
 		//
 	]).then(() => {
-		store.dispatch(finishInitializing());
+		store.dispatch(init());
 	});
 
 	return store;

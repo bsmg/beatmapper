@@ -29,7 +29,7 @@ import {
 	updateSongDetails,
 	updateVolume,
 } from "$/store/actions";
-import { STORAGE_KEY } from "../setup";
+import { SNAPSHOT_KEY } from "../setup";
 
 const initialState = {
 	isLoading: false,
@@ -64,7 +64,7 @@ const slice = createSlice({
 	reducers: {},
 	extraReducers: (builder) => {
 		builder.addCase(hydrateSnapshot, (state, action) => {
-			const hydrated = action.payload[STORAGE_KEY]?.navigation ?? state;
+			const hydrated = action.payload[SNAPSHOT_KEY]?.navigation ?? state;
 			return { ...state, ...hydrated };
 		});
 		builder.addCase(startLoadingSong, (state) => {

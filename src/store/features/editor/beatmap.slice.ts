@@ -2,7 +2,7 @@ import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { NOTE_TOOLS } from "$/constants";
 import { deleteGridPreset, finishManagingNoteSelection, hydrateSnapshot, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
-import { STORAGE_KEY } from "$/store/setup";
+import { SNAPSHOT_KEY } from "$/store/setup";
 import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
 
 const initialState = {
@@ -26,7 +26,7 @@ const slice = createSlice({
 	reducers: {},
 	extraReducers: (builder) => {
 		builder.addCase(hydrateSnapshot, (state, action) => {
-			const hydrated = action.payload[STORAGE_KEY]?.editor.notes ?? state;
+			const hydrated = action.payload[SNAPSHOT_KEY]?.editor.notes ?? state;
 			return { ...state, ...hydrated };
 		});
 		builder.addCase(selectNoteDirection, (state, action) => {

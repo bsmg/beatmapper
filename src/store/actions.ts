@@ -28,10 +28,11 @@ import {
 } from "./selectors";
 import type { RootState, SnapshotStorageObservers } from "./setup";
 
+export const init = createAction("@@APP/INIT");
+
 export const { load: loadSnapshot, save: saveSnapshot, hydrate: hydrateSnapshot } = createStorageActions<RootState, SnapshotStorageObservers>("snapshot");
 
 export const rehydrate = createAction("@@STORAGE/REHYDRATE");
-export const finishInitializing = createAction("@@INIT/FINISH");
 
 export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 

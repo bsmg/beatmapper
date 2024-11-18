@@ -53,6 +53,11 @@ export default defineConfig((ctx) => {
 		build: {
 			commonjsOptions: { transformMixedEsModules: true }, // Change
 		},
+		esbuild: {
+			supported: {
+				"top-level-await": true,
+			},
+		},
 		optimizeDeps: {
 			esbuildOptions: {
 				loader: {

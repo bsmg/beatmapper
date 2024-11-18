@@ -2,6 +2,8 @@ import { pick } from "$/utils";
 import type { StateWithHistory } from "redux-undo";
 import type { RootState } from "./setup";
 
+export type Snapshot = ReturnType<typeof selectSnapshot>;
+
 export function selectSnapshot<T extends RootState>(state: T) {
 	return {
 		user: state.user,

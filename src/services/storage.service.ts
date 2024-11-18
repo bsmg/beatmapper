@@ -61,7 +61,7 @@ export class IDB<S extends DBSchema> {
 	}
 
 	async keys(store: StoreNames<S>, transaction?: IDBPReadableTransaction<S>) {
-		if (!(await this.hasStore(store, transaction))) return;
+		if (!(await this.hasStore(store, transaction))) return [];
 		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readonly").objectStore(store);
 		return tx.getAllKeys();
 	}
@@ -77,23 +77,19 @@ export class IDB<S extends DBSchema> {
 		return tx.get(key);
 	}
 	async set(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, value: StoreValue<S, StoreNames<S>>, transaction?: IDBPWritableTransaction<S>) {
-		if (!(await this.hasStore(store, transaction))) return;
 		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
 		return tx.put(value, key);
 	}
 	async delete(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, transaction?: IDBPWritableTransaction<S>) {
-		if (!(await this.hasStore(store, transaction))) return;
 		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
 		return tx.delete(key);
 	}
 	async clear(store: StoreNames<S>, transaction?: IDBPWritableTransaction<S>) {
-		if (!(await this.hasStore(store, transaction))) return;
 		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
 		return tx.clear();
 	}
 
 	async update<T extends StoreValue<S, StoreNames<S>>, R extends StoreValue<S, StoreNames<S>> = StoreValue<S, StoreNames<S>>>(store: StoreNames<S>, key: StoreKey<S, StoreNames<S>>, updater: (value: T) => R, transaction?: IDBPWritableTransaction<S>) {
-		if (!(await this.hasStore(store, transaction))) return;
 		const tx = transaction?.objectStore(store) ?? (await this.instance).transaction(store, "readwrite").objectStore(store);
 		const current = await tx.get(key);
 		if (!current) return undefined;

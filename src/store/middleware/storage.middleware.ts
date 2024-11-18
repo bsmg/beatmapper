@@ -1,4 +1,4 @@
-import { type EntityId, type Middleware, createAction, isAction } from "@reduxjs/toolkit";
+import { type Middleware, createAction, isAction } from "@reduxjs/toolkit";
 import type { Storage, StorageValue } from "unstorage";
 
 import { rehydrate } from "$/store/actions";
@@ -19,7 +19,10 @@ import { isStrictlyEqual, uniq } from "$/utils";
 // the only downside: we need to define a dedicated case reducer to hydrate values for each slice.
 // bit annoying, but this ensures we have more control for how we want to plug state back into the app, which imo is a fair tradeoff.
 
-export interface StorageObserver<T extends StorageValue, State> {
+// TODO: this could probably be rewritten in the future with better abstractions for common logic and rely more heavily on thunk and listener middleware capabilities.
+// unfortunately i can't be bothered with it right now :)
+
+export interface StorageObserver<State, T extends StorageValue = StorageValue> {
 	/** The state to listen for. */
 	selector: (state: State) => T;
 	/** Allows you to control whether this observer is active. */
@@ -28,7 +31,7 @@ export interface StorageObserver<T extends StorageValue, State> {
 	asRaw?: boolean;
 }
 
-export type StorageObserverMap<State> = Record<string, StorageObserver<StorageValue, State>>;
+export type StorageObserverMap<State> = Record<string, StorageObserver<State, StorageValue>>;
 
 export function createStorageActions<State, T extends StorageObserverMap<State> = StorageObserverMap<State>>(namespace: string) {
 	return {
@@ -78,9 +81,14 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 						const value = (asRaw ? await storage.getItemRaw(key) : await storage.getItem(key)) ?? selector(state);
 						// if the entry doesn't exist, autogenerate it from the initialized state
 						if (!(await storage.hasItem(key))) {
-							if (asRaw) await storage.setItemRaw(key, value);
-							await storage.setItem(key, value);
+							if (asRaw) {
+								await storage.setItemRaw(key, value);
+							} else {
+								await storage.setItem(key, value);
+							}
 						}
+						// if the value in storage matches the selected state, we can skip hydration since the value will remain the same anyways
+						if (isStrictlyEqual(value, selector(state))) return;
 						// dispatch a hydrate action with the injected value
 						return dispatch(hydrate({ [key]: value }));
 					}),
@@ -137,34 +145,34 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 
 // for entities, we don't know what the keys are ahead of time since they are dynamically referenced in state, so we need to make some adjustments to the logic:
 
-interface EntityStorageObserver<T extends StorageValue, State> extends Omit<StorageObserver<T, State>, "selector"> {
+interface EntityStorageObserver<State, T extends StorageValue = StorageValue> extends Omit<StorageObserver<State, T>, "selector"> {
 	/** The key selector (selectIds). Used to generate the keys on initialization and observe for new entries to add on hydration. */
 	keys: (state: State) => string[];
 	/** The entity selector (selectById). */
 	selector: (state: State, key: string) => T;
 }
 
-export function createEntityStorageActions<T, K extends EntityId>(namespace: string) {
+export function createEntityStorageActions<T extends StorageValue = StorageValue>(namespace: string) {
 	return {
 		/** Runs when all hydrations are complete. */
 		load: createAction(`@@STORAGE/LOAD/${namespace}`),
 		/** Runs when an observed state is updated. */
-		save: createAction(`@@STORAGE/SAVE/${namespace}`, (payload: { key: K; value: T | null }) => {
+		save: createAction(`@@STORAGE/SAVE/${namespace}`, (payload: { key: string; value: T | null }) => {
 			return { payload: payload };
 		}),
 		/** Applies a persisted value into the state. Returns the entry from the storage. */
-		hydrate: createAction(`@@STORAGE/HYDRATE/${namespace}`, (payload: Record<K, T>) => {
+		hydrate: createAction(`@@STORAGE/HYDRATE/${namespace}`, (payload: Record<string, T>) => {
 			return { payload: payload };
 		}),
 	};
 }
 
-interface EntityStorageMiddlewareOptions<T extends StorageValue, State> extends Omit<StorageMiddlewareOptions<State>, "observers"> {
+interface EntityStorageMiddlewareOptions<State, T extends StorageValue = StorageValue> extends Omit<StorageMiddlewareOptions<State>, "observers"> {
 	/** The entity observer. Uses selectors to dynamically define key-value pairs based on an entity state. Pairs nicely with RTK's entity adapters */
-	observer: EntityStorageObserver<T, State>;
+	observer: EntityStorageObserver<State, T>;
 }
-export function createEntityStorageMiddleware<T extends StorageValue, State>({ namespace, observer, storage }: EntityStorageMiddlewareOptions<T, State>): Middleware {
-	const { load, save, hydrate } = createEntityStorageActions<T, EntityId>(namespace);
+export function createEntityStorageMiddleware<State, T extends StorageValue = StorageValue>({ namespace, observer, storage }: EntityStorageMiddlewareOptions<State, T>): Middleware {
+	const { load, save, hydrate } = createEntityStorageActions<T>(namespace);
 	let processing = false;
 	return ({ dispatch, getState }) => {
 		return (next) => async (action) => {
@@ -172,6 +180,10 @@ export function createEntityStorageMiddleware<T extends StorageValue, State>({ n
 			// we don't want to be observing changes until the state is initialized
 			if (processing) {
 				return next(action);
+			}
+
+			if (rehydrate.match(action)) {
+				dispatch(load());
 			}
 
 			if (load.match(action)) {
@@ -186,6 +198,8 @@ export function createEntityStorageMiddleware<T extends StorageValue, State>({ n
 						const value = (asRaw ? await storage.getItemRaw(key) : await storage.getItem(key)) ?? selector(state, key);
 						// if the value doesn't exist, it was probably already removed, so we can clear it now
 						if (value === undefined) await storage.removeItem(key);
+						// if the value in storage matches the selected state, we can skip hydration since the value will remain the same anyways
+						if (isStrictlyEqual(value, selector(state, key))) return;
 						// dispatch a hydrate action with the injected value
 						return dispatch(hydrate({ [key]: value }));
 					}),
@@ -200,7 +214,7 @@ export function createEntityStorageMiddleware<T extends StorageValue, State>({ n
 
 			// if we're saving, we don't want to cascade updates in other storage middleware
 			// this only really applies when we have two observers watching the same state
-			if (isAction(action) && action.type.startsWith("@@STORAGE/HYDRATE")) {
+			if (isAction(action) && action.type.startsWith("@@STORAGE")) {
 				return next(action);
 			}
 
@@ -212,7 +226,7 @@ export function createEntityStorageMiddleware<T extends StorageValue, State>({ n
 				const allKeys = uniq([...observer.keys(nextState), ...observer.keys(state)]);
 				return Promise.resolve(
 					Object.values(allKeys).reduce(
-						(acc: { key: EntityId | undefined; value: T | undefined }, key) => {
+						(acc: { key: string | undefined; value: T | undefined }, key) => {
 							const { condition: enabled, selector, asRaw } = observer;
 							// if the observer is not enabled, abort early
 							if (enabled === false) return acc;
