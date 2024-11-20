@@ -1,8 +1,7 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { NOTE_TOOLS } from "$/constants";
-import { deleteGridPreset, finishManagingNoteSelection, hydrateSnapshot, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
-import { SNAPSHOT_KEY } from "$/store/setup";
+import { deleteGridPreset, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
 import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
 
 const initialState = {
@@ -22,12 +21,20 @@ const slice = createSlice({
 		getNoteSelectionMode: (state) => state.selectionMode,
 		getDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
 		getGridPresets: (state) => state.gridPresets,
+		getAllGridPresetIds: (state) => Object.keys(state.gridPresets),
+		getGridPresetById: (state, id: string) => state.gridPresets[id],
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSnapshot, (state, action) => {
-			const hydrated = action.payload[SNAPSHOT_KEY]?.editor.notes ?? state;
-			return { ...state, ...hydrated };
+		builder.addCase(hydrateSession, (state, action) => {
+			const { "notes.tool": selectedTool, "notes.direction": selectedDirection, "notes.duration": defaultObstacleDuration } = action.payload;
+			if (selectedTool !== undefined) state.selectedTool = Object.values(ObjectTool)[selectedTool];
+			if (selectedDirection !== undefined) state.selectedDirection = selectedDirection;
+			if (defaultObstacleDuration !== undefined) state.defaultObstacleDuration = defaultObstacleDuration;
+		});
+		builder.addCase(hydrateGridPresets, (state, action) => {
+			const gridPresets = action.payload;
+			return { ...state, gridPresets: { ...state.gridPresets, ...gridPresets } };
 		});
 		builder.addCase(selectNoteDirection, (state, action) => {
 			const { direction } = action.payload;

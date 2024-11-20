@@ -2,7 +2,7 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
 import type { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContentsFromState } from "$/services/packaging.service";
-import { saveSnapshot } from "$/store/actions";
+import { saveSongs } from "$/store/actions";
 import { getDifficulty, getSelectedSong } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { createAutosaveWorker } from "$/workers";
@@ -15,7 +15,7 @@ export default function createBackupMiddleware({ filestore, worker }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
-		matcher: isAnyOf(saveSnapshot),
+		matcher: isAnyOf(saveSongs),
 		effect: (_, api) => {
 			const state = api.getState();
 			// For reasons unknown to me, sometimes while on localhost the instance isn't created properly, and lacks a 'save' method. :/

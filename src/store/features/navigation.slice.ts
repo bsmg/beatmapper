@@ -6,7 +6,7 @@ import {
 	changeSnapping,
 	decrementSnapping,
 	finishLoadingSong,
-	hydrateSnapshot,
+	hydrateSession,
 	incrementSnapping,
 	jumpToBeat,
 	leaveEditor,
@@ -29,7 +29,6 @@ import {
 	updateSongDetails,
 	updateVolume,
 } from "$/store/actions";
-import { SNAPSHOT_KEY } from "../setup";
 
 const initialState = {
 	isLoading: false,
@@ -63,9 +62,13 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSnapshot, (state, action) => {
-			const hydrated = action.payload[SNAPSHOT_KEY]?.navigation ?? state;
-			return { ...state, ...hydrated };
+		builder.addCase(hydrateSession, (state, action) => {
+			const { "track.snap": snapTo, "track.spacing": beatDepth, "playback.rate": playbackRate, "playback.volume": volume, "playback.tick": playNoteTick } = action.payload;
+			if (snapTo !== undefined) state.snapTo = snapTo;
+			if (beatDepth !== undefined) state.beatDepth = beatDepth;
+			if (playbackRate !== undefined) state.playbackRate = playbackRate;
+			if (volume !== undefined) state.volume = volume;
+			if (playNoteTick !== undefined) state.playNoteTick = playNoteTick;
 		});
 		builder.addCase(startLoadingSong, (state) => {
 			return { ...state, isLoading: true };

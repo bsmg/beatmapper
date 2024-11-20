@@ -11,7 +11,7 @@ import {
 	deleteBeatmap,
 	deleteSong,
 	finishLoadingSong,
-	hydrateSnapshot,
+	hydrateSongs,
 	importExistingSong,
 	leaveEditor,
 	loadGridPreset,
@@ -27,7 +27,6 @@ import {
 	updateSongDetails,
 } from "$/store/actions";
 import { type App, type Difficulty, Environment, ObjectPlacementMode, type SongId } from "$/types";
-import { SNAPSHOT_KEY } from "../setup";
 
 const initialState = {
 	byId: {} as Record<SongId, App.Song>,
@@ -101,8 +100,8 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSnapshot, (state, action) => {
-			const byId = action.payload[SNAPSHOT_KEY]?.songs.byId ?? state.byId;
+		builder.addCase(hydrateSongs, (state, action) => {
+			const byId = action.payload;
 			return { ...state, byId: { ...state.byId, ...byId } };
 		});
 		builder.addCase(startLoadingSong, (state, action) => {

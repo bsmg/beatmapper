@@ -7,6 +7,7 @@ import type { BeatmapFilestore } from "$/services/file.service";
 import { Sfx } from "$/services/sfx.service";
 import {
 	adjustCursorPosition,
+	hydrateSession,
 	jumpToBeat,
 	leaveEditor,
 	pausePlaying,
@@ -79,6 +80,16 @@ export default function createAudioMiddleware({ filestore }: Options) {
 
 	const instance = createListenerMiddleware<RootState>();
 
+	instance.startListening({
+		actionCreator: hydrateSession,
+		effect: async (action, api) => {
+			api.unsubscribe();
+			const { "playback.rate": playbackRate, "playback.volume": volume } = action.payload;
+			if (volume !== undefined) audioSample.changeVolume(volume);
+			if (playbackRate !== undefined) audioSample.changePlaybackRate(playbackRate);
+			api.subscribe();
+		},
+	});
 	instance.startListening({
 		actionCreator: startLoadingSong,
 		effect: async (action, api) => {

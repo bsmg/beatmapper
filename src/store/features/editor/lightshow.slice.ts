@@ -5,7 +5,7 @@ import {
 	clearSelectionBox,
 	commitSelection,
 	drawSelectionBox,
-	hydrateSnapshot,
+	hydrateSession,
 	moveMouseAcrossEventsGrid,
 	selectColor,
 	selectEventEditMode,
@@ -20,8 +20,7 @@ import {
 	zoomIn,
 	zoomOut,
 } from "$/store/actions";
-import { SNAPSHOT_KEY } from "$/store/setup";
-import { type EventTool, type ISelectionBox, View } from "$/types";
+import { EventColor, EventEditMode, EventTool, type ISelectionBox, View } from "$/types";
 
 const initialState = {
 	zoomLevel: 2,
@@ -56,9 +55,27 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSnapshot, (state, action) => {
-			const hydrated = action.payload[SNAPSHOT_KEY]?.editor.events ?? state;
-			return { ...state, ...hydrated };
+		builder.addCase(hydrateSession, (state, action) => {
+			const {
+				"events.mode": selectedEditMode,
+				"events.tool": selectedTool,
+				"events.color": selectedColor,
+				"events.zoom": zoomLevel,
+				"events.preview": showLightingPreview,
+				"events.opacity": backgroundOpacity,
+				"events.height": rowHeight,
+				"events.loop": isLockedToCurrentWindow,
+				"events.mirror": areLasersLocked,
+			} = action.payload;
+			if (selectedEditMode !== undefined) state.selectedEditMode = Object.values(EventEditMode)[selectedEditMode];
+			if (selectedTool !== undefined) state.selectedTool = Object.values(EventTool)[selectedTool];
+			if (selectedColor !== undefined) state.selectedColor = Object.values(EventColor)[selectedColor];
+			if (zoomLevel !== undefined) state.zoomLevel = zoomLevel;
+			if (showLightingPreview !== undefined) state.showLightingPreview = showLightingPreview;
+			if (backgroundOpacity !== undefined) state.backgroundOpacity = backgroundOpacity;
+			if (rowHeight !== undefined) state.rowHeight = rowHeight;
+			if (isLockedToCurrentWindow !== undefined) state.isLockedToCurrentWindow = isLockedToCurrentWindow;
+			if (areLasersLocked !== undefined) state.areLasersLocked = areLasersLocked;
 		});
 		builder.addCase(moveMouseAcrossEventsGrid, (state, action) => {
 			const { selectedBeat } = action.payload;

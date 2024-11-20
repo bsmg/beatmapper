@@ -1,5 +1,6 @@
-import { pick } from "$/utils";
 import type { StateWithHistory } from "redux-undo";
+
+import { pick } from "$/utils";
 import type { RootState } from "./setup";
 
 export type Snapshot = ReturnType<typeof selectSnapshot>;
