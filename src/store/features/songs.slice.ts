@@ -11,6 +11,7 @@ import {
 	deleteBeatmap,
 	deleteSong,
 	finishLoadingSong,
+	hydrateSongs,
 	importExistingSong,
 	leaveEditor,
 	loadGridPreset,
@@ -99,6 +100,10 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
+		builder.addCase(hydrateSongs, (state, action) => {
+			const byId = action.payload;
+			return { ...state, byId: { ...state.byId, ...byId } };
+		});
 		builder.addCase(startLoadingSong, (state, action) => {
 			const { songId, difficulty } = action.payload;
 			state.selectedId = songId;
@@ -223,7 +228,7 @@ const slice = createSlice({
 			currentBeatmapDifficulty.customLabel = customLabel;
 		});
 		builder.addCase(deleteSong, (state, action) => {
-			const { songId } = action.payload;
+			const { id: songId } = action.payload;
 			delete state.byId[songId];
 		});
 		builder.addCase(toggleModForSong, (state, action) => {

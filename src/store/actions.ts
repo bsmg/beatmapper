@@ -4,8 +4,9 @@ import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
-import { type App, type BeatmapId, type Direction, type EventColor, type EventEditMode, type EventTool, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Json, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
+import { type App, type BeatmapId, type Direction, type EventColor, type EventEditMode, type EventTool, type GridPresets, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Json, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
+import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
 	getAllEventsAsArray,
 	getCopiedData,
@@ -25,7 +26,16 @@ import {
 	getStartAndEndBeat,
 	getStickyMapAuthorName,
 } from "./selectors";
-import type { RootState } from "./setup";
+import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
+
+export const init = createAction("@@APP/INIT");
+
+export const { load: loadUser, save: saveUser, hydrate: hydrateUser } = createStorageActions<RootState, UserStorageObservers>("user");
+export const { load: loadSession, save: saveSession, hydrate: hydrateSession } = createStorageActions<RootState, SessionStorageObservers>("session");
+export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = createEntityStorageActions<App.Song>("songs");
+export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGridPresets } = createEntityStorageActions<Member<GridPresets>>("grids");
+
+export const rehydrate = createAction("@@STORAGE/REHYDRATE");
 
 export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 
@@ -372,7 +382,7 @@ export const undoEvents = createAction("UNDO_EVENTS");
 
 export const redoEvents = createAction("REDO_EVENTS");
 
-export const deleteSong = createAction("DELETE_SONG", (args: { songId: SongId }) => {
+export const deleteSong = createAction("DELETE_SONG", (args: Pick<App.Song, "id" | "difficultiesById" | "songFilename" | "coverArtFilename">) => {
 	return { payload: { ...args } };
 });
 

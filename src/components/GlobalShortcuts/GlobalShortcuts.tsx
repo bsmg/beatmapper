@@ -19,6 +19,7 @@ import {
 	pasteSelection,
 	redoEvents,
 	redoNotes,
+	rehydrate,
 	scrollThroughSong,
 	seekBackwards,
 	seekForwards,
@@ -88,6 +89,14 @@ const GlobalShortcuts = ({ view }: Props) => {
 		}
 
 		switch (ev.code) {
+			case "F5": {
+				if (!ev.shiftKey) {
+					ev.preventDefault();
+					return;
+				}
+				return dispatch(rehydrate());
+			}
+
 			case "Space": {
 				// If the user holds down the space, we don't want to register a bunch of play/pause events.
 				if (keysDepressed.current.space) {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { assert, describe, expect, it, vi } from "vitest";
 import { createInfoContent } from "./packaging.service";
 import { getDifficultyRankForDifficulty } from "./packaging.service.nitty-gritty";
 
@@ -27,13 +27,9 @@ const DEFAULT_SONG = {
 	modSettings: {},
 };
 
-vi.mock("localforage", () => {
-	const instance = vi.fn(() => {
-		return { config: vi.fn() };
-	});
-	return {
-		default: { createInstance: instance },
-	};
+vi.mock("idb", () => {
+	// biome-ignore lint/suspicious/noThenProperty: valid for mocking
+	return { openDB: vi.fn(() => ({ createObjectStore: vi.fn(), then: vi.fn() })) };
 });
 
 describe("packaging.service", () => {
@@ -68,7 +64,7 @@ describe("packaging.service", () => {
 					},
 				],
 			};
-			const expectedResult = JSON.stringify(expectedResultObj, null, 2);
+			const expectedResult = expectedResultObj;
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -126,7 +122,7 @@ describe("packaging.service", () => {
 					},
 				],
 			};
-			const expectedResult = JSON.stringify(expectedResultObj, null, 2);
+			const expectedResult = expectedResultObj;
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -146,7 +142,7 @@ describe("packaging.service", () => {
 				},
 			};
 
-			const createdSong = JSON.parse(createInfoContent(moddedSong, { version: 2 }));
+			const createdSong = createInfoContent(moddedSong, { version: 2 });
 
 			const expectedCustomData = {
 				_colorLeft: { r: 0, g: 1, b: 1 },
@@ -156,6 +152,7 @@ describe("packaging.service", () => {
 				_obstacleColor: { r: 1, g: 0, b: 0 },
 			};
 
+			assert(createdSong._difficultyBeatmapSets);
 			for (const difficulty of createdSong._difficultyBeatmapSets[0]._difficultyBeatmaps) {
 				expect(difficulty._customData).toEqual(expectedCustomData);
 			}
@@ -176,10 +173,11 @@ describe("packaging.service", () => {
 				},
 			};
 
-			const createdSong = JSON.parse(createInfoContent(moddedSong, { version: 2 }));
+			const createdSong = createInfoContent(moddedSong, { version: 2 });
 
 			const expectedCustomData = {};
 
+			assert(createdSong._difficultyBeatmapSets);
 			for (const difficulty of createdSong._difficultyBeatmapSets[0]._difficultyBeatmaps) {
 				expect(difficulty._customData).toEqual(expectedCustomData);
 			}

@@ -4,11 +4,11 @@ import { Provider } from "react-redux";
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromChildren } from "react-router-dom";
 import { StyleSheetManager, type WebTarget } from "styled-components";
 
-import configureStore from "./store";
+import { createAppStore } from "./store/setup";
 
 import App from "./components/App";
 
-const store = configureStore();
+const store = await createAppStore();
 
 const root = document.getElementById("root");
 if (!root) throw new Error("No root element.");

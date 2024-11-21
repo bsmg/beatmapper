@@ -1,7 +1,7 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { NOTE_TOOLS } from "$/constants";
-import { deleteGridPreset, finishManagingNoteSelection, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
+import { deleteGridPreset, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
 import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
 
 const initialState = {
@@ -21,9 +21,21 @@ const slice = createSlice({
 		getNoteSelectionMode: (state) => state.selectionMode,
 		getDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
 		getGridPresets: (state) => state.gridPresets,
+		getAllGridPresetIds: (state) => Object.keys(state.gridPresets),
+		getGridPresetById: (state, id: string) => state.gridPresets[id],
 	},
 	reducers: {},
 	extraReducers: (builder) => {
+		builder.addCase(hydrateSession, (state, action) => {
+			const { "notes.tool": selectedTool, "notes.direction": selectedDirection, "notes.duration": defaultObstacleDuration } = action.payload;
+			if (selectedTool !== undefined) state.selectedTool = Object.values(ObjectTool)[selectedTool];
+			if (selectedDirection !== undefined) state.selectedDirection = selectedDirection;
+			if (defaultObstacleDuration !== undefined) state.defaultObstacleDuration = defaultObstacleDuration;
+		});
+		builder.addCase(hydrateGridPresets, (state, action) => {
+			const gridPresets = action.payload;
+			return { ...state, gridPresets: { ...state.gridPresets, ...gridPresets } };
+		});
 		builder.addCase(selectNoteDirection, (state, action) => {
 			const { direction } = action.payload;
 			return { ...state, selectedDirection: direction };

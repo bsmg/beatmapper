@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { LOAD } from "redux-storage";
+
+import { init } from "$/store/actions";
 
 const initialState = {
 	hasInitialized: false,
@@ -13,7 +14,7 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(LOAD, (state) => {
+		builder.addCase(init, (state) => {
 			return { ...state, hasInitialized: true };
 		});
 		builder.addDefaultCase((state) => state);

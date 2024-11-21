@@ -1,20 +1,21 @@
-import { createListenerMiddleware } from "@reduxjs/toolkit";
-import { SAVE } from "redux-storage";
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
-import { saveBeatmap } from "$/services/file.service";
+import type { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContentsFromState } from "$/services/packaging.service";
+import { saveSongs } from "$/store/actions";
 import { getDifficulty, getSelectedSong } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { autosaveWorker } from "$/workers";
+import type { createAutosaveWorker } from "$/workers";
 
-// Saving is a significantly expensive operation, and it's one that is done very often, so it makes sense to do it in a web worker.
-const worker = autosaveWorker();
-
-export default function createBackupMiddleware() {
+interface Options {
+	filestore: BeatmapFilestore;
+	worker: ReturnType<typeof createAutosaveWorker>;
+}
+export default function createBackupMiddleware({ filestore, worker }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
-		type: SAVE,
+		matcher: isAnyOf(saveSongs),
 		effect: (_, api) => {
 			const state = api.getState();
 			// For reasons unknown to me, sometimes while on localhost the instance isn't created properly, and lacks a 'save' method. :/
@@ -27,7 +28,7 @@ export default function createBackupMiddleware() {
 				// We only want to autosave when a song is currently selected
 				if (!song || !difficulty) return;
 				const beatmapContents = createBeatmapContentsFromState(state, song);
-				saveBeatmap(song.id, difficulty, beatmapContents).catch((err) => {
+				filestore.saveBeatmapFile(song.id, difficulty, beatmapContents).catch((err) => {
 					console.error("Could not run backup for beatmap file", err);
 				});
 			}

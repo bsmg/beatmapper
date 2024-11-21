@@ -45,7 +45,7 @@ export const getDurationInBeats = createSelector(getSelectedSong, getDuration, (
 	return convertMillisecondsToBeats(duration, song.bpm);
 });
 
-export const { getGraphicsLevel, getIsNewUser, getProcessingDelay, getSeenPrompts, getStickyMapAuthorName } = user.getSelectors((state: RootState) => {
+export const { getGraphicsLevel, getIsNewUser, getProcessingDelay, getSeenPrompts, getStickyMapAuthorName } = user.getSelectors((state: Pick<RootState, "user">) => {
 	return state.user;
 });
 export const getUsableProcessingDelay = createSelector(getProcessingDelay, getIsPlaying, (processingDelay, isPlaying) => {
@@ -57,7 +57,7 @@ export const { getWaveformData } = waveform.getSelectors((state: RootState) => {
 	return state.waveform;
 });
 
-export const { getDefaultObstacleDuration, getGridPresets, getNoteSelectionMode, getSelectedCutDirection, getSelectedNoteTool } = beatmap.getSelectors((state: RootState) => {
+export const { getDefaultObstacleDuration, getGridPresets, getAllGridPresetIds, getGridPresetById, getNoteSelectionMode, getSelectedCutDirection, getSelectedNoteTool } = beatmap.getSelectors((state: RootState) => {
 	return state.editor.notes;
 });
 

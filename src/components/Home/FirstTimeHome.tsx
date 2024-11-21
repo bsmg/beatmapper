@@ -62,10 +62,8 @@ const FirstTimeHome = ({ setModal }: Props) => {
 					description="Take the editor for a test-drive with some surprisingly good public-domain dubstep"
 					buttonText={isLoadingDemo ? "Loading…" : "Start editing"}
 					handleClick={() => {
-						if (!demoSong) {
-							setIsLoadingDemo(true);
-							dispatch(loadDemoMap());
-						}
+						setIsLoadingDemo(true);
+						dispatch(loadDemoMap());
 					}}
 				/>
 				<Divider />

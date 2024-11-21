@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { getFile } from "$/services/file.service";
+import { filestore } from "$/setup";
 
 function getFileReaderMethodName(readAs: "dataUrl" | "arrayBuffer" | "text") {
 	if (readAs === "dataUrl") return "readAsDataURL" as const;
@@ -25,7 +25,7 @@ export function useLocallyStoredFile<T extends string | ArrayBuffer>(filename: s
 		if (!filename) {
 			return;
 		}
-		const file = getFile<Blob>(filename);
+		const file = filestore.loadFile<Blob>(filename);
 
 		file.then((file) => {
 			if (!file) throw Error("Not found.");

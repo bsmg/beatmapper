@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { createNewSong, dismissPrompt, finishLoadingSong, importExistingSong, updateGraphicsLevel, updateProcessingDelay, updateSongDetails } from "$/store/actions";
+import { createNewSong, dismissPrompt, finishLoadingSong, hydrateUser, importExistingSong, updateGraphicsLevel, updateProcessingDelay, updateSongDetails } from "$/store/actions";
 import { Quality } from "$/types";
 
 const initialState = {
@@ -23,6 +23,14 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
+		builder.addCase(hydrateUser, (state, action) => {
+			const { "user.new": isNewUser, "user.username": stickyMapAuthorName, "user.announcements": seenPrompts, "audio.offset": processingDelay, "graphics.quality": graphicsLevel } = action.payload;
+			if (isNewUser !== undefined) state.isNewUser = isNewUser;
+			if (stickyMapAuthorName !== undefined) state.stickyMapAuthorName = stickyMapAuthorName;
+			if (seenPrompts !== undefined) state.seenPrompts = seenPrompts;
+			if (processingDelay !== undefined) state.processingDelay = processingDelay;
+			if (graphicsLevel !== undefined) state.graphicsLevel = Object.values(Quality)[graphicsLevel];
+		});
 		builder.addCase(importExistingSong, (state, action) => {
 			const { songData } = action.payload;
 			if (songData.demo) return state;

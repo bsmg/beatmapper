@@ -8,3 +8,5 @@ export type Member<T> = T extends Readonly<Array<unknown>> ? T[number] : T exten
 
 export type Predicate<Item, Index, Object, Result> = (value: Item, index: Index, object: Object) => Result;
 export type ArrayPredicate<T, R> = Predicate<T, number, T[], R>;
+
+export type MaybeDefined<T> = T extends any ? T : any;
