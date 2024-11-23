@@ -1,4 +1,4 @@
-import { v1 as uuid } from "uuid";
+import { nanoid } from "nanoid";
 
 import { LIGHTING_TRACKS, LIGHT_EVENTS_ARRAY, LIGHT_EVENT_TYPES, TRACK_IDS_ARRAY, TRACK_ID_MAP } from "$/constants";
 import { App, type Json } from "$/types";
@@ -67,7 +67,7 @@ export function convertEventsToExportableJson<T extends App.Event>(events: T[]) 
 
 export function convertEventsToRedux<T extends Json.Event>(events: T[]): App.Event[] {
 	return events.map((event) => {
-		const id = uuid();
+		const id = nanoid();
 		const trackId = TRACK_IDS_ARRAY[event._type];
 		const beatNum = event._time;
 

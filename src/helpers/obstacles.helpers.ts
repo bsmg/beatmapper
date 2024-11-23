@@ -1,4 +1,4 @@
-import { v1 as uuid } from "uuid";
+import { nanoid } from "nanoid";
 
 import { DEFAULT_NUM_COLS } from "$/constants";
 import { App, type Json, ObjectPlacementMode } from "$/types";
@@ -61,7 +61,7 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 
 		return {
 			...obstacleData,
-			id: uuid(),
+			id: nanoid(),
 			beatStart: o._time,
 			beatDuration: duration,
 			lane: obstacleData.lane ?? o._lineIndex,

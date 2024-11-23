@@ -1,4 +1,4 @@
-import { v1 as uuid } from "uuid";
+import { nanoid } from "nanoid";
 
 import { HUMANIZED_DIRECTIONS } from "$/constants";
 import { App, Direction, type Json } from "$/types";
@@ -9,7 +9,7 @@ type ReduxNote = Json.Note & { selected?: boolean };
 export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]) {
 	return blocks.map((b) => {
 		return {
-			id: uuid(),
+			id: nanoid(),
 			color: b._type === 0 ? App.SaberColor.LEFT : App.SaberColor.RIGHT,
 			direction: HUMANIZED_DIRECTIONS[b._cutDirection],
 			beatNum: b._time,

@@ -48,7 +48,6 @@
 		"three": "^0.169.0",
 		"three-stdlib": "^2.34.0",
 		"unstorage": "^1.13.1",
-		"uuid": "^11.0.2",
 		"waveform-data": "^4.5.0"
 	},
 	"devDependencies": {

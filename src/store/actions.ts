@@ -1,5 +1,5 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { v1 as uuid } from "uuid";
+import { nanoid } from "nanoid";
 import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
@@ -127,7 +127,7 @@ export const pasteSelection = createAsyncThunk("PASTE_SELECTION", (args: { view:
 	// Every entity that has an ID (obstacles, events) needs a unique ID, we shouldn't blindly copy it over.
 	const uniqueData = data.map((item) => {
 		if ("id" in item && typeof item.id === "undefined") return item;
-		return { ...item, id: uuid() };
+		return { ...item, id: nanoid() };
 	});
 	return api.fulfillWithValue({ ...args, data: uniqueData, pasteAtBeat });
 });
@@ -356,7 +356,7 @@ export const createNewObstacle = createAsyncThunk("CREATE_NEW_OBSTACLE", (args: 
 	return api.fulfillWithValue({
 		obstacle: {
 			...args.obstacle,
-			id: uuid(),
+			id: nanoid(),
 			beatStart: cursorPositionInBeats,
 		},
 	});
@@ -413,11 +413,11 @@ export const seekBackwards = createAction("SEEK_BACKWARDS", (args: { view: View 
 });
 
 export const placeEvent = createAction("PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.EventType; eventColorType?: App.EventColorType; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args, id: uuid() } };
+	return { payload: { ...args, id: nanoid() } };
 });
 
 export const changeLaserSpeed = createAction("CHANGE_LASER_SPEED", (args: { trackId: App.TrackId; beatNum: number; speed: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args, id: uuid() } };
+	return { payload: { ...args, id: nanoid() } };
 });
 
 export const deleteEvent = createAction("DELETE_EVENT", (args: { id: App.Event["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {

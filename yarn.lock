@@ -3498,7 +3498,6 @@ __metadata:
     three-stdlib: "npm:^2.34.0"
     typescript: "npm:^5.6.3"
     unstorage: "npm:^1.13.1"
-    uuid: "npm:^11.0.2"
     vite: "npm:^5.4.10"
     vite-plugin-pwa: "npm:^0.20.5"
     vitest: "npm:^2.1.4"
@@ -9810,15 +9809,6 @@ __metadata:
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 10/474acf1146cb2701fe3b074892217553dfcf9a031280919ba1b8d651a068c9b15d863b7303cb15bd00a862b498e6cf4ad7b4a08fb134edd5a6f7641681cb54a2
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^11.0.2":
-  version: 11.0.2
-  resolution: "uuid@npm:11.0.2"
-  bin:
-    uuid: dist/esm/bin/uuid
-  checksum: 10/b98082f398fa2ece8cacc2264402f739256ca70def4bb82e3a14ec70777d189c01ce1054764c3b59b8fc098b62b135a15d1b24914712904c988822e2ac9b4f44
   languageName: node
   linkType: hard
 
