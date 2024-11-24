@@ -99,7 +99,7 @@ const slice = createSlice({
 		},
 		getSelectedEvents: (state) => {
 			const allEvents = Object.values(state).flat();
-			allEvents.filter((event) => event.selected);
+			return allEvents.filter((event) => event.selected);
 		},
 		getEventForTrackAtBeat: (state, trackId: App.TrackId, startBeat: number) => {
 			const relevantEvents = filterEventsBeforeBeat(state, trackId, startBeat);
@@ -190,12 +190,11 @@ const slice = createSlice({
 			}
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
-			const { view, data, pasteAtBeat } = action.payload;
+			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.LIGHTSHOW) return state;
+			if (!data.events) return state;
 			deselectAllEvents(state);
-			const earliestEventAt = getBeatNumForItem(data[0]);
-			const deltaBetweenPeriods = pasteAtBeat - earliestEventAt;
-			const timeShiftedData = data.map((event) => ({ ...event, selected: true, beatNum: getBeatNumForItem(event) + deltaBetweenPeriods }) as App.BasicEvent);
+			const timeShiftedData = data.events.map((event) => ({ ...event, selected: true, beatNum: getBeatNumForItem(event) + deltaBetweenPeriods }) as App.BasicEvent);
 			for (const event of timeShiftedData) {
 				// Shift the event by the delta between
 				state[event.trackId].push(event);

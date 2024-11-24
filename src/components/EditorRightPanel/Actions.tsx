@@ -6,7 +6,7 @@ import { UNIT } from "$/constants";
 import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import { jumpToBeat, pasteSelection, selectAllInRange } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getHasCopiedNotes } from "$/store/selectors";
+import { selectClipboardHasObjects } from "$/store/selectors";
 import { type App, View } from "$/types";
 import { getMetaKeyLabel } from "$/utils";
 import { ACTION_WIDTH } from "./EditorRightPanel.constants";
@@ -22,7 +22,7 @@ interface Props {
 }
 
 const Actions = ({ song, handleGridConfigClick }: Props) => {
-	const hasCopiedNotes = useAppSelector(getHasCopiedNotes);
+	const hasCopiedNotes = useAppSelector(selectClipboardHasObjects);
 	const dispatch = useAppDispatch();
 	const mappingExtensionsEnabled = song?.modSettings?.mappingExtensions?.isEnabled;
 

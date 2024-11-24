@@ -73,14 +73,11 @@ const slice = createSlice({
 			return state.filter((obstacle) => !obstacle.selected);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
-			const { view, data, pasteAtBeat } = action.payload;
+			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const isObstacle = (item: object): item is App.Obstacle => "beatDuration" in item;
-			const earliestBeat = getBeatNumForItem(data[0]);
-			const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
+			if (!data.obstacles) return state;
 			const deselectedState = state.map((obstacle) => ({ ...obstacle, selected: false }));
-			const obstacles = data.filter(isObstacle);
-			const timeShiftedObstacles = obstacles.map((obstacle) => ({ ...obstacle, selected: true, beatNum: getBeatNumForItem(obstacle) + deltaBetweenPeriods }) as App.Obstacle);
+			const timeShiftedObstacles = data.obstacles.map((obstacle) => ({ ...obstacle, selected: true, beatNum: getBeatNumForItem(obstacle) + deltaBetweenPeriods }) as App.Obstacle);
 			return [...deselectedState, ...timeShiftedObstacles];
 		});
 		builder.addCase(selectObstacle, (state, action) => {

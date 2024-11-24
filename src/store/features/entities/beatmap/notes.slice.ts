@@ -104,16 +104,11 @@ const slice = createSlice({
 			return state.filter((note) => !note.selected);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
-			const { view, data, pasteAtBeat } = action.payload;
+			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			function isBlockOrMine(item: object): item is (typeof initialState)[0] {
-				return "_cutDirection" in item;
-			}
-			const earliestBeat = getBeatNumForItem(data[0]);
-			const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
+			if (!data.notes) return state;
 			const deselectedState = state.map((note) => ({ ...note, selected: false }));
-			const notes = data.filter(isBlockOrMine) as unknown as typeof initialState;
-			const timeShiftedNotes = notes.map((note) => ({ ...note, selected: true, _time: getBeatNumForItem(note) + deltaBetweenPeriods }));
+			const timeShiftedNotes = data.notes.map((note) => ({ ...note, selected: true, _time: getBeatNumForItem(note) + deltaBetweenPeriods }));
 			return [...deselectedState, ...timeShiftedNotes];
 		});
 		builder.addCase(toggleNoteColor, (state, action) => {

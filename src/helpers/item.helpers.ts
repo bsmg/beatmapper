@@ -10,3 +10,9 @@ export function getBeatNumForItem<T extends object>(item: T) {
 	}
 	throw new Error("Could not determine time for event");
 }
+
+export function sortByTime<T extends object>(a: T, b: T) {
+	const aBeatNum = getBeatNumForItem(a);
+	const bBeatNum = getBeatNumForItem(b);
+	return aBeatNum - bBeatNum;
+}

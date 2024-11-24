@@ -144,9 +144,21 @@ export const getVisibleObstacles = createSelector(getObstacles, getCursorPositio
 	});
 });
 
-export const getSelectedNotesAndObstacles = createSelector(getSelectedNotes, getSelectedObstacles, (notes, obstacles) => [...notes, ...obstacles]);
+export const selectAllSelectedObjects = createSelector(getSelectedNotes, getSelectedObstacles, (notes, obstacles) => {
+	return {
+		notes: notes.length > 0 ? notes : undefined,
+		obstacles: obstacles.length > 0 ? obstacles : undefined,
+	};
+});
 
-export const { getAllEventsAsArray, getEventForTrackAtBeat, getEvents, getTrackSpeedAtBeat, getTracks } = tracks.getSelectors((state: RootState) => {
+export const {
+	getAllEventsAsArray,
+	getEventForTrackAtBeat,
+	getEvents,
+	getSelectedEvents: getSelectedBasicEvents,
+	getTrackSpeedAtBeat,
+	getTracks,
+} = tracks.getSelectors((state: RootState) => {
 	return state.editorEntities.eventsView.present.tracks;
 });
 export const { getEvents: getPastEvents } = tracks.getSelectors(
@@ -176,21 +188,24 @@ export function makeGetInitialTrackLightingColorType(trackId: App.TrackId) {
 	});
 }
 
-export const getSelectedEvents = createSelector(getAllEventsAsArray, (allEvents) => {
-	return allEvents.filter((event) => event.selected);
+export const selectAllSelectedEvents = createSelector(getSelectedBasicEvents, (basic) => {
+	return {
+		basic: basic.length > 0 ? basic : undefined,
+	};
 });
 
-export function getSelection(view: View) {
-	return createSelector(getSelectedNotesAndObstacles, getSelectedEvents, (objects, events) => {
-		if (view === View.LIGHTSHOW) return events;
-		if (view === View.BEATMAP) return objects;
-	});
-}
+export const selectAllSelectedEntities = createSelector([selectAllSelectedObjects, selectAllSelectedEvents, (_, view: View) => view], (objects, events, view) => {
+	return {
+		notes: view === View.BEATMAP ? objects.notes : undefined,
+		obstacles: view === View.BEATMAP ? objects.obstacles : undefined,
+		events: view === View.LIGHTSHOW ? events.basic : undefined,
+	};
+});
 
 export const { getBookmarks, getSortedBookmarksArray } = bookmarks.getSelectors((state: RootState) => {
 	return state.bookmarks;
 });
 
-export const { getCopiedData, getHasCopiedNotes } = clipboard.getSelectors((state: RootState) => {
+export const { selectData: selectClipboardData, selectHasObjects: selectClipboardHasObjects } = clipboard.getSelectors((state: Pick<RootState, "clipboard">) => {
 	return state.clipboard;
 });

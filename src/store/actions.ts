@@ -4,6 +4,7 @@ import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
+import { getBeatNumForItem } from "$/helpers/item.helpers";
 import {
 	type App,
 	type BeatmapEntities,
@@ -28,7 +29,6 @@ import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
 	getAllEventsAsArray,
-	getCopiedData,
 	getCursorPositionInBeats,
 	getDurationInBeats,
 	getGridSize,
@@ -39,11 +39,12 @@ import {
 	getSelectedEventBeat,
 	getSelectedNoteTool,
 	getSelectedSong,
-	getSelection,
 	getSnapTo,
 	getSortedBookmarksArray,
 	getStartAndEndBeat,
 	getStickyMapAuthorName,
+	selectAllSelectedEntities,
+	selectClipboardData,
 } from "./selectors";
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
@@ -124,31 +125,29 @@ export const tick = createAction("TICK", (args: { timeElapsed: number }) => {
 
 export const cutSelection = createAsyncThunk("CUT_SELECTION", (args: { view: View }, api) => {
 	const state = api.getState() as RootState;
-	const selection = getSelection(args.view)(state);
+	const selection = selectAllSelectedEntities(state, args.view);
 	return api.fulfillWithValue({ ...args, data: selection });
 });
 
 export const copySelection = createAsyncThunk("COPY_SELECTION", (args: { view: View }, api) => {
 	const state = api.getState() as RootState;
-	const selection = getSelection(args.view)(state);
+	const selection = selectAllSelectedEntities(state, args.view);
 	return api.fulfillWithValue({ ...args, data: selection });
 });
 
 export const pasteSelection = createAsyncThunk("PASTE_SELECTION", (args: { view: View }, api) => {
 	const state = api.getState() as RootState;
-	const data = getCopiedData(state);
+	const data = selectClipboardData(state);
 	// If there's nothing copied, do nothing
 	if (!data) return api.rejectWithValue("Clipboard is empty.");
 	// When pasting in notes view, we want to paste at the cursor position, where the song is currently playing.
 	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
 	const pasteAtBeat = args.view === View.BEATMAP ? getCursorPositionInBeats(state) : getSelectedEventBeat(state);
 	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
+	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map((x) => getBeatNumForItem(x)).sort((a, b) => a - b)[0];
+	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
 	// Every entity that has an ID (obstacles, events) needs a unique ID, we shouldn't blindly copy it over.
-	const uniqueData = data.map((item) => {
-		if ("id" in item && typeof item.id === "undefined") return item;
-		return { ...item, id: nanoid() };
-	});
-	return api.fulfillWithValue({ ...args, data: uniqueData, pasteAtBeat });
+	return api.fulfillWithValue({ ...args, data: data, deltaBetweenPeriods });
 });
 
 export const adjustCursorPosition = createAction("ADJUST_CURSOR_POSITION", (args: { newCursorPosition: number }) => {
