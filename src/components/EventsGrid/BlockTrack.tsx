@@ -47,9 +47,9 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 
 	const getPropsForPlacedEvent = useCallback(() => {
 		const isRingEvent = trackId === App.TrackId[8] || trackId === App.TrackId[9];
-		const eventType = isRingEvent ? App.EventType.TRIGGER : selectedTool;
+		const eventType = isRingEvent ? App.BasicEventType.TRIGGER : selectedTool;
 
-		let eventColorType = selectedColorType as App.EventColorType | undefined;
+		let eventColorType = selectedColorType as App.EventColor | undefined;
 		if (isRingEvent || selectedTool === EventTool.OFF) {
 			eventColorType = undefined;
 		}

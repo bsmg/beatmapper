@@ -40,16 +40,16 @@ const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
 		const processingDelay = getUsableProcessingDelay(state);
 		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
 
-		const lastEvent = findMostRecentEventInTrack<App.LightingEvent>(events, currentBeat, processingDelayInBeats);
+		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(events, currentBeat, processingDelayInBeats);
 
 		return lastEvent;
 	});
 
 	// TODO: laser beams for along the side and maybe along the bottom too?
-	const status = lastEvent ? lastEvent.type : App.EventType.OFF;
+	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const lastEventId = lastEvent ? lastEvent.id : null;
 
-	const color = status === App.EventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
 
 	const springConfig = getSpringConfigForLight([ON_PROPS, OFF_PROPS, BRIGHT_PROPS], status);
 
@@ -58,7 +58,7 @@ const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
 			return;
 		}
 
-		const statusShouldReset = status === App.EventType.FLASH || status === App.EventType.FADE;
+		const statusShouldReset = status === App.BasicEventType.FLASH || status === App.BasicEventType.FADE;
 
 		springConfig.reset = statusShouldReset;
 	}, lastEventId);

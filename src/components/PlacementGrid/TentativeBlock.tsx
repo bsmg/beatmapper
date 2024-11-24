@@ -1,5 +1,5 @@
 import { BLOCK_COLUMN_WIDTH, SONG_OFFSET } from "$/constants";
-import type { App, Direction } from "$/types";
+import type { App, CutDirection } from "$/types";
 
 import Block from "../Block";
 
@@ -16,7 +16,7 @@ const getPositionForBlock = (colIndex: number, rowIndex: number) => {
 
 interface Props {
 	song: App.Song;
-	direction: Direction;
+	direction: CutDirection;
 	rowIndex: number;
 	colIndex: number;
 	color: string;

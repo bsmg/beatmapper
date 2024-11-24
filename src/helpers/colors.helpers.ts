@@ -36,7 +36,7 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 
 		// In the events view, our formal name is `envColorLeft`, but the events themselves still use the original colors 'red' / 'blue'.
 		case App.BeatmapColorKey.ENV_LEFT:
-		case App.EventColorType.PRIMARY:
+		case App.EventColor.PRIMARY:
 		case EventColor.PRIMARY: {
 			const defaultColor = DEFAULT_LIGHT_RED;
 			const customColor = song.modSettings.customColors?.envColorLeft || defaultColor;
@@ -44,7 +44,7 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 			return customColorsEnabled ? customColor : defaultColor;
 		}
 		case App.BeatmapColorKey.ENV_RIGHT:
-		case App.EventColorType.SECONDARY:
+		case App.EventColor.SECONDARY:
 		case EventColor.SECONDARY: {
 			const defaultColor = DEFAULT_LIGHT_BLUE;
 			const customColor = song.modSettings.customColors?.envColorRight || defaultColor;
@@ -53,9 +53,9 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 		}
 
 		// Event view has two other event types: rotate and off. They have unique colors.
-		case App.EventType.TRIGGER:
+		case App.BasicEventType.TRIGGER:
 			return COLORS.green[500];
-		case App.EventType.OFF:
+		case App.BasicEventType.OFF:
 			return COLORS.blueGray[400];
 
 		default:

@@ -19,7 +19,7 @@ const INITIAL_TENTATIVE_EVENT = {
 	beatNum: null as number | null,
 	laserSpeed: null as number | null,
 	visible: false,
-} as Partial<App.LaserSpeedEvent> & { visible: boolean };
+} as Partial<App.IBasicValueEvent> & { visible: boolean };
 
 interface Props {
 	trackId: App.TrackId;
@@ -36,7 +36,7 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 	const getEventsForTrack = makeGetEventsForTrack(trackId);
 	const song = useAppSelector(getSelectedSong);
 	const duration = useAppSelector(getDurationInBeats);
-	const events = useAppSelector(getEventsForTrack) as App.LaserSpeedEvent[];
+	const events = useAppSelector(getEventsForTrack) as App.IBasicValueEvent[];
 	const startSpeed = useAppSelector((state) => getTrackSpeedAtBeat(state, trackId, startBeat));
 	const endSpeed = useAppSelector((state) => getTrackSpeedAtBeat(state, trackId, startBeat + numOfBeatsToShow));
 	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
@@ -159,7 +159,7 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 					<SpeedTrackEvent key={event.id} event={event} trackId={trackId} startBeat={startBeat} endBeat={startBeat + numOfBeatsToShow} parentWidth={width} parentHeight={height} areLasersLocked={areLasersLocked} />
 				))}
 
-				{tentativeEvent.visible && <SpeedTrackEvent event={tentativeEvent as App.LaserSpeedEvent} trackId={trackId} startBeat={startBeat} endBeat={startBeat + numOfBeatsToShow} parentWidth={width} parentHeight={height} areLasersLocked={areLasersLocked} />}
+				{tentativeEvent.visible && <SpeedTrackEvent event={tentativeEvent as App.IBasicValueEvent} trackId={trackId} startBeat={startBeat} endBeat={startBeat + numOfBeatsToShow} parentWidth={width} parentHeight={height} areLasersLocked={areLasersLocked} />}
 			</Svg>
 		</Wrapper>
 	);

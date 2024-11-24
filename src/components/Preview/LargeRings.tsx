@@ -39,7 +39,7 @@ const LargeRings = ({ song, isPlaying }: Props) => {
 
 		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
 
-		const lastRotationEvent = findMostRecentEventInTrack<App.RingEvent>(rotationEvents, currentBeat, processingDelayInBeats);
+		const lastRotationEvent = findMostRecentEventInTrack<App.IBasicTriggerEvent>(rotationEvents, currentBeat, processingDelayInBeats);
 		return lastRotationEvent;
 	});
 	const lastLightingEvent = useAppSelector((state) => {
@@ -59,7 +59,7 @@ const LargeRings = ({ song, isPlaying }: Props) => {
 
 		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
 
-		const lastLightingEvent = findMostRecentEventInTrack<App.LightingEvent>(lightingEvents, currentBeat, processingDelayInBeats);
+		const lastLightingEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(lightingEvents, currentBeat, processingDelayInBeats);
 
 		return lastLightingEvent;
 	});
@@ -91,9 +91,9 @@ const LargeRings = ({ song, isPlaying }: Props) => {
 
 	const [rotationRatio, setRotationRatio] = useState(0);
 
-	const lightStatus = lastLightingEvent ? lastLightingEvent.type : App.EventType.OFF;
+	const lightStatus = lastLightingEvent ? lastLightingEvent.type : App.BasicEventType.OFF;
 	const lastLightingEventId = lastLightingEvent ? lastLightingEvent.id : null;
-	const lightColor = lightStatus === App.EventType.OFF ? "#000000" : getColorForItem(lastLightingEvent?.colorType, song);
+	const lightColor = lightStatus === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastLightingEvent?.colorType, song);
 
 	// TODO: Custom hook that is shared with SmallRings
 	useOnChange(() => {

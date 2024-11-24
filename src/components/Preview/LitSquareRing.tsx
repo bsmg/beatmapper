@@ -14,9 +14,9 @@ interface ModelProps {
 	thickness: number;
 	color: ColorRepresentation;
 	zRotation: number;
-	lightStatus: App.LightingEventType;
-	lightColor: App.EventColorType;
-	lastLightingEventId: App.Event["id"] | null;
+	lightStatus: App.LightEventType;
+	lightColor: App.EventColor;
+	lastLightingEventId: App.BasicEvent["id"] | null;
 	isPlaying: boolean;
 }
 
@@ -31,7 +31,7 @@ const RingPeg = ({ size, thickness, color, zRotation, lightStatus, lightColor, l
 			return;
 		}
 
-		const statusShouldReset = lightStatus === App.EventType.FLASH || lightStatus === App.EventType.FADE;
+		const statusShouldReset = lightStatus === App.BasicEventType.FLASH || lightStatus === App.BasicEventType.FADE;
 
 		lightSpringConfig.reset = statusShouldReset;
 	}, lastLightingEventId);
@@ -62,9 +62,9 @@ interface Props {
 	z?: number;
 	color: ColorRepresentation;
 	rotation: Vector3Tuple | Interpolation<Vector3Tuple>;
-	lightStatus: App.LightingEventType;
-	lightColor: App.EventColorType;
-	lastLightingEventId: App.Event["id"] | null;
+	lightStatus: App.LightEventType;
+	lightColor: App.EventColor;
+	lastLightingEventId: App.BasicEvent["id"] | null;
 	isPlaying: boolean;
 }
 

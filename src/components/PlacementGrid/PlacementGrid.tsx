@@ -7,7 +7,7 @@ import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { clearCellOfNotes, clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { getDefaultObstacleDuration, getGridSize, getMappingMode, getNoteSelectionMode, getSelectedNoteTool, getSelectedSong } from "$/store/selectors";
-import { type Direction, ObjectTool } from "$/types";
+import { type CutDirection, ObjectTool } from "$/types";
 import { range } from "$/utils";
 import { getDirectionForDrag } from "./PlacementGrid.helpers";
 
@@ -16,7 +16,7 @@ import TentativeBlock from "./TentativeBlock";
 import TentativeObstacle from "./TentativeObstacle";
 
 interface ITentativeBlock {
-	direction: Direction;
+	direction: CutDirection;
 	rowIndex: number;
 	colIndex: number;
 	selectedTool: ObjectTool;
@@ -42,7 +42,7 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 
 	const [mouseDownAt, setMouseDownAt] = useState<{ rowIndex: number; colIndex: number; x: number; y: number } | null>(null);
 	const [mouseOverAt, setMouseOverAt] = useState<{ rowIndex: number; colIndex: number; x?: number; y?: number } | null>(null);
-	const cachedDirection = useRef<Direction | null>(null);
+	const cachedDirection = useRef<CutDirection | null>(null);
 
 	// `hoveredCell` is an indication of which square is currently highlighted by the cursor. You might think I could just use `mouseOverAt`, but there are 2 reasons why I can't:
 	// - When clicking and dragging to place a cell, I want to 'lock' hoveredCell, even though I'm still mousing over other cells

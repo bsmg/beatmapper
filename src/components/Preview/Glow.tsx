@@ -18,8 +18,8 @@ interface Props {
 	z: number;
 	color: ColorRepresentation;
 	size: number;
-	status: App.LightingEventType;
-	lastEventId: App.Event["id"] | null;
+	status: App.LightEventType;
+	lastEventId: App.BasicEvent["id"] | null;
 	isPlaying: boolean;
 	isBlooming?: boolean;
 }
@@ -33,7 +33,7 @@ const Glow = ({ x, y, z, color, size, status, lastEventId, isPlaying, isBlooming
 		if (!isPlaying) {
 			return;
 		}
-		const statusShouldReset = status === App.EventType.FLASH || status === App.EventType.FADE;
+		const statusShouldReset = status === App.BasicEventType.FLASH || status === App.BasicEventType.FADE;
 
 		springConfig.reset = statusShouldReset;
 	}, lastEventId);

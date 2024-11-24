@@ -1,11 +1,12 @@
-import { App, Difficulty, Environment } from "$/types/beatmap";
+import { App, CutDirection, Difficulty, Environment } from "$/types/beatmap";
 import { TrackType } from "$/types/editor";
 import { DEFAULT_BLUE, DEFAULT_LIGHT_BLUE, DEFAULT_LIGHT_RED, DEFAULT_OBSTACLE, DEFAULT_RED } from "./theme.constants";
 import { EVENT_TRACKS } from "./tracks.constants";
 
 export const DIFFICULTIES = Object.freeze(Object.values(Difficulty));
 
-export const HUMANIZED_DIRECTIONS = Object.freeze(Object.values(App.Direction));
+export const CUT_DIRECTIONS = Object.freeze(Object.values(CutDirection));
+export const HUMANIZED_DIRECTIONS = Object.freeze(Object.values(App.CutDirection));
 
 export const TRACK_ID_MAP = Object.freeze(
 	Object.entries(App.TrackId).reduce(
@@ -29,20 +30,20 @@ export const TRACK_IDS_ARRAY = Object.freeze(
 
 export const LIGHT_EVENT_TYPES = {
 	blue: {
-		[App.EventType.OFF]: 0,
-		[App.EventType.ON]: 1,
-		[App.EventType.FLASH]: 2,
-		[App.EventType.FADE]: 3,
+		[App.BasicEventType.OFF]: 0,
+		[App.BasicEventType.ON]: 1,
+		[App.BasicEventType.FLASH]: 2,
+		[App.BasicEventType.FADE]: 3,
 	},
 	red: {
-		[App.EventType.OFF]: 0,
-		[App.EventType.ON]: 5,
-		[App.EventType.FLASH]: 6,
-		[App.EventType.FADE]: 7,
+		[App.BasicEventType.OFF]: 0,
+		[App.BasicEventType.ON]: 5,
+		[App.BasicEventType.FLASH]: 6,
+		[App.BasicEventType.FADE]: 7,
 	},
 } as const;
 
-export const LIGHT_EVENTS_ARRAY = [App.EventType.OFF, App.EventType.ON, App.EventType.FLASH, App.EventType.FADE, null, App.EventType.ON, App.EventType.FLASH, App.EventType.FADE] as const;
+export const LIGHT_EVENTS_ARRAY = [App.BasicEventType.OFF, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE, null, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE] as const;
 
 export const LIGHTING_TRACKS = Object.freeze(
 	Object.values(EVENT_TRACKS)

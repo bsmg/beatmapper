@@ -39,7 +39,7 @@ function jumpToEarliestNote(args: { earlierNotes: Json.Note[]; laterNotes: Json.
 	}
 }
 
-function switchEventPagesIfNecessary(args: { earlierEvents: App.Event[]; currentEvents: App.Event[] }, api: MiddlewareAPI) {
+function switchEventPagesIfNecessary(args: { earlierEvents: App.BasicEvent[]; currentEvents: App.BasicEvent[] }, api: MiddlewareAPI) {
 	const relevantEvents = findUniquesWithinArrays(args.earlierEvents, args.currentEvents);
 
 	if (relevantEvents.length === 0) {

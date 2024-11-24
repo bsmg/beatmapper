@@ -28,7 +28,7 @@ const TentativeObstacle = ({ mouseDownAt, color, mode, ...rest }: Props) => {
 
 	tentativeObstacle.id = "tentative";
 	tentativeObstacle.tentative = true;
-	tentativeObstacle.beatStart = 0;
+	tentativeObstacle.beatNum = 0;
 
 	return (
 		<ObstacleBox

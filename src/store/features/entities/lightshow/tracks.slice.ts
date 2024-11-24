@@ -26,7 +26,7 @@ import {
 } from "$/store/actions";
 import { App, View } from "$/types";
 
-const initialState = {} as Record<App.TrackId, App.Event[]>;
+const initialState = {} as Record<App.TrackId, App.BasicEvent[]>;
 
 function createInitialState() {
 	return EVENT_TRACKS.reduce(
@@ -46,7 +46,7 @@ function getSymmetricalId(id: EntityId) {
  * In addition to returning an index so that the caller knows where to insert the event,
  * this method also returns whether or not there is already an event at the exact same beatNum.
  */
-function findIndexForNewEvent<T extends App.Event>(beatNum: number, relevantEvents: T[]) {
+function findIndexForNewEvent<T extends App.BasicEvent>(beatNum: number, relevantEvents: T[]) {
 	// Find the spot for this event. All events should be added in chronological order.
 	let indexToInsertAt = 0;
 	let eventOverlaps = false;
@@ -82,7 +82,7 @@ const deselectAllEvents = (draftState: typeof initialState) => {
 	return draftState;
 };
 
-function filterEventsBeforeBeat<T extends App.Event>(tracks: typeof initialState, trackId: App.TrackId, beforeBeat: number) {
+function filterEventsBeforeBeat<T extends App.BasicEvent>(tracks: typeof initialState, trackId: App.TrackId, beforeBeat: number) {
 	return tracks[trackId].filter((event) => event.beatNum < beforeBeat) as T[];
 }
 
@@ -107,7 +107,7 @@ const slice = createSlice({
 			return relevantEvents[relevantEvents.length - 1];
 		},
 		getTrackSpeedAtBeat: (state, trackId: App.TrackId, beatNum: number) => {
-			const events = filterEventsBeforeBeat<App.LaserSpeedEvent>(state, trackId, beatNum).reverse();
+			const events = filterEventsBeforeBeat<App.IBasicValueEvent>(state, trackId, beatNum).reverse();
 			if (!events.length) return 0;
 			return events[0].laserSpeed;
 		},
@@ -119,7 +119,7 @@ const slice = createSlice({
 			if (!events || events.length === 0) return createInitialState();
 			// MAYBE TEMP:
 			// I'm noticing some weird bug where I get SO MANY EVENTS. Remove all duplicates.
-			const uniqueEvents: App.Event[] = [];
+			const uniqueEvents: App.BasicEvent[] = [];
 			for (const event of events) {
 				const alreadyExists = uniqueEvents.some((uniqEvent) => {
 					return uniqEvent.trackId === event.trackId && uniqEvent.beatNum === event.beatNum;
@@ -139,7 +139,7 @@ const slice = createSlice({
 		});
 		builder.addCase(placeEvent, (state, action) => {
 			const { id, trackId, beatNum, eventType, eventColorType, areLasersLocked } = action.payload;
-			const newEvent = { id, trackId, beatNum, type: eventType } as App.Event;
+			const newEvent = { id, trackId, beatNum, type: eventType } as App.BasicEvent;
 			if (isLightEvent(newEvent)) {
 				newEvent.colorType = eventColorType;
 			}
@@ -160,7 +160,7 @@ const slice = createSlice({
 		});
 		builder.addCase(changeLaserSpeed, (state, action) => {
 			const { id, trackId, beatNum, speed, areLasersLocked } = action.payload;
-			const newEvent = { id, trackId, beatNum, laserSpeed: speed } as App.LaserSpeedEvent;
+			const newEvent = { id, trackId, beatNum, laserSpeed: speed } as App.IBasicValueEvent;
 			const relevantEvents = state[trackId];
 			const [indexToInsertAt, eventOverlaps] = findIndexForNewEvent(beatNum, relevantEvents);
 			const numToRemove = eventOverlaps ? 1 : 0;
@@ -195,7 +195,7 @@ const slice = createSlice({
 			deselectAllEvents(state);
 			const earliestEventAt = getBeatNumForItem(data[0]);
 			const deltaBetweenPeriods = pasteAtBeat - earliestEventAt;
-			const timeShiftedData = data.map((event) => ({ ...event, selected: true, beatNum: getBeatNumForItem(event) + deltaBetweenPeriods }) as App.Event);
+			const timeShiftedData = data.map((event) => ({ ...event, selected: true, beatNum: getBeatNumForItem(event) + deltaBetweenPeriods }) as App.BasicEvent);
 			for (const event of timeShiftedData) {
 				// Shift the event by the delta between
 				state[event.trackId].push(event);
@@ -206,7 +206,7 @@ const slice = createSlice({
 			const eventIndex = state[trackId].findIndex((ev) => ev.id === id);
 			const event = state[trackId][eventIndex];
 			if (!isLightEvent(event)) return state;
-			event.colorType = event.colorType === App.EventColorType.SECONDARY ? App.EventColorType.PRIMARY : App.EventColorType.SECONDARY;
+			event.colorType = event.colorType === App.EventColor.SECONDARY ? App.EventColor.PRIMARY : App.EventColor.SECONDARY;
 		});
 		builder.addCase(selectAll.fulfilled, (state, action) => {
 			const { view, metadata } = action.payload;
@@ -241,7 +241,7 @@ const slice = createSlice({
 			const trackIds = Object.keys(state) as App.TrackId[];
 			for (const trackId of trackIds) {
 				for (const event of state[trackId]) {
-					if (event.selected === "tentative") {
+					if (event.tentative === true) {
 						event.selected = true;
 					}
 				}
@@ -258,9 +258,9 @@ const slice = createSlice({
 					if (!isInWindow) return;
 					const isInSelectionBox = isTrackIdWithinBox && event.beatNum >= selectionBoxInBeats.startBeat && event.beatNum <= selectionBoxInBeats.endBeat;
 					if (isInSelectionBox) {
-						event.selected = "tentative";
+						event.tentative = true;
 					} else {
-						if (event.selected === "tentative") {
+						if (event.tentative === true) {
 							event.selected = false;
 						}
 					}

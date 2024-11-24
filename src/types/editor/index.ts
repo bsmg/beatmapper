@@ -27,5 +27,5 @@ export interface IBackgroundBox {
 	id: EntityId;
 	beatNum: number;
 	duration?: number | null;
-	colorType?: App.EventColorType;
+	colorType?: App.EventColor;
 }

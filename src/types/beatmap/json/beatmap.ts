@@ -1,11 +1,9 @@
-import type { Direction } from "../shared";
-
 export interface Note {
 	_time: number;
 	_lineIndex: number;
 	_lineLayer: number;
 	_type: number;
-	_cutDirection: Direction;
+	_cutDirection: number;
 }
 
 export interface Obstacle {

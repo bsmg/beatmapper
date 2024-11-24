@@ -5,9 +5,9 @@ const lightSpringConfig = {
 	friction: 120,
 };
 
-export function getSpringConfigForLight([onProps, offProps, brightProps]: { opacity: number }[], status: App.LightingEventType) {
+export function getSpringConfigForLight([onProps, offProps, brightProps]: { opacity: number }[], status: App.LightEventType) {
 	switch (status) {
-		case App.EventType.OFF:
+		case App.BasicEventType.OFF:
 			return {
 				to: offProps,
 				immediate: true,
@@ -15,7 +15,7 @@ export function getSpringConfigForLight([onProps, offProps, brightProps]: { opac
 				config: lightSpringConfig,
 			};
 
-		case App.EventType.ON: {
+		case App.BasicEventType.ON: {
 			return {
 				to: onProps,
 				immediate: true,
@@ -24,7 +24,7 @@ export function getSpringConfigForLight([onProps, offProps, brightProps]: { opac
 			};
 		}
 
-		case App.EventType.FLASH: {
+		case App.BasicEventType.FLASH: {
 			return {
 				from: brightProps,
 				to: onProps,
@@ -34,7 +34,7 @@ export function getSpringConfigForLight([onProps, offProps, brightProps]: { opac
 			};
 		}
 
-		case App.EventType.FADE: {
+		case App.BasicEventType.FADE: {
 			return {
 				from: brightProps,
 				to: offProps,
@@ -49,7 +49,7 @@ export function getSpringConfigForLight([onProps, offProps, brightProps]: { opac
 	}
 }
 
-export function findMostRecentEventInTrack<T extends App.Event>(events: App.Event[], currentBeat: number, processingDelayInBeats: number) {
+export function findMostRecentEventInTrack<T extends App.BasicEvent>(events: App.BasicEvent[], currentBeat: number, processingDelayInBeats: number) {
 	for (let i = events.length - 1; i >= 0; i--) {
 		const event = events[i];
 		if (event.beatNum < currentBeat + processingDelayInBeats) {

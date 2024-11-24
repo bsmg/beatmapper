@@ -1,6 +1,6 @@
 import type { Vector2Like } from "three";
 
-import { Direction, ObjectPlacementMode } from "$/types";
+import { CutDirection, ObjectPlacementMode } from "$/types";
 import { convertCartesianToPolar } from "$/utils";
 
 function getDirectionForStandardMode(angle: number) {
@@ -29,21 +29,21 @@ function getDirectionForStandardMode(angle: number) {
 
 	switch (chunkIndex) {
 		case 0:
-			return Direction.RIGHT;
+			return CutDirection.RIGHT;
 		case 1:
-			return Direction.DOWN_RIGHT;
+			return CutDirection.DOWN_RIGHT;
 		case 2:
-			return Direction.DOWN;
+			return CutDirection.DOWN;
 		case 3:
-			return Direction.DOWN_LEFT;
+			return CutDirection.DOWN_LEFT;
 		case 4:
-			return Direction.LEFT;
+			return CutDirection.LEFT;
 		case 5:
-			return Direction.UP_LEFT;
+			return CutDirection.UP_LEFT;
 		case 6:
-			return Direction.UP;
+			return CutDirection.UP;
 		case 7:
-			return Direction.UP_RIGHT;
+			return CutDirection.UP_RIGHT;
 		default:
 			throw new Error(`Unrecognized chunk index: ${chunkIndex}`);
 	}

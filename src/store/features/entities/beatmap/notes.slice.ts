@@ -25,9 +25,9 @@ import {
 	swapSelectedNotes,
 	toggleNoteColor,
 } from "$/store/actions";
-import { type Json, ObjectTool, ObjectType, View } from "$/types";
+import { type BeatmapEntities, ObjectTool, ObjectType, View } from "$/types";
 
-const initialState = [] as (Json.Note & { selected?: boolean })[];
+const initialState = [] as BeatmapEntities["notes"];
 
 function getItemType(item: ObjectTool) {
 	switch (item) {

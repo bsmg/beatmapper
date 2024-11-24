@@ -15,18 +15,18 @@ import UnstyledButton from "../UnstyledButton";
 
 const BLOCK_WIDTH = 7;
 
-function getBackgroundForEvent(event: App.Event, song: App.Song) {
+function getBackgroundForEvent(event: App.BasicEvent, song: App.Song) {
 	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, song);
 
 	switch (event.type) {
-		case App.EventType.ON:
-		case App.EventType.OFF:
-		case App.EventType.TRIGGER: {
+		case App.BasicEventType.ON:
+		case App.BasicEventType.OFF:
+		case App.BasicEventType.TRIGGER: {
 			// On/off are solid colors
 			return color;
 		}
 
-		case App.EventType.FLASH: {
+		case App.BasicEventType.FLASH: {
 			const brightColor = Color(color).lighten(0.4).hsl();
 			const semiTransparentColor = Color(color)
 				.darken(0.5)
@@ -35,7 +35,7 @@ function getBackgroundForEvent(event: App.Event, song: App.Song) {
 			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
 
-		case App.EventType.FADE: {
+		case App.BasicEventType.FADE: {
 			const brightColor = Color(color).lighten(0.4).hsl();
 
 			const semiTransparentColor = Color(color)
@@ -51,7 +51,7 @@ function getBackgroundForEvent(event: App.Event, song: App.Song) {
 }
 
 interface Props {
-	event: App.Event;
+	event: App.BasicEvent;
 	trackWidth: number;
 	startBeat: number;
 	numOfBeatsToShow: number;

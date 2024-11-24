@@ -4,7 +4,26 @@ import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
-import { type App, type BeatmapId, type Direction, type EventColor, type EventEditMode, type EventTool, type GridPresets, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Json, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
+import {
+	type App,
+	type BeatmapEntities,
+	type BeatmapId,
+	type CutDirection,
+	type EventColor,
+	type EventEditMode,
+	type EventTool,
+	type GridPresets,
+	type IGrid,
+	type ISelectionBox,
+	type ISelectionBoxInBeats,
+	type Member,
+	type ObjectSelectionMode,
+	type ObjectTool,
+	type ObjectType,
+	type Quality,
+	type SongId,
+	View,
+} from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
@@ -77,7 +96,7 @@ export const startLoadingSong = createAction("START_LOADING_SONG", (args: { song
 	return { payload: { ...args } };
 });
 
-export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: { notes: (Json.Note & { selected?: boolean })[]; obstacles: App.Obstacle[]; events: App.Event[]; bookmarks: App.Bookmark[] }) => {
+export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: Partial<BeatmapEntities>) => {
 	return { payload: { ...args } };
 });
 
@@ -151,7 +170,7 @@ export const deleteBookmark = createAction("DELETE_BOOKMARK", (args: { beatNum: 
 	return { payload: { ...args } };
 });
 
-export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: Direction; tool?: ObjectTool }, api) => {
+export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: CutDirection; tool?: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const selectedDirection = getSelectedCutDirection(state);
 	const selectedTool = getSelectedNoteTool(state);
@@ -170,7 +189,7 @@ export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: {
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats });
 });
 
-export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: Direction; selectedTool: ObjectTool }, api) => {
+export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: CutDirection; selectedTool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const cursorPositionInBeats = getCursorPositionInBeats(state);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
@@ -211,7 +230,7 @@ export const incrementSnapping = createAction("INCREMENT_SNAPPING");
 
 export const decrementSnapping = createAction("DECREMENT_SNAPPING");
 
-export const selectNoteDirection = createAction("SELECT_NOTE_DIRECTION", (args: { direction: Direction }) => {
+export const selectNoteDirection = createAction("SELECT_NOTE_DIRECTION", (args: { direction: CutDirection }) => {
 	return { payload: { ...args } };
 });
 
@@ -357,8 +376,8 @@ export const createNewObstacle = createAsyncThunk("CREATE_NEW_OBSTACLE", (args: 
 		obstacle: {
 			...args.obstacle,
 			id: nanoid(),
-			beatStart: cursorPositionInBeats,
-		},
+			beatNum: cursorPositionInBeats,
+		} as App.Obstacle,
 	});
 });
 
@@ -412,7 +431,7 @@ export const seekBackwards = createAction("SEEK_BACKWARDS", (args: { view: View 
 	return { payload: { ...args } };
 });
 
-export const placeEvent = createAction("PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.EventType; eventColorType?: App.EventColorType; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
+export const placeEvent = createAction("PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.BasicEventType; eventColorType?: App.EventColor; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
 	return { payload: { ...args, id: nanoid() } };
 });
 
@@ -420,33 +439,33 @@ export const changeLaserSpeed = createAction("CHANGE_LASER_SPEED", (args: { trac
 	return { payload: { ...args, id: nanoid() } };
 });
 
-export const deleteEvent = createAction("DELETE_EVENT", (args: { id: App.Event["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {
+export const deleteEvent = createAction("DELETE_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const bulkDeleteEvent = createAction("BULK_DELETE_EVENT", (args: { id: App.Event["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {
+export const bulkDeleteEvent = createAction("BULK_DELETE_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
 export const deleteSelectedEvents = createAction("DELETE_SELECTED_EVENTS");
 
-export const selectEvent = createAction("SELECT_EVENT", (args: { id: App.Event["id"]; trackId: App.TrackId }) => {
+export const selectEvent = createAction("SELECT_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId }) => {
 	return { payload: { ...args } };
 });
 
-export const deselectEvent = createAction("DESELECT_EVENT", (args: { id: App.Event["id"]; trackId: App.TrackId }) => {
+export const deselectEvent = createAction("DESELECT_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId }) => {
 	return { payload: { ...args } };
 });
 
-export const selectColor = createAction("SELECT_COLOR", (args: { view: View; color: App.SaberColor | App.EventColorType | EventColor }) => {
+export const selectColor = createAction("SELECT_COLOR", (args: { view: View; color: App.SaberColor | App.EventColor | EventColor }) => {
 	return { payload: { ...args } };
 });
 
-export const switchEventColor = createAction("SWITCH_EVENT_COLOR", (args: { id: App.Event["id"]; trackId: App.TrackId }) => {
+export const switchEventColor = createAction("SWITCH_EVENT_COLOR", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId }) => {
 	return { payload: { ...args } };
 });
 
-export function selectEventColor(args: { color: App.EventColorType | EventColor }) {
+export function selectEventColor(args: { color: App.EventColor | EventColor }) {
 	return selectColor({ ...args, view: View.LIGHTSHOW });
 }
 

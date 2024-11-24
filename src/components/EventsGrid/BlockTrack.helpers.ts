@@ -1,8 +1,8 @@
 import { EVENT_TRACKS } from "$/constants";
 import { App, type IBackgroundBox, TrackType } from "$/types";
 
-function getIsEventOn(ev: App.Event) {
-	return ev.type === App.EventType.ON || ev.type === App.EventType.FLASH;
+function getIsEventOn(ev: App.BasicEvent) {
+	return ev.type === App.BasicEventType.ON || ev.type === App.BasicEventType.FLASH;
 }
 
 function getIsLightingTrack(trackId: App.TrackId) {
@@ -23,7 +23,7 @@ function getIsLightingTrack(trackId: App.TrackId) {
 	return true;
 }
 
-export function getBackgroundBoxes(events: App.Event[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColorType | null, startBeat: number, numOfBeatsToShow: number) {
+export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number) {
 	// If this track isn't a lighting track, bail early.
 	const isLightingTrack = getIsLightingTrack(trackId);
 	if (!isLightingTrack) {
@@ -34,14 +34,14 @@ export function getBackgroundBoxes(events: App.Event[], trackId: App.TrackId, in
 
 	// If the initial lighting value is true, we wanna convert it into a pseudo-event.
 	// It's simpler if we treat it as an 'on' event at the very first beat of the section.
-	const workableEvents = [...events] as App.LightingEvent[];
+	const workableEvents = [...events] as App.IBasicLightEvent[];
 	if (initialTrackLightingColorType) {
 		const pseudoInitialEvent = {
 			id: `initial-${startBeat}-${numOfBeatsToShow}`,
-			type: App.EventType.ON,
+			type: App.BasicEventType.ON,
 			beatNum: startBeat,
 			colorType: initialTrackLightingColorType,
-		} as App.LightingEvent;
+		} as App.IBasicLightEvent;
 
 		workableEvents.unshift(pseudoInitialEvent);
 

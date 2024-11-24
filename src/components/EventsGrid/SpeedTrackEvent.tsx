@@ -6,7 +6,7 @@ import { normalize } from "$/utils";
 import { getYForSpeed } from "./EventsGrid.helpers";
 
 interface Props {
-	event: App.LaserSpeedEvent;
+	event: App.IBasicValueEvent;
 	trackId: App.TrackId;
 	startBeat: number;
 	endBeat: number;

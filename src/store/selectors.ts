@@ -139,8 +139,8 @@ export const { getObstacles: getFutureObstacles } = obstacles.getSelectors(
 export const getVisibleObstacles = createSelector(getObstacles, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return obstacles.filter((obstacle) => {
-		const beatEnd = obstacle.beatStart + obstacle.beatDuration;
-		return beatEnd > closeLimit && obstacle.beatStart < farLimit;
+		const beatEnd = obstacle.beatNum + obstacle.beatDuration;
+		return beatEnd > closeLimit && obstacle.beatNum < farLimit;
 	});
 });
 
@@ -171,7 +171,7 @@ export function makeGetInitialTrackLightingColorType(trackId: App.TrackId) {
 		const eventsInWindow = tracks[trackId].filter((event) => event.beatNum < startBeat);
 		const lastEvent = eventsInWindow[eventsInWindow.length - 1];
 		if (!lastEvent) return null;
-		const isLastEventOn = lastEvent.type === App.EventType.ON || lastEvent.type === App.EventType.FLASH;
+		const isLastEventOn = lastEvent.type === App.BasicEventType.ON || lastEvent.type === App.BasicEventType.FLASH;
 		return isLastEventOn ? lastEvent.colorType : null;
 	});
 }

@@ -8,12 +8,12 @@ export function getPositionForObstacle(obstacle: App.Obstacle, obstacleDimension
 	// Our initial X should be 1.5 blocks to the left (an 'X' of 0 would be the dividing line between the 2nd and 3rd column,
 	// so I need it to move 1.5 units to the left, to sit in the center of the 1st column)
 	const OFFSET_X = BLOCK_PLACEMENT_SQUARE_SIZE * 1.5 * -1;
-	position.x = obstacle.lane * BLOCK_PLACEMENT_SQUARE_SIZE + OFFSET_X;
+	position.x = obstacle.colIndex * BLOCK_PLACEMENT_SQUARE_SIZE + OFFSET_X;
 	position.x += obstacle.colspan * (BLOCK_PLACEMENT_SQUARE_SIZE / 2) - BLOCK_PLACEMENT_SQUARE_SIZE / 2;
 
 	// ----------- Y ------------
 	if (obstacle.type === App.ObstacleType.EXTENDED) {
-		const mapObstacle = obstacle as App.MappingExtensionObstacle;
+		const mapObstacle = obstacle as App.IExtensionObstacle;
 		const OFFSET_Y = BLOCK_PLACEMENT_SQUARE_SIZE * -1;
 		position.y = mapObstacle.rowIndex * BLOCK_PLACEMENT_SQUARE_SIZE + OFFSET_Y;
 		position.y += obstacleDimensions.height / 2 - BLOCK_PLACEMENT_SQUARE_SIZE / 2;
@@ -23,7 +23,7 @@ export function getPositionForObstacle(obstacle: App.Obstacle, obstacleDimension
 	}
 
 	// ----------- Z ------------
-	const zFront = obstacle.beatStart * zOffset * -1 - SONG_OFFSET;
+	const zFront = obstacle.beatNum * zOffset * -1 - SONG_OFFSET;
 	position.z = zFront - obstacleDimensions.depth / 2 + 0.05;
 
 	return [position.x, position.y, position.z];
@@ -38,7 +38,7 @@ export function getDimensionsForObstacle(obstacle: App.Obstacle, beatDepth: numb
 	depth = obstacle.beatDuration * beatDepth;
 
 	if (obstacle.type === App.ObstacleType.EXTENDED) {
-		const extensionObstacle = obstacle as App.MappingExtensionObstacle;
+		const extensionObstacle = obstacle as App.IExtensionObstacle;
 		height = extensionObstacle.rowspan * BLOCK_PLACEMENT_SQUARE_SIZE;
 	} else {
 		// Height is tricky since it depends on the type.

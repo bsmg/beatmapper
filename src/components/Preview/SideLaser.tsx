@@ -62,7 +62,7 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 
 		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
 
-		const lastEvent = findMostRecentEventInTrack<App.LightingEvent>(lightEvents, currentBeat, processingDelayInBeats);
+		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(lightEvents, currentBeat, processingDelayInBeats);
 		return lastEvent;
 	});
 	const laserSpeed = useAppSelector((state) => {
@@ -82,7 +82,7 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 
 		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
 
-		const lastSpeedEvent = findMostRecentEventInTrack<App.LaserSpeedEvent>(speedEvents, currentBeat, processingDelayInBeats);
+		const lastSpeedEvent = findMostRecentEventInTrack<App.IBasicValueEvent>(speedEvents, currentBeat, processingDelayInBeats);
 
 		const laserSpeed = lastSpeedEvent ? lastSpeedEvent.laserSpeed : 0;
 		return laserSpeed;
@@ -103,10 +103,10 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 	const yOffset = -10;
 	const zOffset = side === "right" ? -100 : -100 - zLeftSideOffset;
 
-	const status = lastEvent ? lastEvent.type : App.EventType.OFF;
+	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const eventId = lastEvent ? lastEvent.id : null;
 
-	const color = status === App.EventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
 
 	const horizontalBeams = laserIndices.map((index) => {
 		const position: Vector3Tuple = [xOffset + index * xDistanceBetweenBeams, yOffset, zOffset + index * zDistanceBetweenBeams];

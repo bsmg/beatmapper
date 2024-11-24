@@ -1,6 +1,10 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import type { Accept, Member } from "../utils";
 
+export interface IEntity {
+	id: EntityId;
+}
+
 export type SongId = EntityId;
 export type BeatmapId = Accept<Difficulty, EntityId>;
 
@@ -27,7 +31,7 @@ export const Environment = {
 } as const;
 export type Environment = Accept<Member<typeof Environment>, string>;
 
-export const Direction = {
+export const CutDirection = {
 	UP: 0,
 	DOWN: 1,
 	LEFT: 2,
@@ -38,4 +42,4 @@ export const Direction = {
 	DOWN_RIGHT: 7,
 	ANY: 8,
 } as const;
-export type Direction = Accept<Member<typeof Direction>, number>;
+export type CutDirection = Accept<Member<typeof CutDirection>, number>;

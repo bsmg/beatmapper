@@ -1,9 +1,9 @@
 import { nanoid } from "nanoid";
 
 import { HUMANIZED_DIRECTIONS } from "$/constants";
-import { App, Direction, type Json } from "$/types";
+import { type Accept, App, type BeatmapEntities, CutDirection, type Json, type Member } from "$/types";
 
-type ReduxNote = Json.Note & { selected?: boolean };
+type ReduxNote = Member<BeatmapEntities["notes"]>;
 
 // TODO: Currently, the "redux" variant of the blocks format isn't used. I use the proprietary json format everywhere. I want to refactor this, to keep everything in line between blocks, obstacles, and mines.
 export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]) {
@@ -15,19 +15,21 @@ export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]) {
 			beatNum: b._time,
 			rowIndex: b._lineLayer,
 			colIndex: b._lineIndex,
-		};
+		} as App.ColorNote;
 	});
 }
 
 // UNUSED
-export function convertBlocksToExportableJson<T extends App.BlockNext>(blocks: T[]) {
-	return blocks.map((b) => ({
-		_time: b.beatNum,
-		_lineIndex: Math.round(b.colIndex),
-		_lineLayer: Math.round(b.rowIndex),
-		_type: b.color === App.SaberColor.LEFT ? 0 : 1,
-		_cutDirection: HUMANIZED_DIRECTIONS.indexOf(b.direction),
-	}));
+export function convertBlocksToExportableJson<T extends App.ColorNote>(blocks: T[]) {
+	return blocks.map((b) => {
+		return {
+			_time: b.beatNum,
+			_lineIndex: Math.round(b.colIndex),
+			_lineLayer: Math.round(b.rowIndex),
+			_type: b.color === App.SaberColor.LEFT ? 0 : 1,
+			_cutDirection: HUMANIZED_DIRECTIONS.indexOf(b.direction),
+		} as Json.Note;
+	});
 }
 
 export function findNoteByProperties<T extends ReduxNote>(notes: T[], query: { time: number; lineLayer: number; lineIndex: number }) {
@@ -41,52 +43,52 @@ export function findNoteIndexByProperties<T extends ReduxNote>(notes: T[], query
 	});
 }
 
-function getHorizontallyFlippedCutDirection(cutDirection: Direction) {
+function getHorizontallyFlippedCutDirection(cutDirection: Accept<CutDirection, number>) {
 	//  4 0 5
 	//  2 8 3
 	//  6 1 7
 	switch (cutDirection) {
-		case Direction.UP:
-		case Direction.ANY:
-		case Direction.DOWN:
+		case CutDirection.UP:
+		case CutDirection.ANY:
+		case CutDirection.DOWN:
 			return cutDirection;
 
-		case Direction.UP_LEFT:
-		case Direction.LEFT:
-		case Direction.DOWN_LEFT:
+		case CutDirection.UP_LEFT:
+		case CutDirection.LEFT:
+		case CutDirection.DOWN_LEFT:
 			return cutDirection + 1;
 
-		case Direction.UP_RIGHT:
-		case Direction.RIGHT:
-		case Direction.DOWN_RIGHT:
+		case CutDirection.UP_RIGHT:
+		case CutDirection.RIGHT:
+		case CutDirection.DOWN_RIGHT:
 			return cutDirection - 1;
 
 		default:
 			throw new Error(`Unrecognized cut direction: ${cutDirection}`);
 	}
 }
-function getVerticallyFlippedCutDirection(cutDirection: Direction) {
+function getVerticallyFlippedCutDirection(cutDirection: Accept<CutDirection, number>) {
 	//  4 0 5
 	//  2 8 3
 	//  6 1 7
 	switch (cutDirection) {
-		case Direction.LEFT:
-		case Direction.ANY:
-		case Direction.RIGHT:
+		case CutDirection.LEFT:
+		case CutDirection.ANY:
+		case CutDirection.RIGHT:
 			return cutDirection;
 
-		case Direction.UP_LEFT:
-		case Direction.UP_RIGHT:
+		case CutDirection.UP_LEFT:
+		case CutDirection.UP_RIGHT:
 			return cutDirection + 2;
 
-		case Direction.UP:
+		case CutDirection.UP:
 			return cutDirection + 1;
 
-		case Direction.DOWN:
+		case CutDirection.DOWN:
 			return cutDirection - 1;
 
-		case Direction.DOWN_LEFT:
-		case Direction.DOWN_RIGHT:
+		case CutDirection.DOWN_LEFT:
+		case CutDirection.DOWN_RIGHT:
 			return cutDirection - 2;
 
 		default:
