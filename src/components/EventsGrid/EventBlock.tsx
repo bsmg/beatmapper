@@ -77,7 +77,7 @@ const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHo
 			onContextMenu={(ev) => ev.preventDefault()}
 			onPointerOver={() => {
 				if (deleteOnHover) {
-					dispatch(bulkDeleteEvent({ id: event.id, trackId: event.trackId, areLasersLocked }));
+					dispatch(bulkDeleteEvent({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				}
 			}}
 			onPointerDown={(ev) => {
@@ -91,15 +91,11 @@ const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHo
 
 				if (clickType === "left") {
 					const actionToSend = event.selected ? deselectEvent : selectEvent;
-					dispatch(actionToSend({ id: event.id, trackId: event.trackId }));
+					dispatch(actionToSend({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				} else if (clickType === "middle") {
-					dispatch(switchEventColor({ id: event.id, trackId: event.trackId }));
+					dispatch(switchEventColor({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				} else if (clickType === "right") {
-					dispatch(deleteEvent({ id: event.id, trackId: event.trackId, areLasersLocked }));
-				}
-
-				if (ev.buttons === 2) {
-					dispatch(deleteEvent({ id: event.id, trackId: event.trackId, areLasersLocked }));
+					dispatch(deleteEvent({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				}
 			}}
 		>

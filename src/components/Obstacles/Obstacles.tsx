@@ -1,14 +1,14 @@
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { deleteObstacle, deselectObstacle, resizeObstacle, selectObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getNoteSelectionMode, getSelectedSong, getSnapTo, getVisibleObstacles } from "$/store/selectors";
+import { getBeatDepth, getNoteSelectionMode, getSelectedSong, getSnapTo, selectAllVisibleObstacles } from "$/store/selectors";
 import { ObjectSelectionMode, ObjectTool } from "$/types";
 
 import ObstacleBox from "../ObstacleBox";
 
 const Obstacles = () => {
 	const song = useAppSelector(getSelectedSong);
-	const obstacles = useAppSelector(getVisibleObstacles);
+	const obstacles = useAppSelector(selectAllVisibleObstacles);
 	const beatDepth = useAppSelector(getBeatDepth);
 	const selectionMode = useAppSelector(getNoteSelectionMode);
 	const snapTo = useAppSelector(getSnapTo);

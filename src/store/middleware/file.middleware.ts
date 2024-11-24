@@ -5,13 +5,13 @@ import { HIGHEST_PRECISION } from "$/constants";
 import { getWaveformDataForFile } from "$/helpers/audio.helpers";
 import { convertBookmarksToRedux } from "$/helpers/bookmarks.helpers";
 import { convertEventsToExportableJson, convertEventsToRedux } from "$/helpers/events.helpers";
-import { convertNotesFromMappingExtensions } from "$/helpers/notes.helpers";
+import { convertBlocksToRedux, convertMinesToRedux, convertNotesFromMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToRedux } from "$/helpers/obstacles.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContents, createInfoContent } from "$/services/packaging.service";
 import { shiftEntitiesByOffset, unshiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { copyDifficulty, createDifficulty, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { getAllEventsAsArray, getSelectedSong, getSongById } from "$/store/selectors";
+import { getSelectedSong, getSongById, selectAllBasicEvents } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { Json } from "$/types";
 import { roundToNearest } from "$/utils";
@@ -43,26 +43,32 @@ export default function createFileMiddleware({ filestore }: Options) {
 			}
 			if (beatmapJson) {
 				let notes = beatmapJson._notes;
-				// If this song uses mapping extensions, the note values will be in the thousands. We need to pull them down to the normal range.
 				if (song.modSettings.mappingExtensions?.isEnabled) {
+					// If this song uses mapping extensions, the note values will be in the thousands. We need to pull them down to the normal range.
 					notes = convertNotesFromMappingExtensions(notes);
 				}
 				// If we do, we need to manage a little dance related to offsets.
 				// See offsets.md for more context, but essentially we need to transform our timing to match the beat, by undoing a transformation previously applied.
-				let unshiftedNotes = unshiftEntitiesByOffset(notes || [], song.offset, song.bpm);
+				let unshiftedNotes = unshiftEntitiesByOffset(notes.filter((x) => [0, 1].includes(x._type)) || [], song.offset, song.bpm);
+				let unshiftedBombs = unshiftEntitiesByOffset(notes.filter((x) => [3].includes(x._type)) || [], song.offset, song.bpm);
 				const unshiftedEvents = unshiftEntitiesByOffset(beatmapJson._events || [], song.offset, song.bpm);
 				const unshiftedObstacles = unshiftEntitiesByOffset(beatmapJson._obstacles || [], song.offset, song.bpm);
 				// Round all notes, so that no floating-point imprecision drift happens
 				unshiftedNotes = unshiftedNotes.map((note) => {
 					return { ...note, _time: roundToNearest(note._time, HIGHEST_PRECISION) };
 				});
+				unshiftedBombs = unshiftedBombs.map((note) => {
+					return { ...note, _time: roundToNearest(note._time, HIGHEST_PRECISION) };
+				});
+
 				// Our beatmap comes in a "raw" form, using proprietary fields.
-				// At present, I'm using that proprietary structure for notes/mines, but I have my own structure for obstacles and events.
-				// So I need to convert the ugly JSON format to something manageable.
-				const convertedObstacles = convertObstaclesToRedux(unshiftedObstacles as Json.Obstacle[]);
-				const convertedEvents = convertEventsToRedux(unshiftedEvents as Json.Event[]);
+				// I need to convert the JSON format to something manageable.
+				const convertedNotes = convertBlocksToRedux(unshiftedNotes);
+				const convertedBombs = convertMinesToRedux(unshiftedBombs);
+				const convertedObstacles = convertObstaclesToRedux(unshiftedObstacles);
+				const convertedEvents = convertEventsToRedux(unshiftedEvents);
 				const convertedBookmarks = beatmapJson._customData?._bookmarks ? convertBookmarksToRedux(beatmapJson._customData._bookmarks) : [];
-				api.dispatch(loadBeatmapEntities({ notes: unshiftedNotes as Json.Note[], events: convertedEvents, obstacles: convertedObstacles, bookmarks: convertedBookmarks }));
+				api.dispatch(loadBeatmapEntities({ notes: convertedNotes, bombs: convertedBombs, events: convertedEvents, obstacles: convertedObstacles, bookmarks: convertedBookmarks }));
 			}
 			api.dispatch(ReduxUndoActionCreators.clearHistory());
 			const file = await filestore.loadFile<Blob>(song.songFilename);
@@ -77,7 +83,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const { difficulty, afterCreate } = action.payload;
 			const state = api.getState();
 			const song = getSelectedSong(state);
-			const events = convertEventsToExportableJson(getAllEventsAsArray(state));
+			const events = convertEventsToExportableJson(selectAllBasicEvents(state));
 			const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
 			// No notes/obstacles/bookmarks by default, but copy the lighting
 			const beatmapContents = createBeatmapContents({ notes: [], obstacles: [], events: shiftedEvents, bookmarks: [] }, { version: 2 });

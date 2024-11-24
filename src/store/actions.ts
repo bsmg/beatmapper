@@ -1,5 +1,4 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { nanoid } from "nanoid";
 import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
@@ -28,21 +27,22 @@ import {
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
-	getAllEventsAsArray,
 	getCursorPositionInBeats,
 	getDurationInBeats,
 	getGridSize,
 	getIsPlaying,
-	getNotes,
-	getObstacles,
 	getSelectedCutDirection,
 	getSelectedEventBeat,
 	getSelectedNoteTool,
 	getSelectedSong,
 	getSnapTo,
-	getSortedBookmarksArray,
 	getStartAndEndBeat,
 	getStickyMapAuthorName,
+	selectAllBasicEvents,
+	selectAllBookmarks,
+	selectAllColorNotes,
+	selectAllNotes,
+	selectAllObstacles,
 	selectAllSelectedEntities,
 	selectClipboardData,
 } from "./selectors";
@@ -156,7 +156,7 @@ export const adjustCursorPosition = createAction("ADJUST_CURSOR_POSITION", (args
 
 export const createBookmark = createAsyncThunk("CREATE_BOOKMARK", (args: { name: string; view: View }, api) => {
 	const state = api.getState() as RootState;
-	const existingBookmarks = getSortedBookmarksArray(state);
+	const existingBookmarks = selectAllBookmarks(state);
 	const color = getNewBookmarkColor(existingBookmarks);
 	// For the notes view, we want to use the cursorPosition to figure out when to create the bookmark for.
 	// For the events view, we want it to be based on the mouse position.
@@ -169,7 +169,7 @@ export const deleteBookmark = createAction("DELETE_BOOKMARK", (args: { beatNum: 
 	return { payload: { ...args } };
 });
 
-export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: CutDirection; tool?: ObjectTool }, api) => {
+export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: CutDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const selectedDirection = getSelectedCutDirection(state);
 	const selectedTool = getSelectedNoteTool(state);
@@ -178,17 +178,19 @@ export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args
 	const duration = getDurationInBeats(state);
 	if (cursorPositionInBeats < 0 || (duration && cursorPositionInBeats > duration)) return api.rejectWithValue("Cannot place objects out-of-bounds.");
 	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
+	const alreadyExists = selectAllNotes(state).some((note) => note.beatNum === adjustedCursorPosition && note.colIndex === args.colIndex && note.rowIndex === args.rowIndex);
+	if (alreadyExists) return api.rejectWithValue("Tried to add a double-note in the same spot.");
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats: adjustedCursorPosition, direction: selectedDirection, tool: selectedTool });
 });
 
-export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: { rowIndex: number; colIndex: number }, api) => {
+export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: { rowIndex: number; colIndex: number; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const cursorPositionInBeats = getCursorPositionInBeats(state);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats });
 });
 
-export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: CutDirection; selectedTool: ObjectTool }, api) => {
+export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: CutDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const cursorPositionInBeats = getCursorPositionInBeats(state);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
@@ -298,15 +300,15 @@ export const toggleSelectAll = createAsyncThunk("TOGGLE_SELECT_ALL", (args: { vi
 	let anythingSelected = false;
 
 	if (args.view === View.BEATMAP) {
-		const notes = getNotes(state);
-		const obstacles = getObstacles(state);
+		const notes = selectAllColorNotes(state);
+		const obstacles = selectAllObstacles(state);
 
 		const anyNotesSelected = notes.some((n) => n.selected);
 		const anyObstaclesSelected = obstacles.some((s) => s.selected);
 
 		anythingSelected = anyNotesSelected || anyObstaclesSelected;
 	} else if (args.view === View.LIGHTSHOW) {
-		const events = getAllEventsAsArray(state);
+		const events = selectAllBasicEvents(state);
 
 		anythingSelected = events.some((e) => e.selected);
 	}
@@ -374,9 +376,8 @@ export const createNewObstacle = createAsyncThunk("CREATE_NEW_OBSTACLE", (args: 
 	return api.fulfillWithValue({
 		obstacle: {
 			...args.obstacle,
-			id: nanoid(),
 			beatNum: cursorPositionInBeats,
-		} as App.Obstacle,
+		} as Omit<App.Obstacle, "id">,
 	});
 });
 
@@ -431,28 +432,32 @@ export const seekBackwards = createAction("SEEK_BACKWARDS", (args: { view: View 
 });
 
 export const placeEvent = createAction("PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.BasicEventType; eventColorType?: App.EventColor; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args, id: nanoid() } };
-});
-
-export const changeLaserSpeed = createAction("CHANGE_LASER_SPEED", (args: { trackId: App.TrackId; beatNum: number; speed: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args, id: nanoid() } };
-});
-
-export const deleteEvent = createAction("DELETE_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const bulkDeleteEvent = createAction("BULK_DELETE_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId; areLasersLocked: boolean }) => {
+export const bulkPlaceEvent = createAction("BULK_PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.BasicEventType; eventColorType?: App.EventColor; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
+	return { payload: { ...args } };
+});
+
+export const changeLaserSpeed = createAction("CHANGE_LASER_SPEED", (args: { trackId: App.TrackId; beatNum: number; speed: number; areLasersLocked: boolean }) => {
+	return { payload: { ...args } };
+});
+
+export const deleteEvent = createAction("DELETE_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
+	return { payload: { ...args } };
+});
+
+export const bulkDeleteEvent = createAction("BULK_DELETE_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
 export const deleteSelectedEvents = createAction("DELETE_SELECTED_EVENTS");
 
-export const selectEvent = createAction("SELECT_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId }) => {
+export const selectEvent = createAction("SELECT_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const deselectEvent = createAction("DESELECT_EVENT", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId }) => {
+export const deselectEvent = createAction("DESELECT_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
@@ -460,7 +465,7 @@ export const selectColor = createAction("SELECT_COLOR", (args: { view: View; col
 	return { payload: { ...args } };
 });
 
-export const switchEventColor = createAction("SWITCH_EVENT_COLOR", (args: { id: App.BasicEvent["id"]; trackId: App.TrackId }) => {
+export const switchEventColor = createAction("SWITCH_EVENT_COLOR", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 

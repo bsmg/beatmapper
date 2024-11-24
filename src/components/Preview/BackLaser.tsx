@@ -3,7 +3,7 @@ import type { Vector3Tuple } from "three";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { getCursorPositionInBeats, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
 import { App } from "$/types";
 import { range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -22,10 +22,7 @@ const BackLaser = ({ song, isPlaying }: Props) => {
 			return null;
 		}
 
-		const trackId = App.TrackId[0];
-
-		const tracks = getTracks(state);
-		const events = tracks[trackId];
+		const events = selectAllBasicEventsForTrack(state, App.TrackId[0]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;

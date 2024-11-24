@@ -1,7 +1,9 @@
-import { nanoid } from "nanoid";
-
 import { LIGHTING_TRACKS, LIGHT_EVENTS_ARRAY, LIGHT_EVENT_TYPES, TRACK_IDS_ARRAY, TRACK_ID_MAP } from "$/constants";
 import { App, type Json } from "$/types";
+
+export function selectId<T extends Pick<App.BasicEvent, "beatNum" | "trackId">>(x: T) {
+	return `${x.trackId}-${x.beatNum}`;
+}
 
 export function isLightEvent(event: App.BasicEvent): event is App.IBasicLightEvent {
 	return LIGHTING_TRACKS.includes(event.trackId);
@@ -67,9 +69,9 @@ export function convertEventsToExportableJson<T extends App.BasicEvent>(events: 
 
 export function convertEventsToRedux<T extends Json.Event>(events: T[]): App.BasicEvent[] {
 	return events.map((event) => {
-		const id = nanoid();
-		const trackId = TRACK_IDS_ARRAY[event._type];
+		const trackId = TRACK_IDS_ARRAY[event._type] as App.TrackId;
 		const beatNum = event._time;
+		const id = selectId({ beatNum, trackId: trackId });
 
 		// Lighting event
 		if (event._type <= 4) {

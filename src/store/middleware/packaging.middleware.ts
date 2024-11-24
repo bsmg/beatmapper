@@ -5,14 +5,14 @@ import type { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContentsFromState, createInfoContent, zipFiles } from "$/services/packaging.service";
 import { shiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { downloadMapFiles } from "$/store/actions";
-import { getAllEventsAsArray, getDifficulty, getSelectedSong, getSelectedSongDifficultyIds, getSongById } from "$/store/selectors";
+import { getDifficulty, getSelectedSong, getSelectedSongDifficultyIds, getSongById, selectAllBasicEvents } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 
 function saveEventsToAllDifficulties(state: RootState, filestore: BeatmapFilestore) {
 	const song = getSelectedSong(state);
 	const difficulties = getSelectedSongDifficultyIds(state);
 
-	const events = convertEventsToExportableJson(getAllEventsAsArray(state));
+	const events = convertEventsToExportableJson(selectAllBasicEvents(state));
 	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
 
 	return Promise.all(

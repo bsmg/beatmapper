@@ -3,7 +3,7 @@ import { useState } from "react";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getGraphicsLevel, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { getCursorPositionInBeats, getGraphicsLevel, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
 import { App, Quality } from "$/types";
 import { range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -26,11 +26,7 @@ const SmallRings = ({ song, isPlaying }: Props) => {
 			return null;
 		}
 
-		const tracks = getTracks(state);
-
-		const zoomTrackId = App.TrackId[9];
-
-		const zoomEvents = tracks[zoomTrackId];
+		const zoomEvents = selectAllBasicEventsForTrack(state, App.TrackId[9]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;
@@ -46,11 +42,7 @@ const SmallRings = ({ song, isPlaying }: Props) => {
 			return null;
 		}
 
-		const tracks = getTracks(state);
-
-		const rotationTrackId = App.TrackId[8];
-
-		const rotationEvents = tracks[rotationTrackId];
+		const rotationEvents = selectAllBasicEventsForTrack(state, App.TrackId[8]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;

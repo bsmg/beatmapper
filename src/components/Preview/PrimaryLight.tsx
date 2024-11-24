@@ -6,7 +6,7 @@ import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useOnChange } from "$/hooks/use-on-change.hook";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { getCursorPositionInBeats, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 import { findMostRecentEventInTrack, getSpringConfigForLight } from "./Preview.helpers";
@@ -30,10 +30,7 @@ const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
 			return null;
 		}
 
-		const trackId = App.TrackId[4];
-
-		const tracks = getTracks(state);
-		const events = tracks[trackId];
+		const events = selectAllBasicEventsForTrack(state, App.TrackId[4]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;

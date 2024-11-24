@@ -33,7 +33,7 @@ const SpeedTrackEvent = ({ event, trackId, startBeat, endBeat, parentWidth, pare
 			}}
 			onPointerDown={(ev) => {
 				if (ev.button === 2) {
-					dispatch(deleteEvent({ id: event.id, trackId, areLasersLocked }));
+					dispatch(deleteEvent({ beatNum: event.beatNum, trackId, areLasersLocked }));
 				}
 			}}
 		/>

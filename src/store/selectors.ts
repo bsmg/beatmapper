@@ -1,4 +1,4 @@
-import { createSelector } from "@reduxjs/toolkit";
+import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 
 import { SURFACE_DEPTHS } from "$/constants";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
@@ -6,17 +6,18 @@ import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { calculateNoteDensity } from "$/helpers/notes.helpers";
 import { App, View } from "$/types";
 import { floorToNearest } from "$/utils";
-import { selectHistory } from "./helpers";
+import { createByPositionSelector, selectHistory } from "./helpers";
 import type { RootState } from "./setup";
 
 import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
+import bombs from "./features/entities/beatmap/bombs.slice";
 import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
 import difficulty from "./features/entities/difficulty.slice";
-import tracks from "./features/entities/lightshow/tracks.slice";
+import basic from "./features/entities/lightshow/basic.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
@@ -76,41 +77,45 @@ export const getStartAndEndBeat = createSelector(getZoomLevelStartBeat, getZoomL
 });
 
 export const { getDifficulty } = difficulty.getSelectors((state: RootState) => {
-	return state.editorEntities.difficulty;
+	return state.entities.difficulty;
 });
 
 export const getCanUndo = createSelector(
-	(state: RootState) => state.editorEntities.notesView,
+	(state: RootState) => state.entities.beatmap,
 	(history) => {
 		return history.past.length > 0;
 	},
 );
 export const getCanRedo = createSelector(
-	(state: RootState) => state.editorEntities.notesView,
+	(state: RootState) => state.entities.beatmap,
 	(history) => {
 		return history.future.length > 0;
 	},
 );
 
-export const { getNotes, getNumOfBlocks, getNumOfMines, getSelectedBlocks, getSelectedMines, getSelectedNotes } = notes.getSelectors((state: RootState) => {
-	return state.editorEntities.notesView.present.notes;
+export const {
+	selectAll: selectAllColorNotes,
+	selectAllSelected: selectAllSelectedColorNotes,
+	selectTotal: selectTotalColorNotes,
+} = notes.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.beatmap.present.notes;
 });
-export const { getNotes: getPastNotes } = notes.getSelectors(
+export const { selectAll: selectPastColorNotes } = notes.getSelectors(
 	selectHistory(
-		(state: RootState) => state.editorEntities.notesView.past,
+		(state: Pick<RootState, "entities">) => state.entities.beatmap.past,
 		(state) => state.notes,
 	),
 );
-export const { getNotes: getFutureNotes } = notes.getSelectors(
+export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 	selectHistory(
-		(state: RootState) => state.editorEntities.notesView.future,
+		(state: Pick<RootState, "entities">) => state.entities.beatmap.future,
 		(state) => state.notes,
 	),
 );
-export const getVisibleNotes = createSelector(getNotes, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (notes, cursorPositionInBeats, beatDepth, graphicsLevel) => {
+export const getVisibleNotes = createSelector(selectAllColorNotes, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (notes, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return notes.filter((note) => {
-		return note._time > closeLimit && note._time < farLimit;
+		return note.beatNum > closeLimit && note.beatNum < farLimit;
 	});
 });
 export const getNoteDensity = createSelector(getVisibleNotes, getBeatDepth, getSelectedSong, getGraphicsLevel, (notes, beatDepth, song, graphicsLevel) => {
@@ -121,22 +126,55 @@ export const getNoteDensity = createSelector(getVisibleNotes, getBeatDepth, getS
 	return calculateNoteDensity(notes.length, segmentLengthInBeats, bpm);
 });
 
-export const { getNumOfObstacles, getObstacles, getSelectedObstacles } = obstacles.getSelectors((state: RootState) => {
-	return state.editorEntities.notesView.present.obstacles;
+export const {
+	selectAll: selectAllBombNotes,
+	selectAllSelected: selectAllSelectedBombNotes,
+	selectTotal: selectedTotalBombNotes,
+} = bombs.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.beatmap.present.bombs;
 });
-export const { getObstacles: getPastObstacles } = obstacles.getSelectors(
+export const { selectAll: selectPastBombNotes } = bombs.getSelectors(
 	selectHistory(
-		(state: RootState) => state.editorEntities.notesView.past,
+		(state: Pick<RootState, "entities">) => state.entities.beatmap.past,
+		(state) => state.bombs,
+	),
+);
+export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
+	selectHistory(
+		(state: Pick<RootState, "entities">) => state.entities.beatmap.future,
+		(state) => state.bombs,
+	),
+);
+export const getVisibleBombs = createSelector(selectAllBombNotes, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (bombs, cursorPositionInBeats, beatDepth, graphicsLevel) => {
+	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
+	return bombs.filter((note) => {
+		return note.beatNum > closeLimit && note.beatNum < farLimit;
+	});
+});
+
+export const selectAllNotes = createDraftSafeSelector(selectAllColorNotes, selectAllBombNotes, (notes, bombs) => [...notes, ...bombs]);
+export const selectNoteByPosition = createByPositionSelector(selectAllNotes);
+
+export const {
+	selectAll: selectAllObstacles,
+	selectAllSelected: selectAllSelectedObstacles,
+	selectTotal: selectTotalObstacles,
+} = obstacles.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.beatmap.present.obstacles;
+});
+export const { selectAll: selectPastObstacles } = obstacles.getSelectors(
+	selectHistory(
+		(state: Pick<RootState, "entities">) => state.entities.beatmap.past,
 		(state) => state.obstacles,
 	),
 );
-export const { getObstacles: getFutureObstacles } = obstacles.getSelectors(
+export const { selectAll: selectFutureObstacles } = obstacles.getSelectors(
 	selectHistory(
-		(state: RootState) => state.editorEntities.notesView.future,
+		(state: Pick<RootState, "entities">) => state.entities.beatmap.future,
 		(state) => state.obstacles,
 	),
 );
-export const getVisibleObstacles = createSelector(getObstacles, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
+export const selectAllVisibleObstacles = createSelector(selectAllObstacles, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return obstacles.filter((obstacle) => {
 		const beatEnd = obstacle.beatNum + obstacle.beatDuration;
@@ -144,51 +182,47 @@ export const getVisibleObstacles = createSelector(getObstacles, getCursorPositio
 	});
 });
 
-export const selectAllSelectedObjects = createSelector(getSelectedNotes, getSelectedObstacles, (notes, obstacles) => {
+export const selectAllSelectedObjects = createSelector(selectAllSelectedColorNotes, selectAllSelectedBombNotes, selectAllSelectedObstacles, (notes, bombs, obstacles) => {
 	return {
 		notes: notes.length > 0 ? notes : undefined,
+		bombs: bombs.length > 0 ? bombs : undefined,
 		obstacles: obstacles.length > 0 ? obstacles : undefined,
 	};
 });
 
 export const {
-	getAllEventsAsArray,
-	getEventForTrackAtBeat,
-	getEvents,
-	getSelectedEvents: getSelectedBasicEvents,
-	getTrackSpeedAtBeat,
-	getTracks,
-} = tracks.getSelectors((state: RootState) => {
-	return state.editorEntities.eventsView.present.tracks;
+	selectAll: selectAllBasicEvents,
+	selectAllSelected: selectAllSelectedBasicEvents,
+	selectAllForTrack: selectAllBasicEventsForTrack,
+	selectForTrackAtBeat: selectBasicEventForTrackAtBeat,
+	selectTrackSpeedAtBeat: selectValueForTrackAtBeat,
+} = basic.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.lightshow.present.basic;
 });
-export const { getEvents: getPastEvents } = tracks.getSelectors(
+export const { selectAll: selectPastBasicEvents } = basic.getSelectors(
 	selectHistory(
-		(state: RootState) => state.editorEntities.eventsView.past,
-		(state) => state.tracks,
+		(state: Pick<RootState, "entities">) => state.entities.lightshow.past,
+		(state) => state.basic,
 	),
 );
-export const { getEvents: getFutureEvents } = tracks.getSelectors(
+export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 	selectHistory(
-		(state: RootState) => state.editorEntities.eventsView.future,
-		(state) => state.tracks,
+		(state: Pick<RootState, "entities">) => state.entities.lightshow.future,
+		(state) => state.basic,
 	),
 );
-export function makeGetEventsForTrack(trackId: App.TrackId) {
-	return createSelector(getStartAndEndBeat, getTracks, ({ startBeat, endBeat }, tracks) => {
-		return tracks[trackId].filter((event) => event.beatNum >= startBeat && event.beatNum < endBeat);
-	});
-}
-export function makeGetInitialTrackLightingColorType(trackId: App.TrackId) {
-	return createSelector(getStartAndEndBeat, getTracks, ({ startBeat }, tracks) => {
-		const eventsInWindow = tracks[trackId].filter((event) => event.beatNum < startBeat);
-		const lastEvent = eventsInWindow[eventsInWindow.length - 1];
-		if (!lastEvent) return null;
-		const isLastEventOn = lastEvent.type === App.BasicEventType.ON || lastEvent.type === App.BasicEventType.FLASH;
-		return isLastEventOn ? lastEvent.colorType : null;
-	});
-}
+export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectAllBasicEventsForTrack, getStartAndEndBeat], (events, { startBeat, endBeat }) => {
+	return events.filter((event) => event.beatNum >= startBeat && event.beatNum < endBeat);
+});
+export const selectInitialColorForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, getStartAndEndBeat], (events, { startBeat }) => {
+	const eventsInWindow = events.filter((event) => event.beatNum < startBeat);
+	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
+	if (!lastEvent) return null;
+	const isLastEventOn = lastEvent.type === App.BasicEventType.ON || lastEvent.type === App.BasicEventType.FLASH;
+	return isLastEventOn ? lastEvent.colorType : null;
+});
 
-export const selectAllSelectedEvents = createSelector(getSelectedBasicEvents, (basic) => {
+export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basic) => {
 	return {
 		basic: basic.length > 0 ? basic : undefined,
 	};
@@ -202,7 +236,7 @@ export const selectAllSelectedEntities = createSelector([selectAllSelectedObject
 	};
 });
 
-export const { getBookmarks, getSortedBookmarksArray } = bookmarks.getSelectors((state: RootState) => {
+export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: Pick<RootState, "bookmarks">) => {
 	return state.bookmarks;
 });
 

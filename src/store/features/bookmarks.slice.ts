@@ -1,39 +1,34 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { createBookmark, createNewSong, deleteBookmark, leaveEditor, loadBeatmapEntities, startLoadingSong } from "$/store/actions";
 import type { App } from "$/types";
 
-const initialState = {} as Record<number, App.Bookmark>;
+const adapter = createEntityAdapter<App.Bookmark, EntityId>({
+	selectId: (x) => x.beatNum,
+});
+const { selectAll } = adapter.getSelectors();
 
 const slice = createSlice({
 	name: "bookmarks",
-	initialState: initialState,
+	initialState: adapter.getInitialState(),
 	selectors: {
-		getBookmarks: (state) => state,
-		getSortedBookmarksArray: (state) => {
-			const bookmarksArray = Object.values(state);
-			return bookmarksArray.sort((a, b) => a.beatNum - b.beatNum);
-		},
+		selectAll: selectAll,
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(loadBeatmapEntities, (_, action) => {
+		builder.addCase(loadBeatmapEntities, (state, action) => {
 			const { bookmarks } = action.payload;
-			// The initial data is loaded as an array, we need to convert it to a map.
-			return bookmarks.reduce((acc, bookmark) => {
-				acc[bookmark.beatNum] = bookmark;
-				return acc;
-			}, initialState);
+			return adapter.setAll(state, bookmarks ?? []);
 		});
 		builder.addCase(createBookmark.fulfilled, (state, action) => {
 			const { beatNum, name, color } = action.payload;
-			return { ...state, [beatNum]: { beatNum: beatNum, name: name, color: color } };
+			return adapter.addOne(state, { beatNum, name, color });
 		});
 		builder.addCase(deleteBookmark, (state, action) => {
 			const { beatNum } = action.payload;
-			delete state[beatNum];
+			return adapter.removeOne(state, beatNum);
 		});
-		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => initialState);
+		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => adapter.getInitialState());
 		builder.addDefaultCase((state) => state);
 	},
 });

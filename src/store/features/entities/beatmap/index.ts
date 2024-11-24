@@ -21,10 +21,12 @@ import {
 	undoNotes,
 } from "$/store/actions";
 
+import bombs from "./bombs.slice";
 import notes from "./notes.slice";
 import obstacles from "./obstacles.slice";
 
 const reducer = combineReducers({
+	bombs: bombs.reducer,
 	notes: notes.reducer,
 	obstacles: obstacles.reducer,
 });

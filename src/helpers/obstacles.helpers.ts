@@ -1,8 +1,5 @@
-import { nanoid } from "nanoid";
-
 import { DEFAULT_NUM_COLS } from "$/constants";
 import { App, type Json, ObjectPlacementMode } from "$/types";
-import { ObstacleType } from "$/types/beatmap/app";
 import { clamp, normalize, roundToNearest } from "$/utils";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
 
@@ -16,13 +13,17 @@ const WALL_START_MAX = 400;
 
 const RIDICULOUS_MAP_EX_CONSTANT = 4001;
 
+export function selectId(x: Pick<App.Obstacle, "beatNum" | "colIndex" | "type">) {
+	return `${x.beatNum}-${x.colIndex}-${Object.values(App.ObstacleType).indexOf(x.type)}`;
+}
+
 export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.IExtensionObstacle {
-	return obstacle.type === ObstacleType.EXTENDED;
+	return obstacle.type === App.ObstacleType.EXTENDED;
 }
 
 export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): App.Obstacle[] {
 	return obstacles.map((o) => {
-		const obstacleData = {} as App.Obstacle;
+		const obstacleData = { beatNum: o._time } as App.Obstacle;
 		if (o._type <= 1) {
 			obstacleData.type = o._type === 0 ? App.ObstacleType.FULL : App.ObstacleType.TOP;
 
@@ -59,13 +60,14 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 			obstacleData.fast = true;
 		}
 
-		return {
+		const data = {
 			...obstacleData,
-			id: nanoid(),
+			id: selectId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? o._lineIndex, type: obstacleData.type }),
 			beatNum: o._time,
 			beatDuration: duration,
 			colIndex: obstacleData.colIndex ?? o._lineIndex,
 		} as App.Obstacle;
+		return data;
 	});
 }
 

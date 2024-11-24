@@ -59,7 +59,7 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 			return COLORS.blueGray[400];
 
 		default:
-			return undefined;
+			throw new Error(`Cannot resolve color for ${item}`);
 	}
 }
 

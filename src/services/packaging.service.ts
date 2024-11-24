@@ -9,11 +9,11 @@ import JSZip from "jszip";
 import { convertBookmarksToExportableJson } from "$/helpers/bookmarks.helpers";
 import { formatColorForMods } from "$/helpers/colors.helpers";
 import { convertEventsToExportableJson } from "$/helpers/events.helpers";
-import { convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
+import { convertBlocksToExportableJson, convertMinesToExportableJson, convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
 import { getSongIdFromName, sortDifficultyIds } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
-import { getAllEventsAsArray, getNotes, getObstacles } from "$/store/selectors";
+import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { App, Difficulty, type Json, type SongId } from "$/types";
 import { isEmpty, omit } from "$/utils";
@@ -143,11 +143,11 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 			const colors = song.modSettings.customColors;
 
 			const colorData = {
-				_colorLeft: formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive),
-				_colorRight: formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive),
-				_envColorLeft: formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive),
-				_envColorRight: formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive),
-				_obstacleColor: formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive),
+				_colorLeft: colors.colorLeft ? formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
+				_colorRight: colors.colorRight ? formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive) : undefined,
+				_envColorLeft: colors.envColorLeft ? formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive) : undefined,
+				_envColorRight: colors.envColorRight ? formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive) : undefined,
+				_obstacleColor: colors.obstacleColor ? formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive) : undefined,
 			};
 
 			for (const set of contents._difficultyBeatmapSets) {
@@ -253,14 +253,16 @@ export function createBeatmapContents(
 }
 
 export function createBeatmapContentsFromState(state: RootState, song: Pick<App.Song, "offset" | "bpm" | "modSettings">) {
-	const notes = getNotes(state);
-	const events = convertEventsToExportableJson(getAllEventsAsArray(state));
-	const obstacles = convertObstaclesToExportableJson(getObstacles(state));
-	const bookmarks = convertBookmarksToExportableJson(Object.values(state.bookmarks));
+	const notes = convertBlocksToExportableJson(selectAllColorNotes(state));
+	const bombs = convertMinesToExportableJson(selectAllBombNotes(state));
+	const events = convertEventsToExportableJson(selectAllBasicEvents(state));
+	const obstacles = convertObstaclesToExportableJson(selectAllObstacles(state));
+	const bookmarks = convertBookmarksToExportableJson(selectAllBookmarks(state));
 
 	// It's important that notes are sorted by their _time property primarily, and then by _lineLayer secondarily.
 
 	const shiftedNotes = shiftEntitiesByOffset(notes, song.offset, song.bpm);
+	const shiftedBombs = shiftEntitiesByOffset(bombs, song.offset, song.bpm);
 	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
 	const shiftedObstacles = shiftEntitiesByOffset(obstacles, song.offset, song.bpm);
 
@@ -270,17 +272,19 @@ export function createBeatmapContentsFromState(state: RootState, song: Pick<App.
 		selected: false,
 	});
 	let deselectedNotes = shiftedNotes.map(deselect);
+	let deselectedBombs = shiftedBombs.map(deselect);
 	const deselectedObstacles = shiftedObstacles.map(deselect);
 	const deselectedEvents = shiftedEvents.map(deselect);
 
 	// If the user has mapping extensions enabled, multiply the notes to sit in the 1000+ range.
 	if (song.modSettings.mappingExtensions?.isEnabled) {
 		deselectedNotes = convertNotesToMappingExtensions(deselectedNotes);
+		deselectedBombs = convertNotesToMappingExtensions(deselectedBombs);
 	}
 
 	return createBeatmapContents(
 		{
-			notes: deselectedNotes,
+			notes: [...deselectedNotes, ...deselectedBombs],
 			obstacles: deselectedObstacles,
 			events: deselectedEvents,
 			bookmarks,
@@ -407,7 +411,7 @@ export async function convertLegacyArchive(archive: JSZip) {
 					notes: fileJson._notes,
 					obstacles: fileJson._obstacles,
 					events: fileJson._events,
-					bookmarks: fileJson._bookmarks,
+					bookmarks: fileJson._customData?._bookmarks,
 				},
 				{ version: 2 },
 			);

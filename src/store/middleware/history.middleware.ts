@@ -3,20 +3,38 @@ import { type MiddlewareAPI, createListenerMiddleware } from "@reduxjs/toolkit";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { getBeatNumForItem } from "$/helpers/item.helpers";
 import * as actions from "$/store/actions";
-import { getBeatDepth, getCursorPositionInBeats, getEvents, getFutureEvents, getFutureNotes, getFutureObstacles, getGraphicsLevel, getNotes, getObstacles, getPastEvents, getPastNotes, getPastObstacles, getStartAndEndBeat } from "$/store/selectors";
+import {
+	getBeatDepth,
+	getCursorPositionInBeats,
+	getGraphicsLevel,
+	getStartAndEndBeat,
+	selectAllBasicEvents,
+	selectAllBombNotes,
+	selectAllColorNotes,
+	selectAllObstacles,
+	selectFutureBasicEvents,
+	selectFutureBombNotes,
+	selectFutureColorNotes,
+	selectFutureObstacles,
+	selectPastBasicEvents,
+	selectPastBombNotes,
+	selectPastColorNotes,
+	selectPastObstacles,
+} from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { App, Json } from "$/types";
+import type { BeatmapEntities } from "$/types";
 import { findUniquesWithinArrays } from "$/utils";
 
-function jumpToEarliestNote(args: { earlierNotes: Json.Note[]; laterNotes: Json.Note[]; earlierObstacles: App.Obstacle[]; laterObstacles: App.Obstacle[] }, api: MiddlewareAPI) {
-	const relevantNotes = findUniquesWithinArrays(args.earlierNotes, args.laterNotes);
-	const relevantObstacles = findUniquesWithinArrays(args.earlierObstacles, args.laterObstacles);
+function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" | "obstacles"]: { past: BeatmapEntities[K]; future: BeatmapEntities[K] } }) {
+	const relevantNotes = findUniquesWithinArrays(args.notes.past, args.notes.future);
+	const relevantBombs = findUniquesWithinArrays(args.bombs.past, args.bombs.future);
+	const relevantObstacles = findUniquesWithinArrays(args.obstacles.past, args.obstacles.future);
 
-	if (relevantNotes.length === 0 && relevantObstacles.length === 0) {
+	if (relevantNotes.length === 0 && relevantBombs.length === 0 && relevantObstacles.length === 0) {
 		return;
 	}
 
-	const relevantEntities = [relevantNotes, relevantObstacles].find((entity) => entity.length > 0) ?? [];
+	const relevantEntities = [relevantNotes, relevantBombs, relevantObstacles].find((entity) => entity.length > 0) ?? [];
 
 	// For now, assume that the first entity is the earliest.
 	// Might make sense to sort them, so that if I delete a selected cluster it brings me to the start of that cluster?
@@ -39,8 +57,8 @@ function jumpToEarliestNote(args: { earlierNotes: Json.Note[]; laterNotes: Json.
 	}
 }
 
-function switchEventPagesIfNecessary(args: { earlierEvents: App.BasicEvent[]; currentEvents: App.BasicEvent[] }, api: MiddlewareAPI) {
-	const relevantEvents = findUniquesWithinArrays(args.earlierEvents, args.currentEvents);
+function switchEventPagesIfNecessary(api: MiddlewareAPI, args: { [K in "events"]: { past: BeatmapEntities[K]; future: BeatmapEntities[K] } }) {
+	const relevantEvents = findUniquesWithinArrays(args.events.past, args.events.future);
 
 	if (relevantEvents.length === 0) {
 		return;
@@ -80,44 +98,60 @@ export default function createHistoryMiddleware() {
 		actionCreator: actions.undoNotes,
 		effect: (_, api) => {
 			const state = api.getState();
-			const pastNotes = getPastNotes(state);
-			const presentNotes = getNotes(state);
-			const pastObstacles = getPastObstacles(state);
-			const presentObstacles = getObstacles(state);
+			const pastNotes = selectPastColorNotes(state);
+			const presentNotes = selectAllColorNotes(state);
+			const pastBombs = selectPastBombNotes(state);
+			const presentBombs = selectAllBombNotes(state);
+			const pastObstacles = selectPastObstacles(state);
+			const presentObstacles = selectAllObstacles(state);
 			if (!pastNotes.length) return;
-			jumpToEarliestNote({ earlierNotes: pastNotes, laterNotes: presentNotes, earlierObstacles: pastObstacles, laterObstacles: presentObstacles }, api);
+			jumpToEarliestNote(api, {
+				notes: { past: pastNotes, future: presentNotes },
+				bombs: { past: pastBombs, future: presentBombs },
+				obstacles: { past: pastObstacles, future: presentObstacles },
+			});
 		},
 	});
 	instance.startListening({
 		actionCreator: actions.redoNotes,
 		effect: (_, api) => {
 			const state = api.getState();
-			const presentNotes = getNotes(state);
-			const futureNotes = getFutureNotes(state);
-			const presentObstacles = getObstacles(state);
-			const futureObstacles = getFutureObstacles(state);
+			const presentNotes = selectAllColorNotes(state);
+			const futureNotes = selectFutureColorNotes(state);
+			const presentBombs = selectAllBombNotes(state);
+			const futureBombs = selectFutureBombNotes(state);
+			const presentObstacles = selectAllObstacles(state);
+			const futureObstacles = selectFutureObstacles(state);
 			if (!futureNotes.length) return;
-			jumpToEarliestNote({ earlierNotes: presentNotes, laterNotes: futureNotes, earlierObstacles: presentObstacles, laterObstacles: futureObstacles }, api);
+			jumpToEarliestNote(api, {
+				notes: { past: presentNotes, future: futureNotes },
+				bombs: { past: presentBombs, future: futureBombs },
+				obstacles: { past: presentObstacles, future: futureObstacles },
+			});
 		},
 	});
 	instance.startListening({
 		actionCreator: actions.undoEvents,
 		effect: (_, api) => {
 			const state = api.getState();
-			const pastEvents = getPastEvents(state);
-			const presentEvents = getEvents(state);
+			const pastEvents = selectPastBasicEvents(state);
+			const presentEvents = selectAllBasicEvents(state);
 			if (pastEvents === null) return;
-			switchEventPagesIfNecessary({ earlierEvents: pastEvents, currentEvents: presentEvents }, api);
+			switchEventPagesIfNecessary(api, {
+				events: { past: pastEvents, future: presentEvents },
+			});
 		},
 	});
 	instance.startListening({
 		actionCreator: actions.redoEvents,
 		effect: (_, api) => {
 			const state = api.getState();
-			const presentEvents = getEvents(state);
-			const futureEvents = getFutureEvents(state);
+			const presentEvents = selectAllBasicEvents(state);
+			const futureEvents = selectFutureBasicEvents(state);
 			if (futureEvents === null) return;
-			switchEventPagesIfNecessary({ earlierEvents: presentEvents, currentEvents: futureEvents }, api);
+			switchEventPagesIfNecessary(api, {
+				events: { past: presentEvents, future: futureEvents },
+			});
 		},
 	});
 

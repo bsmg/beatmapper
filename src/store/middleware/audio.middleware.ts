@@ -28,7 +28,7 @@ import {
 	updateSongDetails,
 	updateVolume,
 } from "$/store/actions";
-import { getBeatsPerZoomLevel, getCursorPosition, getCursorPositionInBeats, getDuration, getIsLockedToCurrentWindow, getNotes, getPlayNoteTick, getPlaybackRate, getProcessingDelay, getSelectedSong, getSnapTo, getSongById, getVolume } from "$/store/selectors";
+import { getBeatsPerZoomLevel, getCursorPosition, getCursorPositionInBeats, getDuration, getIsLockedToCurrentWindow, getPlayNoteTick, getPlaybackRate, getProcessingDelay, getSelectedSong, getSnapTo, getSongById, getVolume, selectAllColorNotes } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { View } from "$/types";
 import { clamp, floorToNearest } from "$/utils";
@@ -42,7 +42,7 @@ function triggerTickerIfNecessary(state: RootState, currentBeat: number, lastBea
 	const playNoteTick = getPlayNoteTick(state);
 	if (playNoteTick) {
 		const delayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-		const anyNotesWithinTimespan = getNotes(state).some((note) => note._time - delayInBeats >= lastBeat && note._time - delayInBeats < currentBeat && note._type !== 3);
+		const anyNotesWithinTimespan = selectAllColorNotes(state).some((note) => note.beatNum - delayInBeats >= lastBeat && note.beatNum - delayInBeats < currentBeat);
 		if (anyNotesWithinTimespan) {
 			ticker.trigger();
 		}

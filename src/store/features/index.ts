@@ -13,7 +13,7 @@ import waveform from "./waveform.slice";
 const reducer = combineReducers({
 	songs: songs.reducer,
 	clipboard: clipboard.reducer,
-	editorEntities: entities.reducer,
+	entities: entities.reducer,
 	waveform: waveform.reducer,
 	navigation: navigation.reducer,
 	editor: editor.reducer,

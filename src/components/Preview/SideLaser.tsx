@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPosition, getCursorPositionInBeats, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { getCursorPosition, getCursorPositionInBeats, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -50,11 +50,7 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 			return null;
 		}
 
-		const tracks = getTracks(state);
-
-		const trackId = side === "left" ? App.TrackId[2] : App.TrackId[3];
-
-		const lightEvents = tracks[trackId];
+		const lightEvents = selectAllBasicEventsForTrack(state, side === "left" ? App.TrackId[2] : App.TrackId[3]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;
@@ -70,11 +66,7 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 			return 0;
 		}
 
-		const tracks = getTracks(state);
-
-		const speedTrackId = side === "left" ? App.TrackId[12] : App.TrackId[13];
-
-		const speedEvents = tracks[speedTrackId];
+		const speedEvents = selectAllBasicEventsForTrack(state, side === "left" ? App.TrackId[12] : App.TrackId[13]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return 0;

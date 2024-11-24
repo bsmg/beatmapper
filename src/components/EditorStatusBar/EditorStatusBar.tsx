@@ -24,7 +24,7 @@ import styled from "styled-components";
 import { COLORS, UNIT } from "$/constants";
 import { toggleNoteTick, togglePreviewLightingInEventsView, tweakEventBackgroundOpacity, tweakEventRowHeight, updateBeatDepth, updatePlaybackSpeed, updateVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBackgroundOpacity, getBeatDepth, getIsLoading, getNumOfBlocks, getNumOfMines, getNumOfObstacles, getPlayNoteTick, getPlaybackRate, getRowHeight, getShowLightingPreview, getVolume } from "$/store/selectors";
+import { getBackgroundOpacity, getBeatDepth, getIsLoading, getPlayNoteTick, getPlaybackRate, getRowHeight, getShowLightingPreview, getVolume, selectTotalColorNotes, selectTotalObstacles, selectedTotalBombNotes } from "$/store/selectors";
 import { View } from "$/types";
 import { pluralize } from "$/utils";
 
@@ -56,9 +56,9 @@ const EditorStatusBar = ({ height }: Props) => {
 	const beatDepth = useAppSelector(getBeatDepth);
 	const volume = useAppSelector(getVolume);
 	const playNoteTick = useAppSelector(getPlayNoteTick);
-	const numOfBlocks = useAppSelector(getNumOfBlocks);
-	const numOfMines = useAppSelector(getNumOfMines);
-	const numOfObstacles = useAppSelector(getNumOfObstacles);
+	const numOfBlocks = useAppSelector(selectTotalColorNotes);
+	const numOfMines = useAppSelector(selectedTotalBombNotes);
+	const numOfObstacles = useAppSelector(selectTotalObstacles);
 	const showLightingPreview = useAppSelector(getShowLightingPreview);
 	const rowHeight = useAppSelector(getRowHeight);
 	const backgroundOpacity = useAppSelector(getBackgroundOpacity);

@@ -6,8 +6,8 @@ import lightshow from "./lightshow";
 
 const reducer = combineReducers({
 	difficulty: difficulty.reducer,
-	notesView: beatmap.reducer,
-	eventsView: lightshow.reducer,
+	beatmap: beatmap.reducer,
+	lightshow: lightshow.reducer,
 });
 
 export default { reducer };

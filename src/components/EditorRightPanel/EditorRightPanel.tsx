@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { UNIT } from "$/constants";
 import { useOnChange, useOnKeydown } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getMappingMode, getSelectedBlocks, getSelectedMines, getSelectedObstacles, getSelectedSong } from "$/store/selectors";
+import { getMappingMode, getSelectedSong, selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles } from "$/store/selectors";
 import { ObjectPlacementMode } from "$/types";
 
 import ItemGrid from "../ItemGrid";
@@ -20,9 +20,9 @@ const bottomPanelHeight = 180;
 const EditorRightPanel = () => {
 	const song = useAppSelector(getSelectedSong);
 	const mappingMode = useAppSelector(getMappingMode);
-	const selectedBlocks = useAppSelector(getSelectedBlocks);
-	const selectedMines = useAppSelector(getSelectedMines);
-	const selectedObstacles = useAppSelector(getSelectedObstacles);
+	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);
+	const selectedMines = useAppSelector(selectAllSelectedBombNotes);
+	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
 
 	const isAnythingSelected = selectedBlocks.length > 0 || selectedObstacles.length > 0 || selectedMines.length > 0;
 

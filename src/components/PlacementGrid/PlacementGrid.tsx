@@ -81,7 +81,7 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 				const effectiveRowIndex = convertGridRow(rowIndex, numRows, rowHeight);
 
 				// If this is the first move event that creates this tentative block, delete any pre-existing block in this cell
-				dispatch(clearCellOfNotes({ rowIndex: effectiveRowIndex, colIndex: effectiveColIndex }));
+				dispatch(clearCellOfNotes({ rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, tool: selectedTool }));
 
 				evenMoreTentativeBlock = {
 					direction,
@@ -99,7 +99,7 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 		const handleMouseUp = (_ev: MouseEvent) => {
 			window.requestAnimationFrame(() => {
 				if (evenMoreTentativeBlock) {
-					dispatch(setBlockByDragging({ direction: evenMoreTentativeBlock.direction, rowIndex: evenMoreTentativeBlock.rowIndex, colIndex: evenMoreTentativeBlock.colIndex, selectedTool: evenMoreTentativeBlock.selectedTool }));
+					dispatch(setBlockByDragging({ direction: evenMoreTentativeBlock.direction, rowIndex: evenMoreTentativeBlock.rowIndex, colIndex: evenMoreTentativeBlock.colIndex, tool: evenMoreTentativeBlock.selectedTool }));
 					setTentativeBlock(null);
 				}
 				setMouseDownAt(null);

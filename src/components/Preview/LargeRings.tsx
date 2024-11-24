@@ -6,7 +6,7 @@ import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getAnimateRingMotion, getCursorPositionInBeats, getGraphicsLevel, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { getAnimateRingMotion, getCursorPositionInBeats, getGraphicsLevel, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
 import { App, Quality } from "$/types";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
 
@@ -27,11 +27,7 @@ const LargeRings = ({ song, isPlaying }: Props) => {
 			return null;
 		}
 
-		const tracks = getTracks(state);
-
-		const rotationTrackId = App.TrackId[8];
-
-		const rotationEvents = tracks[rotationTrackId];
+		const rotationEvents = selectAllBasicEventsForTrack(state, App.TrackId[8]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;
@@ -47,11 +43,7 @@ const LargeRings = ({ song, isPlaying }: Props) => {
 			return null;
 		}
 
-		const tracks = getTracks(state);
-
-		const lightingTrackId = App.TrackId[1];
-
-		const lightingEvents = tracks[lightingTrackId];
+		const lightingEvents = selectAllBasicEventsForTrack(state, App.TrackId[1]);
 
 		const currentBeat = getCursorPositionInBeats(state);
 		if (!currentBeat) return null;

@@ -6,7 +6,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { findNoteByProperties } from "$/helpers/notes.helpers";
 import { bulkDeleteNote, clickNote, deleteNote, deselectNote, mouseOverNote, selectNote, toggleNoteColor } from "$/store/actions";
-import { getNoteSelectionMode, getNotes } from "$/store/selectors";
+import { getNoteSelectionMode, selectAllColorNotes, selectNoteByPosition } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { ObjectSelectionMode } from "$/types";
 
@@ -17,17 +17,17 @@ export default function createSelectionMiddleware() {
 		actionCreator: clickNote,
 		effect: (action, api) => {
 			const state = api.getState();
-			const { clickType, time, lineLayer, lineIndex } = action.payload;
-			const note = findNoteByProperties(getNotes(state), { time, lineLayer, lineIndex });
+			const { clickType, time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
+			const note = selectNoteByPosition(state, { beatNum, colIndex, rowIndex });
 			if (!note) return;
 			if (clickType === "middle") {
-				api.dispatch(toggleNoteColor({ time, lineLayer, lineIndex }));
+				api.dispatch(toggleNoteColor({ time: beatNum, lineIndex: colIndex, lineLayer: rowIndex }));
 			} else if (clickType === "right") {
-				api.dispatch(deleteNote({ time, lineLayer, lineIndex }));
+				api.dispatch(deleteNote({ time: beatNum, lineIndex: colIndex, lineLayer: rowIndex }));
 			} else if (note.selected) {
-				api.dispatch(deselectNote({ time, lineLayer, lineIndex }));
+				api.dispatch(deselectNote({ time: beatNum, lineIndex: colIndex, lineLayer: rowIndex }));
 			} else {
-				api.dispatch(selectNote({ time, lineLayer, lineIndex }));
+				api.dispatch(selectNote({ time: beatNum, lineIndex: colIndex, lineLayer: rowIndex }));
 			}
 		},
 	});
@@ -41,7 +41,7 @@ export default function createSelectionMiddleware() {
 			const selectionMode = getNoteSelectionMode(state);
 			if (!selectionMode) return;
 			// Find the note we're mousing over
-			const note = findNoteByProperties(getNotes(state), { time, lineLayer, lineIndex });
+			const note = findNoteByProperties(selectAllColorNotes(state), { time, lineLayer, lineIndex });
 			if (!note) return;
 			// If the selection mode is delete, we can simply remove this note.
 			if (selectionMode === ObjectSelectionMode.DELETE) return api.dispatch(bulkDeleteNote({ time, lineLayer, lineIndex }));

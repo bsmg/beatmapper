@@ -1,5 +1,7 @@
+import { createDraftSafeSelector } from "@reduxjs/toolkit";
 import type { StateWithHistory } from "redux-undo";
 
+import type { IEditorObject } from "$/types";
 import { pick } from "$/utils";
 import type { RootState } from "./setup";
 
@@ -22,4 +24,13 @@ export function selectHistory<T, R, State>(snapshotSelector: (state: T) => State
 		const mostRecentSnapshot = snapshots[snapshots.length - 1];
 		return entitiesSelector(mostRecentSnapshot);
 	};
+}
+
+export function createSelectedEntitiesSelector<State, T extends IEditorObject>(selectAll: (state: State) => T[]) {
+	return createDraftSafeSelector(selectAll, (state) => state.filter((x) => x.selected === true));
+}
+export function createByPositionSelector<State, T extends { beatNum: number; colIndex: number; rowIndex: number }>(selectAll: (state: State) => T[]) {
+	return createDraftSafeSelector([selectAll, (_, query: { beatNum: number; colIndex: number; rowIndex: number }) => query], (state, { beatNum, colIndex, rowIndex }) => {
+		return state.find((x) => x.beatNum === beatNum && x.colIndex === colIndex && x.rowIndex === rowIndex);
+	});
 }

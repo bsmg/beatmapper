@@ -1,12 +1,12 @@
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deleteBookmark, jumpToBeat } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, getSelectedSong, getSortedBookmarksArray } from "$/store/selectors";
+import { getDurationInBeats, getSelectedSong, selectAllBookmarks } from "$/store/selectors";
 
 import BookmarkFlag from "./BookmarkFlag";
 
 const Bookmarks = () => {
-	const bookmarks = useAppSelector(getSortedBookmarksArray);
+	const bookmarks = useAppSelector(selectAllBookmarks);
 	const durationInBeats = useAppSelector(getDurationInBeats);
 	const offsetInBeats = useAppSelector((state) => {
 		const selectedSong = getSelectedSong(state);

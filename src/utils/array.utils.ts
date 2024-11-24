@@ -75,3 +75,8 @@ export function interleave<T, S extends string>(arr: T[], delimiter: S) {
 		return acc.concat(item, delimiter);
 	}, []);
 }
+
+export function cycle<T>(arr: T[], current: T, step = 1) {
+	const index = arr.indexOf(current);
+	return arr[(index + arr.length + step) % arr.length];
+}
