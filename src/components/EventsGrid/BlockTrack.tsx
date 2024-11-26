@@ -2,11 +2,10 @@ import { memo, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { usePointerUpHandler } from "$/hooks";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, getSelectedSong, selectAllBasicEventsForTrackInWindow, selectInitialColorForTrack } from "$/store/selectors";
+import { getDurationInBeats, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectInitialColorForTrack, selectOffsetInBeats } from "$/store/selectors";
 import { App, EventEditMode, EventTool } from "$/types";
 import { clamp } from "$/utils";
 import { getBackgroundBoxes } from "./BlockTrack.helpers";
@@ -26,8 +25,9 @@ interface Props {
 }
 
 const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, areLasersLocked, isDisabled }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const duration = useAppSelector(getDurationInBeats);
+	const songId = useAppSelector(selectActiveSongId);
+	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
+	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, songId));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
 	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
 	const selectedTool = useAppSelector(getSelectedEventTool);
@@ -57,20 +57,18 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 
 	const handleClickTrack = () => {
 		if (cursorAtBeat === null) return;
-		const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-		const beatNum = clamp(cursorAtBeat, offset, (duration ?? cursorAtBeat) + offset);
+		const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
 		return dispatch(placeEvent({ beatNum: beatNum, ...getPropsForPlacedEvent() }));
 	};
 
 	useEffect(() => {
 		if (selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "left") {
 			if (cursorAtBeat !== null) {
-				const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-				const beatNum = clamp(cursorAtBeat, offset, (duration ?? cursorAtBeat) + offset);
+				const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
 				dispatch(bulkPlaceEvent({ beatNum: beatNum, ...getPropsForPlacedEvent() }));
 			}
 		}
-	}, [dispatch, getPropsForPlacedEvent, cursorAtBeat, duration, song.offset, song.bpm, mouseButtonDepressed, selectedEditMode]);
+	}, [dispatch, getPropsForPlacedEvent, cursorAtBeat, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
 	const backgroundBoxes = getBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow);
 
@@ -93,7 +91,7 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 			onContextMenu={(ev) => ev.preventDefault()}
 		>
 			{backgroundBoxes.map((box) => (
-				<BackgroundBox key={box.id} song={song} box={box} startBeat={startBeat} numOfBeatsToShow={numOfBeatsToShow} />
+				<BackgroundBox key={box.id} box={box} startBeat={startBeat} numOfBeatsToShow={numOfBeatsToShow} />
 			))}
 
 			{events.map((event) => {

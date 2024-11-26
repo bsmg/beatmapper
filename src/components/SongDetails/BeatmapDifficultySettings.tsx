@@ -6,8 +6,9 @@ import { COLORS, UNIT } from "$/constants";
 import { renderImperativePrompt } from "$/helpers/modal.helpers";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
-import type { App, BeatmapId } from "$/types";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectSongById } from "$/store/selectors";
+import type { BeatmapId, SongId } from "$/types";
 
 import CopyDifficultyForm from "../CopyDifficultyForm";
 import Heading from "../Heading";
@@ -17,11 +18,12 @@ import Spacer from "../Spacer";
 import TextInput from "../TextInput";
 
 interface Props {
-	song: App.Song;
+	songId: SongId;
 	difficultyId: BeatmapId;
 }
 
-const BeatmapSettings = ({ song, difficultyId }: Props) => {
+const BeatmapSettings = ({ songId, difficultyId }: Props) => {
+	const song = useAppSelector((state) => selectSongById(state, songId));
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 
@@ -40,10 +42,10 @@ const BeatmapSettings = ({ song, difficultyId }: Props) => {
 		const modalProps: ComponentProps<typeof Modal> = { width: 400, alignment: "top" };
 
 		renderImperativePrompt(modalProps, (triggerSuccess, triggerClose) => (
-			<CopyDifficultyForm song={song} idToCopy={difficultyId} afterCopy={(id) => (id ? triggerSuccess(id) : triggerClose())} copyDifficulty={(songId, fromDifficultyId, toDifficultyId, afterCopy) => dispatch(copyDifficulty({ songId, fromDifficultyId, toDifficultyId, afterCopy }))} />
+			<CopyDifficultyForm songId={songId} idToCopy={difficultyId} afterCopy={(id) => (id ? triggerSuccess(id) : triggerClose())} copyDifficulty={(songId, fromDifficultyId, toDifficultyId, afterCopy) => dispatch(copyDifficulty({ songId, fromDifficultyId, toDifficultyId, afterCopy }))} />
 		)).then((copiedToDifficultyId) => {
 			// Redirect the user to this new difficulty, so that when they go to edit it, they're editing the right difficulty.
-			if (copiedToDifficultyId) navigate(`/edit/${song.id}/${copiedToDifficultyId}/details`);
+			if (copiedToDifficultyId) navigate(`/edit/${songId}/${copiedToDifficultyId}/details`);
 		});
 	};
 
@@ -70,9 +72,9 @@ const BeatmapSettings = ({ song, difficultyId }: Props) => {
 		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
 		const nextDifficultyId = remainingDifficultyIds[0];
 
-		dispatch(deleteBeatmap({ songId: song.id, difficulty: difficultyId }));
+		dispatch(deleteBeatmap({ songId: songId, difficulty: difficultyId }));
 
-		navigate(`/edit/${song.id}/${nextDifficultyId}/details`);
+		navigate(`/edit/${songId}/${nextDifficultyId}/details`);
 	};
 
 	const handleSaveBeatmap: MouseEventHandler = (ev) => {
@@ -83,7 +85,7 @@ const BeatmapSettings = ({ song, difficultyId }: Props) => {
 			window.alert("Start beat offset needs to be a number");
 		}
 
-		dispatch(updateBeatmapMetadata({ songId: song.id, difficulty: difficultyId, noteJumpSpeed: Number(noteJumpSpeed), startBeatOffset: Number(startBeatOffset), customLabel }));
+		dispatch(updateBeatmapMetadata({ songId: songId, difficulty: difficultyId, noteJumpSpeed: Number(noteJumpSpeed), startBeatOffset: Number(startBeatOffset), customLabel }));
 	};
 
 	const difficultyLabel = getLabelForDifficulty(difficultyId);

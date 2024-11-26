@@ -19,7 +19,6 @@ import {
 	selectAllInRange,
 	skipToEnd,
 	skipToStart,
-	startLoadingSong,
 	startPlaying,
 	stopPlaying,
 	tick,
@@ -31,7 +30,6 @@ import {
 } from "$/store/actions";
 
 const initialState = {
-	isLoading: false,
 	isPlaying: false,
 	duration: null as number | null,
 	snapTo: 0.5,
@@ -48,7 +46,6 @@ const slice = createSlice({
 	name: "navigation",
 	initialState: initialState,
 	selectors: {
-		getIsLoading: (state) => state.isLoading,
 		getIsPlaying: (state) => state.isPlaying,
 		getDuration: (state) => state.duration,
 		getSnapTo: (state) => state.snapTo,
@@ -70,18 +67,18 @@ const slice = createSlice({
 			if (volume !== undefined) state.volume = volume;
 			if (playNoteTick !== undefined) state.playNoteTick = playNoteTick;
 		});
-		builder.addCase(startLoadingSong, (state) => {
-			return { ...state, isLoading: true };
-		});
 		builder.addCase(finishLoadingSong, (state, action) => {
-			const { waveformData, song } = action.payload;
+			const {
+				waveformData,
+				songData: { offset },
+			} = action.payload;
 			const durationInMs = waveformData.duration * 1000;
-			return { ...state, cursorPosition: song.offset, isLoading: false, duration: durationInMs };
+			return { ...state, cursorPosition: offset, duration: durationInMs };
 		});
 		builder.addCase(reloadWaveform, (state, action) => {
 			const { waveformData } = action.payload;
 			const durationInMs = waveformData.duration * 1000;
-			return { ...state, isLoading: false, duration: durationInMs };
+			return { ...state, duration: durationInMs };
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
 			const { offset } = action.payload;

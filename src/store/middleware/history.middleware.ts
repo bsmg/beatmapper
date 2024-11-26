@@ -8,6 +8,7 @@ import {
 	getCursorPositionInBeats,
 	getGraphicsLevel,
 	getStartAndEndBeat,
+	selectActiveSongId,
 	selectAllBasicEvents,
 	selectAllBombNotes,
 	selectAllColorNotes,
@@ -42,7 +43,8 @@ function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" 
 
 	// Is this note within our visible range? If not, jump to it.
 	const state = api.getState();
-	const cursorPositionInBeats = getCursorPositionInBeats(state);
+	const songId = selectActiveSongId(state);
+	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
 	const beatDepth = getBeatDepth(state);
 	const graphicsLevel = getGraphicsLevel(state);
 
@@ -58,13 +60,15 @@ function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" 
 }
 
 function switchEventPagesIfNecessary(api: MiddlewareAPI, args: { [K in "events"]: { past: BeatmapEntities[K]; future: BeatmapEntities[K] } }) {
+	const state = api.getState() as RootState;
+	const songId = selectActiveSongId(state);
 	const relevantEvents = findUniquesWithinArrays(args.events.past, args.events.future);
 
 	if (relevantEvents.length === 0) {
 		return;
 	}
 
-	const { startBeat, endBeat } = getStartAndEndBeat(api.getState());
+	const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
 
 	const someItemsWithinWindow = relevantEvents.some((event) => {
 		return event.beatNum >= startBeat && event.beatNum < endBeat;

@@ -1,9 +1,8 @@
 import { useState } from "react";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getGraphicsLevel, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
+import { getCursorPositionInBeats, getGraphicsLevel, selectActiveSongId, selectAllBasicEventsForTrack, selectUsableProcessingDelayInBeats } from "$/store/selectors";
 import { App, Quality } from "$/types";
 import { range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -16,40 +15,23 @@ const DISTANCE_BETWEEN_RINGS_MIN = 3;
 const DISTANCE_BETWEEN_RINGS_MAX = 10;
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 }
 
-const SmallRings = ({ song, isPlaying }: Props) => {
+const SmallRings = ({ isPlaying }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+
 	const lastZoomEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const zoomEvents = selectAllBasicEventsForTrack(state, App.TrackId[9]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastZoomEvent = findMostRecentEventInTrack(zoomEvents, currentBeat, processingDelayInBeats);
 		return lastZoomEvent;
 	});
 	const lastRotationEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const rotationEvents = selectAllBasicEventsForTrack(state, App.TrackId[8]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastRotationEvent = findMostRecentEventInTrack(rotationEvents, currentBeat, processingDelayInBeats);
 		return lastRotationEvent;
 	});

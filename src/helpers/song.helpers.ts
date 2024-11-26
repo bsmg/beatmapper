@@ -1,12 +1,9 @@
-import slugify from "slugify";
-
 import { DIFFICULTIES } from "$/constants";
-import { type BeatmapId, Difficulty } from "$/types";
+import { type App, type BeatmapId, Difficulty } from "$/types";
+import { slugify } from "$/utils";
 
-export function getSongIdFromName(songName: string): string {
-	const songId = slugify(songName).toLowerCase();
-
-	return songId;
+export function selectSongId(x: Pick<App.Song, "name">): string {
+	return slugify(x.name);
 }
 
 export function getLabelForDifficulty(difficulty: BeatmapId) {

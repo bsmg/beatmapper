@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { COLORS, SNAPPING_INCREMENTS, UNIT } from "$/constants";
 import { changeSnapping, pausePlaying, seekBackwards, seekForwards, skipToEnd, skipToStart, startPlaying } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getIsLoading, getIsPlaying, getSnapTo } from "$/store/selectors";
+import { getIsPlaying, getSnapTo, selectIsLoading } from "$/store/selectors";
 import type { View } from "$/types";
 
 import Dropdown from "../Dropdown";
@@ -26,7 +26,7 @@ interface Props {
 
 const EditorNavigationControls = ({ view }: Props) => {
 	const isPlaying = useAppSelector(getIsPlaying);
-	const isLoadingSong = useAppSelector(getIsLoading);
+	const isLoadingSong = useAppSelector(selectIsLoading);
 	const snapTo = useAppSelector(getSnapTo);
 	const dispatch = useAppDispatch();
 

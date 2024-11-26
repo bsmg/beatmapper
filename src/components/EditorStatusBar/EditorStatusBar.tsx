@@ -24,7 +24,7 @@ import styled from "styled-components";
 import { COLORS, UNIT } from "$/constants";
 import { toggleNoteTick, togglePreviewLightingInEventsView, tweakEventBackgroundOpacity, tweakEventRowHeight, updateBeatDepth, updatePlaybackSpeed, updateVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBackgroundOpacity, getBeatDepth, getIsLoading, getPlayNoteTick, getPlaybackRate, getRowHeight, getShowLightingPreview, getVolume, selectTotalColorNotes, selectTotalObstacles, selectedTotalBombNotes } from "$/store/selectors";
+import { getBackgroundOpacity, getBeatDepth, getPlayNoteTick, getPlaybackRate, getRowHeight, getShowLightingPreview, getVolume, selectIsLoading, selectTotalColorNotes, selectTotalObstacles, selectedTotalBombNotes } from "$/store/selectors";
 import { View } from "$/types";
 import { pluralize } from "$/utils";
 
@@ -51,7 +51,7 @@ interface Props {
 }
 
 const EditorStatusBar = ({ height }: Props) => {
-	const isLoading = useAppSelector(getIsLoading);
+	const isLoading = useAppSelector(selectIsLoading);
 	const playbackRate = useAppSelector(getPlaybackRate);
 	const beatDepth = useAppSelector(getBeatDepth);
 	const volume = useAppSelector(getVolume);

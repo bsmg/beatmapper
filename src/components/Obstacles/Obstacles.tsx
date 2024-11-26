@@ -1,20 +1,21 @@
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { deleteObstacle, deselectObstacle, resizeObstacle, selectObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getNoteSelectionMode, getSelectedSong, getSnapTo, selectAllVisibleObstacles } from "$/store/selectors";
+import { getBeatDepth, getNoteSelectionMode, getSnapTo, selectActiveSongId, selectAllVisibleObstacles, selectCustomColors } from "$/store/selectors";
 import { ObjectSelectionMode, ObjectTool } from "$/types";
 
 import ObstacleBox from "../ObstacleBox";
 
 const Obstacles = () => {
-	const song = useAppSelector(getSelectedSong);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
 	const obstacles = useAppSelector(selectAllVisibleObstacles);
 	const beatDepth = useAppSelector(getBeatDepth);
 	const selectionMode = useAppSelector(getNoteSelectionMode);
 	const snapTo = useAppSelector(getSnapTo);
 	const dispatch = useAppDispatch();
 
-	const obstacleColor = getColorForItem(ObjectTool.OBSTACLE, song);
+	const obstacleColor = getColorForItem(ObjectTool.OBSTACLE, customColors);
 
 	return obstacles.map((obstacle) => (
 		<ObstacleBox

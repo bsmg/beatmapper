@@ -2,11 +2,10 @@ import { animated, useSpring } from "@react-spring/three";
 import { Fragment } from "react";
 
 import { SURFACE_WIDTH } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useOnChange } from "$/hooks/use-on-change.hook";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
+import { getCursorPositionInBeats, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 import { findMostRecentEventInTrack, getSpringConfigForLight } from "./Preview.helpers";
@@ -19,26 +18,20 @@ const OFF_PROPS = { emissiveIntensity: 0, opacity: 0 };
 const BRIGHT_PROPS = { emissiveIntensity: 1, opacity: 1 };
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 	isBlooming?: boolean;
 }
 
-const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
+const PrimaryLight = ({ isPlaying, isBlooming }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+
 	const lastEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const events = selectAllBasicEventsForTrack(state, App.TrackId[4]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(events, currentBeat, processingDelayInBeats);
-
 		return lastEvent;
 	});
 
@@ -46,7 +39,7 @@ const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
 	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const lastEventId = lastEvent ? lastEvent.id : null;
 
-	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors);
 
 	const springConfig = getSpringConfigForLight([ON_PROPS, OFF_PROPS, BRIGHT_PROPS], status);
 

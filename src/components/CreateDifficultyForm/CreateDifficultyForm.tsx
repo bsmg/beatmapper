@@ -8,7 +8,7 @@ import { DIFFICULTIES, UNIT } from "$/constants";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDifficulty, getSelectedSongDifficultyIds, getSelectedSongId } from "$/store/selectors";
+import { selectActiveBeatmapId, selectActiveSongId, selectBeatmapIds } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
 
 import Button from "../Button";
@@ -23,9 +23,9 @@ interface Props {
 }
 
 const CreateDifficultyForm = ({ afterCreate }: Props) => {
-	const songId = useAppSelector(getSelectedSongId);
-	const currentDifficulty = useAppSelector(getDifficulty);
-	const difficultyIds = useAppSelector(getSelectedSongDifficultyIds);
+	const songId = useAppSelector(selectActiveSongId);
+	const currentDifficulty = useAppSelector(selectActiveBeatmapId);
+	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, songId));
 	const dispatch = useAppDispatch();
 
 	const [selectedId, setSelectedId] = useState<BeatmapId | null>(null);
@@ -72,7 +72,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 				})}
 			</DifficultiesWrapper>
 			<Spacer size={UNIT * 4} />
-			<Button style={{ width: 275, margin: "auto" }} onClick={() => selectedId && dispatch(createDifficulty({ difficulty: selectedId, afterCreate }))}>
+			<Button style={{ width: 275, margin: "auto" }} onClick={() => songId && selectedId && dispatch(createDifficulty({ songId, difficulty: selectedId, afterCreate }))}>
 				Create {selectedId && getLabelForDifficulty(selectedId)} beatmap
 			</Button>
 		</Wrapper>

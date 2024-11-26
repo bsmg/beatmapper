@@ -7,7 +7,7 @@ import { getColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedEventEditMode, getSelectedSong } from "$/store/selectors";
+import { getSelectedEventEditMode, selectActiveSongId, selectCustomColors } from "$/store/selectors";
 import { App, EventEditMode } from "$/types";
 import { normalize } from "$/utils";
 
@@ -15,8 +15,8 @@ import UnstyledButton from "../UnstyledButton";
 
 const BLOCK_WIDTH = 7;
 
-function getBackgroundForEvent(event: App.BasicEvent, song: App.Song) {
-	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, song);
+function getBackgroundForEvent(event: App.BasicEvent, customColors: App.ModSettings["customColors"]) {
+	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, customColors);
 
 	switch (event.type) {
 		case App.BasicEventType.ON:
@@ -60,7 +60,8 @@ interface Props {
 }
 
 const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHover, areLasersLocked }: Props) => {
-	const song = useAppSelector(getSelectedSong);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
 	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
 	const dispatch = useAppDispatch();
 
@@ -68,7 +69,7 @@ const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHo
 
 	const centeredOffset = offset - BLOCK_WIDTH / 2;
 
-	const background = getBackgroundForEvent(event, song);
+	const background = getBackgroundForEvent(event, customColors);
 
 	return (
 		<Wrapper

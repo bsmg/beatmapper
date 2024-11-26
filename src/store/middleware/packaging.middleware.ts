@@ -5,12 +5,13 @@ import type { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContentsFromState, createInfoContent, zipFiles } from "$/services/packaging.service";
 import { shiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { downloadMapFiles } from "$/store/actions";
-import { getDifficulty, getSelectedSong, getSelectedSongDifficultyIds, getSongById, selectAllBasicEvents } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllBasicEvents, selectBeatmapIds, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
+import type { SongId } from "$/types";
 
-function saveEventsToAllDifficulties(state: RootState, filestore: BeatmapFilestore) {
-	const song = getSelectedSong(state);
-	const difficulties = getSelectedSongDifficultyIds(state);
+function saveEventsToAllDifficulties(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
+	const song = selectSongById(state, songId);
+	const difficulties = selectBeatmapIds(state, songId);
 
 	const events = convertEventsToExportableJson(selectAllBasicEvents(state));
 	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
@@ -34,26 +35,27 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: downloadMapFiles,
 		effect: async (action, api) => {
-			const { version, songId } = action.payload;
+			const { songId, version } = action.payload;
+			if (!songId) throw new Error("No selected song.");
 			const state = api.getState();
-			const selectedSong = getSelectedSong(state);
+			const selectedSong = selectSongById(state, songId);
 			let song = selectedSong;
 			if (!selectedSong) {
 				if (!songId) throw new Error("Tried to download a song with no supplied songId, and no currently-selected song.");
-				song = getSongById(state, songId);
+				song = selectSongById(state, songId);
 			}
 			const infoContent = createInfoContent(song, { version: 2 });
 			const beatmapContent = createBeatmapContentsFromState(state, song);
 			// If we have an actively-loaded song, we want to first persist that song so that we download the very latest stuff.
 			// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 			if (selectedSong) {
-				const difficulty = getDifficulty(state);
+				const difficulty = selectActiveBeatmapId(state);
 				// Persist the Info.dat and the currently-edited difficulty.
 				await filestore.saveInfoFile(song.id, infoContent);
 				if (difficulty) await filestore.saveBeatmapFile(song.id, difficulty, beatmapContent);
 				// We also want to share events between all difficulties.
 				// Copy the events currently in state to the non-loaded beatmaps.
-				await saveEventsToAllDifficulties(state, filestore);
+				await saveEventsToAllDifficulties(state, songId, filestore);
 			}
 			// Next, I need to fetch all relevant files from disk.
 			// TODO: Parallelize this if it takes too long

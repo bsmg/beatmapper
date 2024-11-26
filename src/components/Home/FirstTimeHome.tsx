@@ -8,8 +8,7 @@ import { heroVideo } from "$/assets";
 import { COLORS, UNIT } from "$/constants";
 import { useWindowDimensions } from "$/hooks";
 import { loadDemoMap } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDemoSong } from "$/store/selectors";
+import { useAppDispatch } from "$/store/hooks";
 
 import Center from "../Center";
 import Heading from "../Heading";
@@ -24,7 +23,6 @@ interface Props {
 }
 
 const FirstTimeHome = ({ setModal }: Props) => {
-	const demoSong = useAppSelector(getDemoSong);
 	const dispatch = useAppDispatch();
 
 	const { width: windowWidth } = useWindowDimensions();

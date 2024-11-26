@@ -4,7 +4,7 @@ import { BLOCK_COLUMN_WIDTH, HIGHEST_PRECISION, SONG_OFFSET } from "$/constants"
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { clickNote, finishManagingNoteSelection, mouseOverNote, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getCursorPositionInBeats, getNoteSelectionMode, getSelectedSong, getVisibleBombs, getVisibleNotes } from "$/store/selectors";
+import { getBeatDepth, getCursorPositionInBeats, getNoteSelectionMode, getVisibleBombs, getVisibleNotes, selectActiveSongId, selectCustomColors } from "$/store/selectors";
 import { App, CutDirection, ObjectTool } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
@@ -28,10 +28,11 @@ function getPositionForBlock<T extends App.IBaseNote>(note: T, beatDepth: number
 }
 
 const SongBlocks = () => {
-	const song = useAppSelector(getSelectedSong);
-	const notes = useAppSelector(getVisibleNotes);
-	const bombs = useAppSelector(getVisibleBombs);
-	const cursorPositionInBeats = useAppSelector(getCursorPositionInBeats);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const notes = useAppSelector((state) => getVisibleNotes(state, songId));
+	const bombs = useAppSelector((state) => getVisibleBombs(state, songId));
+	const cursorPositionInBeats = useAppSelector((state) => getCursorPositionInBeats(state, songId));
 	const beatDepth = useAppSelector(getBeatDepth);
 	const selectionMode = useAppSelector(getNoteSelectionMode);
 	const dispatch = useAppDispatch();
@@ -82,7 +83,7 @@ const SongBlocks = () => {
 						lineLayer={note.rowIndex}
 						lineIndex={note.colIndex}
 						direction={direction}
-						color={getColorForItem(color, song)}
+						color={getColorForItem(color, customColors)}
 						isTransparent={adjustedNoteZPosition > -SONG_OFFSET * 2}
 						isSelected={note.selected}
 						selectionMode={selectionMode}
@@ -109,7 +110,7 @@ const SongBlocks = () => {
 						time={note.beatNum}
 						lineLayer={note.rowIndex}
 						lineIndex={note.colIndex}
-						color={getColorForItem(ObjectTool.BOMB_NOTE, song)}
+						color={getColorForItem(ObjectTool.BOMB_NOTE, customColors)}
 						isTransparent={adjustedNoteZPosition > -SONG_OFFSET * 2}
 						isSelected={note.selected}
 						selectionMode={selectionMode}

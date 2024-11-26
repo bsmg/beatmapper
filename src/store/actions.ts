@@ -29,15 +29,14 @@ import { createEntityStorageActions, createStorageActions } from "./middleware/s
 import {
 	getCursorPositionInBeats,
 	getDurationInBeats,
-	getGridSize,
 	getIsPlaying,
 	getSelectedCutDirection,
 	getSelectedEventBeat,
 	getSelectedNoteTool,
-	getSelectedSong,
 	getSnapTo,
 	getStartAndEndBeat,
 	getStickyMapAuthorName,
+	selectActiveSongId,
 	selectAllBasicEvents,
 	selectAllBookmarks,
 	selectAllColorNotes,
@@ -45,6 +44,8 @@ import {
 	selectAllObstacles,
 	selectAllSelectedEntities,
 	selectClipboardData,
+	selectGridSize,
+	selectSongByIdOrNull,
 } from "./selectors";
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
@@ -85,7 +86,7 @@ export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY
 	return { payload: { ...args } };
 });
 
-export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { difficulty: BeatmapId; afterCreate: (id: BeatmapId) => void }) => {
+export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; difficulty: BeatmapId; afterCreate: (id: BeatmapId) => void }) => {
 	return { payload: { ...args } };
 });
 
@@ -101,8 +102,8 @@ export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: 
 	return { payload: { ...args } };
 });
 
-export const finishLoadingSong = createAction("FINISH_LOADING_SONG", (args: { song: App.Song; waveformData: WaveformData }) => {
-	return { payload: { ...args, lastOpenedAt: Date.now() } };
+export const finishLoadingSong = createAction("FINISH_LOADING_SONG", (args: { songId: SongId; songData: Omit<App.Song, "id">; waveformData: WaveformData }) => {
+	return { payload: { ...args, songData: { ...args.songData, lastOpenedAt: Date.now() } } };
 });
 
 export const reloadWaveform = createAction("RELOAD_WAVEFORM", (args: { waveformData: WaveformData }) => {
@@ -137,12 +138,13 @@ export const copySelection = createAsyncThunk("COPY_SELECTION", (args: { view: V
 
 export const pasteSelection = createAsyncThunk("PASTE_SELECTION", (args: { view: View }, api) => {
 	const state = api.getState() as RootState;
+	const songId = selectActiveSongId(state);
 	const data = selectClipboardData(state);
 	// If there's nothing copied, do nothing
 	if (!data) return api.rejectWithValue("Clipboard is empty.");
 	// When pasting in notes view, we want to paste at the cursor position, where the song is currently playing.
 	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
-	const pasteAtBeat = args.view === View.BEATMAP ? getCursorPositionInBeats(state) : getSelectedEventBeat(state);
+	const pasteAtBeat = args.view === View.BEATMAP ? getCursorPositionInBeats(state, songId) : getSelectedEventBeat(state);
 	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
 	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map((x) => getBeatNumForItem(x)).sort((a, b) => a - b)[0];
 	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
@@ -156,11 +158,12 @@ export const adjustCursorPosition = createAction("ADJUST_CURSOR_POSITION", (args
 
 export const createBookmark = createAsyncThunk("CREATE_BOOKMARK", (args: { name: string; view: View }, api) => {
 	const state = api.getState() as RootState;
+	const songId = selectActiveSongId(state);
 	const existingBookmarks = selectAllBookmarks(state);
 	const color = getNewBookmarkColor(existingBookmarks);
 	// For the notes view, we want to use the cursorPosition to figure out when to create the bookmark for.
 	// For the events view, we want it to be based on the mouse position.
-	const beatNum = args.view === View.BEATMAP ? getCursorPositionInBeats(state) : getSelectedEventBeat(state);
+	const beatNum = args.view === View.BEATMAP ? getCursorPositionInBeats(state, songId) : getSelectedEventBeat(state);
 	if (beatNum === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ ...args, beatNum, color });
 });
@@ -171,11 +174,12 @@ export const deleteBookmark = createAction("DELETE_BOOKMARK", (args: { beatNum: 
 
 export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: CutDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
+	const songId = selectActiveSongId(state);
 	const selectedDirection = getSelectedCutDirection(state);
 	const selectedTool = getSelectedNoteTool(state);
-	const cursorPositionInBeats = getCursorPositionInBeats(state);
+	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	const duration = getDurationInBeats(state);
+	const duration = getDurationInBeats(state, songId);
 	if (cursorPositionInBeats < 0 || (duration && cursorPositionInBeats > duration)) return api.rejectWithValue("Cannot place objects out-of-bounds.");
 	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
 	const alreadyExists = selectAllNotes(state).some((note) => note.beatNum === adjustedCursorPosition && note.colIndex === args.colIndex && note.rowIndex === args.rowIndex);
@@ -185,14 +189,16 @@ export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args
 
 export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: { rowIndex: number; colIndex: number; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
-	const cursorPositionInBeats = getCursorPositionInBeats(state);
+	const songId = selectActiveSongId(state);
+	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats });
 });
 
 export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: CutDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
-	const cursorPositionInBeats = getCursorPositionInBeats(state);
+	const songId = selectActiveSongId(state);
+	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats: adjustedCursorPosition });
@@ -216,8 +222,9 @@ export const scrollThroughSong = createAction("SCROLL_THROUGH_SONG", (args: { di
 
 export const skipToStart = createAsyncThunk("SKIP_TO_START", (_, api) => {
 	const state = api.getState() as RootState;
-	const song = getSelectedSong(state);
-	const offset = song.offset ?? 0;
+	const songId = selectActiveSongId(state);
+	const song = selectSongByIdOrNull(state, songId);
+	const offset = song?.offset ?? 0;
 	return api.fulfillWithValue({ offset });
 });
 
@@ -285,10 +292,11 @@ export const deselectAllOfType = createAction("DESELECT_ALL_OF_TYPE", (args: { i
 
 export const selectAll = createAsyncThunk("SELECT_ALL", (args: { view: View }, api) => {
 	const state = api.getState() as RootState;
+	const songId = selectActiveSongId(state);
 	// For the events view, we don't actually want to select EVERY note. We only want to select what is visible in the current frame.
 	let metadata = null;
 	if (args.view === View.LIGHTSHOW) {
-		const { startBeat, endBeat } = getStartAndEndBeat(state);
+		const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
 		metadata = { startBeat, endBeat };
 	}
 	return api.fulfillWithValue({ ...args, metadata });
@@ -344,7 +352,7 @@ export const moveMouseAcrossEventsGrid = createAction("MOVE_MOUSE_ACROSS_EVENTS_
 	return { payload: { ...args } };
 });
 
-export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { version?: number; songId?: SongId }) => {
+export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { songId: SongId; version?: number }) => {
 	return { payload: { ...args, version: args.version ?? 2 } };
 });
 
@@ -370,7 +378,8 @@ export const updateVolume = createAction("UPDATE_VOLUME", (args: { volume: numbe
 
 export const createNewObstacle = createAsyncThunk("CREATE_NEW_OBSTACLE", (args: { obstacle: App.Obstacle }, api) => {
 	const state = api.getState() as RootState;
-	let cursorPositionInBeats = getCursorPositionInBeats(state);
+	const songId = selectActiveSongId(state);
+	let cursorPositionInBeats = getCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	cursorPositionInBeats = roundAwayFloatingPointNonsense(cursorPositionInBeats);
 	return api.fulfillWithValue({
@@ -407,7 +416,9 @@ export const deleteSong = createAction("DELETE_SONG", (args: Pick<App.Song, "id"
 
 export const toggleNoteTick = createAction("TOGGLE_NOTE_TICK");
 
-export const leaveEditor = createAction("LEAVE_EDITOR");
+export const leaveEditor = createAction("LEAVE_EDITOR", (args: { songId: SongId; difficulty: BeatmapId }) => {
+	return { payload: { ...args } };
+});
 
 export const swapSelectedNotes = createAction("SWAP_SELECTED_NOTES", (args: { axis: "horizontal" | "vertical" }) => {
 	return { payload: { ...args } };
@@ -483,7 +494,8 @@ export const zoomOut = createAction("ZOOM_OUT");
 
 export const drawSelectionBox = createAsyncThunk("DRAW_SELECTION_BOX", (args: { selectionBox: ISelectionBox; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
 	const state = api.getState() as RootState;
-	const { startBeat, endBeat } = getStartAndEndBeat(state);
+	const songId = selectActiveSongId(state);
+	const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
 	const metadata = { window: { startBeat, endBeat } };
 	return api.fulfillWithValue({ ...args, metadata });
 });
@@ -510,41 +522,43 @@ export const toggleEventWindowLock = createAction("TOGGLE_EVENT_WINDOW_LOCK");
 
 export const toggleLaserLock = createAction("TOGGLE_LASER_LOCK");
 
-export const toggleModForSong = createAction("TOGGLE_MOD_FOR_SONG", (args: { mod: keyof App.ModSettings }) => {
+export const toggleModForSong = createAction("TOGGLE_MOD_FOR_SONG", (args: { songId: SongId; mod: keyof App.ModSettings }) => {
 	return { payload: { ...args } };
 });
 
-export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { element: App.BeatmapColorKey; color: string }) => {
+export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { songId: SongId; element: App.BeatmapColorKey; color: string }) => {
 	return { payload: { ...args } };
 });
 
-export const updateModColorOverdrive = createAction("UPDATE_MOD_COLOR_OVERDRIVE", (args: { element: App.BeatmapColorKey; overdrive: number }) => {
+export const updateModColorOverdrive = createAction("UPDATE_MOD_COLOR_OVERDRIVE", (args: { songId: SongId; element: App.BeatmapColorKey; overdrive: number }) => {
 	return { payload: { ...args } };
 });
 
-export const updateGrid = createAction("UPDATE_GRID", (args: IGrid) => {
+export const updateGrid = createAction("UPDATE_GRID", (args: { songId: SongId; grid: Partial<IGrid> }) => {
 	return { payload: { ...args } };
 });
 
-export const resetGrid = createAction("RESET_GRID");
-
-export const loadGridPreset = createAction("LOAD_GRID_PRESET", (args: { grid: IGrid }) => {
+export const resetGrid = createAction("RESET_GRID", (args: { songId: SongId }) => {
 	return { payload: { ...args } };
 });
 
-export const saveGridPreset = createAsyncThunk("SAVE_GRID_PRESET", (args: { presetSlot: string }, api) => {
+export const loadGridPreset = createAction("LOAD_GRID_PRESET", (args: { songId: SongId; grid: IGrid }) => {
+	return { payload: { ...args } };
+});
+
+export const saveGridPreset = createAsyncThunk("SAVE_GRID_PRESET", (args: { songId: SongId; presetSlot: string }, api) => {
 	const state = api.getState() as RootState;
-	const grid = getGridSize(state);
+	const grid = selectGridSize(state, args.songId ?? null);
 	return api.fulfillWithValue({ ...args, grid });
 });
 
-export const deleteGridPreset = createAction("DELETE_GRID_PRESET", (args: { presetSlot: string }) => {
+export const deleteGridPreset = createAction("DELETE_GRID_PRESET", (args: { songId: SongId; presetSlot: string }) => {
 	return { payload: { ...args } };
 });
 
 export const toggleFastWallsForSelectedObstacles = createAction("TOGGLE_FAST_WALLS_FOR_SELECTED_OBSTACLES");
 
-export const togglePropertyForSelectedSong = createAction("TOGGLE_PROPERTY_FOR_SELECTED_SONG", (args: { property: keyof App.Song }) => {
+export const togglePropertyForSelectedSong = createAction("TOGGLE_PROPERTY_FOR_SELECTED_SONG", (args: { songId: SongId; property: keyof App.Song }) => {
 	return { payload: { ...args } };
 });
 

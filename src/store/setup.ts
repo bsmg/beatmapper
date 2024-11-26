@@ -14,7 +14,6 @@ import { type StorageObserver, createAllSharedMiddleware, createStorageMiddlewar
 import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
 import {
 	getAllGridPresetIds,
-	getAllSongIds,
 	getAreLasersLocked,
 	getBackgroundOpacity,
 	getBeatDepth,
@@ -35,10 +34,11 @@ import {
 	getSelectedNoteTool,
 	getShowLightingPreview,
 	getSnapTo,
-	getSongById,
 	getStickyMapAuthorName,
 	getVolume,
 	getZoomLevel,
+	selectSongById,
+	selectSongIds,
 } from "./selectors";
 
 export type UserStorageObservers = {
@@ -145,8 +145,8 @@ export async function createAppStore() {
 		namespace: "songs",
 		storage: createStorage({ driver: driver({ name: "songs" }) }),
 		observer: {
-			keys: getAllSongIds,
-			selector: getSongById,
+			keys: (state) => selectSongIds(state).map((x) => x.toString()),
+			selector: selectSongById,
 			asRaw: true,
 		},
 	});

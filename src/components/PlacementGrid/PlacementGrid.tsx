@@ -6,7 +6,7 @@ import { getColorForItem } from "$/helpers/colors.helpers";
 import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { clearCellOfNotes, clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDefaultObstacleDuration, getGridSize, getMappingMode, getNoteSelectionMode, getSelectedNoteTool, getSelectedSong } from "$/store/selectors";
+import { getDefaultObstacleDuration, getNoteSelectionMode, getSelectedNoteTool, selectActiveSongId, selectCustomColors, selectGridSize, selectPlacementMode } from "$/store/selectors";
 import { type CutDirection, ObjectTool } from "$/types";
 import { range } from "$/utils";
 import { getDirectionForDrag } from "./PlacementGrid.helpers";
@@ -29,11 +29,12 @@ interface Props {
 }
 
 const PlacementGrid = ({ gridPosition }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const { numRows, numCols, colWidth, rowHeight } = useAppSelector(getGridSize);
+	const songId = useAppSelector(selectActiveSongId);
+	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, songId));
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
 	const selectedTool = useAppSelector(getSelectedNoteTool);
 	const selectionMode = useAppSelector(getNoteSelectionMode);
-	const mappingMode = useAppSelector(getMappingMode);
+	const mappingMode = useAppSelector((state) => selectPlacementMode(state, songId));
 	const defaultObstacleDuration = useAppSelector(getDefaultObstacleDuration);
 	const dispatch = useAppDispatch();
 
@@ -154,9 +155,9 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 				}),
 			)}
 
-			{tentativeBlock && <TentativeBlock song={song} direction={tentativeBlock.direction} rowIndex={tentativeBlock.rowIndex} colIndex={tentativeBlock.colIndex} color={getColorForItem(tentativeBlock.selectedTool, song)} />}
+			{tentativeBlock && <TentativeBlock direction={tentativeBlock.direction} rowIndex={tentativeBlock.rowIndex} colIndex={tentativeBlock.colIndex} color={getColorForItem(tentativeBlock.selectedTool, customColors)} />}
 
-			{mouseDownAt && selectedTool === ObjectTool.OBSTACLE && <TentativeObstacle mouseDownAt={mouseDownAt} mouseOverAt={mouseOverAt} color={getColorForItem(ObjectTool.OBSTACLE, song)} mode={mappingMode} />}
+			{mouseDownAt && selectedTool === ObjectTool.OBSTACLE && <TentativeObstacle mouseDownAt={mouseDownAt} mouseOverAt={mouseOverAt} color={getColorForItem(ObjectTool.OBSTACLE, customColors)} mode={mappingMode} />}
 		</Fragment>
 	);
 };

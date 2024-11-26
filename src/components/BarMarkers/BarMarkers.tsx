@@ -1,25 +1,23 @@
 import { useMemo } from "react";
 
 import { SONG_OFFSET, SURFACE_DEPTHS } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getCursorPositionInBeats, getDuration, getGraphicsLevel, getSelectedSong } from "$/store/selectors";
+import { getBeatDepth, getCursorPositionInBeats, getDurationInBeats, getGraphicsLevel, selectActiveSongId } from "$/store/selectors";
 import { range } from "$/utils";
 
 import Marker from "./Marker";
 
 const BarMarkers = () => {
-	const song = useAppSelector(getSelectedSong);
-	const duration = useAppSelector(getDuration);
-	const bpm = song ? song.bpm : null;
-	const cursorPositionInBeats = useAppSelector(getCursorPositionInBeats);
+	const songId = useAppSelector(selectActiveSongId);
+	const durationInBeats = useAppSelector((state) => getDurationInBeats(state, songId));
+	const cursorPositionInBeats = useAppSelector((state) => getCursorPositionInBeats(state, songId));
 	const beatDepth = useAppSelector(getBeatDepth);
 	const graphicsLevel = useAppSelector(getGraphicsLevel);
 
 	const surfaceDepth = SURFACE_DEPTHS[graphicsLevel];
 	const numToRender = surfaceDepth / beatDepth;
 
-	const totalNumOfBeats = Math.ceil(convertMillisecondsToBeats((duration ?? 0) - song.offset, bpm ?? 120));
+	const totalNumOfBeats = useMemo(() => Math.ceil(durationInBeats ?? 0), [durationInBeats]);
 
 	const linesArray = useMemo(() => range(totalNumOfBeats * 4), [totalNumOfBeats]);
 

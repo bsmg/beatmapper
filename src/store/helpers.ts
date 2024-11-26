@@ -12,7 +12,7 @@ export function selectSnapshot<T extends RootState>(state: T) {
 		user: state.user,
 		editor: state.editor,
 		songs: {
-			byId: state.songs.byId,
+			byId: state.songs.entities,
 		},
 		navigation: pick(state.navigation, "snapTo", "beatDepth", "volume", "playNoteTick"),
 	};

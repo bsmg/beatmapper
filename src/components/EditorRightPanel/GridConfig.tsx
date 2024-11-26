@@ -5,7 +5,7 @@ import { GRID_PRESET_SLOTS, UNIT } from "$/constants";
 import { promptSaveGridPreset } from "$/helpers/prompts.helpers";
 import { deleteGridPreset, loadGridPreset, resetGrid, saveGridPreset, updateGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getGridPresets, getGridSize } from "$/store/selectors";
+import { getGridPresets, selectActiveSongId, selectGridSize } from "$/store/selectors";
 
 import Center from "../Center";
 import Heading from "../Heading";
@@ -19,7 +19,8 @@ interface Props {
 }
 
 const GridConfig = ({ finishTweakingGrid }: Props) => {
-	const { numRows, numCols, colWidth, rowHeight } = useAppSelector(getGridSize);
+	const songId = useAppSelector(selectActiveSongId);
+	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, songId));
 	const gridPresets = useAppSelector(getGridPresets);
 	const dispatch = useAppDispatch();
 	const showPresets = Object.keys(gridPresets).length > 0;
@@ -27,7 +28,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 	return (
 		<Fragment>
 			<Buttons>
-				<MiniButton onClick={() => dispatch(resetGrid())}>Reset</MiniButton>
+				<MiniButton onClick={() => songId && dispatch(resetGrid({ songId }))}>Reset</MiniButton>
 			</Buttons>
 			<Spacer size={UNIT * 4} />
 
@@ -43,12 +44,12 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 									disabled={!gridPresets[slot]}
 									onClick={(ev) => {
 										if (ev.buttons === 0) {
-											dispatch(loadGridPreset({ grid: gridPresets[slot] }));
+											songId && dispatch(loadGridPreset({ songId, grid: gridPresets[slot] }));
 										}
 									}}
 									onContextMenu={(ev) => {
 										ev.preventDefault();
-										dispatch(deleteGridPreset({ presetSlot: slot }));
+										songId && dispatch(deleteGridPreset({ songId, presetSlot: slot }));
 									}}
 								>
 									{slot}
@@ -71,7 +72,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 						ev.stopPropagation();
 					}}
 					onChange={(ev) => {
-						dispatch(updateGrid({ numCols: Number(ev.target.value), numRows, colWidth, rowHeight }));
+						songId && dispatch(updateGrid({ songId, grid: { numCols: Number(ev.target.value) } }));
 					}}
 				/>
 				<Spacer size={UNIT * 2} />
@@ -85,7 +86,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 						ev.stopPropagation();
 					}}
 					onChange={(ev) => {
-						dispatch(updateGrid({ numCols, numRows: Number(ev.target.value), colWidth, rowHeight }));
+						songId && dispatch(updateGrid({ songId, grid: { numRows: Number(ev.target.value) } }));
 					}}
 				/>
 			</Row>
@@ -102,7 +103,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 						ev.stopPropagation();
 					}}
 					onChange={(ev) => {
-						dispatch(updateGrid({ numCols, numRows, colWidth: Number(ev.target.value), rowHeight }));
+						songId && dispatch(updateGrid({ songId, grid: { colWidth: Number(ev.target.value) } }));
 					}}
 				/>
 				<Spacer size={UNIT * 2} />
@@ -117,7 +118,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 						ev.stopPropagation();
 					}}
 					onChange={(ev) => {
-						dispatch(updateGrid({ numCols, numRows, colWidth, rowHeight: Number(ev.target.value) }));
+						songId && dispatch(updateGrid({ songId, grid: { rowHeight: Number(ev.target.value) } }));
 					}}
 				/>
 			</Row>

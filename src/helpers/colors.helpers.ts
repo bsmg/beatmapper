@@ -4,22 +4,22 @@ import { COLORS, COLOR_ELEMENT_DATA, DEFAULT_BLUE, DEFAULT_LIGHT_BLUE, DEFAULT_L
 import { App, EventColor, ObjectTool } from "$/types";
 import { clamp, normalize } from "$/utils";
 
-export function getColorForItem<T extends string | number>(item: T | undefined, song: App.Song) {
-	const customColorsEnabled = !!song.modSettings.customColors?.isEnabled;
+export function getColorForItem<T extends string | number>(item: T | undefined, customColors?: App.ModSettings["customColors"]) {
+	const customColorsEnabled = !!customColors?.isEnabled;
 
 	switch (item) {
 		// In our notes view, the tool will be labeled "left-block", while the underlying data structure treats colors as a number: 0, 1, 3.
 		case ObjectTool.LEFT_NOTE:
 		case 0: {
 			const defaultColor = DEFAULT_RED;
-			const customColor = song.modSettings.customColors?.colorLeft || defaultColor;
+			const customColor = customColors?.colorLeft || defaultColor;
 
 			return customColorsEnabled ? customColor : defaultColor;
 		}
 		case ObjectTool.RIGHT_NOTE:
 		case 1: {
 			const defaultColor = DEFAULT_BLUE;
-			const customColor = song.modSettings.customColors?.colorRight || defaultColor;
+			const customColor = customColors?.colorRight || defaultColor;
 
 			return customColorsEnabled ? customColor : defaultColor;
 		}
@@ -29,7 +29,7 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 		}
 		case ObjectTool.OBSTACLE: {
 			const defaultColor = DEFAULT_OBSTACLE;
-			const customColor = song.modSettings.customColors?.obstacleColor || defaultColor;
+			const customColor = customColors?.obstacleColor || defaultColor;
 
 			return customColorsEnabled ? customColor : defaultColor;
 		}
@@ -39,7 +39,7 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 		case App.EventColor.PRIMARY:
 		case EventColor.PRIMARY: {
 			const defaultColor = DEFAULT_LIGHT_RED;
-			const customColor = song.modSettings.customColors?.envColorLeft || defaultColor;
+			const customColor = customColors?.envColorLeft || defaultColor;
 
 			return customColorsEnabled ? customColor : defaultColor;
 		}
@@ -47,7 +47,7 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 		case App.EventColor.SECONDARY:
 		case EventColor.SECONDARY: {
 			const defaultColor = DEFAULT_LIGHT_BLUE;
-			const customColor = song.modSettings.customColors?.envColorRight || defaultColor;
+			const customColor = customColors?.envColorRight || defaultColor;
 
 			return customColorsEnabled ? customColor : defaultColor;
 		}

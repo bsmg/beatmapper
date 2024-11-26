@@ -5,7 +5,7 @@ import { UNIT } from "$/constants";
 import { useBoundingBox } from "$/hooks";
 import { scrubWaveform } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getCursorPosition, getDuration, getGraphicsLevel, getIsLoading, getSelectedSong, getWaveformData } from "$/store/selectors";
+import { getCursorPosition, getDuration, getGraphicsLevel, getWaveformData, selectIsLoading } from "$/store/selectors";
 import { Quality } from "$/types";
 import { roundToNearest } from "$/utils";
 
@@ -18,9 +18,8 @@ interface Props {
 }
 
 const EditorWaveform = ({ height }: Props) => {
-	const song = useAppSelector(getSelectedSong);
 	const waveformData = useAppSelector(getWaveformData);
-	const isLoadingSong = useAppSelector(getIsLoading);
+	const isLoadingSong = useAppSelector(selectIsLoading);
 	const duration = useAppSelector(getDuration);
 	const cursorPosition = useAppSelector(getCursorPosition);
 	const graphicsLevel = useAppSelector(getGraphicsLevel);
@@ -45,9 +44,9 @@ const EditorWaveform = ({ height }: Props) => {
 					<CenteredSpinner />
 				</SpinnerWrapper>
 			)}
-			{boundingBox && song && (
+			{boundingBox && (
 				<Fragment>
-					<ScrubbableWaveform key={`${song.id}-${song.selectedDifficulty}`} width={boundingBox.width} height={height - UNIT * 2} waveformData={waveformData} duration={duration} cursorPosition={roundedCursorPosition} scrubWaveform={(offset) => dispatch(scrubWaveform({ newOffset: offset }))} />
+					<ScrubbableWaveform width={boundingBox.width} height={height - UNIT * 2} waveformData={waveformData} duration={duration} cursorPosition={roundedCursorPosition} scrubWaveform={(offset) => dispatch(scrubWaveform({ newOffset: offset }))} />
 					{!isLoadingSong && <Bookmarks />}
 				</Fragment>
 			)}

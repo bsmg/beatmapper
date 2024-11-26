@@ -1,9 +1,8 @@
 import { Fragment } from "react";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPosition, getCursorPositionInBeats, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
+import { getCursorPosition, getCursorPositionInBeats, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -39,43 +38,26 @@ function getSinRotationValue(side: "left" | "right", beamIndex: number, secondsS
 }
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 	side: "left" | "right";
 }
 
-const SideLaser = ({ song, isPlaying, side }: Props) => {
+const SideLaser = ({ isPlaying, side }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+
 	const lastEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const lightEvents = selectAllBasicEventsForTrack(state, side === "left" ? App.TrackId[2] : App.TrackId[3]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(lightEvents, currentBeat, processingDelayInBeats);
 		return lastEvent;
 	});
 	const laserSpeed = useAppSelector((state) => {
-		if (!song) {
-			return 0;
-		}
-
+		if (!songId || !currentBeat) return 0;
 		const speedEvents = selectAllBasicEventsForTrack(state, side === "left" ? App.TrackId[12] : App.TrackId[13]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return 0;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastSpeedEvent = findMostRecentEventInTrack<App.IBasicValueEvent>(speedEvents, currentBeat, processingDelayInBeats);
-
 		const laserSpeed = lastSpeedEvent ? lastSpeedEvent.laserSpeed : 0;
 		return laserSpeed;
 	});
@@ -98,7 +80,7 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const eventId = lastEvent ? lastEvent.id : null;
 
-	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors);
 
 	const horizontalBeams = laserIndices.map((index) => {
 		const position: Vector3Tuple = [xOffset + index * xDistanceBetweenBeams, yOffset, zOffset + index * zDistanceBetweenBeams];

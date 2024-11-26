@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, DIFFICULTIES, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
-import { getSongIdFromName } from "$/helpers/song.helpers";
+import { selectSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { createNewSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAllSongIds } from "$/store/selectors";
+import { selectSongIds } from "$/store/selectors";
 
 import Button from "../Button";
 import DifficultyTag from "../DifficultyTag";
@@ -20,7 +20,7 @@ import CoverArtPicker from "./CoverArtPicker";
 import SongPicker from "./SongPicker";
 
 const AddSongForm = () => {
-	const currentSongIds = useAppSelector(getAllSongIds);
+	const currentSongIds = useAppSelector(selectSongIds);
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 
@@ -58,7 +58,7 @@ const AddSongForm = () => {
 
 		setHasSubmitted(true);
 
-		const songId = getSongIdFromName(name);
+		const songId = selectSongId({ name });
 
 		// Song IDs must be unique, and song IDs are generated from the name.
 		// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases

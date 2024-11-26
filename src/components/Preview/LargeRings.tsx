@@ -2,11 +2,10 @@ import { useTrail } from "@react-spring/three";
 import { useState } from "react";
 import type { Vector3Tuple } from "three";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getAnimateRingMotion, getCursorPositionInBeats, getGraphicsLevel, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
+import { getAnimateRingMotion, getCursorPositionInBeats, getGraphicsLevel, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
 import { App, Quality } from "$/types";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
 
@@ -17,42 +16,25 @@ const INCREMENT_ROTATION_BY = Math.PI * 0.5;
 const DISTANCE_BETWEEN_RINGS = 18;
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 }
 
-const LargeRings = ({ song, isPlaying }: Props) => {
+const LargeRings = ({ isPlaying }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+
 	const lastRotationEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const rotationEvents = selectAllBasicEventsForTrack(state, App.TrackId[8]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastRotationEvent = findMostRecentEventInTrack<App.IBasicTriggerEvent>(rotationEvents, currentBeat, processingDelayInBeats);
 		return lastRotationEvent;
 	});
 	const lastLightingEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const lightingEvents = selectAllBasicEventsForTrack(state, App.TrackId[1]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastLightingEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(lightingEvents, currentBeat, processingDelayInBeats);
-
 		return lastLightingEvent;
 	});
 	const numOfRings = useAppSelector((state) => {
@@ -85,7 +67,7 @@ const LargeRings = ({ song, isPlaying }: Props) => {
 
 	const lightStatus = lastLightingEvent ? lastLightingEvent.type : App.BasicEventType.OFF;
 	const lastLightingEventId = lastLightingEvent ? lastLightingEvent.id : null;
-	const lightColor = lightStatus === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastLightingEvent?.colorType, song);
+	const lightColor = lightStatus === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastLightingEvent?.colorType, customColors);
 
 	// TODO: Custom hook that is shared with SmallRings
 	useOnChange(() => {

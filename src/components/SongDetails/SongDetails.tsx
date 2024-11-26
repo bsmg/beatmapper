@@ -3,14 +3,13 @@ import { useBlocker } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, ENVIRONMENT_DISPLAY_MAP, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
-import { sortDifficultyIds } from "$/helpers/song.helpers";
 import { useMount } from "$/hooks";
 import { createInfoContent } from "$/services/packaging.service";
 import { filestore } from "$/setup";
 import { stopPlaying, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getEnabledFastWalls, getEnabledLightshow, getSelectedSong } from "$/store/selectors";
-import type { App } from "$/types";
+import { selectBeatmapIds, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectSongById } from "$/store/selectors";
+import type { App, SongId } from "$/types";
 
 import CoverArtPicker from "../AddSongForm/CoverArtPicker";
 import SongPicker from "../AddSongForm/SongPicker";
@@ -27,11 +26,14 @@ import BeatmapDifficultySettings from "./BeatmapDifficultySettings";
 import CustomColorSettings from "./CustomColorSettings";
 import MappingExtensionSettings from "./MappingExtensionSettings";
 
-const SongDetails = () => {
+interface Props {
+	songId: SongId;
+}
+const SongDetails = ({ songId }: Props) => {
+	const song = useAppSelector((state) => selectSongById(state, songId));
+	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, songId));
+	const enabledLightshow = useAppSelector((state) => selectIsLightshowEnabled(state, songId));
 	const dispatch = useAppDispatch();
-	const song = useAppSelector(getSelectedSong);
-	const enabledFastWalls = useAppSelector(getEnabledFastWalls);
-	const enabledLightshow = useAppSelector(getEnabledLightshow);
 
 	const [songData, setSongData] = useState(song);
 	const [isDirty, setIsDirty] = useState(false);
@@ -52,7 +54,7 @@ const SongDetails = () => {
 
 	const [status, setStatus] = useState("idle");
 
-	const difficultyIds = sortDifficultyIds(Object.keys(song.difficultiesById));
+	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, songId));
 
 	useMount(() => {
 		// We want to stop & reset the song when the user goes to edit it.
@@ -222,7 +224,7 @@ const SongDetails = () => {
 			<BeatmapsWrapper>
 				<WrappedRow>
 					{difficultyIds.map((difficultyId) => {
-						return <BeatmapDifficultySettings key={difficultyId} difficultyId={difficultyId} song={song} />;
+						return <BeatmapDifficultySettings key={difficultyId} songId={songId} difficultyId={difficultyId} />;
 					})}
 				</WrappedRow>
 			</BeatmapsWrapper>
@@ -236,7 +238,7 @@ const SongDetails = () => {
 				<Spacer size={UNIT * 2} />
 				<MappingExtensionSettings />
 				<Spacer size={UNIT * 2} />
-				<LabeledCheckbox id="enable-lightshow" checked={!!enabledLightshow} onChange={() => dispatch(togglePropertyForSelectedSong({ property: "enabledLightshow" }))}>
+				<LabeledCheckbox id="enable-lightshow" checked={!!enabledLightshow} onChange={() => dispatch(togglePropertyForSelectedSong({ songId, property: "enabledLightshow" }))}>
 					Includes "Lightshow" difficulty{" "}
 					<QuestionTooltip>
 						If enabled, adds a non-standard difficulty with all blocks removed. Nice to include if your lighting is spectacular{" "}
@@ -246,7 +248,7 @@ const SongDetails = () => {
 					</QuestionTooltip>
 				</LabeledCheckbox>
 				<Spacer size={UNIT * 2} />
-				<LabeledCheckbox id="enable-fast-walls" checked={!!enabledFastWalls} onChange={() => dispatch(togglePropertyForSelectedSong({ property: "enabledFastWalls" }))}>
+				<LabeledCheckbox id="enable-fast-walls" checked={!!enabledFastWalls} onChange={() => dispatch(togglePropertyForSelectedSong({ songId, property: "enabledFastWalls" }))}>
 					Enable "fast walls"{" "}
 					<QuestionTooltip>
 						Fast walls exploit a loophole in the game to allow walls to blur by at high speed{" "}

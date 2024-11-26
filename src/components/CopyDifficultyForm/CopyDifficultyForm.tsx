@@ -4,8 +4,10 @@ import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
 import { COLORS, DIFFICULTIES, UNIT } from "$/constants";
-import { getLabelForDifficulty, sortDifficultyIds } from "$/helpers/song.helpers";
-import type { App, BeatmapId, SongId } from "$/types";
+import { getLabelForDifficulty } from "$/helpers/song.helpers";
+import { useAppSelector } from "$/store/hooks";
+import { selectBeatmapIds } from "$/store/selectors";
+import type { BeatmapId, SongId } from "$/types";
 
 import Button from "../Button";
 import DifficultyTag from "../DifficultyTag";
@@ -14,14 +16,14 @@ import Paragraph from "../Paragraph";
 import Spacer from "../Spacer";
 
 interface Props {
-	song: App.Song;
+	songId: SongId;
 	idToCopy: BeatmapId;
 	afterCopy: (id: BeatmapId) => void;
 	copyDifficulty: (songId: SongId, fromDifficultyId: BeatmapId, toDifficultyId: BeatmapId, afterCopy: (id: BeatmapId) => void) => void;
 }
 
-const CopyDifficultyForm = ({ song, idToCopy, afterCopy, copyDifficulty }: Props) => {
-	const difficultyIds = sortDifficultyIds(Object.keys(song.difficultiesById));
+const CopyDifficultyForm = ({ songId, idToCopy, afterCopy, copyDifficulty }: Props) => {
+	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, songId));
 	const [selectedId, setSelectedId] = useState<BeatmapId | null>(null);
 
 	// If we already have all difficulties, let the user know
@@ -70,7 +72,7 @@ const CopyDifficultyForm = ({ song, idToCopy, afterCopy, copyDifficulty }: Props
 				<Button
 					style={{ width: 275, margin: "auto" }}
 					onClick={() => {
-						copyDifficulty(song.id, idToCopy, selectedId, afterCopy);
+						copyDifficulty(songId, idToCopy, selectedId, afterCopy);
 					}}
 				>
 					Copy beatmap

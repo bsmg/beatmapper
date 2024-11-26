@@ -1,9 +1,8 @@
 import type { Vector3Tuple } from "three";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getUsableProcessingDelay, selectAllBasicEventsForTrack } from "$/store/selectors";
+import { getCursorPositionInBeats, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -11,26 +10,20 @@ import { findMostRecentEventInTrack } from "./Preview.helpers";
 import LaserBeam from "./LaserBeam";
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 	secondsSinceSongStart?: number;
 }
 
-const BackLaser = ({ song, isPlaying }: Props) => {
+const BackLaser = ({ isPlaying }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+
 	const lastEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
+		if (!songId || !currentBeat) return null;
 		const events = selectAllBasicEventsForTrack(state, App.TrackId[0]);
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
 		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(events, currentBeat, processingDelayInBeats);
-
 		return lastEvent;
 	});
 
@@ -41,7 +34,7 @@ const BackLaser = ({ song, isPlaying }: Props) => {
 
 	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const eventId = lastEvent ? lastEvent.id : null;
-	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors);
 
 	const sides = ["left", "right"];
 

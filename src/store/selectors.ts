@@ -1,10 +1,10 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 
 import { SURFACE_DEPTHS } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
+import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { calculateNoteDensity } from "$/helpers/notes.helpers";
-import { App, View } from "$/types";
+import { App, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import { createByPositionSelector, selectHistory } from "./helpers";
 import type { RootState } from "./setup";
@@ -13,10 +13,10 @@ import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
+import selected from "./features/entities/active.slice";
 import bombs from "./features/entities/beatmap/bombs.slice";
 import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
-import difficulty from "./features/entities/difficulty.slice";
 import basic from "./features/entities/lightshow/basic.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
@@ -24,26 +24,66 @@ import songs from "./features/songs.slice";
 import user from "./features/user.slice";
 import waveform from "./features/waveform.slice";
 
-export const { getHasInitialized } = global.getSelectors((state: RootState) => {
+export const { selectInitialized, selectIsLoading, selectIsProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
 	return state.global;
 });
 
-export const { getAllSongIds, getAllSongs, getAllSongsChronologically, getCustomColors, getDemoSong, getEnabledFastWalls, getEnabledLightshow, getEnabledMods, getGridSize, getMappingMode, getProcessingImport, getSelectedSong, getSelectedSongDifficultyIds, getSelectedSongId, getSongById } = songs.getSelectors(
-	(state: RootState) => {
-		return state.songs;
-	},
-);
+export const { selectActiveSongId, selectActiveBeatmapId } = selected.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.active;
+});
 
-export const { getAnimateBlockMotion, getAnimateRingMotion, getBeatDepth, getCursorPosition, getDuration, getIsLoading, getIsPlaying, getPlayNoteTick, getPlaybackRate, getSnapTo, getVolume } = navigation.getSelectors((state: RootState) => {
+export const {
+	selectEntities: selectSongs,
+	selectIds: selectSongIds,
+	selectAll: selectAllSongs,
+	selectById: selectSongById,
+	selectByIdOrNull: selectSongByIdOrNull,
+	selectBeatmapIds,
+	selectIsDemo: selectIsDemoSong,
+	selectIsModuleEnabled,
+	selectIsFastWallsEnabled,
+	selectIsLightshowEnabled,
+	selectCustomColors,
+	selectGridSize,
+	selectPlacementMode,
+} = songs.getSelectors((state: Pick<RootState, "songs">) => {
+	return state.songs;
+});
+
+// for selectors that depend on an actively selected song, we should have a fallback value prepared in the off chance the song doesn't exist in state or the called value returns undefined.
+export function createActiveSongSelectorFactory<T>(selector: (song?: App.Song) => T | undefined, fallback: T) {
+	return createSelector(selectSongByIdOrNull, selectSongs, selectActiveSongId, (song, songs, sid) => {
+		if (song) return selector(song) ?? fallback;
+		if (sid) return selector(songs[sid]) ?? fallback;
+		return fallback;
+	});
+}
+export const selectBpm = createActiveSongSelectorFactory((s) => s?.bpm, 120);
+export const selectOffset = createActiveSongSelectorFactory((s) => s?.offset, 0);
+export const selectOffsetInBeats = createSelector(selectBpm, selectOffset, (bpm, offset) => {
+	return convertMillisecondsToBeats(offset, bpm);
+});
+
+export const selectBeatForTime = createSelector([selectBpm, selectOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number, withOffset = true) => ({ time, withOffset })], (bpm, offset, { time, withOffset }) => {
+	return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
+});
+export const selectNearestBeatForTime = createSelector([selectBpm, selectOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number) => time], (bpm, offset, time: number) => {
+	return snapToNearestBeat(time, bpm, offset);
+});
+export const selectTimeForBeat = createSelector([selectBpm, selectOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, beat: number, withOffset = true) => ({ beat, withOffset })], (bpm, offset, { beat, withOffset }) => {
+	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
+});
+
+export const { getAnimateBlockMotion, getAnimateRingMotion, getBeatDepth, getCursorPosition, getDuration, getIsPlaying, getPlayNoteTick, getPlaybackRate, getSnapTo, getVolume } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
-export const getCursorPositionInBeats = createSelector(getSelectedSong, getCursorPosition, (song, cursorPosition) => {
-	if (!song || cursorPosition === null) return null;
-	return convertMillisecondsToBeats(cursorPosition - song.offset, song.bpm);
+export const getCursorPositionInBeats = createSelector(getCursorPosition, selectBpm, selectOffset, (cursorPosition, bpm, offset) => {
+	if (cursorPosition === null) return null;
+	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
 });
-export const getDurationInBeats = createSelector(getSelectedSong, getDuration, (song, duration) => {
-	if (!song || duration === null) return null;
-	return convertMillisecondsToBeats(duration, song.bpm);
+export const getDurationInBeats = createSelector(getDuration, selectBpm, (duration, bpm) => {
+	if (duration === null) return null;
+	return convertMillisecondsToBeats(duration, bpm);
 });
 
 export const { getGraphicsLevel, getIsNewUser, getProcessingDelay, getSeenPrompts, getStickyMapAuthorName } = user.getSelectors((state: Pick<RootState, "user">) => {
@@ -51,6 +91,12 @@ export const { getGraphicsLevel, getIsNewUser, getProcessingDelay, getSeenPrompt
 });
 export const getUsableProcessingDelay = createSelector(getProcessingDelay, getIsPlaying, (processingDelay, isPlaying) => {
 	// If we're not playing the track, we shouldn't have any processing delay. This is to prevent stuff from firing prematurely when scrubbing.
+	return isPlaying ? processingDelay : 0;
+});
+export const selectProcessingDelayInBeats = createSelector(getProcessingDelay, selectBpm, (processingDelay, bpm) => {
+	return convertMillisecondsToBeats(processingDelay, bpm);
+});
+export const selectUsableProcessingDelayInBeats = createSelector(selectProcessingDelayInBeats, getIsPlaying, (processingDelay, isPlaying) => {
 	return isPlaying ? processingDelay : 0;
 });
 
@@ -74,10 +120,6 @@ export const getZoomLevelEndBeat = createSelector(getZoomLevelStartBeat, getBeat
 // TODO: Get rid of this silly selector!
 export const getStartAndEndBeat = createSelector(getZoomLevelStartBeat, getZoomLevelEndBeat, (startBeat, endBeat) => {
 	return { startBeat, endBeat };
-});
-
-export const { getDifficulty } = difficulty.getSelectors((state: RootState) => {
-	return state.entities.difficulty;
 });
 
 export const getCanUndo = createSelector(
@@ -118,10 +160,8 @@ export const getVisibleNotes = createSelector(selectAllColorNotes, getCursorPosi
 		return note.beatNum > closeLimit && note.beatNum < farLimit;
 	});
 });
-export const getNoteDensity = createSelector(getVisibleNotes, getBeatDepth, getSelectedSong, getGraphicsLevel, (notes, beatDepth, song, graphicsLevel) => {
+export const getNoteDensity = createSelector(getVisibleNotes, getBeatDepth, selectBpm, getGraphicsLevel, (notes, beatDepth, bpm, graphicsLevel) => {
 	const surfaceDepth = SURFACE_DEPTHS[graphicsLevel];
-	if (!song) return 0;
-	const { bpm } = song;
 	const segmentLengthInBeats = (surfaceDepth / beatDepth) * 1.2;
 	return calculateNoteDensity(notes.length, segmentLengthInBeats, bpm);
 });

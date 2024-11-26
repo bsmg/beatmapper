@@ -56,3 +56,23 @@ export function shallowCompare<T extends object, K extends keyof T>(o1: T, o2: T
 export function hasPropChanged<T extends object, K extends keyof T>(oldProps: Readonly<T>, newProps: T, key: K) {
 	return oldProps[key] !== newProps[key];
 }
+
+export function deepMerge<T extends object>(target: T, ...sources: Partial<T>[]): T {
+	function isMergeableObject(item: unknown): item is object {
+		return !!(item && typeof item === "object" && !Array.isArray(item));
+	}
+	if (!sources.length) return target;
+	const source = sources.shift();
+	if (source === undefined) return target;
+	if (isMergeableObject(target) && isMergeableObject(source)) {
+		for (const key in source) {
+			if (isMergeableObject(source[key])) {
+				if (!target[key]) Object.assign(target, { [key]: {} });
+				deepMerge(target[key] as object, source[key]);
+			} else {
+				Object.assign(target, { [key]: source[key] });
+			}
+		}
+	}
+	return deepMerge(target, ...sources);
+}

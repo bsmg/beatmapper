@@ -2,11 +2,10 @@ import { type PointerEventHandler, useCallback, useEffect, useRef, useState } fr
 import styled from "styled-components";
 
 import { COLORS, EVENT_TRACKS, UNIT } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAreLasersLocked, getDurationInBeats, getIsLoading, getRowHeight, getSelectedEventBeat, getSelectedEventEditMode, getSelectedSong, getSelectionBox, getSnapTo, getStartAndEndBeat } from "$/store/selectors";
+import { getAreLasersLocked, getDurationInBeats, getRowHeight, getSelectedEventBeat, getSelectedEventEditMode, getSelectionBox, getSnapTo, getStartAndEndBeat, selectActiveSongId, selectIsLoading, selectOffsetInBeats } from "$/store/selectors";
 import { App, EventEditMode, TrackType } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
@@ -42,17 +41,17 @@ interface Props {
 }
 
 const EventsGrid = ({ contentWidth }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const duration = useAppSelector(getDurationInBeats);
-	const { startBeat, endBeat } = useAppSelector(getStartAndEndBeat);
+	const songId = useAppSelector(selectActiveSongId);
+	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
+	const { startBeat, endBeat } = useAppSelector((state) => getStartAndEndBeat(state, songId));
 	const numOfBeatsToShow = endBeat - startBeat;
 	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
 	const selectedBeat = useAppSelector((state) => {
 		const selectedBeat = getSelectedEventBeat(state);
-		const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-		return selectedBeat !== null ? clamp(selectedBeat, offset, (duration ?? selectedBeat) + offset) : null;
+		const offsetInBeats = -selectOffsetInBeats(state, songId);
+		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
-	const isLoading = useAppSelector(getIsLoading);
+	const isLoading = useAppSelector(selectIsLoading);
 	const areLasersLocked = useAppSelector(getAreLasersLocked);
 	const snapTo = useAppSelector(getSnapTo);
 	const selectionBox = useAppSelector(getSelectionBox);

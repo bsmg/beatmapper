@@ -1,9 +1,8 @@
-import { createSelector, createSlice } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT } from "$/constants";
-import { sortDifficultyIds } from "$/helpers/song.helpers";
+import { selectSongId, sortDifficultyIds } from "$/helpers/song.helpers";
 import {
-	cancelImportingSong,
 	changeSelectedDifficulty,
 	copyDifficulty,
 	createDifficulty,
@@ -13,10 +12,8 @@ import {
 	finishLoadingSong,
 	hydrateSongs,
 	importExistingSong,
-	leaveEditor,
 	loadGridPreset,
 	resetGrid,
-	startImportingSong,
 	startLoadingSong,
 	toggleModForSong,
 	togglePropertyForSelectedSong,
@@ -27,45 +24,51 @@ import {
 	updateSongDetails,
 } from "$/store/actions";
 import { type App, type Difficulty, Environment, ObjectPlacementMode, type SongId } from "$/types";
+import { deepMerge, omit } from "$/utils";
 
-const initialState = {
-	byId: {} as Record<SongId, App.Song>,
-	selectedId: null as SongId | null,
-	processingImport: false,
-};
+const adapter = createEntityAdapter<App.Song, SongId>({
+	selectId: selectSongId,
+	sortComparer: (a, b) => a.lastOpenedAt - b.lastOpenedAt,
+});
+const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
 
-type SelectedSong<A extends boolean> = A extends true ? App.Song : App.Song | undefined;
-function grabSelectedSong<A extends boolean>() {
-	return (state: typeof initialState) => {
-		if (state.selectedId) return state.byId[state.selectedId];
-		return undefined as SelectedSong<A>;
-	};
+function selectByIdOrNull(state: ReturnType<typeof adapter.getInitialState>, songId: SongId | null) {
+	if (!songId) return undefined;
+	return selectById(state, songId);
 }
 
 const slice = createSlice({
 	name: "songs",
-	initialState: initialState,
+	initialState: adapter.getInitialState(),
 	selectors: {
-		getAllSongs: (state) => Object.values(state.byId),
-		getAllSongIds: (state) => Object.keys(state.byId),
-		getAllSongsChronologically: (state) => {
-			return Object.values(state.byId).sort((a, b) => {
-				return a.lastOpenedAt > b.lastOpenedAt ? -1 : 1;
-			});
-		},
-		getProcessingImport: (state) => state.processingImport,
-		getSongById: (state, songId: SongId) => state.byId[songId],
-		getSelectedSongId: (state) => state.selectedId,
-		getSelectedSong: grabSelectedSong<true>(),
-		getSelectedSongDifficultyIds: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			const ids = Object.keys(song.difficultiesById) as Difficulty[];
-			return sortDifficultyIds(ids);
+		selectEntities: selectEntities,
+		selectAll: selectAll,
+		selectIds: selectIds,
+		selectById: selectById,
+		selectByIdOrNull: selectByIdOrNull,
+		selectBeatmapIds: createSelector(selectByIdOrNull, (song) => {
+			if (!song) return [];
+			return sortDifficultyIds(Object.keys(song.difficultiesById));
 		}),
-		getDemoSong: (state) => {
-			return Object.values(state.byId).find((song) => song.demo);
-		},
-		getGridSize: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			const mappingExtensions = song.modSettings.mappingExtensions;
+		selectIsDemo: createSelector(selectByIdOrNull, (song) => {
+			return !!song?.demo;
+		}),
+		selectIsModuleEnabled: createSelector([selectByIdOrNull, (_1, _2, key: keyof App.ModSettings) => key], (song, key) => {
+			return !!song?.modSettings[key]?.isEnabled;
+		}),
+		selectIsFastWallsEnabled: createSelector(selectByIdOrNull, (song) => {
+			return !!song?.enabledFastWalls;
+		}),
+		selectIsLightshowEnabled: createSelector(selectByIdOrNull, (song) => {
+			return !!song?.enabledLightshow;
+		}),
+		selectCustomColors: createSelector(selectByIdOrNull, (song) => {
+			const colors = song?.modSettings.customColors;
+			if (!colors) return DEFAULT_MOD_SETTINGS.customColors;
+			return { ...DEFAULT_MOD_SETTINGS.customColors, ...colors };
+		}),
+		selectGridSize: createSelector(selectByIdOrNull, (song) => {
+			const mappingExtensions = song?.modSettings.mappingExtensions;
 			// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
 			const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
 			const isDisabled = mappingExtensions?.isEnabled === false;
@@ -77,57 +80,30 @@ const slice = createSlice({
 				rowHeight: mappingExtensions.rowHeight || DEFAULT_ROW_HEIGHT,
 			};
 		}),
-		getEnabledMods: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			return {
-				mappingExtensions: song.modSettings.mappingExtensions?.isEnabled,
-				customColors: song.modSettings.customColors?.isEnabled,
-			};
-		}),
-		getEnabledFastWalls: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			return song.enabledFastWalls;
-		}),
-		getEnabledLightshow: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			return song.enabledLightshow;
-		}),
-		getCustomColors: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			const colors = song.modSettings.customColors;
-			if (!colors) return DEFAULT_MOD_SETTINGS.customColors;
-			return { ...DEFAULT_MOD_SETTINGS.customColors, ...colors };
-		}),
-		getMappingMode: createSelector(grabSelectedSong<true>(), (song: App.Song) => {
-			return song.modSettings.mappingExtensions?.isEnabled ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
+		selectPlacementMode: createSelector(selectByIdOrNull, (song) => {
+			return song?.modSettings.mappingExtensions?.isEnabled ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
 		}),
 	},
 	reducers: {},
 	extraReducers: (builder) => {
 		builder.addCase(hydrateSongs, (state, action) => {
 			const byId = action.payload;
-			return { ...state, byId: { ...state.byId, ...byId } };
+			return adapter.upsertMany(state, Object.values(byId));
 		});
 		builder.addCase(startLoadingSong, (state, action) => {
 			const { songId, difficulty } = action.payload;
-			state.selectedId = songId;
-			state.byId[songId].selectedDifficulty = difficulty;
+			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: difficulty } });
 		});
 		builder.addCase(finishLoadingSong, (state, action) => {
-			const { song, lastOpenedAt } = action.payload;
-			const draftSong = state.byId[song.id];
-			draftSong.lastOpenedAt = lastOpenedAt;
-			draftSong.modSettings = draftSong.modSettings || {};
-		});
-		builder.addCase(leaveEditor, (state) => {
-			return { ...state, selectedId: null };
-		});
-		builder.addCase(startImportingSong, (state) => {
-			return { ...state, processingImport: true };
-		});
-		builder.addCase(cancelImportingSong, (state) => {
-			return { ...state, processingImport: false };
+			const {
+				songId,
+				songData: { lastOpenedAt },
+			} = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
 		});
 		builder.addCase(createNewSong.fulfilled, (state, action) => {
 			const { coverArtFilename, songFilename, songId, name, subName, artistName, bpm, offset, selectedDifficulty, mapAuthorName, createdAt, lastOpenedAt } = action.payload;
-			state.selectedId = songId;
-			state.byId[songId] = {
+			return adapter.addOne(state, {
 				id: songId,
 				name,
 				subName,
@@ -152,7 +128,7 @@ const slice = createSlice({
 					},
 				},
 				modSettings: DEFAULT_MOD_SETTINGS,
-			};
+			});
 		});
 		builder.addCase(importExistingSong, (state, action) => {
 			const {
@@ -161,8 +137,7 @@ const slice = createSlice({
 				songData: { songId, songFilename, coverArtFilename, name, subName, artistName, mapAuthorName, bpm, offset, swingAmount, swingPeriod, previewStartTime, previewDuration, environment, difficultiesById, demo, modSettings = {}, enabledFastWalls = false, enabledLightshow = false },
 			} = action.payload;
 			const selectedDifficulty = Object.keys(difficultiesById)[0];
-			state.processingImport = false;
-			state.byId[songId] = {
+			return adapter.upsertOne(state, {
 				id: songId,
 				name,
 				subName,
@@ -185,108 +160,119 @@ const slice = createSlice({
 				modSettings,
 				enabledFastWalls,
 				enabledLightshow,
-			};
+			});
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
 			const { songId, ...fieldsToUpdate } = action.payload;
-			state.byId[songId] = { ...state.byId[songId], ...fieldsToUpdate };
+			return adapter.updateOne(state, { id: songId, changes: fieldsToUpdate });
 		});
 		builder.addCase(createDifficulty, (state, action) => {
-			const { difficulty } = action.payload;
-			const selectedSongId = state.selectedId;
-			if (!selectedSongId) return state;
-			const song = state.byId[selectedSongId];
-			song.selectedDifficulty = difficulty;
-			song.difficultiesById[difficulty] = {
-				id: difficulty,
-				noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[difficulty as Difficulty],
-				startBeatOffset: 0,
-				customLabel: "",
-			};
+			const { songId, difficulty } = action.payload;
+			const song = selectById(state, songId);
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					selectedDifficulty: difficulty,
+					difficultiesById: deepMerge(song.difficultiesById, {
+						[difficulty]: { id: difficulty, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[difficulty as Difficulty], startBeatOffset: 0, customLabel: "" },
+					}),
+				},
+			});
 		});
 		builder.addCase(copyDifficulty, (state, action) => {
 			const { songId, fromDifficultyId, toDifficultyId } = action.payload;
-			const song = state.byId[songId];
-			const newDifficultyObj = { ...song.difficultiesById[fromDifficultyId], id: toDifficultyId };
-			song.selectedDifficulty = toDifficultyId;
-			song.difficultiesById[toDifficultyId] = newDifficultyObj;
+			const song = selectById(state, songId);
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					selectedDifficulty: toDifficultyId,
+					difficultiesById: deepMerge(song.difficultiesById, {
+						[toDifficultyId]: { ...song.difficultiesById[fromDifficultyId], id: toDifficultyId },
+					}),
+				},
+			});
 		});
 		builder.addCase(changeSelectedDifficulty, (state, action) => {
 			const { songId, difficulty } = action.payload;
-			const song = state.byId[songId];
-			song.selectedDifficulty = difficulty;
+			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: difficulty } });
 		});
 		builder.addCase(deleteBeatmap, (state, action) => {
 			const { songId, difficulty } = action.payload;
-			delete state.byId[songId].difficultiesById[difficulty];
+			const song = selectById(state, songId);
+			return adapter.updateOne(state, { id: songId, changes: { difficultiesById: omit(song.difficultiesById, difficulty) } });
 		});
 		builder.addCase(updateBeatmapMetadata, (state, action) => {
 			const { songId, difficulty, noteJumpSpeed, startBeatOffset, customLabel } = action.payload;
-			const currentBeatmapDifficulty = state.byId[songId].difficultiesById[difficulty];
-			currentBeatmapDifficulty.noteJumpSpeed = noteJumpSpeed;
-			currentBeatmapDifficulty.startBeatOffset = startBeatOffset;
-			currentBeatmapDifficulty.customLabel = customLabel;
+			const song = selectById(state, songId);
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					difficultiesById: deepMerge(song.difficultiesById, {
+						[difficulty]: { id: difficulty, noteJumpSpeed, startBeatOffset, customLabel },
+					}),
+				},
+			});
 		});
 		builder.addCase(deleteSong, (state, action) => {
 			const { id: songId } = action.payload;
-			delete state.byId[songId];
+			return adapter.removeOne(state, songId);
 		});
 		builder.addCase(toggleModForSong, (state, action) => {
-			const { mod } = action.payload;
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return state;
-			// For a brief moment, modSettings was being set to an empty object, before the children were required. Update that now, if so.
-			if (!song.modSettings) song.modSettings ??= DEFAULT_MOD_SETTINGS;
-			// Also for a brief moment, modSettings didn't always have properties for each mod
-			// @ts-ignore false positive
-			if (!song.modSettings[mod]) song.modSettings[mod] ??= DEFAULT_MOD_SETTINGS[mod];
-			const isModEnabled = song.modSettings[mod].isEnabled;
-			song.modSettings[mod].isEnabled = !isModEnabled;
+			const { songId, mod } = action.payload;
+			const song = selectById(state, songId);
+			const original = song.modSettings ?? DEFAULT_MOD_SETTINGS;
+			const isModEnabled = !!song.modSettings[mod]?.isEnabled;
+			return adapter.updateOne(state, { id: songId, changes: { modSettings: deepMerge(original, { [mod]: { isEnabled: isModEnabled } }) } });
 		});
 		builder.addCase(updateModColor, (state, action) => {
-			const { element, color } = action.payload;
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return;
-			if (!song.modSettings.customColors) song.modSettings.customColors ??= DEFAULT_MOD_SETTINGS.customColors;
-			song.modSettings.customColors[element] = color;
+			const { songId, element, color } = action.payload;
+			const song = selectById(state, songId);
+			const original = song.modSettings.customColors ?? DEFAULT_MOD_SETTINGS.customColors;
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					modSettings: deepMerge(song.modSettings, { customColors: deepMerge(original, { [element]: color }) }),
+				},
+			});
 		});
 		builder.addCase(updateModColorOverdrive, (state, action) => {
-			const { element, overdrive } = action.payload;
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return;
+			const { songId, element, overdrive } = action.payload;
 			const elementOverdriveKey = `${element}Overdrive` as const;
-			if (!song.modSettings.customColors) song.modSettings.customColors ??= DEFAULT_MOD_SETTINGS.customColors;
-			song.modSettings.customColors[elementOverdriveKey] = overdrive;
+			const song = selectById(state, songId);
+			const original = song.modSettings.customColors ?? DEFAULT_MOD_SETTINGS.customColors;
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					modSettings: deepMerge(song.modSettings, { customColors: deepMerge(original, { [elementOverdriveKey]: overdrive }) }),
+				},
+			});
 		});
-		builder.addCase(updateGrid, (state, action) => {
-			const { numRows, numCols, colWidth, rowHeight } = action.payload;
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return;
-			if (!song.modSettings.mappingExtensions) song.modSettings.mappingExtensions ??= DEFAULT_MOD_SETTINGS.mappingExtensions;
-			song.modSettings.mappingExtensions.numRows = numRows;
-			song.modSettings.mappingExtensions.numCols = numCols;
-			song.modSettings.mappingExtensions.colWidth = colWidth;
-			song.modSettings.mappingExtensions.rowHeight = rowHeight;
-		});
-		builder.addCase(resetGrid, (state) => {
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return;
-			if (!song.modSettings.mappingExtensions) song.modSettings.mappingExtensions ??= DEFAULT_MOD_SETTINGS.mappingExtensions;
-			song.modSettings.mappingExtensions = { ...song.modSettings.mappingExtensions, ...DEFAULT_GRID };
-		});
-		builder.addCase(loadGridPreset, (state, action) => {
-			const { grid } = action.payload;
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return;
-			if (!song.modSettings.mappingExtensions) song.modSettings.mappingExtensions ??= DEFAULT_MOD_SETTINGS.mappingExtensions;
-			song.modSettings.mappingExtensions = { ...song.modSettings.mappingExtensions, ...grid };
+		builder.addCase(resetGrid, (state, action) => {
+			const { songId } = action.payload;
+			const song = selectById(state, songId);
+			const original = song.modSettings.mappingExtensions ?? DEFAULT_MOD_SETTINGS.mappingExtensions;
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					modSettings: deepMerge(song.modSettings, { mappingExtensions: deepMerge(original, { ...DEFAULT_GRID }) }),
+				},
+			});
 		});
 		builder.addCase(togglePropertyForSelectedSong, (state, action) => {
-			const { property } = action.payload;
-			const song = grabSelectedSong<false>()(state);
-			if (!song) return;
-			// @ts-ignore false positive
-			song[property] = !song[property];
+			const { songId, property } = action.payload;
+			const song = selectById(state, songId);
+			return adapter.updateOne(state, { id: songId, changes: { [property]: !song[property] } });
+		});
+		builder.addMatcher(isAnyOf(updateGrid, loadGridPreset), (state, action) => {
+			const { songId, grid } = action.payload;
+			const song = selectById(state, songId);
+			const original = song.modSettings.mappingExtensions ?? DEFAULT_MOD_SETTINGS.mappingExtensions;
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					modSettings: deepMerge(song.modSettings, { mappingExtensions: deepMerge(original, { ...DEFAULT_GRID }, { ...grid }) }),
+				},
+			});
 		});
 		builder.addDefaultCase((state) => state);
 	},

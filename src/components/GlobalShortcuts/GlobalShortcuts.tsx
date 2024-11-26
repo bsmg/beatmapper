@@ -34,7 +34,7 @@ import {
 	undoNotes,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedSong } from "$/store/selectors";
+import { selectActiveSongId, selectIsDemoSong } from "$/store/selectors";
 import { View } from "$/types";
 import { isMetaKeyPressed, throttle } from "$/utils";
 
@@ -49,7 +49,8 @@ interface Props {
  * - Demo
  */
 const GlobalShortcuts = ({ view }: Props) => {
-	const song = useAppSelector(getSelectedSong);
+	const songId = useAppSelector(selectActiveSongId);
+	const isDemo = useAppSelector((state) => selectIsDemoSong(state, songId));
 	const dispatch = useAppDispatch();
 
 	const keysDepressed = useRef({
@@ -216,8 +217,9 @@ const GlobalShortcuts = ({ view }: Props) => {
 				}
 
 				ev.preventDefault();
-				if (import.meta.env.PROD && song.demo) return alert("Unfortunately, the demo map is not available for download.");
-				return dispatch(downloadMapFiles({ version: 2 }));
+				if (import.meta.env.PROD && isDemo) return alert("Unfortunately, the demo map is not available for download.");
+				if (songId) return dispatch(downloadMapFiles({ songId, version: 2 }));
+				return;
 			}
 
 			case "KeyQ": {

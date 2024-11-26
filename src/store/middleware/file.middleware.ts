@@ -11,7 +11,7 @@ import { BeatmapFilestore } from "$/services/file.service";
 import { createBeatmapContents, createInfoContent } from "$/services/packaging.service";
 import { shiftEntitiesByOffset, unshiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { copyDifficulty, createDifficulty, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { getSelectedSong, getSongById, selectAllBasicEvents } from "$/store/selectors";
+import { selectAllBasicEvents, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { Json } from "$/types";
 import { roundToNearest } from "$/utils";
@@ -28,7 +28,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId, difficulty } = action.payload;
 			const state = api.getState();
-			const song = getSongById(state, songId);
+			const song = selectSongById(state, songId);
 			if (!song) {
 				console.error(`Song "${songId}" not found. Current state:`, state);
 				return;
@@ -74,15 +74,15 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const file = await filestore.loadFile<Blob>(song.songFilename);
 			if (!file) return;
 			const waveform = await getWaveformDataForFile(file);
-			api.dispatch(finishLoadingSong({ song, waveformData: waveform }));
+			api.dispatch(finishLoadingSong({ songId: song.id, songData: song, waveformData: waveform }));
 		},
 	});
 	instance.startListening({
 		actionCreator: createDifficulty,
 		effect: async (action, api) => {
-			const { difficulty, afterCreate } = action.payload;
+			const { songId, difficulty, afterCreate } = action.payload;
 			const state = api.getState();
-			const song = getSelectedSong(state);
+			const song = selectSongById(state, songId);
 			const events = convertEventsToExportableJson(selectAllBasicEvents(state));
 			const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
 			// No notes/obstacles/bookmarks by default, but copy the lighting
@@ -104,7 +104,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			// Save it to our destination difficulty.
 			await filestore.saveBeatmapFile(songId, toDifficultyId, sourceDifficultyFileContents);
 			// Pull that updated redux state and save it to our Info.dat
-			const song = getSongById(state, songId);
+			const song = selectSongById(state, songId);
 			// Back up our latest data!
 			await filestore.saveInfoFile(song.id, createInfoContent(song, { version: 2 }));
 			if (typeof afterCopy === "function") {
@@ -135,7 +135,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 	});
 	instance.startListening({
 		actionCreator: deleteSong,
-		effect: async (action, api) => {
+		effect: async (action) => {
 			const { id, songFilename, coverArtFilename, difficultiesById } = action.payload;
 			await filestore.removeAllFilesForSong(id, songFilename, coverArtFilename, Object.keys(difficultiesById));
 		},

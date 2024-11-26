@@ -1,6 +1,6 @@
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getDefaultObstacleDuration, getGridSize } from "$/store/selectors";
+import { getBeatDepth, getDefaultObstacleDuration, selectActiveSongId, selectGridSize } from "$/store/selectors";
 import type { ObjectPlacementMode } from "$/types";
 
 import ObstacleBox from "../ObstacleBox";
@@ -13,7 +13,8 @@ interface Props {
 }
 
 const TentativeObstacle = ({ mouseDownAt, color, mode, ...rest }: Props) => {
-	const { numRows: gridRows, numCols: gridCols, colWidth: gridColWidth, rowHeight: gridRowHeight } = useAppSelector(getGridSize);
+	const songId = useAppSelector(selectActiveSongId);
+	const { numRows: gridRows, numCols: gridCols, colWidth: gridColWidth, rowHeight: gridRowHeight } = useAppSelector((state) => selectGridSize(state, songId));
 	const beatDepth = useAppSelector(getBeatDepth);
 	const defaultObstacleDuration = useAppSelector(getDefaultObstacleDuration);
 

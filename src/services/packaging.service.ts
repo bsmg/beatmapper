@@ -11,7 +11,7 @@ import { formatColorForMods } from "$/helpers/colors.helpers";
 import { convertEventsToExportableJson } from "$/helpers/events.helpers";
 import { convertBlocksToExportableJson, convertMinesToExportableJson, convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
-import { getSongIdFromName, sortDifficultyIds } from "$/helpers/song.helpers";
+import { selectSongId, sortDifficultyIds } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -465,7 +465,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	if (!info) throw new Error("No info file.");
 	const infoDatString = await info.async("string");
 	const infoDatJson = JSON.parse(infoDatString);
-	const songId = getSongIdFromName(infoDatJson._songName);
+	const songId = selectSongId({ name: infoDatJson._songName });
 
 	const songIdAlreadyExists = currentSongIds.some((id) => id === songId);
 	if (songIdAlreadyExists) {

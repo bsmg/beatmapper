@@ -2,11 +2,10 @@ import { type PointerEventHandler, useCallback, useState } from "react";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { changeLaserSpeed } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, getSelectedEventEditMode, getSelectedSong, selectAllBasicEventsForTrackInWindow, selectValueForTrackAtBeat } from "$/store/selectors";
+import { getDurationInBeats, getSelectedEventEditMode, selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectOffsetInBeats, selectValueForTrackAtBeat } from "$/store/selectors";
 import { type App, EventEditMode } from "$/types";
 import { clamp, normalize, range } from "$/utils";
 import { getYForSpeed } from "./EventsGrid.helpers";
@@ -33,8 +32,9 @@ interface Props {
 }
 
 const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, isDisabled, areLasersLocked }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const duration = useAppSelector(getDurationInBeats);
+	const songId = useAppSelector(selectActiveSongId);
+	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
+	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, songId));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId) as App.IBasicValueEvent[]);
 	const startSpeed = useAppSelector((state) => selectValueForTrackAtBeat(state, { trackId, beforeBeat: startBeat }));
 	const endSpeed = useAppSelector((state) => selectValueForTrackAtBeat(state, { trackId, beforeBeat: startBeat + numOfBeatsToShow }));
@@ -78,8 +78,7 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 			return;
 		}
 
-		const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-		const beatNum = clamp(cursorAtBeat, offset, (duration ?? cursorAtBeat) + offset);
+		const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
 
 		setTentativeEvent({
 			...tentativeEvent,
