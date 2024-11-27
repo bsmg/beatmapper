@@ -41,7 +41,7 @@ export function isValueEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): even
 
 export function isEventOn<T extends App.BasicEvent>(event: T) {
 	const ON_EVENT_TYPES: App.BasicEventType[] = [App.BasicEventType.ON, App.BasicEventType.FLASH];
-	return isLightEvent(event) && ON_EVENT_TYPES.includes(event.type);
+	return ON_EVENT_TYPES.includes(event.type);
 }
 
 function convertLightingEventToJson<T extends App.IBasicLightEvent>(event: T): Json.Event {
