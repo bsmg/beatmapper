@@ -1,7 +1,7 @@
 import { createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT } from "$/constants";
-import { selectSongId, sortDifficultyIds } from "$/helpers/song.helpers";
+import { resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
 import {
 	changeSelectedDifficulty,
 	copyDifficulty,
@@ -27,7 +27,7 @@ import { type App, type Difficulty, Environment, ObjectPlacementMode, type SongI
 import { deepMerge, omit } from "$/utils";
 
 const adapter = createEntityAdapter<App.Song, SongId>({
-	selectId: selectSongId,
+	selectId: resolveSongId,
 	sortComparer: (a, b) => a.lastOpenedAt - b.lastOpenedAt,
 });
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
@@ -48,7 +48,7 @@ const slice = createSlice({
 		selectByIdOrNull: selectByIdOrNull,
 		selectBeatmapIds: createSelector(selectByIdOrNull, (song) => {
 			if (!song) return [];
-			return sortDifficultyIds(Object.keys(song.difficultiesById));
+			return sortBeatmapIds(Object.keys(song.difficultiesById));
 		}),
 		selectIsDemo: createSelector(selectByIdOrNull, (song) => {
 			return !!song?.demo;

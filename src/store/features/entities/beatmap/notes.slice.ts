@@ -1,7 +1,7 @@
 import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { getBeatNumForItem, mirror, nudge } from "$/helpers/item.helpers";
-import { selectId } from "$/helpers/notes.helpers";
+import { mirrorItem, nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
+import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
 	bulkDeleteNote,
 	clearCellOfNotes,
@@ -30,7 +30,7 @@ import { App, CutDirection, ObjectTool, ObjectType, View } from "$/types";
 import { cycle } from "$/utils";
 
 const adapter = createEntityAdapter<App.ColorNote, EntityId>({
-	selectId: selectId,
+	selectId: resolveNoteId,
 });
 const { selectAll, selectTotal } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
@@ -56,7 +56,7 @@ const slice = createSlice({
 			if (!selectedDirection) return state;
 			const color = Object.values(App.SaberColor)[Object.values(ObjectTool).indexOf(selectedTool)];
 			const direction = Object.values(App.CutDirection)[Object.values<number>(CutDirection).indexOf(selectedDirection)];
-			return adapter.addOne(state, { id: adapter.selectId({ beatNum, colIndex, rowIndex } as App.ColorNote), beatNum, colIndex, rowIndex, color: color, direction: direction });
+			return adapter.addOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex, color: color, direction: direction });
 		});
 		builder.addCase(clearCellOfNotes.fulfilled, (state, action) => {
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex } = action.payload;
@@ -105,7 +105,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.notes.map((note) => ({ ...note, selected: true, beatNum: getBeatNumForItem(note) + deltaBetweenPeriods }));
+			const timeShiftedEntities = data.notes.map((note) => ({ ...note, selected: true, beatNum: resolveBeatForItem(note) + deltaBetweenPeriods }));
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -140,7 +140,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: mirror(x, axis) })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, axis) })),
 			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
@@ -149,7 +149,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: nudge(x, direction, amount) })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
 			);
 		});
 		builder.addCase(deselectAllOfType, (state, action) => {

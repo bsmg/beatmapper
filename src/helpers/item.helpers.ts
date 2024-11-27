@@ -2,7 +2,7 @@ import { DEFAULT_GRID } from "$/constants";
 import { App, CutDirection, type IGrid } from "$/types";
 import { cycle } from "$/utils";
 
-export function getBeatNumForItem<T extends object>(item: T) {
+export function resolveBeatForItem<T extends object>(item: T) {
 	if ("_time" in item && typeof item._time === "number") {
 		return item._time;
 	}
@@ -16,12 +16,12 @@ export function getBeatNumForItem<T extends object>(item: T) {
 }
 
 export function sortByTime<T extends object>(a: T, b: T) {
-	const aBeatNum = getBeatNumForItem(a);
-	const bBeatNum = getBeatNumForItem(b);
+	const aBeatNum = resolveBeatForItem(a);
+	const bBeatNum = resolveBeatForItem(b);
 	return aBeatNum - bBeatNum;
 }
 
-export function nudge<T extends { beatNum: number }>(item: T, direction: "forwards" | "backwards", amount = 1) {
+export function nudgeItem<T extends { beatNum: number }>(item: T, direction: "forwards" | "backwards", amount = 1) {
 	const sign = direction === "backwards" ? 1 : -1;
 	return {
 		beatNum: item.beatNum - amount * sign,
@@ -82,7 +82,7 @@ function getVerticallyFlippedCutDirection(cutDirection: CutDirection) {
 		}
 	}
 }
-export function mirror<T extends { colIndex?: number; rowIndex?: number; color?: App.SaberColor; direction?: App.CutDirection }>(item: T, axis: "horizontal" | "vertical", grid: IGrid = DEFAULT_GRID) {
+export function mirrorItem<T extends { colIndex?: number; rowIndex?: number; color?: App.SaberColor; direction?: App.CutDirection }>(item: T, axis: "horizontal" | "vertical", grid: IGrid = DEFAULT_GRID) {
 	const resolveDirection = axis === "horizontal" ? getHorizontallyFlippedCutDirection : getVerticallyFlippedCutDirection;
 	const direction = item.direction !== undefined ? Object.values(CutDirection)[Object.values(App.CutDirection).indexOf(item.direction)] : undefined;
 	return {

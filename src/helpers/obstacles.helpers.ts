@@ -13,10 +13,13 @@ const WALL_START_MAX = 400;
 
 const RIDICULOUS_MAP_EX_CONSTANT = 4001;
 
-export function selectId(x: Pick<App.Obstacle, "beatNum" | "colIndex" | "type">) {
+export function resolveObstacleId(x: Pick<App.Obstacle, "beatNum" | "colIndex" | "type">) {
 	return `${x.beatNum}-${x.colIndex}-${Object.values(App.ObstacleType).indexOf(x.type)}`;
 }
 
+export function isVanillaObstacle(obstacle: App.Obstacle): obstacle is App.IExtensionObstacle {
+	return obstacle.type !== App.ObstacleType.EXTENDED;
+}
 export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.IExtensionObstacle {
 	return obstacle.type === App.ObstacleType.EXTENDED;
 }
@@ -62,7 +65,7 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 
 		const data = {
 			...obstacleData,
-			id: selectId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? o._lineIndex, type: obstacleData.type }),
+			id: resolveObstacleId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? o._lineIndex, type: obstacleData.type }),
 			beatNum: o._time,
 			beatDuration: duration,
 			colIndex: obstacleData.colIndex ?? o._lineIndex,
@@ -137,39 +140,6 @@ export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacl
 		} as Json.Obstacle;
 
 		return data;
-	});
-}
-
-export function swapObstacles<T extends App.Obstacle>(axis: "horizontal" | "vertical", obstacles: T[]) {
-	// There is no vertical equivalent to ceiling obstacles. So, no work is necessary
-	if (axis === "vertical") {
-		return obstacles;
-	}
-
-	return obstacles.map((obstacle) => {
-		if (!obstacle.selected) {
-			return obstacle;
-		}
-
-		return {
-			...obstacle,
-			colIndex: 3 - obstacle.colIndex,
-		};
-	});
-}
-
-export function nudgeObstacles<T extends App.Obstacle>(direction: "forwards" | "backwards", amount: number, obstacles: T[]) {
-	const sign = direction === "forwards" ? 1 : -1;
-
-	return obstacles.map((obstacle) => {
-		if (!obstacle.selected) {
-			return obstacle;
-		}
-
-		return {
-			...obstacle,
-			beatNum: obstacle.beatNum + amount * sign,
-		};
 	});
 }
 

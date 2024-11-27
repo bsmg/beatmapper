@@ -1,28 +1,47 @@
-import { LIGHTING_TRACKS, LIGHT_EVENTS_ARRAY, LIGHT_EVENT_TYPES, TRACK_IDS_ARRAY, TRACK_ID_MAP } from "$/constants";
-import { App, type Json } from "$/types";
+import { EVENT_TRACKS, LIGHT_EVENTS_ARRAY, LIGHT_EVENT_TYPES, TRACK_IDS_ARRAY, TRACK_ID_MAP } from "$/constants";
+import { App, type Json, TrackType } from "$/types";
 
-export function selectId<T extends Pick<App.BasicEvent, "beatNum" | "trackId">>(x: T) {
-	return `${x.trackId}-${x.beatNum}`;
+export function resolveEventId<T extends Pick<App.BasicEvent, "beatNum" | "trackId">>(x: T) {
+	return `${EVENT_TRACKS.map((x) => x.id).indexOf(x.trackId)}-${x.beatNum}`;
 }
 
-export function isLightEvent(event: App.BasicEvent): event is App.IBasicLightEvent {
-	return LIGHTING_TRACKS.includes(event.trackId);
+export function isLightTrack(trackId: App.TrackId, tracks = EVENT_TRACKS): trackId is App.LightTrackId {
+	const LIGHT_TRACKS = tracks.filter(({ type }) => type === TrackType.LIGHT).map(({ id }) => id);
+	return LIGHT_TRACKS.includes(trackId);
+}
+export function isTriggerTrack(trackId: App.TrackId, tracks = EVENT_TRACKS): trackId is App.TriggerTrackId {
+	const TRIGGER_TRACKS = tracks.filter(({ type }) => type === TrackType.TRIGGER).map(({ id }) => id);
+	return TRIGGER_TRACKS.includes(trackId);
+}
+export function isValueTrack(trackId: App.TrackId, tracks = EVENT_TRACKS): trackId is App.ValueTrackId {
+	const VALUE_TRACKS = tracks.filter(({ type }) => type === TrackType.VALUE).map(({ id }) => id);
+	return VALUE_TRACKS.includes(trackId);
 }
 
-// NOTE: This method mutates the `events` array supplied.
-// This is done because it is called within an Immer `produce` call, which uses proxies to avoid actually doing mutation.
-// But, if you call this from a foreign context, you won't get that, so be wary.
-// This is the kind of thing I'm doing only because this isn't a shared codebase :D
-export function nudgeEvents<T extends App.BasicEvent>(direction: "forwards" | "backwards", amount: number, events: T[]) {
-	const sign = direction === "forwards" ? 1 : -1;
+const LEFT_TRACKS: App.TrackId[] = [App.TrackId[2], App.TrackId[12]] as const;
+const RIGHT_TRACKS: App.TrackId[] = [App.TrackId[3], App.TrackId[13]] as const;
 
-	for (const event of events) {
-		if (!event.selected) {
-			return;
-		}
+export function isMirroredTrack(trackId: App.TrackId) {
+	return [...LEFT_TRACKS, ...RIGHT_TRACKS].includes(trackId);
+}
+export function getMirroredTrack(trackId: App.TrackId) {
+	if (!isMirroredTrack(trackId)) throw new Error("Not a mirrored track.");
+	return LEFT_TRACKS.includes(trackId) ? RIGHT_TRACKS[LEFT_TRACKS.indexOf(trackId)] : LEFT_TRACKS[RIGHT_TRACKS.indexOf(trackId)];
+}
 
-		event.beatNum += amount * sign;
-	}
+export function isLightEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): event is App.IBasicLightEvent {
+	return isLightTrack(event.trackId, tracks);
+}
+export function isTriggerEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): event is App.IBasicTriggerEvent {
+	return isTriggerTrack(event.trackId, tracks);
+}
+export function isValueEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): event is App.IBasicValueEvent {
+	return isValueTrack(event.trackId, tracks);
+}
+
+export function isEventOn<T extends App.BasicEvent>(event: T) {
+	const ON_EVENT_TYPES: App.BasicEventType[] = [App.BasicEventType.ON, App.BasicEventType.FLASH];
+	return isLightEvent(event) && ON_EVENT_TYPES.includes(event.type);
 }
 
 function convertLightingEventToJson<T extends App.IBasicLightEvent>(event: T): Json.Event {
@@ -71,7 +90,7 @@ export function convertEventsToRedux<T extends Json.Event>(events: T[]): App.Bas
 	return events.map((event) => {
 		const trackId = TRACK_IDS_ARRAY[event._type] as App.TrackId;
 		const beatNum = event._time;
-		const id = selectId({ beatNum, trackId: trackId });
+		const id = resolveEventId({ beatNum, trackId: trackId });
 
 		// Lighting event
 		if (event._type <= 4) {

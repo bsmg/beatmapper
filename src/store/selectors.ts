@@ -9,7 +9,6 @@ import { floorToNearest } from "$/utils";
 import { createByPositionSelector, selectHistory } from "./helpers";
 import type { RootState } from "./setup";
 
-import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
@@ -17,6 +16,7 @@ import selected from "./features/entities/active.slice";
 import bombs from "./features/entities/beatmap/bombs.slice";
 import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
+import bookmarks from "./features/entities/editor/bookmarks.slice";
 import basic from "./features/entities/lightshow/basic.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
@@ -276,8 +276,8 @@ export const selectAllSelectedEntities = createSelector([selectAllSelectedObject
 	};
 });
 
-export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: Pick<RootState, "bookmarks">) => {
-	return state.bookmarks;
+export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.editor.bookmarks;
 });
 
 export const { selectData: selectClipboardData, selectHasObjects: selectClipboardHasObjects } = clipboard.getSelectors((state: Pick<RootState, "clipboard">) => {

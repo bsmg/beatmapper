@@ -1,7 +1,5 @@
 import { App, CutDirection, Difficulty, Environment } from "$/types/beatmap";
-import { TrackType } from "$/types/editor";
 import { DEFAULT_BLUE, DEFAULT_LIGHT_BLUE, DEFAULT_LIGHT_RED, DEFAULT_OBSTACLE, DEFAULT_RED } from "./theme.constants";
-import { EVENT_TRACKS } from "./tracks.constants";
 
 export const DIFFICULTIES = Object.freeze(Object.values(Difficulty));
 
@@ -44,12 +42,6 @@ export const LIGHT_EVENT_TYPES = {
 } as const;
 
 export const LIGHT_EVENTS_ARRAY = [App.BasicEventType.OFF, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE, null, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE] as const;
-
-export const LIGHTING_TRACKS = Object.freeze(
-	Object.values(EVENT_TRACKS)
-		.filter(({ type }) => type === TrackType.LIGHT)
-		.map(({ id }) => id),
-);
 
 export const DEFAULT_NUM_COLS = 4;
 export const DEFAULT_NUM_ROWS = 3;

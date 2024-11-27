@@ -1,7 +1,7 @@
 import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { getBeatNumForItem, mirror, nudge } from "$/helpers/item.helpers";
-import { selectId } from "$/helpers/notes.helpers";
+import { mirrorItem, nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
+import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
 	bulkDeleteNote,
 	clearCellOfNotes,
@@ -27,7 +27,7 @@ import { createByPositionSelector, createSelectedEntitiesSelector } from "$/stor
 import { type App, ObjectTool, ObjectType, View } from "$/types";
 
 const adapter = createEntityAdapter<App.BombNote, EntityId>({
-	selectId: selectId,
+	selectId: resolveNoteId,
 });
 const { selectAll, selectTotal } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
@@ -50,20 +50,20 @@ const slice = createSlice({
 		builder.addCase(clickPlacementGrid.fulfilled, (state, action) => {
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex } = action.payload;
 			if (!selectedTool || selectedTool !== ObjectTool.BOMB_NOTE) return state;
-			return adapter.addOne(state, { id: selectId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex });
+			return adapter.addOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex });
 		});
 		builder.addCase(clearCellOfNotes.fulfilled, (state, action) => {
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex } = action.payload;
 			if (!selectedTool || selectedTool !== ObjectTool.BOMB_NOTE) return state;
 			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
 			if (!match) return state;
-			return adapter.removeOne(state, selectId(match));
+			return adapter.removeOne(state, adapter.selectId(match));
 		});
 		builder.addCase(deleteSelectedNotes, (state) => {
 			const entities = selectAllSelected(state);
 			return adapter.removeMany(
 				state,
-				entities.map((x) => selectId(x)),
+				entities.map((x) => adapter.selectId(x)),
 			);
 		});
 		builder.addCase(cutSelection.fulfilled, (state, action) => {
@@ -72,7 +72,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.removeMany(
 				state,
-				entities.map((x) => selectId(x)),
+				entities.map((x) => adapter.selectId(x)),
 			);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
@@ -82,9 +82,9 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: { selected: false } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.bombs.map((note) => ({ ...note, selected: true, beatNum: getBeatNumForItem(note) + deltaBetweenPeriods }));
+			const timeShiftedEntities = data.bombs.map((note) => ({ ...note, selected: true, beatNum: resolveBeatForItem(note) + deltaBetweenPeriods }));
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -93,7 +93,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: { selected: true } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: true } })),
 			);
 		});
 		builder.addCase(deselectAll, (state, action) => {
@@ -102,7 +102,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: { selected: false } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
 		});
 		builder.addCase(selectAllInRange, (state, action) => {
@@ -111,7 +111,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: { selected: x.beatNum >= start && x.beatNum < end } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.beatNum >= start && x.beatNum < end } })),
 			);
 		});
 		builder.addCase(swapSelectedNotes, (state, action) => {
@@ -119,7 +119,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: mirror(x, axis) })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, axis) })),
 			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
@@ -128,7 +128,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: nudge(x, direction, amount) })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
 			);
 		});
 		builder.addCase(deselectAllOfType, (state, action) => {
@@ -137,7 +137,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: selectId(x), changes: { selected: false } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
 		});
 		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => adapter.getInitialState());
@@ -145,14 +145,14 @@ const slice = createSlice({
 			const { time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
 			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
 			if (!match) return state;
-			return adapter.removeOne(state, selectId(match));
+			return adapter.removeOne(state, adapter.selectId(match));
 		});
 		builder.addMatcher(isAnyOf(selectNote, deselectNote), (state, action) => {
 			const { time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
 			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
 			if (!match) return state;
 			const selected = selectNote.match(action);
-			return adapter.updateOne(state, { id: selectId(match), changes: { selected: selected } });
+			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { selected: selected } });
 		});
 		builder.addDefaultCase((state) => state);
 	},

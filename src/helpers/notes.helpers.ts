@@ -1,7 +1,7 @@
 import { HUMANIZED_DIRECTIONS } from "$/constants";
 import { App, type Json } from "$/types";
 
-export function selectId<T extends Pick<App.IBaseNote, "beatNum" | "colIndex" | "rowIndex">>(x: T) {
+export function resolveNoteId<T extends Pick<App.IBaseNote, "beatNum" | "colIndex" | "rowIndex">>(x: T) {
 	return `${x.beatNum}-${x.colIndex}-${x.rowIndex}`;
 }
 
@@ -9,7 +9,7 @@ export function selectId<T extends Pick<App.IBaseNote, "beatNum" | "colIndex" | 
 export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]): App.ColorNote[] {
 	return blocks.map((b) => {
 		return {
-			id: selectId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
+			id: resolveNoteId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
 			color: b._type === 0 ? App.SaberColor.LEFT : App.SaberColor.RIGHT,
 			direction: HUMANIZED_DIRECTIONS[b._cutDirection],
 			beatNum: b._time,
@@ -21,7 +21,7 @@ export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]): App.Colo
 export function convertMinesToRedux<T extends Json.Note>(blocks: T[]): App.BombNote[] {
 	return blocks.map((b) => {
 		return {
-			id: selectId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
+			id: resolveNoteId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
 			beatNum: b._time,
 			rowIndex: b._lineLayer,
 			colIndex: b._lineIndex,
@@ -47,17 +47,6 @@ export function convertMinesToExportableJson<T extends App.BombNote>(blocks: T[]
 		_type: 3,
 		_cutDirection: 0,
 	}));
-}
-
-export function findNoteByProperties<T extends App.IBaseNote>(notes: T[], query: { time: number; lineLayer: number; lineIndex: number }) {
-	return notes.find((note) => {
-		return note.beatNum === query.time && note.rowIndex === query.lineLayer && note.colIndex === query.lineIndex;
-	});
-}
-export function findNoteIndexByProperties<T extends App.IBaseNote>(notes: T[], query: { time: number; lineLayer: number; lineIndex: number }) {
-	return notes.findIndex((note) => {
-		return note.beatNum === query.time && note.rowIndex === query.lineLayer && note.colIndex === query.lineIndex;
-	});
 }
 
 export function calculateNoteDensity(numOfNotes: number, segmentLengthInBeats: number, bpm: number) {

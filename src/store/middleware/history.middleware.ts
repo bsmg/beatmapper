@@ -1,7 +1,7 @@
 import { type MiddlewareAPI, createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
-import { getBeatNumForItem } from "$/helpers/item.helpers";
+import { resolveBeatForItem } from "$/helpers/item.helpers";
 import * as actions from "$/store/actions";
 import {
 	getBeatDepth,
@@ -50,7 +50,7 @@ function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" 
 
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel);
 
-	const entityTime = getBeatNumForItem(earliestEntity);
+	const entityTime = resolveBeatForItem(earliestEntity);
 
 	const isEntityVisible = entityTime > closeLimit && entityTime < farLimit;
 

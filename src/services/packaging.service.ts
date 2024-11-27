@@ -11,7 +11,7 @@ import { formatColorForMods } from "$/helpers/colors.helpers";
 import { convertEventsToExportableJson } from "$/helpers/events.helpers";
 import { convertBlocksToExportableJson, convertMinesToExportableJson, convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
-import { selectSongId, sortDifficultyIds } from "$/helpers/song.helpers";
+import { resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -22,7 +22,7 @@ import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getDifficultyRa
 const LIGHTSHOW_FILENAME = "EasyLightshow.dat";
 
 export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "coverArtFilename" | "createdAt" | "lastOpenedAt">, meta = { version: 2 }) {
-	const difficultyIds = sortDifficultyIds(Object.keys(song.difficultiesById));
+	const difficultyIds = sortBeatmapIds(Object.keys(song.difficultiesById));
 	const difficulties = difficultyIds.map((id) => song.difficultiesById[id]);
 
 	// We need to make sure we store numbers as numbers. This SHOULD be done at a higher level, but may not be.
@@ -465,7 +465,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	if (!info) throw new Error("No info file.");
 	const infoDatString = await info.async("string");
 	const infoDatJson = JSON.parse(infoDatString);
-	const songId = selectSongId({ name: infoDatJson._songName });
+	const songId = resolveSongId({ name: infoDatJson._songName });
 
 	const songIdAlreadyExists = currentSongIds.some((id) => id === songId);
 	if (songIdAlreadyExists) {

@@ -1,7 +1,7 @@
 import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { getBeatNumForItem, mirror, nudge } from "$/helpers/item.helpers";
-import { selectId } from "$/helpers/obstacles.helpers";
+import { mirrorItem, nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
+import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import {
 	createNewObstacle,
 	createNewSong,
@@ -28,7 +28,7 @@ import { createSelectedEntitiesSelector } from "$/store/helpers";
 import { type App, ObjectType, View } from "$/types";
 
 const adapter = createEntityAdapter<App.Obstacle, EntityId>({
-	selectId: selectId,
+	selectId: resolveObstacleId,
 });
 const { selectAll, selectTotal } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
@@ -49,7 +49,7 @@ const slice = createSlice({
 		});
 		builder.addCase(createNewObstacle.fulfilled, (state, action) => {
 			const { obstacle: entity } = action.payload;
-			return adapter.addOne(state, { id: selectId(entity), ...entity });
+			return adapter.addOne(state, { id: resolveObstacleId(entity), ...entity });
 		});
 		builder.addCase(resizeObstacle, (state, action) => {
 			const { id, newBeatDuration } = action.payload;
@@ -101,7 +101,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.obstacles.map((x) => ({ ...x, selected: true, beatNum: getBeatNumForItem(x) + deltaBetweenPeriods }));
+			const timeShiftedEntities = data.obstacles.map((x) => ({ ...x, selected: true, beatNum: resolveBeatForItem(x) + deltaBetweenPeriods }));
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -137,7 +137,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: mirror(x, "horizontal") })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, "horizontal") })),
 			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
@@ -146,7 +146,7 @@ const slice = createSlice({
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: nudge(x, direction, amount) })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
 			);
 		});
 		builder.addCase(deselectAllOfType, (state, action) => {

@@ -3,7 +3,7 @@ import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
-import { getBeatNumForItem } from "$/helpers/item.helpers";
+import { resolveBeatForItem } from "$/helpers/item.helpers";
 import {
 	type App,
 	type BeatmapEntities,
@@ -146,7 +146,7 @@ export const pasteSelection = createAsyncThunk("PASTE_SELECTION", (args: { view:
 	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
 	const pasteAtBeat = args.view === View.BEATMAP ? getCursorPositionInBeats(state, songId) : getSelectedEventBeat(state);
 	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
-	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map((x) => getBeatNumForItem(x)).sort((a, b) => a - b)[0];
+	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map((x) => resolveBeatForItem(x)).sort((a, b) => a - b)[0];
 	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
 	// Every entity that has an ID (obstacles, events) needs a unique ID, we shouldn't blindly copy it over.
 	return api.fulfillWithValue({ ...args, data: data, deltaBetweenPeriods });
@@ -163,7 +163,7 @@ export const createBookmark = createAsyncThunk("CREATE_BOOKMARK", (args: { name:
 	const color = getNewBookmarkColor(existingBookmarks);
 	// For the notes view, we want to use the cursorPosition to figure out when to create the bookmark for.
 	// For the events view, we want it to be based on the mouse position.
-	const beatNum = args.view === View.BEATMAP ? getCursorPositionInBeats(state, songId) : getSelectedEventBeat(state);
+	const beatNum = args.view === View.LIGHTSHOW ? getSelectedEventBeat(state) : getCursorPositionInBeats(state, songId);
 	if (beatNum === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ ...args, beatNum, color });
 });

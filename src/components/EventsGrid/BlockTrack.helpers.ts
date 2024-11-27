@@ -1,34 +1,9 @@
-import { EVENT_TRACKS } from "$/constants";
-import { App, type IBackgroundBox, TrackType } from "$/types";
-
-function getIsEventOn(ev: App.BasicEvent) {
-	return ev.type === App.BasicEventType.ON || ev.type === App.BasicEventType.FLASH;
-}
-
-function getIsLightingTrack(trackId: App.TrackId) {
-	const track = EVENT_TRACKS.find((t) => t.id === trackId);
-
-	if (!track) {
-		throw new Error(`Unrecognized trackId: ${trackId}`);
-	}
-
-	if (track.type !== TrackType.LIGHT) {
-		return false;
-	}
-
-	if (track.id === App.TrackId[8] || track.id === App.TrackId[9]) {
-		return false;
-	}
-
-	return true;
-}
+import { isEventOn, isLightTrack } from "$/helpers/events.helpers";
+import { App, type IBackgroundBox } from "$/types";
 
 export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number) {
 	// If this track isn't a lighting track, bail early.
-	const isLightingTrack = getIsLightingTrack(trackId);
-	if (!isLightingTrack) {
-		return [];
-	}
+	if (!isLightTrack(trackId)) return [];
 
 	const backgroundBoxes: IBackgroundBox[] = [];
 
@@ -61,9 +36,9 @@ export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackI
 	let tentativeBox = null;
 
 	for (const event of workableEvents) {
-		const isEventOn = getIsEventOn(event);
+		const isOn = isEventOn(event);
 
-		if (!tentativeBox && isEventOn) {
+		if (!tentativeBox && isOn) {
 			// relevant possibilities:
 			// It was off, and now it's on
 			// It was on, and not it's off
@@ -78,7 +53,7 @@ export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackI
 			} as IBackgroundBox;
 		}
 
-		if (tentativeBox && !isEventOn) {
+		if (tentativeBox && !isOn) {
 			// 2. It was on, and now it's off
 			tentativeBox.duration = event.beatNum - tentativeBox.beatNum;
 			backgroundBoxes.push(tentativeBox);
@@ -86,7 +61,7 @@ export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackI
 			tentativeBox = null;
 		}
 
-		if (tentativeBox && isEventOn && tentativeBox.colorType !== event.colorType) {
+		if (tentativeBox && isOn && tentativeBox.colorType !== event.colorType) {
 			// 3. Color changed
 			tentativeBox.duration = event.beatNum - tentativeBox.beatNum;
 			backgroundBoxes.push(tentativeBox);

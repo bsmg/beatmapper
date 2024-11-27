@@ -1,10 +1,11 @@
 import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
+import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import { createBookmark, createNewSong, deleteBookmark, leaveEditor, loadBeatmapEntities, startLoadingSong } from "$/store/actions";
 import type { App } from "$/types";
 
 const adapter = createEntityAdapter<App.Bookmark, EntityId>({
-	selectId: (x) => x.beatNum,
+	selectId: resolveBookmarkId,
 });
 const { selectAll } = adapter.getSelectors();
 
@@ -26,7 +27,7 @@ const slice = createSlice({
 		});
 		builder.addCase(deleteBookmark, (state, action) => {
 			const { beatNum } = action.payload;
-			return adapter.removeOne(state, beatNum);
+			return adapter.removeOne(state, resolveBookmarkId({ beatNum }));
 		});
 		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => adapter.getInitialState());
 		builder.addDefaultCase((state) => state);

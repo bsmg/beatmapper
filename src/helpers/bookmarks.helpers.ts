@@ -1,6 +1,10 @@
 import { BOOKMARK_COLORS } from "$/constants";
 import type { App, Json } from "$/types";
 
+export function resolveBookmarkId(x: Pick<App.Bookmark, "beatNum">) {
+	return `${x.beatNum}`;
+}
+
 export function getNewBookmarkColor(bookmarks: Pick<App.Bookmark, "color">[]) {
 	// I have 6 unique colors, and it's important that these are the first-used colors.
 	// Beyond that, we can be a little less careful, since most songs won't get up this high anyway.
