@@ -25,28 +25,24 @@ function getBackgroundForEvent(event: App.BasicEvent, customColors: App.ModSetti
 			// On/off are solid colors
 			return color;
 		}
-
 		case App.BasicEventType.FLASH: {
 			const brightColor = Color(color).lighten(0.4).hsl();
-			const semiTransparentColor = Color(color)
-				.darken(0.5)
-
-				.hsl();
+			const semiTransparentColor = Color(color).darken(0.5).hsl();
 			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
-
 		case App.BasicEventType.FADE: {
 			const brightColor = Color(color).lighten(0.4).hsl();
-
-			const semiTransparentColor = Color(color)
-				.darken(0.5)
-
-				.rgb();
+			const semiTransparentColor = Color(color).darken(0.5).rgb();
 			return `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
-
-		default:
+		case App.BasicEventType.TRANSITION: {
+			const brightColor = Color(color).lighten(0.4).hsl();
+			const semiTransparentColor = Color(color).darken(0.5).rgb();
+			return `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})`;
+		}
+		default: {
 			throw new Error(`Unrecognized type: ${event.type}`);
+		}
 	}
 }
 

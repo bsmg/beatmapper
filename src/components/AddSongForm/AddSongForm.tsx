@@ -2,12 +2,13 @@ import { type FormEventHandler, Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
-import { COLORS, DIFFICULTIES, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
+import { COLORS, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
 import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { createNewSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
+import { Difficulty } from "$/types";
 
 import Button from "../Button";
 import DifficultyTag from "../DifficultyTag";
@@ -153,7 +154,7 @@ const AddSongForm = () => {
 							<QuestionTooltip>Select the first difficulty you'd like to work on. You can create additional difficulties later on.</QuestionTooltip>
 						</Label>
 						<Difficulties>
-							{DIFFICULTIES.map((difficulty) => (
+							{Object.values(Difficulty).map((difficulty) => (
 								<Fragment key={difficulty}>
 									<DifficultyTag disabled={hasSubmitted} difficulty={difficulty} onSelect={setSelectedDifficulty} isSelected={!!selectedDifficulty && selectedDifficulty === difficulty} />
 									<Spacer size={UNIT} />

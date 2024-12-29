@@ -1,9 +1,11 @@
-import { isEventOn, isLightTrack } from "$/helpers/events.helpers";
-import { App, type IBackgroundBox } from "$/types";
+import { isLightTrack } from "$/helpers/events.helpers";
+import { App, type IBackgroundBox, type IEventTrack } from "$/types";
 
-export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number) {
+const ON_EVENT_TYPES: App.BasicEventType[] = [App.BasicEventType.ON, App.BasicEventType.FLASH];
+
+export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number, tracks?: IEventTrack[]) {
 	// If this track isn't a lighting track, bail early.
-	if (!isLightTrack(trackId)) return [];
+	if (!isLightTrack(trackId, tracks)) return [];
 
 	const backgroundBoxes: IBackgroundBox[] = [];
 
@@ -36,7 +38,7 @@ export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackI
 	let tentativeBox = null;
 
 	for (const event of workableEvents) {
-		const isOn = isEventOn(event);
+		const isOn = ON_EVENT_TYPES.includes(event.type);
 
 		if (!tentativeBox && isOn) {
 			// relevant possibilities:

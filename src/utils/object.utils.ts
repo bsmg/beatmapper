@@ -57,7 +57,7 @@ export function hasPropChanged<T extends object, K extends keyof T>(oldProps: Re
 	return oldProps[key] !== newProps[key];
 }
 
-export function deepMerge<T extends object>(target: T, ...sources: Partial<T>[]): T {
+export function deepMerge<T extends Record<string, any>>(target: T, ...sources: Partial<T>[]): T {
 	function isMergeableObject(item: unknown): item is object {
 		return !!(item && typeof item === "object" && !Array.isArray(item));
 	}
@@ -67,10 +67,10 @@ export function deepMerge<T extends object>(target: T, ...sources: Partial<T>[])
 	if (isMergeableObject(target) && isMergeableObject(source)) {
 		for (const key in source) {
 			if (isMergeableObject(source[key])) {
-				if (!target[key]) Object.assign(target, { [key]: {} });
-				deepMerge(target[key] as object, source[key]);
+				if (!(key in target)) Object.assign(target, { [key]: source[key] });
+				else target[key as keyof T] = deepMerge<T[keyof T]>(target[key], source[key]);
 			} else {
-				Object.assign(target, { [key]: source[key] });
+				if (source[key] !== undefined) Object.assign(target, { [key]: source[key] });
 			}
 		}
 	}

@@ -3,11 +3,11 @@ import { Fragment, useState } from "react";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { COLORS, DIFFICULTIES, UNIT } from "$/constants";
+import { COLORS, UNIT } from "$/constants";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
+import { type BeatmapId, Difficulty, type SongId } from "$/types";
 
 import Button from "../Button";
 import DifficultyTag from "../DifficultyTag";
@@ -23,6 +23,7 @@ interface Props {
 }
 
 const CopyDifficultyForm = ({ songId, idToCopy, afterCopy, copyDifficulty }: Props) => {
+	const DIFFICULTIES = Object.values(Difficulty);
 	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, songId));
 	const [selectedId, setSelectedId] = useState<BeatmapId | null>(null);
 

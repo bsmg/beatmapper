@@ -1,12 +1,11 @@
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { COLORS, DIFFICULTIES, DIFFICULTY_COLORS, UNIT } from "$/constants";
-import { getLabelForDifficulty } from "$/helpers/song.helpers";
+import { COLORS, DIFFICULTY_COLORS, DIFFICULTY_RENAME, UNIT } from "$/constants";
 import { changeSelectedDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
-import type { SongId } from "$/types";
+import { Difficulty, type SongId } from "$/types";
 
 import CoverArtImage from "../CoverArtImage";
 import MiniButton from "../MiniButton";
@@ -43,8 +42,8 @@ const SongsTableRow = ({ songId }: Props) => {
 			</DescriptionCell>
 			<DifficultySquaresCell>
 				<DifficultySquaresWrapper>
-					{DIFFICULTIES.map((difficulty) => (
-						<Tooltip key={difficulty} delay={500} title={getLabelForDifficulty(difficulty).toString()}>
+					{Object.values(Difficulty).map((difficulty) => (
+						<Tooltip key={difficulty} delay={500} title={DIFFICULTY_RENAME[difficulty]}>
 							<DificultySquareWrapper>
 								<DifficultySquare
 									color={DIFFICULTY_COLORS[difficulty]}

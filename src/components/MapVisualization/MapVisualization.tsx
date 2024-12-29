@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { Fragment, useRef } from "react";
 
-import { BLOCK_COLUMN_WIDTH, GRID_POSITION } from "$/constants";
+import { BLOCK_COLUMN_WIDTH, SONG_OFFSET } from "$/constants";
 import { Controls } from "$/services/controls.service";
 import { Quality } from "$/types";
 
@@ -46,7 +46,7 @@ const MapVisualization = () => {
 				<Obstacles />
 			</TrackMover>
 
-			<PlacementGrid width={BLOCK_COLUMN_WIDTH * 4} height={BLOCK_COLUMN_WIDTH * 3} gridPosition={GRID_POSITION} />
+			<PlacementGrid width={BLOCK_COLUMN_WIDTH * 4} height={BLOCK_COLUMN_WIDTH * 3} gridPosition={[0, 0, -SONG_OFFSET]} />
 		</Fragment>
 	);
 };

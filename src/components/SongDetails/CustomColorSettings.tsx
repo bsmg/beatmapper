@@ -1,10 +1,11 @@
 import { Suspense, lazy } from "react";
 import styled from "styled-components";
 
-import { COLOR_ELEMENT_DATA, COLOR_ELEMENT_IDS, UNIT } from "$/constants";
+import { BEATMAP_COLOR_KEY_RENAME, UNIT } from "$/constants";
 import { toggleModForSong, updateModColor, updateModColorOverdrive } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectCustomColors } from "$/store/selectors";
+import { App } from "$/types";
 
 import CenteredSpinner from "../CenteredSpinner";
 import Heading from "../Heading";
@@ -38,7 +39,7 @@ const CustomColorSettings = () => {
 				<Suspense fallback={<CenteredSpinner />}>
 					<Spacer size={UNIT * 4} />
 					<Row>
-						{COLOR_ELEMENT_IDS.map((elementId) => {
+						{Object.values(App.BeatmapColorKey).map((elementId) => {
 							const color = customColors[elementId];
 							const overdrive = customColors[`${elementId}Overdrive`];
 
@@ -46,7 +47,7 @@ const CustomColorSettings = () => {
 								<Cell key={elementId}>
 									<ColorPicker colorId={elementId} color={color} updateColor={(element, color) => songId && dispatch(updateModColor({ songId, element, color }))} overdrive={overdrive} />
 									<Spacer size={UNIT * 2} />
-									<Heading size={3}>{COLOR_ELEMENT_DATA[elementId].label}</Heading>
+									<Heading size={3}>{BEATMAP_COLOR_KEY_RENAME[elementId]}</Heading>
 									<Spacer size={UNIT * 3} />
 									<Heading size={4}>Overdrive</Heading>
 									<Spacer size={UNIT * 1} />

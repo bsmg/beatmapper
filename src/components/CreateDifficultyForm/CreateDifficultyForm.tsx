@@ -4,12 +4,12 @@ import { sliders } from "react-icons-kit/feather/sliders";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { DIFFICULTIES, UNIT } from "$/constants";
+import { UNIT } from "$/constants";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveBeatmapId, selectActiveSongId, selectBeatmapIds } from "$/store/selectors";
-import type { BeatmapId } from "$/types";
+import { type BeatmapId, Difficulty } from "$/types";
 
 import Button from "../Button";
 import DifficultyTag from "../DifficultyTag";
@@ -54,7 +54,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 			</Paragraph>
 			<Spacer size={UNIT * 4} />
 			<DifficultiesWrapper>
-				{DIFFICULTIES.map((difficulty) => {
+				{Object.values(Difficulty).map((difficulty) => {
 					const alreadyExists = difficultyIds.includes(difficulty);
 
 					return (

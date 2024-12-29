@@ -60,12 +60,6 @@ export const DIFFICULTY_COLORS = {
 	[Difficulty.EXPERT_PLUS]: "#FF5FF9",
 } as const;
 
-export const DEFAULT_RED = "#c03030";
-export const DEFAULT_BLUE = "#2064a8";
-export const DEFAULT_LIGHT_RED = "#c03030";
-export const DEFAULT_LIGHT_BLUE = "#3098ff";
-export const DEFAULT_OBSTACLE = "#ff3030";
-
 export const BOOKMARK_COLORS = [
 	{ background: "#F50057", text: "white" }, // pink
 	{ background: "#FFEA00", text: "black" }, // yellow

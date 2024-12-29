@@ -1,17 +1,15 @@
-import { HUMANIZED_DIRECTIONS } from "$/constants";
 import { App, type Json } from "$/types";
 
 export function resolveNoteId<T extends Pick<App.IBaseNote, "beatNum" | "colIndex" | "rowIndex">>(x: T) {
 	return `${x.beatNum}-${x.colIndex}-${x.rowIndex}`;
 }
 
-// TODO: Currently, the "redux" variant of the blocks format isn't used. I use the proprietary json format everywhere. I want to refactor this, to keep everything in line between blocks, obstacles, and mines.
 export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]): App.ColorNote[] {
 	return blocks.map((b) => {
 		return {
 			id: resolveNoteId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
 			color: b._type === 0 ? App.SaberColor.LEFT : App.SaberColor.RIGHT,
-			direction: HUMANIZED_DIRECTIONS[b._cutDirection],
+			direction: Object.values(App.CutDirection)[b._cutDirection],
 			beatNum: b._time,
 			rowIndex: b._lineLayer,
 			colIndex: b._lineIndex,
@@ -29,14 +27,13 @@ export function convertMinesToRedux<T extends Json.Note>(blocks: T[]): App.BombN
 	});
 }
 
-// UNUSED
 export function convertBlocksToExportableJson<T extends App.ColorNote>(blocks: T[]): Json.Note[] {
 	return blocks.map((b) => ({
 		_time: b.beatNum,
 		_lineIndex: Math.round(b.colIndex),
 		_lineLayer: Math.round(b.rowIndex),
 		_type: b.color === App.SaberColor.LEFT ? 0 : 1,
-		_cutDirection: HUMANIZED_DIRECTIONS.indexOf(b.direction),
+		_cutDirection: Object.values(App.CutDirection).indexOf(b.direction),
 	}));
 }
 export function convertMinesToExportableJson<T extends App.BombNote>(blocks: T[]): Json.Note[] {

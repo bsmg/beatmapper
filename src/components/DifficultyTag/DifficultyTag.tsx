@@ -1,7 +1,6 @@
 import styled from "styled-components";
 
-import { DIFFICULTY_COLORS } from "$/constants";
-import { getLabelForDifficulty } from "$/helpers/song.helpers";
+import { DIFFICULTY_COLORS, DIFFICULTY_RENAME } from "$/constants";
 import type { Difficulty } from "$/types";
 
 import UnstyledButton from "../UnstyledButton";
@@ -34,7 +33,7 @@ const DifficultyTag = ({ difficulty, width = 80, isSelected, onSelect = noop, di
 			}}
 			{...delegated}
 		>
-			{getLabelForDifficulty(difficulty)}
+			{DIFFICULTY_RENAME[difficulty]}
 		</Wrapper>
 	);
 };

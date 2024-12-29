@@ -1,6 +1,5 @@
 import { type EntityId, createDraftSafeSelector, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { EVENT_TRACKS } from "$/constants";
 import { getMirroredTrack, isLightEvent, isMirroredTrack, resolveEventId } from "$/helpers/events.helpers";
 import { nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
 import {
@@ -80,7 +79,7 @@ const slice = createSlice({
 			const match = selectById(state, resolveEventId({ beatNum, trackId }));
 			if (!match) return state;
 			if (!isLightEvent(match)) return state;
-			const color = cycle(Object.values(App.EventColor), match.colorType);
+			const color = cycle(Object.values(App.EventColor).slice(0, -1), match.colorType);
 			adapter.updateOne(state, { id: adapter.selectId(match), changes: { colorType: color } });
 			if (areLasersLocked && isMirroredTrack(match.trackId)) {
 				const mirrorTrackId = getMirroredTrack(match.trackId);
@@ -150,10 +149,10 @@ const slice = createSlice({
 			);
 		});
 		builder.addCase(drawSelectionBox.fulfilled, (state, action) => {
-			const { selectionBoxInBeats, metadata } = action.payload;
-			const trackIds = EVENT_TRACKS.map((x) => x.id) as App.TrackId[];
+			const { tracks, selectionBoxInBeats, metadata } = action.payload;
+			const trackIds = tracks.map((x) => x.id) as App.TrackId[];
 			for (const trackId of trackIds) {
-				const trackIndex = EVENT_TRACKS.findIndex((track) => track.id === trackId);
+				const trackIndex = tracks.findIndex((track) => track.id === trackId);
 				const isTrackIdWithinBox = trackIndex >= selectionBoxInBeats.startTrackIndex && trackIndex <= selectionBoxInBeats.endTrackIndex;
 				for (const event of selectAll(state)) {
 					const isInWindow = event.beatNum >= metadata.window.startBeat && event.beatNum <= metadata.window.endBeat;

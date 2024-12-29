@@ -1,8 +1,9 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { NOTE_TOOLS } from "$/constants";
 import { deleteGridPreset, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
 import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
+
+const NOTE_TOOLS = Object.values(ObjectTool);
 
 const initialState = {
 	selectedTool: NOTE_TOOLS[0],

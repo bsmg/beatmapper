@@ -15,7 +15,7 @@ export function resolveBeatForItem<T extends object>(item: T) {
 	throw new Error("Could not determine time for event");
 }
 
-export function sortByTime<T extends object>(a: T, b: T) {
+export function sortByBeat<T extends object>(a: T, b: T) {
 	const aBeatNum = resolveBeatForItem(a);
 	const bBeatNum = resolveBeatForItem(b);
 	return aBeatNum - bBeatNum;

@@ -11,13 +11,13 @@ import { formatColorForMods } from "$/helpers/colors.helpers";
 import { convertEventsToExportableJson } from "$/helpers/events.helpers";
 import { convertBlocksToExportableJson, convertMinesToExportableJson, convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
-import { resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
+import { resolveDifficulty, resolveRankForDifficulty, resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { App, Difficulty, type Json, type SongId } from "$/types";
 import { isEmpty, omit } from "$/utils";
-import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getDifficultyRankForDifficulty, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
+import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
 
 const LIGHTSHOW_FILENAME = "EasyLightshow.dat";
 
@@ -53,35 +53,39 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 			previewDuration: song.previewDuration,
 			coverImagePath: "cover.jpg",
 			environmentName: song.environment,
-			difficultyLevels: difficulties.map((difficulty) => ({
-				difficulty: difficulty.id,
-				difficultyRank: getDifficultyRankForDifficulty(difficulty),
-				audioPath: "song.ogg",
-				jsonPath: `${difficulty.id}.json`,
-				offset: offset,
-				oldOffset: offset,
-			})),
+			difficultyLevels: difficulties.map((beatmap) => {
+				const difficulty = resolveDifficulty(beatmap.id);
+				return {
+					difficulty: beatmap.id,
+					difficultyRank: resolveRankForDifficulty(difficulty) + 1,
+					audioPath: "song.ogg",
+					jsonPath: `${beatmap.id}.json`,
+					offset: offset,
+					oldOffset: offset,
+				};
+			}),
 		};
 	} else if (meta.version === 2) {
 		const beatmapSets = [
 			{
 				_beatmapCharacteristicName: "Standard",
-				_difficultyBeatmaps: difficulties.map((difficulty) => {
+				_difficultyBeatmaps: difficulties.map((beatmap) => {
+					const difficulty = resolveDifficulty(beatmap.id);
 					const difficultyData = {
-						_difficulty: difficulty.id,
-						_difficultyRank: getDifficultyRankForDifficulty(difficulty),
-						_beatmapFilename: `${difficulty.id}.dat`,
-						_noteJumpMovementSpeed: difficulty.noteJumpSpeed,
-						_noteJumpStartBeatOffset: difficulty.startBeatOffset,
+						_difficulty: beatmap.id,
+						_difficultyRank: resolveRankForDifficulty(difficulty),
+						_beatmapFilename: `${beatmap.id}.dat`,
+						_noteJumpMovementSpeed: beatmap.noteJumpSpeed,
+						_noteJumpStartBeatOffset: beatmap.startBeatOffset,
 						_customData: {
 							_editorOffset: offset !== 0 ? offset : undefined,
 							_requirements: requirements.length > 0 ? requirements : undefined,
 						},
 					} as Json.BeatmapDifficulty;
 
-					if (difficulty.customLabel) {
+					if (beatmap.customLabel) {
 						difficultyData._customData ??= {};
-						difficultyData._customData._difficultyLabel = difficulty.customLabel;
+						difficultyData._customData._difficultyLabel = beatmap.customLabel;
 					}
 
 					return difficultyData;

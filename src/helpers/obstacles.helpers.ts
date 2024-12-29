@@ -17,7 +17,7 @@ export function resolveObstacleId(x: Pick<App.Obstacle, "beatNum" | "colIndex" |
 	return `${x.beatNum}-${x.colIndex}-${Object.values(App.ObstacleType).indexOf(x.type)}`;
 }
 
-export function isVanillaObstacle(obstacle: App.Obstacle): obstacle is App.IExtensionObstacle {
+export function isVanillaObstacle(obstacle: App.Obstacle): obstacle is App.IBaseObstacle {
 	return obstacle.type !== App.ObstacleType.EXTENDED;
 }
 export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.IExtensionObstacle {

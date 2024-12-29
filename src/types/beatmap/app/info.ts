@@ -1,4 +1,8 @@
-import type { BeatmapId, Environment, SongId } from "../shared";
+import type { EntityId } from "@reduxjs/toolkit";
+import type { Environment } from "../shared";
+
+export type SongId = EntityId;
+export type BeatmapId = EntityId;
 
 export interface ModSettings {
 	mappingExtensions: {

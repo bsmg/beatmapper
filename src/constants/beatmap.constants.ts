@@ -1,47 +1,4 @@
-import { App, CutDirection, Difficulty, Environment } from "$/types/beatmap";
-import { DEFAULT_BLUE, DEFAULT_LIGHT_BLUE, DEFAULT_LIGHT_RED, DEFAULT_OBSTACLE, DEFAULT_RED } from "./theme.constants";
-
-export const DIFFICULTIES = Object.freeze(Object.values(Difficulty));
-
-export const CUT_DIRECTIONS = Object.freeze(Object.values(CutDirection));
-export const HUMANIZED_DIRECTIONS = Object.freeze(Object.values(App.CutDirection));
-
-export const TRACK_ID_MAP = Object.freeze(
-	Object.entries(App.TrackId).reduce(
-		(acc: Record<App.TrackId, number>, [index, value]) => {
-			acc[`${value}`] = Number(index);
-			return acc;
-		},
-		{} as Record<App.TrackId, number>,
-	),
-);
-
-export const TRACK_IDS_ARRAY = Object.freeze(
-	Object.entries(App.TrackId).reduce(
-		(acc, [index, value]) => {
-			acc[Number(index)] = value;
-			return acc;
-		},
-		[] as (App.TrackId | null)[],
-	),
-);
-
-export const LIGHT_EVENT_TYPES = {
-	blue: {
-		[App.BasicEventType.OFF]: 0,
-		[App.BasicEventType.ON]: 1,
-		[App.BasicEventType.FLASH]: 2,
-		[App.BasicEventType.FADE]: 3,
-	},
-	red: {
-		[App.BasicEventType.OFF]: 0,
-		[App.BasicEventType.ON]: 5,
-		[App.BasicEventType.FLASH]: 6,
-		[App.BasicEventType.FADE]: 7,
-	},
-} as const;
-
-export const LIGHT_EVENTS_ARRAY = [App.BasicEventType.OFF, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE, null, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE] as const;
+import { App, Difficulty } from "$/types/beatmap";
 
 export const DEFAULT_NUM_COLS = 4;
 export const DEFAULT_NUM_ROWS = 3;
@@ -63,18 +20,22 @@ export const DEFAULT_NOTE_JUMP_SPEEDS = {
 	[Difficulty.EXPERT_PLUS]: 18,
 } as const;
 
+export const DEFAULT_COLOR_SCHEME = {
+	[App.BeatmapColorKey.SABER_LEFT]: "#c03030",
+	[App.BeatmapColorKey.SABER_RIGHT]: "#2064a8",
+	[App.BeatmapColorKey.ENV_LEFT]: "#c03030",
+	[App.BeatmapColorKey.ENV_RIGHT]: "#3098ff",
+	[App.BeatmapColorKey.OBSTACLE]: "#ff3030",
+} as const;
+
 export const DEFAULT_MOD_SETTINGS = {
 	customColors: {
 		isEnabled: false,
-		colorLeft: DEFAULT_RED,
+		...DEFAULT_COLOR_SCHEME,
 		colorLeftOverdrive: 0,
-		colorRight: DEFAULT_BLUE,
 		colorRightOverdrive: 0,
-		envColorLeft: DEFAULT_LIGHT_RED,
 		envColorLeftOverdrive: 0,
-		envColorRight: DEFAULT_LIGHT_BLUE,
 		envColorRightOverdrive: 0,
-		obstacleColor: DEFAULT_OBSTACLE,
 		obstacleColorOverdrive: 0,
 	},
 	mappingExtensions: {
@@ -83,40 +44,10 @@ export const DEFAULT_MOD_SETTINGS = {
 	},
 } as const;
 
-export const COLOR_ELEMENT_IDS = Object.freeze(Object.values(App.BeatmapColorKey));
-
-export const COLOR_ELEMENT_DATA = {
-	[App.BeatmapColorKey.SABER_LEFT]: {
-		label: "Left Saber",
-		maxValue: 5,
-	},
-	[App.BeatmapColorKey.SABER_RIGHT]: {
-		label: "Right Saber",
-		maxValue: 5,
-	},
-	[App.BeatmapColorKey.ENV_LEFT]: {
-		label: "Environment 1",
-		maxValue: 3,
-	},
-	[App.BeatmapColorKey.ENV_RIGHT]: {
-		label: "Environment 2",
-		maxValue: 3,
-	},
-	[App.BeatmapColorKey.OBSTACLE]: {
-		label: "Obstacles",
-		maxValue: 10,
-	},
-} as const;
-
-export const ENVIRONMENT_DISPLAY_MAP: Record<Environment, string> = {
-	[Environment.THE_FIRST]: "The First",
-	[Environment.ORIGINS]: "Origins",
-	[Environment.TRIANGLE]: "Triangle",
-	[Environment.BIG_MIRROR]: "Big Mirror",
-	[Environment.NICE]: "Nice",
-	[Environment.KDA]: "K/DA",
-	[Environment.MONSTERCAT]: "Monstercat",
-	[Environment.DRAGONS]: "Dragons",
-	[Environment.CRAB_RAVE]: "Crab Rave",
-	[Environment.PANIC]: "Panic",
+export const COLOR_OVERDRIVE_MULTIPLIER = {
+	[App.BeatmapColorKey.SABER_LEFT]: 5,
+	[App.BeatmapColorKey.SABER_RIGHT]: 5,
+	[App.BeatmapColorKey.ENV_LEFT]: 3,
+	[App.BeatmapColorKey.ENV_RIGHT]: 3,
+	[App.BeatmapColorKey.OBSTACLE]: 10,
 } as const;

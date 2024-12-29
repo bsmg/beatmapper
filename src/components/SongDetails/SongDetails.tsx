@@ -2,7 +2,7 @@ import { type FormEventHandler, useState } from "react";
 import { useBlocker } from "react-router-dom";
 import styled from "styled-components";
 
-import { COLORS, ENVIRONMENT_DISPLAY_MAP, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
+import { COLORS, ENVIRONMENT_RENAME, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
 import { useMount } from "$/hooks";
 import { createInfoContent } from "$/services/packaging.service";
 import { filestore } from "$/setup";
@@ -198,8 +198,8 @@ const SongDetails = ({ songId }: Props) => {
 						<Spacer size={UNIT * 4} />
 
 						<Cell>
-							<DropdownInput label="Environment" value={songData.environment} displayValue={ENVIRONMENT_DISPLAY_MAP[songData.environment]} onChange={(ev) => setSongProperty("environment", ev.target.value)}>
-								{Object.entries(ENVIRONMENT_DISPLAY_MAP).map(([id, label]) => (
+							<DropdownInput label="Environment" value={songData.environment} displayValue={ENVIRONMENT_RENAME[songData.environment]} onChange={(ev) => setSongProperty("environment", ev.target.value)}>
+								{Object.entries(ENVIRONMENT_RENAME).map(([id, label]) => (
 									<option key={id} value={id}>
 										{label}
 									</option>

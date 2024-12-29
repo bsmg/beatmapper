@@ -5,9 +5,6 @@ export interface IEntity {
 	id: EntityId;
 }
 
-export type SongId = EntityId;
-export type BeatmapId = Accept<Difficulty, EntityId>;
-
 export const Difficulty = {
 	EASY: "Easy",
 	NORMAL: "Normal",

@@ -6,7 +6,7 @@ import { usePointerUpHandler } from "$/hooks";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { getDurationInBeats, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectInitialColorForTrack, selectOffsetInBeats } from "$/store/selectors";
-import { App, EventEditMode, EventTool } from "$/types";
+import { App, EventEditMode, EventTool, type IEventTrack } from "$/types";
 import { clamp } from "$/utils";
 import { getBackgroundBoxes } from "./BlockTrack.helpers";
 
@@ -15,6 +15,7 @@ import EventBlock from "./EventBlock";
 
 interface Props {
 	trackId: App.TrackId;
+	tracks?: IEventTrack[];
 	width: number;
 	height: number;
 	startBeat: number;
@@ -24,7 +25,7 @@ interface Props {
 	isDisabled: boolean;
 }
 
-const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, areLasersLocked, isDisabled }: Props) => {
+const BlockTrack = ({ trackId, tracks, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, areLasersLocked, isDisabled }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
 	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, songId));
@@ -70,7 +71,7 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 		}
 	}, [dispatch, getPropsForPlacedEvent, cursorAtBeat, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
-	const backgroundBoxes = getBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow);
+	const backgroundBoxes = getBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow, tracks);
 
 	return (
 		<Wrapper

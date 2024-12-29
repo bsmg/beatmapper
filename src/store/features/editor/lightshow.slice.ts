@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { BEATS_PER_ZOOM_LEVEL, EVENT_COLORS, EVENT_EDIT_MODES, EVENT_TOOLS, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
+import { BEATS_PER_ZOOM_LEVEL, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import {
 	clearSelectionBox,
 	commitSelection,
@@ -21,6 +21,10 @@ import {
 	zoomOut,
 } from "$/store/actions";
 import { EventColor, EventEditMode, EventTool, type ISelectionBox, View } from "$/types";
+
+const EVENT_TOOLS = Object.values(EventTool);
+const EVENT_EDIT_MODES = Object.values(EventEditMode);
+const EVENT_COLORS = Object.values(EventColor);
 
 const initialState = {
 	zoomLevel: 2,

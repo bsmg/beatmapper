@@ -13,6 +13,7 @@ import {
 	type EventEditMode,
 	type EventTool,
 	type GridPresets,
+	type IEventTrack,
 	type IGrid,
 	type ISelectionBox,
 	type ISelectionBoxInBeats,
@@ -492,7 +493,7 @@ export const zoomIn = createAction("ZOOM_IN");
 
 export const zoomOut = createAction("ZOOM_OUT");
 
-export const drawSelectionBox = createAsyncThunk("DRAW_SELECTION_BOX", (args: { selectionBox: ISelectionBox; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
+export const drawSelectionBox = createAsyncThunk("DRAW_SELECTION_BOX", (args: { tracks: IEventTrack[]; selectionBox: ISelectionBox; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
 	const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
