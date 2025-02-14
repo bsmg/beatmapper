@@ -1,12 +1,14 @@
-import { Fragment, type PropsWithChildren, useEffect } from "react";
+import { docs } from "velite:content";
+import type { MDXComponents } from "mdx/types";
+import { Fragment, type PropsWithChildren, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet";
-import type { TocEntry } from "remark-mdx-toc";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";
 
 import Spacer from "../Spacer";
 import HorizontalRule from "./HorizontalRule";
+import { useMDXComponent } from "./MDXContent";
 import MdxWrapper from "./MdxWrapper";
 import TableOfContents from "./TableOfContents";
 
@@ -21,28 +23,34 @@ function useScrollOnLoad() {
 }
 
 interface Props extends PropsWithChildren {
-	title: string;
-	subtitle: string;
-	tableOfContents: TocEntry[];
+	id: string;
+	components?: MDXComponents;
 }
 
-const DocPage = ({ title, subtitle, tableOfContents, children }: Props) => {
+const DocPage = ({ id, components }: Props) => {
+	const document = useMemo(() => docs.find((x) => x.id === id), [id]);
+	if (!document) {
+		throw new Error("No doc found at this route.");
+	}
+
+	const { tableOfContents } = useMDXComponent(document.code);
+
 	useScrollOnLoad();
 
 	return (
 		<Fragment>
 			<Helmet>
-				<title>Beatmapper docs - {title}</title>
+				<title>Beatmapper docs - {document.title}</title>
 			</Helmet>
 			<Wrapper>
-				<Title>{title}</Title>
-				{subtitle && <Subtitle>{subtitle}</Subtitle>}
+				<Title>{document.title}</Title>
+				{document.subtitle && <Subtitle>{document.subtitle}</Subtitle>}
 
 				<HorizontalRule />
 
 				<Row>
 					<MainContent>
-						<MdxWrapper>{children}</MdxWrapper>
+						<MdxWrapper components={components} code={document.code} />
 						<Spacer size={UNIT * 8} />
 					</MainContent>
 					<TableOfContents toc={tableOfContents} />

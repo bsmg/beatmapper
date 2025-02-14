@@ -1,5 +1,5 @@
-import { MDXProvider } from "@mdx-js/react";
-import type { ComponentProps, PropsWithChildren } from "react";
+import type { MDXComponents } from "mdx/types";
+import type { ComponentProps } from "react";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
@@ -7,6 +7,7 @@ import { COLORS } from "$/constants";
 import BaseLink from "../BaseLink";
 import YoutubeEmbed from "../YoutubeEmbed";
 import HorizontalRule from "./HorizontalRule";
+import { MDXContent } from "./MDXContent";
 import { MetaKey } from "./ShortcutHelpers";
 
 interface ImageProps extends ComponentProps<"img"> {
@@ -38,7 +39,7 @@ const Pre = styled.pre`
 	}
 `;
 
-const components: ComponentProps<typeof MDXProvider>["components"] = {
+const sharedComponents: MDXComponents = {
 	a: ({ href, ...props }) => <BaseLink {...props} to={href} />,
 	img: Image,
 	hr: HorizontalRule,
@@ -58,10 +59,10 @@ const components: ComponentProps<typeof MDXProvider>["components"] = {
  *
  * This component handles both of those concerns.
  */
-const MdxWrapper = ({ children }: PropsWithChildren) => {
+const MdxWrapper = ({ components, code }: ComponentProps<typeof MDXContent>) => {
 	return (
 		<DocumentStyles>
-			<MDXProvider components={components}>{children}</MDXProvider>
+			<MDXContent code={code} components={{ ...sharedComponents, ...components }} />
 		</DocumentStyles>
 	);
 };

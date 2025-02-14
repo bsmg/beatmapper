@@ -1,0 +1,68 @@
+---
+title: Mod Support
+subtitle: Enabling and working with Beat Saber mods
+---
+
+There are a lot of really cool mods for Beat Saber, and I'm starting to add limited support for some of them to Beatmapper.
+
+Additional mod support coming soon.
+
+## Custom colors
+
+The [`SongCore`](https://github.com/Kylemc1413/SongCore) mod allows maps to customize 5 color values:
+
+- The left-hand saber _(default: red)_
+- The right-hand saber _(default: blue)_
+- The first lighting color _(default: red)_
+- The second lighting color _(default: blue)_
+- The obstacle color _(default: red)_
+
+You can now overwrite those values in the "Map Settings" tab. Tick the "Enable custom colors" checkbox to show the controls for these 5 values.
+
+> For users who haven't installed the SongCore mod, your map will still load and be playable, it just won't respect the custom colors you've assigned.
+
+#### Overdrive
+
+The color picker lets you choose any valid RGB value, but it turns out, the game supports an _extended_ set of colors.
+
+Specifically, you can push the colors outside the bounds of normal RGB space. A bright yellow is normally 100% red and 100% green, but Beat Saber allows you to specify 200% red and 150% green, for example.
+
+When doing so, the results can be unpredictable, and can be game-breaking (if the colors you choose are so bright it obscures note vision!)
+
+Unfortunately, these settings are not previewable within Beatmapper. You'll need to load them into the game to see their effects. Experimentation encouraged!
+
+## Mapping Extensions
+
+The [Mapping Extensions](https://github.com/Kylemc1413/MappingExtensions) mod grants incredible power to the modder:
+
+- Notes can be added anywhere, not just in the 12 traditional spots
+- Obstacles can come in any shape and size, not just wall/ceiling
+- Blocks can take on 360 degrees of directions, not just the cardinal and diagonal directions.
+
+Beatmapper approaches this mod in a bit of an unconventional way. Rather than simply letting you place notes outside the 4×3 grid, it allows you to _redefine the grid_. Maybe you want a section of the song to be in a 5×4 grid, or maybe you want to squeeze an extra column in between all the normal ones, for a 7×3 grid in the space of a 4×3 one.
+
+To use Mapping Extensions, first you have to enable it for your map in the "Map Settings" tab.
+
+> Note: Ticking this box will mean that only users who have Mapping Extensions enabled will be able to play your map. Some users will not be able to play your map if you tick this box.
+
+#### Redefining the grid
+
+Once Mapping Extensions has been enabled for your map, a new button appears in the Notes view's right-hand sidebar: `Customize Grid`.
+
+Clicking this button swaps the side-panel to one that allows you to customize the number of rows and columns in the grid. You can also change the width and height of each cell, so that a larger number of columns doesn't need to take up more physical space in the world!
+
+> Changing the grid doesn't affect notes you've already placed. This means that different sections of your map can use different grids! I've coined the term "Magic lanes" for songs that feature different grids in different sections.
+
+#### Precise note directions
+
+One way to place notes in Beatmapper is to click and drag in a direction:
+
+![](./images/drag-direction.gif)
+
+With Mapping Extensions enabled, you aren't constrained to 8 possible directions. Hold <MetaKey /> to allow for 360-degree placement:
+
+![](./images/360.gif)
+
+---
+
+There's much to be done in this arena - stay tuned for additional tweaks and quality-of-life improvements!
