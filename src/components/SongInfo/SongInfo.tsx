@@ -5,7 +5,8 @@ import styled from "styled-components";
 import { COLORS, UNIT } from "$/constants";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getDifficulty, getSelectedSong, getSelectedSongDifficultyIds } from "$/store/selectors";
+import { selectActiveBeatmapId, selectBeatmapIds, selectSongById } from "$/store/selectors";
+import type { SongId } from "$/types";
 
 import CoverArtImage from "../CoverArtImage";
 import CreateDifficultyForm from "../CreateDifficultyForm";
@@ -19,14 +20,15 @@ const COVER_ART_SIZES = {
 };
 
 interface Props {
+	songId: SongId;
 	showDifficultySelector: boolean;
 	coverArtSize?: "small" | "medium";
 }
 
-const SongInfo = ({ showDifficultySelector, coverArtSize = "medium" }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const selectedDifficulty = useAppSelector(getDifficulty);
-	const difficultyIds = useAppSelector(getSelectedSongDifficultyIds);
+const SongInfo = ({ songId, showDifficultySelector, coverArtSize = "medium" }: Props) => {
+	const selectedDifficulty = useAppSelector(selectActiveBeatmapId);
+	const song = useAppSelector((state) => selectSongById(state, songId));
+	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, songId));
 	const navigate = useNavigate();
 
 	const [showCreateDifficultyModal, setShowCreateDifficultyModal] = useState(false);

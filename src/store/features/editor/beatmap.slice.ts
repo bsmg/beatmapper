@@ -1,8 +1,9 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { NOTE_TOOLS } from "$/constants";
 import { deleteGridPreset, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
 import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
+
+const NOTE_TOOLS = Object.values(ObjectTool);
 
 const initialState = {
 	selectedTool: NOTE_TOOLS[0],
@@ -16,13 +17,13 @@ const slice = createSlice({
 	name: "notes",
 	initialState: initialState,
 	selectors: {
-		getSelectedNoteTool: (state) => state.selectedTool,
-		getSelectedCutDirection: (state) => state.selectedDirection,
-		getNoteSelectionMode: (state) => state.selectionMode,
-		getDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
-		getGridPresets: (state) => state.gridPresets,
-		getAllGridPresetIds: (state) => Object.keys(state.gridPresets),
-		getGridPresetById: (state, id: string) => state.gridPresets[id],
+		selectSelectedNoteTool: (state) => state.selectedTool,
+		selectSelectedCutDirection: (state) => state.selectedDirection,
+		selectNoteSelectionMode: (state) => state.selectionMode,
+		selectDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
+		selectGridPresets: (state) => state.gridPresets,
+		selectAllGridPresetIds: (state) => Object.keys(state.gridPresets),
+		selectGridPresetById: (state, id: string) => state.gridPresets[id],
 	},
 	reducers: {},
 	extraReducers: (builder) => {

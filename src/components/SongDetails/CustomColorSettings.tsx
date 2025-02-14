@@ -1,10 +1,11 @@
 import { Suspense, lazy } from "react";
 import styled from "styled-components";
 
-import { COLOR_ELEMENT_DATA, COLOR_ELEMENT_IDS, UNIT } from "$/constants";
+import { BEATMAP_COLOR_KEY_RENAME, UNIT } from "$/constants";
 import { toggleModForSong, updateModColor, updateModColorOverdrive } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getCustomColors } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors } from "$/store/selectors";
+import { App } from "$/types";
 
 import CenteredSpinner from "../CenteredSpinner";
 import Heading from "../Heading";
@@ -17,12 +18,13 @@ import Spacer from "../Spacer";
 const ColorPicker = lazy(() => import("../ColorPicker"));
 
 const CustomColorSettings = () => {
-	const customColors = useAppSelector(getCustomColors);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
 	const dispatch = useAppDispatch();
 
 	return (
 		<Wrapper>
-			<LabeledCheckbox id="enable-colors" checked={customColors.isEnabled} onChange={() => dispatch(toggleModForSong({ mod: "customColors" }))}>
+			<LabeledCheckbox id="enable-colors" checked={customColors.isEnabled} onChange={() => songId && dispatch(toggleModForSong({ songId, mod: "customColors" }))}>
 				Enable custom colors{" "}
 				<QuestionTooltip>
 					Override the default red/blue color scheme. Use "overdrive" to produce some neat effects.{" "}
@@ -37,19 +39,19 @@ const CustomColorSettings = () => {
 				<Suspense fallback={<CenteredSpinner />}>
 					<Spacer size={UNIT * 4} />
 					<Row>
-						{COLOR_ELEMENT_IDS.map((elementId) => {
+						{Object.values(App.BeatmapColorKey).map((elementId) => {
 							const color = customColors[elementId];
 							const overdrive = customColors[`${elementId}Overdrive`];
 
 							return (
 								<Cell key={elementId}>
-									<ColorPicker colorId={elementId} color={color} updateColor={(element, color) => dispatch(updateModColor({ element, color }))} overdrive={overdrive} />
+									<ColorPicker colorId={elementId} color={color} updateColor={(element, color) => songId && dispatch(updateModColor({ songId, element, color }))} overdrive={overdrive} />
 									<Spacer size={UNIT * 2} />
-									<Heading size={3}>{COLOR_ELEMENT_DATA[elementId].label}</Heading>
+									<Heading size={3}>{BEATMAP_COLOR_KEY_RENAME[elementId]}</Heading>
 									<Spacer size={UNIT * 3} />
 									<Heading size={4}>Overdrive</Heading>
 									<Spacer size={UNIT * 1} />
-									<MiniSlider width={50} height={16} min={0} max={1} step={0.01} value={overdrive} onChange={(ev) => dispatch(updateModColorOverdrive({ element: elementId, overdrive: Number(ev.target.value) }))} />
+									<MiniSlider width={50} height={16} min={0} max={1} step={0.01} value={overdrive} onChange={(ev) => songId && dispatch(updateModColorOverdrive({ songId, element: elementId, overdrive: Number(ev.target.value) }))} />
 								</Cell>
 							);
 						})}

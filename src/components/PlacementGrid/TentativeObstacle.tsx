@@ -1,6 +1,6 @@
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getDefaultObstacleDuration, getGridSize } from "$/store/selectors";
+import { selectActiveSongId, selectBeatDepth, selectDefaultObstacleDuration, selectGridSize } from "$/store/selectors";
 import type { ObjectPlacementMode } from "$/types";
 
 import ObstacleBox from "../ObstacleBox";
@@ -13,9 +13,10 @@ interface Props {
 }
 
 const TentativeObstacle = ({ mouseDownAt, color, mode, ...rest }: Props) => {
-	const { numRows: gridRows, numCols: gridCols, colWidth: gridColWidth, rowHeight: gridRowHeight } = useAppSelector(getGridSize);
-	const beatDepth = useAppSelector(getBeatDepth);
-	const defaultObstacleDuration = useAppSelector(getDefaultObstacleDuration);
+	const songId = useAppSelector(selectActiveSongId);
+	const { numRows: gridRows, numCols: gridCols, colWidth: gridColWidth, rowHeight: gridRowHeight } = useAppSelector((state) => selectGridSize(state, songId));
+	const beatDepth = useAppSelector(selectBeatDepth);
+	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
 
 	// If no mouseOverAt is provided, it ought to be the same as the mouseDownAt.
 	// They've clicked but haven't moved yet, ergo only one row/col is at play.
@@ -28,7 +29,7 @@ const TentativeObstacle = ({ mouseDownAt, color, mode, ...rest }: Props) => {
 
 	tentativeObstacle.id = "tentative";
 	tentativeObstacle.tentative = true;
-	tentativeObstacle.beatStart = 0;
+	tentativeObstacle.beatNum = 0;
 
 	return (
 		<ObstacleBox

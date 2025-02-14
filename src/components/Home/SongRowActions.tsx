@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 import { deleteSong, downloadMapFiles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSongById } from "$/store/selectors";
+import { selectSongById } from "$/store/selectors";
 
 import MiniButton from "../MiniButton";
 
@@ -15,7 +15,7 @@ interface Props {
 }
 
 const SongRowActions = ({ songId, size }: Props) => {
-	const song = useAppSelector((state) => getSongById(state, songId));
+	const song = useAppSelector((state) => selectSongById(state, songId));
 	const dispatch = useAppDispatch();
 
 	const handleDelete = () => {

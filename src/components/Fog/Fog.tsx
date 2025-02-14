@@ -1,5 +1,5 @@
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel } from "$/store/selectors";
+import { selectGraphicsQuality } from "$/store/selectors";
 import type { Quality } from "$/types";
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const Fog = ({ renderForGraphics, strength }: Props) => {
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	if (graphicsLevel !== renderForGraphics) {
 		return null;

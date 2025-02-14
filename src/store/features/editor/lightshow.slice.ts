@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { BEATS_PER_ZOOM_LEVEL, EVENT_COLORS, EVENT_EDIT_MODES, EVENT_TOOLS, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
+import { BEATS_PER_ZOOM_LEVEL, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import {
 	clearSelectionBox,
 	commitSelection,
@@ -22,6 +22,10 @@ import {
 } from "$/store/actions";
 import { EventColor, EventEditMode, EventTool, type ISelectionBox, View } from "$/types";
 
+const EVENT_TOOLS = Object.values(EventTool);
+const EVENT_EDIT_MODES = Object.values(EventEditMode);
+const EVENT_COLORS = Object.values(EventColor);
+
 const initialState = {
 	zoomLevel: 2,
 	isLockedToCurrentWindow: false,
@@ -40,18 +44,18 @@ const slice = createSlice({
 	name: "events",
 	initialState: initialState,
 	selectors: {
-		getSelectedEventEditMode: (state) => state.selectedEditMode,
-		getSelectedEventTool: (state) => state.selectedTool,
-		getSelectedEventColor: (state) => state.selectedColor,
-		getZoomLevel: (state) => state.zoomLevel,
-		getBeatsPerZoomLevel: (state) => BEATS_PER_ZOOM_LEVEL[state.zoomLevel],
-		getSelectionBox: (state) => state.selectionBox,
-		getShowLightingPreview: (state) => state.showLightingPreview,
-		getRowHeight: (state) => state.rowHeight,
-		getBackgroundOpacity: (state) => state.backgroundOpacity,
-		getIsLockedToCurrentWindow: (state) => state.isLockedToCurrentWindow,
-		getAreLasersLocked: (state) => state.areLasersLocked,
-		getSelectedEventBeat: (state) => state.selectedBeat,
+		selectSelectedEventEditMode: (state) => state.selectedEditMode,
+		selectSelectedEventTool: (state) => state.selectedTool,
+		selectSelectedEventColor: (state) => state.selectedColor,
+		selectZoomLevel: (state) => state.zoomLevel,
+		selectBeatsPerZoomLevel: (state) => BEATS_PER_ZOOM_LEVEL[state.zoomLevel],
+		selectSelectionBox: (state) => state.selectionBox,
+		selectShowLightingPreview: (state) => state.showLightingPreview,
+		selectRowHeight: (state) => state.rowHeight,
+		selectBackgroundOpacity: (state) => state.backgroundOpacity,
+		selectIsLockedToCurrentWindow: (state) => state.isLockedToCurrentWindow,
+		selectAreLasersLocked: (state) => state.areLasersLocked,
+		selectSelectedEventBeat: (state) => state.selectedBeat,
 	},
 	reducers: {},
 	extraReducers: (builder) => {

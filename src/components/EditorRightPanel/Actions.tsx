@@ -6,8 +6,8 @@ import { UNIT } from "$/constants";
 import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import { jumpToBeat, pasteSelection, selectAllInRange } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getHasCopiedNotes } from "$/store/selectors";
-import { type App, View } from "$/types";
+import { selectActiveSongId, selectClipboardHasObjects, selectIsModuleEnabled } from "$/store/selectors";
+import { View } from "$/types";
 import { getMetaKeyLabel } from "$/utils";
 import { ACTION_WIDTH } from "./EditorRightPanel.constants";
 
@@ -17,14 +17,14 @@ import Spacer from "../Spacer";
 import UndoRedo from "./UndoRedo";
 
 interface Props {
-	song: App.Song;
 	handleGridConfigClick: MouseEventHandler;
 }
 
-const Actions = ({ song, handleGridConfigClick }: Props) => {
-	const hasCopiedNotes = useAppSelector(getHasCopiedNotes);
+const Actions = ({ handleGridConfigClick }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const hasCopiedNotes = useAppSelector(selectClipboardHasObjects);
+	const mappingExtensionsEnabled = useAppSelector((state) => selectIsModuleEnabled(state, songId, "mappingExtensions"));
 	const dispatch = useAppDispatch();
-	const mappingExtensionsEnabled = song?.modSettings?.mappingExtensions?.isEnabled;
 
 	return (
 		<Wrapper>

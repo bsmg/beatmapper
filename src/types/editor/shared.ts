@@ -54,6 +54,7 @@ export type EventTool = Member<typeof EventTool>;
 export const EventColor = {
 	PRIMARY: "red",
 	SECONDARY: "blue",
+	WHITE: "white",
 } as const;
 export type EventColor = Member<typeof EventColor>;
 
@@ -65,7 +66,8 @@ export type EventEditMode = Member<typeof EventEditMode>;
 
 export const TrackType = {
 	LIGHT: "blocks",
-	TRIGGER: "blocks",
+	TRIGGER: "trigger",
 	VALUE: "speed",
+	UNSUPPORTED: "unknown",
 } as const;
 export type TrackType = Member<typeof TrackType>;

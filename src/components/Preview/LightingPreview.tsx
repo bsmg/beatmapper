@@ -3,7 +3,7 @@ import { Fragment, useRef } from "react";
 
 import { Controls } from "$/services/controls.service";
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel, getIsPlaying, getSelectedSong } from "$/store/selectors";
+import { selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import { Quality } from "$/types";
 
 import { Bloom, NoBloom } from "../BloomEffect";
@@ -22,9 +22,8 @@ import SmallRings from "./SmallRings";
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 const LightingPreview = () => {
-	const song = useAppSelector(getSelectedSong);
-	const isPlaying = useAppSelector(getIsPlaying);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const isPlaying = useAppSelector(selectIsPlaying);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	const controls = useRef<Controls | null>(null);
 
@@ -42,12 +41,12 @@ const LightingPreview = () => {
 
 	const lights = (
 		<Fragment>
-			<SideLaser song={song} isPlaying={isPlaying} side="left" />
-			<SideLaser song={song} isPlaying={isPlaying} side="right" />
-			<BackLaser song={song} isPlaying={isPlaying} />
-			<LargeRings song={song} isPlaying={isPlaying} />
-			<SmallRings song={song} isPlaying={isPlaying} />
-			<PrimaryLight song={song} isPlaying={isPlaying} isBlooming={isBlooming} />
+			<SideLaser isPlaying={isPlaying} side="left" />
+			<SideLaser isPlaying={isPlaying} side="right" />
+			<BackLaser isPlaying={isPlaying} />
+			<LargeRings isPlaying={isPlaying} />
+			<SmallRings isPlaying={isPlaying} />
+			<PrimaryLight isPlaying={isPlaying} isBlooming={isBlooming} />
 		</Fragment>
 	);
 

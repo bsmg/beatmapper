@@ -3,7 +3,7 @@ import { download as fileIcon } from "react-icons-kit/feather/download";
 import { processImportedMap } from "$/services/packaging.service";
 import { cancelImportingSong, importExistingSong, startImportingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAllSongs } from "$/store/selectors";
+import { selectAllSongs } from "$/store/selectors";
 
 import FileUploader from "../FileUploader";
 
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const ImportMap = ({ onImport, onCancel, height }: Props) => {
-	const songs = useAppSelector(getAllSongs);
+	const songs = useAppSelector(selectAllSongs);
 	const dispatch = useAppDispatch();
 	const songIds = songs.map((song) => song.id);
 

@@ -2,7 +2,7 @@ import type { Vector3Tuple } from "three";
 
 import { SONG_OFFSET, SURFACE_DEPTHS } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel } from "$/store/selectors";
+import { selectGraphicsQuality } from "$/store/selectors";
 import { Quality } from "$/types";
 
 import RectAreaLight from "../RectAreaLight";
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const EdgeStrip = ({ x, y, z: zProp, width = 0.1 }: Props) => {
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	const depth = SURFACE_DEPTHS[graphicsLevel];
 

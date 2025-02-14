@@ -2,11 +2,10 @@ import { animated, useSpring } from "@react-spring/three";
 import { Fragment } from "react";
 
 import { SURFACE_WIDTH } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useOnChange } from "$/hooks/use-on-change.hook";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectCustomColors, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 import { findMostRecentEventInTrack, getSpringConfigForLight } from "./Preview.helpers";
@@ -19,37 +18,28 @@ const OFF_PROPS = { emissiveIntensity: 0, opacity: 0 };
 const BRIGHT_PROPS = { emissiveIntensity: 1, opacity: 1 };
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 	isBlooming?: boolean;
 }
 
-const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
+const PrimaryLight = ({ isPlaying, isBlooming }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, songId));
+
 	const lastEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
-		const trackId = App.TrackId[4];
-
-		const tracks = getTracks(state);
-		const events = tracks[trackId];
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
-		const lastEvent = findMostRecentEventInTrack<App.LightingEvent>(events, currentBeat, processingDelayInBeats);
-
+		if (!songId || !currentBeat) return null;
+		const events = selectAllBasicEventsForTrack(state, App.TrackId[4]);
+		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(events, currentBeat, processingDelayInBeats);
 		return lastEvent;
 	});
 
 	// TODO: laser beams for along the side and maybe along the bottom too?
-	const status = lastEvent ? lastEvent.type : App.EventType.OFF;
+	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const lastEventId = lastEvent ? lastEvent.id : null;
 
-	const color = status === App.EventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors);
 
 	const springConfig = getSpringConfigForLight([ON_PROPS, OFF_PROPS, BRIGHT_PROPS], status);
 
@@ -58,7 +48,7 @@ const PrimaryLight = ({ song, isPlaying, isBlooming }: Props) => {
 			return;
 		}
 
-		const statusShouldReset = status === App.EventType.FLASH || status === App.EventType.FADE;
+		const statusShouldReset = status === App.BasicEventType.FLASH || status === App.BasicEventType.FADE;
 
 		springConfig.reset = statusShouldReset;
 	}, lastEventId);

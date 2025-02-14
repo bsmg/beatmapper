@@ -1,6 +1,5 @@
 import { default as WaveformData } from "waveform-data";
 
-import { LOWEST_COMMON_MULTIPLE } from "$/constants";
 import { roundToNearest } from "$/utils";
 
 export function createHtmlAudioElement(url: string) {
@@ -16,7 +15,7 @@ export function convertMillisecondsToBeats(ms: number, bpm: number) {
 
 	// To avoid floating-point issues like 2.999999997, let's round. We'll choose
 	// the lowest-common-multiple to "snap" to any possible value.
-	return roundToNearest(beats, LOWEST_COMMON_MULTIPLE);
+	return roundToNearest(beats, 1 / 96);
 }
 
 export function convertBeatsToMilliseconds(beats: number, bpm: number) {
@@ -61,7 +60,7 @@ export function getFormattedTimestamp(cursorPosition: number) {
 
 export function getFormattedBeatNum(cursorPositionInBeats: number) {
 	const beatNum = Math.floor(cursorPositionInBeats);
-	const remainder = String(roundToNearest(Math.abs(cursorPositionInBeats) % 1, LOWEST_COMMON_MULTIPLE))
+	const remainder = String(roundToNearest(Math.abs(cursorPositionInBeats) % 1, 1 / 96))
 		.replace("0.", "")
 		.slice(0, 3)
 		.padEnd(3, "0");

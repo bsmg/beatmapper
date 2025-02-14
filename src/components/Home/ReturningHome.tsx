@@ -1,4 +1,3 @@
-import type { App } from "$/types";
 import type { CSSProperties, Dispatch, SetStateAction } from "react";
 import styled from "styled-components";
 
@@ -11,12 +10,11 @@ import Spacer from "../Spacer";
 import SongsTable from "./SongsTable";
 
 interface Props {
-	songs: App.Song[];
 	isProcessingImport: boolean;
 	setModal: Dispatch<SetStateAction<string | null>>;
 }
 
-const ReturningHome = ({ songs, isProcessingImport, setModal }: Props) => {
+const ReturningHome = ({ isProcessingImport, setModal }: Props) => {
 	return (
 		<MaxWidthWrapper>
 			<Spacer size={UNIT * 8} />
@@ -24,7 +22,7 @@ const ReturningHome = ({ songs, isProcessingImport, setModal }: Props) => {
 			<Spacer size={UNIT * 2} />
 			<Row>
 				<MainColumn flex={6}>
-					<SongsTable songs={songs} isLoading={isProcessingImport} />
+					<SongsTable isLoading={isProcessingImport} />
 				</MainColumn>
 				<Spacer size={UNIT * 2} />
 

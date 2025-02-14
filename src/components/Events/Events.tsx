@@ -4,8 +4,8 @@ import styled from "styled-components";
 import { SIDEBAR_WIDTH } from "$/constants";
 import { useWindowDimensions } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getBackgroundOpacity } from "$/store/selectors";
-import { View } from "$/types";
+import { selectEventBackgroundOpacity } from "$/store/selectors";
+import { type SongId, View } from "$/types";
 
 import EventsGrid from "../EventsGrid";
 import GlobalShortcuts from "../GlobalShortcuts";
@@ -15,8 +15,11 @@ import EventLightingPreview from "./EventLightingPreview";
 import GridControls from "./GridControls";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 
-const Events = () => {
-	const backgroundOpacity = useAppSelector(getBackgroundOpacity);
+interface Props {
+	songId: SongId;
+}
+const Events = ({ songId }: Props) => {
+	const backgroundOpacity = useAppSelector(selectEventBackgroundOpacity);
 
 	const { width: windowWidth } = useWindowDimensions();
 	const contentWidth = windowWidth - SIDEBAR_WIDTH;
@@ -28,7 +31,7 @@ const Events = () => {
 			</Background>
 
 			<Wrapper>
-				<SongInfo showDifficultySelector={false} coverArtSize="small" />
+				<SongInfo songId={songId} showDifficultySelector={false} coverArtSize="small" />
 
 				<MainUI
 					style={{

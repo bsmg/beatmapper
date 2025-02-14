@@ -1,72 +1,64 @@
 import { default as Color } from "color";
 
-import { COLORS, COLOR_ELEMENT_DATA, DEFAULT_BLUE, DEFAULT_LIGHT_BLUE, DEFAULT_LIGHT_RED, DEFAULT_OBSTACLE, DEFAULT_RED } from "$/constants";
+import { COLORS, COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_COLOR_SCHEME } from "$/constants";
 import { App, EventColor, ObjectTool } from "$/types";
 import { clamp, normalize } from "$/utils";
 
-export function getColorForItem<T extends string | number>(item: T | undefined, song: App.Song) {
-	const customColorsEnabled = !!song.modSettings.customColors?.isEnabled;
-
+export function getColorForItem<T extends string | number>(item: T | undefined, customColors?: App.ModSettings["customColors"]) {
+	const customColorsEnabled = !!customColors?.isEnabled;
 	switch (item) {
-		// In our notes view, the tool will be labeled "left-block", while the underlying data structure treats colors as a number: 0, 1, 3.
-		case ObjectTool.LEFT_NOTE:
-		case 0: {
-			const defaultColor = DEFAULT_RED;
-			const customColor = song.modSettings.customColors?.colorLeft || defaultColor;
-
+		case ObjectTool.LEFT_NOTE: {
+			const defaultColor = DEFAULT_COLOR_SCHEME.colorLeft;
+			const customColor = customColors?.colorLeft || defaultColor;
 			return customColorsEnabled ? customColor : defaultColor;
 		}
-		case ObjectTool.RIGHT_NOTE:
-		case 1: {
-			const defaultColor = DEFAULT_BLUE;
-			const customColor = song.modSettings.customColors?.colorRight || defaultColor;
-
+		case ObjectTool.RIGHT_NOTE: {
+			const defaultColor = DEFAULT_COLOR_SCHEME.colorRight;
+			const customColor = customColors?.colorRight || defaultColor;
 			return customColorsEnabled ? customColor : defaultColor;
 		}
-		case ObjectTool.BOMB_NOTE:
-		case 3: {
+		case ObjectTool.BOMB_NOTE: {
 			return "#687485";
 		}
 		case ObjectTool.OBSTACLE: {
-			const defaultColor = DEFAULT_OBSTACLE;
-			const customColor = song.modSettings.customColors?.obstacleColor || defaultColor;
-
+			const defaultColor = DEFAULT_COLOR_SCHEME.obstacleColor;
+			const customColor = customColors?.obstacleColor || defaultColor;
 			return customColorsEnabled ? customColor : defaultColor;
 		}
-
-		// In the events view, our formal name is `envColorLeft`, but the events themselves still use the original colors 'red' / 'blue'.
 		case App.BeatmapColorKey.ENV_LEFT:
-		case App.EventColorType.PRIMARY:
+		case App.EventColor.PRIMARY:
 		case EventColor.PRIMARY: {
-			const defaultColor = DEFAULT_LIGHT_RED;
-			const customColor = song.modSettings.customColors?.envColorLeft || defaultColor;
-
+			const defaultColor = DEFAULT_COLOR_SCHEME.envColorLeft;
+			const customColor = customColors?.envColorLeft || defaultColor;
 			return customColorsEnabled ? customColor : defaultColor;
 		}
 		case App.BeatmapColorKey.ENV_RIGHT:
-		case App.EventColorType.SECONDARY:
+		case App.EventColor.SECONDARY:
 		case EventColor.SECONDARY: {
-			const defaultColor = DEFAULT_LIGHT_BLUE;
-			const customColor = song.modSettings.customColors?.envColorRight || defaultColor;
-
+			const defaultColor = DEFAULT_COLOR_SCHEME.envColorRight;
+			const customColor = customColors?.envColorRight || defaultColor;
 			return customColorsEnabled ? customColor : defaultColor;
 		}
-
-		// Event view has two other event types: rotate and off. They have unique colors.
-		case App.EventType.TRIGGER:
+		case App.EventColor.WHITE:
+		case EventColor.WHITE: {
+			return "white";
+		}
+		case App.BasicEventType.TRIGGER: {
 			return COLORS.green[500];
-		case App.EventType.OFF:
+		}
+		case App.BasicEventType.OFF: {
 			return COLORS.blueGray[400];
-
-		default:
-			return undefined;
+		}
+		default: {
+			throw new Error(`Cannot resolve color for ${item}`);
+		}
 	}
 }
 
 export function formatColorForMods(element: App.BeatmapColorKey, hex: string, overdrive = 0) {
 	// For overdrive: every element ranges from 0 (no overdrive) to 1 (full).
 	// Different elements are affected by different amounts, though: left/right environment colors range from 1 to 3, whereas obstacles range from 1 to 10.
-	const overdriveMultiple = normalize(overdrive, 0, 1, 1, COLOR_ELEMENT_DATA[element].maxValue);
+	const overdriveMultiple = normalize(overdrive, 0, 1, 1, COLOR_OVERDRIVE_MULTIPLIER[element]);
 
 	const rgb = Color(hex).rgb().unitArray();
 

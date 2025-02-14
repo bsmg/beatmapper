@@ -4,10 +4,10 @@ import type { ColorRepresentation, Mesh, Vector3Tuple } from "three";
 
 import { blockCenterUrl, blockDirectionalUrl } from "$/assets";
 import { useObject } from "$/hooks";
-import { Direction, ObjectSelectionMode } from "$/types";
+import { CutDirection, ObjectSelectionMode } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
-const getBlockUrlForDirection = (direction: Direction) => {
+const getBlockUrlForDirection = (direction: CutDirection) => {
 	// If the direction is >=1000, that means it's a MappingExtensions thing.
 	// Must be directional.
 	if (direction >= 1000) {
@@ -15,23 +15,23 @@ const getBlockUrlForDirection = (direction: Direction) => {
 	}
 
 	switch (direction) {
-		case Direction.UP:
-		case Direction.DOWN:
-		case Direction.LEFT:
-		case Direction.RIGHT:
-		case Direction.UP_LEFT:
-		case Direction.UP_RIGHT:
-		case Direction.DOWN_LEFT:
-		case Direction.DOWN_RIGHT:
+		case CutDirection.UP:
+		case CutDirection.DOWN:
+		case CutDirection.LEFT:
+		case CutDirection.RIGHT:
+		case CutDirection.UP_LEFT:
+		case CutDirection.UP_RIGHT:
+		case CutDirection.DOWN_LEFT:
+		case CutDirection.DOWN_RIGHT:
 			return blockDirectionalUrl;
-		case Direction.ANY:
+		case CutDirection.ANY:
 			return blockCenterUrl;
 		default:
 			throw new Error(`Unrecognized direction: ${direction}`);
 	}
 };
 
-const getRotationForDirection = (direction: Direction) => {
+const getRotationForDirection = (direction: CutDirection) => {
 	// If the rotation is >=1000, we're in MappingExtensions land :D
 	// It uses a 1000-1360 system, from down clockwise.
 	// We have some conversions to do, to get an angle in radians.
@@ -52,24 +52,24 @@ const getRotationForDirection = (direction: Direction) => {
 	//
 	// Our block by default points downwards, so we'll do x-axis rotations depending on the number
 	switch (direction) {
-		case Direction.UP:
+		case CutDirection.UP:
 			return Math.PI;
-		case Direction.DOWN:
+		case CutDirection.DOWN:
 			return 0;
-		case Direction.LEFT:
+		case CutDirection.LEFT:
 			return Math.PI * -0.5;
-		case Direction.RIGHT:
+		case CutDirection.RIGHT:
 			return Math.PI * 0.5;
-		case Direction.UP_LEFT:
+		case CutDirection.UP_LEFT:
 			return Math.PI * -0.75;
-		case Direction.UP_RIGHT:
+		case CutDirection.UP_RIGHT:
 			return Math.PI * 0.75;
-		case Direction.DOWN_LEFT:
+		case CutDirection.DOWN_LEFT:
 			return Math.PI * -0.25;
-		case Direction.DOWN_RIGHT:
+		case CutDirection.DOWN_RIGHT:
 			return Math.PI * 0.25;
 
-		case Direction.ANY:
+		case CutDirection.ANY:
 			return 0;
 
 		default:
@@ -84,7 +84,7 @@ interface Props {
 	time?: number;
 	lineLayer?: number;
 	lineIndex?: number;
-	direction: Direction;
+	direction: CutDirection;
 	size?: number;
 	color?: ColorRepresentation;
 	isTransparent?: boolean;

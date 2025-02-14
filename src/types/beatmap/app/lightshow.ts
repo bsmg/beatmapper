@@ -1,24 +1,19 @@
-import type { EntityId } from "@reduxjs/toolkit";
-import type { EventColorType, LaserSpeedEventType, LaserSpeedTrackId, LightingEventType, LightingTrackId, RingEventType, RingTrackId, TrackId } from "./shared";
+import type { IEntity } from "../shared";
+import type { EventColor, IEditorObject, LightEventType, TrackId, TriggerEventType, ValueEventType } from "./shared";
 
-export interface BaseEvent {
-	id: EntityId;
-	trackId: TrackId;
+export interface IBaseBasicEvent extends IEntity, IEditorObject {
 	beatNum: number;
-	selected?: boolean | "tentative";
+	trackId: TrackId;
 }
-export interface LightingEvent extends BaseEvent {
-	trackId: LightingTrackId;
-	type: LightingEventType;
-	colorType?: EventColorType;
+export interface IBasicLightEvent extends IBaseBasicEvent {
+	type: LightEventType;
+	colorType?: EventColor;
 }
-export interface RingEvent extends BaseEvent {
-	trackId: RingTrackId;
-	type: RingEventType;
+export interface IBasicTriggerEvent extends IBaseBasicEvent {
+	type: TriggerEventType;
 }
-export interface LaserSpeedEvent extends BaseEvent {
-	trackId: LaserSpeedTrackId;
-	type: LaserSpeedEventType;
+export interface IBasicValueEvent extends IBaseBasicEvent {
+	type: ValueEventType;
 	laserSpeed: number;
 }
-export type Event = LightingEvent | RingEvent | LaserSpeedEvent;
+export type BasicEvent = IBasicLightEvent | IBasicTriggerEvent | IBasicValueEvent;

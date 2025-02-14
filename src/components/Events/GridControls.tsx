@@ -13,7 +13,7 @@ import { COLORS, UNIT, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectEventColor, selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAreLasersLocked, getIsLockedToCurrentWindow, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, getSelectedSong, getZoomLevel } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorToggleLoop, selectEventEditorToggleMirror, selectEventEditorTool, selectEventEditorZoomLevel } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool, View } from "$/types";
 
 import Spacer from "../Spacer";
@@ -27,13 +27,14 @@ interface Props {
 }
 
 const GridControls = ({ contentWidth }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
-	const selectedTool = useAppSelector(getSelectedEventTool);
-	const selectedColor = useAppSelector(getSelectedEventColor);
-	const isLockedToCurrentWindow = useAppSelector(getIsLockedToCurrentWindow);
-	const areLasersLocked = useAppSelector(getAreLasersLocked);
-	const zoomLevel = useAppSelector(getZoomLevel);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
+	const selectedTool = useAppSelector(selectEventEditorTool);
+	const selectedColor = useAppSelector(selectEventEditorColor);
+	const isLockedToCurrentWindow = useAppSelector(selectEventEditorToggleLoop);
+	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
+	const zoomLevel = useAppSelector(selectEventEditorZoomLevel);
 	const dispatch = useAppDispatch();
 
 	return (
@@ -51,10 +52,10 @@ const GridControls = ({ contentWidth }: Props) => {
 				<Spacer size={UNIT * 4} />
 				<ControlItem label="Light Color">
 					<ControlItemToggleButton value={EventColor.PRIMARY} isToggled={selectedColor === EventColor.PRIMARY} onToggle={(value) => dispatch(selectEventColor({ color: value as EventColor }))}>
-						<Box color={getColorForItem(EventColor.PRIMARY, song)} />
+						<Box color={getColorForItem(EventColor.PRIMARY, customColors)} />
 					</ControlItemToggleButton>
 					<ControlItemToggleButton value={EventColor.SECONDARY} isToggled={selectedColor === EventColor.SECONDARY} onToggle={(value) => dispatch(selectEventColor({ color: value as EventColor }))}>
-						<Box color={getColorForItem(EventColor.SECONDARY, song)} />
+						<Box color={getColorForItem(EventColor.SECONDARY, customColors)} />
 					</ControlItemToggleButton>
 				</ControlItem>
 
@@ -62,16 +63,16 @@ const GridControls = ({ contentWidth }: Props) => {
 
 				<ControlItem label="Effect">
 					<ControlItemToggleButton value={EventTool.ON} isToggled={selectedTool === EventTool.ON} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }))}>
-						<EventToolIcon tool={EventTool.ON} color={getColorForItem(selectedColor, song)} />
+						<EventToolIcon tool={EventTool.ON} color={getColorForItem(selectedColor, customColors)} />
 					</ControlItemToggleButton>
 					<ControlItemToggleButton value={EventTool.OFF} isToggled={selectedTool === EventTool.OFF} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.OFF }))}>
 						<EventToolIcon tool={EventTool.OFF} />
 					</ControlItemToggleButton>
 					<ControlItemToggleButton value={EventTool.FLASH} isToggled={selectedTool === EventTool.FLASH} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FLASH }))}>
-						<EventToolIcon tool={EventTool.FLASH} color={getColorForItem(selectedColor, song)} />
+						<EventToolIcon tool={EventTool.FLASH} color={getColorForItem(selectedColor, customColors)} />
 					</ControlItemToggleButton>
 					<ControlItemToggleButton value={EventTool.FADE} isToggled={selectedTool === EventTool.FADE} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FADE }))}>
-						<EventToolIcon tool={EventTool.FADE} color={getColorForItem(selectedColor, song)} />
+						<EventToolIcon tool={EventTool.FADE} color={getColorForItem(selectedColor, customColors)} />
 					</ControlItemToggleButton>
 				</ControlItem>
 				<Spacer size={UNIT * 4} />

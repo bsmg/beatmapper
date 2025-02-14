@@ -2,12 +2,11 @@ import { memo, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { usePointerUpHandler } from "$/hooks";
-import { placeEvent } from "$/store/actions";
+import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, getSelectedSong, makeGetEventsForTrack, makeGetInitialTrackLightingColorType } from "$/store/selectors";
-import { App, EventEditMode, EventTool } from "$/types";
+import { selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectDurationInBeats, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorTool, selectInitialColorForTrack, selectOffsetInBeats } from "$/store/selectors";
+import { App, EventEditMode, EventTool, type IEventTrack } from "$/types";
 import { clamp } from "$/utils";
 import { getBackgroundBoxes } from "./BlockTrack.helpers";
 
@@ -16,6 +15,7 @@ import EventBlock from "./EventBlock";
 
 interface Props {
 	trackId: App.TrackId;
+	tracks?: IEventTrack[];
 	width: number;
 	height: number;
 	startBeat: number;
@@ -25,16 +25,15 @@ interface Props {
 	isDisabled: boolean;
 }
 
-const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, areLasersLocked, isDisabled }: Props) => {
-	const getEventsForTrack = makeGetEventsForTrack(trackId);
-	const getInitialTrackLightingColorType = makeGetInitialTrackLightingColorType(trackId);
-	const song = useAppSelector(getSelectedSong);
-	const duration = useAppSelector(getDurationInBeats);
-	const events = useAppSelector(getEventsForTrack);
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
-	const selectedTool = useAppSelector(getSelectedEventTool);
-	const selectedColorType = useAppSelector(getSelectedEventColor);
-	const initialTrackLightingColorType = useAppSelector(getInitialTrackLightingColorType);
+const BlockTrack = ({ trackId, tracks, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, areLasersLocked, isDisabled }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const duration = useAppSelector((state) => selectDurationInBeats(state, songId));
+	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, songId));
+	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
+	const selectedTool = useAppSelector(selectEventEditorTool);
+	const selectedColorType = useAppSelector(selectEventEditorColor);
+	const initialTrackLightingColorType = useAppSelector((state) => selectInitialColorForTrack(state, trackId));
 	const dispatch = useAppDispatch();
 
 	const [mouseButtonDepressed, setMouseButtonDepressed] = useState<"left" | "right" | null>(null);
@@ -47,9 +46,9 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 
 	const getPropsForPlacedEvent = useCallback(() => {
 		const isRingEvent = trackId === App.TrackId[8] || trackId === App.TrackId[9];
-		const eventType = isRingEvent ? App.EventType.TRIGGER : selectedTool;
+		const eventType = isRingEvent ? App.BasicEventType.TRIGGER : selectedTool;
 
-		let eventColorType = selectedColorType as App.EventColorType | undefined;
+		let eventColorType = selectedColorType as App.EventColor | undefined;
 		if (isRingEvent || selectedTool === EventTool.OFF) {
 			eventColorType = undefined;
 		}
@@ -59,23 +58,20 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 
 	const handleClickTrack = () => {
 		if (cursorAtBeat === null) return;
-		const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-		const beatNum = clamp(cursorAtBeat, offset, (duration ?? cursorAtBeat) + offset);
+		const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
 		return dispatch(placeEvent({ beatNum: beatNum, ...getPropsForPlacedEvent() }));
 	};
 
 	useEffect(() => {
 		if (selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "left") {
-			// TODO: Technically this should be a new action, bulkPlaceEvent, so that they can all be undoed in 1 step
 			if (cursorAtBeat !== null) {
-				const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-				const beatNum = clamp(cursorAtBeat, offset, (duration ?? cursorAtBeat) + offset);
-				dispatch(placeEvent({ beatNum: beatNum, ...getPropsForPlacedEvent() }));
+				const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
+				dispatch(bulkPlaceEvent({ beatNum: beatNum, ...getPropsForPlacedEvent() }));
 			}
 		}
-	}, [dispatch, getPropsForPlacedEvent, cursorAtBeat, duration, song.offset, song.bpm, mouseButtonDepressed, selectedEditMode]);
+	}, [dispatch, getPropsForPlacedEvent, cursorAtBeat, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
-	const backgroundBoxes = getBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow);
+	const backgroundBoxes = getBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow, tracks);
 
 	return (
 		<Wrapper
@@ -96,7 +92,7 @@ const BlockTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 			onContextMenu={(ev) => ev.preventDefault()}
 		>
 			{backgroundBoxes.map((box) => (
-				<BackgroundBox key={box.id} song={song} box={box} startBeat={startBeat} numOfBeatsToShow={numOfBeatsToShow} />
+				<BackgroundBox key={box.id} box={box} startBeat={startBeat} numOfBeatsToShow={numOfBeatsToShow} />
 			))}
 
 			{events.map((event) => {

@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import { useAppSelector } from "$/store/hooks";
-import { getHasInitialized } from "$/store/selectors";
+import { selectInitialized } from "$/store/selectors";
 
 import Docs from "../Docs";
 import Editor from "../Editor";
@@ -13,7 +13,7 @@ import LoadingScreen from "../LoadingScreen";
 import "react-tippy/dist/tippy.css";
 
 const App = () => {
-	const hasInitialized = useAppSelector(getHasInitialized);
+	const hasInitialized = useAppSelector(selectInitialized);
 
 	if (!hasInitialized) {
 		return <LoadingScreen />;

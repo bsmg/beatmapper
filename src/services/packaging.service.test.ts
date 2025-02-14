@@ -1,6 +1,6 @@
+import { resolveRankForDifficulty } from "$/helpers/song.helpers";
 import { assert, describe, expect, it, vi } from "vitest";
 import { createInfoContent } from "./packaging.service";
-import { getDifficultyRankForDifficulty } from "./packaging.service.nitty-gritty";
 
 const DEFAULT_SONG = {
 	name: "Ghosts 'n Stuff",
@@ -48,7 +48,7 @@ describe("packaging.service", () => {
 				difficultyLevels: [
 					{
 						difficulty: "Hard",
-						difficultyRank: getDifficultyRankForDifficulty({ id: "Hard" }),
+						difficultyRank: resolveRankForDifficulty("Hard") + 1,
 						audioPath: "song.ogg",
 						jsonPath: "Hard.json",
 						offset: DEFAULT_SONG.offset,
@@ -56,7 +56,7 @@ describe("packaging.service", () => {
 					},
 					{
 						difficulty: "Expert",
-						difficultyRank: getDifficultyRankForDifficulty({ id: "Expert" }),
+						difficultyRank: resolveRankForDifficulty("Expert") + 1,
 						audioPath: "song.ogg",
 						jsonPath: "Expert.json",
 						offset: DEFAULT_SONG.offset,
@@ -102,7 +102,7 @@ describe("packaging.service", () => {
 						_difficultyBeatmaps: [
 							{
 								_difficulty: "Hard",
-								_difficultyRank: getDifficultyRankForDifficulty({ id: "Hard" }),
+								_difficultyRank: resolveRankForDifficulty("Hard"),
 								_beatmapFilename: "Hard.dat",
 								_noteJumpMovementSpeed: DEFAULT_SONG.difficultiesById.Hard.noteJumpSpeed,
 								_noteJumpStartBeatOffset: DEFAULT_SONG.difficultiesById.Hard.startBeatOffset,
@@ -110,9 +110,7 @@ describe("packaging.service", () => {
 							},
 							{
 								_difficulty: "Expert",
-								_difficultyRank: getDifficultyRankForDifficulty({
-									id: "Expert",
-								}),
+								_difficultyRank: resolveRankForDifficulty("Expert"),
 								_beatmapFilename: "Expert.dat",
 								_noteJumpMovementSpeed: DEFAULT_SONG.difficultiesById.Expert.noteJumpSpeed,
 								_noteJumpStartBeatOffset: DEFAULT_SONG.difficultiesById.Expert.startBeatOffset,

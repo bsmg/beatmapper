@@ -7,7 +7,7 @@ import { getColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedEventEditMode, getSelectedSong } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectEventEditorEditMode } from "$/store/selectors";
 import { App, EventEditMode } from "$/types";
 import { normalize } from "$/utils";
 
@@ -15,43 +15,39 @@ import UnstyledButton from "../UnstyledButton";
 
 const BLOCK_WIDTH = 7;
 
-function getBackgroundForEvent(event: App.Event, song: App.Song) {
-	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, song);
+function getBackgroundForEvent(event: App.BasicEvent, customColors: App.ModSettings["customColors"]) {
+	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, customColors);
 
 	switch (event.type) {
-		case App.EventType.ON:
-		case App.EventType.OFF:
-		case App.EventType.TRIGGER: {
+		case App.BasicEventType.ON:
+		case App.BasicEventType.OFF:
+		case App.BasicEventType.TRIGGER: {
 			// On/off are solid colors
 			return color;
 		}
-
-		case App.EventType.FLASH: {
+		case App.BasicEventType.FLASH: {
 			const brightColor = Color(color).lighten(0.4).hsl();
-			const semiTransparentColor = Color(color)
-				.darken(0.5)
-
-				.hsl();
+			const semiTransparentColor = Color(color).darken(0.5).hsl();
 			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
-
-		case App.EventType.FADE: {
+		case App.BasicEventType.FADE: {
 			const brightColor = Color(color).lighten(0.4).hsl();
-
-			const semiTransparentColor = Color(color)
-				.darken(0.5)
-
-				.rgb();
+			const semiTransparentColor = Color(color).darken(0.5).rgb();
 			return `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
-
-		default:
+		case App.BasicEventType.TRANSITION: {
+			const brightColor = Color(color).lighten(0.4).hsl();
+			const semiTransparentColor = Color(color).darken(0.5).rgb();
+			return `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})`;
+		}
+		default: {
 			throw new Error(`Unrecognized type: ${event.type}`);
+		}
 	}
 }
 
 interface Props {
-	event: App.Event;
+	event: App.BasicEvent;
 	trackWidth: number;
 	startBeat: number;
 	numOfBeatsToShow: number;
@@ -60,15 +56,16 @@ interface Props {
 }
 
 const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHover, areLasersLocked }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const dispatch = useAppDispatch();
 
 	const offset = normalize(event.beatNum, startBeat, numOfBeatsToShow + startBeat, 0, trackWidth);
 
 	const centeredOffset = offset - BLOCK_WIDTH / 2;
 
-	const background = getBackgroundForEvent(event, song);
+	const background = getBackgroundForEvent(event, customColors);
 
 	return (
 		<Wrapper
@@ -77,7 +74,7 @@ const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHo
 			onContextMenu={(ev) => ev.preventDefault()}
 			onPointerOver={() => {
 				if (deleteOnHover) {
-					dispatch(bulkDeleteEvent({ id: event.id, trackId: event.trackId, areLasersLocked }));
+					dispatch(bulkDeleteEvent({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				}
 			}}
 			onPointerDown={(ev) => {
@@ -91,15 +88,11 @@ const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHo
 
 				if (clickType === "left") {
 					const actionToSend = event.selected ? deselectEvent : selectEvent;
-					dispatch(actionToSend({ id: event.id, trackId: event.trackId }));
+					dispatch(actionToSend({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				} else if (clickType === "middle") {
-					dispatch(switchEventColor({ id: event.id, trackId: event.trackId }));
+					dispatch(switchEventColor({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				} else if (clickType === "right") {
-					dispatch(deleteEvent({ id: event.id, trackId: event.trackId, areLasersLocked }));
-				}
-
-				if (ev.buttons === 2) {
-					dispatch(deleteEvent({ id: event.id, trackId: event.trackId, areLasersLocked }));
+					dispatch(deleteEvent({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
 				}
 			}}
 		>

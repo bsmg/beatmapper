@@ -3,8 +3,8 @@ import { Fragment, useRef } from "react";
 
 import { Controls } from "$/services/controls.service";
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel, getIsPlaying, getSelectedSong, getShowLightingPreview } from "$/store/selectors";
-import type { App, Quality } from "$/types";
+import { selectEventEditorTogglePreview, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
+import type { Quality } from "$/types";
 
 import AmbientLighting from "../Preview/AmbientLighting";
 import BackLaser from "../Preview/BackLaser";
@@ -16,12 +16,11 @@ import ReduxForwardingCanvas from "../ReduxForwardingCanvas";
 import StaticEnvironment from "../StaticEnvironment";
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 	graphicsLevel: Quality;
 }
 
-const EventLightingPreviewPresentational = ({ song, isPlaying }: Props) => {
+const EventLightingPreviewPresentational = ({ isPlaying }: Props) => {
 	const controls = useRef<Controls | null>(null);
 
 	// Controls to move around the space.
@@ -36,12 +35,12 @@ const EventLightingPreviewPresentational = ({ song, isPlaying }: Props) => {
 
 	const lights = (
 		<Fragment>
-			<SideLaser song={song} isPlaying={isPlaying} side="left" />
-			<SideLaser song={song} isPlaying={isPlaying} side="right" />
-			<BackLaser song={song} isPlaying={isPlaying} />
-			<LargeRings song={song} isPlaying={isPlaying} />
-			<SmallRings song={song} isPlaying={isPlaying} />
-			<PrimaryLight song={song} isPlaying={isPlaying} />
+			<SideLaser isPlaying={isPlaying} side="left" />
+			<SideLaser isPlaying={isPlaying} side="right" />
+			<BackLaser isPlaying={isPlaying} />
+			<LargeRings isPlaying={isPlaying} />
+			<SmallRings isPlaying={isPlaying} />
+			<PrimaryLight isPlaying={isPlaying} />
 		</Fragment>
 	);
 
@@ -66,10 +65,9 @@ const EventLightingPreviewPresentational = ({ song, isPlaying }: Props) => {
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 const EventLightingPreview = () => {
-	const song = useAppSelector(getSelectedSong);
-	const isPlaying = useAppSelector(getIsPlaying);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
-	const showLightingPreview = useAppSelector(getShowLightingPreview);
+	const isPlaying = useAppSelector(selectIsPlaying);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
+	const showLightingPreview = useAppSelector(selectEventEditorTogglePreview);
 
 	if (!showLightingPreview) {
 		return null;
@@ -77,7 +75,7 @@ const EventLightingPreview = () => {
 
 	return (
 		<ReduxForwardingCanvas>
-			<EventLightingPreviewPresentational song={song} isPlaying={isPlaying} graphicsLevel={graphicsLevel} />
+			<EventLightingPreviewPresentational isPlaying={isPlaying} graphicsLevel={graphicsLevel} />
 		</ReduxForwardingCanvas>
 	);
 };

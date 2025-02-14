@@ -4,15 +4,16 @@ import { UNIT } from "$/constants";
 import { promptChangeObstacleDuration } from "$/helpers/prompts.helpers";
 import { resizeSelectedObstacles, toggleFastWallsForSelectedObstacles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getEnabledFastWalls, getSelectedObstacles } from "$/store/selectors";
+import { selectActiveSongId, selectAllSelectedObstacles, selectIsFastWallsEnabled } from "$/store/selectors";
 
 import Heading from "../Heading";
 import MiniButton from "../MiniButton";
 import Spacer from "../Spacer";
 
 const ObstacleTweaks = () => {
-	const selectedObstacles = useAppSelector(getSelectedObstacles);
-	const enabledFastWalls = useAppSelector(getEnabledFastWalls);
+	const songId = useAppSelector(selectActiveSongId);
+	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
+	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, songId));
 	const dispatch = useAppDispatch();
 
 	return (

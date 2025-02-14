@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { COLORS, UNIT } from "$/constants";
 import { copySelection, cutSelection, deselectAll, deselectAllOfType, nudgeSelection, pasteSelection, swapSelectedNotes } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getHasCopiedNotes } from "$/store/selectors";
+import { selectClipboardHasObjects } from "$/store/selectors";
 import { ObjectType, View } from "$/types";
 import { getMetaKeyLabel, interleave } from "$/utils";
 import { ACTION_WIDTH, HALF_ACTION_WIDTH } from "./EditorRightPanel.constants";
@@ -47,7 +47,7 @@ interface Props {
 }
 
 const SelectionInfo = ({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedObstacles }: Props) => {
-	const hasCopiedNotes = useAppSelector(getHasCopiedNotes);
+	const hasCopiedNotes = useAppSelector(selectClipboardHasObjects);
 	const dispatch = useAppDispatch();
 
 	const hasSelectedObstacles = numOfSelectedObstacles >= 1;

@@ -5,7 +5,7 @@ import type { ColorRepresentation, Mesh, Vector3Tuple } from "three";
 
 import { mineUrl } from "$/assets";
 import { useObject } from "$/hooks";
-import { type Direction, ObjectSelectionMode } from "$/types";
+import { ObjectSelectionMode } from "$/types";
 
 interface Props {
 	x: number;
@@ -14,7 +14,6 @@ interface Props {
 	time?: number;
 	lineLayer?: number;
 	lineIndex?: number;
-	direction: Direction;
 	size?: number;
 	color?: ColorRepresentation;
 	isTransparent?: boolean;

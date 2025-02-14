@@ -4,7 +4,7 @@ import { UNIT } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedNoteTool, getSelectedSong } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectNoteEditorTool } from "$/store/selectors";
 import { ObjectTool, View } from "$/types";
 
 import Heading from "../Heading";
@@ -15,8 +15,9 @@ import MineIcon from "./MineIcon";
 import ObstacleIcon from "./ObstacleIcon";
 
 const ItemGrid = () => {
-	const song = useAppSelector(getSelectedSong);
-	const selectedTool = useAppSelector(getSelectedNoteTool);
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const selectedTool = useAppSelector(selectNoteEditorTool);
 	const dispatch = useAppDispatch();
 
 	const buttonSize = 36;
@@ -29,11 +30,11 @@ const ItemGrid = () => {
 			<Grid>
 				<Row>
 					<IconButton size={buttonSize} isToggled={selectedTool === ObjectTool.LEFT_NOTE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.LEFT_NOTE }))}>
-						<BlockIcon color={getColorForItem(ObjectTool.LEFT_NOTE, song)} />
+						<BlockIcon color={getColorForItem(ObjectTool.LEFT_NOTE, customColors)} />
 					</IconButton>
 					<Spacer size={1} />
 					<IconButton size={buttonSize} isToggled={selectedTool === ObjectTool.RIGHT_NOTE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.RIGHT_NOTE }))}>
-						<BlockIcon color={getColorForItem(ObjectTool.RIGHT_NOTE, song)} />
+						<BlockIcon color={getColorForItem(ObjectTool.RIGHT_NOTE, customColors)} />
 					</IconButton>
 					<Spacer size={1} />
 					<IconButton size={buttonSize} isToggled={selectedTool === ObjectTool.BOMB_NOTE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.BOMB_NOTE }))}>

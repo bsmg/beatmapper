@@ -1,17 +1,18 @@
-import type { App } from "$/types";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";
+import { useAppSelector } from "$/store/hooks";
+import { selectSongIds } from "$/store/selectors";
 
 import CenteredSpinner from "../CenteredSpinner";
 import SongsTableRow from "./SongsTableRow";
 
 interface Props {
-	songs: App.Song[];
 	isLoading: boolean;
 }
 
-const SongsTable = ({ songs, isLoading }: Props) => {
+const SongsTable = ({ isLoading }: Props) => {
+	const songIds = useAppSelector(selectSongIds);
 	return (
 		<Wrapper>
 			<Table>
@@ -24,8 +25,8 @@ const SongsTable = ({ songs, isLoading }: Props) => {
 					</tr>
 				</thead>
 				<tbody>
-					{songs.map((song) => (
-						<SongsTableRow key={song.id} song={song} />
+					{songIds.map((songId) => (
+						<SongsTableRow key={songId} songId={songId} />
 					))}
 				</tbody>
 			</Table>

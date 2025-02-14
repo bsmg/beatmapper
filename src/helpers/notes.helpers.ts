@@ -1,17 +1,25 @@
-import { v1 as uuid } from "uuid";
+import { App, type Json } from "$/types";
 
-import { HUMANIZED_DIRECTIONS } from "$/constants";
-import { App, Direction, type Json } from "$/types";
+export function resolveNoteId<T extends Pick<App.IBaseNote, "beatNum" | "colIndex" | "rowIndex">>(x: T) {
+	return `${x.beatNum}-${x.colIndex}-${x.rowIndex}`;
+}
 
-type ReduxNote = Json.Note & { selected?: boolean };
-
-// TODO: Currently, the "redux" variant of the blocks format isn't used. I use the proprietary json format everywhere. I want to refactor this, to keep everything in line between blocks, obstacles, and mines.
-export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]) {
+export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]): App.ColorNote[] {
 	return blocks.map((b) => {
 		return {
-			id: uuid(),
+			id: resolveNoteId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
 			color: b._type === 0 ? App.SaberColor.LEFT : App.SaberColor.RIGHT,
-			direction: HUMANIZED_DIRECTIONS[b._cutDirection],
+			direction: Object.values(App.CutDirection)[b._cutDirection],
+			beatNum: b._time,
+			rowIndex: b._lineLayer,
+			colIndex: b._lineIndex,
+		};
+	});
+}
+export function convertMinesToRedux<T extends Json.Note>(blocks: T[]): App.BombNote[] {
+	return blocks.map((b) => {
+		return {
+			id: resolveNoteId({ beatNum: b._time, colIndex: b._lineIndex, rowIndex: b._lineLayer }),
 			beatNum: b._time,
 			rowIndex: b._lineLayer,
 			colIndex: b._lineIndex,
@@ -19,141 +27,23 @@ export function convertBlocksToRedux<T extends Json.Note>(blocks: T[]) {
 	});
 }
 
-// UNUSED
-export function convertBlocksToExportableJson<T extends App.BlockNext>(blocks: T[]) {
+export function convertBlocksToExportableJson<T extends App.ColorNote>(blocks: T[]): Json.Note[] {
 	return blocks.map((b) => ({
 		_time: b.beatNum,
 		_lineIndex: Math.round(b.colIndex),
 		_lineLayer: Math.round(b.rowIndex),
 		_type: b.color === App.SaberColor.LEFT ? 0 : 1,
-		_cutDirection: HUMANIZED_DIRECTIONS.indexOf(b.direction),
+		_cutDirection: Object.values(App.CutDirection).indexOf(b.direction),
 	}));
 }
-
-export function findNoteByProperties<T extends ReduxNote>(notes: T[], query: { time: number; lineLayer: number; lineIndex: number }) {
-	return notes.find((note) => {
-		return note._time === query.time && note._lineLayer === query.lineLayer && note._lineIndex === query.lineIndex;
-	});
-}
-export function findNoteIndexByProperties<T extends ReduxNote>(notes: T[], query: { time: number; lineLayer: number; lineIndex: number }) {
-	return notes.findIndex((note) => {
-		return note._time === query.time && note._lineLayer === query.lineLayer && note._lineIndex === query.lineIndex;
-	});
-}
-
-function getHorizontallyFlippedCutDirection(cutDirection: Direction) {
-	//  4 0 5
-	//  2 8 3
-	//  6 1 7
-	switch (cutDirection) {
-		case Direction.UP:
-		case Direction.ANY:
-		case Direction.DOWN:
-			return cutDirection;
-
-		case Direction.UP_LEFT:
-		case Direction.LEFT:
-		case Direction.DOWN_LEFT:
-			return cutDirection + 1;
-
-		case Direction.UP_RIGHT:
-		case Direction.RIGHT:
-		case Direction.DOWN_RIGHT:
-			return cutDirection - 1;
-
-		default:
-			throw new Error(`Unrecognized cut direction: ${cutDirection}`);
-	}
-}
-function getVerticallyFlippedCutDirection(cutDirection: Direction) {
-	//  4 0 5
-	//  2 8 3
-	//  6 1 7
-	switch (cutDirection) {
-		case Direction.LEFT:
-		case Direction.ANY:
-		case Direction.RIGHT:
-			return cutDirection;
-
-		case Direction.UP_LEFT:
-		case Direction.UP_RIGHT:
-			return cutDirection + 2;
-
-		case Direction.UP:
-			return cutDirection + 1;
-
-		case Direction.DOWN:
-			return cutDirection - 1;
-
-		case Direction.DOWN_LEFT:
-		case Direction.DOWN_RIGHT:
-			return cutDirection - 2;
-
-		default:
-			throw new Error(`Unrecognized cut direction: ${cutDirection}`);
-	}
-}
-
-export function swapNotesHorizontally<T extends ReduxNote>(notes: T[]) {
-	return notes.map((note) => {
-		if (!note.selected) {
-			return note;
-		}
-
-		// swapping a note means three things:
-		// - Moving its lineIndex to the opposite quadrant,
-		// - flipping its cutDirection to face the opposite way, and
-		// - changing its color
-		const newLineIndex = 3 - note._lineIndex;
-		const newCutDirection = getHorizontallyFlippedCutDirection(note._cutDirection);
-		const newType = note._type === 0 ? 1 : note._type === 1 ? 0 : note._type;
-
-		return {
-			...note,
-			_lineIndex: newLineIndex,
-			_cutDirection: newCutDirection,
-			_type: newType,
-		};
-	});
-}
-
-export function swapNotesVertically<T extends ReduxNote>(notes: T[]) {
-	return notes.map((note) => {
-		if (!note.selected) {
-			return note;
-		}
-
-		const newLineLayer = 2 - note._lineLayer;
-		const newCutDirection = getVerticallyFlippedCutDirection(note._cutDirection);
-
-		return {
-			...note,
-			_lineLayer: newLineLayer,
-			_cutDirection: newCutDirection,
-		};
-	});
-}
-
-export function swapNotes<T extends ReduxNote>(axis: "horizontal" | "vertical", notes: T[]) {
-	if (axis === "horizontal") {
-		return swapNotesHorizontally(notes);
-	}
-	return swapNotesVertically(notes);
-}
-
-export function nudgeNotes<T extends ReduxNote>(direction: "forwards" | "backwards", amount: number, notes: T[]) {
-	const sign = direction === "forwards" ? 1 : -1;
-
-	return notes.map((note) => {
-		if (!note.selected) {
-			return note;
-		}
-
-		return {
-			...note,
-			_time: note._time + amount * sign,
-		};
-	});
+export function convertMinesToExportableJson<T extends App.BombNote>(blocks: T[]): Json.Note[] {
+	return blocks.map((b) => ({
+		_time: b.beatNum,
+		_lineIndex: Math.round(b.colIndex),
+		_lineLayer: Math.round(b.rowIndex),
+		_type: 3,
+		_cutDirection: 0,
+	}));
 }
 
 export function calculateNoteDensity(numOfNotes: number, segmentLengthInBeats: number, bpm: number) {

@@ -1,11 +1,9 @@
-import type { Vector3Tuple } from "three";
-
 import { Quality } from "$/types";
 
 export const BLOCK_SIZE = 1;
-export const BLOCK_COLUMN_WIDTH = BLOCK_SIZE * 1.175;
-export const BLOCK_PLACEMENT_SQUARE_SIZE = BLOCK_COLUMN_WIDTH;
-export const BEAT_DEPTH = BLOCK_SIZE * 8;
+export const BLOCK_COLUMN_WIDTH = 1.175; // BLOCK_SIZE * 1.175;
+export const BLOCK_PLACEMENT_SQUARE_SIZE = 1.175; // BLOCK_COLUMN_WIDTH;
+export const BEAT_DEPTH = 8; // BLOCK_SIZE * 8;
 export const SONG_OFFSET = 6;
 
 // How wide is the platform the notes float above?
@@ -25,5 +23,3 @@ export const LASER_COLORS = {
 	"blue-bright": "#5f7bff",
 	off: "#000000",
 } as const;
-
-export const GRID_POSITION: Vector3Tuple = [0, 0, -SONG_OFFSET] as const;

@@ -13,7 +13,7 @@ const slice = createSlice({
 	name: "waveform",
 	initialState: initialState,
 	selectors: {
-		getWaveformData: (state) => state.data,
+		selectWaveformData: (state) => state.data,
 	},
 	reducers: {},
 	extraReducers: (builder) => {

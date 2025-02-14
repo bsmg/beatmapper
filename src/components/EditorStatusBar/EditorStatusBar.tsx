@@ -24,7 +24,7 @@ import styled from "styled-components";
 import { COLORS, UNIT } from "$/constants";
 import { toggleNoteTick, togglePreviewLightingInEventsView, tweakEventBackgroundOpacity, tweakEventRowHeight, updateBeatDepth, updatePlaybackSpeed, updateVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBackgroundOpacity, getBeatDepth, getIsLoading, getNumOfBlocks, getNumOfMines, getNumOfObstacles, getPlayNoteTick, getPlaybackRate, getRowHeight, getShowLightingPreview, getVolume } from "$/store/selectors";
+import { selectBeatDepth, selectEventBackgroundOpacity, selectEventEditorRowHeight, selectEventEditorTogglePreview, selectIsLoading, selectPlayNoteTick, selectPlaybackRate, selectTotalColorNotes, selectTotalObstacles, selectVolume, selectedTotalBombNotes } from "$/store/selectors";
 import { View } from "$/types";
 import { pluralize } from "$/utils";
 
@@ -51,17 +51,17 @@ interface Props {
 }
 
 const EditorStatusBar = ({ height }: Props) => {
-	const isLoading = useAppSelector(getIsLoading);
-	const playbackRate = useAppSelector(getPlaybackRate);
-	const beatDepth = useAppSelector(getBeatDepth);
-	const volume = useAppSelector(getVolume);
-	const playNoteTick = useAppSelector(getPlayNoteTick);
-	const numOfBlocks = useAppSelector(getNumOfBlocks);
-	const numOfMines = useAppSelector(getNumOfMines);
-	const numOfObstacles = useAppSelector(getNumOfObstacles);
-	const showLightingPreview = useAppSelector(getShowLightingPreview);
-	const rowHeight = useAppSelector(getRowHeight);
-	const backgroundOpacity = useAppSelector(getBackgroundOpacity);
+	const isLoading = useAppSelector(selectIsLoading);
+	const playbackRate = useAppSelector(selectPlaybackRate);
+	const beatDepth = useAppSelector(selectBeatDepth);
+	const volume = useAppSelector(selectVolume);
+	const playNoteTick = useAppSelector(selectPlayNoteTick);
+	const numOfBlocks = useAppSelector(selectTotalColorNotes);
+	const numOfMines = useAppSelector(selectedTotalBombNotes);
+	const numOfObstacles = useAppSelector(selectTotalObstacles);
+	const showLightingPreview = useAppSelector(selectEventEditorTogglePreview);
+	const rowHeight = useAppSelector(selectEventEditorRowHeight);
+	const backgroundOpacity = useAppSelector(selectEventBackgroundOpacity);
 	const dispatch = useAppDispatch();
 
 	const view = getViewFromLocation();

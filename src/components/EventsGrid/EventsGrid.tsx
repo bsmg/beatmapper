@@ -1,13 +1,12 @@
 import { type PointerEventHandler, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS, EVENT_TRACKS, UNIT } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
+import { COLORS, COMMON_EVENT_TRACKS, UNIT } from "$/constants";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAreLasersLocked, getDurationInBeats, getIsLoading, getRowHeight, getSelectedEventBeat, getSelectedEventEditMode, getSelectedSong, getSelectionBox, getSnapTo, getStartAndEndBeat } from "$/store/selectors";
-import { App, EventEditMode, TrackType } from "$/types";
+import { selectActiveSongId, selectDurationInBeats, selectEventEditorEditMode, selectEventEditorRowHeight, selectEventEditorSelectedBeat, selectEventEditorSelectionBox, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror, selectIsLoading, selectOffsetInBeats, selectSnapTo } from "$/store/selectors";
+import { App, EventEditMode, type IEventTrack, TrackType } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
 import BackgroundLines from "./BackgroundLines";
@@ -38,31 +37,32 @@ function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNu
 }
 
 interface Props {
+	tracks?: IEventTrack[];
 	contentWidth: number;
 }
 
-const EventsGrid = ({ contentWidth }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const duration = useAppSelector(getDurationInBeats);
-	const { startBeat, endBeat } = useAppSelector(getStartAndEndBeat);
+const EventsGrid = ({ tracks = COMMON_EVENT_TRACKS, contentWidth }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const duration = useAppSelector((state) => selectDurationInBeats(state, songId));
+	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, songId));
 	const numOfBeatsToShow = endBeat - startBeat;
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedBeat = useAppSelector((state) => {
-		const selectedBeat = getSelectedEventBeat(state);
-		const offset = convertMillisecondsToBeats(-song.offset, song.bpm);
-		return selectedBeat !== null ? clamp(selectedBeat, offset, (duration ?? selectedBeat) + offset) : null;
+		const selectedBeat = selectEventEditorSelectedBeat(state);
+		const offsetInBeats = -selectOffsetInBeats(state, songId);
+		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
-	const isLoading = useAppSelector(getIsLoading);
-	const areLasersLocked = useAppSelector(getAreLasersLocked);
-	const snapTo = useAppSelector(getSnapTo);
-	const selectionBox = useAppSelector(getSelectionBox);
-	const rowHeight = useAppSelector(getRowHeight);
+	const isLoading = useAppSelector(selectIsLoading);
+	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
+	const snapTo = useAppSelector(selectSnapTo);
+	const selectionBox = useAppSelector(selectEventEditorSelectionBox);
+	const rowHeight = useAppSelector(selectEventEditorRowHeight);
 	const dispatch = useAppDispatch();
 
 	const innerGridWidth = contentWidth - PREFIX_WIDTH;
 
 	const headerHeight = 32;
-	const innerGridHeight = rowHeight * EVENT_TRACKS.length;
+	const innerGridHeight = rowHeight * tracks.length;
 
 	const beatNums = range(Math.floor(startBeat), Math.ceil(endBeat));
 
@@ -117,7 +117,7 @@ const EventsGrid = ({ contentWidth }: Props) => {
 				endBeat: end,
 			};
 
-			dispatch(drawSelectionBox({ selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
+			dispatch(drawSelectionBox({ tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
 		}
 
 		if (hoveringOverBeatNum !== selectedBeat) dispatch(moveMouseAcrossEventsGrid({ selectedBeat: hoveringOverBeatNum }));
@@ -157,7 +157,7 @@ const EventsGrid = ({ contentWidth }: Props) => {
 			>
 				<TopLeftBlankCell style={{ height: headerHeight }} />
 
-				{EVENT_TRACKS.map(({ id, label }) => (
+				{tracks.map(({ id, label }) => (
 					<TrackPrefix key={id} style={{ height: rowHeight }} isDisabled={getIsTrackDisabled(id)}>
 						{label}
 					</TrackPrefix>
@@ -178,12 +178,12 @@ const EventsGrid = ({ contentWidth }: Props) => {
 					</BackgroundLinesWrapper>
 
 					<Tracks ref={tracksRef} onPointerDown={handlePointerDown}>
-						{EVENT_TRACKS.map(({ id, type }) => {
-							const TrackComponent = type === TrackType.LIGHT ? BlockTrack : SpeedTrack;
+						{tracks.map(({ id, type }) => {
+							const TrackComponent = type === TrackType.VALUE ? SpeedTrack : BlockTrack;
 
 							const isDisabled = getIsTrackDisabled(id);
 
-							return <TrackComponent key={id} trackId={id} width={innerGridWidth} height={rowHeight} startBeat={startBeat} numOfBeatsToShow={numOfBeatsToShow} cursorAtBeat={selectedBeat} isDisabled={isDisabled} areLasersLocked={areLasersLocked} />;
+							return <TrackComponent key={id} trackId={id} tracks={tracks} width={innerGridWidth} height={rowHeight} startBeat={startBeat} numOfBeatsToShow={numOfBeatsToShow} cursorAtBeat={selectedBeat} isDisabled={isDisabled} areLasersLocked={areLasersLocked} />;
 						})}
 					</Tracks>
 

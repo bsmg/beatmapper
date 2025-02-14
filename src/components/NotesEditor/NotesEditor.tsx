@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { View } from "$/types";
+import { type SongId, View } from "$/types";
 
 import EditorBottomPanel from "../EditorBottomPanel";
 import EditorRightPanel from "../EditorRightPanel";
@@ -10,10 +10,13 @@ import ReduxForwardingCanvas from "../ReduxForwardingCanvas";
 import SongInfo from "../SongInfo";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 
-const NotesEditor = () => {
+interface Props {
+	songId: SongId;
+}
+const NotesEditor = ({ songId }: Props) => {
 	return (
 		<Wrapper>
-			<SongInfo showDifficultySelector />
+			<SongInfo songId={songId} showDifficultySelector />
 
 			<ReduxForwardingCanvas>
 				<MapVisualization />

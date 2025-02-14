@@ -9,20 +9,20 @@ import JSZip from "jszip";
 import { convertBookmarksToExportableJson } from "$/helpers/bookmarks.helpers";
 import { formatColorForMods } from "$/helpers/colors.helpers";
 import { convertEventsToExportableJson } from "$/helpers/events.helpers";
-import { convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
+import { convertBlocksToExportableJson, convertMinesToExportableJson, convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
 import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
-import { getSongIdFromName, sortDifficultyIds } from "$/helpers/song.helpers";
+import { resolveDifficulty, resolveRankForDifficulty, resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
-import { getAllEventsAsArray, getNotes, getObstacles } from "$/store/selectors";
+import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { App, Difficulty, type Json, type SongId } from "$/types";
 import { isEmpty, omit } from "$/utils";
-import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getDifficultyRankForDifficulty, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
+import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
 
 const LIGHTSHOW_FILENAME = "EasyLightshow.dat";
 
 export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "coverArtFilename" | "createdAt" | "lastOpenedAt">, meta = { version: 2 }) {
-	const difficultyIds = sortDifficultyIds(Object.keys(song.difficultiesById));
+	const difficultyIds = sortBeatmapIds(Object.keys(song.difficultiesById));
 	const difficulties = difficultyIds.map((id) => song.difficultiesById[id]);
 
 	// We need to make sure we store numbers as numbers. This SHOULD be done at a higher level, but may not be.
@@ -53,35 +53,39 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 			previewDuration: song.previewDuration,
 			coverImagePath: "cover.jpg",
 			environmentName: song.environment,
-			difficultyLevels: difficulties.map((difficulty) => ({
-				difficulty: difficulty.id,
-				difficultyRank: getDifficultyRankForDifficulty(difficulty),
-				audioPath: "song.ogg",
-				jsonPath: `${difficulty.id}.json`,
-				offset: offset,
-				oldOffset: offset,
-			})),
+			difficultyLevels: difficulties.map((beatmap) => {
+				const difficulty = resolveDifficulty(beatmap.id);
+				return {
+					difficulty: beatmap.id,
+					difficultyRank: resolveRankForDifficulty(difficulty) + 1,
+					audioPath: "song.ogg",
+					jsonPath: `${beatmap.id}.json`,
+					offset: offset,
+					oldOffset: offset,
+				};
+			}),
 		};
 	} else if (meta.version === 2) {
 		const beatmapSets = [
 			{
 				_beatmapCharacteristicName: "Standard",
-				_difficultyBeatmaps: difficulties.map((difficulty) => {
+				_difficultyBeatmaps: difficulties.map((beatmap) => {
+					const difficulty = resolveDifficulty(beatmap.id);
 					const difficultyData = {
-						_difficulty: difficulty.id,
-						_difficultyRank: getDifficultyRankForDifficulty(difficulty),
-						_beatmapFilename: `${difficulty.id}.dat`,
-						_noteJumpMovementSpeed: difficulty.noteJumpSpeed,
-						_noteJumpStartBeatOffset: difficulty.startBeatOffset,
+						_difficulty: beatmap.id,
+						_difficultyRank: resolveRankForDifficulty(difficulty),
+						_beatmapFilename: `${beatmap.id}.dat`,
+						_noteJumpMovementSpeed: beatmap.noteJumpSpeed,
+						_noteJumpStartBeatOffset: beatmap.startBeatOffset,
 						_customData: {
 							_editorOffset: offset !== 0 ? offset : undefined,
 							_requirements: requirements.length > 0 ? requirements : undefined,
 						},
 					} as Json.BeatmapDifficulty;
 
-					if (difficulty.customLabel) {
+					if (beatmap.customLabel) {
 						difficultyData._customData ??= {};
-						difficultyData._customData._difficultyLabel = difficulty.customLabel;
+						difficultyData._customData._difficultyLabel = beatmap.customLabel;
 					}
 
 					return difficultyData;
@@ -143,11 +147,11 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 			const colors = song.modSettings.customColors;
 
 			const colorData = {
-				_colorLeft: formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive),
-				_colorRight: formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive),
-				_envColorLeft: formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive),
-				_envColorRight: formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive),
-				_obstacleColor: formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive),
+				_colorLeft: colors.colorLeft ? formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
+				_colorRight: colors.colorRight ? formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive) : undefined,
+				_envColorLeft: colors.envColorLeft ? formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive) : undefined,
+				_envColorRight: colors.envColorRight ? formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive) : undefined,
+				_obstacleColor: colors.obstacleColor ? formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive) : undefined,
 			};
 
 			for (const set of contents._difficultyBeatmapSets) {
@@ -253,14 +257,16 @@ export function createBeatmapContents(
 }
 
 export function createBeatmapContentsFromState(state: RootState, song: Pick<App.Song, "offset" | "bpm" | "modSettings">) {
-	const notes = getNotes(state);
-	const events = convertEventsToExportableJson(getAllEventsAsArray(state));
-	const obstacles = convertObstaclesToExportableJson(getObstacles(state));
-	const bookmarks = convertBookmarksToExportableJson(Object.values(state.bookmarks));
+	const notes = convertBlocksToExportableJson(selectAllColorNotes(state));
+	const bombs = convertMinesToExportableJson(selectAllBombNotes(state));
+	const events = convertEventsToExportableJson(selectAllBasicEvents(state));
+	const obstacles = convertObstaclesToExportableJson(selectAllObstacles(state));
+	const bookmarks = convertBookmarksToExportableJson(selectAllBookmarks(state));
 
 	// It's important that notes are sorted by their _time property primarily, and then by _lineLayer secondarily.
 
 	const shiftedNotes = shiftEntitiesByOffset(notes, song.offset, song.bpm);
+	const shiftedBombs = shiftEntitiesByOffset(bombs, song.offset, song.bpm);
 	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
 	const shiftedObstacles = shiftEntitiesByOffset(obstacles, song.offset, song.bpm);
 
@@ -270,17 +276,19 @@ export function createBeatmapContentsFromState(state: RootState, song: Pick<App.
 		selected: false,
 	});
 	let deselectedNotes = shiftedNotes.map(deselect);
+	let deselectedBombs = shiftedBombs.map(deselect);
 	const deselectedObstacles = shiftedObstacles.map(deselect);
 	const deselectedEvents = shiftedEvents.map(deselect);
 
 	// If the user has mapping extensions enabled, multiply the notes to sit in the 1000+ range.
 	if (song.modSettings.mappingExtensions?.isEnabled) {
 		deselectedNotes = convertNotesToMappingExtensions(deselectedNotes);
+		deselectedBombs = convertNotesToMappingExtensions(deselectedBombs);
 	}
 
 	return createBeatmapContents(
 		{
-			notes: deselectedNotes,
+			notes: [...deselectedNotes, ...deselectedBombs],
 			obstacles: deselectedObstacles,
 			events: deselectedEvents,
 			bookmarks,
@@ -407,7 +415,7 @@ export async function convertLegacyArchive(archive: JSZip) {
 					notes: fileJson._notes,
 					obstacles: fileJson._obstacles,
 					events: fileJson._events,
-					bookmarks: fileJson._bookmarks,
+					bookmarks: fileJson._customData?._bookmarks,
 				},
 				{ version: 2 },
 			);
@@ -461,7 +469,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	if (!info) throw new Error("No info file.");
 	const infoDatString = await info.async("string");
 	const infoDatJson = JSON.parse(infoDatString);
-	const songId = getSongIdFromName(infoDatJson._songName);
+	const songId = resolveSongId({ name: infoDatJson._songName });
 
 	const songIdAlreadyExists = currentSongIds.some((id) => id === songId);
 	if (songIdAlreadyExists) {

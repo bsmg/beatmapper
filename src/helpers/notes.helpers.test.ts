@@ -1,11 +1,12 @@
-import { App } from "$/types";
 import { describe, expect, it } from "vitest";
+
+import { App, type Json } from "$/types";
 import { calculateNoteDensity, convertBlocksToExportableJson, convertBlocksToRedux, convertNotesFromMappingExtensions, convertNotesToMappingExtensions } from "./notes.helpers";
 
 describe("Notes helpers", () => {
 	describe("convertBlocksToRedux", () => {
 		it("converts", () => {
-			const blocks = [
+			const blocks: Json.Note[] = [
 				{
 					_time: 2,
 					_lineIndex: 2,
@@ -24,11 +25,11 @@ describe("Notes helpers", () => {
 
 			const actualResult = convertBlocksToRedux(blocks);
 
-			const expectedResult = [
+			const expectedResult: App.ColorNote[] = [
 				{
 					id: actualResult[0].id, // Randomly generated so I have to cheat
 					color: App.SaberColor.LEFT,
-					direction: App.Direction.DOWN,
+					direction: App.CutDirection.DOWN,
 					beatNum: 2,
 					rowIndex: 0,
 					colIndex: 2,
@@ -36,7 +37,7 @@ describe("Notes helpers", () => {
 				{
 					id: actualResult[1].id,
 					color: App.SaberColor.RIGHT,
-					direction: App.Direction.UP,
+					direction: App.CutDirection.UP,
 					beatNum: 3.5,
 					rowIndex: 0,
 					colIndex: 3,
@@ -48,11 +49,11 @@ describe("Notes helpers", () => {
 
 	describe("convertBlocksToExportableJson", () => {
 		it("converts", () => {
-			const blocks = [
+			const blocks: App.ColorNote[] = [
 				{
 					id: "a",
 					color: App.SaberColor.LEFT,
-					direction: App.Direction.DOWN,
+					direction: App.CutDirection.DOWN,
 					beatNum: 2,
 					rowIndex: 0,
 					colIndex: 2,
@@ -60,7 +61,7 @@ describe("Notes helpers", () => {
 				{
 					id: "b",
 					color: App.SaberColor.RIGHT,
-					direction: App.Direction.UP,
+					direction: App.CutDirection.UP,
 					beatNum: 3.5,
 					rowIndex: 0,
 					colIndex: 3,
@@ -69,7 +70,7 @@ describe("Notes helpers", () => {
 
 			const actualResult = convertBlocksToExportableJson(blocks);
 
-			const expectedResult = [
+			const expectedResult: Json.Note[] = [
 				{
 					_time: 2,
 					_lineIndex: 2,
@@ -89,7 +90,7 @@ describe("Notes helpers", () => {
 		});
 
 		it("converts full-circle", () => {
-			const blocks = [
+			const blocks: Json.Note[] = [
 				{
 					_time: 2,
 					_lineIndex: 2,
@@ -150,38 +151,38 @@ describe("Notes helpers", () => {
 
 	describe("Mapping Extensions conversions", () => {
 		it("converts to MapEx format", () => {
-			const notes = [
-				{ _time: 4, _lineIndex: 0, _lineLayer: 0 },
-				{ _time: 4, _lineIndex: 1.5, _lineLayer: 2 },
-				{ _time: 6, _lineIndex: -0.5, _lineLayer: 1 },
-				{ _time: 8, _lineIndex: 10, _lineLayer: -2.25 },
+			const notes: Json.Note[] = [
+				{ _time: 4, _lineIndex: 0, _lineLayer: 0, _type: 0, _cutDirection: 0 },
+				{ _time: 4, _lineIndex: 1.5, _lineLayer: 2, _type: 0, _cutDirection: 0 },
+				{ _time: 6, _lineIndex: -0.5, _lineLayer: 1, _type: 0, _cutDirection: 0 },
+				{ _time: 8, _lineIndex: 10, _lineLayer: -2.25, _type: 0, _cutDirection: 0 },
 			];
 
 			const actualResult = convertNotesToMappingExtensions(notes);
-			const expectedResult = [
-				{ _time: 4, _lineIndex: 1000, _lineLayer: 1000 },
-				{ _time: 4, _lineIndex: 2500, _lineLayer: 3000 },
-				{ _time: 6, _lineIndex: -1500, _lineLayer: 2000 },
-				{ _time: 8, _lineIndex: 11000, _lineLayer: -3250 },
+			const expectedResult: Json.Note[] = [
+				{ _time: 4, _lineIndex: 1000, _lineLayer: 1000, _type: 0, _cutDirection: 0 },
+				{ _time: 4, _lineIndex: 2500, _lineLayer: 3000, _type: 0, _cutDirection: 0 },
+				{ _time: 6, _lineIndex: -1500, _lineLayer: 2000, _type: 0, _cutDirection: 0 },
+				{ _time: 8, _lineIndex: 11000, _lineLayer: -3250, _type: 0, _cutDirection: 0 },
 			];
 
 			expect(actualResult).toEqual(expectedResult);
 		});
 
 		it("converts from MapEx format", () => {
-			const notes = [
-				{ _time: 4, _lineIndex: 1000, _lineLayer: 1000 },
-				{ _time: 4, _lineIndex: 2500, _lineLayer: 3000 },
-				{ _time: 6, _lineIndex: -1500, _lineLayer: 2000 },
-				{ _time: 8, _lineIndex: 11000, _lineLayer: -3250 },
+			const notes: Json.Note[] = [
+				{ _time: 4, _lineIndex: 1000, _lineLayer: 1000, _type: 0, _cutDirection: 0 },
+				{ _time: 4, _lineIndex: 2500, _lineLayer: 3000, _type: 0, _cutDirection: 0 },
+				{ _time: 6, _lineIndex: -1500, _lineLayer: 2000, _type: 0, _cutDirection: 0 },
+				{ _time: 8, _lineIndex: 11000, _lineLayer: -3250, _type: 0, _cutDirection: 0 },
 			];
 
 			const actualResult = convertNotesFromMappingExtensions(notes);
-			const expectedResult = [
-				{ _time: 4, _lineIndex: 0, _lineLayer: 0 },
-				{ _time: 4, _lineIndex: 1.5, _lineLayer: 2 },
-				{ _time: 6, _lineIndex: -0.5, _lineLayer: 1 },
-				{ _time: 8, _lineIndex: 10, _lineLayer: -2.25 },
+			const expectedResult: Json.Note[] = [
+				{ _time: 4, _lineIndex: 0, _lineLayer: 0, _type: 0, _cutDirection: 0 },
+				{ _time: 4, _lineIndex: 1.5, _lineLayer: 2, _type: 0, _cutDirection: 0 },
+				{ _time: 6, _lineIndex: -0.5, _lineLayer: 1, _type: 0, _cutDirection: 0 },
+				{ _time: 8, _lineIndex: 10, _lineLayer: -2.25, _type: 0, _cutDirection: 0 },
 			];
 
 			expect(actualResult).toEqual(expectedResult);

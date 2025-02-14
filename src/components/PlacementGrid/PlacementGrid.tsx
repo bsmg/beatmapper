@@ -6,8 +6,8 @@ import { getColorForItem } from "$/helpers/colors.helpers";
 import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { clearCellOfNotes, clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDefaultObstacleDuration, getGridSize, getMappingMode, getNoteSelectionMode, getSelectedNoteTool, getSelectedSong } from "$/store/selectors";
-import { type Direction, ObjectTool } from "$/types";
+import { selectActiveSongId, selectCustomColors, selectDefaultObstacleDuration, selectGridSize, selectNoteEditorSelectionMode, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
+import { type CutDirection, ObjectTool } from "$/types";
 import { range } from "$/utils";
 import { getDirectionForDrag } from "./PlacementGrid.helpers";
 
@@ -16,7 +16,7 @@ import TentativeBlock from "./TentativeBlock";
 import TentativeObstacle from "./TentativeObstacle";
 
 interface ITentativeBlock {
-	direction: Direction;
+	direction: CutDirection;
 	rowIndex: number;
 	colIndex: number;
 	selectedTool: ObjectTool;
@@ -29,12 +29,13 @@ interface Props {
 }
 
 const PlacementGrid = ({ gridPosition }: Props) => {
-	const song = useAppSelector(getSelectedSong);
-	const { numRows, numCols, colWidth, rowHeight } = useAppSelector(getGridSize);
-	const selectedTool = useAppSelector(getSelectedNoteTool);
-	const selectionMode = useAppSelector(getNoteSelectionMode);
-	const mappingMode = useAppSelector(getMappingMode);
-	const defaultObstacleDuration = useAppSelector(getDefaultObstacleDuration);
+	const songId = useAppSelector(selectActiveSongId);
+	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, songId));
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const selectedTool = useAppSelector(selectNoteEditorTool);
+	const selectionMode = useAppSelector(selectNoteEditorSelectionMode);
+	const mappingMode = useAppSelector((state) => selectPlacementMode(state, songId));
+	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
 	const dispatch = useAppDispatch();
 
 	const renderColWidth = colWidth * BLOCK_PLACEMENT_SQUARE_SIZE;
@@ -42,7 +43,7 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 
 	const [mouseDownAt, setMouseDownAt] = useState<{ rowIndex: number; colIndex: number; x: number; y: number } | null>(null);
 	const [mouseOverAt, setMouseOverAt] = useState<{ rowIndex: number; colIndex: number; x?: number; y?: number } | null>(null);
-	const cachedDirection = useRef<Direction | null>(null);
+	const cachedDirection = useRef<CutDirection | null>(null);
 
 	// `hoveredCell` is an indication of which square is currently highlighted by the cursor. You might think I could just use `mouseOverAt`, but there are 2 reasons why I can't:
 	// - When clicking and dragging to place a cell, I want to 'lock' hoveredCell, even though I'm still mousing over other cells
@@ -81,7 +82,7 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 				const effectiveRowIndex = convertGridRow(rowIndex, numRows, rowHeight);
 
 				// If this is the first move event that creates this tentative block, delete any pre-existing block in this cell
-				dispatch(clearCellOfNotes({ rowIndex: effectiveRowIndex, colIndex: effectiveColIndex }));
+				dispatch(clearCellOfNotes({ rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, tool: selectedTool }));
 
 				evenMoreTentativeBlock = {
 					direction,
@@ -99,7 +100,7 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 		const handleMouseUp = (_ev: MouseEvent) => {
 			window.requestAnimationFrame(() => {
 				if (evenMoreTentativeBlock) {
-					dispatch(setBlockByDragging({ direction: evenMoreTentativeBlock.direction, rowIndex: evenMoreTentativeBlock.rowIndex, colIndex: evenMoreTentativeBlock.colIndex, selectedTool: evenMoreTentativeBlock.selectedTool }));
+					dispatch(setBlockByDragging({ direction: evenMoreTentativeBlock.direction, rowIndex: evenMoreTentativeBlock.rowIndex, colIndex: evenMoreTentativeBlock.colIndex, tool: evenMoreTentativeBlock.selectedTool }));
 					setTentativeBlock(null);
 				}
 				setMouseDownAt(null);
@@ -154,9 +155,9 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 				}),
 			)}
 
-			{tentativeBlock && <TentativeBlock song={song} direction={tentativeBlock.direction} rowIndex={tentativeBlock.rowIndex} colIndex={tentativeBlock.colIndex} color={getColorForItem(tentativeBlock.selectedTool, song)} />}
+			{tentativeBlock && <TentativeBlock direction={tentativeBlock.direction} rowIndex={tentativeBlock.rowIndex} colIndex={tentativeBlock.colIndex} color={getColorForItem(tentativeBlock.selectedTool, customColors)} />}
 
-			{mouseDownAt && selectedTool === ObjectTool.OBSTACLE && <TentativeObstacle mouseDownAt={mouseDownAt} mouseOverAt={mouseOverAt} color={getColorForItem(ObjectTool.OBSTACLE, song)} mode={mappingMode} />}
+			{mouseDownAt && selectedTool === ObjectTool.OBSTACLE && <TentativeObstacle mouseDownAt={mouseDownAt} mouseOverAt={mouseOverAt} color={getColorForItem(ObjectTool.OBSTACLE, customColors)} mode={mappingMode} />}
 		</Fragment>
 	);
 };

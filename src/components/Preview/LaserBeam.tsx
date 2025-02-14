@@ -14,8 +14,8 @@ interface Props {
 	position: Vector3Tuple;
 	rotation: Vector3Tuple;
 	brightness?: number;
-	status: App.LightingEventType;
-	lastEventId: App.Event["id"] | null;
+	status: App.LightEventType;
+	lastEventId: App.BasicEvent["id"] | null;
 	isPlaying: boolean;
 	length?: number;
 	radius?: number;
@@ -42,7 +42,7 @@ const LaserBeam = ({ color, position, rotation, status, lastEventId, isPlaying, 
 			return;
 		}
 
-		const statusShouldReset = status === App.EventType.FLASH || status === App.EventType.FADE;
+		const statusShouldReset = status === App.BasicEventType.FLASH || status === App.BasicEventType.FADE;
 
 		springConfig.reset = statusShouldReset;
 	}, lastEventId);

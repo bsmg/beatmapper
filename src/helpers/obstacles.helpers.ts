@@ -1,8 +1,5 @@
-import { v1 as uuid } from "uuid";
-
 import { DEFAULT_NUM_COLS } from "$/constants";
 import { App, type Json, ObjectPlacementMode } from "$/types";
-import { ObstacleType } from "$/types/beatmap/app";
 import { clamp, normalize, roundToNearest } from "$/utils";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
 
@@ -16,13 +13,20 @@ const WALL_START_MAX = 400;
 
 const RIDICULOUS_MAP_EX_CONSTANT = 4001;
 
-export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.MappingExtensionObstacle {
-	return obstacle.type === ObstacleType.EXTENDED;
+export function resolveObstacleId(x: Pick<App.Obstacle, "beatNum" | "colIndex" | "type">) {
+	return `${x.beatNum}-${x.colIndex}-${Object.values(App.ObstacleType).indexOf(x.type)}`;
+}
+
+export function isVanillaObstacle(obstacle: App.Obstacle): obstacle is App.IBaseObstacle {
+	return obstacle.type !== App.ObstacleType.EXTENDED;
+}
+export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.IExtensionObstacle {
+	return obstacle.type === App.ObstacleType.EXTENDED;
 }
 
 export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): App.Obstacle[] {
 	return obstacles.map((o) => {
-		const obstacleData = {} as App.Obstacle;
+		const obstacleData = { beatNum: o._time } as App.Obstacle;
 		if (o._type <= 1) {
 			obstacleData.type = o._type === 0 ? App.ObstacleType.FULL : App.ObstacleType.TOP;
 
@@ -48,7 +52,7 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 			if (isExtendedObstacle(obstacleData)) {
 				obstacleData.rowspan = rowspan;
 				obstacleData.rowIndex = rowIndex;
-				obstacleData.lane = o._lineIndex < 0 ? o._lineIndex / 1000 + 1 : o._lineIndex / 1000 - 1;
+				obstacleData.colIndex = o._lineIndex < 0 ? o._lineIndex / 1000 + 1 : o._lineIndex / 1000 - 1;
 				obstacleData.colspan = (o._width - 1000) / 1000;
 			}
 		}
@@ -59,13 +63,14 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 			obstacleData.fast = true;
 		}
 
-		return {
+		const data = {
 			...obstacleData,
-			id: uuid(),
-			beatStart: o._time,
+			id: resolveObstacleId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? o._lineIndex, type: obstacleData.type }),
+			beatNum: o._time,
 			beatDuration: duration,
-			lane: obstacleData.lane ?? o._lineIndex,
-		};
+			colIndex: obstacleData.colIndex ?? o._lineIndex,
+		} as App.Obstacle;
+		return data;
 	});
 }
 
@@ -79,13 +84,13 @@ export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacl
 		switch (o.type) {
 			case App.ObstacleType.FULL: {
 				obstacleData._type = 0;
-				obstacleData._lineIndex = o.lane;
+				obstacleData._lineIndex = o.colIndex;
 				obstacleData._width = o.colspan;
 				break;
 			}
 			case App.ObstacleType.TOP: {
 				obstacleData._type = 1;
-				obstacleData._lineIndex = o.lane;
+				obstacleData._lineIndex = o.colIndex;
 				obstacleData._width = o.colspan;
 				break;
 			}
@@ -106,7 +111,7 @@ export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacl
 
 				// Lanes are values from 0-3 in a standard 4-column grid, but they could be lower or higher than that in a larger grid (eg. in an 8-col grid, the range is -2 through 5).
 				// As with notes, we need to convert them to the thousands-scale used by MappingExtensions.
-				obstacleData._lineIndex = Math.round(o.lane < 0 ? o.lane * 1000 - 1000 : o.lane * 1000 + 1000);
+				obstacleData._lineIndex = Math.round(o.colIndex < 0 ? o.colIndex * 1000 - 1000 : o.colIndex * 1000 + 1000);
 
 				obstacleData._width = Math.round(o.colspan * 1000 + 1000);
 
@@ -130,44 +135,11 @@ export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacl
 
 		const data = {
 			...obstacleData,
-			_time: o.beatStart,
+			_time: o.beatNum,
 			_duration: duration,
-		};
+		} as Json.Obstacle;
 
 		return data;
-	});
-}
-
-export function swapObstacles<T extends App.Obstacle>(axis: "horizontal" | "vertical", obstacles: T[]) {
-	// There is no vertical equivalent to ceiling obstacles. So, no work is necessary
-	if (axis === "vertical") {
-		return obstacles;
-	}
-
-	return obstacles.map((obstacle) => {
-		if (!obstacle.selected) {
-			return obstacle;
-		}
-
-		return {
-			...obstacle,
-			lane: 3 - obstacle.lane,
-		};
-	});
-}
-
-export function nudgeObstacles<T extends App.Obstacle>(direction: "forwards" | "backwards", amount: number, obstacles: T[]) {
-	const sign = direction === "forwards" ? 1 : -1;
-
-	return obstacles.map((obstacle) => {
-		if (!obstacle.selected) {
-			return obstacle;
-		}
-
-		return {
-			...obstacle,
-			beatStart: obstacle.beatStart + amount * sign,
-		};
 	});
 }
 
@@ -190,7 +162,7 @@ export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols:
 	// 'original' walls need to be clamped, to not cause hazards
 	if (mode === ObjectPlacementMode.NORMAL) {
 		const lane = convertGridColumn(laneIndex, numCols, colWidth);
-		obstacle.lane = lane;
+		obstacle.colIndex = lane;
 
 		if (obstacle.type === App.ObstacleType.FULL && obstacle.colspan > 2) {
 			const overBy = obstacle.colspan - 2;
@@ -199,9 +171,9 @@ export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols:
 			const colspanDelta = mouseOverAt.colIndex - mouseDownAt.colIndex;
 
 			if (colspanDelta > 0) {
-				obstacle.lane += overBy;
+				obstacle.colIndex += overBy;
 			} else {
-				obstacle.lane = mouseOverAt.colIndex;
+				obstacle.colIndex = mouseOverAt.colIndex;
 			}
 		}
 	} else if (mode === ObjectPlacementMode.EXTENSIONS) {
@@ -229,7 +201,7 @@ export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols:
 		// Same thing for columns
 		obstacle.colspan = colspan * colWidth;
 
-		obstacle.lane = lane;
+		obstacle.colIndex = lane;
 		obstacle.rowIndex = rowIndex;
 	}
 

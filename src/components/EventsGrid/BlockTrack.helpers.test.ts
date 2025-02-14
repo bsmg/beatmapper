@@ -1,5 +1,6 @@
-import { App, type IBackgroundBox } from "$/types";
 import { describe, expect, it } from "vitest";
+
+import { App, type IBackgroundBox } from "$/types";
 import { getBackgroundBoxes } from "./BlockTrack.helpers";
 
 const LIGHTING_TRACK_ID = App.TrackId[4];
@@ -21,16 +22,16 @@ describe("BlockTrack helpers", () => {
 					trackId,
 					beatNum: 3,
 					id: "a",
-					type: App.EventType.ON,
-					colorType: App.EventColorType.PRIMARY,
+					type: App.BasicEventType.ON,
+					colorType: App.EventColor.PRIMARY,
 				},
 				{
 					trackId,
 					beatNum: 4,
 					id: "b",
-					type: App.EventType.OFF,
+					type: App.BasicEventType.OFF,
 				},
-			] as unknown as App.Event[];
+			] as unknown as App.BasicEvent[];
 			const initialTrackLightingColorType = null;
 			const startBeat = 0;
 			const numOfBeatsToShow = 8;
@@ -43,7 +44,7 @@ describe("BlockTrack helpers", () => {
 
 		it("handles an empty set of events without initial lighting", () => {
 			//  0  [________]
-			const events: App.LightingEvent[] = [];
+			const events: App.IBasicLightEvent[] = [];
 			const initialTrackLightingColorType = null;
 			const startBeat = 0;
 			const numOfBeatsToShow = 8;
@@ -56,17 +57,17 @@ describe("BlockTrack helpers", () => {
 
 		it("handles an empty set of events WITH initial lighting", () => {
 			//  R  [________]
-			const events: App.LightingEvent[] = [];
-			const initialTrackLightingColorType = App.EventColorType.PRIMARY;
+			const events: App.IBasicLightEvent[] = [];
+			const initialTrackLightingColorType = App.EventColor.PRIMARY;
 			const startBeat = 8;
 			const numOfBeatsToShow = 8;
 
-			const expectedResult = [
+			const expectedResult: IBackgroundBox[] = [
 				{
 					id: "initial-8-8",
 					beatNum: 8,
 					duration: 8,
-					colorType: App.EventColorType.PRIMARY,
+					colorType: App.EventColor.PRIMARY,
 				},
 			];
 			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
@@ -76,31 +77,31 @@ describe("BlockTrack helpers", () => {
 
 		it("handles a basic on-off case", () => {
 			//  0  [R___0___]
-			const events = [
+			const events: App.IBasicLightEvent[] = [
 				{
 					id: "a",
 					trackId: App.TrackId[2],
 					beatNum: 8,
-					type: App.EventType.ON,
-					colorType: App.EventColorType.PRIMARY,
+					type: App.BasicEventType.ON,
+					colorType: App.EventColor.PRIMARY,
 				},
 				{
 					id: "b",
 					trackId: App.TrackId[2],
 					beatNum: 12,
-					type: App.EventType.OFF,
+					type: App.BasicEventType.OFF,
 				},
 			];
 			const initialTrackLightingColorType = null;
 			const startBeat = 8;
 			const numOfBeatsToShow = 8;
 
-			const expectedResult = [
+			const expectedResult: IBackgroundBox[] = [
 				{
 					id: "a",
 					beatNum: 8,
 					duration: 4,
-					colorType: App.EventColorType.PRIMARY,
+					colorType: App.EventColor.PRIMARY,
 				},
 			];
 			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
@@ -110,26 +111,26 @@ describe("BlockTrack helpers", () => {
 
 		it("handles turning on when already on", () => {
 			//  R  [____R___]
-			const events = [
+			const events: App.IBasicLightEvent[] = [
 				{
 					id: "a",
 					trackId: App.TrackId[2],
 					beatNum: 12,
-					type: App.EventType.ON,
-					colorType: App.EventColorType.PRIMARY,
+					type: App.BasicEventType.ON,
+					colorType: App.EventColor.PRIMARY,
 				},
 			];
-			const initialTrackLightingColorType = App.EventColorType.PRIMARY;
+			const initialTrackLightingColorType = App.EventColor.PRIMARY;
 			const startBeat = 8;
 			const numOfBeatsToShow = 8;
 
-			const expectedResult = [
+			const expectedResult: IBackgroundBox[] = [
 				// Should be a single box filling the available space.
 				{
 					id: "initial-8-8",
 					beatNum: 8,
 					duration: 8,
-					colorType: App.EventColorType.PRIMARY,
+					colorType: App.EventColor.PRIMARY,
 				},
 			];
 			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
@@ -139,44 +140,44 @@ describe("BlockTrack helpers", () => {
 
 		it("handles color changes", () => {
 			//  0  [R___B_0_]
-			const events = [
+			const events: App.IBasicLightEvent[] = [
 				{
 					id: "a",
 					trackId: App.TrackId[2],
 					beatNum: 8,
-					type: App.EventType.ON,
-					colorType: App.EventColorType.PRIMARY,
+					type: App.BasicEventType.ON,
+					colorType: App.EventColor.PRIMARY,
 				},
 				{
 					id: "b",
 					trackId: App.TrackId[2],
 					beatNum: 12,
-					type: App.EventType.ON,
-					colorType: App.EventColorType.SECONDARY,
+					type: App.BasicEventType.ON,
+					colorType: App.EventColor.SECONDARY,
 				},
 				{
 					id: "b",
 					trackId: App.TrackId[2],
 					beatNum: 14,
-					type: App.EventType.OFF,
+					type: App.BasicEventType.OFF,
 				},
 			];
 			const initialTrackLightingColorType = null;
 			const startBeat = 8;
 			const numOfBeatsToShow = 8;
 
-			const expectedResult = [
+			const expectedResult: IBackgroundBox[] = [
 				{
 					id: "a",
 					beatNum: 8,
 					duration: 4,
-					colorType: App.EventColorType.PRIMARY,
+					colorType: App.EventColor.PRIMARY,
 				},
 				{
 					id: "b",
 					beatNum: 12,
 					duration: 2,
-					colorType: App.EventColorType.SECONDARY,
+					colorType: App.EventColor.SECONDARY,
 				},
 			];
 			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);

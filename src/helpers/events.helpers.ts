@@ -1,107 +1,125 @@
-import { v1 as uuid } from "uuid";
+import { EVENT_TRACKS } from "$/constants";
+import { App, type Json, TrackType } from "$/types";
 
-import { LIGHTING_TRACKS, LIGHT_EVENTS_ARRAY, LIGHT_EVENT_TYPES, TRACK_IDS_ARRAY, TRACK_ID_MAP } from "$/constants";
-import { App, type Json } from "$/types";
-
-export function isLightEvent(event: App.Event): event is App.LightingEvent {
-	return LIGHTING_TRACKS.includes(event.trackId);
+export function resolveEventId<T extends Pick<App.BasicEvent, "beatNum" | "trackId">>(x: T) {
+	return `${EVENT_TRACKS.map((x) => x.id).indexOf(x.trackId)}-${x.beatNum}`;
 }
 
-// NOTE: This method mutates the `events` array supplied.
-// This is done because it is called within an Immer `produce` call, which uses proxies to avoid actually doing mutation.
-// But, if you call this from a foreign context, you won't get that, so be wary.
-// This is the kind of thing I'm doing only because this isn't a shared codebase :D
-export function nudgeEvents<T extends App.Event>(direction: "forwards" | "backwards", amount: number, events: T[]) {
-	const sign = direction === "forwards" ? 1 : -1;
+export function isLightTrack(trackId: App.TrackId, tracks = EVENT_TRACKS) {
+	const LIGHT_TRACKS = tracks.filter(({ type }) => type === TrackType.LIGHT).map(({ id }) => id);
+	return LIGHT_TRACKS.includes(trackId);
+}
+export function isTriggerTrack(trackId: App.TrackId, tracks = EVENT_TRACKS) {
+	const TRIGGER_TRACKS = tracks.filter(({ type }) => type === TrackType.TRIGGER).map(({ id }) => id);
+	return TRIGGER_TRACKS.includes(trackId);
+}
+export function isValueTrack(trackId: App.TrackId, tracks = EVENT_TRACKS) {
+	const VALUE_TRACKS = tracks.filter(({ type }) => type === TrackType.VALUE).map(({ id }) => id);
+	return VALUE_TRACKS.includes(trackId);
+}
 
-	for (const event of events) {
-		if (!event.selected) {
-			return;
-		}
+export function isMirroredTrack(trackId: App.TrackId, tracks = EVENT_TRACKS) {
+	const mirrorTracks = tracks.filter((track) => !!track.side).map((x) => x.id);
+	return mirrorTracks.includes(trackId);
+}
+export function getMirroredTrack(trackId: App.TrackId, tracks = EVENT_TRACKS) {
+	const leftTracks = tracks.filter((track) => track.side === "left").map((x) => x.id);
+	const rightTracks = tracks.filter((track) => track.side === "right").map((x) => x.id);
+	return leftTracks.includes(trackId) ? rightTracks[leftTracks.indexOf(trackId)] : leftTracks[rightTracks.indexOf(trackId)];
+}
 
-		event.beatNum += amount * sign;
+export function isLightEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): event is App.IBasicLightEvent {
+	return isLightTrack(event.trackId, tracks);
+}
+export function isTriggerEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): event is App.IBasicTriggerEvent {
+	return isTriggerTrack(event.trackId, tracks);
+}
+export function isValueEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): event is App.IBasicValueEvent {
+	return isValueTrack(event.trackId, tracks);
+}
+
+const LIGHT_EVENT_TYPES = [App.BasicEventType.TRANSITION, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE] as const;
+
+function serializeEventType<T extends App.BasicEvent>(event: T) {
+	const TRACK_ID_MAP = Object.entries(App.TrackId).reduce(
+		(acc: Record<App.TrackId, number>, [index, value]) => {
+			acc[`${value}`] = Number(index);
+			return acc;
+		},
+		{} as Record<App.TrackId, number>,
+	);
+	return TRACK_ID_MAP[event.trackId];
+}
+function serializeEventValue<T extends App.BasicEvent>(event: T) {
+	if (isValueEvent(event)) return event.laserSpeed;
+	if (isLightEvent(event)) {
+		// `Off` events have no color attribute, since there is no way to tell when importing whether it was supposed to be red or blue.
+		if (event.type === App.BasicEventType.OFF || !event.colorType) return 0;
+		const value = 4 * Object.values(App.EventColor).indexOf(event.colorType) + LIGHT_EVENT_TYPES.indexOf(event.type) + 1;
+		return value - 1;
 	}
+	return 0;
 }
 
-function convertLightingEventToJson<T extends App.LightingEvent>(event: T): Json.Event {
-	// `Off` events have no color attribute, since there is no way to tell when importing whether it was supposed to be red or blue.
-	const value = event.colorType ? LIGHT_EVENT_TYPES[event.colorType][event.type] : 0;
-
+function convertLightingEventToJson<T extends App.IBasicLightEvent>(event: T): Json.Event {
 	return {
 		_time: event.beatNum,
-		_type: TRACK_ID_MAP[event.trackId],
-		_value: value,
+		_type: serializeEventType(event),
+		_value: serializeEventValue(event),
 	};
 }
-
-function convertLaserSpeedEventToJson<T extends App.LaserSpeedEvent>(event: T): Json.Event {
-	const type = TRACK_ID_MAP[event.trackId];
-
+function convertLaserSpeedEventToJson<T extends App.IBasicValueEvent>(event: T): Json.Event {
 	return {
 		_time: event.beatNum,
-		_type: type,
+		_type: serializeEventType(event),
 		_value: event.laserSpeed,
 	};
 }
-function convertRotationEventToJson<T extends App.RingEvent>(event: T): Json.Event {
-	const type = TRACK_ID_MAP[event.trackId];
-
+function convertRotationEventToJson<T extends App.IBasicTriggerEvent>(event: T): Json.Event {
 	return {
 		_time: event.beatNum,
-		_type: type,
+		_type: serializeEventType(event),
 		_value: 0,
 	};
 }
 
-export function convertEventsToExportableJson<T extends App.Event>(events: T[]) {
+export function convertEventsToExportableJson<T extends App.BasicEvent>(events: T[], tracks = EVENT_TRACKS) {
 	return events.map((event) => {
-		if (event.trackId === App.TrackId[12] || event.trackId === App.TrackId[13]) {
-			return convertLaserSpeedEventToJson(event as App.LaserSpeedEvent);
+		if (isLightTrack(event.trackId, tracks)) {
+			return convertLightingEventToJson(event as App.IBasicLightEvent);
 		}
-		if (event.trackId === App.TrackId[8] || event.trackId === App.TrackId[9]) {
-			return convertRotationEventToJson(event as App.RingEvent);
+		if (isTriggerTrack(event.trackId, tracks)) {
+			return convertRotationEventToJson(event as App.IBasicTriggerEvent);
 		}
-		return convertLightingEventToJson(event as App.LightingEvent);
+		if (isValueTrack(event.trackId, tracks)) {
+			return convertLaserSpeedEventToJson(event as App.IBasicValueEvent);
+		}
 	});
 }
 
-export function convertEventsToRedux<T extends Json.Event>(events: T[]): App.Event[] {
+export function convertEventsToRedux<T extends Json.Event>(events: T[], tracks = EVENT_TRACKS): App.BasicEvent[] {
+	const TRACK_IDS_ARRAY = Object.entries(App.TrackId).reduce(
+		(acc, [index, value]) => {
+			acc[Number(index)] = value;
+			return acc;
+		},
+		[] as (App.TrackId | null)[],
+	);
 	return events.map((event) => {
-		const id = uuid();
-		const trackId = TRACK_IDS_ARRAY[event._type];
+		const trackId = TRACK_IDS_ARRAY[event._type] as App.TrackId;
 		const beatNum = event._time;
-
-		// Lighting event
-		if (event._type <= 4) {
-			const lightingType = LIGHT_EVENTS_ARRAY[event._value];
-			const colorType = event._value === 0 ? undefined : event._value < 4 ? App.EventColorType.SECONDARY : App.EventColorType.PRIMARY;
-
-			return {
-				id,
-				trackId,
-				beatNum,
-				type: lightingType,
-				colorType,
-			} as App.LightingEvent;
+		const id = resolveEventId({ beatNum, trackId: trackId });
+		if (isTriggerTrack(trackId, tracks)) {
+			return { id, trackId, beatNum, type: App.BasicEventType.TRIGGER } as App.IBasicTriggerEvent;
 		}
-		if (trackId === App.TrackId[8] || trackId === App.TrackId[9]) {
-			return {
-				id,
-				trackId,
-				beatNum,
-				type: App.EventType.TRIGGER,
-			};
-		}
-		if (trackId === App.TrackId[12] || trackId === App.TrackId[13]) {
+		if (isValueTrack(trackId, tracks)) {
 			const laserSpeed = event._value;
-
-			return {
-				id,
-				trackId,
-				beatNum,
-				type: App.EventType.VALUE,
-				laserSpeed,
-			};
+			return { id, trackId, beatNum, type: App.BasicEventType.VALUE, laserSpeed } as App.IBasicValueEvent;
+		}
+		if (isLightTrack(trackId, tracks)) {
+			const lightingType = event._value === 0 ? App.BasicEventType.OFF : LIGHT_EVENT_TYPES[event._value % 4];
+			const colorType = event._value === 0 ? undefined : Object.values(App.EventColor)[Math.floor((event._value - 1) / 4)];
+			return { id, trackId, beatNum, type: lightingType, colorType } as App.IBasicLightEvent;
 		}
 		throw new Error(`Unrecognized event track: ${JSON.stringify(event._type, null, 2)}`);
 	});

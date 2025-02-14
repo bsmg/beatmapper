@@ -1,9 +1,8 @@
 import { Fragment } from "react";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPosition, getCursorPositionInBeats, getTracks, getUsableProcessingDelay } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPosition, selectCursorPositionInBeats, selectCustomColors, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -39,55 +38,30 @@ function getSinRotationValue(side: "left" | "right", beamIndex: number, secondsS
 }
 
 interface Props {
-	song: App.Song;
 	isPlaying: boolean;
 	side: "left" | "right";
 }
 
-const SideLaser = ({ song, isPlaying, side }: Props) => {
+const SideLaser = ({ isPlaying, side }: Props) => {
+	const songId = useAppSelector(selectActiveSongId);
+	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, songId));
+
 	const lastEvent = useAppSelector((state) => {
-		if (!song) {
-			return null;
-		}
-
-		const tracks = getTracks(state);
-
-		const trackId = side === "left" ? App.TrackId[2] : App.TrackId[3];
-
-		const lightEvents = tracks[trackId];
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return null;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
-		const lastEvent = findMostRecentEventInTrack<App.LightingEvent>(lightEvents, currentBeat, processingDelayInBeats);
+		if (!songId || !currentBeat) return null;
+		const lightEvents = selectAllBasicEventsForTrack(state, side === "left" ? App.TrackId[2] : App.TrackId[3]);
+		const lastEvent = findMostRecentEventInTrack<App.IBasicLightEvent>(lightEvents, currentBeat, processingDelayInBeats);
 		return lastEvent;
 	});
 	const laserSpeed = useAppSelector((state) => {
-		if (!song) {
-			return 0;
-		}
-
-		const tracks = getTracks(state);
-
-		const speedTrackId = side === "left" ? App.TrackId[12] : App.TrackId[13];
-
-		const speedEvents = tracks[speedTrackId];
-
-		const currentBeat = getCursorPositionInBeats(state);
-		if (!currentBeat) return 0;
-		const processingDelay = getUsableProcessingDelay(state);
-
-		const processingDelayInBeats = convertMillisecondsToBeats(processingDelay, song.bpm);
-
-		const lastSpeedEvent = findMostRecentEventInTrack<App.LaserSpeedEvent>(speedEvents, currentBeat, processingDelayInBeats);
-
+		if (!songId || !currentBeat) return 0;
+		const speedEvents = selectAllBasicEventsForTrack(state, side === "left" ? App.TrackId[12] : App.TrackId[13]);
+		const lastSpeedEvent = findMostRecentEventInTrack<App.IBasicValueEvent>(speedEvents, currentBeat, processingDelayInBeats);
 		const laserSpeed = lastSpeedEvent ? lastSpeedEvent.laserSpeed : 0;
 		return laserSpeed;
 	});
-	const secondsSinceSongStart = useAppSelector((state) => getCursorPosition(state) / 1000);
+	const secondsSinceSongStart = useAppSelector((state) => selectCursorPosition(state) / 1000);
 
 	const NUM_OF_HORIZONTAL_BEAMS = 4;
 	const laserIndices = range(0, NUM_OF_HORIZONTAL_BEAMS);
@@ -103,10 +77,10 @@ const SideLaser = ({ song, isPlaying, side }: Props) => {
 	const yOffset = -10;
 	const zOffset = side === "right" ? -100 : -100 - zLeftSideOffset;
 
-	const status = lastEvent ? lastEvent.type : App.EventType.OFF;
+	const status = lastEvent ? lastEvent.type : App.BasicEventType.OFF;
 	const eventId = lastEvent ? lastEvent.id : null;
 
-	const color = status === App.EventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, song);
+	const color = status === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors);
 
 	const horizontalBeams = laserIndices.map((index) => {
 		const position: Vector3Tuple = [xOffset + index * xDistanceBetweenBeams, yOffset, zOffset + index * zDistanceBetweenBeams];

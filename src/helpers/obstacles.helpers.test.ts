@@ -1,9 +1,10 @@
-import { App } from "$/types";
-import { omit } from "$/utils";
 import { describe, expect, it } from "vitest";
+
+import { App, type Json } from "$/types";
+import { omit } from "$/utils";
 import { convertObstaclesToExportableJson, convertObstaclesToRedux } from "./obstacles.helpers";
 
-const SAMPLE_PROPRIETARY_DATA = [
+const SAMPLE_PROPRIETARY_DATA: Json.Obstacle[] = [
 	{ _time: 0, _lineIndex: 0, _type: 0, _duration: 1, _width: 1 },
 	{ _time: 2, _lineIndex: 1, _type: 0, _duration: 2, _width: 1 },
 	{ _time: 9, _lineIndex: 0, _type: 0, _duration: 1, _width: 2 },
@@ -14,10 +15,10 @@ const SAMPLE_PROPRIETARY_DATA = [
 	{ _time: 17, _lineIndex: 2, _type: 0, _duration: 1, _width: 10 },
 ];
 
-const SAMPLE_REDUX_DATA = [
-	{ id: "a", beatStart: 2, beatDuration: 4, lane: 0, type: App.ObstacleType.FULL, colspan: 2 },
-	{ id: "b", beatStart: 4, beatDuration: 0, lane: 2, type: App.ObstacleType.TOP, colspan: 2 },
-	{ id: "c", beatStart: 4, beatDuration: 4, lane: 0, type: App.ObstacleType.FULL, colspan: 1 },
+const SAMPLE_REDUX_DATA: App.Obstacle[] = [
+	{ id: "a", beatNum: 2, beatDuration: 4, colIndex: 0, type: App.ObstacleType.FULL, colspan: 2 },
+	{ id: "b", beatNum: 4, beatDuration: 0, colIndex: 2, type: App.ObstacleType.TOP, colspan: 2 },
+	{ id: "c", beatNum: 4, beatDuration: 4, colIndex: 0, type: App.ObstacleType.FULL, colspan: 1 },
 ];
 
 describe("Obstacles helpers", () => {
@@ -29,14 +30,14 @@ describe("Obstacles helpers", () => {
 			expect(typeof result.id).toEqual("string");
 		}
 
-		const expectedResult = [
-			{ id: "a", beatStart: 0, beatDuration: 1, lane: 0, type: App.ObstacleType.FULL, colspan: 1 },
-			{ id: "b", beatStart: 2, beatDuration: 2, lane: 1, type: App.ObstacleType.FULL, colspan: 1 },
-			{ id: "c", beatStart: 9, beatDuration: 1, lane: 0, type: App.ObstacleType.FULL, colspan: 2 },
-			{ id: "d", beatStart: 11, beatDuration: 1, lane: 2, type: App.ObstacleType.FULL, colspan: 1 },
-			{ id: "e", beatStart: 14, beatDuration: 1, lane: 0, type: App.ObstacleType.TOP, colspan: 4 },
-			{ id: "f", beatStart: 17, beatDuration: 1, lane: 0, type: App.ObstacleType.FULL, colspan: 4 },
-			{ id: "g", beatStart: 17, beatDuration: 1, lane: 2, type: App.ObstacleType.FULL, colspan: 2 },
+		const expectedResult: App.Obstacle[] = [
+			{ id: "a", beatNum: 0, beatDuration: 1, colIndex: 0, type: App.ObstacleType.FULL, colspan: 1 },
+			{ id: "b", beatNum: 2, beatDuration: 2, colIndex: 1, type: App.ObstacleType.FULL, colspan: 1 },
+			{ id: "c", beatNum: 9, beatDuration: 1, colIndex: 0, type: App.ObstacleType.FULL, colspan: 2 },
+			{ id: "d", beatNum: 11, beatDuration: 1, colIndex: 2, type: App.ObstacleType.FULL, colspan: 1 },
+			{ id: "e", beatNum: 14, beatDuration: 1, colIndex: 0, type: App.ObstacleType.TOP, colspan: 4 },
+			{ id: "f", beatNum: 17, beatDuration: 1, colIndex: 0, type: App.ObstacleType.FULL, colspan: 4 },
+			{ id: "g", beatNum: 17, beatDuration: 1, colIndex: 2, type: App.ObstacleType.FULL, colspan: 2 },
 		];
 
 		expect(actualResult.map((x) => omit(x, "id"))).toEqual(expectedResult.map((x) => omit(x, "id")));
@@ -44,7 +45,7 @@ describe("Obstacles helpers", () => {
 
 	it("converts from redux to proprietary", () => {
 		const actualResult = convertObstaclesToExportableJson(SAMPLE_REDUX_DATA);
-		const expectedResult = [
+		const expectedResult: Json.Obstacle[] = [
 			{ _time: 2, _lineIndex: 0, _type: 0, _duration: 4, _width: 2 },
 			{ _time: 4, _lineIndex: 2, _type: 1, _duration: 0.01, _width: 2 },
 			{ _time: 4, _lineIndex: 0, _type: 0, _duration: 4, _width: 1 },
@@ -67,19 +68,19 @@ describe("Obstacles helpers", () => {
 			//   [X _ _ _]
 			//   [X _ _ _]
 			//   [_ _ _ _]
-			const obstacle = {
+			const obstacle: App.Obstacle = {
 				id: "a",
 				type: App.ObstacleType.EXTENDED,
-				beatStart: 2,
+				beatNum: 2,
 				beatDuration: 4,
-				lane: 0,
+				colIndex: 0,
 				colspan: 1,
 				rowIndex: 1,
 				rowspan: 2,
 			};
 
 			const actualResult = convertObstaclesToExportableJson([obstacle]);
-			const expectedResult = [
+			const expectedResult: Json.Obstacle[] = [
 				{
 					_time: 2,
 					_lineIndex: 1000,
@@ -98,19 +99,19 @@ describe("Obstacles helpers", () => {
 		// X X [_ _ _ _] _ _
 		// X X [_ _ _ _] _ _
 		const gridCols = 8;
-		const obstacle = {
+		const obstacle: App.Obstacle = {
 			id: "a",
 			type: App.ObstacleType.EXTENDED,
-			beatStart: 2,
+			beatNum: 2,
 			beatDuration: 4,
-			lane: -2,
+			colIndex: -2,
 			colspan: 2,
 			rowIndex: 0,
 			rowspan: 3,
 		};
 
 		const actualResult = convertObstaclesToExportableJson([obstacle], gridCols);
-		const expectedResult = [
+		const expectedResult: Json.Obstacle[] = [
 			{
 				_time: 2,
 				_lineIndex: -3000,
@@ -124,7 +125,7 @@ describe("Obstacles helpers", () => {
 	});
 
 	it("Converts an 8x3 grid to Redux", () => {
-		const proprietaryData = [
+		const proprietaryData: Json.Obstacle[] = [
 			{
 				_time: 2,
 				_lineIndex: -3000,
@@ -143,12 +144,12 @@ describe("Obstacles helpers", () => {
 			return copy;
 		});
 
-		const expectedResult = [
+		const expectedResult: Omit<App.IExtensionObstacle, "id">[] = [
 			{
 				type: App.ObstacleType.EXTENDED,
-				beatStart: 2,
+				beatNum: 2,
 				beatDuration: 4,
-				lane: -2,
+				colIndex: -2,
 				colspan: 3,
 				rowIndex: 0,
 				rowspan: 3,
@@ -163,12 +164,12 @@ describe("Obstacles helpers", () => {
 			// This grid is 10x3 with 0.25x columns
 			// First, just check and make sure I get the same values in and out.
 			const gridCols = 10;
-			const obstacle = {
+			const obstacle: App.Obstacle = {
 				id: "a",
 				beatDuration: 1,
-				beatStart: 0,
+				beatNum: 0,
 				colspan: 0.25,
-				lane: 2.75,
+				colIndex: 2.75,
 				rowIndex: 1,
 				rowspan: 1,
 				type: App.ObstacleType.EXTENDED,
@@ -187,12 +188,12 @@ describe("Obstacles helpers", () => {
 			// This grid is 4x10 with 0.25x columns
 			// First, just check and make sure I get the same values in and out.
 			const gridCols = 4;
-			const obstacle = {
+			const obstacle: App.Obstacle = {
 				id: "a",
 				beatDuration: 1,
-				beatStart: 0,
+				beatNum: 0,
 				colspan: 1,
-				lane: 1,
+				colIndex: 1,
 				rowIndex: 1.25,
 				rowspan: 0.5,
 				type: App.ObstacleType.EXTENDED,

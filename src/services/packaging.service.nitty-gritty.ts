@@ -1,7 +1,7 @@
-import { COLOR_ELEMENT_IDS, DEFAULT_GRID } from "$/constants";
+import { DEFAULT_GRID } from "$/constants";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { formatColorFromImport } from "$/helpers/colors.helpers";
-import { type App, Difficulty, type Json } from "$/types";
+import { App, type Json } from "$/types";
 import { isEmpty, roundAwayFloatingPointNonsense } from "$/utils";
 import type JSZip from "jszip";
 
@@ -11,23 +11,6 @@ export function getFileFromArchive(archive: JSZip, filename: string) {
 	const matchingFilename = allFilenamesInArchive.find((name) => name.toLowerCase().includes(filename.toLowerCase()));
 	if (!matchingFilename) return null;
 	return archive.files[matchingFilename];
-}
-
-export function getDifficultyRankForDifficulty(difficulty: Pick<App.Beatmap, "id">) {
-	switch (difficulty.id) {
-		case Difficulty.EASY:
-			return 1;
-		case Difficulty.NORMAL:
-			return 3;
-		case Difficulty.HARD:
-			return 5;
-		case Difficulty.EXPERT:
-			return 7;
-		case Difficulty.EXPERT_PLUS:
-			return 9;
-		default:
-			throw new Error("Unrecognized difficulty");
-	}
 }
 
 export function getArchiveVersion(archive: JSZip) {
@@ -88,7 +71,7 @@ export function deriveDefaultModSettingsFromBeatmap(beatmapSet: Json.BeatmapSet)
 			// If we set any custom colors on previous beatmaps, we can skip this.
 			const customColors = {} as Record<App.BeatmapColorKey, string>;
 
-			for (const key of COLOR_ELEMENT_IDS) {
+			for (const key of Object.values(App.BeatmapColorKey)) {
 				const _key = `_${key}`;
 
 				if (beatmap._customData?.[_key]) {

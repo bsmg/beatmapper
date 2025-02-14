@@ -1,3 +1,5 @@
+import type { Song } from "./info";
+
 export interface Bookmark {
 	beatNum: number;
 	name: string;
@@ -5,4 +7,8 @@ export interface Bookmark {
 		background: string;
 		text: string;
 	};
+}
+
+export interface EditorInfoData {
+	editorSettings: Partial<Pick<Song, "enabledFastWalls" | "enabledLightshow" | "modSettings">>;
 }

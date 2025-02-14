@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { UNIT } from "$/constants";
 import { useOnChange, useOnKeydown } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getMappingMode, getSelectedBlocks, getSelectedMines, getSelectedObstacles, getSelectedSong } from "$/store/selectors";
+import { selectActiveSongId, selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
 import { ObjectPlacementMode } from "$/types";
 
 import ItemGrid from "../ItemGrid";
@@ -18,11 +18,11 @@ import SelectionInfo from "./SelectionInfo";
 const bottomPanelHeight = 180;
 
 const EditorRightPanel = () => {
-	const song = useAppSelector(getSelectedSong);
-	const mappingMode = useAppSelector(getMappingMode);
-	const selectedBlocks = useAppSelector(getSelectedBlocks);
-	const selectedMines = useAppSelector(getSelectedMines);
-	const selectedObstacles = useAppSelector(getSelectedObstacles);
+	const songId = useAppSelector(selectActiveSongId);
+	const mappingMode = useAppSelector((state) => selectPlacementMode(state, songId));
+	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);
+	const selectedMines = useAppSelector(selectAllSelectedBombNotes);
+	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
 
 	const isAnythingSelected = selectedBlocks.length > 0 || selectedObstacles.length > 0 || selectedMines.length > 0;
 
@@ -62,7 +62,7 @@ const EditorRightPanel = () => {
 				<Spacer size={UNIT * 4} />
 				<ItemGrid />
 				<Spacer size={UNIT * 4} />
-				<Actions song={song} handleGridConfigClick={() => setShowGridConfig(true)} />
+				<Actions handleGridConfigClick={() => setShowGridConfig(true)} />
 			</Fragment>
 		);
 	}

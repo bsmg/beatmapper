@@ -13,32 +13,32 @@ import type { Snapshot } from "./helpers";
 import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
 import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
 import {
-	getAllGridPresetIds,
-	getAllSongIds,
-	getAreLasersLocked,
-	getBackgroundOpacity,
-	getBeatDepth,
-	getDefaultObstacleDuration,
-	getGraphicsLevel,
-	getGridPresetById,
-	getIsLockedToCurrentWindow,
-	getIsNewUser,
-	getPlayNoteTick,
-	getPlaybackRate,
-	getProcessingDelay,
-	getRowHeight,
-	getSeenPrompts,
-	getSelectedCutDirection,
-	getSelectedEventColor,
-	getSelectedEventEditMode,
-	getSelectedEventTool,
-	getSelectedNoteTool,
-	getShowLightingPreview,
-	getSnapTo,
-	getSongById,
-	getStickyMapAuthorName,
-	getVolume,
-	getZoomLevel,
+	selectAllGridPresetIds,
+	selectAudioProcessingDelay,
+	selectBeatDepth,
+	selectDefaultObstacleDuration,
+	selectEventBackgroundOpacity,
+	selectEventEditorColor,
+	selectEventEditorEditMode,
+	selectEventEditorRowHeight,
+	selectEventEditorToggleLoop,
+	selectEventEditorToggleMirror,
+	selectEventEditorTogglePreview,
+	selectEventEditorTool,
+	selectEventEditorZoomLevel,
+	selectGraphicsQuality,
+	selectGridPresetById,
+	selectIsNew,
+	selectNoteEditorDirection,
+	selectNoteEditorTool,
+	selectPlayNoteTick,
+	selectPlaybackRate,
+	selectSeenPrompts,
+	selectSnapTo,
+	selectSongById,
+	selectSongIds,
+	selectUserName,
+	selectVolume,
 } from "./selectors";
 
 export type UserStorageObservers = {
@@ -81,12 +81,12 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 			const value = (await idb.get("keyvaluepairs", import.meta.env.DEV ? "redux-state-dev" : "redux-state", tx)) as string;
 			if (value) {
 				const snapshot = (typeof value === "string" ? JSON.parse(value) : value) as Snapshot;
-				const username = getStickyMapAuthorName(snapshot);
-				localStorage.setItem("beatmapper:user.new", String(getIsNewUser(snapshot)));
+				const username = selectUserName(snapshot);
+				localStorage.setItem("beatmapper:user.new", String(selectIsNew(snapshot)));
 				if (username) localStorage.setItem("beatmapper:user.username", username);
-				localStorage.setItem("beatmapper:user.announcements", getSeenPrompts(snapshot).toString());
-				localStorage.setItem("beatmapper:audio.offset", getProcessingDelay(snapshot).toString());
-				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(getGraphicsLevel(snapshot)).toString());
+				localStorage.setItem("beatmapper:user.announcements", selectSeenPrompts(snapshot).toString());
+				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
+				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(selectGraphicsQuality(snapshot)).toString());
 				for (const [id, song] of Object.entries(snapshot.songs.byId)) {
 					await idb.set("songs", id, { ...song, songFilename: song.songFilename.replace("_", "."), coverArtFilename: song.coverArtFilename.replace("_", ".") }, tx);
 				}
@@ -111,42 +111,42 @@ export async function createAppStore() {
 		namespace: "user",
 		storage: createStorage({ driver: ls({ base: storagePrefix }) }),
 		observers: {
-			"user.new": { selector: getIsNewUser },
-			"user.username": { selector: (state) => getStickyMapAuthorName(state) ?? "" },
-			"user.announcements": { selector: getSeenPrompts },
-			"audio.offset": { selector: getProcessingDelay },
-			"graphics.quality": { selector: (state) => Object.values(Quality).indexOf(getGraphicsLevel(state)) },
+			"user.new": { selector: selectIsNew },
+			"user.username": { selector: (state) => selectUserName(state) ?? "" },
+			"user.announcements": { selector: selectSeenPrompts },
+			"audio.offset": { selector: selectAudioProcessingDelay },
+			"graphics.quality": { selector: (state) => Object.values(Quality).indexOf(selectGraphicsQuality(state)) },
 		},
 	});
 	const sessionMiddleware = createStorageMiddleware<RootState, SessionStorageObservers>({
 		namespace: "session",
 		storage: createStorage({ driver: ss({ base: storagePrefix }) }),
 		observers: {
-			"track.snap": { selector: getSnapTo },
-			"track.spacing": { selector: getBeatDepth },
-			"playback.rate": { selector: getPlaybackRate },
-			"playback.volume": { selector: getVolume },
-			"playback.tick": { selector: getPlayNoteTick },
-			"notes.tool": { selector: (state) => Object.values(ObjectTool).indexOf(getSelectedNoteTool(state)) },
-			"notes.direction": { selector: getSelectedCutDirection },
-			"notes.duration": { selector: getDefaultObstacleDuration },
-			"events.mode": { selector: (state) => Object.values(EventEditMode).indexOf(getSelectedEventEditMode(state)) },
-			"events.tool": { selector: (state) => Object.values(EventTool).indexOf(getSelectedEventTool(state)) },
-			"events.color": { selector: (state) => Object.values(EventColor).indexOf(getSelectedEventColor(state)) },
-			"events.zoom": { selector: getZoomLevel },
-			"events.opacity": { selector: getBackgroundOpacity },
-			"events.height": { selector: getRowHeight },
-			"events.preview": { selector: getShowLightingPreview },
-			"events.loop": { selector: getIsLockedToCurrentWindow },
-			"events.mirror": { selector: getAreLasersLocked },
+			"track.snap": { selector: selectSnapTo },
+			"track.spacing": { selector: selectBeatDepth },
+			"playback.rate": { selector: selectPlaybackRate },
+			"playback.volume": { selector: selectVolume },
+			"playback.tick": { selector: selectPlayNoteTick },
+			"notes.tool": { selector: (state) => Object.values(ObjectTool).indexOf(selectNoteEditorTool(state)) },
+			"notes.direction": { selector: selectNoteEditorDirection },
+			"notes.duration": { selector: selectDefaultObstacleDuration },
+			"events.mode": { selector: (state) => Object.values(EventEditMode).indexOf(selectEventEditorEditMode(state)) },
+			"events.tool": { selector: (state) => Object.values(EventTool).indexOf(selectEventEditorTool(state)) },
+			"events.color": { selector: (state) => Object.values(EventColor).indexOf(selectEventEditorColor(state)) },
+			"events.zoom": { selector: selectEventEditorZoomLevel },
+			"events.opacity": { selector: selectEventBackgroundOpacity },
+			"events.height": { selector: selectEventEditorRowHeight },
+			"events.preview": { selector: selectEventEditorTogglePreview },
+			"events.loop": { selector: selectEventEditorToggleLoop },
+			"events.mirror": { selector: selectEventEditorToggleMirror },
 		},
 	});
 	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.Song>({
 		namespace: "songs",
 		storage: createStorage({ driver: driver({ name: "songs" }) }),
 		observer: {
-			keys: getAllSongIds,
-			selector: getSongById,
+			keys: (state) => selectSongIds(state).map((x) => x.toString()),
+			selector: selectSongById,
 			asRaw: true,
 		},
 	});
@@ -154,8 +154,8 @@ export async function createAppStore() {
 		namespace: "grids",
 		storage: createStorage({ driver: driver({ name: "grids" }) }),
 		observer: {
-			keys: getAllGridPresetIds,
-			selector: getGridPresetById,
+			keys: selectAllGridPresetIds,
+			selector: selectGridPresetById,
 			asRaw: true,
 		},
 	});
