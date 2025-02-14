@@ -5,7 +5,7 @@ import { COLORS } from "$/constants";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { changeLaserSpeed } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, getSelectedEventEditMode, selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectOffsetInBeats, selectValueForTrackAtBeat } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectDurationInBeats, selectEventEditorEditMode, selectOffsetInBeats, selectValueForTrackAtBeat } from "$/store/selectors";
 import { type App, EventEditMode } from "$/types";
 import { clamp, normalize, range } from "$/utils";
 import { getYForSpeed } from "./EventsGrid.helpers";
@@ -33,12 +33,12 @@ interface Props {
 
 const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, isDisabled, areLasersLocked }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
-	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
+	const duration = useAppSelector((state) => selectDurationInBeats(state, songId));
 	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, songId));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId) as App.IBasicValueEvent[]);
 	const startSpeed = useAppSelector((state) => selectValueForTrackAtBeat(state, { trackId, beforeBeat: startBeat }));
 	const endSpeed = useAppSelector((state) => selectValueForTrackAtBeat(state, { trackId, beforeBeat: startBeat + numOfBeatsToShow }));
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const dispatch = useAppDispatch();
 	const [tentativeEvent, setTentativeEvent] = useState(INITIAL_TENTATIVE_EVENT);
 

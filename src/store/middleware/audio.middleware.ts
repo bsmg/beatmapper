@@ -28,23 +28,23 @@ import {
 	updateVolume,
 } from "$/store/actions";
 import {
-	getBeatsPerZoomLevel,
-	getCursorPosition,
-	getCursorPositionInBeats,
-	getDuration,
-	getDurationInBeats,
-	getIsLockedToCurrentWindow,
-	getPlayNoteTick,
-	getPlaybackRate,
-	getSnapTo,
-	getVolume,
 	selectActiveSongId,
 	selectAllColorNotes,
+	selectAudioProcessingDelayInBeats,
 	selectBeatForTime,
+	selectCursorPosition,
+	selectCursorPositionInBeats,
+	selectDuration,
+	selectDurationInBeats,
+	selectEventEditorBeatsPerZoomLevel,
+	selectEventEditorToggleLoop,
 	selectNearestBeatForTime,
-	selectProcessingDelayInBeats,
+	selectPlayNoteTick,
+	selectPlaybackRate,
+	selectSnapTo,
 	selectSongById,
 	selectTimeForBeat,
+	selectVolume,
 } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { View } from "$/types";
@@ -57,9 +57,9 @@ function stopAndRewindAudio(audioSample: AudioSample, offset: number) {
 function triggerTickerIfNecessary(state: RootState, currentBeat: number, lastBeat: number, ticker: Sfx) {
 	const songId = selectActiveSongId(state);
 	if (!songId) return;
-	const playNoteTick = getPlayNoteTick(state);
+	const playNoteTick = selectPlayNoteTick(state);
 	if (playNoteTick) {
-		const delayInBeats = selectProcessingDelayInBeats(state, songId);
+		const delayInBeats = selectAudioProcessingDelayInBeats(state, songId);
 		const anyNotesWithinTimespan = selectAllColorNotes(state).some((note) => note.beatNum - delayInBeats >= lastBeat && note.beatNum - delayInBeats < currentBeat);
 		if (anyNotesWithinTimespan) {
 			ticker.trigger();
@@ -70,13 +70,13 @@ function triggerTickerIfNecessary(state: RootState, currentBeat: number, lastBea
 function calculateIfPlaybackShouldBeCommandeered(state: RootState, currentBeat: number, lastBeat: number, view: View | null) {
 	if (view !== View.LIGHTSHOW) return;
 	const songId = selectActiveSongId(state);
-	const isLockedToCurrentWindow = getIsLockedToCurrentWindow(state);
-	const beatsPerZoomLevel = getBeatsPerZoomLevel(state);
+	const isLockedToCurrentWindow = selectEventEditorToggleLoop(state);
+	const beatsPerZoomLevel = selectEventEditorBeatsPerZoomLevel(state);
 	// Figure out how much time lasts between frames, on average.
 	const currentTime = selectTimeForBeat(state, songId, currentBeat, false);
 	const lastBeatTime = selectTimeForBeat(state, songId, lastBeat, false);
 	const deltaInMillisecondsBetweenFrames = currentTime - lastBeatTime;
-	const processingDelayInBeats = selectProcessingDelayInBeats(state, songId);
+	const processingDelayInBeats = selectAudioProcessingDelayInBeats(state, songId);
 	const windowForCurrentBeat = floorToNearest(currentBeat + processingDelayInBeats, beatsPerZoomLevel);
 	const windowForLastBeat = floorToNearest(lastBeat + processingDelayInBeats, beatsPerZoomLevel);
 	const justExceededWindow = windowForLastBeat < windowForCurrentBeat && deltaInMillisecondsBetweenFrames < 100;
@@ -115,8 +115,8 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const { songId } = action.payload;
 			const state = api.getState();
 			const song = selectSongById(state, songId);
-			const volume = getVolume(state);
-			const playbackRate = getPlaybackRate(state);
+			const volume = selectVolume(state);
+			const playbackRate = selectPlaybackRate(state);
 			const file = await filestore.loadFile<Blob>(song.songFilename);
 			if (!file) return;
 			const arrayBuffer = await convertFileToArrayBuffer(file);
@@ -147,7 +147,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			let lastBeat = 0;
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
-			const duration = getDuration(state);
+			const duration = selectDuration(state);
 			const viewMatch = window.location.pathname.match(/\/(\w+)$/);
 			const view = viewMatch ? (viewMatch[1] as View) : null;
 			function onTick() {
@@ -183,7 +183,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
 			const { newOffset } = action.payload;
-			const duration = getDuration(state);
+			const duration = selectDuration(state);
 			let roundedCursorPosition = selectNearestBeatForTime(state, songId, newOffset);
 			roundedCursorPosition = clamp(roundedCursorPosition, 0, duration ?? roundedCursorPosition);
 			// Dispatch this new cursor position, but also seek to this place in the audio, so that it is in sync.
@@ -213,7 +213,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
 			const { selectedBeat } = action.payload;
-			const duration = getDuration(state);
+			const duration = selectDuration(state);
 			let newCursorPosition = selectTimeForBeat(state, songId, selectedBeat);
 			newCursorPosition = clamp(newCursorPosition, 0, duration ?? newCursorPosition);
 			api.dispatch(adjustCursorPosition({ newCursorPosition }));
@@ -242,7 +242,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
 			const { beatNum, pauseTrack } = action.payload;
-			const duration = getDuration(state);
+			const duration = selectDuration(state);
 			let newCursorPosition = selectTimeForBeat(state, songId, beatNum);
 			newCursorPosition = clamp(newCursorPosition, 0, duration ?? newCursorPosition);
 			api.dispatch(adjustCursorPosition({ newCursorPosition }));
@@ -260,11 +260,11 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
 			const { view } = action.payload;
-			const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
-			const duration = getDuration(state);
+			const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
+			const duration = selectDuration(state);
 			if (cursorPositionInBeats === null || duration === null) return;
 			// In events view, we always want to jump ahead to the next window. This is a bit tricky since it's not a fixed # of cells to jump.
-			const beatsPerZoomLevel = getBeatsPerZoomLevel(state);
+			const beatsPerZoomLevel = selectEventEditorBeatsPerZoomLevel(state);
 			const windowSize = view === View.LIGHTSHOW ? beatsPerZoomLevel : 32;
 			const currentWindowIndex = Math.floor(cursorPositionInBeats / windowSize);
 			let newStartBeat: number;
@@ -295,9 +295,9 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			if (!audioSample) return;
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
-			const snapTo = getSnapTo(state);
-			const cursorPosition = getCursorPosition(state);
-			const duration = getDuration(state);
+			const snapTo = selectSnapTo(state);
+			const cursorPosition = selectCursorPosition(state);
+			const duration = selectDuration(state);
 			if (duration === null) return;
 			const { direction } = action.payload;
 			// We want to jump by the amount that we're snapping to.
@@ -327,8 +327,8 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			// Once we stop, we want to snap to the nearest beat.
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
-			const cursorPosition = getCursorPosition(state);
-			const duration = getDuration(state);
+			const cursorPosition = selectCursorPosition(state);
+			const duration = selectDuration(state);
 			window.cancelAnimationFrame(animationFrameId);
 			audioSample.pause();
 			let roundedCursorPosition = selectNearestBeatForTime(state, songId, cursorPosition);
@@ -367,7 +367,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			api.unsubscribe();
 			const state = api.getState();
 			const songId = selectActiveSongId(state);
-			const duration = getDurationInBeats(state, songId);
+			const duration = selectDurationInBeats(state, songId);
 			if (duration === null) return;
 			const lastBeatInSong = Math.floor(duration);
 			// Rather than go to the literal last millisecond in the song, we'll jump 2 bars away from the very end. That seems most likely to be useful.

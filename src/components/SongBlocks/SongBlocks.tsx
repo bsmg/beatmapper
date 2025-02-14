@@ -4,7 +4,7 @@ import { BLOCK_COLUMN_WIDTH, HIGHEST_PRECISION, SONG_OFFSET } from "$/constants"
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { clickNote, finishManagingNoteSelection, mouseOverNote, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getCursorPositionInBeats, getNoteSelectionMode, getVisibleBombs, getVisibleNotes, selectActiveSongId, selectCustomColors } from "$/store/selectors";
+import { selectActiveSongId, selectBeatDepth, selectCursorPositionInBeats, selectCustomColors, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
 import { App, CutDirection, ObjectTool } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
@@ -30,11 +30,11 @@ function getPositionForBlock<T extends App.IBaseNote>(note: T, beatDepth: number
 const SongBlocks = () => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const notes = useAppSelector((state) => getVisibleNotes(state, songId));
-	const bombs = useAppSelector((state) => getVisibleBombs(state, songId));
-	const cursorPositionInBeats = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const beatDepth = useAppSelector(getBeatDepth);
-	const selectionMode = useAppSelector(getNoteSelectionMode);
+	const notes = useAppSelector((state) => selectVisibleNotes(state, songId));
+	const bombs = useAppSelector((state) => selectVisibleBombs(state, songId));
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const beatDepth = useAppSelector(selectBeatDepth);
+	const selectionMode = useAppSelector(selectNoteEditorSelectionMode);
 	const dispatch = useAppDispatch();
 
 	const zPosition = -SONG_OFFSET + (cursorPositionInBeats ?? 0) * beatDepth;

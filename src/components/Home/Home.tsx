@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { getIsNewUser, selectIsProcessingImport } from "$/store/selectors";
+import { selectIsNew, selectIsProcessingImport } from "$/store/selectors";
 
 import AddSongForm from "../AddSongForm";
 import BasicLayout from "../BasicLayout";
@@ -11,7 +11,7 @@ import FirstTimeHome from "./FirstTimeHome";
 import ReturningHome from "./ReturningHome";
 
 const Home = () => {
-	const isNewUser = useAppSelector(getIsNewUser);
+	const isNewUser = useAppSelector(selectIsNew);
 	const isProcessingImport = useAppSelector(selectIsProcessingImport);
 
 	const [modal, setModal] = useState<string | null>(null);

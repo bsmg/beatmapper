@@ -74,61 +74,88 @@ export const selectTimeForBeat = createSelector([selectBpm, selectOffset, (state
 	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
 });
 
-export const { getAnimateBlockMotion, getAnimateRingMotion, getBeatDepth, getCursorPosition, getDuration, getIsPlaying, getPlayNoteTick, getPlaybackRate, getSnapTo, getVolume } = navigation.getSelectors((state: RootState) => {
+export const { selectAnimateBlockMotion, selectAnimateRingMotion, selectBeatDepth, selectCursorPosition, selectDuration, selectIsPlaying, selectPlayNoteTick, selectPlaybackRate, selectSnapTo, selectVolume } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
-export const getCursorPositionInBeats = createSelector(getCursorPosition, selectBpm, selectOffset, (cursorPosition, bpm, offset) => {
+export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectOffset, (cursorPosition, bpm, offset) => {
 	if (cursorPosition === null) return null;
 	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
 });
-export const getDurationInBeats = createSelector(getDuration, selectBpm, (duration, bpm) => {
+export const selectDurationInBeats = createSelector(selectDuration, selectBpm, (duration, bpm) => {
 	if (duration === null) return null;
 	return convertMillisecondsToBeats(duration, bpm);
 });
 
-export const { getGraphicsLevel, getIsNewUser, getProcessingDelay, getSeenPrompts, getStickyMapAuthorName } = user.getSelectors((state: Pick<RootState, "user">) => {
+export const {
+	selectGraphicsLevel: selectGraphicsQuality,
+	selectIsNewUser: selectIsNew,
+	selectProcessingDelay: selectAudioProcessingDelay,
+	selectSeenPrompts,
+	selectStickyMapAuthorName: selectUserName,
+} = user.getSelectors((state: Pick<RootState, "user">) => {
 	return state.user;
 });
-export const getUsableProcessingDelay = createSelector(getProcessingDelay, getIsPlaying, (processingDelay, isPlaying) => {
+export const selectUsableAudioProcessingDelay = createSelector(selectAudioProcessingDelay, selectIsPlaying, (processingDelay, isPlaying) => {
 	// If we're not playing the track, we shouldn't have any processing delay. This is to prevent stuff from firing prematurely when scrubbing.
 	return isPlaying ? processingDelay : 0;
 });
-export const selectProcessingDelayInBeats = createSelector(getProcessingDelay, selectBpm, (processingDelay, bpm) => {
+export const selectAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelay, selectBpm, (processingDelay, bpm) => {
 	return convertMillisecondsToBeats(processingDelay, bpm);
 });
-export const selectUsableProcessingDelayInBeats = createSelector(selectProcessingDelayInBeats, getIsPlaying, (processingDelay, isPlaying) => {
+export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelayInBeats, selectIsPlaying, (processingDelay, isPlaying) => {
 	return isPlaying ? processingDelay : 0;
 });
 
-export const { getWaveformData } = waveform.getSelectors((state: RootState) => {
+export const { selectWaveformData } = waveform.getSelectors((state: RootState) => {
 	return state.waveform;
 });
 
-export const { getDefaultObstacleDuration, getGridPresets, getAllGridPresetIds, getGridPresetById, getNoteSelectionMode, getSelectedCutDirection, getSelectedNoteTool } = beatmap.getSelectors((state: RootState) => {
+export const {
+	selectDefaultObstacleDuration,
+	selectGridPresets,
+	selectAllGridPresetIds,
+	selectGridPresetById,
+	selectNoteSelectionMode: selectNoteEditorSelectionMode,
+	selectSelectedCutDirection: selectNoteEditorDirection,
+	selectSelectedNoteTool: selectNoteEditorTool,
+} = beatmap.getSelectors((state: RootState) => {
 	return state.editor.notes;
 });
 
-export const { getAreLasersLocked, getBackgroundOpacity, getBeatsPerZoomLevel, getIsLockedToCurrentWindow, getRowHeight, getSelectedEventBeat, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, getSelectionBox, getShowLightingPreview, getZoomLevel } = lightshow.getSelectors((state: RootState) => {
+export const {
+	selectAreLasersLocked: selectEventEditorToggleMirror,
+	selectBackgroundOpacity: selectEventBackgroundOpacity,
+	selectBeatsPerZoomLevel: selectEventEditorBeatsPerZoomLevel,
+	selectIsLockedToCurrentWindow: selectEventEditorToggleLoop,
+	selectRowHeight: selectEventEditorRowHeight,
+	selectSelectedEventBeat: selectEventEditorSelectedBeat,
+	selectSelectedEventColor: selectEventEditorColor,
+	selectSelectedEventEditMode: selectEventEditorEditMode,
+	selectSelectedEventTool: selectEventEditorTool,
+	selectSelectionBox: selectEventEditorSelectionBox,
+	selectShowLightingPreview: selectEventEditorTogglePreview,
+	selectZoomLevel: selectEventEditorZoomLevel,
+} = lightshow.getSelectors((state: RootState) => {
 	return state.editor.events;
 });
-export const getZoomLevelStartBeat = createSelector(getCursorPositionInBeats, getBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
+export const selectEventEditorZoomLevelStartBeat = createSelector(selectCursorPositionInBeats, selectEventEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
 	return floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
 });
-export const getZoomLevelEndBeat = createSelector(getZoomLevelStartBeat, getBeatsPerZoomLevel, (startBeat, beatsPerZoomLevel) => {
+export const selectEventEditorZoomLevelEndBeat = createSelector(selectEventEditorZoomLevelStartBeat, selectEventEditorBeatsPerZoomLevel, (startBeat, beatsPerZoomLevel) => {
 	return startBeat + beatsPerZoomLevel;
 });
 // TODO: Get rid of this silly selector!
-export const getStartAndEndBeat = createSelector(getZoomLevelStartBeat, getZoomLevelEndBeat, (startBeat, endBeat) => {
+export const selectEventEditorStartAndEndBeat = createSelector(selectEventEditorZoomLevelStartBeat, selectEventEditorZoomLevelEndBeat, (startBeat, endBeat) => {
 	return { startBeat, endBeat };
 });
 
-export const getCanUndo = createSelector(
+export const selectObjectsCanUndo = createSelector(
 	(state: RootState) => state.entities.beatmap,
 	(history) => {
 		return history.past.length > 0;
 	},
 );
-export const getCanRedo = createSelector(
+export const selectObjectsCanRedo = createSelector(
 	(state: RootState) => state.entities.beatmap,
 	(history) => {
 		return history.future.length > 0;
@@ -154,13 +181,13 @@ export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 		(state) => state.notes,
 	),
 );
-export const getVisibleNotes = createSelector(selectAllColorNotes, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (notes, cursorPositionInBeats, beatDepth, graphicsLevel) => {
+export const selectVisibleNotes = createSelector(selectAllColorNotes, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (notes, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return notes.filter((note) => {
 		return note.beatNum > closeLimit && note.beatNum < farLimit;
 	});
 });
-export const getNoteDensity = createSelector(getVisibleNotes, getBeatDepth, selectBpm, getGraphicsLevel, (notes, beatDepth, bpm, graphicsLevel) => {
+export const selectNoteDensity = createSelector(selectVisibleNotes, selectBeatDepth, selectBpm, selectGraphicsQuality, (notes, beatDepth, bpm, graphicsLevel) => {
 	const surfaceDepth = SURFACE_DEPTHS[graphicsLevel];
 	const segmentLengthInBeats = (surfaceDepth / beatDepth) * 1.2;
 	return calculateNoteDensity(notes.length, segmentLengthInBeats, bpm);
@@ -185,7 +212,7 @@ export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
 		(state) => state.bombs,
 	),
 );
-export const getVisibleBombs = createSelector(selectAllBombNotes, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (bombs, cursorPositionInBeats, beatDepth, graphicsLevel) => {
+export const selectVisibleBombs = createSelector(selectAllBombNotes, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (bombs, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return bombs.filter((note) => {
 		return note.beatNum > closeLimit && note.beatNum < farLimit;
@@ -214,7 +241,7 @@ export const { selectAll: selectFutureObstacles } = obstacles.getSelectors(
 		(state) => state.obstacles,
 	),
 );
-export const selectAllVisibleObstacles = createSelector(selectAllObstacles, getCursorPositionInBeats, getBeatDepth, getGraphicsLevel, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
+export const selectAllVisibleObstacles = createSelector(selectAllObstacles, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return obstacles.filter((obstacle) => {
 		const beatEnd = obstacle.beatNum + obstacle.beatDuration;
@@ -251,10 +278,10 @@ export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 		(state) => state.basic,
 	),
 );
-export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectAllBasicEventsForTrack, getStartAndEndBeat], (events, { startBeat, endBeat }) => {
+export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat, endBeat }) => {
 	return events.filter((event) => event.beatNum >= startBeat && event.beatNum < endBeat);
 });
-export const selectInitialColorForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, getStartAndEndBeat], (events, { startBeat }) => {
+export const selectInitialColorForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat }) => {
 	const eventsInWindow = events.filter((event) => event.beatNum < startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
 	if (!lastEvent) return null;

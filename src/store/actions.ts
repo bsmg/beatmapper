@@ -28,15 +28,6 @@ import {
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
-	getCursorPositionInBeats,
-	getDurationInBeats,
-	getIsPlaying,
-	getSelectedCutDirection,
-	getSelectedEventBeat,
-	getSelectedNoteTool,
-	getSnapTo,
-	getStartAndEndBeat,
-	getStickyMapAuthorName,
 	selectActiveSongId,
 	selectAllBasicEvents,
 	selectAllBookmarks,
@@ -45,8 +36,17 @@ import {
 	selectAllObstacles,
 	selectAllSelectedEntities,
 	selectClipboardData,
+	selectCursorPositionInBeats,
+	selectDurationInBeats,
+	selectEventEditorSelectedBeat,
+	selectEventEditorStartAndEndBeat,
 	selectGridSize,
+	selectIsPlaying,
+	selectNoteEditorDirection,
+	selectNoteEditorTool,
+	selectSnapTo,
 	selectSongByIdOrNull,
+	selectUserName,
 } from "./selectors";
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
@@ -64,7 +64,7 @@ export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 export const createNewSong = createAsyncThunk("CREATE_NEW_SONG", (args: Pick<App.Song, "coverArtFilename" | "songFilename" | "name" | "subName" | "artistName" | "bpm" | "offset"> & { coverArtFile: Blob; songFile: Blob; songId: SongId; selectedDifficulty: BeatmapId }, api) => {
 	const state = api.getState() as RootState;
 
-	const mapAuthorName = getStickyMapAuthorName(state);
+	const mapAuthorName = selectUserName(state);
 
 	return api.fulfillWithValue({ ...args, mapAuthorName, createdAt: Date.now(), lastOpenedAt: Date.now() });
 });
@@ -145,7 +145,7 @@ export const pasteSelection = createAsyncThunk("PASTE_SELECTION", (args: { view:
 	if (!data) return api.rejectWithValue("Clipboard is empty.");
 	// When pasting in notes view, we want to paste at the cursor position, where the song is currently playing.
 	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
-	const pasteAtBeat = args.view === View.BEATMAP ? getCursorPositionInBeats(state, songId) : getSelectedEventBeat(state);
+	const pasteAtBeat = args.view === View.BEATMAP ? selectCursorPositionInBeats(state, songId) : selectEventEditorSelectedBeat(state);
 	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
 	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map((x) => resolveBeatForItem(x)).sort((a, b) => a - b)[0];
 	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
@@ -164,7 +164,7 @@ export const createBookmark = createAsyncThunk("CREATE_BOOKMARK", (args: { name:
 	const color = getNewBookmarkColor(existingBookmarks);
 	// For the notes view, we want to use the cursorPosition to figure out when to create the bookmark for.
 	// For the events view, we want it to be based on the mouse position.
-	const beatNum = args.view === View.LIGHTSHOW ? getSelectedEventBeat(state) : getCursorPositionInBeats(state, songId);
+	const beatNum = args.view === View.LIGHTSHOW ? selectEventEditorSelectedBeat(state) : selectCursorPositionInBeats(state, songId);
 	if (beatNum === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ ...args, beatNum, color });
 });
@@ -176,11 +176,11 @@ export const deleteBookmark = createAction("DELETE_BOOKMARK", (args: { beatNum: 
 export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: CutDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
-	const selectedDirection = getSelectedCutDirection(state);
-	const selectedTool = getSelectedNoteTool(state);
-	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
+	const selectedDirection = selectNoteEditorDirection(state);
+	const selectedTool = selectNoteEditorTool(state);
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	const duration = getDurationInBeats(state, songId);
+	const duration = selectDurationInBeats(state, songId);
 	if (cursorPositionInBeats < 0 || (duration && cursorPositionInBeats > duration)) return api.rejectWithValue("Cannot place objects out-of-bounds.");
 	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
 	const alreadyExists = selectAllNotes(state).some((note) => note.beatNum === adjustedCursorPosition && note.colIndex === args.colIndex && note.rowIndex === args.rowIndex);
@@ -191,7 +191,7 @@ export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args
 export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: { rowIndex: number; colIndex: number; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
-	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats });
 });
@@ -199,7 +199,7 @@ export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: {
 export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: CutDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
-	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats: adjustedCursorPosition });
@@ -297,7 +297,7 @@ export const selectAll = createAsyncThunk("SELECT_ALL", (args: { view: View }, a
 	// For the events view, we don't actually want to select EVERY note. We only want to select what is visible in the current frame.
 	let metadata = null;
 	if (args.view === View.LIGHTSHOW) {
-		const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
+		const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, songId);
 		metadata = { startBeat, endBeat };
 	}
 	return api.fulfillWithValue({ ...args, metadata });
@@ -380,7 +380,7 @@ export const updateVolume = createAction("UPDATE_VOLUME", (args: { volume: numbe
 export const createNewObstacle = createAsyncThunk("CREATE_NEW_OBSTACLE", (args: { obstacle: App.Obstacle }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
-	let cursorPositionInBeats = getCursorPositionInBeats(state, songId);
+	let cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	cursorPositionInBeats = roundAwayFloatingPointNonsense(cursorPositionInBeats);
 	return api.fulfillWithValue({
@@ -427,7 +427,7 @@ export const swapSelectedNotes = createAction("SWAP_SELECTED_NOTES", (args: { ax
 
 export const nudgeSelection = createAsyncThunk("NUDGE_SELECTION", (args: { direction: "forwards" | "backwards"; view: View }, api) => {
 	const state = api.getState() as RootState;
-	const snapTo = getSnapTo(state);
+	const snapTo = selectSnapTo(state);
 	return api.fulfillWithValue({ ...args, amount: snapTo });
 });
 
@@ -496,7 +496,7 @@ export const zoomOut = createAction("ZOOM_OUT");
 export const drawSelectionBox = createAsyncThunk("DRAW_SELECTION_BOX", (args: { tracks: IEventTrack[]; selectionBox: ISelectionBox; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
-	const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
+	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, songId);
 	const metadata = { window: { startBeat, endBeat } };
 	return api.fulfillWithValue({ ...args, metadata });
 });
@@ -572,12 +572,12 @@ export const updateGraphicsLevel = createAction("UPDATE_GRAPHICS_LEVEL", (args: 
 });
 
 function adjustNoteCursorPosition(cursorPositionInBeats: number, state: RootState) {
-	const isPlaying = getIsPlaying(state);
+	const isPlaying = selectIsPlaying(state);
 
 	if (isPlaying) {
 		// If the user tries to place blocks while the song is playing, we want to snap to the nearest snapping interval.
 		// eg. if they're set to snap to 1/2 beats, and they click when the song is 3.476 beats in, we should round up to 3.5.
-		const snapTo = getSnapTo(state);
+		const snapTo = selectSnapTo(state);
 		return roundToNearest(cursorPositionInBeats, snapTo);
 	}
 	// If the song isn't playing, we want to snap to the highest precision we have.

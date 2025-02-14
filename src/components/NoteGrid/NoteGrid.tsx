@@ -12,7 +12,7 @@ import styled from "styled-components";
 import { UNIT } from "$/constants";
 import { selectNoteDirection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedCutDirection, getSelectedNoteTool } from "$/store/selectors";
+import { selectNoteEditorDirection, selectNoteEditorTool } from "$/store/selectors";
 import { CutDirection, ObjectTool } from "$/types";
 
 import Heading from "../Heading";
@@ -20,8 +20,8 @@ import IconButton from "../IconButton";
 import Spacer from "../Spacer";
 
 const NoteGrid = () => {
-	const selectedDirection = useAppSelector(getSelectedCutDirection);
-	const selectedNoteTool = useAppSelector(getSelectedNoteTool);
+	const selectedDirection = useAppSelector(selectNoteEditorDirection);
+	const selectedNoteTool = useAppSelector(selectNoteEditorTool);
 	const dispatch = useAppDispatch();
 
 	const isDisabled = selectedNoteTool !== ObjectTool.LEFT_NOTE && selectedNoteTool !== ObjectTool.RIGHT_NOTE;

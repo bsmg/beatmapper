@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 import { dismissPrompt } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSeenPrompts } from "$/store/selectors";
+import { selectSeenPrompts } from "$/store/selectors";
 
 import Paragraph from "../Paragraph";
 import UnobtrusivePrompt from "../UnobtrusivePrompt";
@@ -25,7 +25,7 @@ const PROMPTS = [
 
 const EditorPrompts = () => {
 	const prompt = useAppSelector((state) => {
-		const seenPrompts = getSeenPrompts(state);
+		const seenPrompts = selectSeenPrompts(state);
 		const unseenPrompts = PROMPTS.filter((prompt) => !seenPrompts.includes(prompt.id));
 		return unseenPrompts[0];
 	});

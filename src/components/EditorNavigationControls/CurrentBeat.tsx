@@ -1,6 +1,6 @@
 import { getFormattedBeatNum } from "$/helpers/audio.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getIsPlaying, selectActiveSongId } from "$/store/selectors";
+import { selectActiveSongId, selectCursorPositionInBeats, selectIsPlaying } from "$/store/selectors";
 import { roundToNearest } from "$/utils";
 
 import LabeledNumber from "../LabeledNumber";
@@ -8,10 +8,10 @@ import LabeledNumber from "../LabeledNumber";
 const CurrentBeat = () => {
 	const songId = useAppSelector(selectActiveSongId);
 	const displayString = useAppSelector((state) => {
-		const isPlaying = getIsPlaying(state);
+		const isPlaying = selectIsPlaying(state);
 
 		let displayString = "--";
-		const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
+		const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 		if (cursorPositionInBeats === null) return displayString;
 
 		// When the song is playing, this number will move incredibly quickly. It's a hot blurry mess.

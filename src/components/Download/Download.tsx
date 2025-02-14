@@ -4,7 +4,7 @@ import { UNIT } from "$/constants";
 import { useMount } from "$/hooks";
 import { downloadMapFiles, pausePlaying } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getIsPlaying, selectIsDemoSong } from "$/store/selectors";
+import { selectIsDemoSong, selectIsPlaying } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import Button from "../Button";
@@ -18,7 +18,7 @@ interface Props {
 }
 const Download = ({ songId }: Props) => {
 	const isDemo = useAppSelector((state) => selectIsDemoSong(state, songId));
-	const isPlaying = useAppSelector(getIsPlaying);
+	const isPlaying = useAppSelector(selectIsPlaying);
 	const dispatch = useAppDispatch();
 
 	// When this component mounts, if the song is playing, pause it.

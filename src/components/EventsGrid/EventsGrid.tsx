@@ -5,7 +5,7 @@ import { COLORS, COMMON_EVENT_TRACKS, UNIT } from "$/constants";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAreLasersLocked, getDurationInBeats, getRowHeight, getSelectedEventBeat, getSelectedEventEditMode, getSelectionBox, getSnapTo, getStartAndEndBeat, selectActiveSongId, selectIsLoading, selectOffsetInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectDurationInBeats, selectEventEditorEditMode, selectEventEditorRowHeight, selectEventEditorSelectedBeat, selectEventEditorSelectionBox, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror, selectIsLoading, selectOffsetInBeats, selectSnapTo } from "$/store/selectors";
 import { App, EventEditMode, type IEventTrack, TrackType } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
@@ -43,20 +43,20 @@ interface Props {
 
 const EventsGrid = ({ tracks = COMMON_EVENT_TRACKS, contentWidth }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
-	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
-	const { startBeat, endBeat } = useAppSelector((state) => getStartAndEndBeat(state, songId));
+	const duration = useAppSelector((state) => selectDurationInBeats(state, songId));
+	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, songId));
 	const numOfBeatsToShow = endBeat - startBeat;
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedBeat = useAppSelector((state) => {
-		const selectedBeat = getSelectedEventBeat(state);
+		const selectedBeat = selectEventEditorSelectedBeat(state);
 		const offsetInBeats = -selectOffsetInBeats(state, songId);
 		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
 	const isLoading = useAppSelector(selectIsLoading);
-	const areLasersLocked = useAppSelector(getAreLasersLocked);
-	const snapTo = useAppSelector(getSnapTo);
-	const selectionBox = useAppSelector(getSelectionBox);
-	const rowHeight = useAppSelector(getRowHeight);
+	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
+	const snapTo = useAppSelector(selectSnapTo);
+	const selectionBox = useAppSelector(selectEventEditorSelectionBox);
+	const rowHeight = useAppSelector(selectEventEditorRowHeight);
 	const dispatch = useAppDispatch();
 
 	const innerGridWidth = contentWidth - PREFIX_WIDTH;

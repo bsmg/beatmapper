@@ -5,7 +5,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { bulkDeleteNote, clickNote, deleteNote, deselectNote, mouseOverNote, selectNote, toggleNoteColor } from "$/store/actions";
-import { getNoteSelectionMode, selectNoteByPosition } from "$/store/selectors";
+import { selectNoteByPosition, selectNoteEditorSelectionMode } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { ObjectSelectionMode } from "$/types";
 
@@ -35,7 +35,7 @@ export default function createSelectionMiddleware() {
 		effect: (action, api) => {
 			const state = api.getState();
 			const { time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
-			const selectionMode = getNoteSelectionMode(state);
+			const selectionMode = selectNoteEditorSelectionMode(state);
 			if (!selectionMode) return;
 			// Find the note we're mousing over
 			const note = selectNoteByPosition(state, { beatNum, colIndex, rowIndex });

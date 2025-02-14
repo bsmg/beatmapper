@@ -3,7 +3,7 @@ import { Fragment, useRef } from "react";
 
 import { Controls } from "$/services/controls.service";
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel, getIsPlaying, getShowLightingPreview } from "$/store/selectors";
+import { selectEventEditorTogglePreview, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import type { Quality } from "$/types";
 
 import AmbientLighting from "../Preview/AmbientLighting";
@@ -65,9 +65,9 @@ const EventLightingPreviewPresentational = ({ isPlaying }: Props) => {
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 const EventLightingPreview = () => {
-	const isPlaying = useAppSelector(getIsPlaying);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
-	const showLightingPreview = useAppSelector(getShowLightingPreview);
+	const isPlaying = useAppSelector(selectIsPlaying);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
+	const showLightingPreview = useAppSelector(selectEventEditorTogglePreview);
 
 	if (!showLightingPreview) {
 		return null;

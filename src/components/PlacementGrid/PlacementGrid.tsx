@@ -6,7 +6,7 @@ import { getColorForItem } from "$/helpers/colors.helpers";
 import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { clearCellOfNotes, clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDefaultObstacleDuration, getNoteSelectionMode, getSelectedNoteTool, selectActiveSongId, selectCustomColors, selectGridSize, selectPlacementMode } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectDefaultObstacleDuration, selectGridSize, selectNoteEditorSelectionMode, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
 import { type CutDirection, ObjectTool } from "$/types";
 import { range } from "$/utils";
 import { getDirectionForDrag } from "./PlacementGrid.helpers";
@@ -32,10 +32,10 @@ const PlacementGrid = ({ gridPosition }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, songId));
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const selectedTool = useAppSelector(getSelectedNoteTool);
-	const selectionMode = useAppSelector(getNoteSelectionMode);
+	const selectedTool = useAppSelector(selectNoteEditorTool);
+	const selectionMode = useAppSelector(selectNoteEditorSelectionMode);
 	const mappingMode = useAppSelector((state) => selectPlacementMode(state, songId));
-	const defaultObstacleDuration = useAppSelector(getDefaultObstacleDuration);
+	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
 	const dispatch = useAppDispatch();
 
 	const renderColWidth = colWidth * BLOCK_PLACEMENT_SQUARE_SIZE;

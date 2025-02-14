@@ -13,7 +13,7 @@ import { COLORS, UNIT, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectEventColor, selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getAreLasersLocked, getIsLockedToCurrentWindow, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, getZoomLevel, selectActiveSongId, selectCustomColors } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorToggleLoop, selectEventEditorToggleMirror, selectEventEditorTool, selectEventEditorZoomLevel } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool, View } from "$/types";
 
 import Spacer from "../Spacer";
@@ -29,12 +29,12 @@ interface Props {
 const GridControls = ({ contentWidth }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
-	const selectedTool = useAppSelector(getSelectedEventTool);
-	const selectedColor = useAppSelector(getSelectedEventColor);
-	const isLockedToCurrentWindow = useAppSelector(getIsLockedToCurrentWindow);
-	const areLasersLocked = useAppSelector(getAreLasersLocked);
-	const zoomLevel = useAppSelector(getZoomLevel);
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
+	const selectedTool = useAppSelector(selectEventEditorTool);
+	const selectedColor = useAppSelector(selectEventEditorColor);
+	const isLockedToCurrentWindow = useAppSelector(selectEventEditorToggleLoop);
+	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
+	const zoomLevel = useAppSelector(selectEventEditorZoomLevel);
 	const dispatch = useAppDispatch();
 
 	return (

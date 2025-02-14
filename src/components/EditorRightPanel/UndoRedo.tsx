@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { UNIT } from "$/constants";
 import { redoNotes, undoNotes } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getCanRedo, getCanUndo } from "$/store/selectors";
+import { selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
 import { getMetaKeyLabel } from "$/utils";
 import { HALF_ACTION_WIDTH } from "./EditorRightPanel.constants";
 
@@ -12,8 +12,8 @@ import MiniButton from "../MiniButton";
 import Spacer from "../Spacer";
 
 const UndoRedo = () => {
-	const canUndo = useAppSelector(getCanUndo);
-	const canRedo = useAppSelector(getCanRedo);
+	const canUndo = useAppSelector(selectObjectsCanUndo);
+	const canRedo = useAppSelector(selectObjectsCanRedo);
 	const dispatch = useAppDispatch();
 
 	return (

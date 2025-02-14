@@ -5,7 +5,7 @@ import { GRID_PRESET_SLOTS, UNIT } from "$/constants";
 import { promptSaveGridPreset } from "$/helpers/prompts.helpers";
 import { deleteGridPreset, loadGridPreset, resetGrid, saveGridPreset, updateGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getGridPresets, selectActiveSongId, selectGridSize } from "$/store/selectors";
+import { selectActiveSongId, selectGridPresets, selectGridSize } from "$/store/selectors";
 
 import Center from "../Center";
 import Heading from "../Heading";
@@ -21,7 +21,7 @@ interface Props {
 const GridConfig = ({ finishTweakingGrid }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, songId));
-	const gridPresets = useAppSelector(getGridPresets);
+	const gridPresets = useAppSelector(selectGridPresets);
 	const dispatch = useAppDispatch();
 	const showPresets = Object.keys(gridPresets).length > 0;
 

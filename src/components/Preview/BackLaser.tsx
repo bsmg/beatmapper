@@ -2,7 +2,7 @@ import type { Vector3Tuple } from "three";
 
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectCustomColors, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -17,8 +17,8 @@ interface Props {
 const BackLaser = ({ isPlaying }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, songId));
 
 	const lastEvent = useAppSelector((state) => {
 		if (!songId || !currentBeat) return null;

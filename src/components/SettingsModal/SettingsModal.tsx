@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { UNIT } from "$/constants";
 import { updateGraphicsLevel, updateProcessingDelay } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel, getProcessingDelay } from "$/store/selectors";
+import { selectAudioProcessingDelay, selectGraphicsQuality } from "$/store/selectors";
 import { Quality } from "$/types";
 import { capitalize } from "$/utils";
 
@@ -20,8 +20,8 @@ interface Props {
 }
 
 const SettingsModal = ({ isVisible, onDismiss }: Props) => {
-	const processingDelay = useAppSelector(getProcessingDelay);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const processingDelay = useAppSelector(selectAudioProcessingDelay);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 	const dispatch = useAppDispatch();
 
 	const QUALITY_VALUES = useMemo(() => Object.values(Quality).map((value) => ({ value, label: capitalize(value) })), []);

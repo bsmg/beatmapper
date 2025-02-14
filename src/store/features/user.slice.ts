@@ -15,11 +15,11 @@ const slice = createSlice({
 	name: "user",
 	initialState: initialState,
 	selectors: {
-		getIsNewUser: (state) => state.isNewUser,
-		getSeenPrompts: (state) => state.seenPrompts,
-		getStickyMapAuthorName: (state) => state.stickyMapAuthorName,
-		getProcessingDelay: (state) => (typeof state.processingDelay === "number" ? state.processingDelay : initialState.processingDelay),
-		getGraphicsLevel: (state) => (typeof state.graphicsLevel === "string" ? state.graphicsLevel : initialState.graphicsLevel),
+		selectIsNewUser: (state) => state.isNewUser,
+		selectSeenPrompts: (state) => state.seenPrompts,
+		selectStickyMapAuthorName: (state) => state.stickyMapAuthorName,
+		selectProcessingDelay: (state) => (typeof state.processingDelay === "number" ? state.processingDelay : initialState.processingDelay),
+		selectGraphicsLevel: (state) => (typeof state.graphicsLevel === "string" ? state.graphicsLevel : initialState.graphicsLevel),
 	},
 	reducers: {},
 	extraReducers: (builder) => {

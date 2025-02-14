@@ -3,7 +3,7 @@ import { Fragment, useRef } from "react";
 
 import { Controls } from "$/services/controls.service";
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel, getIsPlaying } from "$/store/selectors";
+import { selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import { Quality } from "$/types";
 
 import { Bloom, NoBloom } from "../BloomEffect";
@@ -22,8 +22,8 @@ import SmallRings from "./SmallRings";
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 const LightingPreview = () => {
-	const isPlaying = useAppSelector(getIsPlaying);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const isPlaying = useAppSelector(selectIsPlaying);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	const controls = useRef<Controls | null>(null);
 

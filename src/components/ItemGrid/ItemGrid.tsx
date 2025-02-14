@@ -4,7 +4,7 @@ import { UNIT } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedNoteTool, selectActiveSongId, selectCustomColors } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectNoteEditorTool } from "$/store/selectors";
 import { ObjectTool, View } from "$/types";
 
 import Heading from "../Heading";
@@ -17,7 +17,7 @@ import ObstacleIcon from "./ObstacleIcon";
 const ItemGrid = () => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const selectedTool = useAppSelector(getSelectedNoteTool);
+	const selectedTool = useAppSelector(selectNoteEditorTool);
 	const dispatch = useAppDispatch();
 
 	const buttonSize = 36;

@@ -2,7 +2,7 @@ import { Fragment } from "react";
 
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPosition, getCursorPositionInBeats, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPosition, selectCursorPositionInBeats, selectCustomColors, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -45,8 +45,8 @@ interface Props {
 const SideLaser = ({ isPlaying, side }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, songId));
 
 	const lastEvent = useAppSelector((state) => {
 		if (!songId || !currentBeat) return null;
@@ -61,7 +61,7 @@ const SideLaser = ({ isPlaying, side }: Props) => {
 		const laserSpeed = lastSpeedEvent ? lastSpeedEvent.laserSpeed : 0;
 		return laserSpeed;
 	});
-	const secondsSinceSongStart = useAppSelector((state) => getCursorPosition(state) / 1000);
+	const secondsSinceSongStart = useAppSelector((state) => selectCursorPosition(state) / 1000);
 
 	const NUM_OF_HORIZONTAL_BEAMS = 4;
 	const laserIndices = range(0, NUM_OF_HORIZONTAL_BEAMS);

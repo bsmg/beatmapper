@@ -1,13 +1,13 @@
 import { deleteBookmark, jumpToBeat } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, selectActiveSongId, selectAllBookmarks, selectOffsetInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectAllBookmarks, selectDurationInBeats, selectOffsetInBeats } from "$/store/selectors";
 
 import BookmarkFlag from "./BookmarkFlag";
 
 const Bookmarks = () => {
 	const songId = useAppSelector(selectActiveSongId);
 	const bookmarks = useAppSelector(selectAllBookmarks);
-	const durationInBeats = useAppSelector((state) => getDurationInBeats(state, songId));
+	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, songId));
 	const offsetInBeats = useAppSelector((state) => selectOffsetInBeats(state, songId));
 	const dispatch = useAppDispatch();
 

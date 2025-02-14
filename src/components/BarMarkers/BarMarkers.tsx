@@ -2,17 +2,17 @@ import { useMemo } from "react";
 
 import { SONG_OFFSET, SURFACE_DEPTHS } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
-import { getBeatDepth, getCursorPositionInBeats, getDurationInBeats, getGraphicsLevel, selectActiveSongId } from "$/store/selectors";
+import { selectActiveSongId, selectBeatDepth, selectCursorPositionInBeats, selectDurationInBeats, selectGraphicsQuality } from "$/store/selectors";
 import { range } from "$/utils";
 
 import Marker from "./Marker";
 
 const BarMarkers = () => {
 	const songId = useAppSelector(selectActiveSongId);
-	const durationInBeats = useAppSelector((state) => getDurationInBeats(state, songId));
-	const cursorPositionInBeats = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const beatDepth = useAppSelector(getBeatDepth);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, songId));
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const beatDepth = useAppSelector(selectBeatDepth);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	const surfaceDepth = SURFACE_DEPTHS[graphicsLevel];
 	const numToRender = surfaceDepth / beatDepth;

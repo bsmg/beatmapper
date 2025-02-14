@@ -2,7 +2,7 @@ import { Fragment } from "react";
 
 import { BLOCK_COLUMN_WIDTH, DEFAULT_NUM_ROWS, SONG_OFFSET, SURFACE_DEPTHS, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
-import { getGraphicsLevel } from "$/store/selectors";
+import { selectGraphicsQuality } from "$/store/selectors";
 
 import EdgeStrip from "./EdgeStrip";
 
@@ -13,7 +13,7 @@ interface Props {
 
 const StaticEnvironment = ({ includeEdgeStrips }: Props) => {
 	const surfaceDepth = useAppSelector((state) => {
-		const graphicsLevel = getGraphicsLevel(state);
+		const graphicsLevel = selectGraphicsQuality(state);
 		return SURFACE_DEPTHS[graphicsLevel];
 	});
 

@@ -5,7 +5,7 @@ import type { Vector3Tuple } from "three";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getAnimateRingMotion, getCursorPositionInBeats, getGraphicsLevel, selectActiveSongId, selectAllBasicEventsForTrack, selectCustomColors, selectUsableProcessingDelayInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrack, selectAnimateRingMotion, selectCursorPositionInBeats, selectCustomColors, selectGraphicsQuality, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App, Quality } from "$/types";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
 
@@ -22,8 +22,8 @@ interface Props {
 const LargeRings = ({ isPlaying }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, songId));
 
 	const lastRotationEvent = useAppSelector((state) => {
 		if (!songId || !currentBeat) return null;
@@ -38,7 +38,7 @@ const LargeRings = ({ isPlaying }: Props) => {
 		return lastLightingEvent;
 	});
 	const numOfRings = useAppSelector((state) => {
-		const graphicsLevel = getGraphicsLevel(state);
+		const graphicsLevel = selectGraphicsQuality(state);
 
 		let numOfRings: number;
 		switch (graphicsLevel) {
@@ -57,7 +57,7 @@ const LargeRings = ({ isPlaying }: Props) => {
 		}
 		return numOfRings;
 	});
-	const animateRingMotion = useAppSelector(getAnimateRingMotion);
+	const animateRingMotion = useAppSelector(selectAnimateRingMotion);
 
 	const lastRotationEventId = lastRotationEvent ? lastRotationEvent.id : null;
 

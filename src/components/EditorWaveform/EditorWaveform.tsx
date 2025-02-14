@@ -5,7 +5,7 @@ import { UNIT } from "$/constants";
 import { useBoundingBox } from "$/hooks";
 import { scrubWaveform } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getCursorPosition, getDuration, getGraphicsLevel, getWaveformData, selectIsLoading } from "$/store/selectors";
+import { selectCursorPosition, selectDuration, selectGraphicsQuality, selectIsLoading, selectWaveformData } from "$/store/selectors";
 import { Quality } from "$/types";
 import { roundToNearest } from "$/utils";
 
@@ -18,11 +18,11 @@ interface Props {
 }
 
 const EditorWaveform = ({ height }: Props) => {
-	const waveformData = useAppSelector(getWaveformData);
+	const waveformData = useAppSelector(selectWaveformData);
 	const isLoadingSong = useAppSelector(selectIsLoading);
-	const duration = useAppSelector(getDuration);
-	const cursorPosition = useAppSelector(getCursorPosition);
-	const graphicsLevel = useAppSelector(getGraphicsLevel);
+	const duration = useAppSelector(selectDuration);
+	const cursorPosition = useAppSelector(selectCursorPosition);
+	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 	const dispatch = useAppDispatch();
 	const [ref, boundingBox] = useBoundingBox<HTMLDivElement>();
 

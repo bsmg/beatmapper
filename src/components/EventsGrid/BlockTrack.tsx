@@ -5,7 +5,7 @@ import { COLORS } from "$/constants";
 import { usePointerUpHandler } from "$/hooks";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getDurationInBeats, getSelectedEventColor, getSelectedEventEditMode, getSelectedEventTool, selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectInitialColorForTrack, selectOffsetInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrackInWindow, selectDurationInBeats, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorTool, selectInitialColorForTrack, selectOffsetInBeats } from "$/store/selectors";
 import { App, EventEditMode, EventTool, type IEventTrack } from "$/types";
 import { clamp } from "$/utils";
 import { getBackgroundBoxes } from "./BlockTrack.helpers";
@@ -27,12 +27,12 @@ interface Props {
 
 const BlockTrack = ({ trackId, tracks, width, height, startBeat, numOfBeatsToShow, cursorAtBeat, areLasersLocked, isDisabled }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
-	const duration = useAppSelector((state) => getDurationInBeats(state, songId));
+	const duration = useAppSelector((state) => selectDurationInBeats(state, songId));
 	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, songId));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
-	const selectedTool = useAppSelector(getSelectedEventTool);
-	const selectedColorType = useAppSelector(getSelectedEventColor);
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
+	const selectedTool = useAppSelector(selectEventEditorTool);
+	const selectedColorType = useAppSelector(selectEventEditorColor);
 	const initialTrackLightingColorType = useAppSelector((state) => selectInitialColorForTrack(state, trackId));
 	const dispatch = useAppDispatch();
 

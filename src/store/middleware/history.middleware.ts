@@ -4,19 +4,19 @@ import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { resolveBeatForItem } from "$/helpers/item.helpers";
 import * as actions from "$/store/actions";
 import {
-	getBeatDepth,
-	getCursorPositionInBeats,
-	getGraphicsLevel,
-	getStartAndEndBeat,
 	selectActiveSongId,
 	selectAllBasicEvents,
 	selectAllBombNotes,
 	selectAllColorNotes,
 	selectAllObstacles,
+	selectBeatDepth,
+	selectCursorPositionInBeats,
+	selectEventEditorStartAndEndBeat,
 	selectFutureBasicEvents,
 	selectFutureBombNotes,
 	selectFutureColorNotes,
 	selectFutureObstacles,
+	selectGraphicsQuality,
 	selectPastBasicEvents,
 	selectPastBombNotes,
 	selectPastColorNotes,
@@ -44,9 +44,9 @@ function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" 
 	// Is this note within our visible range? If not, jump to it.
 	const state = api.getState();
 	const songId = selectActiveSongId(state);
-	const cursorPositionInBeats = getCursorPositionInBeats(state, songId);
-	const beatDepth = getBeatDepth(state);
-	const graphicsLevel = getGraphicsLevel(state);
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
+	const beatDepth = selectBeatDepth(state);
+	const graphicsLevel = selectGraphicsQuality(state);
 
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel);
 
@@ -68,7 +68,7 @@ function switchEventPagesIfNecessary(api: MiddlewareAPI, args: { [K in "events"]
 		return;
 	}
 
-	const { startBeat, endBeat } = getStartAndEndBeat(state, songId);
+	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, songId);
 
 	const someItemsWithinWindow = relevantEvents.some((event) => {
 		return event.beatNum >= startBeat && event.beatNum < endBeat;

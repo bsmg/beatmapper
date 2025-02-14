@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 import { COLORS } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, selectActiveSongId } from "$/store/selectors";
+import { selectActiveSongId, selectCursorPositionInBeats } from "$/store/selectors";
 import { normalize } from "$/utils";
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 const CursorPositionIndicator = ({ gridWidth, startBeat, endBeat, zIndex }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
-	const cursorPositionInBeats = useAppSelector((state) => getCursorPositionInBeats(state, songId));
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
 	if (cursorPositionInBeats === null) return;
 
 	const cursorOffsetInWindow = normalize(cursorPositionInBeats, startBeat, endBeat, 0, gridWidth);

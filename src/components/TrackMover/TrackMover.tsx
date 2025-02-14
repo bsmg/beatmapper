@@ -2,15 +2,15 @@ import { a, useSpring } from "@react-spring/three";
 import type { PropsWithChildren } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { getAnimateBlockMotion, getBeatDepth, getCursorPositionInBeats, selectActiveSongId } from "$/store/selectors";
+import { selectActiveSongId, selectAnimateBlockMotion, selectBeatDepth, selectCursorPositionInBeats } from "$/store/selectors";
 
 interface Props extends PropsWithChildren {}
 
 const TrackMover = ({ children }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
-	const cursorPositionInBeats = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const beatDepth = useAppSelector(getBeatDepth);
-	const animateBlockMotion = useAppSelector(getAnimateBlockMotion);
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const beatDepth = useAppSelector(selectBeatDepth);
+	const animateBlockMotion = useAppSelector(selectAnimateBlockMotion);
 
 	const zPosition = (cursorPositionInBeats ?? 0) * beatDepth;
 

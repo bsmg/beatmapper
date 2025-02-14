@@ -7,7 +7,7 @@ import { getColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { getSelectedEventEditMode, selectActiveSongId, selectCustomColors } from "$/store/selectors";
+import { selectActiveSongId, selectCustomColors, selectEventEditorEditMode } from "$/store/selectors";
 import { App, EventEditMode } from "$/types";
 import { normalize } from "$/utils";
 
@@ -58,7 +58,7 @@ interface Props {
 const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHover, areLasersLocked }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
 	const customColors = useAppSelector((state) => selectCustomColors(state, songId));
-	const selectedEditMode = useAppSelector(getSelectedEventEditMode);
+	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const dispatch = useAppDispatch();
 
 	const offset = normalize(event.beatNum, startBeat, numOfBeatsToShow + startBeat, 0, trackWidth);

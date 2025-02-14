@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { SIDEBAR_WIDTH } from "$/constants";
 import { useWindowDimensions } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getBackgroundOpacity } from "$/store/selectors";
+import { selectEventBackgroundOpacity } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 
 import EventsGrid from "../EventsGrid";
@@ -19,7 +19,7 @@ interface Props {
 	songId: SongId;
 }
 const Events = ({ songId }: Props) => {
-	const backgroundOpacity = useAppSelector(getBackgroundOpacity);
+	const backgroundOpacity = useAppSelector(selectEventBackgroundOpacity);
 
 	const { width: windowWidth } = useWindowDimensions();
 	const contentWidth = windowWidth - SIDEBAR_WIDTH;

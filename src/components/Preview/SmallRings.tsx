@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { getCursorPositionInBeats, getGraphicsLevel, selectActiveSongId, selectAllBasicEventsForTrack, selectUsableProcessingDelayInBeats } from "$/store/selectors";
+import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectGraphicsQuality, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App, Quality } from "$/types";
 import { range } from "$/utils";
 import { findMostRecentEventInTrack } from "./Preview.helpers";
@@ -20,8 +20,8 @@ interface Props {
 
 const SmallRings = ({ isPlaying }: Props) => {
 	const songId = useAppSelector(selectActiveSongId);
-	const currentBeat = useAppSelector((state) => getCursorPositionInBeats(state, songId));
-	const processingDelayInBeats = useAppSelector((state) => selectUsableProcessingDelayInBeats(state, songId));
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, songId));
+	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, songId));
 
 	const lastZoomEvent = useAppSelector((state) => {
 		if (!songId || !currentBeat) return null;
@@ -36,7 +36,7 @@ const SmallRings = ({ isPlaying }: Props) => {
 		return lastRotationEvent;
 	});
 	const numOfRings = useAppSelector((state) => {
-		const graphicsLevel = getGraphicsLevel(state);
+		const graphicsLevel = selectGraphicsQuality(state);
 
 		let numOfRings: number;
 		switch (graphicsLevel) {
