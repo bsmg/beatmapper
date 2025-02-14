@@ -29,10 +29,6 @@ export const SNAPPING_INCREMENTS = Object.freeze(
 
 export const HIGHEST_PRECISION = SNAPPING_INCREMENTS[0].value;
 
-// Our most precise snapping increments are 1/24 and 1/32.
-// These two numbers share 1/96 as their lowest common multiple
-export const LOWEST_COMMON_MULTIPLE = 0.0104166667;
-
 export const BEATS_PER_ZOOM_LEVEL = [32, 16, 8, 4, 2] as const;
 
 export const ZOOM_LEVEL_MIN = 0;

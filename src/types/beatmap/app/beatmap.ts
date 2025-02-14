@@ -1,7 +1,6 @@
 import type { IEntity } from "../shared";
 import type { CutDirection, IEditorObject, ObstacleType, SaberColor } from "./shared";
 
-// NOTE: This type is unused. Planning to migrate to it, but for now I'm using the raw "note" type, with all the underscore-prefixed fields used in-game.
 export interface IBaseNote extends IEntity, IEditorObject {
 	beatNum: number;
 	rowIndex: number;

@@ -66,7 +66,7 @@ export type EventEditMode = Member<typeof EventEditMode>;
 
 export const TrackType = {
 	LIGHT: "blocks",
-	TRIGGER: "blocks",
+	TRIGGER: "trigger",
 	VALUE: "speed",
 	UNSUPPORTED: "unknown",
 } as const;

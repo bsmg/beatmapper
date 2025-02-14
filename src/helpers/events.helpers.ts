@@ -56,7 +56,7 @@ function serializeEventValue<T extends App.BasicEvent>(event: T) {
 		// `Off` events have no color attribute, since there is no way to tell when importing whether it was supposed to be red or blue.
 		if (event.type === App.BasicEventType.OFF || !event.colorType) return 0;
 		const value = 4 * Object.values(App.EventColor).indexOf(event.colorType) + LIGHT_EVENT_TYPES.indexOf(event.type) + 1;
-		return value;
+		return value - 1;
 	}
 	return 0;
 }
@@ -109,17 +109,17 @@ export function convertEventsToRedux<T extends Json.Event>(events: T[], tracks =
 		const trackId = TRACK_IDS_ARRAY[event._type] as App.TrackId;
 		const beatNum = event._time;
 		const id = resolveEventId({ beatNum, trackId: trackId });
-		if (isLightTrack(trackId, tracks)) {
-			const lightingType = event._value === 0 ? App.BasicEventType.OFF : LIGHT_EVENT_TYPES[(event._value - 1) % 4];
-			const colorType = event._value === 0 ? undefined : Object.values(App.EventColor)[Math.floor((event._value - 1) / 4)];
-			return { id, trackId, beatNum, type: lightingType, colorType } as App.IBasicLightEvent;
-		}
 		if (isTriggerTrack(trackId, tracks)) {
 			return { id, trackId, beatNum, type: App.BasicEventType.TRIGGER } as App.IBasicTriggerEvent;
 		}
 		if (isValueTrack(trackId, tracks)) {
 			const laserSpeed = event._value;
 			return { id, trackId, beatNum, type: App.BasicEventType.VALUE, laserSpeed } as App.IBasicValueEvent;
+		}
+		if (isLightTrack(trackId, tracks)) {
+			const lightingType = event._value === 0 ? App.BasicEventType.OFF : LIGHT_EVENT_TYPES[event._value % 4];
+			const colorType = event._value === 0 ? undefined : Object.values(App.EventColor)[Math.floor((event._value - 1) / 4)];
+			return { id, trackId, beatNum, type: lightingType, colorType } as App.IBasicLightEvent;
 		}
 		throw new Error(`Unrecognized event track: ${JSON.stringify(event._type, null, 2)}`);
 	});
