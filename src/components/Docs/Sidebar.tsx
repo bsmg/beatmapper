@@ -1,3 +1,4 @@
+import { docs } from "velite:content";
 import { NavLink as NavLinkRaw } from "react-router-dom";
 import styled from "styled-components";
 
@@ -5,6 +6,10 @@ import { COLORS } from "$/constants";
 
 import Logo from "../Logo";
 import NavGroup from "./NavGroup";
+
+function getDocsForCategory(category: string | null) {
+	return docs.filter((x) => x.category === category).sort((a, b) => a.order - b.order);
+}
 
 const Sidebar = () => {
 	return (
@@ -14,30 +19,49 @@ const Sidebar = () => {
 			</Header>
 			<Navigation>
 				<NavGroup>
-					<NavLink to="/docs/intro">About</NavLink>
-					<NavLink to="/docs/keyboard-shortcuts">Keyboard shortcuts</NavLink>
+					{getDocsForCategory(null).map((entry) => {
+						return (
+							<NavLink key={entry.id} to={`/docs/${entry.id}`}>
+								{entry.title}
+							</NavLink>
+						);
+					})}
 				</NavGroup>
 				<NavGroup title="User Manual" showByDefault>
-					<NavLink to="/docs/manual/getting-started">Getting started</NavLink>
-					<NavLink to="/docs/manual/navigating-the-editor">Navigating the editor</NavLink>
-					<NavLink to="/docs/manual/notes-view">Notes view</NavLink>
-					<NavLink to="/docs/manual/events-view">Events view</NavLink>
-					<NavLink to="/docs/manual/demo-view">Demo view</NavLink>
-					<NavLink to="/docs/manual/publishing">Downloading and publishing</NavLink>
+					{getDocsForCategory("manual").map((entry) => {
+						return (
+							<NavLink key={entry.id} to={`/docs/manual/${entry.id}`}>
+								{entry.title}
+							</NavLink>
+						);
+					})}
 				</NavGroup>
 				<NavGroup title="Advanced">
-					<NavLink to="/docs/migrating">Migrating from another editor</NavLink>
-					<NavLink to="/docs/mods">Mod support</NavLink>
-					<NavLink to="/docs/fast-walls">Fast walls</NavLink>
-					<NavLink to="/docs/running-locally">Running locally</NavLink>
+					{getDocsForCategory("advanced").map((entry) => {
+						return (
+							<NavLink key={entry.id} to={`/docs/${entry.id}`}>
+								{entry.title}
+							</NavLink>
+						);
+					})}
 				</NavGroup>
 				<NavGroup title="Release Notes">
-					<NavLink to="/docs/releases/0.2">v0.2</NavLink>
-					<NavLink to="/docs/releases/0.3">v0.3</NavLink>
+					{getDocsForCategory("release-notes").map((entry) => {
+						return (
+							<NavLink key={entry.id} to={`/docs/releases/${entry.id}`}>
+								{entry.title}
+							</NavLink>
+						);
+					})}
 				</NavGroup>
 				<NavGroup title="Legal">
-					<NavLink to="/docs/content-policy">Content policy</NavLink>
-					<NavLink to="/docs/privacy">Privacy</NavLink>
+					{getDocsForCategory("legal").map((entry) => {
+						return (
+							<NavLink key={entry.id} to={`/docs/${entry.id}`}>
+								{entry.title}
+							</NavLink>
+						);
+					})}
 				</NavGroup>
 			</Navigation>
 		</Wrapper>

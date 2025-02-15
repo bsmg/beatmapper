@@ -8,8 +8,8 @@ import { COLORS, UNIT } from "$/constants";
 
 import Spacer from "../Spacer";
 import HorizontalRule from "./HorizontalRule";
-import { useMDXComponent } from "./MDXContent";
 import MdxWrapper from "./MdxWrapper";
+import PreviousNextBar from "./PreviousNextBar";
 import TableOfContents from "./TableOfContents";
 
 /**
@@ -33,28 +33,25 @@ const DocPage = ({ id, components }: Props) => {
 		throw new Error("No doc found at this route.");
 	}
 
-	const { tableOfContents } = useMDXComponent(document.code);
-
 	useScrollOnLoad();
 
 	return (
 		<Fragment>
 			<Helmet>
-				<title>Beatmapper docs - {document.title}</title>
+				<title>Beatmapper Docs - {document.title}</title>
 			</Helmet>
 			<Wrapper>
 				<Title>{document.title}</Title>
 				{document.subtitle && <Subtitle>{document.subtitle}</Subtitle>}
-
 				<HorizontalRule />
-
 				<Row>
 					<MainContent>
 						<MdxWrapper components={components} code={document.code} />
 						<Spacer size={UNIT * 8} />
 					</MainContent>
-					<TableOfContents toc={tableOfContents} />
+					<TableOfContents toc={document.tableOfContents} />
 				</Row>
+				{(document.prev || document.next) && <PreviousNextBar prev={document.prev} next={document.next} />}
 			</Wrapper>
 		</Fragment>
 	);

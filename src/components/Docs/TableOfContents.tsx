@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { Icon } from "react-icons-kit";
 import { externalLink } from "react-icons-kit/feather/externalLink";
-import type { TocEntry } from "remark-mdx-toc";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
-import { slugify, throttle } from "$/utils";
+import { throttle } from "$/utils";
 
 import BaseLink from "../BaseLink";
 import Spacer from "../Spacer";
+
+interface TocEntry {
+	title: string;
+	url: string;
+	items: TocEntry[];
+}
 
 function useActiveHeading(headings: TocEntry[]) {
 	const [activeHeadingId, setActiveHeading] = useState<string | null>(null);
@@ -25,10 +30,9 @@ function useActiveHeading(headings: TocEntry[]) {
 			// 1. Are there any headings in the viewport right now? If so, pick the top one.
 			// 2. If there are no headings in the viewport, are there any above the viewport? If so, pick the last one (most recently scrolled out of view)
 			// If neither condition is met, I'll assume I'm still in the intro, although this would have to be a VERY long intro to ever be true.
-			const headingBoxes = headings.map(({ value: title }) => {
-				const id = slugify(title);
-				const elem = document.querySelector(`#${id}`);
-				return { id, box: elem?.getBoundingClientRect() };
+			const headingBoxes = headings.map((entry) => {
+				const elem = document.querySelector(entry.url);
+				return { id: entry.url.replace("#", ""), box: elem?.getBoundingClientRect() };
 			});
 
 			// The first heading within the viewport is the one we want to highlight.
@@ -63,8 +67,8 @@ function useActiveHeading(headings: TocEntry[]) {
 }
 
 function getGithubLink(pathname: string) {
-	const prefix = "https://github.com/bsmg/beatmapper/edit/master/src";
-	return `${prefix + pathname}.mdx`;
+	const prefix = "https://github.com/bsmg/beatmapper/edit/master/src/content";
+	return `${prefix + pathname}/index.mdx`;
 }
 
 interface Props {
@@ -72,7 +76,7 @@ interface Props {
 }
 
 const TableOfContents = ({ toc }: Props) => {
-	const headings = toc.filter((item) => item.depth <= 4);
+	const headings = toc;
 
 	const activeHeadingId = useActiveHeading(headings);
 
@@ -94,17 +98,11 @@ const TableOfContents = ({ toc }: Props) => {
 				Introduction
 			</HeadingLink>
 
-			{headings.map(({ value: title }) => {
-				const id = slugify(title);
+			{headings.map((entry) => {
+				const id = entry.url.replace("#", "");
 				return (
-					<HeadingLink
-						key={id}
-						href={`#${id}`}
-						style={{
-							color: id === activeHeadingId ? COLORS.pink[700] : undefined,
-						}}
-					>
-						{title}
+					<HeadingLink key={id} href={entry.url} style={{ color: id === activeHeadingId ? COLORS.pink[700] : undefined }}>
+						{entry.title}
 					</HeadingLink>
 				);
 			})}

@@ -1,4 +1,5 @@
-import { Fragment } from "react";
+import { docs } from "velite:content";
+import { Fragment, useMemo } from "react";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
@@ -6,15 +7,6 @@ import { COLORS } from "$/constants";
 import BaseLink from "../BaseLink";
 import Spacer from "../Spacer";
 import HorizontalRule from "./HorizontalRule";
-
-const pages = [
-	{ id: "getting-started", title: "Getting started" },
-	{ id: "navigating-the-editor", title: "Navigating the Editor" },
-	{ id: "notes-view", title: "Notes View" },
-	{ id: "events-view", title: "Events View" },
-	{ id: "demo-view", title: "Demo View" },
-	{ id: "publishing", title: "Downloading and publishing" },
-];
 
 interface NavProps {
 	direction: "previous" | "next";
@@ -37,14 +29,13 @@ const NavigationBlock = ({ direction, item }: NavProps) => {
 };
 
 interface Props {
-	currentPageId: string;
+	prev?: string;
+	next?: string;
 }
 
-const PreviousNextBar = ({ currentPageId }: Props) => {
-	const currentIndex = pages.findIndex((page) => page.id === currentPageId);
-
-	const previous = pages[currentIndex - 1];
-	const next = pages[currentIndex + 1];
+const PreviousNextBar = ({ prev: prevId, next: nextId }: Props) => {
+	const previous = useMemo(() => docs.find((page) => page.id === prevId), [prevId]);
+	const next = useMemo(() => docs.find((page) => page.id === nextId), [nextId]);
 
 	return (
 		<Fragment>

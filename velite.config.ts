@@ -1,17 +1,11 @@
 import { defineCollection, defineConfig, s } from "velite";
 
-import { default as rehypeMdxImportMedia } from "rehype-mdx-import-media";
 import { default as rehypeSlug } from "rehype-slug";
 import { default as remarkGfm } from "remark-gfm";
-import { remarkMdxToc } from "remark-mdx-toc";
 
 const mdx = s.mdx({
-	remarkPlugins: [
-		remarkGfm,
-		// @ts-ignore
-		[remarkMdxToc, { name: "tableOfContents" }],
-	],
-	rehypePlugins: [rehypeSlug, rehypeMdxImportMedia],
+	remarkPlugins: [remarkGfm],
+	rehypePlugins: [rehypeSlug],
 });
 
 function resolveId(path: string) {
@@ -26,7 +20,7 @@ function resolveId(path: string) {
 const docs = defineCollection({
 	name: "Doc",
 	pattern: "docs/**/*.mdx",
-	schema: s.object({ title: s.string(), subtitle: s.string().optional(), code: mdx }).transform((data, ctx) => {
+	schema: s.object({ title: s.string(), subtitle: s.string().optional(), category: s.nullable(s.string()).default(null), order: s.number().default(0), prev: s.string().optional(), next: s.string().optional(), code: mdx, tableOfContents: s.toc() }).transform((data, ctx) => {
 		if (!ctx.meta.basename) return { id: "", ...data };
 		return { id: resolveId(ctx.meta.basename), ...data };
 	}),

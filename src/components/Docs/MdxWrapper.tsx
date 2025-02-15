@@ -8,6 +8,7 @@ import BaseLink from "../BaseLink";
 import YoutubeEmbed from "../YoutubeEmbed";
 import HorizontalRule from "./HorizontalRule";
 import { MDXContent } from "./MDXContent";
+import { Shortcut, ShortcutTable } from "./Shortcut";
 import { MetaKey } from "./ShortcutHelpers";
 
 interface ImageProps extends ComponentProps<"img"> {
@@ -46,6 +47,8 @@ const sharedComponents: MDXComponents = {
 	MetaKey: MetaKey,
 	pre: Pre,
 	Subtle: Subtle,
+	Shortcut: Shortcut,
+	ShortcutTable: ShortcutTable,
 	YoutubeEmbed,
 };
 
