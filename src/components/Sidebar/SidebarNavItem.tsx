@@ -1,13 +1,12 @@
-import type { ComponentProps } from "react";
 import { Icon, type IconProp } from "react-icons-kit";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
 import { COLORS, SIDEBAR_WIDTH, UNIT } from "$/constants";
 
-import BaseLink from "../BaseLink";
+import BaseLink, { type BaseLinkProps } from "../BaseLink";
 
-interface Props extends ComponentProps<typeof BaseLink> {
+interface Props extends BaseLinkProps {
 	isActive?: boolean;
 	icon: IconProp["icon"];
 }

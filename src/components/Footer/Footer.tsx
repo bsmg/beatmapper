@@ -16,7 +16,13 @@ const Footer = () => {
 						<Logo size="mini" />
 						<Spacer size={UNIT} />
 						<Links>
-							<Link to="/docs/privacy">Privacy</Link> · <Link to="/docs/content-policy">Content Policy</Link>
+							<Link to="/docs/$" params={{ _splat: "privacy" }}>
+								Privacy
+							</Link>{" "}
+							·{" "}
+							<Link to="/docs/$" params={{ _splat: "content-policy" }}>
+								Content Policy
+							</Link>
 						</Links>
 					</LogoWrapper>
 					<Info>

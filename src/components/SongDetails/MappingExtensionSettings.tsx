@@ -19,7 +19,7 @@ const MappingExtensionSettings = () => {
 				Enable Mapping Extensions{" "}
 				<QuestionTooltip>
 					Allows you to customize size and shape of the grid, to place notes outside of the typical 4×3 grid.{" "}
-					<Link forceAnchor to="/docs/mods#mapping-extensions">
+					<Link forceAnchor to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
 						Learn more
 					</Link>
 					.

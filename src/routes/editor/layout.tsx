@@ -1,25 +1,22 @@
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect } from "react";
-import { Route, Routes, useParams } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, SIDEBAR_WIDTH } from "$/constants";
 import { leaveEditor, startLoadingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
 
-import Download from "../Download";
-import EditorPrompts from "../EditorPrompts";
-import Events from "../Events";
-import LoadingScreen from "../LoadingScreen";
-import NotesEditor from "../NotesEditor";
-import Preview from "../Preview";
-import Sidebar from "../Sidebar";
-import SongDetails from "../SongDetails";
-import EditorErrors from "./EditorErrors";
+import EditorPrompts from "$/components/EditorPrompts";
+import LoadingScreen from "$/components/LoadingScreen";
+import Sidebar from "$/components/Sidebar";
 
-const Editor = () => {
-	const { songId, difficulty } = useParams();
+export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { sid: songId, bid: difficulty } = Route.useParams();
 
 	const activeSongId = useAppSelector(selectActiveSongId);
 	const dispatch = useAppDispatch();
@@ -32,12 +29,12 @@ const Editor = () => {
 
 	// Our locally-persisted state might be out of date. We need to fix that before we do anything else.
 	useEffect(() => {
-		dispatch(startLoadingSong({ songId: songId as SongId, difficulty: difficulty as BeatmapId }));
+		dispatch(startLoadingSong({ songId: songId, difficulty: difficulty }));
 	}, [dispatch, songId, difficulty]);
 
 	useEffect(() => {
 		return () => {
-			dispatch(leaveEditor({ songId: songId as SongId, difficulty: difficulty as BeatmapId }));
+			dispatch(leaveEditor({ songId: songId, difficulty: difficulty }));
 		};
 	}, [dispatch, songId, difficulty]);
 
@@ -48,23 +45,13 @@ const Editor = () => {
 	return (
 		<Fragment>
 			<Sidebar />
-
 			<Wrapper>
-				<EditorErrors>
-					<Routes>
-						<Route path="/notes" element={<NotesEditor songId={activeSongId} />} />
-						<Route path="/events" element={<Events songId={activeSongId} />} />
-						<Route path="/preview" element={<Preview />} />
-						<Route path="/details" element={<SongDetails songId={activeSongId} />} />
-						<Route path="/download" element={<Download songId={activeSongId} />} />
-					</Routes>
-				</EditorErrors>
+				<Outlet />
 			</Wrapper>
-
 			<EditorPrompts />
 		</Fragment>
 	);
-};
+}
 
 const Wrapper = styled.div`
   position: fixed;
@@ -74,5 +61,3 @@ const Wrapper = styled.div`
   bottom: 0;
   background: ${COLORS.blueGray[1000]};
 `;
-
-export default Editor;

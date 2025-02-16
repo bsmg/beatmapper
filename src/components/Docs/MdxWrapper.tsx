@@ -4,6 +4,7 @@ import styled from "styled-components";
 
 import { COLORS } from "$/constants";
 
+import type { FileRoutesByTo } from "$/routeTree.gen";
 import BaseLink from "../BaseLink";
 import YoutubeEmbed from "../YoutubeEmbed";
 import HorizontalRule from "./HorizontalRule";
@@ -30,7 +31,7 @@ const Subtle = styled.span`
 `;
 
 const sharedComponents: MDXComponents = {
-	a: ({ href, ...props }) => <BaseLink {...props} to={href} />,
+	a: ({ href, ...props }) => <BaseLink {...props} to={href as keyof FileRoutesByTo} />,
 	img: Image,
 	hr: HorizontalRule,
 	Key: ({ size, children }) => <KeyIcon size={size ?? "medium"}>{children}</KeyIcon>,

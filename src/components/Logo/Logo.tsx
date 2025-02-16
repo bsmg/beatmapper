@@ -1,12 +1,12 @@
 import { animated as a, useSpring } from "@react-spring/three";
 import { Canvas } from "@react-three/fiber";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import styled from "styled-components";
 import type { Vector3Tuple } from "three";
 
 import { UNIT } from "$/constants";
 
+import BaseLink from "../BaseLink";
 import Block from "../Block";
 import Spacer from "../Spacer";
 
@@ -48,7 +48,7 @@ const Logo = ({ size = "full", color = "#FFF" }: Props) => {
 	);
 };
 
-const Wrapper = styled(Link)`
+const Wrapper = styled(BaseLink)`
   display: flex;
   align-items: center;
   text-decoration: none;

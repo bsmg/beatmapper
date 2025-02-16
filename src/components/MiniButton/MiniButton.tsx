@@ -1,23 +1,26 @@
+import type { Merge } from "@react-spring/three";
+import type { LinkProps } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
-import { Link, type To } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";
+import type { router } from "$/routes";
 
+import BaseLink from "../BaseLink";
 import PixelShifter from "../PixelShifter";
 import UnfocusedButton from "../UnfocusedButton";
 
-interface Props extends ComponentProps<typeof UnfocusedButton> {
+interface Props extends Merge<ComponentProps<typeof UnfocusedButton>, LinkProps<"button", typeof router>> {
 	hoverColor?: string;
 	as?: string;
 	width?: number;
-	to?: To;
 }
 
-const MiniButton = ({ ref, children, color, hoverColor, as, width, style = {}, to, ...delegated }: Props) => {
+const MiniButton = ({ ref, children, color, hoverColor, as, width, style = {}, to, params, ...delegated }: Props) => {
 	if (to) {
 		return (
-			<ButtonElem as={Link} to={to} color={color} hoverColor={hoverColor} style={{ ...style, width }}>
+			// biome-ignore lint/suspicious/noExplicitAny: uh oh!
+			<ButtonElem as={BaseLink as any} to={to} params={params} color={color} hoverColor={hoverColor} style={{ ...style, width }}>
 				{typeof children === "string" ? <PixelShifter y={-1}>{children}</PixelShifter> : children}
 			</ButtonElem>
 		);

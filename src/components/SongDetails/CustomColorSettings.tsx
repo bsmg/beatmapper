@@ -28,7 +28,7 @@ const CustomColorSettings = () => {
 				Enable custom colors{" "}
 				<QuestionTooltip>
 					Override the default red/blue color scheme. Use "overdrive" to produce some neat effects.{" "}
-					<Link forceAnchor to="/docs/mods#custom-colors">
+					<Link forceAnchor to="/docs/$" params={{ _splat: "mods#custom-colors" }}>
 						Learn more
 					</Link>
 					.

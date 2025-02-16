@@ -1,5 +1,5 @@
+import { useBlocker } from "@tanstack/react-router";
 import { type FormEventHandler, useState } from "react";
-import { useBlocker } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, ENVIRONMENT_RENAME, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
@@ -252,7 +252,7 @@ const SongDetails = ({ songId }: Props) => {
 					Enable "fast walls"{" "}
 					<QuestionTooltip>
 						Fast walls exploit a loophole in the game to allow walls to blur by at high speed{" "}
-						<Link forceAnchor to="/docs/mods#mapping-extensions">
+						<Link forceAnchor to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
 							Learn more
 						</Link>
 						.

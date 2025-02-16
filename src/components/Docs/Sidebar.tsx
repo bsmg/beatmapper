@@ -1,9 +1,9 @@
 import { docs } from "velite:content";
-import { NavLink as NavLinkRaw } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS } from "$/constants";
 
+import BaseLink from "../BaseLink";
 import Logo from "../Logo";
 import NavGroup from "./NavGroup";
 
@@ -21,7 +21,7 @@ const Sidebar = () => {
 				<NavGroup>
 					{getDocsForCategory(null).map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
+							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -30,7 +30,7 @@ const Sidebar = () => {
 				<NavGroup title="User Manual" showByDefault>
 					{getDocsForCategory("manual").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
+							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -39,7 +39,7 @@ const Sidebar = () => {
 				<NavGroup title="Advanced">
 					{getDocsForCategory("advanced").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
+							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -48,7 +48,7 @@ const Sidebar = () => {
 				<NavGroup title="Release Notes">
 					{getDocsForCategory("release-notes").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
+							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -57,7 +57,7 @@ const Sidebar = () => {
 				<NavGroup title="Legal">
 					{getDocsForCategory("legal").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
+							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -77,7 +77,7 @@ const Navigation = styled.nav`
   padding-left: 12px;
 `;
 
-const NavLink = styled(NavLinkRaw)`
+const NavLink = styled(BaseLink)`
   display: flex;
   align-items: center;
   height: 35px;

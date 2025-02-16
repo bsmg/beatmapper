@@ -46,7 +46,11 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 			<Heading size={1}>Create new beatmap</Heading>
 			<Spacer size={UNIT * 2} />
 			<Paragraph>
-				Select the difficulty you'd like to start creating. You can also copy an existing difficulty instead, on the <Link to={`/edit/${songId}/${currentDifficulty}/details`}>Song Details</Link> page (
+				Select the difficulty you'd like to start creating. You can also copy an existing difficulty instead, on the{" "}
+				<Link to={"/edit/$sid/$bid/details"} params={{ sid: songId?.toString(), bid: currentDifficulty?.toString() }}>
+					Song Details
+				</Link>{" "}
+				page (
 				<IconWrapper>
 					<Icon icon={sliders} size={15} />
 				</IconWrapper>

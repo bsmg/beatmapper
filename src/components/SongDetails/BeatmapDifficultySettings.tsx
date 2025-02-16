@@ -1,5 +1,5 @@
+import { useBlocker, useNavigate } from "@tanstack/react-router";
 import { type ComponentProps, type MouseEventHandler, useState } from "react";
-import { useBlocker, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";
@@ -45,7 +45,9 @@ const BeatmapSettings = ({ songId, difficultyId }: Props) => {
 			<CopyDifficultyForm songId={songId} idToCopy={difficultyId} afterCopy={(id) => (id ? triggerSuccess(id) : triggerClose())} copyDifficulty={(songId, fromDifficultyId, toDifficultyId, afterCopy) => dispatch(copyDifficulty({ songId, fromDifficultyId, toDifficultyId, afterCopy }))} />
 		)).then((copiedToDifficultyId) => {
 			// Redirect the user to this new difficulty, so that when they go to edit it, they're editing the right difficulty.
-			if (copiedToDifficultyId) navigate(`/edit/${songId}/${copiedToDifficultyId}/details`);
+			if (copiedToDifficultyId) {
+				return navigate({ to: "/edit/$sid/$bid/details", params: { sid: songId.toString(), bid: copiedToDifficultyId.toString() } });
+			}
 		});
 	};
 
@@ -74,7 +76,7 @@ const BeatmapSettings = ({ songId, difficultyId }: Props) => {
 
 		dispatch(deleteBeatmap({ songId: songId, difficulty: difficultyId }));
 
-		navigate(`/edit/${songId}/${nextDifficultyId}/details`);
+		return navigate({ to: "/edit/$sid/$bid/details", params: { sid: songId.toString(), bid: nextDifficultyId.toString() } });
 	};
 
 	const handleSaveBeatmap: MouseEventHandler = (ev) => {

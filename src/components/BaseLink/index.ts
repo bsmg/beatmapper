@@ -1,1 +1,1 @@
-export { default } from "./BaseLink";
+export { default, type BaseLinkProps } from "./BaseLink";

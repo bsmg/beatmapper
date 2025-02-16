@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { type FormEventHandler, Fragment, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
@@ -78,7 +78,7 @@ const AddSongForm = () => {
 
 			// Wait for the `createNewSong` action to flush, and then redirect the user to the new song page!
 			window.requestAnimationFrame(() => {
-				navigate(`/edit/${songId}/${selectedDifficulty}/notes`);
+				navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId, bid: selectedDifficulty } });
 			});
 		} catch (err) {
 			console.error("Could not save files to local storage", err);

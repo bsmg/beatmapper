@@ -23,7 +23,9 @@ const NavigationBlock = ({ direction, item }: NavProps) => {
 			}}
 		>
 			<Subtitle>{formattedSubtitle}</Subtitle>
-			<BaseLink to={`/docs/manual/${item.id}`}>{item.title}</BaseLink>
+			<BaseLink to={"/docs/$"} params={{ _splat: `manual/${item.id}` }}>
+				{item.title}
+			</BaseLink>
 		</NavBlockWrapper>
 	);
 };

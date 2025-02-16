@@ -108,7 +108,7 @@ const TableOfContents = ({ toc }: Props) => {
 			})}
 
 			<Spacer size={30} />
-			<GithubLink to={getGithubLink(location.pathname)}>
+			<GithubLink href={getGithubLink(location.pathname)}>
 				Suggest an edit
 				<Spacer size={12} />
 				<Icon icon={externalLink} />

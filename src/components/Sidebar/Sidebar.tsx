@@ -1,3 +1,4 @@
+import { getRouteApi, useLocation } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { box } from "react-icons-kit/feather/box";
 import { download } from "react-icons-kit/feather/download";
@@ -7,7 +8,6 @@ import { play } from "react-icons-kit/feather/play";
 import { settings } from "react-icons-kit/feather/settings";
 import { sliders } from "react-icons-kit/feather/sliders";
 import { sun } from "react-icons-kit/feather/sun";
-import { useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, SIDEBAR_WIDTH, UNIT } from "$/constants";
@@ -17,9 +17,11 @@ import SpacedChildren from "../SpacedChildren";
 import Spacer from "../Spacer";
 import SidebarNavItem from "./SidebarNavItem";
 
+const route = getRouteApi("/_/edit/$sid/$bid");
+
 const Sidebar = () => {
 	const location = useLocation();
-	const { songId, difficulty } = useParams();
+	const { sid: songId, bid: difficulty } = route.useParams();
 
 	const [showSettingsModal, setShowSettingsModal] = useState(false);
 
@@ -42,11 +44,11 @@ const Sidebar = () => {
 					<Spacer size={UNIT * 2} />
 
 					<SpacedChildren spacing={UNIT * 2}>
-						<SidebarNavItem title="Notes" icon={box} to={`/edit/${songId}/${difficulty}/notes`} isActive={!!location.pathname.match(/\/notes$/)} />
-						<SidebarNavItem title="Events" icon={sun} to={`/edit/${songId}/${difficulty}/events`} isActive={!!location.pathname.match(/\/events$/)} />
-						<SidebarNavItem title="Preview" icon={play} to={`/edit/${songId}/${difficulty}/preview`} isActive={!!location.pathname.match(/\/preview$/)} />
-						<SidebarNavItem title="Map settings" icon={sliders} to={`/edit/${songId}/${difficulty}/details`} isActive={!!location.pathname.match(/\/details$/)} />
-						<SidebarNavItem title="Download" icon={download} to={`/edit/${songId}/${difficulty}/download`} isActive={!!location.pathname.match(/\/download$/)} />
+						<SidebarNavItem title="Notes" icon={box} to={"/edit/$sid/$bid/notes"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/notes$/)} />
+						<SidebarNavItem title="Events" icon={sun} to={"/edit/$sid/$bid/events"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/events$/)} />
+						<SidebarNavItem title="Preview" icon={play} to={"/edit/$sid/$bid/preview"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/preview$/)} />
+						<SidebarNavItem title="Map settings" icon={sliders} to={"/edit/$sid/$bid/details"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/details$/)} />
+						<SidebarNavItem title="Download" icon={download} to={"/edit/$sid/$bid/download"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/download$/)} />
 					</SpacedChildren>
 				</Top>
 
@@ -61,7 +63,7 @@ const Sidebar = () => {
 							}}
 							isActive={false}
 						/>
-						<SidebarNavItem title="Help" icon={helpCircle} to="/docs" isActive={false} target="_blank" />
+						<SidebarNavItem title="Help" icon={helpCircle} to="/docs/$" params={{ _splat: "intro" }} isActive={false} target="_blank" />
 					</SpacedChildren>
 				</Bottom>
 			</Wrapper>

@@ -1,5 +1,6 @@
 // TODO: This status bar is reused across two views, but the views don't need the same info :/ I should create a shared "root" component with slots for the stuff that is variant.
 
+import { useLocation } from "@tanstack/react-router";
 import { Fragment, type ReactNode } from "react";
 import { alignJustify as rowHeightMinIcon } from "react-icons-kit/feather/alignJustify";
 import { bell as tickOnIcon } from "react-icons-kit/feather/bell";
@@ -18,7 +19,6 @@ import { volume2 as volumeMaxIcon } from "react-icons-kit/feather/volume2";
 import { volumeX as volumeMinIcon } from "react-icons-kit/feather/volumeX";
 import { zap as showLightsIcon } from "react-icons-kit/feather/zap";
 import { zapOff as hideLightsIcon } from "react-icons-kit/feather/zapOff";
-import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";

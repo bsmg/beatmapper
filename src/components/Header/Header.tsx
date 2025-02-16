@@ -12,7 +12,9 @@ const Header = () => {
 			<MaxWidthWrapper>
 				<Contents>
 					<Logo />
-					<DocLink to="/docs">Documentation</DocLink>
+					<DocLink to="/docs/$" params={{ _splat: "intro" }}>
+						Documentation
+					</DocLink>
 				</Contents>
 			</MaxWidthWrapper>
 		</Wrapper>

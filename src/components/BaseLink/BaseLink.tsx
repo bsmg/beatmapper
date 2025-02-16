@@ -1,17 +1,19 @@
+import type { router } from "$/routes";
+import type { Merge } from "@react-spring/three";
+import { Link, type LinkProps } from "@tanstack/react-router";
 import type { ComponentProps, HTMLAttributeAnchorTarget } from "react";
-import { Link as RRLink, type To } from "react-router-dom";
 
-function shouldUseAnchor(to: To) {
+function shouldUseAnchor(to: string) {
 	const href = to.toString();
 	return !!(href.match(/^https?:\/\//i) || href.match(/^mailto:/) || href.match(/^#/));
 }
 
-export interface Props extends Omit<ComponentProps<typeof RRLink>, "to"> {
-	to?: string;
+export interface BaseLinkProps extends Merge<LinkProps<"a", typeof router>, ComponentProps<"a">> {
 	forceAnchor?: boolean;
 }
 
-const BaseLink = ({ to = "", children, forceAnchor, ...delegated }: Props) => {
+const BaseLink = ({ to, children, forceAnchor, ...delegated }: BaseLinkProps) => {
+	if (!to) return <span {...delegated}>{children}</span>;
 	if (shouldUseAnchor(to) || forceAnchor) {
 		let target: HTMLAttributeAnchorTarget | undefined;
 
@@ -26,9 +28,9 @@ const BaseLink = ({ to = "", children, forceAnchor, ...delegated }: Props) => {
 		);
 	}
 	return (
-		<RRLink to={to} {...delegated}>
+		<Link to={to} {...delegated}>
 			{children}
-		</RRLink>
+		</Link>
 	);
 };
 

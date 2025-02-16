@@ -70,7 +70,8 @@ const SongsTableRow = ({ songId }: Props) => {
 							paddingLeft: UNIT * 2,
 							paddingRight: UNIT * 2,
 						}}
-						to={`/edit/${song.id}/${difficultyToLoad}/notes`}
+						to={"/edit/$sid/$bid/notes"}
+						params={{ sid: song.id.toString(), bid: difficultyToLoad.toString() }}
 					>
 						Load Map
 					</MiniButton>

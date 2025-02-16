@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Fragment, memo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";
@@ -63,7 +63,7 @@ const SongInfo = ({ songId, showDifficultySelector, coverArtSize = "medium" }: P
 											// This might be annoying when trying to jump quickly between two difficulties :/
 											// Maybe I can solve this by pushing query strings?
 											// ?offset=716.83
-											navigate(`/edit/${song.id}/${value}/notes`);
+											return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: value } });
 										}
 									}}
 									width={90}
@@ -87,7 +87,7 @@ const SongInfo = ({ songId, showDifficultySelector, coverArtSize = "medium" }: P
 				<CreateDifficultyForm
 					afterCreate={(difficulty) => {
 						setShowCreateDifficultyModal(false);
-						navigate(`/edit/${song.id}/${difficulty}/notes`);
+						return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: difficulty.toString() } });
 					}}
 				/>
 			</Modal>
