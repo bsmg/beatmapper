@@ -33,7 +33,7 @@ In Beatmapper's events view, every event type gets its own **track**. A track is
 
 The events view collects the 9 tracks in a **table**. The table shows a specific **window** of time, measured in beats. In the screenshot above, we see beats 0 through 16, since we're editing the very first section of the song.
 
-A thick vertical yellow bar represents the song's current position. When you press `Space` to play the song, the yellow bar moves through the window, and will automatically advance to the next window:
+A thick vertical yellow bar represents the song's current position. When you press <Shortcut>Space</Shortcut> to play the song, the yellow bar moves through the window, and will automatically advance to the next window:
 
 ![](./images/events-yellow-bar.gif)
 
@@ -53,7 +53,8 @@ Finally, above the tracks you'll find a suite of **controls**. These controls ch
 
 As you play the song, the window automatically advances when the song's position passes the current window. There are much more convenient ways to jump around though!
 
-First, many of the tricks you learned in the Notes view will carry over. You can scrub the waveform, scroll with the mousewheel or arrow keys to seek forwards and backwards, and use the `J` key to jump to a specific point.
+First, many of the tricks you learned in the Notes view will carry over. 
+You can scrub the waveform, scroll with the mousewheel or arrow keys to seek forwards and backwards, and use the <Shortcut>J</Shortcut> key to jump to a specific point.
 
 The media keys on either side of the "play" button take on a slightly different role in this view, though. The "next" button will automatically jump to the next window; If you're looking at beats 0-16, one press of the button will show you beats 16-32. The "previous" button rewinds to the start of the current window, and repeated presses will jump to previous windows.
 
@@ -69,7 +70,8 @@ You can also change the size of the window using the **zoom buttons**. These are
 
 ![](./images/zoom-controls.png)
 
-This changes the number of beats that fit in the window. You can zoom out to fit 32 beats, or zoom in to fit as few as 4 beats in the window. You can use the keyboard shortcuts `-` and `+`.
+This changes the number of beats that fit in the window. You can zoom out to fit 32 beats, or zoom in to fit as few as 4 beats in the window. 
+You can use the keyboard shortcuts <Shortcut separator="&"> - & +</Shortcut>.
 
 ## Track types
 
@@ -137,8 +139,8 @@ For lighting tracks, you can select the _color_ and _type_ of the lighting event
 
 Manually clicking the controls is tedious, so it is recommended to use the keyboard shortcuts:
 
-- For color, you can use `R` to select red lighting, and `B` to select blue lighting.
-- For event types, you can use the numbers `1-4` (`1` for on, `2` for off, etc), or you can use `Tab` and `Shift+Tab` to toggle between tools.
+- For color, you can use <Shortcut>r</Shortcut> to select red lighting, and <Shortcut>b</Shortcut> to select blue lighting.
+- For event types, you can use the numbers <Shortcut separator="—">1—4</Shortcut> (<Shortcut>1</Shortcut> for on, <Shortcut>2</Shortcut> for off, etc), or you can use <Shortcut>tab</Shortcut> and <Shortcut>shift+tab</Shortcut> to toggle between tools.
 
 > More information about shortcuts can be found on the [keyboard shortcuts](/docs/keyboard-shortcuts) page.
 
@@ -170,17 +172,12 @@ At the very bottom of the editor, you'll see a toggle and a couple sliders:
 
 The toggle enables **background lights**. This allows you to view the lights at the same time as you edit the grid!
 
-<YoutubeEmbed
-  title="Enable lights"
-  src="https://www.youtube.com/embed/ZcMW8v3OIVY"
-/>
+<video src='./videos/enable-lights.mp4' autoPlay muted loop controls style={{ width: '100%' }}/>
 
 The sliders beside this toggle allow you to customize the height of each row, and how see-through the event grid is:
 
-<YoutubeEmbed
-  title="Customize Lights"
-  src="https://www.youtube.com/embed/ONwndWYNM5M"
-/>
+<video src='./videos/customize-lights.mp4' autoPlay muted loop controls style={{ width: '100%' }}/>
+
 
 These configuration options will hopefully make it easier to find an arrangement that works for monitors of all sizes.
 
@@ -196,19 +193,19 @@ Add mode works great for quickly placing events, but it's not so great for makin
 
 As in the notes view, events can be selected, and selected events glow yellow to indicate their status.
 
-You can toggle between Add and Select mode through the "Edit Mode" control, or through their keyboard shortcuts: `A` for Add mode, `S` for Select mode.
+You can toggle between Add and Select mode through the "Edit Mode" control, or through their keyboard shortcuts: <Shortcut>a</Shortcut> for Add mode, <Shortcut>s</Shortcut> for Select mode.
 
 ## Managing selections
 
 Armed with the Select mode box tool, we can quickly select groups of events. Let's look at how we can use selections to our advantage.
 
-Sometimes we simply want to erase a section. We can do this by pressing `Delete` - all selected events will be removed.
+Sometimes we simply want to erase a section. We can do this by pressing <Shortcut>delete</Shortcut> - all selected events will be removed.
 
 We can also cut, copy, and paste selections using the typical shortcuts. This is an effective way to move groups of events around (cut -> paste), or repeat a set of events (copy -> paste).
 
 > Pasting is based on the mouse's cursor position, the thin white line, and _not_ the thick yellow line indicating the song's position. This gives you much greater control to quickly paste repeated sections.
 
-If you want to un-select all events, you can press the `Escape` key. You can also select all _visible_ events by using `ctrl+A` or `⌘+A`.
+If you want to un-select all events, you can press the <Shortcut>escape</Shortcut> key. You can also select all _visible_ events by using <Shortcut>meta+a</Shortcut>.
 
 > Note that the "Select all" shortcut is slightly different from the Notes view; in Notes, "Select all" selects all entities across the entire map, whilst in the Events view, it only selects events within the current window, visible on-screen.
 
@@ -224,7 +221,7 @@ Sometimes, you'll be editing something right at the tail end of the window, and 
 
 The "event window lock" loops playback within the current view of events, so the window no longer automatically advances.
 
-You can toggle it on or off with the `Z` key.
+You can toggle it on or off with the <Shortcut>z</Shortcut> key.
 
 ### Symmetrical lasers
 
@@ -234,7 +231,7 @@ The "laser lock" disables the `Right laser` and `Right laser speed` tracks, and 
 
 ![](./images/lock-lasers.gif)
 
-You can toggle it on or off with the `X` key.
+You can toggle it on or off with the <Shortcut>x</Shortcut> key.
 
 ## Playtesting your map
 

@@ -8,8 +8,8 @@ import BaseLink from "../BaseLink";
 import YoutubeEmbed from "../YoutubeEmbed";
 import HorizontalRule from "./HorizontalRule";
 import { MDXContent } from "./MDXContent";
-import { Shortcut, ShortcutTable } from "./Shortcut";
-import { MetaKey } from "./ShortcutHelpers";
+import { ShortcutItem, ShortcutTable } from "./Shortcut";
+import { KeyIcon, Shortcut } from "./ShortcutHelpers";
 
 interface ImageProps extends ComponentProps<"img"> {
 	caption?: string;
@@ -29,25 +29,18 @@ const Subtle = styled.span`
 	font-style: italic;
 `;
 
-const Pre = styled.pre`
-	padding: 2rem;
-	background: rgba(0, 0, 0, 0.04);
-	font-family: monospace;
-	margin: 2rem 0;
-
-	code {
-		background: transparent !important;
-	}
-`;
-
 const sharedComponents: MDXComponents = {
 	a: ({ href, ...props }) => <BaseLink {...props} to={href} />,
 	img: Image,
 	hr: HorizontalRule,
-	MetaKey: MetaKey,
-	pre: Pre,
+	Key: ({ size, children }) => <KeyIcon size={size ?? "medium"}>{children}</KeyIcon>,
 	Subtle: Subtle,
-	Shortcut: Shortcut,
+	Shortcut: ({ size, separator, children }) => (
+		<Shortcut separator={separator} size={size ?? "medium"}>
+			{children}
+		</Shortcut>
+	),
+	ShortcutItem: ShortcutItem,
 	ShortcutTable: ShortcutTable,
 	YoutubeEmbed,
 };
@@ -83,7 +76,7 @@ const ImageWrapper = styled.span`
 	padding: 8px;
 	border-radius: 6px;
 	/* border: 1px solid ${COLORS.blueGray[100]}; */
-	margin-bottom: 24px;
+	margin-block: 12px;
 
 	&:hover {
 		background: ${COLORS.blueGray[50]};
@@ -108,8 +101,8 @@ const DocumentStyles = styled.div`
 	font-size: 18px;
 	color: ${COLORS.blueGray[900]};
 
-	p {
-		margin-bottom: 24px;
+	p:not(:first-of-type) {
+		margin-block: 24px;
 	}
 
 	a {
@@ -162,13 +155,13 @@ const DocumentStyles = styled.div`
 
 	ul,
 	ol {
-		margin-bottom: 40px;
+		margin-block: 20px;
 	}
 
 	li {
 		margin-left: 20px;
 		list-style-type: disc;
-		margin-bottom: 18px;
+		margin-block: 9px;
 	}
 
 	code {
@@ -215,7 +208,7 @@ const DocumentStyles = styled.div`
 		margin-bottom: 30px;
 
 		*:last-of-type {
-			margin-bottom: 0;
+			margin-block: 0;
 		}
 	}
 `;

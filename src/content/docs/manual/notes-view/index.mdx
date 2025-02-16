@@ -19,7 +19,7 @@ There are many ways to move through time in the song:
 
 #### 1. Media controls
 
-In the center of the bottom control panel, you'll find buttons for playing / pausing the track (shortcut: `Space`), jumping forwards/backwards by 32 beats (`PageUp` / `PageDown`), and jumping straight to the beginning or end (`Home` / `End`).
+In the center of the bottom control panel, you'll find buttons for playing / pausing the track (shortcut: <Shortcut>Space</Shortcut>), jumping forwards/backwards by 32 beats (<Shortcut separator="/">Page Up / Page Down</Shortcut>), and jumping straight to the beginning or end (<Shortcut separator="/">Home / End</Shortcut>).
 
 ![](./images/jump-icons.png)
 
@@ -35,7 +35,7 @@ The most common way to navigate around is known as "seeking". Seeking works by m
 
 You can **scroll the mousewheel** to seek - every tick up will send you forwards by _1 increment_, while mouse-wheeling in the opposite direction will seek backwards.
 
-You can also use the arrow keys! **Up** and **right** are used to go forwards, while **down** and **left** will go backward.
+You can also use the arrow keys! <Shortcut>up</Shortcut> and <Shortcut>right</Shortcut> are used to go forwards, while <Shortcut>down</Shortcut> and <Shortcut>left</Shortcut> will go backward.
 
 You can change the "snapping interval", which affects how far each tick takes you.
 
@@ -45,17 +45,18 @@ Clicking on the dropdown will show you all available options, as well as the cor
 
 ![](./images/snapping-interval-shortcuts.png)
 
-> You can also shift between snapping intervals by holding `ctrl` (or `⌘` on Mac) and spinning the mousewheel.
+> You can also shift between snapping intervals by holding <Shortcut>META</Shortcut> and spinning the mousewheel.
 
 ## Navigating space
 
 By default, the camera will be facing the placement grid head-on. The main benefit of a 3D editor is the ability to move around, though!
 
-You can move the camera by **holding shift** and **using WASD**, while looking around with the mouse, as you might in a first-person shooter video game. You can also use **R** to rise up, and **F** to fall down (while still holding shift).
+You can move the camera by **holding <Shortcut>shift</Shortcut>** and **using <Shortcut>W+A+S+D</Shortcut>**, while looking around with the mouse, as you might in a first-person shooter video game. 
+You can also use <Shortcut>R</Shortcut> to rise up, and <Shortcut>F</Shortcut> to fall down (while still holding shift).
 
 ![](./images/movement.gif "Like playing Unreal Tournament, only you can fly")
 
-At any point, you can press **backspace** to reset the camera's position to the default head-on view.
+At any point, you can press <Shortcut>backspace</Shortcut> to reset the camera's position to the default head-on view.
 
 ## Placing blocks
 
@@ -69,8 +70,10 @@ Blocks can be placed in 8 cardinal directions, as well as a directionless "face"
 
 You'll be changing color and direction quite a lot while mapping, so a number of conveniences are provided. First, you can use **keyboard shortcuts**:
 
-- To switch between red and blue blocks, you can press the `R` and `B` keys (or the `1` and `2` keys). You can also press `tab` to move forward between tools (including mines and obstacles, which we'll learn about shortly), or `shift+tab` to move backwards between tools.
-- To select a block direction, you can use the letters `WASD`. For example, you'd press `W` to select an "up" direction block. For diagonals, you can hold multiple keys: to select a top-left block, press both `W` and `A` at the same time.
+- To switch between red and blue blocks, you can press the <Shortcut>R</Shortcut> and <Shortcut>B</Shortcut> keys (or the <Shortcut>1</Shortcut> and <Shortcut>2</Shortcut> keys). 
+  You can also press <Shortcut>tab</Shortcut> to move forward between tools (including mines and obstacles, which we'll learn about shortly), or <Shortcut>shift + tab</Shortcut> to move backwards between tools.
+- To select a block direction, you can use the letters <Shortcut>w+a+s+d</Shortcut>. 
+  For example, you'd press <Shortcut>w</Shortcut> to select an "up" direction block. For diagonals, you can hold multiple keys: to select a top-left block, press <Shortcut>w + a</Shortcut> at the same time.
 
 You can swap the color of an existing block by clicking on it with the **middle mouse button**:
 
@@ -84,7 +87,7 @@ Finally, you can **click and drag** to dynamically select a block direction. Thi
 
 There are two other tools we need to familiarize ourselves with: **mines** and **obstacles**.
 
-Mines are meant to be avoided by the sabers. You can select them from the right sidebar, or press `3` to select them. You can also cycle through tools with `tab` and `shift+tab`.
+Mines are meant to be avoided by the sabers. You can select them from the right sidebar, or press <Shortcut>3</Shortcut> to select them. You can also cycle through tools with <Shortcut>tab</Shortcut> and <Shortcut>shift + tab</Shortcut>.
 
 Mines don't have colors or directions, but otherwise they work just like blocks:
 
@@ -132,21 +135,22 @@ As a convenience, you can **click and hold** to select (or deselect) many items 
 
 ![](./images/bulk-select.gif "Blocks, obstacles, and mines can all be selected")
 
-To **clear your selection**, press the `Escape` key on your keyboard. You can also toggle between selecting all notes and no notes with `ctrl+A` (`⌘+A` on Mac)
+To **clear your selection**, press the <Shortcut>Escape</Shortcut> key on your keyboard. You can also toggle between selecting all notes and no notes with <Shortcut>meta + a</Shortcut>.
 
-To **delete selected items**, you can use the `Delete` key. Alternatively, you can also right-click items to delete them.
+To **delete selected items**, you can use the <Shortcut>Delete</Shortcut> key. Alternatively, you can also right-click items to delete them.
 
-If you make a mistake deleting items, you can undo with `ctrl+Z` or `⌘+Z`.
+If you make a mistake deleting items, you can undo with <Shortcut>meta + z</Shortcut>.
 
 You can **copy and paste** using the standard shortcuts for your operating system:
 
-- `ctrl+c` or `⌘+c` to copy
-- `ctrl+v` or `⌘+v` to cut (copies to the clipboard and deletes the blocks)
-- `ctrl+p` or `⌘+p` to paste
+- <Shortcut>meta + c</Shortcut> to copy
+- <Shortcut>meta + x</Shortcut> to cut (copies to the clipboard and deletes the blocks)
+- <Shortcut>meta + v</Shortcut> to paste
 
 ### Quick-select
 
-It can be tedious to drag your mouse over all notes in a given section. To make life easier, you can use the "Quick-select" button in the right side-panel (Keyboard shortcut `Q`). This will prompt you to enter a _range of beats_ to select:
+It can be tedious to drag your mouse over all notes in a given section. To make life easier, you can use the "Quick-select" button in the right side-panel (Keyboard shortcut <Shortcut>q</Shortcut>). 
+This will prompt you to enter a _range of beats_ to select:
 
 ![](./images/quick-select.gif)
 

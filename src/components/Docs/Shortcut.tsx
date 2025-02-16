@@ -3,60 +3,8 @@ import styled from "styled-components";
 
 import { COLORS } from "$/constants";
 
-import Mouse from "./Mouse";
-import { IconRow, KeyIcon, MetaKey, OptionKey, Or, Plus, Sidenote } from "./ShortcutHelpers";
+import { IconRow, Or, Plus, Shortcut, Sidenote } from "./ShortcutHelpers";
 
-function resolveIcon(code: string) {
-	if (code.length === 1) {
-		return (
-			<KeyIcon key={code} type="square">
-				{code}
-			</KeyIcon>
-		);
-	}
-	switch (code) {
-		case "META": {
-			return (
-				<KeyIcon key={code} type="slightly-wide">
-					<MetaKey />
-				</KeyIcon>
-			);
-		}
-		case "OPTION": {
-			return (
-				<KeyIcon key={code} type="slightly-wide">
-					<OptionKey />
-				</KeyIcon>
-			);
-		}
-		case "Space": {
-			return (
-				<KeyIcon key={code} type="spacebar">
-					{code}
-				</KeyIcon>
-			);
-		}
-		case "MOVE":
-		case "LEFT_CLICK":
-		case "MIDDLE_CLICK":
-		case "RIGHT_CLICK":
-		case "SCROLL": {
-			return <Mouse key={code} activeButton={code} />;
-		}
-		default: {
-			return (
-				<KeyIcon key={code} type="slightly-wide">
-					{code}
-				</KeyIcon>
-			);
-		}
-	}
-}
-
-function Icon({ code }: { code: string }) {
-	if (Array.isArray(code)) return [code.map((x) => resolveIcon(x))];
-	return resolveIcon(code);
-}
 function Row({ row, separator }: { row?: string[]; separator?: string }) {
 	if (!row || separator) {
 		return (
@@ -68,8 +16,8 @@ function Row({ row, separator }: { row?: string[]; separator?: string }) {
 	return (
 		<IconRow>
 			{row.map((code, index) => {
-				if (index > 0) return [<Plus key={`${index}-${"plus"}`} />, <Icon key={`${index}-${code}`} code={code} />];
-				return <Icon key={`${index}-${code}`} code={code} />;
+				if (index > 0) return [<Plus key={`${index}-${"plus"}`} />, <Shortcut key={`${index}-${code}`}>{code}</Shortcut>];
+				return <Shortcut key={`${index}-${code}`}>{code}</Shortcut>;
 			})}
 		</IconRow>
 	);
@@ -81,7 +29,7 @@ interface Props extends PropsWithChildren {
 	separator?: string;
 }
 
-export const Shortcut = ({ title, keys, separator, children }: Props) => {
+export const ShortcutItem = ({ title, keys, separator, children }: Props) => {
 	const rows = useMemo(
 		() =>
 			keys.map((row, index) => {

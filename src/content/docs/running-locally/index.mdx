@@ -55,7 +55,7 @@ Our first order of business is to move into the directory we just created. By de
 
 We need to navigate to the folder we downloaded from GitHub. Assuming that you placed the `beatmapper-master` folder on the desktop, you should be able to get there by typing:
 
-```
+```sh
 cd Desktop/beatmapper-master
 ```
 
@@ -69,14 +69,14 @@ Once you're in the correct folder, you can run `ls` again to see a list of the B
 
 From within the `beatmapper-master` directory, run the following command:
 
-```
+```sh
 yarn install
 ```
 
 Yarn is a tool used to fetch and manage the dependencies that Beatmapper uses.
 The final output should look something like this:
 
-```sh
+```
 ➤ YN0000: · Yarn 4.3.1
 ➤ YN0000: ┌ Resolution step
 ➤ YN0000: └ Completed
@@ -92,13 +92,13 @@ The final output should look something like this:
 
 Once that command has finished, we're ready to build the project. Run:
 
-```
+```sh
 yarn build
 ```
 
 This will also take a couple minutes, and you may see a few scary-looking warnings. Pay no attention to them. The final output should look like:
 
-```sh
+```
 vite v5.4.3 building for production...
 ✓ 1809 modules transformed.
 rendering chunks (2)...
@@ -127,7 +127,7 @@ The last step in our intrepid adventure: we need to serve the built application.
 
 Vite has a built-in command to do this, so simply run:
 
-```
+```sh
 yarn preview
 ```
 
@@ -135,14 +135,14 @@ This command creates a mini webserver, and allows you to access your local versi
 
 When you do so, you should see the familiar UI of Beatmapper! There is no difference between this local build and the one that runs on this domain. All of the documentation and everything should work just as well
 
-This server will run until you close the terminal window. The process can be interrupted with `ctrl + C` (may be different on Windows), if you wish to stop the server without closing the window.
+This server will run until you close the terminal window. The process can be interrupted with <Shortcut>META+C</Shortcut>, if you wish to stop the server without closing the window.
 
 ### Editing local files
 
 When you make changes to local files, you'll need to rebuild the application. After you've made your changes, run the following command to rebuild the application and restart the web server:
 
-```
-npm run build && serve -s build
+```sh
+yarn build
 ```
 
 ## Running a development server
@@ -154,7 +154,7 @@ as well as print out additional debug information for ease of development.
 
 You can run the dev server via the following command:
 
-```
+```sh
 yarn dev
 ```
 
@@ -184,13 +184,13 @@ Open up those 3 files in this editor.
 
 ### Mission: Remapping the "Undo" shortcut
 
-Beatmapper uses the standard convention of having Ctrl + Z used for undo. On QWERTY keyboards, this works great, but on AZERTY keyboards, this shortcut closes the browser tab!
+Beatmapper uses the standard convention of having <Shortcut>META+Z</Shortcut> used for undo. On QWERTY keyboards, this works great, but on AZERTY keyboards, this shortcut closes the browser tab!
 
-We want to remap this to Ctrl + W instead
+We want to remap this to <Shortcut>META+W</Shortcut> instead
 
 Inside `GlobalShortcuts.tsx`, there is a section of code around line 90 that looks like:
 
-```
+```ts title="src/components/GlobalShortcuts/GlobalShortcuts.tsx"
 switch (ev.code) {
   case 'Space': {
     ...
@@ -206,11 +206,11 @@ switch (ev.code) {
 }
 ```
 
-To briefly explain what's happening here: this code runs whenever a key on the keyboard is pressed, and each `case` is listening for a different letter. When the spacebar is pressed, the code inside `case 'Space'` is run.
+To briefly explain what's happening here: this code runs whenever a key on the keyboard is pressed, and each `case` is listening for a different letter. When the <Shortcut>Spacebar</Shortcut> is pressed, the code inside `case 'Space'` is run.
 
-For individual letters, the pattern is `KeyX`. So the 'A' key is `KeyA`. Scroll down until you see this code:
+For individual letters, the pattern is `KeyX`. So the <Shortcut>A</Shortcut> key is `KeyA`. Scroll down until you see this code:
 
-```
+```ts title="src/components/GlobalShortcuts/GlobalShortcuts.tsx"
 case 'KeyZ': {
   if (!isMetaKeyPressed(ev)) {
     return;
@@ -232,13 +232,13 @@ Save the file, and [follow the rebuild steps](#editing-local-files). Your new ke
 
 ### Mission: Remapping the event tools
 
-In the events view, you can use the numbers 1 through 4 to pick between the different event types: `1` is "On", `2` is "Off", `3` is "Flash", `4` is "Fade".
+In the events view, you can use the numbers 1 through 4 to pick between the different event types: <Shortcut>1</Shortcut> is "On", <Shortcut>2</Shortcut> is "Off", <Shortcut>3</Shortcut> is "Flash", <Shortcut>4</Shortcut> is "Fade".
 
 Let's say we want to remap this to use WASD, but only when the "Shift" key is held.
 
-First, let's find where the shortcuts live now. They're in `src/components/Events/KeyboardShortcuts.ts`:
+First, let's find where the shortcuts live now. They're in `src/components/Events/KeyboardShortcuts.tsx`:
 
-```
+```ts title="src/components/Events/KeyboardShortcuts.tsx"
 case 'Digit1': {
   return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
 }
@@ -253,19 +253,19 @@ case 'Digit4': {
 }
 ```
 
-Let's say we want `Shift + A` to trigger the "On" event. Your instinct might be to simply update `Digit1` to `KeyA`:
+Let's say we want <Shortcut>Shift + A</Shortcut> to trigger the "On" event. Your instinct might be to simply update `Digit1` to `KeyA`:
 
-```
+```ts title="src/components/Events/KeyboardShortcuts.tsx"
 case 'KeyA': {
   return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
 }
 ```
 
-That will allow the `A` key to toggle this tool, but remember, we want it to be `Shift + A`, not just `A` on its own!
+That will allow the <Shortcut>A</Shortcut> key to toggle this tool, but remember, we want it to be <Shortcut>Shift + A</Shortcut>, not just <Shortcut>A</Shortcut> on its own!
 
 We need to wrap this code in a _condition_. Update the code so that it reads:
 
-```
+```ts title="src/components/Events/KeyboardShortcuts.tsx"
 case 'KeyA': {
   if (ev.shiftKey) {
     return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
@@ -275,11 +275,11 @@ case 'KeyA': {
 
 Explaining this code-change in depth is beyond the scope of this documentation, but hopefully its meaning is somewhat clear; If the shift key is held, run the code that selects the "On" tool.
 
-There's one last problem we need to tackle, though; it turns out, we _already had_ a keybinding for the `A` key. If we run this code as-is, we'll _overwrite_ some other bindings that exist for this key.
+There's one last problem we need to tackle, though; it turns out, we _already had_ a keybinding for the <Shortcut>A</Shortcut> key. If we run this code as-is, we'll _overwrite_ some other bindings that exist for this key.
 
-In VS Code, if you type `Ctrl + F`, you'll pull up a little search text field. Enter `KeyA`, and you'll discover that this code exists in the same file:
+In VS Code, if you type <Shortcut>META+F</Shortcut>, you'll pull up a little search text field. Enter `KeyA`, and you'll discover that this code exists in the same file:
 
-```
+```ts title="src/components/Events/KeyboardShortcuts.tsx"
 case 'KeyA': {
   if (isMetaKeyPressed(ev)) {
     ev.preventDefault();
@@ -292,14 +292,14 @@ case 'KeyA': {
 
 The "Meta key" that this code references is the Control key on Windows/Linux, and the Command key on Mac. Essentially, these bindings do two things:
 
-- When `Ctrl+A` is pressed, select all events in the view.
-- When `A` is pressed on its own, switch the edit mode (`A` is for "Add" mode, `S` is for "Select" mode).
+- When <Shortcut>META+A</Shortcut> is pressed, select all events in the view.
+- When <Shortcut>A</Shortcut> is pressed on its own, switch the edit mode (<Shortcut>S</Shortcut> is for "Add" mode, <Shortcut>S</Shortcut> is for "Select" mode).
 
 We can't have two different `case 'KeyA':` lines - if we do, the second one will overwrite the first, and we won't be able to use these other shortcuts anymore!
 
 We need to consolidate these two cases. Copy the code we wrote, and paste it in the top of this `case`, like so:
 
-```
+```ts title="src/components/Events/KeyboardShortcuts.tsx"
 case 'KeyA': {
   if (ev.shiftKey) {
     return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
@@ -316,8 +316,8 @@ case 'KeyA': {
 
 Now this code has 3 conditions:
 
-- If the Shift key is held, select the "On" event
-- If the Ctrl key is held, select all entities
+- If the <Shortcut>Shift</Shortcut> key is held, select the "On" event
+- If the <Shortcut>META</Shortcut> key is held, select all entities
 - If neither of those keys are held, switch the edit mode
 
 ---

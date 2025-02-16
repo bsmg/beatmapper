@@ -21,7 +21,7 @@ const Sidebar = () => {
 				<NavGroup>
 					{getDocsForCategory(null).map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`}>
+							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -30,7 +30,7 @@ const Sidebar = () => {
 				<NavGroup title="User Manual" showByDefault>
 					{getDocsForCategory("manual").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/manual/${entry.id}`}>
+							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -39,7 +39,7 @@ const Sidebar = () => {
 				<NavGroup title="Advanced">
 					{getDocsForCategory("advanced").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`}>
+							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -48,7 +48,7 @@ const Sidebar = () => {
 				<NavGroup title="Release Notes">
 					{getDocsForCategory("release-notes").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/releases/${entry.id}`}>
+							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);
@@ -57,7 +57,7 @@ const Sidebar = () => {
 				<NavGroup title="Legal">
 					{getDocsForCategory("legal").map((entry) => {
 						return (
-							<NavLink key={entry.id} to={`/docs/${entry.id}`}>
+							<NavLink key={entry.id} to={`/docs/${entry.id}`} onClick={() => window.scrollTo({ top: 0 })}>
 								{entry.title}
 							</NavLink>
 						);

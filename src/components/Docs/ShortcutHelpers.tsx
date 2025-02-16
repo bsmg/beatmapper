@@ -5,6 +5,7 @@ import styled from "styled-components";
 
 import { COLORS } from "$/constants";
 import { getMetaKeyLabel, getOptionKeyLabel } from "$/utils";
+import Mouse from "./Mouse";
 
 interface Props extends PropsWithChildren {
 	size?: "small" | "medium";
@@ -49,6 +50,91 @@ export const MetaKey = () => {
 };
 export const OptionKey = () => {
 	return getOptionKeyLabel(navigator);
+};
+
+function resolveIcon(code: string, size?: "small" | "medium") {
+	const aliases: Record<string, string> = {
+		meta: getMetaKeyLabel(),
+		option: getOptionKeyLabel(),
+		space: "Spacebar",
+		up: "↑",
+		down: "↓",
+		left: "←",
+		right: "→",
+		escape: "Esc",
+		delete: "Del",
+	};
+	const alias = code.toLowerCase() in aliases ? aliases[code.toLowerCase()] : code.toLowerCase();
+
+	if (code.length === 1) {
+		return (
+			<KeyIcon key={alias} size={size} type="square">
+				{alias}
+			</KeyIcon>
+		);
+	}
+	switch (code.toLowerCase()) {
+		case "up":
+		case "down":
+		case "left":
+		case "right": {
+			return (
+				<KeyIcon key={alias} size={size} type="square">
+					{alias}
+				</KeyIcon>
+			);
+		}
+		case "option":
+		case "meta": {
+			return (
+				<KeyIcon key={alias} size={size} type="slightly-wide">
+					{alias}
+				</KeyIcon>
+			);
+		}
+		case "spacebar":
+		case "space": {
+			return (
+				<KeyIcon key={alias} size={size} type="spacebar">
+					{alias}
+				</KeyIcon>
+			);
+		}
+		case "mousemove":
+		case "mouseleft":
+		case "mouseright":
+		case "mousemiddle":
+		case "mousescroll": {
+			return <Mouse key={alias} activeButton={alias} />;
+		}
+		default: {
+			return (
+				<KeyIcon key={alias} size={size} type="slightly-wide">
+					{alias}
+				</KeyIcon>
+			);
+		}
+	}
+}
+
+interface Props extends PropsWithChildren {
+	separator?: string;
+	size?: "small" | "medium";
+}
+
+export const Shortcut = ({ separator = "+", size, children }: Props) => {
+	return Children.map(children, (child) => {
+		if (typeof child !== "string") throw new Error("");
+		const keys = child.toString().trim().split(separator);
+		return (
+			<span>
+				{keys.map((c, i) => {
+					if (i !== 0) return [separator, resolveIcon(c.trim(), size)];
+					return resolveIcon(c.trim(), size);
+				})}
+			</span>
+		);
+	});
 };
 
 export const IconRow = styled.div`
