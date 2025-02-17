@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import NotesEditor from "$/components/NotesEditor";
+import NotesEditor from "$/components/legacy/NotesEditor";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/notes")({
 	component: RouteComponent,

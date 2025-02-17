@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import Download from "$/components/Download";
+import Download from "$/components/legacy/Download";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/download")({
 	component: RouteComponent,

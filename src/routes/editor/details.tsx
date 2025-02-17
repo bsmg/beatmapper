@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import SongDetails from "$/components/SongDetails";
+import SongDetails from "$/components/legacy/SongDetails";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/details")({
 	component: RouteComponent,

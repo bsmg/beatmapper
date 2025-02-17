@@ -2,7 +2,7 @@ import { docs } from "velite:content";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import DocPage from "$/components/Docs/DocPage";
+import DocPage from "$/components/legacy/Docs/DocPage";
 
 export const Route = createFileRoute("/_/docs/_/$")({
 	component: RouteComponent,

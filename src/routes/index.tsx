@@ -1,4 +1,4 @@
-import Home from "$/components/Home";
+import Home from "$/components/legacy/Home";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({

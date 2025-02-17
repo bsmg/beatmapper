@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 import type { JSX } from "react/jsx-runtime";
 
-import Modal from "$/components/Modal";
+import Modal from "$/components/legacy/Modal";
 
 let mountPoint: Element | DocumentFragment;
 

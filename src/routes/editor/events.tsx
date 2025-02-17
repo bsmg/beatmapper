@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import Events from "$/components/Events";
+import Events from "$/components/legacy/Events";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/events")({
 	component: RouteComponent,

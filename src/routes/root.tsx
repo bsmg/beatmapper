@@ -5,8 +5,8 @@ import { Fragment } from "react";
 import { useAppSelector } from "$/store/hooks";
 import { selectInitialized } from "$/store/selectors";
 
-import GlobalStyles from "$/components/GlobalStyles";
-import LoadingScreen from "$/components/LoadingScreen";
+import GlobalStyles from "$/components/legacy/GlobalStyles";
+import LoadingScreen from "$/components/legacy/LoadingScreen";
 
 import "react-tippy/dist/tippy.css";
 

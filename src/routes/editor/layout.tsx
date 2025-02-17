@@ -7,9 +7,9 @@ import { leaveEditor, startLoadingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId } from "$/store/selectors";
 
-import EditorPrompts from "$/components/EditorPrompts";
-import LoadingScreen from "$/components/LoadingScreen";
-import Sidebar from "$/components/Sidebar";
+import EditorPrompts from "$/components/legacy/EditorPrompts";
+import LoadingScreen from "$/components/legacy/LoadingScreen";
+import Sidebar from "$/components/legacy/Sidebar";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	component: RouteComponent,
