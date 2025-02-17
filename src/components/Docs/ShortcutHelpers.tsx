@@ -100,11 +100,11 @@ function resolveIcon(code: string, size?: "small" | "medium") {
 				</KeyIcon>
 			);
 		}
-		case "mousemove":
-		case "mouseleft":
-		case "mouseright":
-		case "mousemiddle":
-		case "mousescroll": {
+		case "move":
+		case "clickleft":
+		case "clickright":
+		case "clickmiddle":
+		case "scroll": {
 			return <Mouse key={alias} activeButton={alias} />;
 		}
 		default: {
@@ -137,24 +137,14 @@ export const Shortcut = ({ separator = "+", size, children }: Props) => {
 	});
 };
 
-export const IconRow = styled.div`
+export const IconRow = styled.span`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  margin-bottom: 4px;
-
-  &:last-of-type {
-    margin-bottom: 0;
-  }
 
   & > * {
     margin-right: 4px;
-    margin-bottom: 4px;
-
-    &:last-of-type {
-      margin-right: 0;
-    }
   }
 `;
 
@@ -168,8 +158,9 @@ export const Sidenote = styled.div`
   font-weight: 300;
   margin-top: 8px;
   line-height: 1.3;
+
   & p {
-    margin-bottom: 0;
+    margin-block: 0 !important;
   }
 `;
 
@@ -185,10 +176,11 @@ export const OrWrapper = styled.div`
   opacity: 0.5;
 `;
 
-const PlusWrapper = styled.div`
+const PlusWrapper = styled.span`
   display: flex;
-  margin-inline: 0.25em;
   align-items: center;
+	justify-content: center;
+	margin-inline: 0;
   justify-content: center;
   transform: translate(-2px, -4px);
 `;

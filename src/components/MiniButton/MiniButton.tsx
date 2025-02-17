@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import styled from "styled-components";
 
 import { COLORS, UNIT } from "$/constants";
-import type { router } from "$/routes";
+import type { router } from "$/index";
 
 import BaseLink from "../BaseLink";
 import PixelShifter from "../PixelShifter";

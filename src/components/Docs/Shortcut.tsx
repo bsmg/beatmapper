@@ -16,8 +16,19 @@ function Row({ row, separator }: { row?: string[]; separator?: string }) {
 	return (
 		<IconRow>
 			{row.map((code, index) => {
-				if (index > 0) return [<Plus key={`${index}-${"plus"}`} />, <Shortcut key={`${index}-${code}`}>{code}</Shortcut>];
-				return <Shortcut key={`${index}-${code}`}>{code}</Shortcut>;
+				const separator = code === "+" ? " " : "+";
+				if (index > 0)
+					return [
+						<Plus key={`${index}-${"plus"}`} />,
+						<Shortcut key={`${index}-${code}`} separator={separator}>
+							{code}
+						</Shortcut>,
+					];
+				return (
+					<Shortcut key={`${index}-${code}`} separator={separator}>
+						{code}
+					</Shortcut>
+				);
 			})}
 		</IconRow>
 	);

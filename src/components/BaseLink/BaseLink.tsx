@@ -1,4 +1,4 @@
-import type { router } from "$/routes";
+import type { router } from "$/index";
 import type { Merge } from "@react-spring/three";
 import { Link, type LinkProps } from "@tanstack/react-router";
 import type { ComponentProps, HTMLAttributeAnchorTarget } from "react";
