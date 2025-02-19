@@ -16,6 +16,7 @@
 		"foo": "echo 'hello';"
 	},
 	"dependencies": {
+		"@ark-ui/react": "^4.9.1",
 		"@mdx-js/react": "^3.1.0",
 		"@react-spring/three": "^9.7.5",
 		"@react-spring/web": "^9.7.5",
@@ -29,6 +30,7 @@
 		"idb": "^8.0.0",
 		"immer": "^10.1.1",
 		"jszip": "^3.10.1",
+		"lucide-react": "^0.475.0",
 		"postprocessing": "^6.36.3",
 		"react": "^18.3.1",
 		"react-color": "^2.19.3",
@@ -53,6 +55,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@mdx-js/rollup": "^3.1.0",
+		"@pandacss/dev": "^0.53.0",
+		"@pandacss/studio": "^0.53.0",
 		"@tanstack/router-cli": "^1.105.0",
 		"@tanstack/router-devtools": "^1.105.0",
 		"@tanstack/virtual-file-routes": "^1.99.0",

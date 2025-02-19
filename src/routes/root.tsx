@@ -5,10 +5,7 @@ import { Fragment } from "react";
 import { useAppSelector } from "$/store/hooks";
 import { selectInitialized } from "$/store/selectors";
 
-import GlobalStyles from "$/components/legacy/GlobalStyles";
 import LoadingScreen from "$/components/legacy/LoadingScreen";
-
-import "react-tippy/dist/tippy.css";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -24,7 +21,6 @@ function RootComponent() {
 	return (
 		<Fragment>
 			<Outlet />
-			<GlobalStyles />
 			<TanStackRouterDevtools position="top-right" />
 		</Fragment>
 	);

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { type UserConfig, defineConfig } from "vite";
 
+import { default as pandacss } from "@pandacss/dev/postcss";
 import { default as react } from "@vitejs/plugin-react";
 import { VitePWA as pwa } from "vite-plugin-pwa";
 
@@ -30,12 +31,18 @@ export default defineConfig(async (ctx) => {
 		resolve: {
 			alias: {
 				$: fileURLToPath(new URL("./src", import.meta.url)),
+				"$:styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)),
 				"velite:content": fileURLToPath(new URL("./.velite", import.meta.url)),
 			},
 		},
 		assetsInclude: ["**/*.glsl"],
 		build: {
 			commonjsOptions: { transformMixedEsModules: true }, // Change
+		},
+		css: {
+			postcss: {
+				plugins: [pandacss({})],
+			},
 		},
 		esbuild: {
 			supported: {

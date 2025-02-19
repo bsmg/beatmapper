@@ -7,6 +7,8 @@ import { StyleSheetManager, type WebTarget } from "styled-components";
 import { routeTree } from "./routeTree.gen";
 import { store } from "./setup";
 
+import "./index.css";
+
 const root = document.getElementById("root");
 if (!root) throw new Error("No root element.");
 

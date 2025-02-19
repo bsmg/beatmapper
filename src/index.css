@@ -1,0 +1,36 @@
+@layer reset, base, tokens, recipes, utilities;
+
+@import "react-tippy/dist/tippy.css";
+
+@font-face {
+	font-family: system;
+	font-style: normal;
+	font-weight: 300;
+	src: local(".SFNSText-Light"), local(".HelveticaNeueDeskInterface-Light"), local(".LucidaGrandeUI"), local("Ubuntu Light"), local("Segoe UI Light"), local("Roboto-Light"), local("DroidSans"), local("Tahoma");
+}
+
+body {
+	line-height: 1;
+	font-family: "Oswald", sans-serif;
+	background-color: hsl(222, 30%, 7%) /* var(--colors-slate-1000) */;
+}
+
+body,
+input,
+select,
+button,
+textarea {
+	color: white;
+}
+
+.tippy-tooltip {
+	line-height: 1 !important;
+	padding: 8px 12px !important;
+	background: hsl(0, 0%, 7%) /* var(--colors-gray-900) */ !important;
+}
+.tippy-tooltip [x-circle] {
+	display: none;
+}
+.tippy-popper {
+	pointer-events: auto !important;
+}
