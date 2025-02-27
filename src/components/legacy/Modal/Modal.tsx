@@ -7,7 +7,7 @@ import { x } from "react-icons-kit/feather/x";
 import { Transition } from "react-transition-group";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { hasPropChanged } from "$/utils";
 
 import ScrollDisabler from "../ScrollDisabler";
@@ -149,7 +149,7 @@ const PaneWrapper = styled.div.attrs<Pick<Props, "width" | "height" | "alignment
   max-width: 100%;
   max-height: 95%;
   border-radius: 16px;
-  background: ${COLORS.blueGray[900]};
+  background: ${token.var("colors.slate.900")};
   will-change: transform;
 `;
 

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { updateGraphicsLevel, updateProcessingDelay } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAudioProcessingDelay, selectGraphicsQuality } from "$/store/selectors";
@@ -29,11 +29,11 @@ const SettingsModal = ({ isVisible, onDismiss }: Props) => {
 		<Modal width={400} isVisible={isVisible} onDismiss={onDismiss}>
 			<Wrapper>
 				<Heading size={1}>App settings</Heading>
-				<Spacer size={UNIT * 6} />
+				<Spacer size={token.var("spacing.6")} />
 
 				<RadioSet label="Graphics quality" name="graphics-level" currentValue={graphicsLevel} items={QUALITY_VALUES} onChange={(value) => dispatch(updateGraphicsLevel({ newGraphicsLevel: value as Quality }))} />
 
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 
 				<TextInput
 					label="Processing delay"
@@ -47,7 +47,7 @@ const SettingsModal = ({ isVisible, onDismiss }: Props) => {
 };
 
 const Wrapper = styled.div`
-  padding: ${UNIT * 4}px;
+  padding: ${token.var("spacing.4")};
 `;
 
 export default SettingsModal;

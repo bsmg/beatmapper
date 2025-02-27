@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { fastForward } from "react-icons-kit/feather/fastForward";
 import { pause } from "react-icons-kit/feather/pause";
 import { play } from "react-icons-kit/feather/play";
@@ -6,7 +7,8 @@ import { skipBack } from "react-icons-kit/feather/skipBack";
 import { skipForward } from "react-icons-kit/feather/skipForward";
 import styled from "styled-components";
 
-import { COLORS, SNAPPING_INCREMENTS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { SNAPPING_INCREMENTS } from "$/constants";
 import { changeSnapping, pausePlaying, seekBackwards, seekForwards, skipToEnd, skipToStart, startPlaying } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectIsLoading, selectIsPlaying, selectSnapTo } from "$/store/selectors";
@@ -20,11 +22,11 @@ import CurrentBeat from "./CurrentBeat";
 import CurrentTime from "./CurrentTime";
 
 interface Props {
-	height: number; // TODO: Use `height`
+	height: CSSProperties["height"];
 	view: View;
 }
 
-const EditorNavigationControls = ({ view }: Props) => {
+const EditorNavigationControls = ({ height, view }: Props) => {
 	const isPlaying = useAppSelector(selectIsPlaying);
 	const isLoadingSong = useAppSelector(selectIsLoading);
 	const snapTo = useAppSelector(selectSnapTo);
@@ -43,18 +45,18 @@ const EditorNavigationControls = ({ view }: Props) => {
 					))}
 				</Dropdown>
 			</Left>
-			<Center>
-				<SpacedChildren spacing={UNIT}>
-					<IconButton disabled={isLoadingSong} color={COLORS.white} icon={skipBack} onClick={() => dispatch(skipToStart())} />
-					<IconButton disabled={isLoadingSong} color={COLORS.white} icon={rewind} onClick={() => dispatch(seekBackwards({ view }))} />
-					<IconButton disabled={isLoadingSong} color={COLORS.white} icon={isPlaying ? pause : play} onClick={() => dispatch(playButtonAction())} />
-					<IconButton disabled={isLoadingSong} color={COLORS.white} icon={fastForward} onClick={() => dispatch(seekForwards({ view }))} />
-					<IconButton disabled={isLoadingSong} color={COLORS.white} icon={skipForward} onClick={() => dispatch(skipToEnd())} />
+			<Center style={{ height }}>
+				<SpacedChildren spacing={token.var("spacing.1")}>
+					<IconButton disabled={isLoadingSong} color={"white"} icon={skipBack} onClick={() => dispatch(skipToStart())} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={rewind} onClick={() => dispatch(seekBackwards({ view }))} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={isPlaying ? pause : play} onClick={() => dispatch(playButtonAction())} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={fastForward} onClick={() => dispatch(seekForwards({ view }))} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={skipForward} onClick={() => dispatch(skipToEnd())} />
 				</SpacedChildren>
 			</Center>
 			<Right>
 				<CurrentTime />
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<CurrentBeat />
 			</Right>
 		</Wrapper>

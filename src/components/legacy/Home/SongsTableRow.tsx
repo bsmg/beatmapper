@@ -1,7 +1,8 @@
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { COLORS, DIFFICULTY_COLORS, DIFFICULTY_RENAME, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { DIFFICULTY_RENAME } from "$/constants";
 import { changeSelectedDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
@@ -13,9 +14,9 @@ import Spacer from "../Spacer";
 import UnstyledButton from "../UnstyledButton";
 import SongRowActions from "./SongRowActions";
 
-const SQUARE_SIZE = 12;
-const SQUARE_PADDING = 4;
-const CELL_HEIGHT = 40;
+const SQUARE_SIZE = "12px";
+const SQUARE_PADDING = "4px";
+const CELL_HEIGHT = "40px";
 
 interface Props {
 	songId: SongId;
@@ -46,7 +47,7 @@ const SongsTableRow = ({ songId }: Props) => {
 						<Tooltip key={difficulty} delay={500} title={DIFFICULTY_RENAME[difficulty]}>
 							<DificultySquareWrapper>
 								<DifficultySquare
-									color={DIFFICULTY_COLORS[difficulty]}
+									color={token.var(`colors.difficulty.${difficulty}`)}
 									isOn={!!song.difficultiesById[difficulty]}
 									isSelected={difficultyToLoad === difficulty}
 									onClick={() => {
@@ -67,15 +68,15 @@ const SongsTableRow = ({ songId }: Props) => {
 					<MiniButton
 						style={{
 							height: CELL_HEIGHT,
-							paddingLeft: UNIT * 2,
-							paddingRight: UNIT * 2,
+							paddingLeft: token.var("spacing.2"),
+							paddingRight: token.var("spacing.2"),
 						}}
 						to={"/edit/$sid/$bid/notes"}
 						params={{ sid: song.id.toString(), bid: difficultyToLoad.toString() }}
 					>
 						Load Map
 					</MiniButton>
-					<Spacer size={UNIT} />
+					<Spacer size={token.var("spacing.1")} />
 					<SongRowActions songId={song.id} size={CELL_HEIGHT} />
 				</Actions>
 			</ActionsCell>
@@ -84,8 +85,8 @@ const SongsTableRow = ({ songId }: Props) => {
 };
 
 const Cell = styled.td`
-  height: ${CELL_HEIGHT + UNIT * 2}px;
-  padding: ${UNIT}px;
+  height: calc(${CELL_HEIGHT} + ${token.var("spacing.2")});
+  padding: ${token.var("spacing.1")};
   vertical-align: top;
 
   &:last-of-type {
@@ -95,7 +96,7 @@ const Cell = styled.td`
 `;
 
 const CoverArtCell = styled(Cell)`
-  width: ${CELL_HEIGHT}px;
+  width: calc(${CELL_HEIGHT} + ${token.var("spacing.2")});
 `;
 
 const DescriptionCell = styled(Cell)``;
@@ -108,35 +109,35 @@ const Actions = styled.div`
 `;
 
 const Demo = styled.span`
-  color: ${COLORS.yellow[500]};
+  color: ${token.var("colors.yellow.500")};
   margin-left: 8px;
   font-size: 0.8em;
 `;
 
 const DifficultySquaresCell = styled(Cell)`
-  padding-left: ${UNIT * 2}px;
-  padding-right: ${UNIT * 2}px;
-  width: ${SQUARE_SIZE * 5 + SQUARE_PADDING * 8 + UNIT * 3}px;
+  padding-left: ${token.var("spacing.2")};
+  padding-right: ${token.var("spacing.2")};
+  width: calc((${SQUARE_SIZE} * 5) + (${SQUARE_PADDING} * 8) + ${token.var("spacing.3")});
 `;
 
 const DifficultySquaresWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: ${CELL_HEIGHT}px;
+  height: ${CELL_HEIGHT};
 `;
 
 const DificultySquareWrapper = styled(UnstyledButton)`
-  padding: ${SQUARE_PADDING}px;
+  padding: ${SQUARE_PADDING};
   cursor: default;
 `;
 
 const DifficultySquare = styled.div<{ isOn: boolean; isSelected: boolean }>`
   position: relative;
-  width: ${SQUARE_SIZE}px;
-  height: ${SQUARE_SIZE}px;
+  width: ${SQUARE_SIZE};
+  height: ${SQUARE_SIZE};
   border-radius: 3px;
-  background-color: ${(props) => (props.isOn ? props.color : COLORS.gray[700])};
+  background-color: ${(props) => (props.isOn ? props.color : token.var("colors.gray.700"))};
   cursor: ${(props) => (props.isOn ? "pointer" : "not-allowed")};
 
   &:after {
@@ -146,7 +147,7 @@ const DifficultySquare = styled.div<{ isOn: boolean; isSelected: boolean }>`
     left: -5px;
     right: -5px;
     bottom: -5px;
-    border: 2px solid ${COLORS.white};
+    border: 2px solid white;
     border-radius: 8px;
     opacity: 0.5;
   }
@@ -155,13 +156,13 @@ const DifficultySquare = styled.div<{ isOn: boolean; isSelected: boolean }>`
 const Title = styled.div`
   font-size: 16px;
   font-weight: 400;
-  color: ${COLORS.white};
+  color: white;
 `;
 
 const Artist = styled.div`
   font-size: 15px;
   font-weight: 300;
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 export default SongsTableRow;

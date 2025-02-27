@@ -4,7 +4,7 @@ import { sliders } from "react-icons-kit/feather/sliders";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -35,7 +35,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 		return (
 			<Wrapper>
 				<Heading size={1}>All beatmaps created</Heading>
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<Paragraph>You already have a beatmap for every available difficulty. You cannot create any more beatmaps for this song.</Paragraph>
 				<Paragraph>Did you mean to select an existing difficulty?</Paragraph>
 			</Wrapper>
@@ -44,7 +44,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 	return (
 		<Wrapper>
 			<Heading size={1}>Create new beatmap</Heading>
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 			<Paragraph>
 				Select the difficulty you'd like to start creating. You can also copy an existing difficulty instead, on the{" "}
 				<Link to={"/edit/$sid/$bid/details"} params={{ sid: songId?.toString(), bid: currentDifficulty?.toString() }}>
@@ -56,7 +56,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 				</IconWrapper>
 				).
 			</Paragraph>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<DifficultiesWrapper>
 				{Object.values(Difficulty).map((difficulty) => {
 					const alreadyExists = difficultyIds.includes(difficulty);
@@ -75,7 +75,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 					);
 				})}
 			</DifficultiesWrapper>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<Button style={{ width: 275, margin: "auto" }} onClick={() => songId && selectedId && dispatch(createDifficulty({ songId, difficulty: selectedId, afterCreate }))}>
 				Create {selectedId && getLabelForDifficulty(selectedId)} beatmap
 			</Button>
@@ -84,7 +84,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 };
 
 const Wrapper = styled.div`
-  padding: ${UNIT * 4}px;
+  padding: ${token.var("spacing.4")};
 `;
 
 const IconWrapper = styled.span`

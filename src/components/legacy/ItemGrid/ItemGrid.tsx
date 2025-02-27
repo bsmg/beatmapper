@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -25,7 +25,7 @@ const ItemGrid = () => {
 		<Wrapper>
 			<Heading size={3}>Items</Heading>
 
-			<Spacer size={UNIT * 1.5} />
+			<Spacer size={token.var("spacing.1.5")} />
 
 			<Grid>
 				<Row>

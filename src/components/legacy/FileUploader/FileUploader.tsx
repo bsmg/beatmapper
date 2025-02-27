@@ -4,7 +4,7 @@ import { Icon, type IconProp } from "react-icons-kit";
 import { x } from "react-icons-kit/feather/x";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spacer from "../Spacer";
 import UnstyledButton from "../UnstyledButton";
@@ -54,10 +54,10 @@ const FileUploader = ({ icon, file, title, description, height, onSelectFile, on
 
 					<SelectedHeader>
 						<Filename>{showFilename && file.name}</Filename>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<ClearAction onClick={handleClear}>
 							<Icon icon={x} size={16} />
-							<Spacer size={UNIT} />
+							<Spacer size={token.var("spacing.1")} />
 							Clear
 						</ClearAction>
 					</SelectedHeader>
@@ -66,16 +66,16 @@ const FileUploader = ({ icon, file, title, description, height, onSelectFile, on
 			) : (
 				<PlaceholderWrapper
 					style={{
-						borderColor: isDragActive ? COLORS.yellow[500] : COLORS.blueGray[300],
+						borderColor: isDragActive ? token.var("colors.yellow.500") : token.var("colors.slate.300"),
 					}}
 				>
 					<InnerWrapper>
 						<IconWrapper>
 							<Icon icon={icon} size={24} />
 						</IconWrapper>
-						<Spacer size={UNIT * 2} />
+						<Spacer size={token.var("spacing.2")} />
 						<Title>{title}</Title>
-						<Spacer size={UNIT * 1} />
+						<Spacer size={token.var("spacing.1")} />
 						<Description>{description}</Description>
 
 						<FileInput {...delegated} {...getInputProps()} />
@@ -95,9 +95,9 @@ const SelectedWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
-  border: 2px solid ${COLORS.gray[500]};
+  border: 2px solid ${token.var("colors.gray.500")};
   border-radius: 8px;
-  padding: ${UNIT}px;
+  padding: ${token.var("spacing.1")};
 `;
 
 const SelectedHeader = styled.div`
@@ -107,11 +107,11 @@ const SelectedHeader = styled.div`
   left: 0;
   right: 0;
   height: 40px;
-  padding: 0 ${UNIT * 3}px;
+  padding: 0 ${token.var("spacing.3")};
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
   font-size: 14px;
   opacity: 0;
   pointer-events: none;
@@ -178,15 +178,15 @@ const ClearAction = styled(UnstyledButton)`
 const PlaceholderWrapper = styled.div`
   width: 100%;
   height: 100%;
-  border: 2px dashed ${COLORS.gray[300]};
+  border: 2px dashed ${token.var("colors.gray.300")};
   border-radius: 8px;
-  padding: ${UNIT}px;
+  padding: ${token.var("spacing.1")};
 `;
 
 const InnerWrapper = styled.div`
   width: 100%;
   height: 100%;
-  padding: ${UNIT * 2}px;
+  padding: ${token.var("spacing.2")};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -202,7 +202,7 @@ const InnerWrapper = styled.div`
 `;
 
 const IconWrapper = styled.span`
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 const Title = styled.div`
@@ -214,7 +214,7 @@ const Description = styled.div`
   font-size: 15px;
   font-weight: 300;
   line-height: 1.4;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
 `;
 
 const FileInput = styled.input`

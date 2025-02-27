@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { COLORS, FOOTER_HEIGHT, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Link from "../Link";
 import Logo from "../Logo";
@@ -11,10 +11,10 @@ const Footer = () => {
 	return (
 		<Wrapper>
 			<MaxWidthWrapper>
-				<InnerWrapper style={{ height: FOOTER_HEIGHT }}>
+				<InnerWrapper style={{ height: token.var("sizes.footer") }}>
 					<LogoWrapper>
 						<Logo size="mini" />
-						<Spacer size={UNIT} />
+						<Spacer size={token.var("spacing.1")} />
 						<Links>
 							<Link to="/docs/$" params={{ _splat: "privacy" }}>
 								Privacy
@@ -30,7 +30,7 @@ const Footer = () => {
 						<br />
 						<Symbol>©</Symbol> 2019-present, All rights reserved.
 						<br />
-						<Spacer size={UNIT} />
+						<Spacer size={token.var("spacing.1")} />
 						<Disclaimer>
 							Not affiliated with Beat Games<Symbol>™</Symbol> or Beat Saber
 							<Symbol>™</Symbol>.
@@ -46,7 +46,7 @@ const Wrapper = styled.footer`
   font-size: 14px;
   font-weight: 300;
   background: hsla(0, 0%, 92%, 0.05);
-  color: ${COLORS.blueGray[300]};
+  color: ${token.var("colors.slate.300")};
 `;
 
 const LogoWrapper = styled.div``;
@@ -70,11 +70,11 @@ const Info = styled.div`
 `;
 
 const Disclaimer = styled.div`
-  color: ${COLORS.blueGray[400]};
+  color: ${token.var("colors.slate.400")};
 `;
 
 const ExternalLink = styled.a`
-  color: ${COLORS.blueGray[100]};
+  color: ${token.var("colors.slate.100")};
   font-weight: 400;
   text-decoration: none;
 `;

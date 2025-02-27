@@ -1,10 +1,10 @@
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 const Panel = styled.div`
-  background: ${COLORS.gray[700]};
-  padding: ${UNIT}px;
+  background: ${token.var("colors.gray.700")};
+  padding: ${token.var("spacing.1")};
   border-radius: 4px;
 `;
 

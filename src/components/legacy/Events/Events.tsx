@@ -1,12 +1,12 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import styled from "styled-components";
 
-import { SIDEBAR_WIDTH } from "$/constants";
 import { useWindowDimensions } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectEventBackgroundOpacity } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 
+import { token } from "$:styled-system/tokens";
 import EventsGrid from "../EventsGrid";
 import GlobalShortcuts from "../GlobalShortcuts";
 import SongInfo from "../SongInfo";
@@ -22,7 +22,7 @@ const Events = ({ songId }: Props) => {
 	const backgroundOpacity = useAppSelector(selectEventBackgroundOpacity);
 
 	const { width: windowWidth } = useWindowDimensions();
-	const contentWidth = windowWidth - SIDEBAR_WIDTH;
+	const contentWidth = useMemo(() => windowWidth - Number.parseFloat(token("sizes.sidebar")), [windowWidth]);
 
 	return (
 		<Fragment>

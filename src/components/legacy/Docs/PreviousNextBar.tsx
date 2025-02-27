@@ -2,7 +2,7 @@ import { docs } from "velite:content";
 import { Fragment, useMemo } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import BaseLink from "../BaseLink";
 import Spacer from "../Spacer";
@@ -65,7 +65,7 @@ const NavBlockWrapper = styled.div`
 
 const Subtitle = styled.div`
   font-size: 14px;
-  color: ${COLORS.blueGray[500]};
+  color: ${token.var("colors.slate.500")};
   margin-bottom: 6px;
 `;
 

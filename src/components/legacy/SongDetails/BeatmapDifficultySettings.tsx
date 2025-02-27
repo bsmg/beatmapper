@@ -2,7 +2,7 @@ import { useBlocker, useNavigate } from "@tanstack/react-router";
 import { type ComponentProps, type MouseEventHandler, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { renderImperativePrompt } from "$/helpers/modal.helpers";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
@@ -97,22 +97,22 @@ const BeatmapSettings = ({ songId, difficultyId }: Props) => {
 	return (
 		<Wrapper>
 			<Heading size={3}>{difficultyLabel}</Heading>
-			<Spacer size={UNIT * 3} />
+			<Spacer size={token.var("spacing.3")} />
 			<TextInput label="Note jump speed" value={noteJumpSpeed} onChange={(ev) => setNoteJumpSpeed(Number(ev.target.value))} />
-			<Spacer size={UNIT * 3} />
+			<Spacer size={token.var("spacing.3")} />
 			<TextInput label="Start beat offset" value={startBeatOffset} onChange={(ev) => setStartBeatOffset(Number(ev.target.value))} />
-			<Spacer size={UNIT * 3} />
+			<Spacer size={token.var("spacing.3")} />
 			<TextInput label="Custom label" value={customLabel || ""} onChange={(ev) => setCustomLabel(ev.target.value)} />
-			<Spacer size={UNIT * 3} />
+			<Spacer size={token.var("spacing.3")} />
 
 			<Row>
 				<MiniButton disabled={!isDirty} onClick={handleSaveBeatmap}>
 					Save
 				</MiniButton>
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<MiniButton onClick={handleCopyBeatmap}>Copy</MiniButton>
-				<Spacer size={UNIT * 2} />
-				<MiniButton color={COLORS.red[700]} hoverColor={COLORS.red[500]} onClick={handleDeleteBeatmap}>
+				<Spacer size={token.var("spacing.2")} />
+				<MiniButton color={token.var("colors.red.700")} hoverColor={token.var("colors.red.500")} onClick={handleDeleteBeatmap}>
 					Delete
 				</MiniButton>
 			</Row>
@@ -123,8 +123,8 @@ const BeatmapSettings = ({ songId, difficultyId }: Props) => {
 const Wrapper = styled.div`
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: ${UNIT * 3}px;
-  margin: ${UNIT * 2}px;
+  padding: ${token.var("spacing.3")};
+  margin: ${token.var("spacing.2")};
 
   &:last-of-type {
     margin-right: 0;

@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 const StrikethroughOnHover = styled.span`
   display: inline-block;
@@ -16,7 +16,7 @@ const StrikethroughOnHover = styled.span`
     transform: rotate(-4deg);
     transform-origin: center center;
     border-radius: 2px;
-    background: ${COLORS.red[500]};
+    background: ${token.var("colors.red.500")};
   }
 `;
 

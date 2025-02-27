@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { Icon, type IconProp } from "react-icons-kit";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import UnfocusedButton from "../UnfocusedButton";
 
@@ -17,7 +17,7 @@ const IconButton = ({ ref, icon, style = {}, isToggled, children, color, size = 
 	const iconSize = size / 2;
 
 	return (
-		<ButtonElem {...delegated} style={{ ...style, width: size, height: size, color: color || (isToggled ? COLORS.white : COLORS.gray[300]), backgroundColor: isToggled ? "hsla(0, 0%, 100%, 10%)" : "transparent" }}>
+		<ButtonElem {...delegated} style={{ ...style, width: size, height: size, color: color || (isToggled ? "white" : token.var("colors.gray.300")), backgroundColor: isToggled ? "hsla(0, 0%, 100%, 10%)" : "transparent" }}>
 			{children || <Icon size={iconSize} icon={icon} style={{ transform: `rotate(${rotation}deg)` }} />}
 		</ButtonElem>
 	);
@@ -29,7 +29,7 @@ const ButtonElem = styled(UnfocusedButton)`
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: ${UNIT}px;
+  border-radius: ${token.var("spacing.1")};
 
   &:hover:not(:disabled) {
     background: hsla(0, 0%, 100%, 10%) !important;

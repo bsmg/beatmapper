@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spinner from "../Spinner";
 
@@ -18,7 +18,7 @@ const Wrapper = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: ${COLORS.gray[900]};
+  background-color: ${token.var("colors.gray.900")};
   display: flex;
   justify-content: center;
   align-items: center;

@@ -1,15 +1,23 @@
+import { type CSSProperties, type ComponentProps, useMemo } from "react";
 import styled from "styled-components";
 
 import { pixelSrc } from "$/assets";
 
-interface Props {
-	size: number;
+interface Props extends ComponentProps<typeof Wrapper> {
+	size: CSSProperties["width" | "height"];
 }
 
-const Spacer = styled.img.attrs<Props>({ src: pixelSrc })`
+export function Spacer({ size, ...rest }: Props) {
+	const spacing = useMemo(() => {
+		const gap = typeof size === "string" ? size : `${size}px`;
+		return { width: gap, height: gap };
+	}, [size]);
+
+	return <Wrapper style={spacing} {...rest} />;
+}
+
+const Wrapper = styled.img.attrs({ src: pixelSrc })`
   display: block;
-  width: ${(props) => props.size}px;
-  height: ${(props) => props.size}px;
   pointer-events: none;
   user-select: none;
 `;

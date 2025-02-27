@@ -3,8 +3,6 @@ import { Icon } from "react-icons-kit";
 import { loader } from "react-icons-kit/feather/loader";
 import styled, { keyframes } from "styled-components";
 
-import { COLORS } from "$/constants";
-
 interface Props {
 	size?: number;
 }
@@ -29,7 +27,7 @@ const endlessRotation = keyframes`
 
 const Wrapper = styled.div`
   display: inline-block;
-  color: ${COLORS.white}
+  color: white;
   opacity: 0.75;
   animation: ${endlessRotation} 2s linear infinite;
 

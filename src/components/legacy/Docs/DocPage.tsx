@@ -4,7 +4,7 @@ import { Fragment, type PropsWithChildren, useMemo } from "react";
 import { Helmet } from "react-helmet";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spacer from "../Spacer";
 import HorizontalRule from "./HorizontalRule";
@@ -35,7 +35,7 @@ const DocPage = ({ id, components }: Props) => {
 				<Row>
 					<MainContent>
 						<MdxWrapper components={components} code={document.code} />
-						<Spacer size={UNIT * 8} />
+						<Spacer size={token.var("spacing.8")} />
 					</MainContent>
 					<TableOfContents toc={document.tableOfContents} />
 				</Row>
@@ -53,7 +53,7 @@ const Wrapper = styled.div`
 
 const Title = styled.div`
   font-size: 38px;
-  color: ${COLORS.blueGray[900]};
+  color: ${token.var("colors.slate.900")};
   font-weight: 900;
   margin-bottom: 12px;
   /* font-family: 'Raleway'; */
@@ -61,7 +61,7 @@ const Title = styled.div`
 
 const Subtitle = styled.div`
   font-size: 28px;
-  color: ${COLORS.blueGray[500]};
+  color: ${token.var("colors.slate.500")};
   font-weight: 500;
 `;
 

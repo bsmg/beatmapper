@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { promptChangeObstacleDuration } from "$/helpers/prompts.helpers";
 import { resizeSelectedObstacles, toggleFastWallsForSelectedObstacles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -19,11 +19,11 @@ const ObstacleTweaks = () => {
 	return (
 		<Fragment>
 			<Heading size={3}>Selected Walls</Heading>
-			<Spacer size={UNIT * 1.5} />
+			<Spacer size={token.var("spacing.1.5")} />
 			<MiniButton onClick={() => dispatch(promptChangeObstacleDuration(selectedObstacles, resizeSelectedObstacles))}>Change duration</MiniButton>
 			{enabledFastWalls && (
 				<Fragment>
-					<Spacer size={UNIT} />
+					<Spacer size={token.var("spacing.1")} />
 					<MiniButton onClick={() => dispatch(toggleFastWallsForSelectedObstacles())}>Toggle Fast Walls</MiniButton>
 				</Fragment>
 			)}

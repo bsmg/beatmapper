@@ -2,9 +2,8 @@ import { animated as a, useSpring } from "@react-spring/three";
 import { Canvas } from "@react-three/fiber";
 import { useState } from "react";
 import styled from "styled-components";
-import type { Vector3Tuple } from "three";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import BaseLink from "../BaseLink";
 import Block from "../Block";
@@ -21,7 +20,7 @@ const Logo = ({ size = "full", color = "#FFF" }: Props) => {
 	const [isHovering, setIsHovering] = useState(false);
 
 	const spring = useSpring({
-		rotation: [0, isHovering ? 0 : -0.35, 0] as Vector3Tuple,
+		rotation: isHovering ? 0 : -0.35,
 		config: { tension: 200, friction: 50 },
 	});
 
@@ -33,7 +32,7 @@ const Logo = ({ size = "full", color = "#FFF" }: Props) => {
 					height: size === "full" ? 50 : 30,
 				}}
 			>
-				<a.group rotation={spring.rotation}>
+				<a.group rotation-y={spring.rotation}>
 					<Block x={0} y={0} z={2} direction={1} size={3} handleClick={noop} handleStartSelecting={noop} handleMouseOver={noop} />
 				</a.group>
 
@@ -42,7 +41,7 @@ const Logo = ({ size = "full", color = "#FFF" }: Props) => {
 				<directionalLight intensity={0.1} position={[5, 0, 20]} />
 				<directionalLight intensity={0.1} position={[-20, -10, 4]} />
 			</Canvas>
-			<Spacer size={UNIT} />
+			<Spacer size={token.var("spacing.1")} />
 			<Text style={{ fontSize: size === "full" ? 24 : 18, color }}>Beatmapper</Text>
 		</Wrapper>
 	);

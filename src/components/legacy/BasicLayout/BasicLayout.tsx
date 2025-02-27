@@ -1,13 +1,13 @@
 import { Fragment, type PropsWithChildren } from "react";
 import styled from "styled-components";
 
-import { FOOTER_HEIGHT, HEADER_HEIGHT, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Footer from "../Footer";
 import Header from "../Header";
 import Spacer from "../Spacer";
 
-const HEADER_SPACING = UNIT * 8;
+const HEADER_SPACING = token.var("spacing.8");
 
 interface Props extends PropsWithChildren {}
 
@@ -23,7 +23,7 @@ const BasicLayout = ({ children }: Props) => {
 };
 
 const MainContent = styled.div`
-  min-height: calc(100vh - ${HEADER_HEIGHT + FOOTER_HEIGHT + HEADER_SPACING}px);
+  min-height: calc(100vh - ${token.var("sizes.header")} - ${token.var("sizes.footer")} - ${HEADER_SPACING});
 `;
 
 export default BasicLayout;

@@ -3,7 +3,7 @@ import { Icon } from "react-icons-kit";
 import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spacer from "../Spacer";
 
@@ -72,15 +72,15 @@ const Wrapper = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding: 0 ${UNIT}px;
-  border-radius: ${UNIT}px;
+  padding: 0 ${token.var("spacing.1")};
+  border-radius: ${token.var("spacing.1")};
   font-size: 14px;
   user-select: none;
   /* The invisible <select> can get quite tall for some reason. Truncate it. */
   overflow: hidden;
 
   &:hover {
-    background: ${COLORS.gray[700]};
+    background: ${token.var("colors.gray.700")};
   }
 `;
 
@@ -98,7 +98,7 @@ const Select = styled.select`
 `;
 
 const Label = styled.div`
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 const Value = styled.div`
@@ -109,7 +109,7 @@ const Value = styled.div`
 `;
 
 const Caret = styled.div`
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 const DisplayedValue = styled.div`

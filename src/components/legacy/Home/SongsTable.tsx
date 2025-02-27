@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
 
@@ -63,9 +63,9 @@ const Table = styled.table`
     text-align: left;
     font-size: 13px;
     font-weight: 300;
-    color: ${COLORS.gray[300]};
+    color: ${token.var("colors.gray.300")};
     border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-    padding: ${UNIT}px;
+    padding: ${token.var("spacing.1")};
   }
 
   & th:nth-of-type(3),

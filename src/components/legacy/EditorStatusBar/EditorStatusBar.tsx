@@ -1,7 +1,7 @@
 // TODO: This status bar is reused across two views, but the views don't need the same info :/ I should create a shared "root" component with slots for the stuff that is variant.
 
 import { useLocation } from "@tanstack/react-router";
-import { Fragment, type ReactNode } from "react";
+import { type CSSProperties, Fragment, type ReactNode } from "react";
 import { alignJustify as rowHeightMinIcon } from "react-icons-kit/feather/alignJustify";
 import { bell as tickOnIcon } from "react-icons-kit/feather/bell";
 import { bellOff as tickOffIcon } from "react-icons-kit/feather/bellOff";
@@ -21,7 +21,7 @@ import { zap as showLightsIcon } from "react-icons-kit/feather/zap";
 import { zapOff as hideLightsIcon } from "react-icons-kit/feather/zapOff";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { toggleNoteTick, togglePreviewLightingInEventsView, tweakEventBackgroundOpacity, tweakEventRowHeight, updateBeatDepth, updatePlaybackSpeed, updateVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectEventBackgroundOpacity, selectEventEditorRowHeight, selectEventEditorTogglePreview, selectIsLoading, selectPlayNoteTick, selectPlaybackRate, selectTotalColorNotes, selectTotalObstacles, selectVolume, selectedTotalBombNotes } from "$/store/selectors";
@@ -47,7 +47,7 @@ function getViewFromLocation() {
 }
 
 interface Props {
-	height: number;
+	height: CSSProperties["height"];
 }
 
 const EditorStatusBar = ({ height }: Props) => {
@@ -73,11 +73,11 @@ const EditorStatusBar = ({ height }: Props) => {
 		leftContent = (
 			<Fragment>
 				<CountIndicator num={numOfBlocks} label={pluralize(numOfBlocks, "block")} icon={box} />
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<CountIndicator num={numOfMines} label={pluralize(numOfMines, "mine")} icon={globe} />
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<CountIndicator num={numOfObstacles} label={pluralize(numOfObstacles, "obstacle")} icon={codepen} />
-				<Spacer size={UNIT * 6} />
+				<Spacer size={token.var("spacing.6")} />
 				<NoteDensityIndicator />
 			</Fragment>
 		);
@@ -85,37 +85,37 @@ const EditorStatusBar = ({ height }: Props) => {
 		rightContent = (
 			<Fragment>
 				<Toggle size={8} value={playNoteTick} onIcon={tickOnIcon} offIcon={tickOffIcon} onChange={() => dispatch(toggleNoteTick())} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup disabled={isLoading} width={UNIT * 7} height={height} minIcon={distanceCloseIcon} maxIcon={distanceFarIcon} min={7} max={14} value={beatDepth} onChange={(value) => dispatch(updateBeatDepth({ beatDepth: Number(value) }))} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup includeMidpointTick disabled={isLoading} width={UNIT * 7} height={height} minIcon={playbackSpeedMinIcon} maxIcon={playbackSpeedMaxIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup width={UNIT * 7} height={height} minIcon={volumeMinIcon} maxIcon={volumeMaxIcon} min={0} max={1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={distanceCloseIcon} maxIcon={distanceFarIcon} min={7} max={14} value={beatDepth} onChange={(value) => dispatch(updateBeatDepth({ beatDepth: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup includeMidpointTick disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={playbackSpeedMinIcon} maxIcon={playbackSpeedMaxIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup width={token.var("spacing.7")} height={height} minIcon={volumeMinIcon} maxIcon={volumeMaxIcon} min={0} max={1} step={0.1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
 			</Fragment>
 		);
 	} else if (view === View.LIGHTSHOW) {
 		leftContent = (
 			<Fragment>
 				<Toggle size={8} value={showLightingPreview} onIcon={showLightsIcon} offIcon={hideLightsIcon} onChange={() => dispatch(togglePreviewLightingInEventsView())} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup width={UNIT * 5} height={height} minIcon={rowHeightMinIcon} maxIcon={rowHeightMaxIcon} min={25} max={50} step={1} value={rowHeight} onChange={(value) => dispatch(tweakEventRowHeight({ newHeight: Number(value) }))} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup disabled={isLoading} width={UNIT * 5} height={height} minIcon={backgroundOpacityMinIcon} maxIcon={backgroundOpacityMaxIcon} min={0.3} max={1} step={0.02} value={backgroundOpacity} onChange={(value) => dispatch(tweakEventBackgroundOpacity({ newOpacity: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup width={token.var("spacing.5")} height={height} minIcon={rowHeightMinIcon} maxIcon={rowHeightMaxIcon} min={25} max={50} step={1} value={rowHeight} onChange={(value) => dispatch(tweakEventRowHeight({ newHeight: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup disabled={isLoading} width={token.var("spacing.5")} height={height} minIcon={backgroundOpacityMinIcon} maxIcon={backgroundOpacityMaxIcon} min={0.3} max={1} step={0.02} value={backgroundOpacity} onChange={(value) => dispatch(tweakEventBackgroundOpacity({ newOpacity: Number(value) }))} />
 			</Fragment>
 		);
 		rightContent = (
 			<Fragment>
 				<Toggle size={8} value={playNoteTick} onIcon={tickOnIcon} offIcon={tickOffIcon} onChange={() => dispatch(toggleNoteTick())} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup includeMidpointTick disabled={isLoading} width={UNIT * 7} height={height} minIcon={playbackSpeedMinIcon} maxIcon={playbackSpeedMaxIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
-				<Spacer size={UNIT * 6} />
-				<SliderGroup width={UNIT * 7} height={height} minIcon={volumeMinIcon} maxIcon={volumeMaxIcon} min={0} max={1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup includeMidpointTick disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={playbackSpeedMinIcon} maxIcon={playbackSpeedMaxIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
+				<Spacer size={token.var("spacing.6")} />
+				<SliderGroup width={token.var("spacing.7")} height={height} minIcon={volumeMinIcon} maxIcon={volumeMaxIcon} min={0} max={1} step={0.1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
 			</Fragment>
 		);
 	}
 
 	return (
-		<Wrapper style={{ height, lineHeight: `${height}px` }}>
+		<Wrapper style={{ height, lineHeight: height }}>
 			<Left>{leftContent}</Left>
 			<Right>{rightContent}</Right>
 		</Wrapper>
@@ -125,10 +125,10 @@ const EditorStatusBar = ({ height }: Props) => {
 const Wrapper = styled.div`
   display: flex;
   justify-content: space-between;
-  background: ${COLORS.blueGray[900]};
+  background: ${token.var("colors.slate.900")};
   font-size: 12px;
-  padding: 0 ${UNIT * 2}px;
-  color: ${COLORS.blueGray[300]};
+  padding: 0 ${token.var("spacing.2")};
+  color: ${token.var("colors.slate.300")};
 
   @media (max-width: 850px) {
     justify-content: center;

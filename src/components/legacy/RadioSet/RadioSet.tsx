@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import RadioButton from "../RadioButton";
 import Spacer from "../Spacer";
@@ -22,7 +22,7 @@ const RadioSet = ({ label, name, items, currentValue, onChange }: Props) => {
 					<RadioButton name={name} value={value} checked={value === currentValue} onChange={() => onChange(value)} />
 					{label}
 				</ItemLabel>
-				<Spacer size={UNIT * 3} />
+				<Spacer size={token.var("spacing.3")} />
 			</Fragment>
 		);
 	});
@@ -42,7 +42,7 @@ const Row = styled.div`
 const LabelText = styled.div`
   font-size: 16px;
   font-weight: 300;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
   margin-bottom: 4px;
   display: flex;
   justify-content: space-between;

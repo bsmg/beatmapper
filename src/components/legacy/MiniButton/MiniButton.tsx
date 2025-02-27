@@ -1,9 +1,9 @@
 import type { Merge } from "@react-spring/three";
 import type { LinkProps } from "@tanstack/react-router";
-import type { ComponentProps } from "react";
+import type { CSSProperties, ComponentProps } from "react";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import type { router } from "$/index";
 
 import BaseLink from "../BaseLink";
@@ -13,7 +13,7 @@ import UnfocusedButton from "../UnfocusedButton";
 interface Props extends Merge<ComponentProps<typeof UnfocusedButton>, LinkProps<"button", typeof router>> {
 	hoverColor?: string;
 	as?: string;
-	width?: number;
+	width?: CSSProperties["width"];
 }
 
 const MiniButton = ({ ref, children, color, hoverColor, as, width, style = {}, to, params, ...delegated }: Props) => {
@@ -34,14 +34,14 @@ const MiniButton = ({ ref, children, color, hoverColor, as, width, style = {}, t
 
 const ButtonElem = styled(UnfocusedButton)<Props>`
   position: relative;
-  padding: ${UNIT / 2}px ${UNIT * 1.5}px;
-  border-radius: ${UNIT}px;
+  padding: ${token.var("spacing.0.5")} ${token.var("spacing.1.5")};
+  border-radius: ${token.var("spacing.1")};
   font-size: 14px;
   background: ${(props) => props.color || "hsla(0, 0%, 100%, 9%)"};
   display: flex;
   justify-content: center;
   align-items: center;
-  color: ${COLORS.white};
+  color: white;
   text-decoration: none;
 
   &:hover:not(:disabled) {

@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode, useState } from "react";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { useOnChange, useOnKeydown } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
@@ -13,9 +13,6 @@ import Spacer from "../Spacer";
 import Actions from "./Actions";
 import GridConfig from "./GridConfig";
 import SelectionInfo from "./SelectionInfo";
-
-// TODO: This should be a constant somewhere, used to set bottom panel height!
-const bottomPanelHeight = 180;
 
 const EditorRightPanel = () => {
 	const songId = useAppSelector(selectActiveSongId);
@@ -59,9 +56,9 @@ const EditorRightPanel = () => {
 		panelContents = (
 			<Fragment>
 				<NoteGrid />
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<ItemGrid />
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<Actions handleGridConfigClick={() => setShowGridConfig(true)} />
 			</Fragment>
 		);
@@ -85,7 +82,7 @@ const OuterWrapper = styled.div`
   position: absolute;
   top: 0;
   right: 0;
-  bottom: ${bottomPanelHeight}px;
+  bottom: ${token.var("sizes.navigationPanel")};
   width: 200px;
   display: flex;
   flex-direction: column;
@@ -95,9 +92,9 @@ const OuterWrapper = styled.div`
 
 const Wrapper = styled.div`
   color: #fff;
-  padding: ${UNIT * 4}px ${UNIT * 3}px;
+  padding: ${token.var("spacing.4")} ${token.var("spacing.3")};
   background: rgba(0, 0, 0, 0.45);
-  border-radius: ${UNIT}px 0 0 ${UNIT}px;
+  border-radius: ${token.var("spacing.1")} 0 0 ${token.var("spacing.1")};
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);

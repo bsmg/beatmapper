@@ -1,7 +1,8 @@
 import { type PointerEventHandler, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS, COMMON_EVENT_TRACKS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { COMMON_EVENT_TRACKS } from "$/constants";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -221,7 +222,7 @@ const Grid = styled.div`
 `;
 
 const TopLeftBlankCell = styled.div`
-  border-bottom: 1px solid ${COLORS.blueGray[500]};
+  border-bottom: 1px solid ${token.var("colors.slate.500")};
 `;
 
 const MainGridContent = styled.div`
@@ -245,9 +246,9 @@ const TrackPrefix = styled.div<{ isDisabled?: boolean }>`
   justify-content: center;
   font-size: 15px;
   font-weight: 400;
-  color: ${COLORS.blueGray[100]};
-  padding: 0 ${UNIT}px;
-  border-bottom: 1px solid ${COLORS.blueGray[400]};
+  color: ${token.var("colors.slate.100")};
+  padding: 0 ${token.var("spacing.1")};
+  border-bottom: 1px solid ${token.var("colors.slate.400")};
 
   opacity: ${(p) => p.isDisabled && 0.5};
   cursor: ${(p) => p.isDisabled && "not-allowed"};
@@ -269,8 +270,8 @@ const MouseCursor = styled.div`
   z-index: ${LAYERS.mouseCursor};
   width: 3px;
   height: 100%;
-  background: ${COLORS.blueGray[100]};
-  border: 1px solid ${COLORS.blueGray[900]};
+  background: ${token.var("colors.slate.100")};
+  border: 1px solid ${token.var("colors.slate.900")};
   border-radius: 2px;
   pointer-events: none;
   transform: translateX(-1px);

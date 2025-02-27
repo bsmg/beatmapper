@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectCursorPositionInBeats } from "$/store/selectors";
 import { normalize } from "$/utils";
@@ -35,7 +35,7 @@ const Elem = styled.div`
   left: -1.5px;
   width: 3px;
   height: 100%;
-  background: ${COLORS.yellow[500]};
+  background: ${token.var("colors.yellow.500")};
   border-radius: 4px;
   pointer-events: none;
 `;

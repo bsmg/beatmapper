@@ -1,7 +1,7 @@
 import type { CSSProperties, Dispatch, SetStateAction } from "react";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Button from "../Button";
 import Heading from "../Heading";
@@ -17,20 +17,20 @@ interface Props {
 const ReturningHome = ({ isProcessingImport, setModal }: Props) => {
 	return (
 		<MaxWidthWrapper>
-			<Spacer size={UNIT * 8} />
+			<Spacer size={token.var("spacing.8")} />
 			<Heading size={1}>Select map to edit</Heading>
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 			<Row>
 				<MainColumn flex={6}>
 					<SongsTable isLoading={isProcessingImport} />
 				</MainColumn>
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 
 				<SideColumn flex={2}>
 					<Button style={{ width: "100%" }} onClick={() => setModal("create-new-song")}>
 						Create new song
 					</Button>
-					<Spacer size={UNIT * 2} />
+					<Spacer size={token.var("spacing.2")} />
 					<Button style={{ width: "100%" }} onClick={() => setModal("import-map")}>
 						Import existing map
 					</Button>
@@ -46,7 +46,7 @@ const Row = styled.div`
 
 const Column = styled.div<{ flex?: CSSProperties["flex"] }>`
   flex: ${(props) => props.flex};
-  padding: ${UNIT * 2}px;
+  padding: ${token.var("spacing.2")};
 `;
 
 const MainColumn = styled(Column)`
@@ -55,13 +55,13 @@ const MainColumn = styled(Column)`
 
 const SideColumn = styled(Column)`
   background: rgba(255, 255, 255, 0.06);
-  padding: ${UNIT * 4}px;
-  margin-top: ${UNIT * 2}px;
-  margin-bottom: ${UNIT * 2}px;
+  padding: ${token.var("spacing.4")};
+  margin-top: ${token.var("spacing.2")};
+  margin-bottom: ${token.var("spacing.2")};
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: ${UNIT}px;
+  border-radius: ${token.var("spacing.1")};
   min-width: 280px;
 `;
 export default ReturningHome;

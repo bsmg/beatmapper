@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { volume2 } from "react-icons-kit/feather/volume2";
 import styled from "styled-components";
 import type WaveformData from "waveform-data";
 
-import { UNIT } from "$/constants";
 import { getWaveformDataForFile } from "$/helpers/audio.helpers";
 
+import { token } from "$:styled-system/tokens";
 import FileUploader from "../FileUploader";
 import ScrubbableWaveform from "../ScrubbableWaveform";
 import Spinner from "../Spinner";
@@ -33,6 +33,11 @@ const SongPicker = ({ height, songFile, setSongFile }: Props) => {
 			setLoadingWaveformData(false);
 		});
 	}, [songFile]);
+
+	const waveformHeight = useMemo(() => {
+		const h = typeof height === "number" ? height : Number.parseFloat(height);
+		return h - Number.parseFloat(token("spacing.2"));
+	}, [height]);
 
 	return (
 		<FileUploader
@@ -74,7 +79,7 @@ const SongPicker = ({ height, songFile, setSongFile }: Props) => {
 						) : (
 							// TODO: I'm reusing the same 'scrubbableWaveform' from the editor. A better solution would be to extract a shared "Waveform" base component, and build 2 variants on top of it.
 							// TODO: Would be cool if this actually was scrubbable, and playable!
-							<ScrubbableWaveform width={500} height={height - UNIT * 2} waveformData={waveformData} duration={waveformData ? waveformData.duration : null} cursorPosition={waveformData ? waveformData.duration : 0} scrubWaveform={() => {} /* noop */} />
+							<ScrubbableWaveform width={500} height={waveformHeight} waveformData={waveformData} duration={waveformData ? waveformData.duration : null} cursorPosition={waveformData ? waveformData.duration : 0} scrubWaveform={() => {} /* noop */} />
 						)}
 					</MediaWrapper>
 				);

@@ -1,7 +1,8 @@
 import { Suspense, lazy } from "react";
 import styled from "styled-components";
 
-import { BEATMAP_COLOR_KEY_RENAME, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { BEATMAP_COLOR_KEY_RENAME } from "$/constants";
 import { toggleModForSong, updateModColor, updateModColorOverdrive } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectCustomColors } from "$/store/selectors";
@@ -37,7 +38,7 @@ const CustomColorSettings = () => {
 
 			{customColors.isEnabled && (
 				<Suspense fallback={<CenteredSpinner />}>
-					<Spacer size={UNIT * 4} />
+					<Spacer size={token.var("spacing.4")} />
 					<Row>
 						{Object.values(App.BeatmapColorKey).map((elementId) => {
 							const color = customColors[elementId];
@@ -46,17 +47,17 @@ const CustomColorSettings = () => {
 							return (
 								<Cell key={elementId}>
 									<ColorPicker colorId={elementId} color={color} updateColor={(element, color) => songId && dispatch(updateModColor({ songId, element, color }))} overdrive={overdrive} />
-									<Spacer size={UNIT * 2} />
+									<Spacer size={token.var("spacing.2")} />
 									<Heading size={3}>{BEATMAP_COLOR_KEY_RENAME[elementId]}</Heading>
-									<Spacer size={UNIT * 3} />
+									<Spacer size={token.var("spacing.3")} />
 									<Heading size={4}>Overdrive</Heading>
-									<Spacer size={UNIT * 1} />
+									<Spacer size={token.var("spacing.1")} />
 									<MiniSlider width={50} height={16} min={0} max={1} step={0.01} value={overdrive} onChange={(ev) => songId && dispatch(updateModColorOverdrive({ songId, element: elementId, overdrive: Number(ev.target.value) }))} />
 								</Cell>
 							);
 						})}
 					</Row>
-					<Spacer size={UNIT * 4} />
+					<Spacer size={token.var("spacing.4")} />
 				</Suspense>
 			)}
 		</Wrapper>

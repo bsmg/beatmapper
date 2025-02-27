@@ -3,7 +3,7 @@ import { Icon } from "react-icons-kit";
 import { image } from "react-icons-kit/feather/image";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spacer from "../Spacer";
 
@@ -24,9 +24,9 @@ const CoverArtSelector = ({ coverArt }: Props) => {
 						<IconWrapper>
 							<Icon icon={image} size={32} />
 						</IconWrapper>
-						<Spacer size={UNIT * 3} />
+						<Spacer size={token.var("spacing.3")} />
 						<Title>Cover Art</Title>
-						<Spacer size={UNIT * 2} />
+						<Spacer size={token.var("spacing.2")} />
 						<Description>Browse for a square cover image, at least 500px wide</Description>
 
 						<FileInput ref={fileInputRef} />
@@ -48,15 +48,15 @@ const CoverArtImage = styled.img``;
 const PlaceholderWrapper = styled.div`
   width: 100%;
   height: 100%;
-  border: 2px dashed ${COLORS.gray[300]};
+  border: 2px dashed ${token.var("colors.gray.300")};
   border-radius: 8px;
-  padding: ${UNIT}px;
+  padding: ${token.var("spacing.1")};
 `;
 
 const InnerWrapper = styled.div`
   width: 100%;
   height: 100%;
-  padding: ${UNIT * 2}px;
+  padding: ${token.var("spacing.2")};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -72,7 +72,7 @@ const InnerWrapper = styled.div`
 `;
 
 const IconWrapper = styled.span`
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 const Title = styled.div`
@@ -84,7 +84,7 @@ const Description = styled.div`
   font-size: 15px;
   font-weight: 300;
   line-height: 1.4;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
 `;
 
 const FileInput = styled.input`

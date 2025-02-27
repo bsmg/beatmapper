@@ -3,7 +3,7 @@ import { Icon } from "react-icons-kit";
 import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled, { keyframes } from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import UnstyledButton from "../UnstyledButton";
 
@@ -42,7 +42,7 @@ const NavGroup = ({ title, showByDefault, children }: Props) => {
 };
 
 const Wrapper = styled.div`
-  border-bottom: 1px solid ${COLORS.blueGray[100]};
+  border-bottom: 1px solid ${token.var("colors.slate.100")};
   padding: 12px;
 `;
 
@@ -53,7 +53,7 @@ const Trigger = styled(UnstyledButton)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: ${COLORS.blueGray[700]};
+  color: ${token.var("colors.slate.700")};
 `;
 
 const Title = styled.div`
@@ -62,7 +62,7 @@ const Title = styled.div`
   font-size: 15px;
   font-weight: 500;
   text-transform: uppercase;
-  color: ${COLORS.blueGray[500]};
+  color: ${token.var("colors.slate.500")};
 `;
 
 const IconWrapper = styled.div`
@@ -77,7 +77,7 @@ const Highlight = styled.div`
   left: -12px;
   right: -12px;
   bottom: 0;
-  background: ${COLORS.blueGray[50]};
+  background: ${token.var("colors.slate.50")};
   border-radius: 4px;
   opacity: 0;
 

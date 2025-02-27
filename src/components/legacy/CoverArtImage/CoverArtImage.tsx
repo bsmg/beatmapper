@@ -1,24 +1,25 @@
+import { type CSSProperties, useMemo } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { useLocallyStoredFile } from "$/hooks";
 
 import CenteredSpinner from "../CenteredSpinner";
 
 interface Props {
 	filename: string;
-	size: number;
+	size: CSSProperties["width"];
 }
 
 const CoverArtImage = ({ filename, size }: Props) => {
 	const [coverArtUrl] = useLocallyStoredFile<string>(filename);
-	const width = size;
-	const height = size;
+
+	const style = useMemo(() => ({ width: size, height: size }), [size]);
 
 	return coverArtUrl ? (
-		<CoverArt src={coverArtUrl} style={{ width, height }} />
+		<CoverArt src={coverArtUrl} style={style} />
 	) : (
-		<LoadingArtWrapper style={{ width, height }}>
+		<LoadingArtWrapper style={style}>
 			<CenteredSpinner />
 		</LoadingArtWrapper>
 	);
@@ -31,7 +32,7 @@ const CoverArt = styled.img`
 
 const LoadingArtWrapper = styled.div`
   border-radius: 4px;
-  background: ${COLORS.gray[500]};
+  background: ${token.var("colors.gray.500")};
   opacity: 0.25;
 `;
 

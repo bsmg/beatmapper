@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 
@@ -54,7 +54,7 @@ const GridHeader = ({ height, beatNums, selectedBeat }: Props) => {
 
 const Header = styled.div`
   display: flex;
-  border-bottom: 1px solid ${COLORS.blueGray[500]};
+  border-bottom: 1px solid ${token.var("colors.slate.500")};
   cursor: col-resize;
 `;
 

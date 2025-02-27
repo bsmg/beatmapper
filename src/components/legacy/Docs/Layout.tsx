@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import SearchHeader from "./SearchHeader";
 import Sidebar from "./Sidebar";
@@ -32,7 +32,7 @@ const Wrapper = styled.div`
 
 const SidebarWrapper = styled.div`
   width: 300px;
-  border-right: 1px solid ${COLORS.blueGray[100]};
+  border-right: 1px solid ${token.var("colors.slate.100")};
 `;
 
 const MainContent = styled.div`

@@ -1,7 +1,7 @@
 import type { IconProp } from "react-icons-kit";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spacer from "../Spacer";
 import UnfocusedButton from "../UnfocusedButton";
@@ -24,11 +24,11 @@ const Toggle = ({ size, onIcon, offIcon, value, onChange }: Props) => {
 	return (
 		<Wrapper>
 			<StatusIcon size={14} opacity={value ? 0.5 : 1} icon={offIcon} onClick={() => onChange(false)} />
-			<Spacer size={UNIT} />
+			<Spacer size={token.var("spacing.1")} />
 			<ToggleWrapper style={{ width: size * 2 + padding * 2 + borderWidth * 2, height: size + padding * 2 + borderWidth * 2, padding, borderWidth }} onClick={() => onChange(!value)}>
 				<Ball style={{ [side]: padding, width: size, height: size }} />
 			</ToggleWrapper>
-			<Spacer size={UNIT} />
+			<Spacer size={token.var("spacing.1")} />
 			<StatusIcon size={14} opacity={value ? 1 : 0.5} icon={onIcon} onClick={() => onChange(true)} />
 		</Wrapper>
 	);
@@ -41,7 +41,7 @@ const Wrapper = styled.div`
 
 const ToggleWrapper = styled(UnfocusedButton)`
   position: relative;
-  border-color: ${COLORS.blueGray[500]};
+  border-color: ${token.var("colors.slate.500")};
   border-style: solid;
   border-radius: 500px;
   cursor: pointer;
@@ -53,7 +53,7 @@ const Ball = styled.div`
   bottom: 0;
   margin: auto;
   border-radius: 50%;
-  background: ${COLORS.blueGray[100]};
+  background: ${token.var("colors.slate.100")};
 `;
 
 export default Toggle;

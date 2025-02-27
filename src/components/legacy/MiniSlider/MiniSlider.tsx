@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 interface Props extends ComponentProps<"input"> {
 	includeMidpointTick?: boolean;
@@ -38,7 +38,7 @@ const Tick = styled.div`
   &::after {
     content: '';
     height: 4px;
-    background: ${COLORS.blueGray[400]};
+    background: ${token.var("colors.slate.400")};
   }
 `;
 
@@ -61,14 +61,14 @@ const Input = styled.input`
     width: 100%;
     height: 2px;
     animate: 0.2s;
-    box-shadow: 0px 0px 1px ${COLORS.blueGray[700]};
-    background: ${COLORS.blueGray[400]};
+    box-shadow: 0px 0px 1px ${token.var("colors.slate.700")};
+    background: ${token.var("colors.slate.400")};
     border-radius: 5px;
-    border: 0px solid ${COLORS.blueGray[700]};
+    border: 0px solid ${token.var("colors.slate.700")};
   }
   &::-webkit-slider-thumb {
-    box-shadow: 0px 0px 0px ${COLORS.blueGray[700]};
-    border: 2px solid ${COLORS.blueGray[700]};
+    box-shadow: 0px 0px 0px ${token.var("colors.slate.700")};
+    border: 2px solid ${token.var("colors.slate.700")};
     height: 12px;
     width: 12px;
     border-radius: 12px;
@@ -82,11 +82,11 @@ const Input = styled.input`
     animate: 0.2s;
     background: #ffffff;
     border-radius: 5px;
-    border: 0px solid ${COLORS.blueGray[700]};
+    border: 0px solid ${token.var("colors.slate.700")};
   }
   &::-moz-range-thumb {
-    box-shadow: 0px 0px 0px ${COLORS.blueGray[700]};
-    border: 2px solid ${COLORS.blueGray[700]};
+    box-shadow: 0px 0px 0px ${token.var("colors.slate.700")};
+    border: 2px solid ${token.var("colors.slate.700")};
     height: 12px;
     width: 12px;
     border-radius: 12px;

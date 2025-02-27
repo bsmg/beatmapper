@@ -1,7 +1,6 @@
-import { BOOKMARK_COLORS } from "$/constants";
 import type { App } from "$/types";
 import { describe, expect, it } from "vitest";
-import { convertBookmarksToExportableJson, convertBookmarksToRedux, getNewBookmarkColor } from "./bookmarks.helpers";
+import { BOOKMARK_COLORS, convertBookmarksToExportableJson, convertBookmarksToRedux, getNewBookmarkColor } from "./bookmarks.helpers";
 
 describe("Bookmarks helpers", () => {
 	describe("getNewBookmarkColor", () => {

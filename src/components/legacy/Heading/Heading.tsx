@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 interface Props extends ComponentProps<"h4"> {
 	size: 1 | 2 | 3 | 4;
@@ -17,7 +17,7 @@ const HeadingBase = styled.h4`
   font-weight: 300;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 const H1 = styled(HeadingBase)`

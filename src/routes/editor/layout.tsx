@@ -2,7 +2,7 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect } from "react";
 import styled from "styled-components";
 
-import { COLORS, SIDEBAR_WIDTH } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { leaveEditor, startLoadingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId } from "$/store/selectors";
@@ -56,8 +56,8 @@ function RouteComponent() {
 const Wrapper = styled.div`
   position: fixed;
   top: 0;
-  left: ${SIDEBAR_WIDTH}px;
+  left: ${token.var("sizes.sidebar")};
   right: 0;
   bottom: 0;
-  background: ${COLORS.blueGray[1000]};
+  background: ${token.var("colors.slate.1000")};
 `;

@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import styled from "styled-components";
 
-import { DIFFICULTY_COLORS, DIFFICULTY_RENAME } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { DIFFICULTY_RENAME } from "$/constants";
 import type { Difficulty } from "$/types";
 
 import UnstyledButton from "../UnstyledButton";
@@ -16,7 +18,7 @@ interface Props {
 const noop = () => {};
 
 const DifficultyTag = ({ difficulty, width = 80, isSelected, onSelect = noop, disabled, ...delegated }: Props) => {
-	const difficultyColor = DIFFICULTY_COLORS[difficulty];
+	const difficultyColor = useMemo(() => token.var(`colors.difficulty.${difficulty}`), [difficulty]);
 
 	const border = isSelected ? `2px solid ${difficultyColor}` : "2px solid rgba(255, 255, 255, 0.35)";
 

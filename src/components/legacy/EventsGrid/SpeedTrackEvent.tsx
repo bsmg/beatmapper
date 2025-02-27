@@ -1,4 +1,4 @@
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { deleteEvent } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import type { App } from "$/types";
@@ -26,7 +26,7 @@ const SpeedTrackEvent = ({ event, trackId, startBeat, endBeat, parentWidth, pare
 			cx={x}
 			cy={y}
 			r={4}
-			fill={event.selected ? COLORS.yellow[500] : COLORS.green[500]}
+			fill={event.selected ? token.var("colors.yellow.500") : token.var("colors.green.500")}
 			style={{
 				cursor: "pointer",
 				opacity: event.id === "tentative" ? 0.5 : 1,

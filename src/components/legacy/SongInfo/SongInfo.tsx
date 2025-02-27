@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Fragment, memo, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveBeatmapId, selectBeatmapIds, selectSongById } from "$/store/selectors";
@@ -41,13 +41,13 @@ const SongInfo = ({ songId, showDifficultySelector, coverArtSize = "medium" }: P
 					<Description>
 						<Text>
 							<Title>{song.name}</Title>
-							<Spacer size={UNIT / 2} />
+							<Spacer size={token.var("spacing.0.5")} />
 							<Subtitle>{song.artistName}</Subtitle>
 						</Text>
 
 						{showDifficultySelector && selectedDifficulty && (
 							<Fragment>
-								<Spacer size={UNIT} />
+								<Spacer size={token.var("spacing.1")} />
 								<Dropdown
 									label=""
 									value={selectedDifficulty}
@@ -98,8 +98,8 @@ const SongInfo = ({ songId, showDifficultySelector, coverArtSize = "medium" }: P
 const OuterWrapper = styled.div`
   position: absolute;
   z-index: 10;
-  top: ${UNIT * 2}px;
-  left: ${UNIT * 2}px;
+  top: ${token.var("spacing.2")};
+  left: ${token.var("spacing.2")};
   display: flex;
   align-items: center;
   user-select: none;
@@ -111,21 +111,21 @@ const Wrapper = styled.div`
 `;
 
 const Text = styled.div`
-  padding-left: ${UNIT}px;
+  padding-left: ${token.var("spacing.1")};
 `;
 
 const Description = styled.div`
-  padding-left: ${UNIT}px;
+  padding-left: ${token.var("spacing.1")};
 `;
 
 const Title = styled.div`
   font-size: 21px;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
 `;
 
 const Subtitle = styled.div`
   font-size: 16px;
-  color: ${COLORS.gray[300]};
+  color: ${token.var("colors.gray.300")};
 `;
 
 export default memo(SongInfo);

@@ -3,7 +3,7 @@ import { Icon } from "react-icons-kit";
 import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 interface Props extends ComponentProps<"select"> {
 	label: string;
@@ -40,12 +40,12 @@ const Input = styled.input`
   background: transparent;
   border: none;
   border-bottom: 2px solid rgba(255, 255, 255, 0.4);
-  color: ${COLORS.white};
+  color: white;
   font-size: 16px;
   outline: none;
 
   &:focus {
-    border-bottom: 2px solid ${COLORS.pink[500]};
+    border-bottom: 2px solid ${token.var("colors.pink.500")};
   }
 
   ::placeholder {
@@ -61,7 +61,7 @@ const Label = styled.label`
 const LabelText = styled.div`
   font-size: 14px;
   font-weight: 300;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
   margin-bottom: 4px;
 `;
 
@@ -74,7 +74,7 @@ const Caret = styled.div`
   margin: auto;
   width: 16px;
   height: 16px;
-  color: ${COLORS.white};
+  color: white;
 `;
 
 const Select = styled.select`

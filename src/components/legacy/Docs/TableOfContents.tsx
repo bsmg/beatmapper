@@ -3,7 +3,7 @@ import { Icon } from "react-icons-kit";
 import { externalLink } from "react-icons-kit/feather/externalLink";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { throttle } from "$/utils";
 
 import BaseLink from "../BaseLink";
@@ -92,7 +92,7 @@ const TableOfContents = ({ toc }: Props) => {
 				href="#"
 				onClick={handleClickIntro}
 				style={{
-					color: activeHeadingId ? undefined : COLORS.pink[700],
+					color: activeHeadingId ? undefined : token.var("colors.pink.700"),
 				}}
 			>
 				Introduction
@@ -101,7 +101,7 @@ const TableOfContents = ({ toc }: Props) => {
 			{headings.map((entry) => {
 				const id = entry.url.replace("#", "");
 				return (
-					<HeadingLink key={id} href={entry.url} style={{ color: id === activeHeadingId ? COLORS.pink[700] : undefined }}>
+					<HeadingLink key={id} href={entry.url} style={{ color: id === activeHeadingId ? token.var("colors.pink.700") : undefined }}>
 						{entry.title}
 					</HeadingLink>
 				);
@@ -134,17 +134,17 @@ const Title = styled.h4`
 	font-weight: 600;
 	margin-bottom: 12px;
 	padding-bottom: 12px;
-	border-bottom: 1px solid ${COLORS.blueGray[100]};
+	border-bottom: 1px solid ${token.var("colors.slate.100")};
 `;
 
 const HeadingLink = styled.a`
 	display: block;
-	color: ${COLORS.blueGray[700]};
+	color: ${token.var("colors.slate.700")};
 	text-decoration: none;
 	margin-bottom: 14px;
 
 	&:hover {
-		color: ${COLORS.blueGray[500]};
+		color: ${token.var("colors.slate.500")};
 		text-decoration: underline;
 	}
 `;
@@ -152,7 +152,7 @@ const HeadingLink = styled.a`
 const GithubLink = styled(BaseLink)`
 	display: flex;
 	align-items: center;
-	color: ${COLORS.blueGray[300]};
+	color: ${token.var("colors.slate.300")};
 	text-decoration: none;
 	font-size: 15px;
 	font-weight: bold;

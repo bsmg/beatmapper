@@ -1,10 +1,9 @@
-import Color from "color";
 import type { PropsWithChildren } from "react";
 import { Icon } from "react-icons-kit";
 import { x } from "react-icons-kit/feather/x";
 import styled, { keyframes } from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Heading from "../Heading";
 import Spacer from "../Spacer";
@@ -22,7 +21,7 @@ const UnobtrusivePrompt = ({ title, children, onDismiss }: Props) => {
 				<Icon icon={x} size={24} />
 			</CloseButton>
 			<Heading size={2}>{title}</Heading>
-			<Spacer size={UNIT * 3} />
+			<Spacer size={token.var("spacing.3")} />
 			<Contents>{children}</Contents>
 		</Wrapper>
 	);
@@ -43,18 +42,18 @@ const Wrapper = styled.div`
   position: absolute;
   z-index: 999;
   max-width: 400px;
-  background: ${Color(COLORS.blueGray[900]).fade(0.1).string()};
-  top: ${UNIT * 2}px;
-  right: ${UNIT * 2}px;
-  padding: ${UNIT * 3}px;
+  background: color-mix(in srgb, ${token.var("colors.slate.900")}, transparent 10%);
+  top: ${token.var("spacing.2")};
+  right: ${token.var("spacing.2")};
+  padding: ${token.var("spacing.3")};
   box-shadow: 0px 5px 30px rgba(0, 0, 0, 0.8);
   animation: ${enterAnimation} 500ms 1000ms both ease-out;
 `;
 
 const CloseButton = styled(UnstyledButton)`
   position: absolute;
-  top: ${UNIT * 2}px;
-  right: ${UNIT * 2}px;
+  top: ${token.var("spacing.2")};
+  right: ${token.var("spacing.2")};
 `;
 
 const Contents = styled.div`
@@ -66,7 +65,7 @@ const Contents = styled.div`
   }
 
   p:not(:last-of-type) {
-    margin-bottom: ${UNIT * 2}px;
+    margin-bottom: ${token.var("spacing.2")};
   }
 `;
 

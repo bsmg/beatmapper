@@ -1,7 +1,8 @@
 import { Fragment, type MouseEventHandler } from "react";
 import styled from "styled-components";
 
-import { GRID_PRESET_SLOTS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { GRID_PRESET_SLOTS } from "$/constants";
 import { promptSaveGridPreset } from "$/helpers/prompts.helpers";
 import { deleteGridPreset, loadGridPreset, resetGrid, saveGridPreset, updateGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -30,12 +31,12 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 			<Buttons>
 				<MiniButton onClick={() => songId && dispatch(resetGrid({ songId }))}>Reset</MiniButton>
 			</Buttons>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 
 			{showPresets && (
 				<Center>
 					<Heading size={3}>Presets</Heading>
-					<Spacer size={UNIT * 1.5} />
+					<Spacer size={token.var("spacing.1.5")} />
 					<Row>
 						<SpacedChildren>
 							{GRID_PRESET_SLOTS.map((slot) => (
@@ -57,7 +58,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 							))}
 						</SpacedChildren>
 					</Row>
-					<Spacer size={UNIT * 4} />
+					<Spacer size={token.var("spacing.4")} />
 				</Center>
 			)}
 
@@ -75,7 +76,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 						songId && dispatch(updateGrid({ songId, grid: { numCols: Number(ev.target.value) } }));
 					}}
 				/>
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<TextInput
 					type="number"
 					min={1}
@@ -90,7 +91,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 					}}
 				/>
 			</Row>
-			<Spacer size={UNIT * 3} />
+			<Spacer size={token.var("spacing.3")} />
 			<Row>
 				<TextInput
 					type="number"
@@ -106,7 +107,7 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 						songId && dispatch(updateGrid({ songId, grid: { colWidth: Number(ev.target.value) } }));
 					}}
 				/>
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<TextInput
 					type="number"
 					min={0.1}
@@ -123,10 +124,10 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 				/>
 			</Row>
 
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<Buttons>
 				<MiniButton onClick={() => dispatch(promptSaveGridPreset(gridPresets, saveGridPreset))}>Save Preset</MiniButton>
-				<Spacer size={UNIT * 1} />
+				<Spacer size={token.var("spacing.1")} />
 				<MiniButton onClick={finishTweakingGrid}>Finish Customizing</MiniButton>
 			</Buttons>
 		</Fragment>

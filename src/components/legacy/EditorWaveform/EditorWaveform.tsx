@@ -1,7 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { useBoundingBox } from "$/hooks";
 import { scrubWaveform } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -37,6 +37,8 @@ const EditorWaveform = ({ height }: Props) => {
 		roundedCursorPosition = cursorPosition;
 	}
 
+	const waveformHeight = useMemo(() => height - Number.parseFloat(token("spacing.2")), [height]);
+
 	return (
 		<Wrapper ref={ref}>
 			{isLoadingSong && (
@@ -46,7 +48,7 @@ const EditorWaveform = ({ height }: Props) => {
 			)}
 			{boundingBox && (
 				<Fragment>
-					<ScrubbableWaveform width={boundingBox.width} height={height - UNIT * 2} waveformData={waveformData} duration={duration} cursorPosition={roundedCursorPosition} scrubWaveform={(offset) => dispatch(scrubWaveform({ newOffset: offset }))} />
+					<ScrubbableWaveform width={boundingBox.width} height={waveformHeight} waveformData={waveformData} duration={duration} cursorPosition={roundedCursorPosition} scrubWaveform={(offset) => dispatch(scrubWaveform({ newOffset: offset }))} />
 					{!isLoadingSong && <Bookmarks />}
 				</Fragment>
 			)}

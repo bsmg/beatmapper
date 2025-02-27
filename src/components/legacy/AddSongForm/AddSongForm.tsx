@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
-import { type FormEventHandler, Fragment, useState } from "react";
+import { type FormEventHandler, Fragment, useMemo, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { createNewSong } from "$/store/actions";
@@ -89,21 +89,23 @@ const AddSongForm = () => {
 		}
 	};
 
+	const mediaRowHeight = useMemo(() => Number.parseFloat(token("sizes.mediaRow")), []);
+
 	return (
 		<Wrapper>
 			<Heading size={1}>Add new song</Heading>
-			<Spacer size={UNIT * 6} />
+			<Spacer size={token.var("spacing.6")} />
 
 			<Row>
 				<div style={{ flex: 1 }}>
-					<SongPicker height={MEDIA_ROW_HEIGHT} songFile={songFile} setSongFile={setSongFile} />
+					<SongPicker height={mediaRowHeight} songFile={songFile} setSongFile={setSongFile} />
 				</div>
-				<Spacer size={UNIT * 2} />
-				<div style={{ flexBasis: MEDIA_ROW_HEIGHT }}>
-					<CoverArtPicker height={MEDIA_ROW_HEIGHT} coverArtFile={coverArtFile} setCoverArtFile={setCoverArtFile} />
+				<Spacer size={token.var("spacing.2")} />
+				<div style={{ flexBasis: token.var("sizes.mediaRow") }}>
+					<CoverArtPicker height={mediaRowHeight} coverArtFile={coverArtFile} setCoverArtFile={setCoverArtFile} />
 				</div>
 			</Row>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<form onSubmit={handleSubmit}>
 				<Row>
 					<Cell>
@@ -111,23 +113,23 @@ const AddSongForm = () => {
 							<Cell>
 								<TextInput required label="Song name" value={name} placeholder="Radar" onChange={(ev) => setSongName(ev.target.value)} />
 							</Cell>
-							<Spacer size={UNIT * 4} />
+							<Spacer size={token.var("spacing.4")} />
 							<Cell>
 								<TextInput label="Song sub-name" value={subName} placeholder="(Original Mix)" onChange={(ev) => setSongSubName(ev.target.value)} />
 							</Cell>
 						</Row>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<Row>
 							<Cell>
 								<TextInput required label="Artist name" value={artistName} placeholder="Fox Stevenson" onChange={(ev) => setArtistName(ev.target.value)} />
 							</Cell>
-							<Spacer size={UNIT * 4} />
+							<Spacer size={token.var("spacing.4")} />
 							<Cell>
 								<Row>
 									<Cell>
 										<TextInput required type="number" label="BPM (Beats per Minute)" value={bpm} placeholder="140" onChange={(ev) => setBpm(Number(ev.target.value))} />
 									</Cell>
-									<Spacer size={UNIT * 4} />
+									<Spacer size={token.var("spacing.4")} />
 									<Cell>
 										<TextInput label="Offset" moreInfo="This is the number of milliseconds between the start of the audio file and the first beat of the map." type="number" value={offset} placeholder="0" onChange={(ev) => setOffset(Number(ev.target.value))} />
 									</Cell>
@@ -136,7 +138,7 @@ const AddSongForm = () => {
 						</Row>
 					</Cell>
 				</Row>
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				{/*
           I don't want `enter` to toggle one of the difficulty tag buttons,
           so they have to be lower in the DOM than the real submit button.
@@ -147,7 +149,7 @@ const AddSongForm = () => {
 					<Center>
 						<Button disabled={hasSubmitted}>{hasSubmitted ? <Spinner size={16} /> : "Create new song"}</Button>
 					</Center>
-					<Spacer size={UNIT * 8} />
+					<Spacer size={token.var("spacing.8")} />
 					<Row>
 						<Label>
 							Difficulty
@@ -157,7 +159,7 @@ const AddSongForm = () => {
 							{Object.values(Difficulty).map((difficulty) => (
 								<Fragment key={difficulty}>
 									<DifficultyTag disabled={hasSubmitted} difficulty={difficulty} onSelect={setSelectedDifficulty} isSelected={!!selectedDifficulty && selectedDifficulty === difficulty} />
-									<Spacer size={UNIT} />
+									<Spacer size={token.var("spacing.1")} />
 								</Fragment>
 							))}
 						</Difficulties>
@@ -169,7 +171,7 @@ const AddSongForm = () => {
 };
 
 const Wrapper = styled.div`
-  padding: ${UNIT * 4}px;
+  padding: ${token.var("spacing.4")};
 `;
 
 const Row = styled.div`
@@ -184,7 +186,7 @@ const Cell = styled.div`
 const Label = styled.div`
   font-size: 16px;
   font-weight: 300;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
   display: flex;
   align-items: center;
 `;

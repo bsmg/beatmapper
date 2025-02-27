@@ -2,9 +2,9 @@ import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
-
+import { token } from "$:styled-system/tokens";
 import type { FileRoutesByTo } from "$/routeTree.gen";
+
 import BaseLink from "../BaseLink";
 import YoutubeEmbed from "../YoutubeEmbed";
 import HorizontalRule from "./HorizontalRule";
@@ -76,11 +76,11 @@ const ImageWrapper = styled.span`
 	max-width: 100%;
 	padding: 8px;
 	border-radius: 6px;
-	/* border: 1px solid ${COLORS.blueGray[100]}; */
+	/* border: 1px solid ${token.var("colors.slate.100")}; */
 	margin-block: 12px;
 
 	&:hover {
-		background: ${COLORS.blueGray[50]};
+		background: ${token.var("colors.slate.50")};
 	}
 
 	img {
@@ -100,19 +100,19 @@ const ImageCaption = styled.span`
 const DocumentStyles = styled.div`
 	line-height: 1.4;
 	font-size: 18px;
-	color: ${COLORS.blueGray[900]};
+	color: ${token.var("colors.slate.900")};
 
 	p:not(:first-of-type) {
 		margin-block: 24px;
 	}
 
 	a {
-		color: ${COLORS.blue[700]};
+		color: ${token.var("colors.blue.700")};
 		text-decoration: none;
 		font-weight: bold;
 
 		&:hover {
-			color: ${COLORS.blue[500]};
+			color: ${token.var("colors.blue.500")};
 			text-decoration: underline;
 		}
 	}
@@ -146,7 +146,7 @@ const DocumentStyles = styled.div`
 	h3 {
 		font-size: 21px;
 		font-weight: 700;
-		color: ${COLORS.blueGray[500]};
+		color: ${token.var("colors.slate.500")};
 	}
 
 	h4 {
@@ -187,13 +187,13 @@ const DocumentStyles = styled.div`
 	th {
 		text-align: left;
 		font-weight: bold;
-		border-bottom: 1px solid ${COLORS.blueGray[300]};
+		border-bottom: 1px solid ${token.var("colors.slate.300")};
 	}
 
 	td {
 		font-size: 15px;
 
-		border-bottom: 1px solid ${COLORS.blueGray[100]};
+		border-bottom: 1px solid ${token.var("colors.slate.100")};
 	}
 
 	tr:last-of-type td {
@@ -203,7 +203,7 @@ const DocumentStyles = styled.div`
 	blockquote {
 		padding: 20px;
 		background: hsla(212, 100%, 45%, 0.2);
-		border-left: 3px solid ${COLORS.blue[500]};
+		border-left: 3px solid ${token.var("colors.blue.500")};
 		border-radius: 3px;
 		font-size: 0.9em;
 		margin-bottom: 30px;

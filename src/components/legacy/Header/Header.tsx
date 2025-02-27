@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import BaseLink from "../BaseLink";
 
-import { COLORS, HEADER_HEIGHT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Logo from "../Logo";
 import MaxWidthWrapper from "../MaxWidthWrapper";
@@ -22,9 +22,9 @@ const Header = () => {
 };
 
 const Wrapper = styled.div`
-  height: ${HEADER_HEIGHT}px;
-  line-height: ${HEADER_HEIGHT}px;
-  background: ${COLORS.blueGray[900]};
+  height: ${token.var("sizes.header")};
+  line-height: ${token.var("sizes.header")};
+  background: ${token.var("colors.slate.900")};
 `;
 
 const Contents = styled.div`

@@ -2,7 +2,7 @@ import { Icon, type IconProp } from "react-icons-kit";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Spacer from "../Spacer";
 
@@ -17,7 +17,7 @@ const CountIndicator = ({ num, label, icon }: Props) => {
 		<Tooltip title={label} delay={250}>
 			<Wrapper>
 				<Icon icon={icon} size={12} style={{ transform: "translateY(-2px)" }} />
-				<Spacer size={UNIT} />
+				<Spacer size={token.var("spacing.1")} />
 				<Count>{num}</Count>
 			</Wrapper>
 		</Tooltip>

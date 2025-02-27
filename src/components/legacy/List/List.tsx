@@ -3,7 +3,7 @@ import IconBase from "react-icons-kit";
 import { arrowRightC } from "react-icons-kit/ionicons/arrowRightC";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 const List = ({ children }: PropsWithChildren) => <ListElem>{children}</ListElem>;
 
@@ -32,7 +32,7 @@ const ListItemElem = styled.li`
 const IconWrapper = styled.div`
   padding-right: 16px;
   margin-top: -2px;
-  color: ${COLORS.blue[500]};
+  color: ${token.var("colors.blue.500")};
 `;
 
 const Children = styled.div``;

@@ -3,7 +3,7 @@ import { ChromePicker } from "react-color";
 import OutsideClickHandler from "react-outside-click-handler";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import type { App } from "$/types";
 
 import UnstyledButton from "../UnstyledButton";
@@ -65,7 +65,7 @@ const ColorPreviewBorder = styled.div`
   height: ${PREVIEW_SIZE + BORDER_WIDTH * 2}px;
   transform: translate(-${BORDER_WIDTH}px, -${BORDER_WIDTH}px);
   border-radius: 50%;
-  border: ${BORDER_WIDTH}px solid ${COLORS.blueGray[1000]};
+  border: ${BORDER_WIDTH}px solid ${token.var("colors.slate.1000")};
   opacity: 0.25;
   pointer-events: none;
 `;

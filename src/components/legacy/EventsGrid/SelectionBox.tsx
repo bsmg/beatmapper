@@ -1,6 +1,5 @@
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
 import type { ISelectionBox } from "$/types";
 
 interface Props {
@@ -26,7 +25,7 @@ const SelectionBox = ({ box }: Props) => {
 const Box = styled.div`
   position: absolute;
   z-index: 10;
-  border: 2px dashed ${COLORS.white};
+  border: 2px dashed white;
   border-radius: 5px;
   pointer-events: none;
 `;

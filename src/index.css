@@ -12,7 +12,7 @@
 body {
 	line-height: 1;
 	font-family: "Oswald", sans-serif;
-	background-color: hsl(222, 30%, 7%) /* var(--colors-slate-1000) */;
+	background-color: var(--colors-slate-1000);
 }
 
 body,
@@ -22,11 +22,14 @@ button,
 textarea {
 	color: white;
 }
+option {
+	color: black;
+}
 
 .tippy-tooltip {
 	line-height: 1 !important;
 	padding: 8px 12px !important;
-	background: hsl(0, 0%, 7%) /* var(--colors-gray-900) */ !important;
+	background: var(--colors-gray-900) !important;
 }
 .tippy-tooltip [x-circle] {
 	display: none;

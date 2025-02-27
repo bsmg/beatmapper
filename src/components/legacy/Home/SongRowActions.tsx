@@ -1,4 +1,4 @@
-import type { SongId } from "$/types";
+import type { CSSProperties } from "react";
 import { Icon } from "react-icons-kit";
 import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled from "styled-components";
@@ -6,12 +6,13 @@ import styled from "styled-components";
 import { deleteSong, downloadMapFiles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
+import type { SongId } from "$/types";
 
 import MiniButton from "../MiniButton";
 
 interface Props {
 	songId: SongId;
-	size: number;
+	size: CSSProperties["height"];
 }
 
 const SongRowActions = ({ songId, size }: Props) => {

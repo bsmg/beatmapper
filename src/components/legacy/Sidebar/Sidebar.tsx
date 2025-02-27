@@ -10,7 +10,7 @@ import { sliders } from "react-icons-kit/feather/sliders";
 import { sun } from "react-icons-kit/feather/sun";
 import styled from "styled-components";
 
-import { COLORS, SIDEBAR_WIDTH, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import SettingsModal from "../SettingsModal";
 import SpacedChildren from "../SpacedChildren";
@@ -36,14 +36,14 @@ const Sidebar = () => {
 
 			<Wrapper>
 				<Top>
-					<Spacer size={UNIT * 2} />
+					<Spacer size={token.var("spacing.2")} />
 					<SidebarNavItem icon={home} to="/" />
 
-					<Spacer size={UNIT * 2} />
+					<Spacer size={token.var("spacing.2")} />
 					<Divider />
-					<Spacer size={UNIT * 2} />
+					<Spacer size={token.var("spacing.2")} />
 
-					<SpacedChildren spacing={UNIT * 2}>
+					<SpacedChildren spacing={token.var("spacing.2")}>
 						<SidebarNavItem title="Notes" icon={box} to={"/edit/$sid/$bid/notes"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/notes$/)} />
 						<SidebarNavItem title="Events" icon={sun} to={"/edit/$sid/$bid/events"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/events$/)} />
 						<SidebarNavItem title="Preview" icon={play} to={"/edit/$sid/$bid/preview"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/preview$/)} />
@@ -53,7 +53,7 @@ const Sidebar = () => {
 				</Top>
 
 				<Bottom>
-					<SpacedChildren spacing={UNIT * 2}>
+					<SpacedChildren spacing={token.var("spacing.2")}>
 						<SidebarNavItem
 							title="App settings"
 							icon={settings}
@@ -73,13 +73,13 @@ const Sidebar = () => {
 
 const Wrapper = styled.div`
   position: relative;
-  width: ${SIDEBAR_WIDTH}px;
+  width: ${token.var("sizes.sidebar")};
   height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  background: ${COLORS.blueGray[700]};
+  background: ${token.var("colors.slate.700")};
   user-select: none;
 `;
 

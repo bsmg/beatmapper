@@ -3,7 +3,7 @@ import { Fragment, useState } from "react";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds } from "$/store/selectors";
@@ -32,7 +32,7 @@ const CopyDifficultyForm = ({ songId, idToCopy, afterCopy, copyDifficulty }: Pro
 		return (
 			<Wrapper>
 				<Heading size={1}>All beatmaps created</Heading>
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<Paragraph>You already have beatmaps for every difficulty, and you can only copy beatmaps for difficulties that don't yet exist. Please delete the beatmap for the difficulty you'd like to copy to.</Paragraph>
 			</Wrapper>
 		);
@@ -45,11 +45,11 @@ const CopyDifficultyForm = ({ songId, idToCopy, afterCopy, copyDifficulty }: Pro
 	return (
 		<Wrapper>
 			<Heading size={1}>Copy beatmap </Heading>
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 			<Paragraph>
 				Copy the <Highlight>{getLabelForDifficulty(idToCopy)}</Highlight> beatmap for another difficulty:
 			</Paragraph>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<DifficultiesWrapper>
 				{difficultiesToRender.map((difficulty) => {
 					const alreadyExists = difficultyIds.includes(difficulty);
@@ -68,7 +68,7 @@ const CopyDifficultyForm = ({ songId, idToCopy, afterCopy, copyDifficulty }: Pro
 					);
 				})}
 			</DifficultiesWrapper>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			{selectedId && (
 				<Button
 					style={{ width: 275, margin: "auto" }}
@@ -84,12 +84,12 @@ const CopyDifficultyForm = ({ songId, idToCopy, afterCopy, copyDifficulty }: Pro
 };
 
 const Wrapper = styled.div`
-  padding: ${UNIT * 4}px;
+  padding: ${token.var("spacing.4")};
   text-align: center;
 `;
 
 const Highlight = styled.span`
-  color: ${COLORS.yellow[500]};
+  color: ${token.var("colors.yellow.500")};
   font-weight: 500;
 `;
 

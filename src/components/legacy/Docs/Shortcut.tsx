@@ -1,7 +1,7 @@
 import { type PropsWithChildren, useMemo } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import { IconRow, Or, Plus, Shortcut, Sidenote } from "./ShortcutHelpers";
 
@@ -70,7 +70,7 @@ const TableWrapper = styled.div`
 	grid-column-gap: 3px;
 	grid-row-gap: 3px;
 	padding: 3px;
-	border: 1px solid ${COLORS.blueGray[200]};
+	border: 1px solid ${token.var("colors.slate.200")};
 	border-radius: 4px;
 
 	@media (min-width: 1400px) {
@@ -81,7 +81,7 @@ const TableWrapper = styled.div`
 const ShortcutWrapper = styled.div`
 	display: flex;
 	padding: 10px;
-	border: 1px solid ${COLORS.blueGray[100]};
+	border: 1px solid ${token.var("colors.slate.100")};
 	border-radius: 2px;
 `;
 

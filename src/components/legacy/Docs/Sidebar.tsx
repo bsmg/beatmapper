@@ -1,7 +1,7 @@
 import { docs } from "velite:content";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import BaseLink from "../BaseLink";
 import Logo from "../Logo";
@@ -81,24 +81,24 @@ const NavLink = styled(BaseLink)`
   display: flex;
   align-items: center;
   height: 35px;
-  color: ${COLORS.blueGray[700]};
+  color: ${token.var("colors.slate.700")};
   font-family: 'system';
   font-weight: 500;
   font-size: 16px;
   text-decoration: none;
 
   &:hover {
-    color: ${COLORS.blueGray[400]};
+    color: ${token.var("colors.slate.400")};
   }
 
 	&.active {
-		color: ${COLORS.blue[500]};
+		color: ${token.var("colors.blue.500")};
 	}
 `;
 
 const Header = styled.header`
   height: 80px;
-  border-bottom: 1px solid ${COLORS.blueGray[100]};
+  border-bottom: 1px solid ${token.var("colors.slate.100")};
   display: flex;
   align-items: center;
   padding: 0 20px;

@@ -9,7 +9,7 @@ import { arrowUpRight } from "react-icons-kit/feather/arrowUpRight";
 import { circle } from "react-icons-kit/feather/circle";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { selectNoteDirection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectNoteEditorDirection, selectNoteEditorTool } from "$/store/selectors";
@@ -30,7 +30,7 @@ const NoteGrid = () => {
 		<Wrapper>
 			<Heading size={3}>Notes</Heading>
 
-			<Spacer size={UNIT * 1.5} />
+			<Spacer size={token.var("spacing.1.5")} />
 
 			<Grid>
 				<Row>

@@ -1,8 +1,9 @@
 import { useBlocker } from "@tanstack/react-router";
-import { type FormEventHandler, useState } from "react";
+import { type FormEventHandler, useMemo, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS, ENVIRONMENT_RENAME, MEDIA_ROW_HEIGHT, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { ENVIRONMENT_RENAME } from "$/constants";
 import { useMount } from "$/hooks";
 import { createInfoContent } from "$/services/packaging.service";
 import { filestore } from "$/setup";
@@ -130,30 +131,32 @@ const SongDetails = ({ songId }: Props) => {
 
 	useBlocker(() => (isDirty ? !window.confirm("You have unsaved changes! Are you sure you want to leave this page?") : false));
 
+	const mediaRowHeight = useMemo(() => Number.parseFloat(token("sizes.mediaRow")), []);
+
 	return (
 		<Wrapper>
 			<InnerWrapper>
-				<Spacer size={UNIT * 10} />
+				<Spacer size={token.var("spacing.10")} />
 				<Heading size={1}>Edit Song Details</Heading>
-				<Spacer size={UNIT * 6} />
+				<Spacer size={token.var("spacing.6")} />
 
 				<form onSubmit={handleSubmit}>
 					<Row>
 						<div style={{ flex: 1 }}>
-							<SongPicker height={MEDIA_ROW_HEIGHT} songFile={songFile} setSongFile={(file) => setSongProperty("songFile", file)} />
+							<SongPicker height={mediaRowHeight} songFile={songFile} setSongFile={(file) => setSongProperty("songFile", file)} />
 						</div>
-						<Spacer size={UNIT * 2} />
-						<div style={{ flexBasis: MEDIA_ROW_HEIGHT }}>
-							<CoverArtPicker height={MEDIA_ROW_HEIGHT} coverArtFile={coverArtFile} setCoverArtFile={(file) => setSongProperty("coverArtFile", file)} />
+						<Spacer size={token.var("spacing.2")} />
+						<div style={{ flexBasis: token.var("sizes.mediaRow") }}>
+							<CoverArtPicker height={mediaRowHeight} coverArtFile={coverArtFile} setCoverArtFile={(file) => setSongProperty("coverArtFile", file)} />
 						</div>
 					</Row>
-					<Spacer size={UNIT * 4} />
+					<Spacer size={token.var("spacing.4")} />
 
 					<Row>
 						<Cell>
 							<TextInput required label="Song name" value={songData.name} placeholder="Radar" onChange={(ev) => setSongProperty("name", ev.target.value)} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<Cell>
 							<TextInput label="Song sub-name" value={songData.subName} placeholder="Original Mix" onChange={(ev) => setSongProperty("subName", ev.target.value)} />
 						</Cell>
@@ -162,7 +165,7 @@ const SongDetails = ({ songId }: Props) => {
 						<Cell>
 							<TextInput required label="Artist name" value={songData.artistName} placeholder="Fox Stevenson" onChange={(ev) => setSongProperty("artistName", ev.target.value)} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<Cell>
 							<TextInput required label="Map author name" value={songData.mapAuthorName} onChange={(ev) => setSongProperty("mapAuthorName", ev.target.value)} />
 						</Cell>
@@ -172,16 +175,16 @@ const SongDetails = ({ songId }: Props) => {
 						<Cell>
 							<TextInput required type="number" label="BPM" value={songData.bpm} placeholder="140" onChange={(ev) => setSongProperty("bpm", Number(ev.target.value))} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<Cell>
 							<TextInput type="number" label="Offset" value={songData.offset} placeholder="0" onChange={(ev) => setSongProperty("offset", Number(ev.target.value))} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 
 						<Cell>
 							<TextInput label="Swing amount" value={songData.swingAmount} placeholder="0" onChange={(ev) => setSongProperty("swingAmount", Number(ev.target.value))} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<Cell>
 							<TextInput label="Swing period" value={songData.swingPeriod} placeholder="0" onChange={(ev) => setSongProperty("swingPeriod", Number(ev.target.value))} />
 						</Cell>
@@ -191,11 +194,11 @@ const SongDetails = ({ songId }: Props) => {
 						<Cell>
 							<TextInput required type="number" label="Preview start time" value={songData.previewStartTime} placeholder="(in seconds)" onChange={(ev) => setSongProperty("previewStartTime", Number(ev.target.value))} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 						<Cell>
 							<TextInput required type="number" label="Preview duration" value={songData.previewDuration} placeholder="(in seconds)" onChange={(ev) => setSongProperty("previewDuration", Number(ev.target.value))} />
 						</Cell>
-						<Spacer size={UNIT * 4} />
+						<Spacer size={token.var("spacing.4")} />
 
 						<Cell>
 							<DropdownInput label="Environment" value={songData.environment} displayValue={ENVIRONMENT_RENAME[songData.environment]} onChange={(ev) => setSongProperty("environment", ev.target.value)}>
@@ -207,19 +210,19 @@ const SongDetails = ({ songId }: Props) => {
 							</DropdownInput>
 						</Cell>
 					</Row>
-					<Spacer size={UNIT * 2} />
+					<Spacer size={token.var("spacing.2")} />
 					<Center>
-						<Button disabled={isSaveDisabled} color={status === "success" ? COLORS.green[700] : undefined}>
+						<Button disabled={isSaveDisabled} color={status === "success" ? token.var("colors.green.700") : undefined}>
 							{status === "working" ? <Spinner size={16} /> : status === "success" ? "Saved!" : "Update song details"}
 						</Button>
 					</Center>
 				</form>
-				<Spacer size={UNIT * 8} />
+				<Spacer size={token.var("spacing.8")} />
 
 				<Heading size={1}>Edit Difficulties</Heading>
 			</InnerWrapper>
 
-			<Spacer size={UNIT * 6} />
+			<Spacer size={token.var("spacing.6")} />
 
 			<BeatmapsWrapper>
 				<WrappedRow>
@@ -229,15 +232,15 @@ const SongDetails = ({ songId }: Props) => {
 				</WrappedRow>
 			</BeatmapsWrapper>
 
-			<Spacer size={UNIT * 6} />
+			<Spacer size={token.var("spacing.6")} />
 
 			<InnerWrapper>
 				<Heading size={1}>Advanced Settings</Heading>
-				<Spacer size={UNIT * 6} />
+				<Spacer size={token.var("spacing.6")} />
 				<CustomColorSettings />
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<MappingExtensionSettings />
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<LabeledCheckbox id="enable-lightshow" checked={!!enabledLightshow} onChange={() => dispatch(togglePropertyForSelectedSong({ songId, property: "enabledLightshow" }))}>
 					Includes "Lightshow" difficulty{" "}
 					<QuestionTooltip>
@@ -247,7 +250,7 @@ const SongDetails = ({ songId }: Props) => {
 						</span>
 					</QuestionTooltip>
 				</LabeledCheckbox>
-				<Spacer size={UNIT * 2} />
+				<Spacer size={token.var("spacing.2")} />
 				<LabeledCheckbox id="enable-fast-walls" checked={!!enabledFastWalls} onChange={() => dispatch(togglePropertyForSelectedSong({ songId, property: "enabledFastWalls" }))}>
 					Enable "fast walls"{" "}
 					<QuestionTooltip>
@@ -260,7 +263,7 @@ const SongDetails = ({ songId }: Props) => {
 				</LabeledCheckbox>
 			</InnerWrapper>
 
-			<Spacer size={UNIT * 36} />
+			<Spacer size={token.var("spacing.36")} />
 		</Wrapper>
 	);
 };
@@ -271,15 +274,15 @@ const Wrapper = styled.div`
 `;
 
 const InnerWrapper = styled.div`
-  padding-left: ${UNIT * 4}px;
-  padding-right: ${UNIT * 4}px;
+  padding-left: ${token.var("spacing.4")};
+  padding-right: ${token.var("spacing.4")};
   /*
     HACK: These magic numbers are necessary because SongPicker uses
     ScrubbableWaveform, which assumes a 500px width, and sits beside
     CoverArtPicker, which is a MEDIA_ROW_HEIGHT-sized square. Plus padding.
     No clue why the +4 is needed
   */
-  width: ${500 + MEDIA_ROW_HEIGHT + UNIT * 4 + UNIT * 8 + 4}px;
+  width: calc(500px + ${token.var("sizes.mediaRow")} + ${token.var("spacing.4")} + ${token.var("spacing.8")} + 4px);
   margin: auto;
 `;
 
@@ -299,7 +302,7 @@ const BeatmapsWrapper = styled(InnerWrapper)`
 const Row = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: ${UNIT * 4}px;
+  margin-bottom: ${token.var("spacing.4")};
 `;
 const WrappedRow = styled(Row)`
   flex-wrap: wrap;

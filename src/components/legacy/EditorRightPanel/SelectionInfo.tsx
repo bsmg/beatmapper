@@ -5,13 +5,12 @@ import { maximize2 as swapIcon } from "react-icons-kit/feather/maximize2";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { copySelection, cutSelection, deselectAll, deselectAllOfType, nudgeSelection, pasteSelection, swapSelectedNotes } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectClipboardHasObjects } from "$/store/selectors";
 import { ObjectType, View } from "$/types";
 import { getMetaKeyLabel, interleave } from "$/utils";
-import { ACTION_WIDTH, HALF_ACTION_WIDTH } from "./EditorRightPanel.constants";
 
 import Heading from "../Heading";
 import IconButton from "../IconButton";
@@ -70,75 +69,75 @@ const SelectionInfo = ({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedO
 	return (
 		<Wrapper>
 			<Heading size={3}>Selection</Heading>
-			<Spacer size={UNIT * 1.5} />
+			<Spacer size={token.var("spacing.1.5")} />
 
 			<div>{numbers}</div>
 
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 
 			{hasSelectedObstacles && (
 				<Fragment>
 					<ObstacleTweaks />
-					<Spacer size={UNIT * 4} />
+					<Spacer size={token.var("spacing.4")} />
 				</Fragment>
 			)}
 
 			<Heading size={3}>Actions</Heading>
-			<Spacer size={UNIT * 1.5} />
+			<Spacer size={token.var("spacing.1.5")} />
 
 			<Row>
 				<Tooltip delay={1000} title="Swap horizontally (H)">
 					<IconButton rotation={45} icon={swapIcon} onClick={() => dispatch(swapSelectedNotes({ axis: "horizontal" }))} />
 				</Tooltip>
-				<Spacer size={UNIT} />
+				<Spacer size={token.var("spacing.1")} />
 				<Tooltip delay={1000} title="Swap vertically (V)">
 					<IconButton rotation={-45} icon={swapIcon} onClick={() => dispatch(swapSelectedNotes({ axis: "vertical" }))} />
 				</Tooltip>
 			</Row>
 
-			<Spacer size={UNIT} />
+			<Spacer size={token.var("spacing.1")} />
 
 			<Row>
 				<Tooltip delay={1000} title={`Nudge forwards (${metaKeyLabel} + ↑)`}>
 					<IconButton icon={arrowUp} onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))} />
 				</Tooltip>
-				<Spacer size={UNIT} />
+				<Spacer size={token.var("spacing.1")} />
 				<Tooltip delay={1000} title={`Nudge backwards (${metaKeyLabel} + ↓)`}>
 					<IconButton icon={arrowDown} onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))} />
 				</Tooltip>
 			</Row>
 
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 
 			<Tooltip delay={1000} title="Clear selection (Escape)">
-				<MiniButton width={ACTION_WIDTH} onClick={() => dispatch(deselectAll({ view: View.BEATMAP }))}>
+				<MiniButton width={token.var("sizes.actionPanelFull")} onClick={() => dispatch(deselectAll({ view: View.BEATMAP }))}>
 					Deselect
 				</MiniButton>
 			</Tooltip>
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 
 			<UndoRedo />
 
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 
 			<Row>
 				<Tooltip delay={1000} title={`copy and remove selection (${getMetaKeyLabel()} + X)`}>
-					<MiniButton width={HALF_ACTION_WIDTH} onClick={() => dispatch(cutSelection({ view: View.BEATMAP }))}>
+					<MiniButton width={token.var("sizes.actionPanelHalf")} onClick={() => dispatch(cutSelection({ view: View.BEATMAP }))}>
 						Cut
 					</MiniButton>
 				</Tooltip>
-				<Spacer size={UNIT} />
+				<Spacer size={token.var("spacing.1")} />
 				<Tooltip delay={1000} title={`Copy selection (${getMetaKeyLabel()} + C)`}>
-					<MiniButton width={HALF_ACTION_WIDTH} onClick={() => dispatch(copySelection({ view: View.BEATMAP }))}>
+					<MiniButton width={token.var("sizes.actionPanelHalf")} onClick={() => dispatch(copySelection({ view: View.BEATMAP }))}>
 						Copy
 					</MiniButton>
 				</Tooltip>
 			</Row>
 
-			<Spacer size={UNIT} />
+			<Spacer size={token.var("spacing.1")} />
 
 			<Tooltip delay={1000} title={`Paste copied notes and obstacles (${getMetaKeyLabel()} + V)`}>
-				<MiniButton width={ACTION_WIDTH} disabled={!hasCopiedNotes} onClick={() => dispatch(pasteSelection({ view: View.BEATMAP }))}>
+				<MiniButton width={token.var("sizes.actionPanelFull")} disabled={!hasCopiedNotes} onClick={() => dispatch(pasteSelection({ view: View.BEATMAP }))}>
 					Paste
 				</MiniButton>
 			</Tooltip>
@@ -157,7 +156,7 @@ const Row = styled.div`
 `;
 
 const Highlight = styled.span`
-  color: ${COLORS.yellow[500]};
+  color: ${token.var("colors.yellow.500")};
 `;
 
 export default SelectionInfo;

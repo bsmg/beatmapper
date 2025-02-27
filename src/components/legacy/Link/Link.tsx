@@ -1,11 +1,11 @@
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import BaseLink from "../BaseLink";
 
 export default styled(BaseLink)`
-  color: ${COLORS.yellow[500]};
+  color: ${token.var("colors.yellow.500")};
   text-decoration: none;
 
   &:hover {

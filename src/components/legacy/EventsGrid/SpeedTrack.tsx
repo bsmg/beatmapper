@@ -1,7 +1,7 @@
 import { type PointerEventHandler, useCallback, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { changeLaserSpeed } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -133,7 +133,7 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 				{!isDisabled && (
 					<Background>
 						{range(NUM_OF_SPEEDS + 1).map((i) => (
-							<line key={i} x1={0} y1={getYForSpeed(height, i)} x2={width} y2={getYForSpeed(height, i)} strokeWidth={1} stroke={COLORS.blueGray[700]} style={{ opacity: 0.6 }} />
+							<line key={i} x1={0} y1={getYForSpeed(height, i)} x2={width} y2={getYForSpeed(height, i)} strokeWidth={1} stroke={token.var("colors.slate.700")} style={{ opacity: 0.6 }} />
 						))}
 					</Background>
 				)}
@@ -148,7 +148,7 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 					}, "")}
 					stroke="white"
 					strokeWidth="0.2"
-					fill={COLORS.green[500]}
+					fill={token.var("colors.green.500")}
 					opacity={0.5}
 				/>
 
@@ -165,7 +165,7 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 
 const Wrapper = styled.div<{ isDisabled?: boolean }>`
   position: relative;
-  border-bottom: 1px solid ${COLORS.blueGray[400]};
+  border-bottom: 1px solid ${token.var("colors.slate.400")};
   opacity: ${(p) => p.isDisabled && 0.5};
   cursor: ${(p) => p.isDisabled && "not-allowed"};
   background-color: ${(p) => p.isDisabled && "rgba(255,255,255,0.2)"};

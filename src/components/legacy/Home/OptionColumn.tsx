@@ -2,7 +2,7 @@ import type { MouseEventHandler } from "react";
 import { Icon, type IconProp } from "react-icons-kit";
 import styled from "styled-components";
 
-import { COLORS, UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import Button from "../Button";
 import Heading from "../Heading";
@@ -22,11 +22,11 @@ const OptionColumn = ({ icon, title, disabled, description, buttonText, handleCl
 	return (
 		<Wrapper>
 			<Icon icon={icon} size={24} />
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<Title size={3}>{title}</Title>
-			<Spacer size={UNIT * 2} />
+			<Spacer size={token.var("spacing.2")} />
 			<Description>{description}</Description>
-			<Spacer size={UNIT * 4} />
+			<Spacer size={token.var("spacing.4")} />
 			<Button onClick={handleClick} disabled={disabled}>
 				{buttonText}
 			</Button>
@@ -39,16 +39,16 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: ${COLORS.blueGray[300]};
-  margin-bottom: ${UNIT * 5}px;
+  color: ${token.var("colors.slate.300")};
+  margin-bottom: ${token.var("spacing.5")};
 `;
 
 const Title = styled(Heading)`
-  color: ${COLORS.white};
+  color: white;
 `;
 
 const Description = styled(Paragraph)`
-  color: ${COLORS.blueGray[300]};
+  color: ${token.var("colors.slate.300")};
   text-align: center;
 `;
 

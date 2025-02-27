@@ -9,7 +9,8 @@ import { zoomOut as zoomOutIcon } from "react-icons-kit/feather/zoomOut";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
-import { COLORS, UNIT, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectEventColor, selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -49,7 +50,7 @@ const GridControls = ({ contentWidth }: Props) => {
 						<Icon icon={selectToolIcon} />
 					</ControlItemToggleButton>
 				</ControlItem>
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<ControlItem label="Light Color">
 					<ControlItemToggleButton value={EventColor.PRIMARY} isToggled={selectedColor === EventColor.PRIMARY} onToggle={(value) => dispatch(selectEventColor({ color: value as EventColor }))}>
 						<Box color={getColorForItem(EventColor.PRIMARY, customColors)} />
@@ -59,7 +60,7 @@ const GridControls = ({ contentWidth }: Props) => {
 					</ControlItemToggleButton>
 				</ControlItem>
 
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 
 				<ControlItem label="Effect">
 					<ControlItemToggleButton value={EventTool.ON} isToggled={selectedTool === EventTool.ON} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }))}>
@@ -75,7 +76,7 @@ const GridControls = ({ contentWidth }: Props) => {
 						<EventToolIcon tool={EventTool.FADE} color={getColorForItem(selectedColor, customColors)} />
 					</ControlItemToggleButton>
 				</ControlItem>
-				<Spacer size={UNIT * 4} />
+				<Spacer size={token.var("spacing.4")} />
 				<ControlItem label="Locks">
 					<Tooltip delay={500} title="Loop playback within the current event window (L)">
 						<ControlItemToggleButton value={null} isToggled={isLockedToCurrentWindow} onToggle={() => dispatch(toggleEventWindowLock())}>
@@ -113,7 +114,7 @@ const Wrapper = styled.div`
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   user-select: none;
-  padding: 0 ${UNIT * 2}px;
+  padding: 0 ${token.var("spacing.2")};
 `;
 
 const Side = styled.div`
@@ -138,8 +139,8 @@ const ZoomBtn = styled(UnfocusedButton)`
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  background: ${COLORS.blueGray[900]};
-  color: ${COLORS.blueGray[100]};
+  background: ${token.var("colors.slate.900")};
+  color: ${token.var("colors.slate.100")};
   display: flex;
   justify-content: center;
   align-items: center;

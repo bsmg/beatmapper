@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import { usePointerUpHandler } from "$/hooks";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -104,7 +104,7 @@ const BlockTrack = ({ trackId, tracks, width, height, startBeat, numOfBeatsToSho
 
 const Wrapper = styled.div<{ isDisabled?: boolean }>`
   position: relative;
-  border-bottom: 1px solid ${COLORS.blueGray[400]};
+  border-bottom: 1px solid ${token.var("colors.slate.400")};
   opacity: ${(p) => p.isDisabled && 0.5};
   cursor: ${(p) => p.isDisabled && "not-allowed"};
   background-color: ${(p) => p.isDisabled && "rgba(255,255,255,0.2)"};

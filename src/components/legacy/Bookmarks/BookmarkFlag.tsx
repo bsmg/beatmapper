@@ -1,13 +1,13 @@
 import { Fragment, type MouseEventHandler } from "react";
 import styled from "styled-components";
 
-import { UNIT } from "$/constants";
+import { token } from "$:styled-system/tokens";
 import type { App } from "$/types";
 
 import UnfocusedButton from "../UnfocusedButton";
 
-const TOP_SPILLOVER = 15;
-const BOTTOM_SPILLOVER = UNIT;
+const TOP_SPILLOVER = "15px";
+const BOTTOM_SPILLOVER = token.var("spacing.1");
 
 interface Props {
 	bookmark: App.Bookmark;
@@ -62,8 +62,8 @@ const BookmarkFlag = ({ bookmark, offsetPercentage, handleJump, handleDelete }: 
 const ThinStrip = styled.div`
   position: absolute;
   z-index: 2;
-  top: ${-TOP_SPILLOVER}px;
-  bottom: ${-BOTTOM_SPILLOVER}px;
+  top: calc(${TOP_SPILLOVER} * -1);
+  bottom: calc(${BOTTOM_SPILLOVER} * -1);
   width: 2px;
   transform: translateX(-1px);
   border-radius: 2px 0 2px 2px;
@@ -77,7 +77,7 @@ const ThinStrip = styled.div`
 const Flag = styled(UnfocusedButton)`
   position: absolute;
   z-index: 2;
-  top: ${-TOP_SPILLOVER}px;
+  top: calc(${TOP_SPILLOVER} * -1);
   padding-left: 4px;
   padding-right: 4px;
   height: 20px;

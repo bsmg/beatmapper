@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
+import { token } from "$:styled-system/tokens";
 
 import QuestionTooltip from "../QuestionTooltip";
 
@@ -33,12 +33,12 @@ const Input = styled.input`
   background: transparent;
   border: none;
   border-bottom: 2px solid rgba(255, 255, 255, 0.4);
-  color: ${COLORS.white};
+  color: white;
   font-size: 16px;
   outline: none;
 
   &:focus {
-    border-bottom: 2px solid ${COLORS.pink[500]};
+    border-bottom: 2px solid ${token.var("colors.pink.500")};
   }
 
   ::placeholder {
@@ -46,7 +46,7 @@ const Input = styled.input`
   }
 
   &:disabled {
-    color: ${COLORS.blueGray[500]};
+    color: ${token.var("colors.slate.500")};
   }
 `;
 
@@ -57,7 +57,7 @@ const Label = styled.label`
 const LabelText = styled.div`
   font-size: 16px;
   font-weight: 300;
-  color: ${COLORS.gray[100]};
+  color: ${token.var("colors.gray.100")};
   margin-bottom: 4px;
   display: flex;
   justify-content: space-between;
@@ -65,7 +65,7 @@ const LabelText = styled.div`
 
 const Asterisk = styled.span`
   display: inline-block;
-  color: ${COLORS.red[300]};
+  color: ${token.var("colors.red.300")};
   padding-left: 4px;
 
   &:before {

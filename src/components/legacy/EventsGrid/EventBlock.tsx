@@ -2,7 +2,6 @@ import Color from "color";
 import { memo } from "react";
 import styled from "styled-components";
 
-import { COLORS } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
@@ -11,6 +10,7 @@ import { selectActiveSongId, selectCustomColors, selectEventEditorEditMode } fro
 import { App, EventEditMode } from "$/types";
 import { normalize } from "$/utils";
 
+import { token } from "$:styled-system/tokens";
 import UnstyledButton from "../UnstyledButton";
 
 const BLOCK_WIDTH = 7;
@@ -117,7 +117,7 @@ const SelectedGlow = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: ${COLORS.yellow[500]};
+  background-color: ${token.var("colors.yellow.500")};
   border-radius: ${BLOCK_WIDTH / 2}px;
   opacity: 0.6;
 `;
