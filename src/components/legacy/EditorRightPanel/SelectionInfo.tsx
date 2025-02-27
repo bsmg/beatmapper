@@ -1,7 +1,5 @@
+import { ArrowDownToLineIcon, ArrowUpToLineIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
 import { Fragment, type MouseEventHandler } from "react";
-import { arrowDown } from "react-icons-kit/feather/arrowDown";
-import { arrowUp } from "react-icons-kit/feather/arrowUp";
-import { maximize2 as swapIcon } from "react-icons-kit/feather/maximize2";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
@@ -87,11 +85,11 @@ const SelectionInfo = ({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedO
 
 			<Row>
 				<Tooltip delay={1000} title="Swap horizontally (H)">
-					<IconButton rotation={45} icon={swapIcon} onClick={() => dispatch(swapSelectedNotes({ axis: "horizontal" }))} />
+					<IconButton icon={FlipHorizontal2Icon} onClick={() => dispatch(swapSelectedNotes({ axis: "horizontal" }))} />
 				</Tooltip>
 				<Spacer size={token.var("spacing.1")} />
 				<Tooltip delay={1000} title="Swap vertically (V)">
-					<IconButton rotation={-45} icon={swapIcon} onClick={() => dispatch(swapSelectedNotes({ axis: "vertical" }))} />
+					<IconButton icon={FlipVertical2Icon} onClick={() => dispatch(swapSelectedNotes({ axis: "vertical" }))} />
 				</Tooltip>
 			</Row>
 
@@ -99,11 +97,11 @@ const SelectionInfo = ({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedO
 
 			<Row>
 				<Tooltip delay={1000} title={`Nudge forwards (${metaKeyLabel} + ↑)`}>
-					<IconButton icon={arrowUp} onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))} />
+					<IconButton icon={ArrowUpToLineIcon} onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))} />
 				</Tooltip>
 				<Spacer size={token.var("spacing.1")} />
 				<Tooltip delay={1000} title={`Nudge backwards (${metaKeyLabel} + ↓)`}>
-					<IconButton icon={arrowDown} onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))} />
+					<IconButton icon={ArrowDownToLineIcon} onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))} />
 				</Tooltip>
 			</Row>
 

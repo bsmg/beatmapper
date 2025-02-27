@@ -1,5 +1,5 @@
-import type { CSSProperties, ComponentProps } from "react";
-import type { IconProp } from "react-icons-kit";
+import type { LucideProps } from "lucide-react";
+import type { CSSProperties, ComponentProps, ComponentType } from "react";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -11,8 +11,8 @@ import StatusIcon from "./StatusIcon";
 interface Props extends Omit<ComponentProps<typeof MiniSlider>, "width" | "onChange"> {
 	width: CSSProperties["width"];
 	onChange: (value: ComponentProps<typeof MiniSlider>["value"]) => void;
-	minIcon: IconProp["icon"];
-	maxIcon: IconProp["icon"];
+	minIcon: ComponentType<LucideProps>;
+	maxIcon: ComponentType<LucideProps>;
 }
 
 const SliderGroup = ({ width, height, minIcon, maxIcon, min, max, step, value, onChange, disabled, ...delegated }: Props) => (

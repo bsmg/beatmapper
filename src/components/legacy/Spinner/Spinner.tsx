@@ -1,16 +1,16 @@
-// TODO: Custom spinner!
-import { Icon } from "react-icons-kit";
-import { loader } from "react-icons-kit/feather/loader";
+import { LoaderIcon, type LucideProps } from "lucide-react";
+import type { ComponentType } from "react";
 import styled, { keyframes } from "styled-components";
 
 interface Props {
+	icon?: ComponentType<LucideProps>;
 	size?: number;
 }
 
-const Spinner = ({ size = 32 }: Props) => {
+const Spinner = ({ icon: Icon = LoaderIcon, size = 32 }: Props) => {
 	return (
 		<Wrapper>
-			<Icon icon={loader} size={size} />
+			<Icon size={size} />
 		</Wrapper>
 	);
 };

@@ -1,4 +1,5 @@
-import { Icon, type IconProp } from "react-icons-kit";
+import type { LucideProps } from "lucide-react";
+import type { ComponentType } from "react";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
@@ -9,14 +10,14 @@ import Spacer from "../Spacer";
 interface Props {
 	num: number;
 	label: string;
-	icon: IconProp["icon"];
+	icon: ComponentType<LucideProps>;
 }
 
-const CountIndicator = ({ num, label, icon }: Props) => {
+const CountIndicator = ({ num, label, icon: Icon }: Props) => {
 	return (
 		<Tooltip title={label} delay={250}>
 			<Wrapper>
-				<Icon icon={icon} size={12} style={{ transform: "translateY(-2px)" }} />
+				<Icon size={12} />
 				<Spacer size={token.var("spacing.1")} />
 				<Count>{num}</Count>
 			</Wrapper>
@@ -28,6 +29,7 @@ const Count = styled.div``;
 
 const Wrapper = styled.div`
   display: flex;
+	align-items: center;
   cursor: default;
 `;
 

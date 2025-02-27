@@ -1,6 +1,5 @@
+import { ImageIcon } from "lucide-react";
 import { useRef } from "react";
-import { Icon } from "react-icons-kit";
-import { image } from "react-icons-kit/feather/image";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -22,7 +21,7 @@ const CoverArtSelector = ({ coverArt }: Props) => {
 				<PlaceholderWrapper>
 					<InnerWrapper>
 						<IconWrapper>
-							<Icon icon={image} size={32} />
+							<ImageIcon size={32} />
 						</IconWrapper>
 						<Spacer size={token.var("spacing.3")} />
 						<Title>Cover Art</Title>

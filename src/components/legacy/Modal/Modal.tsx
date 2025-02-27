@@ -1,9 +1,8 @@
 // TODO: Accessibility. There are a lot of a11y things for modals, and this component isn't doing any of them :/
 // TODO: Use a portal to render this at the top-level, to avoid any z-index issues?
 
+import { XIcon } from "lucide-react";
 import { Fragment, type PropsWithChildren, PureComponent } from "react";
-import { Icon } from "react-icons-kit";
-import { x } from "react-icons-kit/feather/x";
 import { Transition } from "react-transition-group";
 import styled from "styled-components";
 
@@ -90,7 +89,7 @@ class Modal extends PureComponent<Props> {
 									</div>
 									{showBackdropX && (
 										<ManualDismiss onClick={onDismiss}>
-											<Icon icon={x} size={32} />
+											<XIcon size={32} />
 										</ManualDismiss>
 									)}
 								</PaneWrapper>

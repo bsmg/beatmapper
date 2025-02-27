@@ -1,7 +1,6 @@
-import { type ComponentProps, type ReactNode, useCallback } from "react";
+import { type LucideProps, XIcon } from "lucide-react";
+import { type ComponentProps, type ComponentType, type ReactNode, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { Icon, type IconProp } from "react-icons-kit";
-import { x } from "react-icons-kit/feather/x";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -10,7 +9,7 @@ import Spacer from "../Spacer";
 import UnstyledButton from "../UnstyledButton";
 
 interface Props extends ComponentProps<"input"> {
-	icon: IconProp["icon"];
+	icon: ComponentType<LucideProps>;
 	file?: File | null;
 	description: string;
 	height?: number;
@@ -20,7 +19,7 @@ interface Props extends ComponentProps<"input"> {
 	renderWhenFileSelected?: () => ReactNode;
 }
 
-const FileUploader = ({ icon, file, title, description, height, onSelectFile, onClear, showFilename, renderWhenFileSelected, ...delegated }: Props) => {
+const FileUploader = ({ icon: Icon, file, title, description, height, onSelectFile, onClear, showFilename, renderWhenFileSelected, ...delegated }: Props) => {
 	const onDrop = useCallback(
 		(acceptedFiles: File[]) => {
 			const selectedFile = acceptedFiles[0];
@@ -56,7 +55,7 @@ const FileUploader = ({ icon, file, title, description, height, onSelectFile, on
 						<Filename>{showFilename && file.name}</Filename>
 						<Spacer size={token.var("spacing.4")} />
 						<ClearAction onClick={handleClear}>
-							<Icon icon={x} size={16} />
+							<XIcon size={16} />
 							<Spacer size={token.var("spacing.1")} />
 							Clear
 						</ClearAction>
@@ -71,7 +70,7 @@ const FileUploader = ({ icon, file, title, description, height, onSelectFile, on
 				>
 					<InnerWrapper>
 						<IconWrapper>
-							<Icon icon={icon} size={24} />
+							<Icon size={24} />
 						</IconWrapper>
 						<Spacer size={token.var("spacing.2")} />
 						<Title>{title}</Title>

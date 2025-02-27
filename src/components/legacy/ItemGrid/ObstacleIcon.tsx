@@ -1,6 +1,6 @@
-interface Props {
-	size: number;
-}
+import type { LucideProps } from "lucide-react";
+
+interface Props extends LucideProps {}
 
 const ObstacleIcon = ({ size }: Props) => (
 	<svg width={size} fill="none" viewBox="0 0 43 31">

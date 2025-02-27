@@ -1,6 +1,5 @@
+import { ExternalLinkIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Icon } from "react-icons-kit";
-import { externalLink } from "react-icons-kit/feather/externalLink";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -111,7 +110,7 @@ const TableOfContents = ({ toc }: Props) => {
 			<GithubLink href={getGithubLink(location.pathname)}>
 				Suggest an edit
 				<Spacer size={12} />
-				<Icon icon={externalLink} />
+				<ExternalLinkIcon size={15} />
 			</GithubLink>
 		</Wrapper>
 	);

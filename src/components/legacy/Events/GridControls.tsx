@@ -1,11 +1,5 @@
 import Color from "color";
-import { Icon } from "react-icons-kit";
-import { lock as lockIcon } from "react-icons-kit/feather/lock";
-import { maximize as selectToolIcon } from "react-icons-kit/feather/maximize";
-import { plus as placeToolIcon } from "react-icons-kit/feather/plus";
-import { repeat as repeatWindowIcon } from "react-icons-kit/feather/repeat";
-import { zoomIn as zoomInIcon } from "react-icons-kit/feather/zoomIn";
-import { zoomOut as zoomOutIcon } from "react-icons-kit/feather/zoomOut";
+import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
@@ -43,11 +37,10 @@ const GridControls = ({ contentWidth }: Props) => {
 			<Left>
 				<ControlItem label="Edit Mode">
 					<ControlItemToggleButton value={EventEditMode.PLACE} isToggled={selectedEditMode === EventEditMode.PLACE} onToggle={() => dispatch(selectEventEditMode({ editMode: EventEditMode.PLACE }))}>
-						<Icon icon={placeToolIcon} />
+						<SquarePlusIcon size={16} />
 					</ControlItemToggleButton>
-
 					<ControlItemToggleButton value={EventEditMode.SELECT} isToggled={selectedEditMode === EventEditMode.SELECT} onToggle={() => dispatch(selectEventEditMode({ editMode: EventEditMode.SELECT }))}>
-						<Icon icon={selectToolIcon} />
+						<SquareDashedIcon size={16} />
 					</ControlItemToggleButton>
 				</ControlItem>
 				<Spacer size={token.var("spacing.4")} />
@@ -59,9 +52,7 @@ const GridControls = ({ contentWidth }: Props) => {
 						<Box color={getColorForItem(EventColor.SECONDARY, customColors)} />
 					</ControlItemToggleButton>
 				</ControlItem>
-
 				<Spacer size={token.var("spacing.4")} />
-
 				<ControlItem label="Effect">
 					<ControlItemToggleButton value={EventTool.ON} isToggled={selectedTool === EventTool.ON} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }))}>
 						<EventToolIcon tool={EventTool.ON} color={getColorForItem(selectedColor, customColors)} />
@@ -80,13 +71,12 @@ const GridControls = ({ contentWidth }: Props) => {
 				<ControlItem label="Locks">
 					<Tooltip delay={500} title="Loop playback within the current event window (L)">
 						<ControlItemToggleButton value={null} isToggled={isLockedToCurrentWindow} onToggle={() => dispatch(toggleEventWindowLock())}>
-							<Icon icon={repeatWindowIcon} />
+							<RepeatIcon size={16} />
 						</ControlItemToggleButton>
 					</Tooltip>
-
 					<Tooltip delay={500} title="Pair side lasers for symmetrical left/right events">
 						<ControlItemToggleButton value={null} isToggled={areLasersLocked} onToggle={() => dispatch(toggleLaserLock())}>
-							<Icon icon={lockIcon} />
+							<LockIcon size={16} />
 						</ControlItemToggleButton>
 					</Tooltip>
 				</ControlItem>
@@ -95,10 +85,10 @@ const GridControls = ({ contentWidth }: Props) => {
 			<Right>
 				<ControlItem label="Zoom" align="right">
 					<ZoomBtn onClick={() => dispatch(zoomOut())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
-						<Icon size={14} icon={zoomOutIcon} />
+						<ZoomOutIcon size={14} />
 					</ZoomBtn>
 					<ZoomBtn onClick={() => dispatch(zoomIn())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
-						<Icon size={14} icon={zoomInIcon} />
+						<ZoomInIcon size={14} />
 					</ZoomBtn>
 				</ControlItem>
 			</Right>

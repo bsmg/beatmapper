@@ -1,6 +1,6 @@
-interface Props {
-	size: number;
-}
+import type { LucideProps } from "lucide-react";
+
+interface Props extends LucideProps {}
 
 const MineIcon = ({ size }: Props) => {
 	return (

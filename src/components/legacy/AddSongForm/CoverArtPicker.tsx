@@ -1,5 +1,5 @@
+import { FileImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { image as imageIcon } from "react-icons-kit/feather/image";
 import styled from "styled-components";
 
 import FileUploader from "../FileUploader";
@@ -39,7 +39,7 @@ const CoverArtPicker = ({ height, coverArtFile, setCoverArtFile }: Props) => {
 
 	return (
 		<FileUploader
-			icon={imageIcon}
+			icon={FileImageIcon}
 			file={coverArtFile}
 			title="Cover Art"
 			description="Select a square cover image"

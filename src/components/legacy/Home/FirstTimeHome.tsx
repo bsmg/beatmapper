@@ -1,7 +1,5 @@
+import { CircleIcon, DownloadIcon, PackageOpenIcon } from "lucide-react";
 import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
-import { box } from "react-icons-kit/feather/box";
-import { download } from "react-icons-kit/feather/download";
-import { filePlus } from "react-icons-kit/feather/filePlus";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -55,7 +53,7 @@ const FirstTimeHome = ({ setModal }: Props) => {
 			<Spacer size={token.var("spacing.6")} />
 			<Row>
 				<OptionColumn
-					icon={box}
+					icon={PackageOpenIcon}
 					title="Try a demo map"
 					description="Take the editor for a test-drive with some surprisingly good public-domain dubstep"
 					buttonText={isLoadingDemo ? "Loading…" : "Start editing"}
@@ -65,9 +63,9 @@ const FirstTimeHome = ({ setModal }: Props) => {
 					}}
 				/>
 				<Divider />
-				<OptionColumn icon={filePlus} title="Create new song" description="Build a new map from scratch, using music from your computer" buttonText="Create from scratch" handleClick={() => setModal("create-new-song")} />
+				<OptionColumn icon={CircleIcon} title="Create new song" description="Build a new map from scratch, using music from your computer" buttonText="Create from scratch" handleClick={() => setModal("create-new-song")} />
 				<Divider />
-				<OptionColumn icon={download} title="Import existing map" description="Edit an existing map by selecting it from your computer" buttonText="Import map" handleClick={() => setModal("import-map")} />
+				<OptionColumn icon={DownloadIcon} title="Import existing map" description="Edit an existing map by selecting it from your computer" buttonText="Import map" handleClick={() => setModal("import-map")} />
 			</Row>
 
 			<Spacer size={token.var("spacing.10")} />

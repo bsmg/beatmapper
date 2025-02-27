@@ -1,5 +1,5 @@
+import { FileAudioIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { volume2 } from "react-icons-kit/feather/volume2";
 import styled from "styled-components";
 import type WaveformData from "waveform-data";
 
@@ -43,7 +43,7 @@ const SongPicker = ({ height, songFile, setSongFile }: Props) => {
 		<FileUploader
 			showFilename
 			file={songFile}
-			icon={volume2}
+			icon={FileAudioIcon}
 			title="Song File"
 			description="Browse for an .ogg song"
 			height={height}

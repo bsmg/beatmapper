@@ -1,24 +1,8 @@
 // TODO: This status bar is reused across two views, but the views don't need the same info :/ I should create a shared "root" component with slots for the stuff that is variant.
 
 import { useLocation } from "@tanstack/react-router";
+import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 import { type CSSProperties, Fragment, type ReactNode } from "react";
-import { alignJustify as rowHeightMinIcon } from "react-icons-kit/feather/alignJustify";
-import { bell as tickOnIcon } from "react-icons-kit/feather/bell";
-import { bellOff as tickOffIcon } from "react-icons-kit/feather/bellOff";
-import { box } from "react-icons-kit/feather/box";
-import { codepen } from "react-icons-kit/feather/codepen";
-import { eye as backgroundOpacityMaxIcon } from "react-icons-kit/feather/eye";
-import { eyeOff as backgroundOpacityMinIcon } from "react-icons-kit/feather/eyeOff";
-import { fastForward as playbackSpeedMaxIcon } from "react-icons-kit/feather/fastForward";
-import { globe } from "react-icons-kit/feather/globe";
-import { maximize2 as distanceFarIcon } from "react-icons-kit/feather/maximize2";
-import { menu as rowHeightMaxIcon } from "react-icons-kit/feather/menu";
-import { minimize2 as distanceCloseIcon } from "react-icons-kit/feather/minimize2";
-import { music as playbackSpeedMinIcon } from "react-icons-kit/feather/music";
-import { volume2 as volumeMaxIcon } from "react-icons-kit/feather/volume2";
-import { volumeX as volumeMinIcon } from "react-icons-kit/feather/volumeX";
-import { zap as showLightsIcon } from "react-icons-kit/feather/zap";
-import { zapOff as hideLightsIcon } from "react-icons-kit/feather/zapOff";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -72,11 +56,11 @@ const EditorStatusBar = ({ height }: Props) => {
 	if (view === View.BEATMAP) {
 		leftContent = (
 			<Fragment>
-				<CountIndicator num={numOfBlocks} label={pluralize(numOfBlocks, "block")} icon={box} />
+				<CountIndicator num={numOfBlocks} label={pluralize(numOfBlocks, "block")} icon={BoxIcon} />
 				<Spacer size={token.var("spacing.2")} />
-				<CountIndicator num={numOfMines} label={pluralize(numOfMines, "mine")} icon={globe} />
+				<CountIndicator num={numOfMines} label={pluralize(numOfMines, "mine")} icon={GlobeIcon} />
 				<Spacer size={token.var("spacing.2")} />
-				<CountIndicator num={numOfObstacles} label={pluralize(numOfObstacles, "obstacle")} icon={codepen} />
+				<CountIndicator num={numOfObstacles} label={pluralize(numOfObstacles, "obstacle")} icon={CuboidIcon} />
 				<Spacer size={token.var("spacing.6")} />
 				<NoteDensityIndicator />
 			</Fragment>
@@ -84,32 +68,32 @@ const EditorStatusBar = ({ height }: Props) => {
 
 		rightContent = (
 			<Fragment>
-				<Toggle size={8} value={playNoteTick} onIcon={tickOnIcon} offIcon={tickOffIcon} onChange={() => dispatch(toggleNoteTick())} />
+				<Toggle size={8} value={playNoteTick} onIcon={BellIcon} offIcon={BellOffIcon} onChange={() => dispatch(toggleNoteTick())} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={distanceCloseIcon} maxIcon={distanceFarIcon} min={7} max={14} value={beatDepth} onChange={(value) => dispatch(updateBeatDepth({ beatDepth: Number(value) }))} />
+				<SliderGroup disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={7} max={14} value={beatDepth} onChange={(value) => dispatch(updateBeatDepth({ beatDepth: Number(value) }))} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup includeMidpointTick disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={playbackSpeedMinIcon} maxIcon={playbackSpeedMaxIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
+				<SliderGroup includeMidpointTick disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup width={token.var("spacing.7")} height={height} minIcon={volumeMinIcon} maxIcon={volumeMaxIcon} min={0} max={1} step={0.1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
+				<SliderGroup width={token.var("spacing.7")} height={height} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
 			</Fragment>
 		);
 	} else if (view === View.LIGHTSHOW) {
 		leftContent = (
 			<Fragment>
-				<Toggle size={8} value={showLightingPreview} onIcon={showLightsIcon} offIcon={hideLightsIcon} onChange={() => dispatch(togglePreviewLightingInEventsView())} />
+				<Toggle size={8} value={showLightingPreview} onIcon={ZapIcon} offIcon={ZapOffIcon} onChange={() => dispatch(togglePreviewLightingInEventsView())} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup width={token.var("spacing.5")} height={height} minIcon={rowHeightMinIcon} maxIcon={rowHeightMaxIcon} min={25} max={50} step={1} value={rowHeight} onChange={(value) => dispatch(tweakEventRowHeight({ newHeight: Number(value) }))} />
+				<SliderGroup width={token.var("spacing.5")} height={height} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={25} max={50} step={1} value={rowHeight} onChange={(value) => dispatch(tweakEventRowHeight({ newHeight: Number(value) }))} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup disabled={isLoading} width={token.var("spacing.5")} height={height} minIcon={backgroundOpacityMinIcon} maxIcon={backgroundOpacityMaxIcon} min={0.3} max={1} step={0.02} value={backgroundOpacity} onChange={(value) => dispatch(tweakEventBackgroundOpacity({ newOpacity: Number(value) }))} />
+				<SliderGroup disabled={isLoading} width={token.var("spacing.5")} height={height} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={backgroundOpacity} onChange={(value) => dispatch(tweakEventBackgroundOpacity({ newOpacity: Number(value) }))} />
 			</Fragment>
 		);
 		rightContent = (
 			<Fragment>
-				<Toggle size={8} value={playNoteTick} onIcon={tickOnIcon} offIcon={tickOffIcon} onChange={() => dispatch(toggleNoteTick())} />
+				<Toggle size={8} value={playNoteTick} onIcon={BellIcon} offIcon={BellOffIcon} onChange={() => dispatch(toggleNoteTick())} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup includeMidpointTick disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={playbackSpeedMinIcon} maxIcon={playbackSpeedMaxIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
+				<SliderGroup includeMidpointTick disabled={isLoading} width={token.var("spacing.7")} height={height} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0.5} max={1.5} step={0.1} value={playbackRate} onChange={(value) => dispatch(updatePlaybackSpeed({ playbackRate: Number(value) }))} />
 				<Spacer size={token.var("spacing.6")} />
-				<SliderGroup width={token.var("spacing.7")} height={height} minIcon={volumeMinIcon} maxIcon={volumeMaxIcon} min={0} max={1} step={0.1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
+				<SliderGroup width={token.var("spacing.7")} height={height} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={volume} onChange={(value) => dispatch(updateVolume({ volume: Number(value) }))} />
 			</Fragment>
 		);
 	}

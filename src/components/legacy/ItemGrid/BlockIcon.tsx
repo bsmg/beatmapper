@@ -1,15 +1,15 @@
+import type { LucideProps } from "lucide-react";
 import styled from "styled-components";
 
-interface Props {
+interface Props extends LucideProps {
 	color: string;
-	size?: number;
 }
 
 const BlockIcon = ({ color, size = 16 }: Props) => {
 	return (
-		<Block color={color} style={{ width: size, height: size, borderRadius: size / 4, padding: size / 8 }}>
-			<svg width={size - size / 4} height={size - size / 4} viewBox="0 0 12 12">
-				<path d="M0,0 L12,0 L6,4 Z" fill="#FFF" />
+		<Block color={color} style={{ width: size, height: size }}>
+			<svg width={`calc(${size} - ${size} / 4)`} height={`calc(${size} - ${size} / 4)`} viewBox="0 0 12 12">
+				<path d="M0,2 L12,2 L6,6 Z" fill="#FFF" />
 			</svg>
 		</Block>
 	);

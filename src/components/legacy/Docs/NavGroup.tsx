@@ -1,6 +1,5 @@
+import { ChevronDownIcon } from "lucide-react";
 import { type PropsWithChildren, useState } from "react";
-import { Icon } from "react-icons-kit";
-import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled, { keyframes } from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -30,7 +29,7 @@ const NavGroup = ({ title, showByDefault, children }: Props) => {
 							transform: `rotateX(${iconRotateAmount}deg)`,
 						}}
 					>
-						<Icon icon={chevronDown} size={18} />
+						<ChevronDownIcon size={18} />
 					</IconWrapper>
 					<Highlight />
 				</Trigger>

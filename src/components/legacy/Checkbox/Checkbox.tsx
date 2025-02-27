@@ -1,6 +1,5 @@
+import { XIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { Icon } from "react-icons-kit";
-import { x as checkedIcon } from "react-icons-kit/feather/x";
 import styled from "styled-components";
 
 interface Props extends ComponentProps<"input"> {}
@@ -10,7 +9,7 @@ const Checkbox = ({ checked, onChange, ...delegated }: Props) => {
 		<Wrapper>
 			<RealCheckbox checked={checked} onChange={onChange} {...delegated} type="checkbox" />
 			<FakeCheckbox>
-				<CheckIcon icon={checkedIcon} size={16} style={{ opacity: checked ? 1 : 0 }} />
+				<CheckIcon size={16} style={{ opacity: checked ? 1 : 0 }} />
 			</FakeCheckbox>
 		</Wrapper>
 	);
@@ -51,7 +50,7 @@ const FakeCheckbox = styled.div`
   }
 `;
 
-const CheckIcon = styled(Icon)`
+const CheckIcon = styled(XIcon)`
   transition: opacity 100ms;
 `;
 

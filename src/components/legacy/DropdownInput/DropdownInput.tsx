@@ -1,6 +1,5 @@
+import { ChevronDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { Icon } from "react-icons-kit";
-import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -20,7 +19,7 @@ const DropdownInput = ({ label, children, value, displayValue, ...delegated }: P
 			<Input value={displayedText} onChange={() => {}} />
 
 			<Caret>
-				<Icon icon={chevronDown} size={16} />
+				<ChevronDownIcon size={16} />
 			</Caret>
 
 			<Select value={value} {...delegated}>
@@ -68,7 +67,7 @@ const LabelText = styled.div`
 const Caret = styled.div`
   position: absolute;
   z-index: 2;
-  top: 0;
+  top: 16px;
   bottom: 0;
   right: 0;
   margin: auto;

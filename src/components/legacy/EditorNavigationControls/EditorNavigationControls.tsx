@@ -1,10 +1,5 @@
+import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 import type { CSSProperties } from "react";
-import { fastForward } from "react-icons-kit/feather/fastForward";
-import { pause } from "react-icons-kit/feather/pause";
-import { play } from "react-icons-kit/feather/play";
-import { rewind } from "react-icons-kit/feather/rewind";
-import { skipBack } from "react-icons-kit/feather/skipBack";
-import { skipForward } from "react-icons-kit/feather/skipForward";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -47,11 +42,11 @@ const EditorNavigationControls = ({ height, view }: Props) => {
 			</Left>
 			<Center style={{ height }}>
 				<SpacedChildren spacing={token.var("spacing.1")}>
-					<IconButton disabled={isLoadingSong} color={"white"} icon={skipBack} onClick={() => dispatch(skipToStart())} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={rewind} onClick={() => dispatch(seekBackwards({ view }))} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={isPlaying ? pause : play} onClick={() => dispatch(playButtonAction())} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={fastForward} onClick={() => dispatch(seekForwards({ view }))} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={skipForward} onClick={() => dispatch(skipToEnd())} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={SkipBackIcon} onClick={() => dispatch(skipToStart())} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={RewindIcon} onClick={() => dispatch(seekBackwards({ view }))} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={isPlaying ? PauseIcon : PlayIcon} onClick={() => dispatch(playButtonAction())} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={FastForwardIcon} onClick={() => dispatch(seekForwards({ view }))} />
+					<IconButton disabled={isLoadingSong} color={"white"} icon={SkipForwardIcon} onClick={() => dispatch(skipToEnd())} />
 				</SpacedChildren>
 			</Center>
 			<Right>

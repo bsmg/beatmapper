@@ -1,18 +1,18 @@
-import { Icon, type IconProp } from "react-icons-kit";
+import type { LucideProps } from "lucide-react";
+import { type ComponentType, useMemo } from "react";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
 
-import { useMemo } from "react";
 import BaseLink, { type BaseLinkProps } from "../BaseLink";
 
 interface Props extends BaseLinkProps {
 	isActive?: boolean;
-	icon: IconProp["icon"];
+	icon: ComponentType<LucideProps>;
 }
 
-const SidebarNavItem = ({ ref, isActive, title, icon, to, onClick, ...delegated }: Props) => {
+const SidebarNavItem = ({ ref, isActive, title, icon: Icon, to, onClick, ...delegated }: Props) => {
 	const distance = useMemo(() => Number.parseFloat(token("spacing.2")), []);
 	return (
 		<Tooltip disabled={!title} title={title} position="right" delay={500} distance={distance} animateFill={false}>
@@ -26,7 +26,7 @@ const SidebarNavItem = ({ ref, isActive, title, icon, to, onClick, ...delegated 
 					onClick={onClick}
 					{...delegated}
 				>
-					<Icon icon={icon} size={20} />
+					<Icon size={20} />
 				</LinkElem>
 			</Wrapper>
 		</Tooltip>

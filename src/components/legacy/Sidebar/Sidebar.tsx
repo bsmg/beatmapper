@@ -1,13 +1,6 @@
 import { getRouteApi, useLocation } from "@tanstack/react-router";
+import { BookOpenIcon, BoxIcon, DownloadIcon, HomeIcon, ListIcon, PlayIcon, SettingsIcon, ZapIcon } from "lucide-react";
 import { Fragment, useState } from "react";
-import { box } from "react-icons-kit/feather/box";
-import { download } from "react-icons-kit/feather/download";
-import { helpCircle } from "react-icons-kit/feather/helpCircle";
-import { home } from "react-icons-kit/feather/home";
-import { play } from "react-icons-kit/feather/play";
-import { settings } from "react-icons-kit/feather/settings";
-import { sliders } from "react-icons-kit/feather/sliders";
-import { sun } from "react-icons-kit/feather/sun";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -37,18 +30,18 @@ const Sidebar = () => {
 			<Wrapper>
 				<Top>
 					<Spacer size={token.var("spacing.2")} />
-					<SidebarNavItem icon={home} to="/" />
+					<SidebarNavItem icon={HomeIcon} to="/" />
 
 					<Spacer size={token.var("spacing.2")} />
 					<Divider />
 					<Spacer size={token.var("spacing.2")} />
 
 					<SpacedChildren spacing={token.var("spacing.2")}>
-						<SidebarNavItem title="Notes" icon={box} to={"/edit/$sid/$bid/notes"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/notes$/)} />
-						<SidebarNavItem title="Events" icon={sun} to={"/edit/$sid/$bid/events"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/events$/)} />
-						<SidebarNavItem title="Preview" icon={play} to={"/edit/$sid/$bid/preview"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/preview$/)} />
-						<SidebarNavItem title="Map settings" icon={sliders} to={"/edit/$sid/$bid/details"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/details$/)} />
-						<SidebarNavItem title="Download" icon={download} to={"/edit/$sid/$bid/download"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/download$/)} />
+						<SidebarNavItem title="Notes" icon={BoxIcon} to={"/edit/$sid/$bid/notes"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/notes$/)} />
+						<SidebarNavItem title="Events" icon={ZapIcon} to={"/edit/$sid/$bid/events"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/events$/)} />
+						<SidebarNavItem title="Preview" icon={PlayIcon} to={"/edit/$sid/$bid/preview"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/preview$/)} />
+						<SidebarNavItem title="Map settings" icon={ListIcon} to={"/edit/$sid/$bid/details"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/details$/)} />
+						<SidebarNavItem title="Download" icon={DownloadIcon} to={"/edit/$sid/$bid/download"} params={{ sid: songId, bid: difficulty }} isActive={!!location.pathname.match(/\/download$/)} />
 					</SpacedChildren>
 				</Top>
 
@@ -56,14 +49,14 @@ const Sidebar = () => {
 					<SpacedChildren spacing={token.var("spacing.2")}>
 						<SidebarNavItem
 							title="App settings"
-							icon={settings}
+							icon={SettingsIcon}
 							onClick={(ev) => {
 								ev.preventDefault();
 								setShowSettingsModal(true);
 							}}
 							isActive={false}
 						/>
-						<SidebarNavItem title="Help" icon={helpCircle} to="/docs/$" params={{ _splat: "intro" }} isActive={false} target="_blank" />
+						<SidebarNavItem title="Help" icon={BookOpenIcon} to="/docs/$" params={{ _splat: "intro" }} isActive={false} target="_blank" />
 					</SpacedChildren>
 				</Bottom>
 			</Wrapper>

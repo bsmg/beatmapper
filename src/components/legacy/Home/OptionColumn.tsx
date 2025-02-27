@@ -1,5 +1,5 @@
-import type { MouseEventHandler } from "react";
-import { Icon, type IconProp } from "react-icons-kit";
+import type { LucideProps } from "lucide-react";
+import type { ComponentType, MouseEventHandler } from "react";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -10,7 +10,7 @@ import Paragraph from "../Paragraph";
 import Spacer from "../Spacer";
 
 interface Props {
-	icon: IconProp["icon"];
+	icon: ComponentType<LucideProps>;
 	title: string;
 	disabled?: boolean;
 	description: string;
@@ -18,10 +18,10 @@ interface Props {
 	handleClick: MouseEventHandler;
 }
 
-const OptionColumn = ({ icon, title, disabled, description, buttonText, handleClick }: Props) => {
+const OptionColumn = ({ icon: Icon, title, disabled, description, buttonText, handleClick }: Props) => {
 	return (
 		<Wrapper>
-			<Icon icon={icon} size={24} />
+			<Icon size={24} />
 			<Spacer size={token.var("spacing.4")} />
 			<Title size={3}>{title}</Title>
 			<Spacer size={token.var("spacing.2")} />

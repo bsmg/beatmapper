@@ -1,12 +1,4 @@
-import { arrowDown } from "react-icons-kit/feather/arrowDown";
-import { arrowDownLeft } from "react-icons-kit/feather/arrowDownLeft";
-import { arrowDownRight } from "react-icons-kit/feather/arrowDownRight";
-import { arrowLeft } from "react-icons-kit/feather/arrowLeft";
-import { arrowRight } from "react-icons-kit/feather/arrowRight";
-import { arrowUp } from "react-icons-kit/feather/arrowUp";
-import { arrowUpLeft } from "react-icons-kit/feather/arrowUpLeft";
-import { arrowUpRight } from "react-icons-kit/feather/arrowUpRight";
-import { circle } from "react-icons-kit/feather/circle";
+import { ArrowDownIcon, ArrowDownLeftIcon, ArrowDownRightIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, ArrowUpLeftIcon, ArrowUpRightIcon, CircleIcon } from "lucide-react";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -34,28 +26,28 @@ const NoteGrid = () => {
 
 			<Grid>
 				<Row>
-					<IconButton disabled={isDisabled} icon={arrowUpLeft} isToggled={selectedDirection === CutDirection.UP_LEFT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.UP_LEFT }))} />
+					<IconButton disabled={isDisabled} icon={ArrowUpLeftIcon} isToggled={selectedDirection === CutDirection.UP_LEFT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.UP_LEFT }))} />
 					<Spacer size={1} />
-					<IconButton disabled={isDisabled} icon={arrowUp} isToggled={selectedDirection === CutDirection.UP} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.UP }))} />
+					<IconButton disabled={isDisabled} icon={ArrowUpIcon} isToggled={selectedDirection === CutDirection.UP} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.UP }))} />
 					<Spacer size={1} />
-					<IconButton disabled={isDisabled} icon={arrowUpRight} isToggled={selectedDirection === CutDirection.UP_RIGHT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.UP_RIGHT }))} />
+					<IconButton disabled={isDisabled} icon={ArrowUpRightIcon} isToggled={selectedDirection === CutDirection.UP_RIGHT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.UP_RIGHT }))} />
 				</Row>
 				<Spacer size={1} />
 				<Row>
-					<IconButton disabled={isDisabled} icon={arrowLeft} isToggled={selectedDirection === CutDirection.LEFT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.LEFT }))} />
+					<IconButton disabled={isDisabled} icon={ArrowLeftIcon} isToggled={selectedDirection === CutDirection.LEFT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.LEFT }))} />
 					<Spacer size={1} />
-					<IconButton disabled={isDisabled} icon={circle} isToggled={selectedDirection === CutDirection.ANY} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.ANY }))} />
+					<IconButton disabled={isDisabled} icon={CircleIcon} isToggled={selectedDirection === CutDirection.ANY} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.ANY }))} />
 					<Spacer size={1} />
-					<IconButton disabled={isDisabled} icon={arrowRight} isToggled={selectedDirection === CutDirection.RIGHT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.RIGHT }))} />
+					<IconButton disabled={isDisabled} icon={ArrowRightIcon} isToggled={selectedDirection === CutDirection.RIGHT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.RIGHT }))} />
 					<Spacer size={1} />
 				</Row>
 				<Spacer size={1} />
 				<Row>
-					<IconButton disabled={isDisabled} icon={arrowDownLeft} isToggled={selectedDirection === CutDirection.DOWN_LEFT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.DOWN_LEFT }))} />
+					<IconButton disabled={isDisabled} icon={ArrowDownLeftIcon} isToggled={selectedDirection === CutDirection.DOWN_LEFT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.DOWN_LEFT }))} />
 					<Spacer size={1} />
-					<IconButton disabled={isDisabled} icon={arrowDown} isToggled={selectedDirection === CutDirection.DOWN} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.DOWN }))} />
+					<IconButton disabled={isDisabled} icon={ArrowDownIcon} isToggled={selectedDirection === CutDirection.DOWN} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.DOWN }))} />
 					<Spacer size={1} />
-					<IconButton disabled={isDisabled} icon={arrowDownRight} isToggled={selectedDirection === CutDirection.DOWN_RIGHT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.DOWN_RIGHT }))} />
+					<IconButton disabled={isDisabled} icon={ArrowDownRightIcon} isToggled={selectedDirection === CutDirection.DOWN_RIGHT} onClick={() => dispatch(selectNoteDirection({ direction: CutDirection.DOWN_RIGHT }))} />
 					<Spacer size={1} />
 				</Row>
 			</Grid>

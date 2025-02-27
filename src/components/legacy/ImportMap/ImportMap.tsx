@@ -1,4 +1,4 @@
-import { download as fileIcon } from "react-icons-kit/feather/download";
+import { FileArchiveIcon } from "lucide-react";
 
 import { processImportedMap } from "$/services/packaging.service";
 import { cancelImportingSong, importExistingSong, startImportingSong } from "$/store/actions";
@@ -33,7 +33,7 @@ const ImportMap = ({ onImport, onCancel, height }: Props) => {
 		}
 	};
 
-	return <FileUploader onSelectFile={handleSelectExistingMap} icon={fileIcon} height={height} title="Import existing map" description="Select a .zip file" />;
+	return <FileUploader onSelectFile={handleSelectExistingMap} icon={FileArchiveIcon} height={height} title="Import existing map" description="Select a .zip file" />;
 };
 
 export default ImportMap;

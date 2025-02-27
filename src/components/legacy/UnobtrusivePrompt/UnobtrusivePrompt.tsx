@@ -1,6 +1,5 @@
+import { XIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";
-import { Icon } from "react-icons-kit";
-import { x } from "react-icons-kit/feather/x";
 import styled, { keyframes } from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -18,7 +17,7 @@ const UnobtrusivePrompt = ({ title, children, onDismiss }: Props) => {
 	return (
 		<Wrapper>
 			<CloseButton onClick={onDismiss}>
-				<Icon icon={x} size={24} />
+				<XIcon size={24} />
 			</CloseButton>
 			<Heading size={2}>{title}</Heading>
 			<Spacer size={token.var("spacing.3")} />

@@ -1,6 +1,5 @@
+import { ChevronDownIcon } from "lucide-react";
 import type { CSSProperties } from "react";
-import { Icon } from "react-icons-kit";
-import { chevronDown } from "react-icons-kit/feather/chevronDown";
 import styled from "styled-components";
 
 import { deleteSong, downloadMapFiles } from "$/store/actions";
@@ -31,7 +30,7 @@ const SongRowActions = ({ songId, size }: Props) => {
 
 	return (
 		<MiniButton style={{ height: size, width: size }}>
-			<Icon icon={chevronDown} />
+			<ChevronDownIcon size={16} />
 			<Select
 				style={{ height: size, width: size }}
 				value=""

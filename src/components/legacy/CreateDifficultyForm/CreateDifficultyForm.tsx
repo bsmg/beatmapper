@@ -1,6 +1,5 @@
+import { ListIcon } from "lucide-react";
 import { Fragment, useState } from "react";
-import { Icon } from "react-icons-kit";
-import { sliders } from "react-icons-kit/feather/sliders";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
@@ -52,7 +51,7 @@ const CreateDifficultyForm = ({ afterCreate }: Props) => {
 				</Link>{" "}
 				page (
 				<IconWrapper>
-					<Icon icon={sliders} size={15} />
+					<ListIcon size={16} />
 				</IconWrapper>
 				).
 			</Paragraph>
@@ -89,7 +88,8 @@ const Wrapper = styled.div`
 
 const IconWrapper = styled.span`
   display: inline-block;
-  padding: 5px;
+  padding-inline: 5px;
+	transform: translateY(2px);
   color: rgba(255, 255, 255, 0.5);
 `;
 

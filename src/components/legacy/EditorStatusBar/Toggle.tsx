@@ -1,4 +1,5 @@
-import type { IconProp } from "react-icons-kit";
+import type { LucideProps } from "lucide-react";
+import type { ComponentType } from "react";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -9,8 +10,8 @@ import StatusIcon from "./StatusIcon";
 
 interface Props {
 	size: number;
-	onIcon: IconProp["icon"];
-	offIcon: IconProp["icon"];
+	onIcon: ComponentType<LucideProps>;
+	offIcon: ComponentType<LucideProps>;
 	value: boolean;
 	onChange: (value: boolean) => void;
 }

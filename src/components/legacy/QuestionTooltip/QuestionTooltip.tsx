@@ -1,6 +1,5 @@
+import { HelpCircleIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { Icon } from "react-icons-kit";
-import { helpCircle } from "react-icons-kit/feather/helpCircle";
 import { Tooltip } from "react-tippy";
 import styled from "styled-components";
 
@@ -11,7 +10,7 @@ const QuestionTooltip = ({ children, ...delegated }: Props) => {
 		<Wrapper>
 			<Tooltip interactive html={<HelpWrapper>{children}</HelpWrapper>} {...delegated}>
 				<IconWrapper>
-					<Icon size={14} icon={helpCircle} />
+					<HelpCircleIcon size={14} />
 				</IconWrapper>
 			</Tooltip>
 		</Wrapper>

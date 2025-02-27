@@ -1,6 +1,5 @@
+import { PlusIcon } from "lucide-react";
 import { Children, type PropsWithChildren } from "react";
-import { Icon } from "react-icons-kit";
-import { plus } from "react-icons-kit/feather/plus";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -42,7 +41,7 @@ export const KeyIcon = ({ size = "medium", type, children }: Props) => {
 
 export const Plus = () => (
 	<PlusWrapper>
-		<Icon icon={plus} size={16} />
+		<PlusIcon size={16} />
 	</PlusWrapper>
 );
 
@@ -183,7 +182,7 @@ const PlusWrapper = styled.span`
 	justify-content: center;
 	margin-inline: 0;
   justify-content: center;
-  transform: translate(-2px, -4px);
+  transform: translate(-2px, -2px);
 `;
 
 export const Key = styled.kbd<Props>`

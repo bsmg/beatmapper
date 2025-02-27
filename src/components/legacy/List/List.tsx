@@ -1,6 +1,5 @@
+import { ArrowRightIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";
-import IconBase from "react-icons-kit";
-import { arrowRightC } from "react-icons-kit/ionicons/arrowRightC";
 import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
@@ -10,7 +9,7 @@ const List = ({ children }: PropsWithChildren) => <ListElem>{children}</ListElem
 List.ListItem = ({ children }: PropsWithChildren) => (
 	<ListItemElem>
 		<IconWrapper>
-			<IconBase size={16} icon={arrowRightC} />
+			<ArrowRightIcon size={16} />
 		</IconWrapper>
 		<Children>{children}</Children>
 	</ListItemElem>
