@@ -12,16 +12,14 @@
 body {
 	line-height: 1;
 	font-family: "Oswald", sans-serif;
-	background-color: var(--colors-slate-1000);
 }
 
-body,
-input,
-select,
-button,
-textarea {
-	color: white;
+#root {
+	min-height: 100vh;
+	background-color: var(--colors-bg-canvas);
+	color: var(--colors-fg-default);
 }
+
 option {
 	color: black;
 }

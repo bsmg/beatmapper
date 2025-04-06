@@ -1,0 +1,45 @@
+import { type RowData, type Table, flexRender } from "@tanstack/react-table";
+import { useMemo } from "react";
+
+import * as Builder from "../styled/table";
+
+export interface DataTableProps<T extends RowData> {
+	table: Table<T>;
+}
+export function DataTable<T extends RowData>({ table: data }: DataTableProps<T>) {
+	const headerGroups = useMemo(() => data.getHeaderGroups(), [data]);
+	const rows = useMemo(() => data.getRowModel().rows, [data]);
+	const footerGroups = useMemo(() => data.getFooterGroups(), [data]);
+
+	return (
+		<Builder.Root>
+			<Builder.Header>
+				{headerGroups.map((headerGroup) => (
+					<Builder.Row key={headerGroup.id}>
+						{headerGroup.headers.map((header) => (
+							<Builder.HeaderCell key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</Builder.HeaderCell>
+						))}
+					</Builder.Row>
+				))}
+			</Builder.Header>
+			<Builder.Body>
+				{rows.map((row) => (
+					<Builder.Row key={row.id}>
+						{row.getVisibleCells().map((cell) => (
+							<Builder.Cell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Builder.Cell>
+						))}
+					</Builder.Row>
+				))}
+			</Builder.Body>
+			<Builder.Footer>
+				{footerGroups.map((footerGroup) => (
+					<Builder.Row key={footerGroup.id}>
+						{footerGroup.headers.map((header) => (
+							<Builder.HeaderCell key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}</Builder.HeaderCell>
+						))}
+					</Builder.Row>
+				))}
+			</Builder.Footer>
+		</Builder.Root>
+	);
+}
