@@ -1,80 +1,65 @@
+import { createListCollection } from "@ark-ui/react/collection";
+import type { MenuSelectionDetails } from "@ark-ui/react/menu";
 import { ChevronDownIcon } from "lucide-react";
-import type { CSSProperties } from "react";
-import styled from "styled-components";
+import { useCallback, useMemo } from "react";
 
 import { deleteSong, downloadMapFiles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
-import type { SongId } from "$/types";
+import type { App, SongId } from "$/types";
 
-import MiniButton from "../MiniButton";
+import { APP_TOASTER } from "$/components/app/constants";
+import { Button, Menu } from "$/components/ui/compositions";
+
+interface SongActionListCollection {
+	song: App.Song;
+}
+function createSongActionListCollection({ song }: SongActionListCollection) {
+	return createListCollection({
+		items: ["copy", "delete", "download"].map((value, index) => {
+			return { value, label: ["Copy", "Delete", "Download"][index] };
+		}),
+		isItemDisabled: (item) => import.meta.env.PROD && !!song.demo && !["delete"].includes(item.value),
+	});
+}
 
 interface Props {
 	songId: SongId;
-	size: CSSProperties["height"];
 }
-
-const SongRowActions = ({ songId, size }: Props) => {
+const SongRowActions = ({ songId }: Props) => {
 	const song = useAppSelector((state) => selectSongById(state, songId));
 	const dispatch = useAppDispatch();
 
-	const handleDelete = () => {
-		if (window.confirm("Are you sure? This action cannot be undone 😱")) {
-			dispatch(deleteSong(song));
-		}
-	};
+	const ACTION_LIST_COLLECTION = useMemo(() => createSongActionListCollection({ song }), [song]);
 
-	const handleCopy = () => {
-		window.alert("This feature does not exist yet. Sorry! Coming soon.");
-	};
+	const handleActionSelect = useCallback(
+		(details: MenuSelectionDetails) => {
+			switch (details.value) {
+				case "delete": {
+					if (!window.confirm("Are you sure? This action cannot be undone 😱")) return;
+					return dispatch(deleteSong(song));
+				}
+				case "download": {
+					return dispatch(downloadMapFiles({ songId: song.id }));
+				}
+				default: {
+					return APP_TOASTER.create({
+						id: `song-action.${details.value}`,
+						description: "This feature does not exist yet. Sorry! Coming soon.",
+					});
+				}
+			}
+		},
+		[dispatch, song],
+	);
 
 	return (
-		<MiniButton style={{ height: size, width: size }}>
-			<ChevronDownIcon size={16} />
-			<Select
-				style={{ height: size, width: size }}
-				value=""
-				onChange={(ev) => {
-					switch (ev.target.value) {
-						case "copy":
-							return handleCopy();
-						case "delete":
-							return handleDelete();
-						case "download":
-							return dispatch(downloadMapFiles({ songId }));
-						default:
-							throw new Error(`Unrecognized action: ${ev.target.value}`);
-					}
-				}}
-			>
-				<option />
-				{(import.meta.env.DEV || !song.demo) && <option value="copy">Copy</option>}
-				<option value="delete">Delete</option>
-				{(import.meta.env.DEV || !song.demo) && <option value="download">Download</option>}
-			</Select>
-		</MiniButton>
+		<Menu collection={ACTION_LIST_COLLECTION} onSelect={handleActionSelect}>
+			<Button variant="subtle" size="icon">
+				<ChevronDownIcon size={16} />
+			</Button>
+		</Menu>
 	);
 };
-
-const Select = styled.select`
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-
-  /*
-    Reports of invisible text on options on Chrome Windows.
-    Not sure if this is an actual fix tho.
-  */
-  option {
-    color: black;
-  }
-`;
 
 export default SongRowActions;

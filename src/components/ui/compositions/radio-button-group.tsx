@@ -1,5 +1,5 @@
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import type { ComponentProps, ReactNode } from "react";
+import type { CSSProperties, ComponentProps, ReactNode } from "react";
 
 import { ListCollectionFor } from "../atoms";
 import * as Builder from "../styled/radio-button-group";
@@ -20,10 +20,10 @@ export function RadioButtonGroup<T extends RadioButtonItem>({ collection, childr
 			<Builder.Indicator />
 			<ListCollectionFor collection={collection}>
 				{(item) => {
-					const style = { "--current-color": item.color };
+					const style = { "--current-color": item.color } as CSSProperties;
 					return (
 						<Tooltip key={item.value} disabled={!item.tooltip} render={() => item.tooltip}>
-							<Builder.Item value={item.value} disabled={item.disabled} style={style}>
+							<Builder.Item value={item.value} disabled={item.disabled} data-disabled={item.disabled} style={style}>
 								<Builder.ItemText>{item.label}</Builder.ItemText>
 								<Builder.ItemHiddenInput />
 							</Builder.Item>

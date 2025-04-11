@@ -27,7 +27,7 @@ function WrapperField<T extends AnyFieldApi>({ label, helperText, children, ...r
 	const field = useFieldContext<string>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			{children(field as T)}
 		</Field>
 	);
@@ -36,8 +36,8 @@ function InputField({ label, helperText, ...rest }: Assign<DataFieldProps, Compo
 	const field = useFieldContext<string>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
-			<Input id={field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+			<Input id={rest.id ?? field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);
 }
@@ -45,8 +45,8 @@ function NumberInputField({ label, helperText, ...rest }: Assign<DataFieldProps,
 	const field = useFieldContext<number>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
-			<Input id={field.name} {...rest} type="number" value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+			<Input id={rest.id ?? field.name} {...rest} type="number" value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
 		</Field>
 	);
 }
@@ -54,8 +54,8 @@ function NativeSelectField({ label, helperText, collection, ...rest }: Assign<Da
 	const field = useFieldContext<string>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
-			<NativeSelect id={field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+			<NativeSelect id={rest.id ?? field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)}>
 				{collection.items.map((item) => {
 					const value = collection.getItemValue(item);
 					if (!value) return;
@@ -73,8 +73,8 @@ function TextareaField({ label, helperText, ...rest }: Assign<DataFieldProps, Co
 	const field = useFieldContext<string>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
-			<Textarea id={field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+			<Textarea id={rest.id ?? field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
 }
@@ -82,7 +82,7 @@ function CheckboxField({ label, helperText, ...rest }: Assign<DataFieldProps, Co
 	const field = useFieldContext<boolean>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<Checkbox {...rest} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
 		</Field>
 	);
@@ -91,7 +91,7 @@ function SwitchField({ label, helperText, ...rest }: Assign<DataFieldProps, Comp
 	const field = useFieldContext<boolean>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<Switch {...rest} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
 		</Field>
 	);
@@ -100,7 +100,7 @@ function RadioGroupField({ label, helperText, ...rest }: Assign<DataFieldProps, 
 	const field = useFieldContext<string>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<RadioGroup {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
@@ -109,7 +109,7 @@ function RadioButtonGroupField({ label, helperText, ...rest }: Assign<DataFieldP
 	const field = useFieldContext<string>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} cosmetic label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<RadioButtonGroup {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
@@ -118,7 +118,7 @@ function TagsInputField({ label, helperText, ...rest }: Assign<DataFieldProps, C
 	const field = useFieldContext<string[]>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<TagsInput {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
@@ -127,7 +127,7 @@ function ToggleGroupField({ label, helperText, ...rest }: Assign<DataFieldProps,
 	const field = useFieldContext<string[]>();
 	const error = useFieldError(field);
 	return (
-		<Field id={field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
+		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<ToggleGroup {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);

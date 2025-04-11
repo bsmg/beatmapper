@@ -20,6 +20,7 @@ const recipe = sva({
 			width: "100%",
 			height: "40px",
 			justify: "space-between",
+			fontFamily: "body",
 			fontSize: "15px",
 			fontWeight: 500,
 			textTransform: "uppercase",
@@ -29,7 +30,7 @@ const recipe = sva({
 			cursor: { base: "pointer", _disabled: "not-allowed" },
 		}),
 		itemContent: {
-			marginBlock: 2,
+			marginBlock: 0.5,
 		},
 		itemIndicator: {
 			transform: { _open: "rotate(180deg)" },

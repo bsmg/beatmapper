@@ -1,68 +1,62 @@
 import type { LucideProps } from "lucide-react";
-import { type ComponentType, useMemo } from "react";
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
+import type { ComponentType, ReactNode } from "react";
 
-import { token } from "$:styled-system/tokens";
+import { styled } from "$:styled-system/jsx";
+import { center } from "$:styled-system/patterns";
+import { Tooltip } from "$/components/ui/compositions";
 
-import BaseLink, { type BaseLinkProps } from "../BaseLink";
-
-interface Props extends BaseLinkProps {
-	isActive?: boolean;
+interface Props {
+	tooltip?: string;
+	active?: boolean;
 	icon: ComponentType<LucideProps>;
+	children: (icon: ReactNode) => ReactNode;
 }
 
-const SidebarNavItem = ({ ref, isActive, title, icon: Icon, to, onClick, ...delegated }: Props) => {
-	const distance = useMemo(() => Number.parseFloat(token("spacing.2")), []);
+const tooltipPositioning = { placement: "right" } as const;
+
+const SidebarNavItem = ({ active, tooltip, icon: Icon, children: render, ...delegated }: Props) => {
 	return (
-		<Tooltip disabled={!title} title={title} position="right" delay={500} distance={distance} animateFill={false}>
+		<Tooltip disabled={!tooltip} render={() => tooltip} positioning={tooltipPositioning}>
 			<Wrapper>
-				<ActiveIndicator style={{ transform: isActive ? "translateX(0)" : "translateX(-4px)" }} />
-				<LinkElem
-					to={to}
-					style={{
-						color: isActive ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.65)",
-					}}
-					onClick={onClick}
-					{...delegated}
-				>
-					<Icon size={20} />
+				<ActiveIndicator data-active={active} />
+				<LinkElem data-active={active} {...delegated}>
+					{render(<Icon size={20} />)}
 				</LinkElem>
 			</Wrapper>
 		</Tooltip>
 	);
 };
 
-const SIZE = `calc(${token.var("sizes.sidebar")} - ${token.var("spacing.2")})`;
+const ActiveIndicator = styled("div", {
+	base: {
+		position: "absolute",
+		insetBlock: "4px",
+		left: -1,
+		width: "4px",
+		colorPalette: "pink",
+		backgroundColor: "colorPalette.700",
+		borderRightRadius: "md",
+		transitionProperty: "transform",
+		transitionDuration: "fast",
+		transform: { base: "translateX(-4px)", _active: "translateX(0)" },
+	},
+});
 
-const ActiveIndicator = styled.div`
-  position: absolute;
-  top: 4px;
-  left: calc(${token("spacing.1")} * -1);
-  bottom: 4px;
-  width: 4px;
-  background: ${token.var("colors.pink.700")};
-  border-radius: 0 4px 4px 0;
-  transition: transform 300ms;
-`;
+const Wrapper = styled("div", {
+	base: {
+		position: "relative",
+		boxSize: "40px",
+		cursor: "pointer",
+	},
+});
 
-const Wrapper = styled.div`
-  position: relative;
-  width: ${SIZE};
-  height: ${SIZE};
-`;
-
-const LinkElem = styled(BaseLink)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
-`;
+const LinkElem = styled("div", {
+	base: center.raw({
+		position: "absolute",
+		inset: 0,
+		borderRadius: "full",
+		backgroundColor: { _hover: "bg.ghost" },
+	}),
+});
 
 export default SidebarNavItem;

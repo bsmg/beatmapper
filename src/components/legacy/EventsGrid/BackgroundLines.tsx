@@ -1,5 +1,3 @@
-import styled from "styled-components";
-
 import { token } from "$:styled-system/tokens";
 import { range } from "$/utils";
 
@@ -18,7 +16,7 @@ const BackgroundLines = ({ width, height, numOfBeatsToShow, primaryDivisions }: 
 		if (i === numOfBeatsToShow - 1) {
 			return null;
 		}
-		return <line key={i} x1={(i + 1) * segmentWidth} y1={-6} x2={(i + 1) * segmentWidth} y2={height} stroke={token.var("colors.slate.500")} strokeWidth={1} />;
+		return <line key={i} x1={(i + 1) * segmentWidth} y1={-6} x2={(i + 1) * segmentWidth} y2={height} stroke={token.var("colors.border.default")} strokeWidth={1} />;
 	});
 
 	const primaryLines = beatLines.map((_, segmentIndex) => {
@@ -29,21 +27,16 @@ const BackgroundLines = ({ width, height, numOfBeatsToShow, primaryDivisions }: 
 
 			const subSegmentWidth = segmentWidth / primaryDivisions;
 
-			return <line key={i} x1={segmentIndex * segmentWidth + i * subSegmentWidth} y1={0} x2={segmentIndex * segmentWidth + i * subSegmentWidth} y2={height} stroke={token.var("colors.slate.700")} strokeWidth={1} />;
+			return <line key={i} x1={segmentIndex * segmentWidth + i * subSegmentWidth} y1={0} x2={segmentIndex * segmentWidth + i * subSegmentWidth} y2={height} stroke={token.var("colors.border.subtle")} strokeWidth={1} />;
 		});
 	});
 
 	return (
-		<Svg width={width} height={height}>
+		<svg width={width} height={height}>
 			{beatLines}
 			{primaryLines}
-		</Svg>
+		</svg>
 	);
 };
-
-const Svg = styled.svg`
-  display: block;
-  overflow: visible;
-`;
 
 export default BackgroundLines;

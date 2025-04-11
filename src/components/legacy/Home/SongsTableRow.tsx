@@ -1,22 +1,17 @@
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
-
-import { token } from "$:styled-system/tokens";
-import { DIFFICULTY_RENAME } from "$/constants";
 import { changeSelectedDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
-import { Difficulty, type SongId } from "$/types";
+import type { SongId } from "$/types";
 
+import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { createBeatmapListCollection } from "$/components/app/constants";
+import { Button, Select } from "$/components/ui/compositions";
+import { Table } from "$/components/ui/styled";
+import { Link } from "@tanstack/react-router";
+import { ArrowRightToLineIcon } from "lucide-react";
+import { useMemo } from "react";
 import CoverArtImage from "../CoverArtImage";
-import MiniButton from "../MiniButton";
-import Spacer from "../Spacer";
-import UnstyledButton from "../UnstyledButton";
 import SongRowActions from "./SongRowActions";
-
-const SQUARE_SIZE = "12px";
-const SQUARE_PADDING = "4px";
-const CELL_HEIGHT = "40px";
 
 interface Props {
 	songId: SongId;
@@ -26,143 +21,82 @@ const SongsTableRow = ({ songId }: Props) => {
 	const song = useAppSelector((state) => selectSongById(state, songId));
 	const dispatch = useAppDispatch();
 
-	const difficultyToLoad = song.selectedDifficulty || Object.keys(song.difficultiesById)[0];
+	const difficultyToLoad = useMemo(() => song.selectedDifficulty || Object.keys(song.difficultiesById)[0], [song.selectedDifficulty, song.difficultiesById]);
+
+	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ song }), [song]);
 
 	return (
-		<tr>
+		<Table.Row>
 			<CoverArtCell>
 				<CoverArtImage filename={song.coverArtFilename} size={CELL_HEIGHT} />
 			</CoverArtCell>
 			<DescriptionCell>
-				<Title>
-					{song.name}
-					{song.demo && <Demo>(Demo song)</Demo>}
-				</Title>
-				<Spacer size={6} />
-				<Artist>{song.artistName}</Artist>
+				<Stack gap={0.5}>
+					<Title>
+						{song.name}
+						{song.demo && <Demo>(Demo song)</Demo>}
+					</Title>
+					<Artist>{song.artistName}</Artist>
+				</Stack>
 			</DescriptionCell>
 			<DifficultySquaresCell>
-				<DifficultySquaresWrapper>
-					{Object.values(Difficulty).map((difficulty) => (
-						<Tooltip key={difficulty} delay={500} title={DIFFICULTY_RENAME[difficulty]}>
-							<DificultySquareWrapper>
-								<DifficultySquare
-									color={token.var(`colors.difficulty.${difficulty}`)}
-									isOn={!!song.difficultiesById[difficulty]}
-									isSelected={difficultyToLoad === difficulty}
-									onClick={() => {
-										const difficultyExists = !!song.difficultiesById[difficulty];
-
-										if (difficultyExists) {
-											dispatch(changeSelectedDifficulty({ songId: song.id, difficulty }));
-										}
-									}}
-								/>
-							</DificultySquareWrapper>
-						</Tooltip>
-					))}
-				</DifficultySquaresWrapper>
+				<Select collection={BEATMAP_LIST_COLLECTION} value={[difficultyToLoad.toString()]} onValueChange={(details) => dispatch(changeSelectedDifficulty({ songId: song.id, difficulty: details.value[0] }))} />
 			</DifficultySquaresCell>
 			<ActionsCell>
-				<Actions>
-					<MiniButton
-						style={{
-							height: CELL_HEIGHT,
-							paddingLeft: token.var("spacing.2"),
-							paddingRight: token.var("spacing.2"),
-						}}
-						to={"/edit/$sid/$bid/notes"}
-						params={{ sid: song.id.toString(), bid: difficultyToLoad.toString() }}
-					>
-						Load Map
-					</MiniButton>
-					<Spacer size={token.var("spacing.1")} />
-					<SongRowActions songId={song.id} size={CELL_HEIGHT} />
-				</Actions>
+				<HStack gap={1}>
+					<SongRowActions songId={song.id} />
+					<Link to={"/edit/$sid/$bid/notes"} params={{ sid: song.id.toString(), bid: difficultyToLoad.toString() }}>
+						<Button variant="subtle" size="icon">
+							<ArrowRightToLineIcon />
+						</Button>
+					</Link>
+				</HStack>
 			</ActionsCell>
-		</tr>
+		</Table.Row>
 	);
 };
 
-const Cell = styled.td`
-  height: calc(${CELL_HEIGHT} + ${token.var("spacing.2")});
-  padding: ${token.var("spacing.1")};
-  vertical-align: top;
+const CELL_HEIGHT = "40px";
 
-  &:last-of-type {
-    padding-right: 0;
-    text-align: right;
-  }
-`;
+const CoverArtCell = styled(Table.Cell, {
+	base: {
+		width: `calc(${CELL_HEIGHT} + {spacing.2})`,
+	},
+});
 
-const CoverArtCell = styled(Cell)`
-  width: calc(${CELL_HEIGHT} + ${token.var("spacing.2")});
-`;
+const DescriptionCell = styled(Table.Cell);
 
-const DescriptionCell = styled(Cell)``;
-const ActionsCell = styled(Cell)`
-  width: 138px;
-`;
+const DifficultySquaresCell = styled(Table.Cell);
 
-const Actions = styled.div`
-  display: flex;
-`;
+const ActionsCell = styled(Table.Cell, {
+	base: {
+		width: "90px",
+	},
+});
 
-const Demo = styled.span`
-  color: ${token.var("colors.yellow.500")};
-  margin-left: 8px;
-  font-size: 0.8em;
-`;
+const Demo = styled("span", {
+	base: {
+		colorPalette: "yellow",
+		color: { _light: "colorPalette.700", _dark: "colorPalette.500" },
+		fontSize: "0.8em",
+		marginLeft: 1,
+	},
+});
 
-const DifficultySquaresCell = styled(Cell)`
-  padding-left: ${token.var("spacing.2")};
-  padding-right: ${token.var("spacing.2")};
-  width: calc((${SQUARE_SIZE} * 5) + (${SQUARE_PADDING} * 8) + ${token.var("spacing.3")});
-`;
+const Title = styled("div", {
+	base: {
+		fontSize: "16px",
+		fontWeight: 400,
+		color: "fg.default",
+	},
+});
 
-const DifficultySquaresWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: ${CELL_HEIGHT};
-`;
-
-const DificultySquareWrapper = styled(UnstyledButton)`
-  padding: ${SQUARE_PADDING};
-  cursor: default;
-`;
-
-const DifficultySquare = styled.div<{ isOn: boolean; isSelected: boolean }>`
-  position: relative;
-  width: ${SQUARE_SIZE};
-  height: ${SQUARE_SIZE};
-  border-radius: 3px;
-  background-color: ${(props) => (props.isOn ? props.color : token.var("colors.gray.700"))};
-  cursor: ${(props) => (props.isOn ? "pointer" : "not-allowed")};
-
-  &:after {
-    content: ${(props) => (props.isSelected ? '""' : undefined)};
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    border: 2px solid white;
-    border-radius: 8px;
-    opacity: 0.5;
-  }
-`;
-
-const Title = styled.div`
-  font-size: 16px;
-  font-weight: 400;
-  color: white;
-`;
-
-const Artist = styled.div`
-  font-size: 15px;
-  font-weight: 300;
-  color: ${token.var("colors.gray.300")};
-`;
+const Artist = styled("div", {
+	base: {
+		fontSize: "15px",
+		fontWeight: 300,
+		color: "fg.muted",
+	},
+});
 
 export default SongsTableRow;

@@ -1,10 +1,10 @@
 import { type CSSProperties, useMemo } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
-import { useLocallyStoredFile } from "$/hooks";
+import { convertFileToDataUrl } from "$/helpers/file.helpers";
+import { useLocalFileQuery } from "$/hooks";
 
-import CenteredSpinner from "../CenteredSpinner";
+import { Center, styled } from "$:styled-system/jsx";
+import { Spinner } from "$/components/ui/compositions";
 
 interface Props {
 	filename: string;
@@ -12,28 +12,35 @@ interface Props {
 }
 
 const CoverArtImage = ({ filename, size }: Props) => {
-	const [coverArtUrl] = useLocallyStoredFile<string>(filename);
+	const { data: coverArtUrl, isFetching } = useLocalFileQuery<string>(filename, {
+		queryKeySuffix: "preview",
+		transform: async (file) => await convertFileToDataUrl(file),
+	});
 
 	const style = useMemo(() => ({ width: size, height: size }), [size]);
 
-	return coverArtUrl ? (
-		<CoverArt src={coverArtUrl} style={style} />
-	) : (
-		<LoadingArtWrapper style={style}>
-			<CenteredSpinner />
-		</LoadingArtWrapper>
-	);
+	if (isFetching) {
+		return (
+			<LoadingArtWrapper style={style}>
+				<Spinner />
+			</LoadingArtWrapper>
+		);
+	}
+	return coverArtUrl && <CoverArt src={coverArtUrl} style={style} />;
 };
 
-const CoverArt = styled.img`
-  object-fit: cover;
-  border-radius: 4px;
-`;
+const CoverArt = styled("img", {
+	base: {
+		objectFit: "cover",
+		borderRadius: "sm",
+	},
+});
 
-const LoadingArtWrapper = styled.div`
-  border-radius: 4px;
-  background: ${token.var("colors.gray.500")};
-  opacity: 0.25;
-`;
+const LoadingArtWrapper = styled(Center, {
+	base: {
+		backgroundColor: "bg.muted",
+		borderRadius: "sm",
+	},
+});
 
 export default CoverArtImage;

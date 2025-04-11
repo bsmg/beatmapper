@@ -1,11 +1,15 @@
-import { type ComponentProps, memo, useEffect, useRef } from "react";
+import { type ComponentProps, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 
 interface Props extends ComponentProps<"canvas"> {
 	dimensions: { width: number; height: number };
 	draw: (ctx: CanvasRenderingContext2D, dimensions: { width: number; height: number }) => void;
 }
-export const Canvas = memo(function Canvas({ draw, dimensions, ...rest }: Props) {
+export const Canvas = forwardRef<HTMLCanvasElement, Props>(function Canvas({ draw, dimensions, ...rest }, ref) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+
+	useImperativeHandle(ref, () => canvasRef.current as HTMLCanvasElement);
+
+	const styles = useMemo(() => ({ ...rest.style, width: dimensions.width, height: dimensions.height }), [rest.style, dimensions]);
 
 	useEffect(() => {
 		if (canvasRef.current) {
@@ -24,5 +28,5 @@ export const Canvas = memo(function Canvas({ draw, dimensions, ...rest }: Props)
 		}
 	}, [dimensions, draw]);
 
-	return <canvas ref={canvasRef} {...rest} />;
+	return <canvas ref={canvasRef} {...rest} style={styles} />;
 });

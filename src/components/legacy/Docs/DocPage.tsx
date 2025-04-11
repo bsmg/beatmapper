@@ -2,12 +2,9 @@ import { docs } from "velite:content";
 import type { MDXComponents } from "mdx/types";
 import { Fragment, type PropsWithChildren, useMemo } from "react";
 import { Helmet } from "react-helmet";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
-
-import Spacer from "../Spacer";
-import HorizontalRule from "./HorizontalRule";
+import { Divider, Stack, styled } from "$:styled-system/jsx";
+import { stack } from "$:styled-system/patterns";
 import MdxWrapper from "./MdxWrapper";
 import PreviousNextBar from "./PreviousNextBar";
 import TableOfContents from "./TableOfContents";
@@ -29,49 +26,63 @@ const DocPage = ({ id, components }: Props) => {
 				<title>Beatmapper Docs - {document.title}</title>
 			</Helmet>
 			<Wrapper>
-				<Title>{document.title}</Title>
-				{document.subtitle && <Subtitle>{document.subtitle}</Subtitle>}
-				<HorizontalRule />
-				<Row>
+				<Stack gap={2}>
+					<Title>{document.title}</Title>
+					{document.subtitle && <Subtitle>{document.subtitle}</Subtitle>}
+				</Stack>
+				<Divider color={"border.muted"} />
+				<ContentWrapper>
 					<MainContent>
 						<MdxWrapper components={components} code={document.code} />
-						<Spacer size={token.var("spacing.8")} />
 					</MainContent>
 					<TableOfContents toc={document.tableOfContents} />
-				</Row>
+				</ContentWrapper>
 				{(document.prev || document.next) && <PreviousNextBar prev={document.prev} next={document.next} />}
 			</Wrapper>
 		</Fragment>
 	);
 };
 
-const Wrapper = styled.div`
-  padding: 45px 60px;
-  font-family: 'system';
-  max-width: 1250px;
-`;
+const Wrapper = styled("div", {
+	base: stack.raw({
+		gap: 4,
+		paddingBlock: 4,
+		paddingInline: { base: 4, md: 8 },
+		fontFamily: "'system'",
+		width: "100%",
+		maxWidth: "1250px",
+	}),
+});
 
-const Title = styled.div`
-  font-size: 38px;
-  color: ${token.var("colors.slate.900")};
-  font-weight: 900;
-  margin-bottom: 12px;
-  /* font-family: 'Raleway'; */
-`;
+const Title = styled("div", {
+	base: {
+		fontSize: "38px",
+		color: "fg.default",
+		fontWeight: "bold",
+	},
+});
 
-const Subtitle = styled.div`
-  font-size: 28px;
-  color: ${token.var("colors.slate.500")};
-  font-weight: 500;
-`;
+const Subtitle = styled("div", {
+	base: {
+		fontSize: "28px",
+		color: "fg.muted",
+		fontWeight: "normal",
+	},
+});
 
-const Row = styled.div`
-  display: flex;
-  align-items: flex-start;
-`;
+const ContentWrapper = styled("div", {
+	base: stack.raw({
+		align: "start",
+		gap: { base: 4, lg: 8 },
+		flex: 1,
+		direction: { base: "column-reverse", lg: "row" },
+	}),
+});
 
-const MainContent = styled.div`
-  flex: 1;
-`;
+const MainContent = styled("div", {
+	base: {
+		flex: 1,
+	},
+});
 
 export default DocPage;

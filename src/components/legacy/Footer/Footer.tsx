@@ -1,89 +1,82 @@
-import styled from "styled-components";
-
-import { token } from "$:styled-system/tokens";
-
-import Link from "../Link";
+import { Container, HStack, styled } from "$:styled-system/jsx";
+import { center, stack } from "$:styled-system/patterns";
+import { Interleave } from "$/components/ui/atoms";
+import { Text } from "$/components/ui/compositions";
+import { Link } from "@tanstack/react-router";
+import { DotIcon } from "lucide-react";
 import Logo from "../Logo";
-import MaxWidthWrapper from "../MaxWidthWrapper";
-import Spacer from "../Spacer";
 
 const Footer = () => {
 	return (
 		<Wrapper>
-			<MaxWidthWrapper>
-				<InnerWrapper style={{ height: token.var("sizes.footer") }}>
-					<LogoWrapper>
-						<Logo size="mini" />
-						<Spacer size={token.var("spacing.1")} />
-						<Links>
-							<Link to="/docs/$" params={{ _splat: "privacy" }}>
-								Privacy
-							</Link>{" "}
-							·{" "}
-							<Link to="/docs/$" params={{ _splat: "content-policy" }}>
-								Content Policy
-							</Link>
-						</Links>
-					</LogoWrapper>
-					<Info>
+			<InnerWrapper>
+				<SectionWrapper>
+					<Logo size="mini" />
+					<HStack gap={0}>
+						<Interleave separator={() => <DotIcon />}>
+							<Text textStyle={"link"} color={"fg.default"}>
+								<Link to="/docs/$" params={{ _splat: "privacy" }}>
+									Privacy
+								</Link>
+							</Text>
+							<Text textStyle={"link"} color={"fg.default"}>
+								<Link to="/docs/$" params={{ _splat: "content-policy" }}>
+									Content Policy
+								</Link>
+							</Text>
+						</Interleave>
+					</HStack>
+				</SectionWrapper>
+				<SectionWrapper>
+					<div>
 						A side-project by <ExternalLink href="https://twitter.com/JoshWComeau">Josh Comeau</ExternalLink>. Maintained by <ExternalLink href="https://bsmg.wiki/">BSMG</ExternalLink>.
-						<br />
-						<Symbol>©</Symbol> 2019-present, All rights reserved.
-						<br />
-						<Spacer size={token.var("spacing.1")} />
-						<Disclaimer>
-							Not affiliated with Beat Games<Symbol>™</Symbol> or Beat Saber
-							<Symbol>™</Symbol>.
-						</Disclaimer>
-					</Info>
-				</InnerWrapper>
-			</MaxWidthWrapper>
+					</div>
+					<div>© 2019-present, All rights reserved.</div>
+					<Text color={"fg.subtle"} fontSize={"14px"}>
+						Not affiliated with Beat Games™ or Beat Saber™.
+					</Text>
+				</SectionWrapper>
+			</InnerWrapper>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.footer`
-  font-size: 14px;
-  font-weight: 300;
-  background: hsla(0, 0%, 92%, 0.05);
-  color: ${token.var("colors.slate.300")};
-`;
+const Wrapper = styled("footer", {
+	base: center.raw({
+		width: "100%",
+		minHeight: "footer",
+		fontSize: "14px",
+		fontWeight: 300,
+		backgroundColor: "bg.default",
+		color: "fg.muted",
+		borderTopWidth: "sm",
+		borderColor: "border.default",
+	}),
+});
 
-const LogoWrapper = styled.div``;
+const InnerWrapper = styled(Container, {
+	base: stack.raw({
+		width: "100%",
+		direction: { base: "column", md: "row" },
+		justify: "space-between",
+		gap: { base: 2, md: 1 },
+		paddingBlock: 1.5,
+	}),
+});
 
-const Symbol = styled.span`
-  display: inline-block;
-  font-size: 0.6em;
-  transform: translateY(-40%);
-`;
+const SectionWrapper = styled("div", {
+	base: stack.raw({
+		gap: 1,
+		justify: { base: "start", _last: "end" },
+		align: { base: "center", md: { base: "start", _last: "end" } },
+	}),
+});
 
-const InnerWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const Info = styled.div`
-  text-align: right;
-  font-size: 14px;
-  line-height: 1.4;
-`;
-
-const Disclaimer = styled.div`
-  color: ${token.var("colors.slate.400")};
-`;
-
-const ExternalLink = styled.a`
-  color: ${token.var("colors.slate.100")};
-  font-weight: 400;
-  text-decoration: none;
-`;
-
-const Links = styled.div`
-  & a {
-    color: inherit !important;
-    font-weight: 400;
-  }
-`;
+const ExternalLink = styled("a", {
+	base: {
+		textStyle: "link",
+		color: "fg.default",
+	},
+});
 
 export default Footer;

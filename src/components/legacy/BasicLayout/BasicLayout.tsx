@@ -1,13 +1,8 @@
 import { Fragment, type PropsWithChildren } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
-
+import { Container, styled } from "$:styled-system/jsx";
 import Footer from "../Footer";
 import Header from "../Header";
-import Spacer from "../Spacer";
-
-const HEADER_SPACING = token.var("spacing.8");
 
 interface Props extends PropsWithChildren {}
 
@@ -15,15 +10,18 @@ const BasicLayout = ({ children }: Props) => {
 	return (
 		<Fragment>
 			<Header />
-			<Spacer size={HEADER_SPACING} />
 			<MainContent>{children}</MainContent>
 			<Footer />
 		</Fragment>
 	);
 };
 
-const MainContent = styled.div`
-  min-height: calc(100vh - ${token.var("sizes.header")} - ${token.var("sizes.footer")} - ${HEADER_SPACING});
-`;
+const MainContent = styled(Container, {
+	base: {
+		flex: 1,
+		minHeight: "calc(100vh - {sizes.header} - {sizes.footer})",
+		paddingBlock: 8,
+	},
+});
 
 export default BasicLayout;

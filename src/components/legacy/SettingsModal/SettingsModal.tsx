@@ -1,53 +1,34 @@
-import { useMemo } from "react";
-import styled from "styled-components";
+import { createListCollection } from "@ark-ui/react/collection";
 
-import { token } from "$:styled-system/tokens";
 import { updateGraphicsLevel, updateProcessingDelay } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAudioProcessingDelay, selectGraphicsQuality } from "$/store/selectors";
 import { Quality } from "$/types";
 import { capitalize } from "$/utils";
 
-import Heading from "../Heading";
-import Modal from "../Modal";
-import RadioSet from "../RadioSet";
-import Spacer from "../Spacer";
-import TextInput from "../TextInput";
+import { Field, FieldInput, RadioGroup } from "$/components/ui/compositions";
+import { Fragment } from "react/jsx-runtime";
 
-interface Props {
-	isVisible: boolean;
-	onDismiss: () => void;
-}
+const QUALITY_LIST_COLLECTION = createListCollection({
+	items: Object.values(Quality),
+	itemToString: (item) => capitalize(item),
+});
 
-const SettingsModal = ({ isVisible, onDismiss }: Props) => {
+const SettingsModal = () => {
 	const processingDelay = useAppSelector(selectAudioProcessingDelay);
 	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 	const dispatch = useAppDispatch();
 
-	const QUALITY_VALUES = useMemo(() => Object.values(Quality).map((value) => ({ value, label: capitalize(value) })), []);
 	return (
-		<Modal width={400} isVisible={isVisible} onDismiss={onDismiss}>
-			<Wrapper>
-				<Heading size={1}>App settings</Heading>
-				<Spacer size={token.var("spacing.6")} />
-
-				<RadioSet label="Graphics quality" name="graphics-level" currentValue={graphicsLevel} items={QUALITY_VALUES} onChange={(value) => dispatch(updateGraphicsLevel({ newGraphicsLevel: value as Quality }))} />
-
-				<Spacer size={token.var("spacing.4")} />
-
-				<TextInput
-					label="Processing delay"
-					moreInfo="Tweak the amount of time, in milliseconds, that the audio should be offset by, for it to seem synchronized. Slower machines should experiment with larger numbers."
-					value={processingDelay}
-					onChange={(ev) => dispatch(updateProcessingDelay({ newDelay: Number(ev.target.value) }))}
-				/>
-			</Wrapper>
-		</Modal>
+		<Fragment>
+			<Field cosmetic label="Graphics quality">
+				<RadioGroup name="graphics-level" collection={QUALITY_LIST_COLLECTION} value={graphicsLevel} onValueChange={(details) => dispatch(updateGraphicsLevel({ newGraphicsLevel: details.value as Quality }))} />
+			</Field>
+			<Field label="Processing delay" helperText="Tweak the amount of time, in milliseconds, that the audio should be offset by, for it to seem synchronized. Slower machines should experiment with larger numbers.">
+				<FieldInput type="number" value={processingDelay} onValueChange={(details) => dispatch(updateProcessingDelay({ newDelay: details.valueAsNumber }))} />
+			</Field>
+		</Fragment>
 	);
 };
-
-const Wrapper = styled.div`
-  padding: ${token.var("spacing.4")};
-`;
 
 export default SettingsModal;

@@ -1,12 +1,9 @@
+import { throttle } from "@tanstack/react-pacer";
 import { ExternalLinkIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import styled from "styled-components";
+import { useEffect, useRef, useState } from "react";
 
-import { token } from "$:styled-system/tokens";
-import { throttle } from "$/utils";
-
-import BaseLink from "../BaseLink";
-import Spacer from "../Spacer";
+import { HStack, styled } from "$:styled-system/jsx";
+import { hstack, stack } from "$:styled-system/patterns";
 
 interface TocEntry {
 	title: string;
@@ -14,53 +11,56 @@ interface TocEntry {
 	items: TocEntry[];
 }
 
-function useActiveHeading(headings: TocEntry[]) {
+function useActiveHeading(headings: TocEntry[], container: HTMLElement) {
 	const [activeHeadingId, setActiveHeading] = useState<string | null>(null);
 
 	useEffect(() => {
-		const handleScroll = throttle(() => {
-			// If we're all the way at the top, there is no active heading.
-			// This is done because "Introduction", the first link in the TOC, will be active if `heading` is `null`.
-			if (window.scrollY === 0) {
-				return setActiveHeading(null);
-			}
+		const handleScroll = throttle(
+			() => {
+				// If we're all the way at the top, there is no active heading.
+				// This is done because "Introduction", the first link in the TOC, will be active if `heading` is `null`.
+				if (container.scrollTop === 0) {
+					return setActiveHeading(null);
+				}
 
-			// There HAS to be a better single-step algorithm for this, but I can't think of it. So I'm doing this in 2 steps:
-			// 1. Are there any headings in the viewport right now? If so, pick the top one.
-			// 2. If there are no headings in the viewport, are there any above the viewport? If so, pick the last one (most recently scrolled out of view)
-			// If neither condition is met, I'll assume I'm still in the intro, although this would have to be a VERY long intro to ever be true.
-			const headingBoxes = headings.map((entry) => {
-				const elem = document.querySelector(entry.url);
-				return { id: entry.url.replace("#", ""), box: elem?.getBoundingClientRect() };
-			});
-
-			// The first heading within the viewport is the one we want to highlight.
-			let firstHeadingInViewport = headingBoxes.find(({ box }) => {
-				return box && box.bottom > 0 && box.top < window.innerHeight;
-			});
-
-			// If there is no heading in the viewport, check and see if there are any above the viewport.
-			if (!firstHeadingInViewport) {
-				const reversedBoxes = [...headingBoxes].reverse();
-
-				firstHeadingInViewport = reversedBoxes.find(({ box }) => {
-					return box && box.bottom < 0;
+				// There HAS to be a better single-step algorithm for this, but I can't think of it. So I'm doing this in 2 steps:
+				// 1. Are there any headings in the viewport right now? If so, pick the top one.
+				// 2. If there are no headings in the viewport, are there any above the viewport? If so, pick the last one (most recently scrolled out of view)
+				// If neither condition is met, I'll assume I'm still in the intro, although this would have to be a VERY long intro to ever be true.
+				const headingBoxes = headings.map((entry) => {
+					const elem = document.querySelector(entry.url);
+					return { id: entry.url.replace("#", ""), box: elem?.getBoundingClientRect() };
 				});
-			}
 
-			if (!firstHeadingInViewport) {
-				setActiveHeading(null);
-			} else if (firstHeadingInViewport.id !== activeHeadingId) {
-				setActiveHeading(firstHeadingInViewport.id);
-			}
-		}, 500);
+				// The first heading within the viewport is the one we want to highlight.
+				let firstHeadingInViewport = headingBoxes.find(({ box }) => {
+					return box && box.bottom > 0 && box.top < window.innerHeight;
+				});
 
-		window.addEventListener("scroll", handleScroll);
+				// If there is no heading in the viewport, check and see if there are any above the viewport.
+				if (!firstHeadingInViewport) {
+					const reversedBoxes = [...headingBoxes].reverse();
+
+					firstHeadingInViewport = reversedBoxes.find(({ box }) => {
+						return box && box.bottom < 0;
+					});
+				}
+
+				if (!firstHeadingInViewport) {
+					setActiveHeading(null);
+				} else if (firstHeadingInViewport.id !== activeHeadingId) {
+					setActiveHeading(firstHeadingInViewport.id);
+				}
+			},
+			{ wait: 500 },
+		);
+
+		container.addEventListener("scroll", handleScroll);
 
 		return () => {
-			window.removeEventListener("scroll", handleScroll);
+			container.removeEventListener("scroll", handleScroll);
 		};
-	}, [activeHeadingId, headings]);
+	}, [activeHeadingId, headings, container]);
 
 	return activeHeadingId;
 }
@@ -77,84 +77,82 @@ interface Props {
 const TableOfContents = ({ toc }: Props) => {
 	const headings = toc;
 
-	const activeHeadingId = useActiveHeading(headings);
+	const container = useRef(document.querySelector("main") as HTMLElement);
+
+	const activeHeadingId = useActiveHeading(headings, container.current);
 
 	const handleClickIntro = () => {
-		window.scrollTo({ top: 0 });
+		container.current.scrollTo({ top: 0 });
 	};
 
 	return (
 		<Wrapper>
 			<Title>Table of Contents</Title>
 
-			<HeadingLink
-				href="#"
-				onClick={handleClickIntro}
-				style={{
-					color: activeHeadingId ? undefined : token.var("colors.pink.700"),
-				}}
-			>
+			<HeadingLink href="#" onClick={handleClickIntro} data-active={!activeHeadingId}>
 				Introduction
 			</HeadingLink>
 
 			{headings.map((entry) => {
 				const id = entry.url.replace("#", "");
 				return (
-					<HeadingLink key={id} href={entry.url} style={{ color: id === activeHeadingId ? token.var("colors.pink.700") : undefined }}>
+					<HeadingLink key={id} href={entry.url} data-active={id === activeHeadingId}>
 						{entry.title}
 					</HeadingLink>
 				);
 			})}
 
-			<Spacer size={30} />
 			<GithubLink href={getGithubLink(location.pathname)}>
-				Suggest an edit
-				<Spacer size={12} />
-				<ExternalLinkIcon size={15} />
+				<HStack gap={1}>
+					Suggest an edit
+					<ExternalLinkIcon size={15} />
+				</HStack>
 			</GithubLink>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-	width: 180px;
-	line-height: 1.4;
-	position: sticky;
-	top: 100px;
-	margin-left: 40px;
+const Wrapper = styled("div", {
+	base: stack.raw({
+		position: { base: undefined, lg: "sticky" },
+		gap: 0,
+		minWidth: "180px",
+		width: "100%",
+		flexBasis: "180px",
+		lineHeight: 1.4,
+		top: 2,
+	}),
+});
 
-	@media (max-width: 1199px) {
-		display: none;
-	}
-`;
+const Title = styled("h4", {
+	base: {
+		fontWeight: "bold",
+		borderBottomWidth: "sm",
+		borderColor: "border.default",
+		paddingBottom: 1,
+		marginBottom: 1,
+	},
+});
 
-const Title = styled.h4`
-	font-size: 16px;
-	font-weight: 600;
-	margin-bottom: 12px;
-	padding-bottom: 12px;
-	border-bottom: 1px solid ${token.var("colors.slate.100")};
-`;
+const HeadingLink = styled("a", {
+	base: {
+		textStyle: "link",
+		colorPalette: "pink",
+		color: { base: "fg.muted", _active: "colorPalette.700" },
+		paddingBlock: 1,
+	},
+});
 
-const HeadingLink = styled.a`
-	display: block;
-	color: ${token.var("colors.slate.700")};
-	text-decoration: none;
-	margin-bottom: 14px;
-
-	&:hover {
-		color: ${token.var("colors.slate.500")};
-		text-decoration: underline;
-	}
-`;
-
-const GithubLink = styled(BaseLink)`
-	display: flex;
-	align-items: center;
-	color: ${token.var("colors.slate.300")};
-	text-decoration: none;
-	font-size: 15px;
-	font-weight: bold;
-`;
+const GithubLink = styled("a", {
+	base: hstack.raw({
+		textStyle: "link",
+		fontWeight: "bold",
+		color: "fg.default",
+		borderTopWidth: "sm",
+		borderColor: "border.default",
+		paddingTop: 1,
+		marginTop: 1,
+	}),
+});
 
 export default TableOfContents;

@@ -1,24 +1,46 @@
-import Color from "color";
+import { createListCollection } from "@ark-ui/react/collection";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
+import { useMemo } from "react";
 
-import { token } from "$:styled-system/tokens";
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { selectEventColor, selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectCustomColors, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorToggleLoop, selectEventEditorToggleMirror, selectEventEditorTool, selectEventEditorZoomLevel } from "$/store/selectors";
-import { EventColor, EventEditMode, EventTool, View } from "$/types";
+import { type App, EventColor, EventEditMode, EventTool, View } from "$/types";
 
-import Spacer from "../Spacer";
-import UnfocusedButton from "../UnfocusedButton";
-import ControlItem from "./ControlItem";
-import ControlItemToggleButton from "./ControlItemToggleButton";
+import { HStack, styled } from "$:styled-system/jsx";
+import { Button, Field, Toggle, ToggleGroup, Tooltip } from "$/components/ui/compositions";
 import EventToolIcon from "./EventToolIcon";
 
 interface Props {
 	contentWidth: number;
+}
+
+const EDIT_MODE_LIST_COLLECTION = createListCollection({
+	items: Object.values(EventEditMode).map((value, index) => {
+		const Icon = [SquarePlusIcon, SquareDashedIcon][index];
+		return { value, label: <Icon size={16} /> };
+	}),
+});
+
+interface EventListCollection {
+	customColors?: App.ModSettings["customColors"];
+	selectedColor?: EventColor;
+}
+function createEventColorListCollection({ customColors }: EventListCollection) {
+	return createListCollection({
+		items: Object.values(EventColor).map((value) => {
+			return { value, label: <Box style={{ "--color": getColorForItem(value, customColors) }} /> };
+		}),
+	});
+}
+function createEventEffectListCollection({ customColors, selectedColor }: EventListCollection) {
+	return createListCollection({
+		items: Object.values(EventTool).map((value) => {
+			return { value, label: <EventToolIcon tool={value} color={getColorForItem(selectedColor, customColors)} /> };
+		}),
+	});
 }
 
 const GridControls = ({ contentWidth }: Props) => {
@@ -32,116 +54,67 @@ const GridControls = ({ contentWidth }: Props) => {
 	const zoomLevel = useAppSelector(selectEventEditorZoomLevel);
 	const dispatch = useAppDispatch();
 
-	return (
-		<Wrapper style={{ width: contentWidth }}>
-			<Left>
-				<ControlItem label="Edit Mode">
-					<ControlItemToggleButton value={EventEditMode.PLACE} isToggled={selectedEditMode === EventEditMode.PLACE} onToggle={() => dispatch(selectEventEditMode({ editMode: EventEditMode.PLACE }))}>
-						<SquarePlusIcon size={16} />
-					</ControlItemToggleButton>
-					<ControlItemToggleButton value={EventEditMode.SELECT} isToggled={selectedEditMode === EventEditMode.SELECT} onToggle={() => dispatch(selectEventEditMode({ editMode: EventEditMode.SELECT }))}>
-						<SquareDashedIcon size={16} />
-					</ControlItemToggleButton>
-				</ControlItem>
-				<Spacer size={token.var("spacing.4")} />
-				<ControlItem label="Light Color">
-					<ControlItemToggleButton value={EventColor.PRIMARY} isToggled={selectedColor === EventColor.PRIMARY} onToggle={(value) => dispatch(selectEventColor({ color: value as EventColor }))}>
-						<Box color={getColorForItem(EventColor.PRIMARY, customColors)} />
-					</ControlItemToggleButton>
-					<ControlItemToggleButton value={EventColor.SECONDARY} isToggled={selectedColor === EventColor.SECONDARY} onToggle={(value) => dispatch(selectEventColor({ color: value as EventColor }))}>
-						<Box color={getColorForItem(EventColor.SECONDARY, customColors)} />
-					</ControlItemToggleButton>
-				</ControlItem>
-				<Spacer size={token.var("spacing.4")} />
-				<ControlItem label="Effect">
-					<ControlItemToggleButton value={EventTool.ON} isToggled={selectedTool === EventTool.ON} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }))}>
-						<EventToolIcon tool={EventTool.ON} color={getColorForItem(selectedColor, customColors)} />
-					</ControlItemToggleButton>
-					<ControlItemToggleButton value={EventTool.OFF} isToggled={selectedTool === EventTool.OFF} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.OFF }))}>
-						<EventToolIcon tool={EventTool.OFF} />
-					</ControlItemToggleButton>
-					<ControlItemToggleButton value={EventTool.FLASH} isToggled={selectedTool === EventTool.FLASH} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FLASH }))}>
-						<EventToolIcon tool={EventTool.FLASH} color={getColorForItem(selectedColor, customColors)} />
-					</ControlItemToggleButton>
-					<ControlItemToggleButton value={EventTool.FADE} isToggled={selectedTool === EventTool.FADE} onToggle={() => dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FADE }))}>
-						<EventToolIcon tool={EventTool.FADE} color={getColorForItem(selectedColor, customColors)} />
-					</ControlItemToggleButton>
-				</ControlItem>
-				<Spacer size={token.var("spacing.4")} />
-				<ControlItem label="Locks">
-					<Tooltip delay={500} title="Loop playback within the current event window (L)">
-						<ControlItemToggleButton value={null} isToggled={isLockedToCurrentWindow} onToggle={() => dispatch(toggleEventWindowLock())}>
-							<RepeatIcon size={16} />
-						</ControlItemToggleButton>
-					</Tooltip>
-					<Tooltip delay={500} title="Pair side lasers for symmetrical left/right events">
-						<ControlItemToggleButton value={null} isToggled={areLasersLocked} onToggle={() => dispatch(toggleLaserLock())}>
-							<LockIcon size={16} />
-						</ControlItemToggleButton>
-					</Tooltip>
-				</ControlItem>
-			</Left>
+	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ customColors }), [customColors]);
+	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ customColors, selectedColor }), [customColors, selectedColor]);
 
-			<Right>
-				<ControlItem label="Zoom" align="right">
-					<ZoomBtn onClick={() => dispatch(zoomOut())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
-						<ZoomOutIcon size={14} />
-					</ZoomBtn>
-					<ZoomBtn onClick={() => dispatch(zoomIn())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
-						<ZoomInIcon size={14} />
-					</ZoomBtn>
-				</ControlItem>
-			</Right>
+	return (
+		<Wrapper gap={4} justify={"space-between"} style={{ width: contentWidth }}>
+			<HStack gap={4} justify={"flex-start"}>
+				<Field cosmetic size="sm" label="Edit Mode">
+					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(selectEventEditMode({ editMode: details.value[0] as EventEditMode }))} />
+				</Field>
+				<Field cosmetic size="sm" label="Color">
+					<ToggleGroup collection={COLOR_LIST_COLLECTION} value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(selectEventColor({ color: details.value[0] as EventColor }))} />
+				</Field>
+				<Field cosmetic size="sm" label="Effect">
+					<ToggleGroup collection={EFFECT_LIST_COLLECTION} value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(selectTool({ view: View.LIGHTSHOW, tool: details.value[0] as EventTool }))} />
+				</Field>
+				<Field cosmetic size="sm" label="Locks">
+					<HStack gap={1}>
+						<Tooltip render={() => "Loop playback within the current event window (L)"}>
+							<Toggle pressed={isLockedToCurrentWindow} onPressedChange={() => dispatch(toggleEventWindowLock())}>
+								<RepeatIcon size={16} />
+							</Toggle>
+						</Tooltip>
+						<Tooltip render={() => "Pair side lasers for symmetrical left/right events"}>
+							<Toggle pressed={areLasersLocked} onPressedChange={() => dispatch(toggleLaserLock())}>
+								<LockIcon size={16} />
+							</Toggle>
+						</Tooltip>
+					</HStack>
+				</Field>
+			</HStack>
+			<HStack gap={4} justify={"flex-end"}>
+				<Field cosmetic size="sm" label="Zoom" align="end">
+					<HStack gap={1}>
+						<Button variant="subtle" size="sm" onClick={() => dispatch(zoomOut())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
+							<ZoomOutIcon size={14} />
+						</Button>
+						<Button variant="subtle" size="sm" onClick={() => dispatch(zoomIn())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
+							<ZoomInIcon size={14} />
+						</Button>
+					</HStack>
+				</Field>
+			</HStack>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  height: 75px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  user-select: none;
-  padding: 0 ${token.var("spacing.2")};
-`;
+const Wrapper = styled(HStack, {
+	base: {
+		padding: 2,
+		borderBlockWidth: "sm",
+		borderColor: "border.muted",
+		userSelect: "none",
+	},
+});
 
-const Side = styled.div`
-  display: flex;
-`;
-
-const Left = styled(Side)``;
-const Right = styled(Side)``;
-
-const Box = styled.div`
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  background: linear-gradient(
-    0deg,
-    ${(props) => Color(props.color).darken(0.2).hsl().string()},
-    ${(props) => Color(props.color).lighten(0.1).hsl().string()}
-  );
-`;
-
-const ZoomBtn = styled(UnfocusedButton)`
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background: ${token.var("colors.slate.900")};
-  color: ${token.var("colors.slate.100")};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:disabled {
-    opacity: 0.5;
-  }
-
-  & svg {
-    display: block !important;
-  }
-`;
+const Box = styled("div", {
+	base: {
+		boxSize: "16px",
+		borderRadius: "sm",
+		background: "linear-gradient(0deg, color-mix(in srgb, var(--color), black 15%), color-mix(in srgb, var(--color), white 15%))",
+	},
+});
 
 export default GridControls;

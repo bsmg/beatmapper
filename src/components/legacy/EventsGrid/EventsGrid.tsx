@@ -1,7 +1,5 @@
 import { type PointerEventHandler, useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
 import { COMMON_EVENT_TRACKS } from "$/constants";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
@@ -10,21 +8,14 @@ import { selectActiveSongId, selectDurationInBeats, selectEventEditorEditMode, s
 import { App, EventEditMode, type IEventTrack, TrackType } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
+import { styled } from "$:styled-system/jsx";
+import { flex, hstack, stack } from "$:styled-system/patterns";
 import BackgroundLines from "./BackgroundLines";
 import BlockTrack from "./BlockTrack";
 import CursorPositionIndicator from "./CursorPositionIndicator";
 import GridHeader from "./GridHeader";
 import SelectionBox from "./SelectionBox";
 import SpeedTrack from "./SpeedTrack";
-
-const LAYERS = {
-	background: 0,
-	mouseCursor: 1,
-	tracks: 2,
-	songPositionIndicator: 3,
-};
-
-const PREFIX_WIDTH = 170;
 
 function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNums: number[], startBeat: number, snapTo?: number) {
 	const positionInBeats = normalize(x, 0, innerGridWidth, 0, beatNums.length);
@@ -148,7 +139,7 @@ const EventsGrid = ({ tracks = COMMON_EVENT_TRACKS, contentWidth }: Props) => {
 	};
 
 	return (
-		<Wrapper isLoading={isLoading} style={{ width: contentWidth }}>
+		<Wrapper data-loading={isLoading} style={{ width: contentWidth }}>
 			<PrefixColumn
 				style={{ width: PREFIX_WIDTH }}
 				onContextMenu={(ev) => {
@@ -159,7 +150,7 @@ const EventsGrid = ({ tracks = COMMON_EVENT_TRACKS, contentWidth }: Props) => {
 				<TopLeftBlankCell style={{ height: headerHeight }} />
 
 				{tracks.map(({ id, label }) => (
-					<TrackPrefix key={id} style={{ height: rowHeight }} isDisabled={getIsTrackDisabled(id)}>
+					<TrackPrefix key={id} style={{ height: rowHeight }} data-disabled={getIsTrackDisabled(id)}>
 						{label}
 					</TrackPrefix>
 				))}
@@ -199,82 +190,92 @@ const EventsGrid = ({ tracks = COMMON_EVENT_TRACKS, contentWidth }: Props) => {
 	);
 };
 
-const Wrapper = styled.div<{ isLoading?: boolean }>`
-  display: flex;
-  opacity: ${(props) => (props.isLoading ? 0.25 : 1)};
-  /*
-    Disallow clicking until the song has loaded, to prevent weird edge-case bugs
-  */
-  pointer-events: ${(props) => (props.isLoading ? "none" : "auto")};
-  /* Don't allow the track labels or beat nums to be selected */
-  user-select: none;
-`;
+const LAYERS = {
+	background: 0,
+	mouseCursor: 1,
+	tracks: 2,
+	songPositionIndicator: 3,
+};
 
-const PrefixColumn = styled.div`
-  width: 170px;
-  border-right: 2px solid rgba(255, 255, 255, 0.25);
-`;
+const PREFIX_WIDTH = 170;
 
-const Grid = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
+const Wrapper = styled("div", {
+	base: flex.raw({
+		opacity: { base: 1, _loading: 0.25 },
+		pointerEvents: { base: "auto", _loading: "none" },
+		userSelect: "none",
+	}),
+});
 
-const TopLeftBlankCell = styled.div`
-  border-bottom: 1px solid ${token.var("colors.slate.500")};
-`;
+const PrefixColumn = styled("div", {
+	base: {
+		width: "170px",
+	},
+});
 
-const MainGridContent = styled.div`
-  flex: 1;
-  position: relative;
-`;
+const Grid = styled("div", {
+	base: stack.raw({
+		flex: 1,
+		gap: 0,
+	}),
+});
 
-const BackgroundLinesWrapper = styled.div`
-  position: absolute;
-  z-index: ${LAYERS.background};
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-`;
+const TopLeftBlankCell = styled("div", {
+	base: {
+		borderBottomWidth: "sm",
+		borderColor: "border.muted",
+	},
+});
 
-const TrackPrefix = styled.div<{ isDisabled?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 400;
-  color: ${token.var("colors.slate.100")};
-  padding: 0 ${token.var("spacing.1")};
-  border-bottom: 1px solid ${token.var("colors.slate.400")};
+const MainGridContent = styled("div", {
+	base: {
+		position: "relative",
+		flex: 1,
+	},
+});
 
-  opacity: ${(p) => p.isDisabled && 0.5};
-  cursor: ${(p) => p.isDisabled && "not-allowed"};
-  background-color: ${(p) => p.isDisabled && "rgba(255,255,255,0.2)"};
+const BackgroundLinesWrapper = styled("div", {
+	base: {
+		position: "absolute",
+		zIndex: LAYERS.background,
+		inset: 0,
+	},
+});
 
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
+const TrackPrefix = styled("div", {
+	base: hstack.raw({
+		justify: "flex-end",
+		paddingInline: 1,
+		position: "relative",
+		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
+		borderBlockWidth: { base: "sm", _lastOfType: 0 },
+		borderRightWidth: "md",
+		borderColor: "border.muted",
+		opacity: { base: 1, _disabled: "disabled" },
+		cursor: { base: undefined, _disabled: "not-allowed" },
+	}),
+});
 
-const Tracks = styled.div`
-  position: relative;
-  z-index: ${LAYERS.tracks};
-`;
+const Tracks = styled("div", {
+	base: {
+		position: "relative",
+		zIndex: LAYERS.tracks,
+	},
+});
 
-const MouseCursor = styled.div`
-  position: absolute;
-  top: 0;
-  z-index: ${LAYERS.mouseCursor};
-  width: 3px;
-  height: 100%;
-  background: ${token.var("colors.slate.100")};
-  border: 1px solid ${token.var("colors.slate.900")};
-  border-radius: 2px;
-  pointer-events: none;
-  transform: translateX(-1px);
-`;
+const MouseCursor = styled("div", {
+	base: {
+		position: "absolute",
+		top: 0,
+		zIndex: LAYERS.mouseCursor,
+		width: "4px",
+		height: "100%",
+		background: "fg.default",
+		borderWidth: "sm",
+		borderColor: "border.default",
+		pointerEvents: "none",
+		transform: "translateX(-2px)",
+	},
+});
 
 export default EventsGrid;

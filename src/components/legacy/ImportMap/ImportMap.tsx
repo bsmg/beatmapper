@@ -1,19 +1,19 @@
-import { FileArchiveIcon } from "lucide-react";
+import type { UseDialogContext } from "@ark-ui/react/dialog";
 
 import { processImportedMap } from "$/services/packaging.service";
 import { cancelImportingSong, importExistingSong, startImportingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllSongs } from "$/store/selectors";
 
-import FileUploader from "../FileUploader";
+import { FileUpload } from "$/components/ui/compositions";
 
 interface Props {
-	onImport: () => void;
-	onCancel: () => void;
-	height?: number;
+	dialog?: UseDialogContext;
+	onImport?: () => void;
+	onCancel?: () => void;
 }
 
-const ImportMap = ({ onImport, onCancel, height }: Props) => {
+const ImportMap = ({ dialog, onImport, onCancel }: Props) => {
 	const songs = useAppSelector(selectAllSongs);
 	const dispatch = useAppDispatch();
 	const songIds = songs.map((song) => song.id);
@@ -25,15 +25,16 @@ const ImportMap = ({ onImport, onCancel, height }: Props) => {
 			const songData = await processImportedMap(file, songIds);
 
 			dispatch(importExistingSong({ songData }));
-			onImport();
+			onImport?.();
+			if (dialog) dialog.setOpen(false);
 		} catch (err) {
 			console.error("Could not import map:", err);
 			dispatch(cancelImportingSong());
-			onCancel();
+			onCancel?.();
 		}
 	};
 
-	return <FileUploader onSelectFile={handleSelectExistingMap} icon={FileArchiveIcon} height={height} title="Import existing map" description="Select a .zip file" />;
+	return <FileUpload onFileAccept={(details) => handleSelectExistingMap(details.files[0])}>Map Archive File</FileUpload>;
 };
 
 export default ImportMap;

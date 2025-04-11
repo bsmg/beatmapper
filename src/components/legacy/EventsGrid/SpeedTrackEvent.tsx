@@ -1,4 +1,4 @@
-import { token } from "$:styled-system/tokens";
+import { styled } from "$:styled-system/jsx";
 import { deleteEvent } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import type { App } from "$/types";
@@ -22,15 +22,12 @@ const SpeedTrackEvent = ({ event, trackId, startBeat, endBeat, parentWidth, pare
 	const y = getYForSpeed(parentHeight, event.laserSpeed);
 
 	return (
-		<circle
+		<Circle
 			cx={x}
 			cy={y}
 			r={4}
-			fill={event.selected ? token.var("colors.yellow.500") : token.var("colors.green.500")}
-			style={{
-				cursor: "pointer",
-				opacity: event.id === "tentative" ? 0.5 : 1,
-			}}
+			data-selected={event.selected}
+			data-tentative={event.id === "tentative"}
 			onPointerDown={(ev) => {
 				if (ev.button === 2) {
 					dispatch(deleteEvent({ beatNum: event.beatNum, trackId, areLasersLocked }));
@@ -39,5 +36,17 @@ const SpeedTrackEvent = ({ event, trackId, startBeat, endBeat, parentWidth, pare
 		/>
 	);
 };
+
+const Circle = styled("circle", {
+	base: {
+		colorPalette: { base: "green", _selected: "yellow" },
+		fill: "colorPalette.500",
+		cursor: "pointer",
+		opacity: 1,
+		"&[data-tentative=true]": {
+			opacity: 0.5,
+		},
+	},
+});
 
 export default SpeedTrackEvent;

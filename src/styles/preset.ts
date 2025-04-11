@@ -18,9 +18,10 @@ export default function preset({ unit = 8 }: PresetOptions) {
 		name: "beatmapper",
 		conditions: {
 			extend: {
-				hover: "&:is(:hover, [data-hover]):not(:disabled, [data-disabled])",
-				active: "&:is(:active, [data-active=true], [data-status=active]):not(:disabled, [data-disabled], [data-state=open])",
-				disabled: "&:is(:disabled, [disabled], [data-disabled])",
+				hover: "&:is(:hover, [data-hover]):not(:disabled, [data-disabled=true])",
+				active: "&:is(:active, [data-active=true], [data-status=active]):not(:disabled, [data-disabled=true], [data-state=open])",
+				disabled: "&:is(:disabled, [disabled], [data-disabled=true])",
+				selected: "&:is([aria-selected=true], [data-selected=true])",
 				loading: "&:is([data-loading=true], [aria-busy=true])",
 				valid: "&:is(:valid, [data-valid], [data-state=valid])",
 				invalid: "&:is(:invalid, [data-invalid], [aria-invalid=true], [data-state=invalid])",

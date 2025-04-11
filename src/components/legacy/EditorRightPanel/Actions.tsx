@@ -1,8 +1,5 @@
-import { Fragment, type MouseEventHandler } from "react";
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
+import type { MouseEventHandler } from "react";
 
-import { token } from "$:styled-system/tokens";
 import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import { jumpToBeat, pasteSelection, selectAllInRange } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -10,9 +7,8 @@ import { selectActiveSongId, selectClipboardHasObjects, selectIsModuleEnabled } 
 import { View } from "$/types";
 import { getMetaKeyLabel } from "$/utils";
 
-import Heading from "../Heading";
-import MiniButton from "../MiniButton";
-import Spacer from "../Spacer";
+import { VStack } from "$:styled-system/jsx";
+import { Button, Heading, Tooltip } from "$/components/ui/compositions";
 import UndoRedo from "./UndoRedo";
 
 interface Props {
@@ -26,53 +22,35 @@ const Actions = ({ handleGridConfigClick }: Props) => {
 	const dispatch = useAppDispatch();
 
 	return (
-		<Wrapper>
-			<Heading size={3}>Actions</Heading>
-			<Spacer size={token.var("spacing.1.5")} />
-
-			<UndoRedo />
-
-			<Spacer size={token.var("spacing.1")} />
-
-			<Tooltip delay={1000} title={`Paste previously-copied notes (${getMetaKeyLabel(navigator)} + V)`}>
-				<MiniButton disabled={!hasCopiedNotes} width={token.var("sizes.actionPanelFull")} onClick={() => dispatch(pasteSelection({ view: View.BEATMAP }))}>
-					Paste Selection
-				</MiniButton>
-			</Tooltip>
-
-			<Spacer size={token.var("spacing.1")} />
-
-			<Tooltip delay={1000} title="Select everything over a time period (Q)">
-				<MiniButton width={token.var("sizes.actionPanelFull")} onClick={() => dispatch(promptQuickSelect(View.BEATMAP, selectAllInRange))}>
-					Quick-select
-				</MiniButton>
-			</Tooltip>
-
-			<Spacer size={token.var("spacing.1")} />
-
-			<Tooltip delay={1000} title="Jump to a specific beat number (J)">
-				<MiniButton width={token.var("sizes.actionPanelFull")} onClick={() => dispatch(promptJumpToBeat(jumpToBeat, { pauseTrack: true }))}>
-					Jump to Beat
-				</MiniButton>
-			</Tooltip>
-
-			{mappingExtensionsEnabled && (
-				<Fragment>
-					<Spacer size={token.var("spacing.1")} />
-
-					<Tooltip delay={500} title="Change the number of columns/rows">
-						<MiniButton onClick={handleGridConfigClick}>Customize Grid</MiniButton>
+		<VStack gap={1.5}>
+			<Heading rank={3}>Actions</Heading>
+			<VStack gap={1}>
+				<UndoRedo />
+				<Tooltip render={() => `Paste previously-copied notes (${getMetaKeyLabel(navigator)} + V)`}>
+					<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} onClick={() => dispatch(pasteSelection({ view: View.BEATMAP }))}>
+						Paste Selection
+					</Button>
+				</Tooltip>
+				<Tooltip render={() => "Select everything over a time period (Q)"}>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(promptQuickSelect(View.BEATMAP, selectAllInRange))}>
+						Quick-select
+					</Button>
+				</Tooltip>
+				<Tooltip render={() => "Jump to a specific beat number (J)"}>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(promptJumpToBeat(jumpToBeat, { pauseTrack: true }))}>
+						Jump to Beat
+					</Button>
+				</Tooltip>
+				{mappingExtensionsEnabled && (
+					<Tooltip render={() => "Change the number of columns/rows"}>
+						<Button variant="subtle" size="sm" onClick={handleGridConfigClick}>
+							Customize Grid
+						</Button>
 					</Tooltip>
-				</Fragment>
-			)}
-		</Wrapper>
+				)}
+			</VStack>
+		</VStack>
 	);
 };
-
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
 
 export default Actions;

@@ -1,26 +1,21 @@
+import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useNavigate } from "@tanstack/react-router";
-import { type FormEventHandler, Fragment, useMemo, useState } from "react";
-import styled from "styled-components";
+import { useState } from "react";
+import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
-import { token } from "$:styled-system/tokens";
 import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import { createNewSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
-import { Difficulty } from "$/types";
 
-import Button from "../Button";
-import DifficultyTag from "../DifficultyTag";
-import Heading from "../Heading";
-import QuestionTooltip from "../QuestionTooltip";
-import Spacer from "../Spacer";
-import Spinner from "../Spinner";
-import TextInput from "../TextInput";
-import CoverArtPicker from "./CoverArtPicker";
-import SongPicker from "./SongPicker";
+import { APP_TOASTER, DIFFICULTY_COLLECTION } from "$/components/app/constants";
+import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 
-const AddSongForm = () => {
+interface Props {
+	dialog?: UseDialogContext;
+}
+const AddSongForm = ({ dialog }: Props) => {
 	const currentSongIds = useAppSelector(selectSongIds);
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -30,181 +25,102 @@ const AddSongForm = () => {
 	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
 	const [songFile, setSongFile] = useState<File | null>(null);
 
-	const [name, setSongName] = useState("");
-	const [subName, setSongSubName] = useState("");
-	const [artistName, setArtistName] = useState("");
-	const [bpm, setBpm] = useState(120);
-	const [offset, setOffset] = useState(0);
-	const [selectedDifficulty, setSelectedDifficulty] = useState("");
+	const Form = useAppForm({
+		defaultValues: {
+			name: "",
+			subName: "",
+			artistName: "",
+			bpm: 120,
+			offset: 0,
+			selectedDifficulty: "",
+		},
+		validators: {
+			onChange: object({
+				name: pipe(string(), minLength(1)),
+				subName: pipe(string()),
+				artistName: pipe(string(), minLength(1)),
+				bpm: pipe(number(), gtValue(0)),
+				offset: pipe(
+					number(),
+					transform((input) => (Number.isNaN(input) ? undefined : input)),
+				),
+				selectedDifficulty: pipe(string()),
+			}),
+		},
+		onSubmit: async ({ value }) => {
+			if (!coverArtFile) {
+				return APP_TOASTER.create({
+					type: "error",
+					description: "Please select a cover art file first",
+				});
+			}
+			if (!songFile) {
+				return APP_TOASTER.create({
+					type: "error",
+					description: "Please select a song file first",
+				});
+			}
 
-	const [hasSubmitted, setHasSubmitted] = useState(false);
+			const songId = resolveSongId({ name: value.name });
 
-	const handleSubmit: FormEventHandler = async (ev) => {
-		if (!name || !artistName || !bpm) {
-			return;
-		}
+			// Song IDs must be unique, and song IDs are generated from the name.
+			// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
+			if (currentSongIds.some((id) => id === songId)) {
+				return APP_TOASTER.create({
+					id: "song-already-exists",
+					type: "error",
+					description: "You already have a song with this name. Please choose a unique name.",
+				});
+			}
 
-		ev.preventDefault();
+			try {
+				const { filename: coverArtFilename } = await filestore.saveCoverFile(songId, coverArtFile);
+				const { filename: songFilename } = await filestore.saveSongFile(songId, songFile);
 
-		if (!coverArtFile) {
-			return alert("Please select a cover art file first");
-		}
-		if (!songFile) {
-			return alert("Please select a song file first");
-		}
+				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedDifficulty: value.selectedDifficulty }));
 
-		if (!selectedDifficulty) {
-			return alert("Please select a difficulty. You can always create other difficulties later.");
-		}
+				if (dialog) dialog.setOpen(false);
 
-		setHasSubmitted(true);
-
-		const songId = resolveSongId({ name });
-
-		// Song IDs must be unique, and song IDs are generated from the name.
-		// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
-		const isUnique = !currentSongIds.some((id) => id === songId);
-		if (!isUnique) {
-			alert("You already have a song with this name. Please choose a unique name.");
-			setHasSubmitted(false);
-			return;
-		}
-
-		try {
-			const { filename: coverArtFilename } = await filestore.saveCoverFile(songId, coverArtFile);
-			const { filename: songFilename } = await filestore.saveSongFile(songId, songFile);
-
-			dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name, subName, artistName, bpm, offset, selectedDifficulty }));
-
-			// Wait for the `createNewSong` action to flush, and then redirect the user to the new song page!
-			window.requestAnimationFrame(() => {
-				navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId, bid: selectedDifficulty } });
-			});
-		} catch (err) {
-			console.error("Could not save files to local storage", err);
-			// TODO: Proper error toasts
-			alert("Error creating map. See console for more information.");
-
-			setHasSubmitted(false);
-		}
-	};
-
-	const mediaRowHeight = useMemo(() => Number.parseFloat(token("sizes.mediaRow")), []);
+				navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId, bid: value.selectedDifficulty } });
+			} catch (err) {
+				console.error("Could not save files to local storage", err);
+				return APP_TOASTER.create({
+					description: "Error creating map. See console for more information.",
+					type: "error",
+				});
+			}
+		},
+	});
 
 	return (
-		<Wrapper>
-			<Heading size={1}>Add new song</Heading>
-			<Spacer size={token.var("spacing.6")} />
-
-			<Row>
-				<div style={{ flex: 1 }}>
-					<SongPicker height={mediaRowHeight} songFile={songFile} setSongFile={setSongFile} />
-				</div>
-				<Spacer size={token.var("spacing.2")} />
-				<div style={{ flexBasis: token.var("sizes.mediaRow") }}>
-					<CoverArtPicker height={mediaRowHeight} coverArtFile={coverArtFile} setCoverArtFile={setCoverArtFile} />
-				</div>
-			</Row>
-			<Spacer size={token.var("spacing.4")} />
-			<form onSubmit={handleSubmit}>
-				<Row>
-					<Cell>
-						<Row>
-							<Cell>
-								<TextInput required label="Song name" value={name} placeholder="Radar" onChange={(ev) => setSongName(ev.target.value)} />
-							</Cell>
-							<Spacer size={token.var("spacing.4")} />
-							<Cell>
-								<TextInput label="Song sub-name" value={subName} placeholder="(Original Mix)" onChange={(ev) => setSongSubName(ev.target.value)} />
-							</Cell>
-						</Row>
-						<Spacer size={token.var("spacing.4")} />
-						<Row>
-							<Cell>
-								<TextInput required label="Artist name" value={artistName} placeholder="Fox Stevenson" onChange={(ev) => setArtistName(ev.target.value)} />
-							</Cell>
-							<Spacer size={token.var("spacing.4")} />
-							<Cell>
-								<Row>
-									<Cell>
-										<TextInput required type="number" label="BPM (Beats per Minute)" value={bpm} placeholder="140" onChange={(ev) => setBpm(Number(ev.target.value))} />
-									</Cell>
-									<Spacer size={token.var("spacing.4")} />
-									<Cell>
-										<TextInput label="Offset" moreInfo="This is the number of milliseconds between the start of the audio file and the first beat of the map." type="number" value={offset} placeholder="0" onChange={(ev) => setOffset(Number(ev.target.value))} />
-									</Cell>
-								</Row>
-							</Cell>
-						</Row>
-					</Cell>
-				</Row>
-				<Spacer size={token.var("spacing.4")} />
-				{/*
-          I don't want `enter` to toggle one of the difficulty tag buttons,
-          so they have to be lower in the DOM than the real submit button.
-          But I also want them to be flipped visually, so I'm using flexbox
-          to swap their onscreen position.
-        */}
-				<Flipped>
-					<Center>
-						<Button disabled={hasSubmitted}>{hasSubmitted ? <Spinner size={16} /> : "Create new song"}</Button>
-					</Center>
-					<Spacer size={token.var("spacing.8")} />
-					<Row>
-						<Label>
-							Difficulty
-							<QuestionTooltip>Select the first difficulty you'd like to work on. You can create additional difficulties later on.</QuestionTooltip>
-						</Label>
-						<Difficulties>
-							{Object.values(Difficulty).map((difficulty) => (
-								<Fragment key={difficulty}>
-									<DifficultyTag disabled={hasSubmitted} difficulty={difficulty} onSelect={setSelectedDifficulty} isSelected={!!selectedDifficulty && selectedDifficulty === difficulty} />
-									<Spacer size={token.var("spacing.1")} />
-								</Fragment>
-							))}
-						</Difficulties>
-					</Row>
-				</Flipped>
-			</form>
-		</Wrapper>
+		<Form.AppForm>
+			<Form.Row>
+				<Field label="Song File">
+					<FileUpload files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
+						Audio File
+					</FileUpload>
+				</Field>
+				<Field label="Cover Art File">
+					<FileUpload files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+						Image File
+					</FileUpload>
+				</Field>
+			</Form.Row>
+			<Form.Root>
+				<Form.Row>
+					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
+					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
+					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Artist Name" required />}</Form.AppField>
+				</Form.Row>
+				<Form.Row>
+					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
+					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
+				</Form.Row>
+				<Form.AppField name="selectedDifficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
+				<Form.Submit>Create new song</Form.Submit>
+			</Form.Root>
+		</Form.AppForm>
 	);
 };
-
-const Wrapper = styled.div`
-  padding: ${token.var("spacing.4")};
-`;
-
-const Row = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const Cell = styled.div`
-  flex: 1;
-`;
-
-const Label = styled.div`
-  font-size: 16px;
-  font-weight: 300;
-  color: ${token.var("colors.gray.100")};
-  display: flex;
-  align-items: center;
-`;
-
-const Difficulties = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-`;
-
-const Center = styled.div`
-  display: flex;
-  justify-content: center;
-`;
-
-const Flipped = styled.div`
-  display: flex;
-  flex-direction: column-reverse;
-`;
 
 export default AddSongForm;

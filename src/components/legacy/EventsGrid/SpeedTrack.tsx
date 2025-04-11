@@ -1,5 +1,4 @@
 import { type PointerEventHandler, useCallback, useState } from "react";
-import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
 import { useMousePositionOverElement, usePointerUpHandler } from "$/hooks";
@@ -10,6 +9,7 @@ import { type App, EventEditMode } from "$/types";
 import { clamp, normalize, range } from "$/utils";
 import { getYForSpeed } from "./EventsGrid.helpers";
 
+import { styled } from "$:styled-system/jsx";
 import SpeedTrackEvent from "./SpeedTrackEvent";
 
 const NUM_OF_SPEEDS = 7;
@@ -127,15 +127,15 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 	);
 
 	return (
-		<Wrapper ref={ref} style={{ height }} isDisabled={isDisabled} onPointerDown={handlePointerDown} onContextMenu={(ev) => ev.preventDefault()}>
-			<Svg width={width} height={height}>
+		<Wrapper ref={ref} style={{ height }} data-disabled={isDisabled} onPointerDown={handlePointerDown} onContextMenu={(ev) => ev.preventDefault()}>
+			<svg width={width} height={height}>
 				{/* Background 8 vertical lines, indicating the "levels" */}
 				{!isDisabled && (
-					<Background>
+					<g>
 						{range(NUM_OF_SPEEDS + 1).map((i) => (
-							<line key={i} x1={0} y1={getYForSpeed(height, i)} x2={width} y2={getYForSpeed(height, i)} strokeWidth={1} stroke={token.var("colors.slate.700")} style={{ opacity: 0.6 }} />
+							<line key={i} x1={0} y1={getYForSpeed(height, i)} x2={width} y2={getYForSpeed(height, i)} strokeWidth={1} stroke={token.var("colors.border.subtle")} style={{ opacity: 0.6 }} />
 						))}
-					</Background>
+					</g>
 				)}
 
 				{/*
@@ -158,28 +158,20 @@ const SpeedTrack = ({ trackId, width, height, startBeat, numOfBeatsToShow, curso
 				))}
 
 				{tentativeEvent.visible && <SpeedTrackEvent event={tentativeEvent as App.IBasicValueEvent} trackId={trackId} startBeat={startBeat} endBeat={startBeat + numOfBeatsToShow} parentWidth={width} parentHeight={height} areLasersLocked={areLasersLocked} />}
-			</Svg>
+			</svg>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div<{ isDisabled?: boolean }>`
-  position: relative;
-  border-bottom: 1px solid ${token.var("colors.slate.400")};
-  opacity: ${(p) => p.isDisabled && 0.5};
-  cursor: ${(p) => p.isDisabled && "not-allowed"};
-  background-color: ${(p) => p.isDisabled && "rgba(255,255,255,0.2)"};
-
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
-
-const Svg = styled.svg`
-  position: relative;
-  display: block;
-`;
-
-const Background = styled.g``;
+const Wrapper = styled("div", {
+	base: {
+		position: "relative",
+		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
+		borderBlockWidth: { base: "sm", _lastOfType: 0 },
+		borderColor: "border.muted",
+		opacity: { base: 1, _disabled: "disabled" },
+		cursor: { base: undefined, _disabled: "not-allowed" },
+	},
+});
 
 export default SpeedTrack;

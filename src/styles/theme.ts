@@ -143,6 +143,10 @@ export const semanticTokens = defineSemanticTokens({
 			[Difficulty.EXPERT_PLUS]: { value: "#FF5FF9" },
 		},
 	},
+	fonts: {
+		body: { value: ["'Oswald'", "sans-serif"] },
+		monospace: { value: ["'Inconsolata'", "monospace"] },
+	},
 	sizes: {
 		header: { value: "75px" },
 		footer: { value: "100px" },

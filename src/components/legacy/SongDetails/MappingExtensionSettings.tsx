@@ -1,11 +1,10 @@
-import styled from "styled-components";
-
 import { toggleModForSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectIsModuleEnabled } from "$/store/selectors";
 
-import LabeledCheckbox from "../LabeledCheckbox";
-import Link from "../Link";
+import { styled } from "$:styled-system/jsx";
+import { Checkbox, Text } from "$/components/ui/compositions";
+import { Link } from "@tanstack/react-router";
 import QuestionTooltip from "../QuestionTooltip";
 
 const MappingExtensionSettings = () => {
@@ -15,22 +14,26 @@ const MappingExtensionSettings = () => {
 
 	return (
 		<Wrapper>
-			<LabeledCheckbox id="enable-mapping-extensions" checked={isModEnabled} onChange={() => songId && dispatch(toggleModForSong({ songId, mod: "mappingExtensions" }))}>
+			<Checkbox id="enable-mapping-extensions" checked={isModEnabled} onCheckedChange={() => songId && dispatch(toggleModForSong({ songId, mod: "mappingExtensions" }))}>
 				Enable Mapping Extensions{" "}
 				<QuestionTooltip>
 					Allows you to customize size and shape of the grid, to place notes outside of the typical 4×3 grid.{" "}
-					<Link forceAnchor to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
-						Learn more
-					</Link>
+					<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
+						<Link to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
+							Learn more
+						</Link>
+					</Text>
 					.
 				</QuestionTooltip>
-			</LabeledCheckbox>
+			</Checkbox>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  user-select: none;
-`;
+const Wrapper = styled("div", {
+	base: {
+		userSelect: "none",
+	},
+});
 
 export default MappingExtensionSettings;

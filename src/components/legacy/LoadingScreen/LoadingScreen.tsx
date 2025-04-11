@@ -1,27 +1,18 @@
-import styled from "styled-components";
-
-import { token } from "$:styled-system/tokens";
-
-import Spinner from "../Spinner";
+import { Float, styled } from "$:styled-system/jsx";
+import { Spinner } from "$/components/ui/compositions";
 
 const LoadingScreen = () => {
 	return (
-		<Wrapper>
+		<Wrapper placement={"middle-center"}>
 			<Spinner />
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: ${token.var("colors.gray.900")};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
+const Wrapper = styled(Float, {
+	base: {
+		backgroundColor: "bg.canvas",
+	},
+});
 
 export default LoadingScreen;

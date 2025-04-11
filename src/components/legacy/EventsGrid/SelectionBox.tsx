@@ -1,6 +1,6 @@
-import styled from "styled-components";
-
 import type { ISelectionBox } from "$/types";
+
+import { styled } from "$:styled-system/jsx";
 
 interface Props {
 	box: ISelectionBox;
@@ -22,12 +22,15 @@ const SelectionBox = ({ box }: Props) => {
 	);
 };
 
-const Box = styled.div`
-  position: absolute;
-  z-index: 10;
-  border: 2px dashed white;
-  border-radius: 5px;
-  pointer-events: none;
-`;
+const Box = styled("div", {
+	base: {
+		position: "absolute",
+		zIndex: 10,
+		borderWidth: "md",
+		borderStyle: "dashed",
+		borderColor: "fg.default",
+		pointerEvents: "none",
+	},
+});
 
 export default SelectionBox;

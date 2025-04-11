@@ -1,36 +1,27 @@
 import { HelpCircleIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
 
-interface Props extends ComponentProps<typeof Tooltip> {}
+import { styled } from "$:styled-system/jsx";
+import { Tooltip } from "$/components/ui/compositions";
 
-const QuestionTooltip = ({ children, ...delegated }: Props) => {
+interface Props extends Omit<ComponentProps<typeof Tooltip>, "render"> {}
+
+const QuestionTooltip = ({ children, ...rest }: Props) => {
 	return (
-		<Wrapper>
-			<Tooltip interactive html={<HelpWrapper>{children}</HelpWrapper>} {...delegated}>
-				<IconWrapper>
-					<HelpCircleIcon size={14} />
-				</IconWrapper>
-			</Tooltip>
-		</Wrapper>
+		<Tooltip {...rest} interactive render={() => children}>
+			<IconWrapper>
+				<HelpCircleIcon size={14} />
+			</IconWrapper>
+		</Tooltip>
 	);
 };
 
-const Wrapper = styled.div`
-  display: inline;
-  font-size: inherit;
-  color: inherit;
-`;
-
-const HelpWrapper = styled.div`
-  max-width: 150px;
-  line-height: 1.4;
-`;
-
-const IconWrapper = styled.div`
-  opacity: 0.4;
-  padding-left: 0.5rem;
-`;
+const IconWrapper = styled("div", {
+	base: {
+		paddingLeft: "0.5rem",
+		color: "fg.muted",
+		cursor: "help",
+	},
+});
 
 export default QuestionTooltip;

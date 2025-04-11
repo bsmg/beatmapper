@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 
 import * as Builder from "../styled/toaster";
 import { Button } from "./button";
+import { Heading } from "./heading";
 
 interface Props extends Omit<ComponentProps<typeof Builder.Toaster>, "children"> {
 	toaster: CreateToasterReturn;
@@ -15,7 +16,11 @@ export function Toaster({ toaster, ...rest }: Props) {
 			<Builder.Toaster {...rest} toaster={toaster}>
 				{(toast) => (
 					<Builder.Root key={toast.id}>
-						{toast.title && <Builder.Title>{toast.title}</Builder.Title>}
+						{toast.title && (
+							<Builder.Title asChild>
+								<Heading rank={2}>{toast.title}</Heading>
+							</Builder.Title>
+						)}
 						{toast.description && <Builder.Description>{toast.description}</Builder.Description>}
 						{toast.action && (
 							<Builder.ActionTrigger asChild>
@@ -24,10 +29,8 @@ export function Toaster({ toaster, ...rest }: Props) {
 								</Button>
 							</Builder.ActionTrigger>
 						)}
-						<Builder.CloseTrigger asChild>
-							<Button size="sm" variant="ghost">
-								<XIcon size={20} />
-							</Button>
+						<Builder.CloseTrigger>
+							<XIcon size={20} />
 						</Builder.CloseTrigger>
 					</Builder.Root>
 				)}

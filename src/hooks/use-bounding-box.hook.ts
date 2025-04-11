@@ -1,6 +1,5 @@
+import { debounce } from "@tanstack/react-pacer";
 import { type DependencyList, useEffect, useRef, useState } from "react";
-
-import { debounce } from "$/utils";
 
 export function useBoundingBox<T extends HTMLElement>(dependencies: DependencyList = []) {
 	// Our `ref` is needed to be passed to the component's `ref` attribute.
@@ -24,11 +23,14 @@ export function useBoundingBox<T extends HTMLElement>(dependencies: DependencyLi
 			return;
 		}
 
-		const recalculate = debounce(() => {
-			if (ref.current) {
-				setBoundingBox(ref.current.getBoundingClientRect());
-			}
-		}, 250);
+		const recalculate = debounce(
+			() => {
+				if (ref.current) {
+					setBoundingBox(ref.current.getBoundingClientRect());
+				}
+			},
+			{ wait: 250 },
+		);
 
 		window.addEventListener("scroll", recalculate);
 		window.addEventListener("resize", recalculate);

@@ -1,27 +1,28 @@
+import { createListCollection } from "@ark-ui/react/collection";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
-import type { CSSProperties } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { changeSnapping, pausePlaying, seekBackwards, seekForwards, skipToEnd, skipToStart, startPlaying } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectIsLoading, selectIsPlaying, selectSnapTo } from "$/store/selectors";
 import type { View } from "$/types";
 
-import Dropdown from "../Dropdown";
-import IconButton from "../IconButton";
-import SpacedChildren from "../SpacedChildren";
-import Spacer from "../Spacer";
+import { HStack, styled } from "$:styled-system/jsx";
+import { Button, Select } from "$/components/ui/compositions";
 import CurrentBeat from "./CurrentBeat";
 import CurrentTime from "./CurrentTime";
 
+const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
+	items: SNAPPING_INCREMENTS.map((item) => {
+		const label = item.shortcutKey ? `${item.label} (${item.shortcutLabel})` : item.label;
+		return { value: item.value.toString(), label };
+	}),
+});
+
 interface Props {
-	height: CSSProperties["height"];
 	view: View;
 }
-
-const EditorNavigationControls = ({ height, view }: Props) => {
+const EditorNavigationControls = ({ view }: Props) => {
 	const isPlaying = useAppSelector(selectIsPlaying);
 	const isLoadingSong = useAppSelector(selectIsLoading);
 	const snapTo = useAppSelector(selectSnapTo);
@@ -30,52 +31,41 @@ const EditorNavigationControls = ({ height, view }: Props) => {
 	const playButtonAction = isPlaying ? pausePlaying : startPlaying;
 
 	return (
-		<Wrapper>
-			<Left>
-				<Dropdown label="Snap to" value={snapTo} onChange={(ev) => dispatch(changeSnapping({ newSnapTo: Number(ev.target.value) }))} width={165}>
-					{SNAPPING_INCREMENTS.map(({ value, label, shortcutLabel }) => (
-						<option key={value} value={value} when-selected={label}>
-							{label} {shortcutLabel && `(${shortcutLabel})`}
-						</option>
-					))}
-				</Dropdown>
-			</Left>
-			<Center style={{ height }}>
-				<SpacedChildren spacing={token.var("spacing.1")}>
-					<IconButton disabled={isLoadingSong} color={"white"} icon={SkipBackIcon} onClick={() => dispatch(skipToStart())} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={RewindIcon} onClick={() => dispatch(seekBackwards({ view }))} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={isPlaying ? PauseIcon : PlayIcon} onClick={() => dispatch(playButtonAction())} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={FastForwardIcon} onClick={() => dispatch(seekForwards({ view }))} />
-					<IconButton disabled={isLoadingSong} color={"white"} icon={SkipForwardIcon} onClick={() => dispatch(skipToEnd())} />
-				</SpacedChildren>
-			</Center>
-			<Right>
+		<HStack justify={"space-between"}>
+			<Column gap={4} justify={"flex-start"}>
+				<Select collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(changeSnapping({ newSnapTo: Number(ev.value[0]) }))}>
+					Snap To
+				</Select>
+			</Column>
+			<Column gap={1} justify={"center"}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToStart())}>
+					<SkipBackIcon />
+				</Button>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekBackwards({ view }))}>
+					<RewindIcon />
+				</Button>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(playButtonAction())}>
+					{isPlaying ? <PauseIcon /> : <PlayIcon />}
+				</Button>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekForwards({ view }))}>
+					<FastForwardIcon />
+				</Button>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToEnd())}>
+					<SkipForwardIcon />
+				</Button>
+			</Column>
+			<Column gap={4} justify={"flex-end"}>
 				<CurrentTime />
-				<Spacer size={token.var("spacing.4")} />
 				<CurrentBeat />
-			</Right>
-		</Wrapper>
+			</Column>
+		</HStack>
 	);
 };
 
-const Wrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-`;
-
-const Column = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-`;
-const Left = styled(Column)`
-  justify-content: flex-start;
-`;
-const Center = styled(Column)`
-  justify-content: center;
-`;
-const Right = styled(Column)`
-  justify-content: flex-end;
-`;
+const Column = styled(HStack, {
+	base: {
+		flex: 1,
+	},
+});
 
 export default EditorNavigationControls;

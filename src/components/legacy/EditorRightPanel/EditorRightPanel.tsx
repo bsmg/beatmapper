@@ -1,15 +1,14 @@
-import { Fragment, type ReactNode, useState } from "react";
-import styled from "styled-components";
+import { type ReactNode, useState } from "react";
 
-import { token } from "$:styled-system/tokens";
 import { useOnChange, useOnKeydown } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
 import { ObjectPlacementMode } from "$/types";
 
+import { VStack, styled } from "$:styled-system/jsx";
+import { center } from "$:styled-system/patterns";
 import ItemGrid from "../ItemGrid";
 import NoteGrid from "../NoteGrid";
-import Spacer from "../Spacer";
 import Actions from "./Actions";
 import GridConfig from "./GridConfig";
 import SelectionInfo from "./SelectionInfo";
@@ -54,13 +53,11 @@ const EditorRightPanel = () => {
 		panelContents = <SelectionInfo numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />;
 	} else {
 		panelContents = (
-			<Fragment>
+			<VStack gap={4}>
 				<NoteGrid />
-				<Spacer size={token.var("spacing.4")} />
 				<ItemGrid />
-				<Spacer size={token.var("spacing.4")} />
 				<Actions handleGridConfigClick={() => setShowGridConfig(true)} />
-			</Fragment>
+			</VStack>
 		);
 	}
 
@@ -78,29 +75,31 @@ const EditorRightPanel = () => {
 	);
 };
 
-const OuterWrapper = styled.div`
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: ${token.var("sizes.navigationPanel")};
-  width: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  pointer-events: none;
-`;
+const OuterWrapper = styled("div", {
+	base: center.raw({
+		position: "absolute",
+		top: 0,
+		bottom: "{sizes.navigationPanel}",
+		right: 0,
+		width: "200px",
+		pointerEvents: "none",
+	}),
+});
 
-const Wrapper = styled.div`
-  color: #fff;
-  padding: ${token.var("spacing.4")} ${token.var("spacing.3")};
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: ${token.var("spacing.1")} 0 0 ${token.var("spacing.1")};
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  user-select: none;
-  overflow: auto;
-  pointer-events: auto;
-`;
+const Wrapper = styled("div", {
+	base: {
+		padding: 4,
+		backgroundColor: "bg.translucent",
+		color: "white",
+		borderLeftRadius: "md",
+		borderBlockWidth: "sm",
+		borderLeftWidth: "sm",
+		borderColor: "border.muted",
+		backdropFilter: "blur(8px)",
+		userSelect: "none",
+		overflow: "auto",
+		pointerEvents: "auto",
+	},
+});
 
 export default EditorRightPanel;

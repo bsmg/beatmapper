@@ -1,44 +1,58 @@
-import styled from "styled-components";
-import BaseLink from "../BaseLink";
-
-import { token } from "$:styled-system/tokens";
-
+import { Container, styled } from "$:styled-system/jsx";
+import { stack } from "$:styled-system/patterns";
+import { Interleave } from "$/components/ui/atoms";
+import { Text } from "$/components/ui/compositions";
+import { Link } from "@tanstack/react-router";
+import { DotIcon } from "lucide-react";
 import Logo from "../Logo";
-import MaxWidthWrapper from "../MaxWidthWrapper";
 
 const Header = () => {
 	return (
 		<Wrapper>
-			<MaxWidthWrapper>
-				<Contents>
+			<InnerWrapper>
+				<SectionWrapper>
 					<Logo />
-					<DocLink to="/docs/$" params={{ _splat: "intro" }}>
-						Documentation
-					</DocLink>
-				</Contents>
-			</MaxWidthWrapper>
+				</SectionWrapper>
+				<SectionWrapper>
+					<Interleave separator={() => <DotIcon />}>
+						<Text asChild textStyle={"link"}>
+							<Link to="/docs/$" params={{ _splat: "intro" }}>
+								Documentation
+							</Link>
+						</Text>
+					</Interleave>
+				</SectionWrapper>
+			</InnerWrapper>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  height: ${token.var("sizes.header")};
-  line-height: ${token.var("sizes.header")};
-  background: ${token.var("colors.slate.900")};
-`;
+const Wrapper = styled("header", {
+	base: {
+		minHeight: "header",
+		backgroundColor: "bg.default",
+		borderBottomWidth: "sm",
+		borderColor: "border.default",
+		paddingBlock: 1.5,
+		paddingBlockEnd: { mdDown: 3 },
+	},
+});
 
-const Contents = styled.div`
-  display: flex;
-  justify-content: space-between;
-`;
+const InnerWrapper = styled(Container, {
+	base: stack.raw({
+		direction: { base: "column", md: "row" },
+		align: "center",
+		justify: "space-between",
+		gap: { base: 2, md: 1 },
+	}),
+});
 
-const DocLink = styled(BaseLink)`
-  text-decoration: none;
-  color: white;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
+const SectionWrapper = styled("div", {
+	base: stack.raw({
+		gap: 1,
+		justify: { base: "start", _last: "end" },
+		align: { base: "center", md: { base: "start", _last: "end" } },
+	}),
+});
 
 export default Header;

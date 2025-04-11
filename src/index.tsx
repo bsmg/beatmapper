@@ -1,8 +1,7 @@
-import isPropValid from "@emotion/is-prop-valid";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import { StyleSheetManager, type WebTarget } from "styled-components";
 
 import { routeTree } from "./routeTree.gen";
 import { store } from "./setup";
@@ -14,6 +13,8 @@ if (!root) throw new Error("No root element.");
 
 export const router = createRouter({ routeTree: routeTree });
 
+const queryClient = new QueryClient();
+
 declare module "@tanstack/react-router" {
 	interface Register {
 		router: typeof router;
@@ -21,13 +22,8 @@ declare module "@tanstack/react-router" {
 }
 createRoot(root).render(
 	<Provider store={store}>
-		<StyleSheetManager shouldForwardProp={shouldForwardProp}>
+		<QueryClientProvider client={queryClient}>
 			<RouterProvider router={router} />
-		</StyleSheetManager>
+		</QueryClientProvider>
 	</Provider>,
 );
-
-function shouldForwardProp(propName: string, target: WebTarget) {
-	if (typeof target === "string") return isPropValid(propName);
-	return true;
-}

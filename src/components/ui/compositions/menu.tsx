@@ -1,5 +1,4 @@
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import { ark } from "@ark-ui/react/factory";
 import type { ComponentProps } from "react";
 
 import { ListCollectionFor } from "../atoms";
@@ -13,8 +12,8 @@ export interface MenuProps<T extends MenuItem> extends ComponentProps<typeof Bui
 export function Menu<T extends MenuItem>({ collection, children, ...rest }: MenuProps<T>) {
 	return (
 		<Builder.Root {...rest}>
-			<Builder.Trigger>
-				<ark.span asChild>{children}</ark.span>
+			<Builder.Trigger asChild>
+				<span>{children}</span>
 			</Builder.Trigger>
 			<Builder.Positioner>
 				<Builder.Content>

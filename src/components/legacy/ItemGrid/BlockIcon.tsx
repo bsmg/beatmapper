@@ -1,24 +1,17 @@
 import type { LucideProps } from "lucide-react";
-import styled from "styled-components";
+import { type CSSProperties, useMemo } from "react";
 
-interface Props extends LucideProps {
-	color: string;
-}
+interface Props extends LucideProps {}
 
-const BlockIcon = ({ color, size = 16 }: Props) => {
+function BlockIcon({ color, size = 16 }: Props) {
+	const style = useMemo(() => ({ "--color": color }) as CSSProperties, [color]);
+
 	return (
-		<Block color={color} style={{ width: size, height: size }}>
-			<svg width={`calc(${size} - ${size} / 4)`} height={`calc(${size} - ${size} / 4)`} viewBox="0 0 12 12">
-				<path d="M0,2 L12,2 L6,6 Z" fill="#FFF" />
-			</svg>
-		</Block>
+		<svg viewBox="0 0 12 12" width={size} height={size} style={style}>
+			<rect width="12" height="12" rx={3} ry={3} fill="var(--color)" />
+			<path id="arrow" d="M1.5,2.5 L10.5,2.5 L6,6 Z" fill="white" />
+		</svg>
 	);
-};
-
-const Block = styled.div`
-  border-radius: 4px;
-  background-color: ${(props) => props.color};
-  padding: 2px;
-`;
+}
 
 export default BlockIcon;

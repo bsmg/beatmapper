@@ -1,13 +1,9 @@
-import { Fragment, type MouseEventHandler } from "react";
-import styled from "styled-components";
+import { Fragment, type MouseEventHandler, useState } from "react";
 
-import { token } from "$:styled-system/tokens";
 import type { App } from "$/types";
 
-import UnfocusedButton from "../UnfocusedButton";
-
-const TOP_SPILLOVER = "15px";
-const BOTTOM_SPILLOVER = token.var("spacing.1");
+import { HStack, styled } from "$:styled-system/jsx";
+import { Button } from "$/components/ui/compositions";
 
 interface Props {
 	bookmark: App.Bookmark;
@@ -15,7 +11,6 @@ interface Props {
 	handleJump: () => void;
 	handleDelete: () => void;
 }
-
 const BookmarkFlag = ({ bookmark, offsetPercentage, handleJump, handleDelete }: Props) => {
 	// We want to return two sibling pieces:
 	// - A thin vertical line that shows where the flag lives in the beat, which ignores pointer events so that the waveform remains scrubbable
@@ -38,19 +33,26 @@ const BookmarkFlag = ({ bookmark, offsetPercentage, handleJump, handleDelete }: 
 		}
 	};
 
+	const [isHovering, setIsHovering] = useState(false);
+
 	return (
 		<Fragment>
 			<ThinStrip style={sharedStyles} />
 			<Flag
+				unfocusOnClick
 				style={sharedStyles}
+				onMouseEnter={() => setIsHovering(true)}
+				onMouseLeave={() => setIsHovering(false)}
 				onMouseUp={handleMouseUp}
 				onContextMenu={(ev) => {
 					// Don't allow context menu to pop on right click.
 					ev.preventDefault();
 				}}
 			>
-				<BeatNum>{bookmark.beatNum} </BeatNum>
-				<Name>{bookmark.name}</Name>
+				<HStack gap={1}>
+					<BeatNum>{bookmark.beatNum} </BeatNum>
+					<Name data-hover={isHovering ? "true" : undefined}>{bookmark.name}</Name>
+				</HStack>
 				<FlagDecoration viewBox="0 0 5 10">
 					<polygon fill={bookmark.color.background} points="0,0 5,5 0,10" />
 				</FlagDecoration>
@@ -59,54 +61,53 @@ const BookmarkFlag = ({ bookmark, offsetPercentage, handleJump, handleDelete }: 
 	);
 };
 
-const ThinStrip = styled.div`
-  position: absolute;
-  z-index: 2;
-  top: calc(${TOP_SPILLOVER} * -1);
-  bottom: calc(${BOTTOM_SPILLOVER} * -1);
-  width: 2px;
-  transform: translateX(-1px);
-  border-radius: 2px 0 2px 2px;
-  /*
-    Important: no pointer events, since this line overlaps the waveform.
-    I don't want to block scrubbing
-  */
-  pointer-events: none;
-`;
+const ThinStrip = styled("div", {
+	base: {
+		position: "absolute",
+		zIndex: 2,
+		insetBlockStart: -1,
+		insetBlockEnd: -1,
+		width: "2px",
+		transform: "translateX(-1px)",
+		borderRadius: "md",
+		pointerEvents: "none",
+	},
+});
 
-const Flag = styled(UnfocusedButton)`
-  position: absolute;
-  z-index: 2;
-  top: calc(${TOP_SPILLOVER} * -1);
-  padding-left: 4px;
-  padding-right: 4px;
-  height: 20px;
-  line-height: 20px;
-  display: flex;
-`;
+const Flag = styled(Button, {
+	base: {
+		position: "absolute",
+		zIndex: 2,
+		insetBlockStart: -1,
+		paddingInline: "4px",
+		height: "20px",
+		lineHeight: "20px",
+		display: "flex",
+	},
+});
 
-const BeatNum = styled.div`
-  font-size: 11px;
-  font-weight: bold;
-`;
+const BeatNum = styled("span", {
+	base: {
+		fontSize: "11px",
+		fontWeight: "bold",
+	},
+});
 
-const FlagDecoration = styled.svg`
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  transform: translateX(100%);
-  height: 100%;
-`;
+const FlagDecoration = styled("svg", {
+	base: {
+		position: "absolute",
+		insetBlock: 0,
+		insetInlineEnd: 0,
+		transform: "translateX(100%)",
+		height: "100%",
+	},
+});
 
-const Name = styled.div`
-  margin-left: 6px;
-  font-size: 11px;
-  display: none;
-
-  ${Flag}:hover & {
-    display: block;
-  }
-`;
+const Name = styled("span", {
+	base: {
+		fontSize: "11px",
+		display: { base: "none", _hover: "block" },
+	},
+});
 
 export default BookmarkFlag;

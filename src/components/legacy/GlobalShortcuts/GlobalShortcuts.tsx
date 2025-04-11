@@ -1,5 +1,7 @@
+import { useThrottledCallback } from "@tanstack/react-pacer";
 import { useEffect, useRef } from "react";
 
+import { APP_TOASTER } from "$/components/app/constants";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import { useMousewheel } from "$/hooks";
@@ -36,7 +38,7 @@ import {
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectIsDemoSong } from "$/store/selectors";
 import { View } from "$/types";
-import { isMetaKeyPressed, throttle } from "$/utils";
+import { isMetaKeyPressed } from "$/utils";
 
 interface Props {
 	view: View;
@@ -58,20 +60,21 @@ const GlobalShortcuts = ({ view }: Props) => {
 	});
 
 	// This handler handles mousewheel events, as well as up/down/left/right arrow keys.
-	const handleScroll = (direction: "forwards" | "backwards", holdingMeta: boolean, holdingAlt: boolean) => {
-		// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
-		if (holdingMeta) {
-			return dispatch(direction === "forwards" ? decrementSnapping() : incrementSnapping());
-		}
+	const handleScroll = useThrottledCallback(
+		(direction: "forwards" | "backwards", holdingMeta: boolean, holdingAlt: boolean) => {
+			// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
+			if (holdingMeta) {
+				return dispatch(direction === "forwards" ? decrementSnapping() : incrementSnapping());
+			}
 
-		if (holdingAlt) {
-			return dispatch(nudgeSelection({ direction, view }));
-		}
+			if (holdingAlt) {
+				return dispatch(nudgeSelection({ direction, view }));
+			}
 
-		dispatch(scrollThroughSong({ direction }));
-	};
-
-	const handleScrollThrottled = throttle(handleScroll, 50);
+			dispatch(scrollThroughSong({ direction }));
+		},
+		{ wait: 50 },
+	);
 
 	const handleKeyDown = (ev: KeyboardEvent) => {
 		const metaKeyPressed = isMetaKeyPressed(ev, navigator);
@@ -120,11 +123,11 @@ const GlobalShortcuts = ({ view }: Props) => {
 
 			case "ArrowUp":
 			case "ArrowRight": {
-				return handleScrollThrottled("forwards", metaKeyPressed, ev.altKey);
+				return handleScroll("forwards", metaKeyPressed, ev.altKey);
 			}
 			case "ArrowDown":
 			case "ArrowLeft": {
-				return handleScrollThrottled("backwards", metaKeyPressed, ev.altKey);
+				return handleScroll("backwards", metaKeyPressed, ev.altKey);
 			}
 
 			case "PageUp": {
@@ -217,7 +220,13 @@ const GlobalShortcuts = ({ view }: Props) => {
 				}
 
 				ev.preventDefault();
-				if (import.meta.env.PROD && isDemo) return alert("Unfortunately, the demo map is not available for download.");
+				if (import.meta.env.PROD && isDemo) {
+					return APP_TOASTER.create({
+						id: "demo-download-blocker",
+						type: "info",
+						description: "Unfortunately, the demo map is not available for download.",
+					});
+				}
 				if (songId) return dispatch(downloadMapFiles({ songId, version: 2 }));
 				return;
 			}

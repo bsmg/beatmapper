@@ -1,18 +1,15 @@
 import type { MDXComponents } from "mdx/types";
 import * as runtime from "react/jsx-runtime";
 
+import { KBD } from "$/components/ui/styled";
 import Mouse from "./Mouse";
-import { KeyIcon, Shortcut } from "./ShortcutHelpers";
+import { Shortcut } from "./ShortcutHelpers";
 
 const sharedComponents: MDXComponents = {
 	a: ({ ...rest }) => <a {...rest} target="_blank" />,
-	Key: ({ size, children }) => <KeyIcon size={size ?? "small"}>{children}</KeyIcon>,
+	Key: ({ children }) => <KBD>{children}</KBD>,
 	Mouse: Mouse,
-	Shortcut: ({ size, separator, children }) => (
-		<Shortcut separator={separator} size={size ?? "small"}>
-			{children}
-		</Shortcut>
-	),
+	Shortcut: ({ separator, children }) => <Shortcut separator={separator}>{children}</Shortcut>,
 };
 
 export function useMDXComponent(code: string) {

@@ -1,6 +1,4 @@
-import Color from "color";
 import { memo } from "react";
-import styled from "styled-components";
 
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent } from "$/helpers/events.helpers";
@@ -10,34 +8,32 @@ import { selectActiveSongId, selectCustomColors, selectEventEditorEditMode } fro
 import { App, EventEditMode } from "$/types";
 import { normalize } from "$/utils";
 
-import { token } from "$:styled-system/tokens";
-import UnstyledButton from "../UnstyledButton";
+import { styled } from "$:styled-system/jsx";
+import { Button } from "$/components/ui/compositions";
 
 const BLOCK_WIDTH = 7;
 
 function getBackgroundForEvent(event: App.BasicEvent, customColors: App.ModSettings["customColors"]) {
 	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, customColors);
+	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
+	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
 
 	switch (event.type) {
-		case App.BasicEventType.ON:
-		case App.BasicEventType.OFF:
-		case App.BasicEventType.TRIGGER: {
+		case App.BasicEventType.ON: {
 			// On/off are solid colors
 			return color;
 		}
+		case App.BasicEventType.OFF:
+		case App.BasicEventType.TRIGGER: {
+			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor}, ${semiTransparentColor})`;
+		}
 		case App.BasicEventType.FLASH: {
-			const brightColor = Color(color).lighten(0.4).hsl();
-			const semiTransparentColor = Color(color).darken(0.5).hsl();
 			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
 		case App.BasicEventType.FADE: {
-			const brightColor = Color(color).lighten(0.4).hsl();
-			const semiTransparentColor = Color(color).darken(0.5).rgb();
 			return `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
 		case App.BasicEventType.TRANSITION: {
-			const brightColor = Color(color).lighten(0.4).hsl();
-			const semiTransparentColor = Color(color).darken(0.5).rgb();
 			return `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})`;
 		}
 		default: {
@@ -101,25 +97,26 @@ const EventBlock = ({ event, trackWidth, startBeat, numOfBeatsToShow, deleteOnHo
 	);
 };
 
-const Wrapper = styled(UnstyledButton)`
-  width: ${BLOCK_WIDTH}px;
-  height: 100%;
-  position: absolute;
-  border-radius: ${BLOCK_WIDTH / 2}px;
-`;
+const Wrapper = styled(Button, {
+	base: {
+		width: "8px",
+		height: "100%",
+		position: "absolute",
+		borderRadius: "full",
+	},
+});
 
-const SelectedGlow = styled.div`
-  position: absolute;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: ${token.var("colors.yellow.500")};
-  border-radius: ${BLOCK_WIDTH / 2}px;
-  opacity: 0.6;
-`;
+const SelectedGlow = styled("div", {
+	base: {
+		position: "absolute",
+		boxSize: "100%",
+		inset: 0,
+		zIndex: 1,
+		colorPalette: "yellow",
+		backgroundColor: "colorPalette.500",
+		borderRadius: "full",
+		opacity: 0.5,
+	},
+});
 
 export default memo(EventBlock);

@@ -33,7 +33,7 @@ const recipe = sva({
 			lineHeight: 1.25,
 			whiteSpace: "wrap",
 			textOverflow: "ellipsis",
-			color: "red.300",
+			color: { _light: "red.700", _dark: "red.300" },
 		},
 	},
 	variants: {

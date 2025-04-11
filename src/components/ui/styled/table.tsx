@@ -15,7 +15,7 @@ const recipe = sva({
 			fontSize: "13px",
 			fontWeight: 300,
 			color: "fg.muted",
-			paddingBlock: 1,
+			padding: 1,
 		},
 		header: {
 			borderBottomWidth: { base: "sm" },
@@ -30,7 +30,7 @@ const recipe = sva({
 			borderColor: { base: "border.muted" },
 		},
 		cell: {
-			paddingBlock: 1,
+			padding: 1,
 		},
 	},
 });

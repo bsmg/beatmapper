@@ -1,9 +1,8 @@
-import styled from "styled-components";
-
-import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectCursorPositionInBeats } from "$/store/selectors";
 import { normalize } from "$/utils";
+
+import { styled } from "$:styled-system/jsx";
 
 interface Props {
 	gridWidth: number;
@@ -29,15 +28,18 @@ const CursorPositionIndicator = ({ gridWidth, startBeat, endBeat, zIndex }: Prop
 	);
 };
 
-const Elem = styled.div`
-  position: absolute;
-  top: 0;
-  left: -1.5px;
-  width: 3px;
-  height: 100%;
-  background: ${token.var("colors.yellow.500")};
-  border-radius: 4px;
-  pointer-events: none;
-`;
+const Elem = styled("div", {
+	base: {
+		width: "4px",
+		position: "absolute",
+		top: 0,
+		left: "-2px",
+		height: "100%",
+		colorPalette: "yellow",
+		backgroundColor: "colorPalette.500",
+		borderRadius: "full",
+		pointerEvents: "none",
+	},
+});
 
 export default CursorPositionIndicator;

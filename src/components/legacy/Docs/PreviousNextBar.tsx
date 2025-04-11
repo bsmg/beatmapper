@@ -1,12 +1,9 @@
 import { docs } from "velite:content";
-import { Fragment, useMemo } from "react";
-import styled from "styled-components";
+import { useMemo } from "react";
 
-import { token } from "$:styled-system/tokens";
-
-import BaseLink from "../BaseLink";
-import Spacer from "../Spacer";
-import HorizontalRule from "./HorizontalRule";
+import { Divider, HStack, Stack } from "$:styled-system/jsx";
+import { Text } from "$/components/ui/compositions";
+import { Link } from "@tanstack/react-router";
 
 interface NavProps {
 	direction: "previous" | "next";
@@ -17,16 +14,16 @@ const NavigationBlock = ({ direction, item }: NavProps) => {
 	const formattedSubtitle = direction === "previous" ? "« PREVIOUS" : "NEXT »";
 
 	return (
-		<NavBlockWrapper
-			style={{
-				alignItems: direction === "previous" ? "flex-start" : "flex-end",
-			}}
-		>
-			<Subtitle>{formattedSubtitle}</Subtitle>
-			<BaseLink to={"/docs/$"} params={{ _splat: `manual/${item.id}` }}>
-				{item.title}
-			</BaseLink>
-		</NavBlockWrapper>
+		<Stack gap={0.5} align={direction === "previous" ? "flex-start" : "flex-end"}>
+			<Text color={"fg.muted"} fontSize={"14px"}>
+				{formattedSubtitle}
+			</Text>
+			<Text textStyle={"link"} colorPalette="blue" color="colorPalette.500" fontSize={"20px"} fontWeight={"bold"}>
+				<Link to={"/docs/$"} params={{ _splat: `manual/${item.id}` }}>
+					{item.title}
+				</Link>
+			</Text>
+		</Stack>
 	);
 };
 
@@ -34,39 +31,19 @@ interface Props {
 	prev?: string;
 	next?: string;
 }
-
 const PreviousNextBar = ({ prev: prevId, next: nextId }: Props) => {
 	const previous = useMemo(() => docs.find((page) => page.id === prevId), [prevId]);
 	const next = useMemo(() => docs.find((page) => page.id === nextId), [nextId]);
 
 	return (
-		<Fragment>
-			<Spacer size={40} />
-			<HorizontalRule />
-			<Wrapper>
-				<Side>{previous && <NavigationBlock direction="previous" item={previous} />}</Side>
-				<Side>{next && <NavigationBlock direction="next" item={next} />}</Side>
-			</Wrapper>
-		</Fragment>
+		<Stack gap={2}>
+			<Divider color={"border.muted"} />
+			<HStack gap={2} justify={"space-between"}>
+				{previous && <NavigationBlock direction="previous" item={previous} />}
+				{next && <NavigationBlock direction="next" item={next} />}
+			</HStack>
+		</Stack>
 	);
 };
-
-const Wrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-`;
-
-const Side = styled.div``;
-
-const NavBlockWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Subtitle = styled.div`
-  font-size: 14px;
-  color: ${token.var("colors.slate.500")};
-  margin-bottom: 6px;
-`;
 
 export default PreviousNextBar;

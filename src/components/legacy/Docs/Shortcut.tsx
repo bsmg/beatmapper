@@ -1,9 +1,10 @@
 import { type PropsWithChildren, useMemo } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
-
-import { IconRow, Or, Plus, Shortcut, Sidenote } from "./ShortcutHelpers";
+import { styled } from "$:styled-system/jsx";
+import { grid, stack } from "$:styled-system/patterns";
+import { Text } from "$/components/ui/compositions";
+import { PlusIcon } from "lucide-react";
+import { IconRow, Or, Shortcut, Sidenote } from "./ShortcutHelpers";
 
 function Row({ row, separator }: { row?: string[]; separator?: string }) {
 	if (!row || separator) {
@@ -19,7 +20,7 @@ function Row({ row, separator }: { row?: string[]; separator?: string }) {
 				const separator = code === "+" ? " " : "+";
 				if (index > 0)
 					return [
-						<Plus key={`${index}-${"plus"}`} />,
+						<PlusIcon key={`${index}-${"plus"}`} size={16} />,
 						<Shortcut key={`${index}-${code}`} separator={separator}>
 							{code}
 						</Shortcut>,
@@ -53,7 +54,9 @@ export const ShortcutItem = ({ title, keys, separator, children }: Props) => {
 		<ShortcutWrapper>
 			<Keys>{rows}</Keys>
 			<Children>
-				{title && <span>{title}</span>}
+				<Text color={"fg.default"} fontSize={"18px"} fontWeight={700}>
+					{title}
+				</Text>
 				<Sidenote>{children}</Sidenote>
 			</Children>
 		</ShortcutWrapper>
@@ -64,39 +67,44 @@ export const ShortcutTable = ({ children }: PropsWithChildren) => {
 	return <TableWrapper>{children}</TableWrapper>;
 };
 
-const TableWrapper = styled.div`
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-column-gap: 3px;
-	grid-row-gap: 3px;
-	padding: 3px;
-	border: 1px solid ${token.var("colors.slate.200")};
-	border-radius: 4px;
+const TableWrapper = styled("div", {
+	base: grid.raw({
+		columns: { base: 1, xl: 2 },
+		columnSpan: "1fr",
+		gap: 0.5,
+		padding: 0.5,
+		borderWidth: "sm",
+		borderColor: "border.muted",
+		borderRadius: "sm",
+	}),
+});
 
-	@media (min-width: 1400px) {
-		grid-template-columns: 1fr 1fr;
-	}
-`;
+const ShortcutWrapper = styled("div", {
+	base: stack.raw({
+		direction: { base: "column", lg: "row" },
+		align: { base: "start", lg: "center" },
+		padding: 1,
+		borderWidth: "sm",
+		borderColor: "border.muted",
+		borderRadius: "sm",
+	}),
+});
 
-const ShortcutWrapper = styled.div`
-	display: flex;
-	padding: 10px;
-	border: 1px solid ${token.var("colors.slate.100")};
-	border-radius: 2px;
-`;
+const Keys = styled("div", {
+	base: stack.raw({
+		width: { base: "100%", lg: "150px" },
+		align: "center",
+		gap: 0,
+		padding: 1,
+	}),
+});
 
-const Keys = styled.div`
-	padding: 10px;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	width: 150px;
-`;
-
-const Children = styled.div`
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	padding-left: 20px;
-`;
+const Children = styled("div", {
+	base: stack.raw({
+		width: "100%",
+		align: { base: "center", lg: "start" },
+		padding: 1,
+		flex: 1,
+		gap: 0,
+	}),
+});

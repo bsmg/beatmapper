@@ -1,7 +1,5 @@
 import { memo, useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
 import { usePointerUpHandler } from "$/hooks";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -10,6 +8,7 @@ import { App, EventEditMode, EventTool, type IEventTrack } from "$/types";
 import { clamp } from "$/utils";
 import { getBackgroundBoxes } from "./BlockTrack.helpers";
 
+import { styled } from "$:styled-system/jsx";
 import BackgroundBox from "./BackgroundBox";
 import EventBlock from "./EventBlock";
 
@@ -76,7 +75,7 @@ const BlockTrack = ({ trackId, tracks, width, height, startBeat, numOfBeatsToSho
 	return (
 		<Wrapper
 			style={{ height }}
-			isDisabled={isDisabled}
+			data-disabled={isDisabled}
 			onPointerDown={(ev) => {
 				if (isDisabled || selectedEditMode === EventEditMode.SELECT) {
 					return;
@@ -102,16 +101,15 @@ const BlockTrack = ({ trackId, tracks, width, height, startBeat, numOfBeatsToSho
 	);
 };
 
-const Wrapper = styled.div<{ isDisabled?: boolean }>`
-  position: relative;
-  border-bottom: 1px solid ${token.var("colors.slate.400")};
-  opacity: ${(p) => p.isDisabled && 0.5};
-  cursor: ${(p) => p.isDisabled && "not-allowed"};
-  background-color: ${(p) => p.isDisabled && "rgba(255,255,255,0.2)"};
-
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
+const Wrapper = styled("div", {
+	base: {
+		position: "relative",
+		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
+		borderBlockWidth: { base: "sm", _lastOfType: 0 },
+		borderColor: "border.muted",
+		opacity: { base: 1, _disabled: "disabled" },
+		cursor: { base: undefined, _disabled: "not-allowed" },
+	},
+});
 
 export default memo(BlockTrack);

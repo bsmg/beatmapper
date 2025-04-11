@@ -1,7 +1,5 @@
 @layer reset, base, tokens, recipes, utilities;
 
-@import "react-tippy/dist/tippy.css";
-
 @font-face {
 	font-family: system;
 	font-style: normal;
@@ -24,14 +22,7 @@ option {
 	color: black;
 }
 
-.tippy-tooltip {
-	line-height: 1 !important;
-	padding: 8px 12px !important;
-	background: var(--colors-gray-900) !important;
-}
-.tippy-tooltip [x-circle] {
-	display: none;
-}
-.tippy-popper {
-	pointer-events: auto !important;
+.expressive-code pre[data-language] {
+	width: 0 !important;
+	min-width: 100% !important;
 }

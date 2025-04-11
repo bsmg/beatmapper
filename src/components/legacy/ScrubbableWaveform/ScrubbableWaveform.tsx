@@ -1,9 +1,10 @@
-import { type MouseEvent, type MouseEventHandler, type RefObject, memo, useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import { throttle } from "@tanstack/react-pacer";
+import { type MouseEvent, type MouseEventHandler, type RefObject, memo, useCallback, useRef, useState } from "react";
 import type WaveformData from "waveform-data";
 
-import { getDevicePixelRatio, getScaledCanvasProps } from "$/helpers/canvas.helpers";
-import { throttle } from "$/utils";
+import { styled } from "$:styled-system/jsx";
+import { Canvas } from "$/components/ui/atoms";
+import { getScaledCanvasProps } from "$/helpers/canvas.helpers";
 
 function getY(totalHeight: number, val: number) {
 	const amplitude = 256;
@@ -33,7 +34,6 @@ interface Props {
 
 export const ScrubbableWaveform = ({ width, height, waveformData, duration, cursorPosition, scrubWaveform }: Props) => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 	const { style, ...dimensions } = getScaledCanvasProps(width, height);
 
 	const [scrubbing, setScrubbing] = useState(false);
@@ -53,15 +53,18 @@ export const ScrubbableWaveform = ({ width, height, waveformData, duration, curs
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: correct use case
 	const throttledHandler = useCallback(
-		throttle((ev) => {
-			if (!scrubbing || !duration) {
-				return;
-			}
+		throttle(
+			(ev) => {
+				if (!scrubbing || !duration) {
+					return;
+				}
 
-			const newCursorPosition = getNewCursorPosition(ev, canvasRef, duration);
+				const newCursorPosition = getNewCursorPosition(ev, canvasRef, duration);
 
-			scrubWaveform(newCursorPosition);
-		}, 30),
+				scrubWaveform(newCursorPosition);
+			},
+			{ wait: 30 },
+		),
 		[duration, scrubWaveform, scrubbing],
 	);
 
@@ -78,69 +81,47 @@ export const ScrubbableWaveform = ({ width, height, waveformData, duration, curs
 		});
 	};
 
-	useEffect(() => {
-		if (!canvasRef.current || !waveformData) {
-			return;
-		}
+	const drawWaveform = useCallback(
+		(ctx: CanvasRenderingContext2D, { width, height }: { width: number; height: number }) => {
+			if (!waveformData) return;
+			ctx.clearRect(0, 0, width, height);
 
-		if (!contextRef.current) {
-			contextRef.current = canvasRef.current.getContext("2d");
-		}
+			ctx.strokeStyle = "#FFF";
 
-		const ctx = contextRef.current;
-		if (!ctx) return;
+			ctx.beginPath();
 
-		const devicePixelRatio = getDevicePixelRatio();
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		ctx.scale(devicePixelRatio, devicePixelRatio);
+			const resampledData = waveformData.resample({ width }).toJSON();
 
-		ctx.clearRect(0, 0, width, height);
+			resampledData.data.forEach((min, i) => {
+				ctx.lineTo(i / 2, getY(height, min));
+			});
 
-		ctx.strokeStyle = "#FFF";
-
-		ctx.beginPath();
-
-		const resampledData = waveformData.resample({ width }).toJSON();
-
-		resampledData.data.forEach((min, i) => {
-			ctx.lineTo(i / 2, getY(height, min));
-		});
-
-		ctx.stroke();
-	}, [width, height, waveformData]);
+			ctx.stroke();
+		},
+		[waveformData],
+	);
 
 	if (!duration) return;
 	const ratioPlayed = cursorPosition / duration;
 
 	return (
-		<Wrapper>
-			<Canvas ref={canvasRef} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} style={style} {...dimensions} />
+		<div>
+			<Canvas ref={canvasRef} dimensions={dimensions} draw={drawWaveform} onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} style={style} />
 			<ProgressRect style={{ transform: `scaleX(${1 - ratioPlayed})` }} />
-		</Wrapper>
+		</div>
 	);
 };
 
-const Wrapper = styled.div`
-  position: relative;
-`;
-
-const Canvas = styled.canvas`
-  position: relative;
-  z-index: 1;
-  display: block;
-`;
-
-const ProgressRect = styled.div`
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  mix-blend-mode: darken;
-  transform-origin: center right;
-  pointer-events: none;
-`;
+const ProgressRect = styled("div", {
+	base: {
+		position: "absolute",
+		zIndex: 2,
+		inset: 0,
+		backgroundColor: "bg.translucent",
+		mixBlendMode: "darken",
+		transformOrigin: "center right",
+		pointerEvents: "none",
+	},
+});
 
 export default memo(ScrubbableWaveform);

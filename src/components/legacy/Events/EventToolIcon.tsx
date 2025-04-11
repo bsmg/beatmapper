@@ -1,5 +1,4 @@
-import styled from "styled-components";
-
+import { token } from "$:styled-system/tokens";
 import { EventTool } from "$/types";
 
 function getPathForTool(tool: EventTool) {
@@ -24,15 +23,11 @@ interface Props {
 
 const EventToolIcon = ({ tool, color }: Props) => {
 	return (
-		<Svg width={16} height={16} viewBox="0 0 32 32" fill="none">
-			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke="rgba(255, 255, 255, 0.3)" />
+		<svg width={16} height={16} viewBox="0 0 32 32" fill="none">
+			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke={token.var("colors.border.default")} />
 			<path d={getPathForTool(tool)} fill={color} stroke="none" />
-		</Svg>
+		</svg>
 	);
 };
-
-const Svg = styled.svg`
-  display: block;
-`;
 
 export default EventToolIcon;

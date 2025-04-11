@@ -4,7 +4,6 @@ import { Toast, toastAnatomy } from "@ark-ui/react/toast";
 import { sva } from "$:styled-system/css";
 import { stack } from "$:styled-system/patterns";
 import { createStyleContext } from "../../utils/create-style-context";
-import { recipe as heading } from "./heading";
 
 const recipe = sva({
 	slots: toastAnatomy.keys(),
@@ -30,16 +29,12 @@ const recipe = sva({
 			transitionDuration: "fast",
 			transitionProperty: "translate, scale, opacity, height",
 			transitionTimingFunction: "default",
-			"& > [data-part=title]": { marginRight: 5 },
+			"& > *:nth-child(2)": { marginRight: 6 },
 		}),
-		title: {
-			...heading.raw({ rank: 2 }),
-		},
-		description: {},
 		closeTrigger: {
 			position: "absolute",
-			top: 2,
-			right: 2,
+			top: 1,
+			right: 1,
 			padding: 1,
 			layerStyle: "fill.ghost",
 			borderRadius: "sm",

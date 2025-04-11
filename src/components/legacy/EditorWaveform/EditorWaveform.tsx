@@ -1,5 +1,4 @@
 import { Fragment, useMemo } from "react";
-import styled from "styled-components";
 
 import { token } from "$:styled-system/tokens";
 import { useBoundingBox } from "$/hooks";
@@ -9,8 +8,9 @@ import { selectCursorPosition, selectDuration, selectGraphicsQuality, selectIsLo
 import { Quality } from "$/types";
 import { roundToNearest } from "$/utils";
 
+import { Center, styled } from "$:styled-system/jsx";
+import { Spinner } from "$/components/ui/compositions";
 import Bookmarks from "../Bookmarks";
-import CenteredSpinner from "../CenteredSpinner";
 import ScrubbableWaveform from "../ScrubbableWaveform";
 
 interface Props {
@@ -40,10 +40,10 @@ const EditorWaveform = ({ height }: Props) => {
 	const waveformHeight = useMemo(() => height - Number.parseFloat(token("spacing.2")), [height]);
 
 	return (
-		<Wrapper ref={ref}>
+		<div ref={ref}>
 			{isLoadingSong && (
 				<SpinnerWrapper>
-					<CenteredSpinner />
+					<Spinner />
 				</SpinnerWrapper>
 			)}
 			{boundingBox && (
@@ -52,22 +52,16 @@ const EditorWaveform = ({ height }: Props) => {
 					{!isLoadingSong && <Bookmarks />}
 				</Fragment>
 			)}
-		</Wrapper>
+		</div>
 	);
 };
 
-const Wrapper = styled.div`
-  position: relative;
-`;
-
-const SpinnerWrapper = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-`;
+const SpinnerWrapper = styled(Center, {
+	base: {
+		position: "absolute",
+		inset: 0,
+		boxSize: "100%",
+	},
+});
 
 export default EditorWaveform;

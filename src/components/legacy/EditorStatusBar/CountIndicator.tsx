@@ -1,36 +1,23 @@
 import type { LucideProps } from "lucide-react";
-import type { ComponentType } from "react";
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
+import type { ComponentType, ReactNode } from "react";
 
-import { token } from "$:styled-system/tokens";
-
-import Spacer from "../Spacer";
+import { HStack } from "$:styled-system/jsx";
+import { Tooltip } from "$/components/ui/compositions";
 
 interface Props {
-	num: number;
+	num: ReactNode;
 	label: string;
 	icon: ComponentType<LucideProps>;
 }
-
 const CountIndicator = ({ num, label, icon: Icon }: Props) => {
 	return (
-		<Tooltip title={label} delay={250}>
-			<Wrapper>
+		<Tooltip render={() => label}>
+			<HStack gap={1}>
 				<Icon size={12} />
-				<Spacer size={token.var("spacing.1")} />
-				<Count>{num}</Count>
-			</Wrapper>
+				<pre>{num}</pre>
+			</HStack>
 		</Tooltip>
 	);
 };
-
-const Count = styled.div``;
-
-const Wrapper = styled.div`
-  display: flex;
-	align-items: center;
-  cursor: default;
-`;
 
 export default CountIndicator;

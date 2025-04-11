@@ -1,10 +1,10 @@
-import styled from "styled-components";
-
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectCustomColors } from "$/store/selectors";
 import type { IBackgroundBox } from "$/types";
 import { normalize } from "$/utils";
+
+import { styled } from "$:styled-system/jsx";
 
 interface Props {
 	box: IBackgroundBox;
@@ -29,10 +29,12 @@ const BackgroundBox = ({ box, startBeat, numOfBeatsToShow }: Props) => {
 	);
 };
 
-const Wrapper = styled.div`
-  height: 100%;
-  position: absolute;
-  opacity: 0.2;
-`;
+const Wrapper = styled("div", {
+	base: {
+		position: "absolute",
+		height: "100%",
+		opacity: 0.2,
+	},
+});
 
 export default BackgroundBox;

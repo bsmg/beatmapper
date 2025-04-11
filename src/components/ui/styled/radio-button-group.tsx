@@ -27,6 +27,7 @@ export const recipe = sva({
 			outlineColor: "border.outline",
 			outlineOffset: 0.25,
 			userSelect: "none",
+			opacity: { base: 1, _disabled: "disabled" },
 			cursor: { base: "pointer", _disabled: "not-allowed" },
 		},
 	},

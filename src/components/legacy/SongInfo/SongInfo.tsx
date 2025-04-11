@@ -1,18 +1,17 @@
+import type { MenuSelectionDetails } from "@ark-ui/react/menu";
 import { useNavigate } from "@tanstack/react-router";
-import { Fragment, memo, useState } from "react";
-import styled from "styled-components";
+import { Fragment, memo, useCallback, useMemo } from "react";
 
-import { token } from "$:styled-system/tokens";
-import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectActiveBeatmapId, selectBeatmapIds, selectSongById } from "$/store/selectors";
-import type { SongId } from "$/types";
+import { selectActiveBeatmapId, selectSongById } from "$/store/selectors";
+import type { BeatmapId, SongId } from "$/types";
 
+import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { createBeatmapListCollection } from "$/components/app/constants";
+import { Button, Dialog, Menu, Text } from "$/components/ui/compositions";
+import { PlusIcon } from "lucide-react";
 import CoverArtImage from "../CoverArtImage";
 import CreateDifficultyForm from "../CreateDifficultyForm";
-import Dropdown from "../Dropdown";
-import Modal from "../Modal";
-import Spacer from "../Spacer";
 
 const COVER_ART_SIZES = {
 	medium: 75,
@@ -28,104 +27,72 @@ interface Props {
 const SongInfo = ({ songId, showDifficultySelector, coverArtSize = "medium" }: Props) => {
 	const selectedDifficulty = useAppSelector(selectActiveBeatmapId);
 	const song = useAppSelector((state) => selectSongById(state, songId));
-	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, songId));
 	const navigate = useNavigate();
 
-	const [showCreateDifficultyModal, setShowCreateDifficultyModal] = useState(false);
+	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ song }), [song]);
+
+	const handleBeatmapSelect = useCallback(
+		(details: MenuSelectionDetails) => {
+			if (details.value === "create-new") {
+				return;
+			}
+			return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: details.value } });
+		},
+		[navigate, song.id],
+	);
+
+	const handleCreate = useCallback(
+		(id: BeatmapId) => {
+			navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: id.toString() } });
+		},
+		[navigate, song.id],
+	);
 
 	return (
 		<Fragment>
-			<OuterWrapper>
-				<Wrapper style={{ height: COVER_ART_SIZES[coverArtSize] }}>
-					<CoverArtImage size={COVER_ART_SIZES[coverArtSize]} filename={song.coverArtFilename} />
-					<Description>
-						<Text>
-							<Title>{song.name}</Title>
-							<Spacer size={token.var("spacing.0.5")} />
-							<Subtitle>{song.artistName}</Subtitle>
+			<OuterWrapper gap={1.5}>
+				<CoverArtImage size={COVER_ART_SIZES[coverArtSize]} filename={song.coverArtFilename} />
+				<Stack gap={1}>
+					<Stack gap={0.5}>
+						<Text color={"fg.default"} fontSize="20px" fontWeight={500} lineHeight={1}>
+							{song.name}
 						</Text>
-
-						{showDifficultySelector && selectedDifficulty && (
-							<Fragment>
-								<Spacer size={token.var("spacing.1")} />
-								<Dropdown
-									label=""
-									value={selectedDifficulty}
-									onChange={(ev) => {
-										ev.target.blur();
-
-										const { value } = ev.target;
-
-										if (value === "create-new") {
-											setShowCreateDifficultyModal(true);
-										} else {
-											// TODO: Having the difficulty as part of the URL means that a bunch of state is reset when you change URLs, stuff like your position in the song.
-											// This might be annoying when trying to jump quickly between two difficulties :/
-											// Maybe I can solve this by pushing query strings?
-											// ?offset=716.83
-											return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: value } });
-										}
-									}}
-									width={90}
-									height={28}
-								>
-									{difficultyIds.map((id) => (
-										<option key={id} value={id} when-selected={getLabelForDifficulty(id)}>
-											{getLabelForDifficulty(id)}
-										</option>
-									))}
-									<option value="create-new" when-selected="--">
-										+ Create new
-									</option>
-								</Dropdown>
-							</Fragment>
-						)}
-					</Description>
-				</Wrapper>
+						<Text color={"fg.muted"} fontSize="16px" fontWeight={400} lineHeight={1}>
+							{song.artistName}
+						</Text>
+					</Stack>
+					{showDifficultySelector && selectedDifficulty && (
+						<Fragment>
+							<HStack gap={0.5}>
+								<Menu collection={BEATMAP_LIST_COLLECTION} onSelect={handleBeatmapSelect}>
+									<Button variant="ghost" size="sm">
+										<Text fontSize="14px" fontWeight={400} lineHeight={1}>
+											{song.selectedDifficulty}
+										</Text>
+									</Button>
+								</Menu>
+								<Dialog title="Create New Beatmap" render={(ctx) => <CreateDifficultyForm dialog={ctx} songId={songId} afterCreate={handleCreate} />}>
+									<Button variant="ghost" size="sm">
+										<PlusIcon size={16} />
+									</Button>
+								</Dialog>
+							</HStack>
+						</Fragment>
+					)}
+				</Stack>
 			</OuterWrapper>
-			<Modal width={430} isVisible={showCreateDifficultyModal} clickBackdropToDismiss={true} onDismiss={() => setShowCreateDifficultyModal(false)}>
-				<CreateDifficultyForm
-					afterCreate={(difficulty) => {
-						setShowCreateDifficultyModal(false);
-						return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: difficulty.toString() } });
-					}}
-				/>
-			</Modal>
 		</Fragment>
 	);
 };
 
-const OuterWrapper = styled.div`
-  position: absolute;
-  z-index: 10;
-  top: ${token.var("spacing.2")};
-  left: ${token.var("spacing.2")};
-  display: flex;
-  align-items: center;
-  user-select: none;
-`;
-
-const Wrapper = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const Text = styled.div`
-  padding-left: ${token.var("spacing.1")};
-`;
-
-const Description = styled.div`
-  padding-left: ${token.var("spacing.1")};
-`;
-
-const Title = styled.div`
-  font-size: 21px;
-  color: ${token.var("colors.gray.100")};
-`;
-
-const Subtitle = styled.div`
-  font-size: 16px;
-  color: ${token.var("colors.gray.300")};
-`;
+const OuterWrapper = styled(HStack, {
+	base: {
+		position: "absolute",
+		zIndex: 1,
+		top: 2,
+		left: 2,
+		userSelect: "none",
+	},
+});
 
 export default memo(SongInfo);

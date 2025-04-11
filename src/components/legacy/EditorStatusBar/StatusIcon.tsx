@@ -1,8 +1,8 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, MouseEventHandler } from "react";
-import styled from "styled-components";
 
-import UnfocusedButton from "../UnfocusedButton";
+import { styled } from "$:styled-system/jsx";
+import { Button } from "$/components/ui/compositions";
 
 interface Props {
 	icon: ComponentType<LucideProps>;
@@ -12,22 +12,16 @@ interface Props {
 	disabled?: boolean;
 }
 
-const StatusIcon = ({ icon: Icon, onClick, size = 16, opacity = 1, disabled }: Props) => (
-	<Wrapper
-		onClick={disabled ? undefined : onClick}
-		style={{
-			opacity: disabled ? 0.4 : opacity,
-			cursor: disabled ? "not-allowed" : "pointer",
-		}}
-	>
+const StatusIcon = ({ icon: Icon, onClick, size = 16, disabled }: Props) => (
+	<Wrapper unfocusOnClick disabled={disabled} onClick={onClick}>
 		<Icon size={size} />
 	</Wrapper>
 );
-const Wrapper = styled(UnfocusedButton)`
-  color: inherit;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-`;
+
+const Wrapper = styled(Button, {
+	base: {
+		opacity: { base: 1, _disabled: "disabled" },
+	},
+});
 
 export default StatusIcon;

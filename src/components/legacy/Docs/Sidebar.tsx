@@ -1,107 +1,103 @@
 import { docs } from "velite:content";
-import styled from "styled-components";
+import { createListCollection } from "@ark-ui/react/collection";
 
-import { token } from "$:styled-system/tokens";
-
-import BaseLink from "../BaseLink";
+import { styled } from "$:styled-system/jsx";
+import { center, stack } from "$:styled-system/patterns";
+import { Accordion, Text } from "$/components/ui/compositions";
+import { Link } from "@tanstack/react-router";
 import Logo from "../Logo";
-import NavGroup from "./NavGroup";
 
 function getDocsForCategory(category: string | null) {
 	return docs.filter((x) => x.category === category).sort((a, b) => a.order - b.order);
 }
 
+const DOCS_LIST_COLLECTION = createListCollection({
+	items: ["manual", "advanced", "release-notes", "legal"].map((category, index) => {
+		return {
+			value: category,
+			label: ["User Manual", "Advanced", "Release Notes", "Legal"][index],
+			render: () => (
+				<NavLinkGroup>
+					{getDocsForCategory(category).map((entry) => (
+						<NavLinkWrapper key={entry.id} asChild onClick={() => window.scrollTo({ top: 0 })}>
+							<Link to={"/docs/$"} params={{ _splat: entry.id }}>
+								{entry.title}
+							</Link>
+						</NavLinkWrapper>
+					))}
+				</NavLinkGroup>
+			),
+		};
+	}),
+});
+
 const Sidebar = () => {
 	return (
 		<Wrapper>
 			<Header>
-				<Logo color="#000" />
+				<Logo />
 			</Header>
 			<Navigation>
-				<NavGroup>
-					{getDocsForCategory(null).map((entry) => {
-						return (
-							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
+				<NavLinkGroup>
+					{getDocsForCategory(null).map((entry) => (
+						<NavLinkWrapper key={entry.id} asChild onClick={() => window.scrollTo({ top: 0 })}>
+							<Link to={"/docs/$"} params={{ _splat: entry.id }}>
 								{entry.title}
-							</NavLink>
-						);
-					})}
-				</NavGroup>
-				<NavGroup title="User Manual" showByDefault>
-					{getDocsForCategory("manual").map((entry) => {
-						return (
-							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
-								{entry.title}
-							</NavLink>
-						);
-					})}
-				</NavGroup>
-				<NavGroup title="Advanced">
-					{getDocsForCategory("advanced").map((entry) => {
-						return (
-							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
-								{entry.title}
-							</NavLink>
-						);
-					})}
-				</NavGroup>
-				<NavGroup title="Release Notes">
-					{getDocsForCategory("release-notes").map((entry) => {
-						return (
-							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
-								{entry.title}
-							</NavLink>
-						);
-					})}
-				</NavGroup>
-				<NavGroup title="Legal">
-					{getDocsForCategory("legal").map((entry) => {
-						return (
-							<NavLink key={entry.id} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
-								{entry.title}
-							</NavLink>
-						);
-					})}
-				</NavGroup>
+							</Link>
+						</NavLinkWrapper>
+					))}
+				</NavLinkGroup>
+				<Accordion collection={DOCS_LIST_COLLECTION} multiple />
 			</Navigation>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  position: sticky;
-  top: 0;
-`;
+const Wrapper = styled("div", {
+	base: stack.raw({
+		minWidth: "300px",
+		maxHeight: "100vh",
+		gap: 0,
+		fontFamily: "'system'",
+		backgroundColor: "bg.default",
+		borderTopWidth: { base: "sm", md: 0 },
+		borderRightWidth: { base: 0, md: "sm" },
+		borderColor: "border.default",
+	}),
+});
 
-const Navigation = styled.nav`
-  padding-left: 12px;
-`;
+const Header = styled("header", {
+	base: center.raw({
+		minHeight: "header",
+		borderBottomWidth: "sm",
+		borderColor: "border.default",
+	}),
+});
 
-const NavLink = styled(BaseLink)`
-  display: flex;
-  align-items: center;
-  height: 35px;
-  color: ${token.var("colors.slate.700")};
-  font-family: 'system';
-  font-weight: 500;
-  font-size: 16px;
-  text-decoration: none;
+const Navigation = styled("nav", {
+	base: stack.raw({
+		gap: 0,
+		padding: 1.5,
+		overflowY: { base: "visible", md: "auto" },
+	}),
+});
 
-  &:hover {
-    color: ${token.var("colors.slate.400")};
-  }
+const NavLinkGroup = styled("div", {
+	base: stack.raw({
+		gap: 0,
+		paddingInline: 1.5,
+	}),
+});
 
-	&.active {
-		color: ${token.var("colors.blue.500")};
-	}
-`;
-
-const Header = styled.header`
-  height: 80px;
-  border-bottom: 1px solid ${token.var("colors.slate.100")};
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-`;
+const NavLinkWrapper = styled(Text, {
+	base: {
+		height: "35px",
+		textStyle: "link",
+		colorPalette: "pink",
+		color: { base: "fg.muted", _hover: "fg.default", _active: "colorPalette.700" },
+		fontWeight: 500,
+		fontSize: "16px",
+	},
+});
 
 export default Sidebar;

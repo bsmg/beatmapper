@@ -1,19 +1,13 @@
-import { Fragment, type MouseEventHandler } from "react";
-import styled from "styled-components";
+import type { MouseEventHandler } from "react";
 
-import { token } from "$:styled-system/tokens";
 import { GRID_PRESET_SLOTS } from "$/constants";
 import { promptSaveGridPreset } from "$/helpers/prompts.helpers";
 import { deleteGridPreset, loadGridPreset, resetGrid, saveGridPreset, updateGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectGridPresets, selectGridSize } from "$/store/selectors";
 
-import Center from "../Center";
-import Heading from "../Heading";
-import MiniButton from "../MiniButton";
-import SpacedChildren from "../SpacedChildren";
-import Spacer from "../Spacer";
-import TextInput from "../TextInput";
+import { VStack, Wrap } from "$:styled-system/jsx";
+import { Button, Field, FieldInput, Heading } from "$/components/ui/compositions";
 
 interface Props {
 	finishTweakingGrid: MouseEventHandler;
@@ -27,130 +21,60 @@ const GridConfig = ({ finishTweakingGrid }: Props) => {
 	const showPresets = Object.keys(gridPresets).length > 0;
 
 	return (
-		<Fragment>
-			<Buttons>
-				<MiniButton onClick={() => songId && dispatch(resetGrid({ songId }))}>Reset</MiniButton>
-			</Buttons>
-			<Spacer size={token.var("spacing.4")} />
-
+		<VStack gap={4}>
+			<Button variant="subtle" size="sm" onClick={() => songId && dispatch(resetGrid({ songId }))}>
+				Reset
+			</Button>
 			{showPresets && (
-				<Center>
-					<Heading size={3}>Presets</Heading>
-					<Spacer size={token.var("spacing.1.5")} />
-					<Row>
-						<SpacedChildren>
-							{GRID_PRESET_SLOTS.map((slot) => (
-								<MiniButton
-									key={slot}
-									disabled={!gridPresets[slot]}
-									onClick={(ev) => {
-										if (ev.buttons === 0) {
-											songId && dispatch(loadGridPreset({ songId, grid: gridPresets[slot] }));
-										}
-									}}
-									onContextMenu={(ev) => {
-										ev.preventDefault();
-										songId && dispatch(deleteGridPreset({ songId, presetSlot: slot }));
-									}}
-								>
-									{slot}
-								</MiniButton>
-							))}
-						</SpacedChildren>
-					</Row>
-					<Spacer size={token.var("spacing.4")} />
-				</Center>
+				<VStack gap={1.5}>
+					<Heading rank={3}>Presets</Heading>
+					<Wrap gap={1} justify={"center"}>
+						{GRID_PRESET_SLOTS.map((slot) => (
+							<Button
+								key={slot}
+								variant="subtle"
+								size="sm"
+								disabled={!gridPresets[slot]}
+								onClick={(ev) => {
+									if (ev.buttons === 0) {
+										songId && dispatch(loadGridPreset({ songId, grid: gridPresets[slot] }));
+									}
+								}}
+								onContextMenu={(ev) => {
+									ev.preventDefault();
+									songId && dispatch(deleteGridPreset({ songId, presetSlot: slot }));
+								}}
+							>
+								{slot}
+							</Button>
+						))}
+					</Wrap>
+				</VStack>
 			)}
-
-			<Row>
-				<TextInput
-					type="number"
-					min={1}
-					max={40}
-					label="Columns"
-					value={numCols}
-					onKeyDown={(ev) => {
-						ev.stopPropagation();
-					}}
-					onChange={(ev) => {
-						songId && dispatch(updateGrid({ songId, grid: { numCols: Number(ev.target.value) } }));
-					}}
-				/>
-				<Spacer size={token.var("spacing.2")} />
-				<TextInput
-					type="number"
-					min={1}
-					max={11}
-					label="Rows"
-					value={numRows}
-					onKeyDown={(ev) => {
-						ev.stopPropagation();
-					}}
-					onChange={(ev) => {
-						songId && dispatch(updateGrid({ songId, grid: { numRows: Number(ev.target.value) } }));
-					}}
-				/>
-			</Row>
-			<Spacer size={token.var("spacing.3")} />
-			<Row>
-				<TextInput
-					type="number"
-					min={0.1}
-					max={4}
-					step={0.1}
-					label="Cell Width"
-					value={colWidth}
-					onKeyDown={(ev) => {
-						ev.stopPropagation();
-					}}
-					onChange={(ev) => {
-						songId && dispatch(updateGrid({ songId, grid: { colWidth: Number(ev.target.value) } }));
-					}}
-				/>
-				<Spacer size={token.var("spacing.2")} />
-				<TextInput
-					type="number"
-					min={0.1}
-					max={4}
-					step={0.1}
-					label="Cell Height"
-					value={rowHeight}
-					onKeyDown={(ev) => {
-						ev.stopPropagation();
-					}}
-					onChange={(ev) => {
-						songId && dispatch(updateGrid({ songId, grid: { rowHeight: Number(ev.target.value) } }));
-					}}
-				/>
-			</Row>
-
-			<Spacer size={token.var("spacing.4")} />
-			<Buttons>
-				<MiniButton onClick={() => dispatch(promptSaveGridPreset(gridPresets, saveGridPreset))}>Save Preset</MiniButton>
-				<Spacer size={token.var("spacing.1")} />
-				<MiniButton onClick={finishTweakingGrid}>Finish Customizing</MiniButton>
-			</Buttons>
-		</Fragment>
+			<Wrap gap={1}>
+				<Field label="Columns">
+					<FieldInput type="number" min={1} max={40} value={numCols} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => songId && dispatch(updateGrid({ songId, grid: { numCols: details.valueAsNumber } }))} />
+				</Field>
+				<Field label="Rows">
+					<FieldInput type="number" min={1} max={11} value={numRows} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => songId && dispatch(updateGrid({ songId, grid: { numRows: details.valueAsNumber } }))} />
+				</Field>
+				<Field label="Cell Width">
+					<FieldInput type="number" min={0.1} max={4} step={0.1} value={colWidth} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => songId && dispatch(updateGrid({ songId, grid: { colWidth: details.valueAsNumber } }))} />
+				</Field>
+				<Field label="Cell Height">
+					<FieldInput type="number" min={0.1} max={4} step={0.1} value={rowHeight} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => songId && dispatch(updateGrid({ songId, grid: { rowHeight: details.valueAsNumber } }))} />
+				</Field>
+			</Wrap>
+			<Wrap gap={1}>
+				<Button variant="subtle" size="sm" onClick={() => dispatch(promptSaveGridPreset(gridPresets, saveGridPreset))}>
+					Save Preset
+				</Button>
+				<Button variant="subtle" size="sm" onClick={finishTweakingGrid}>
+					Finish Customizing
+				</Button>
+			</Wrap>
+		</VStack>
 	);
 };
-
-const Row = styled.div`
-  display: flex;
-
-  label {
-    flex: 1;
-  }
-`;
-
-const Buttons = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  i,
-  svg {
-    display: block !important;
-  }
-`;
 
 export default GridConfig;

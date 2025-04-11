@@ -1,49 +1,40 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
-import type { FileRoutesByTo } from "$/routeTree.gen";
-
-import BaseLink from "../BaseLink";
-import YoutubeEmbed from "../YoutubeEmbed";
-import HorizontalRule from "./HorizontalRule";
+import { styled } from "$:styled-system/jsx";
+import { Text } from "$/components/ui/compositions";
+import { KBD } from "$/components/ui/styled";
 import { MDXContent } from "./MDXContent";
+import DocsMedia from "./Media";
 import { ShortcutItem, ShortcutTable } from "./Shortcut";
-import { KeyIcon, Shortcut } from "./ShortcutHelpers";
+import { Shortcut } from "./ShortcutHelpers";
 
-interface ImageProps extends ComponentProps<"img"> {
-	caption?: string;
-}
-
-const Image = ({ title, alt, width, caption, ...props }: ImageProps) => (
-	<OuterImageWrapper>
-		<ImageWrapper>
-			<img {...props} alt={alt ?? caption} style={{ width }} />
-			{(caption || title) && <ImageCaption>{title ?? caption}</ImageCaption>}
-		</ImageWrapper>
-	</OuterImageWrapper>
-);
-
-const Subtle = styled.span`
-	opacity: 0.5;
-	font-style: italic;
-`;
+const Subtle = styled("span", {
+	base: {
+		fontStyle: "italic",
+		color: "fg.subtle",
+	},
+});
 
 const sharedComponents: MDXComponents = {
-	a: ({ href, ...props }) => <BaseLink {...props} to={href as keyof FileRoutesByTo} />,
-	img: Image,
-	hr: HorizontalRule,
-	Key: ({ size, children }) => <KeyIcon size={size ?? "medium"}>{children}</KeyIcon>,
-	Subtle: Subtle,
-	Shortcut: ({ size, separator, children }) => (
-		<Shortcut separator={separator} size={size ?? "medium"}>
-			{children}
-		</Shortcut>
+	a: ({ ...props }) => (
+		<Text asChild textStyle={"link"}>
+			<a {...props} />
+		</Text>
 	),
+	img: ({ alt, title, ...rest }) => (
+		<DocsMedia caption={alt ?? title}>
+			<img {...rest} alt={alt} title={title} />
+		</DocsMedia>
+	),
+	Key: ({ children }) => <KBD>{children}</KBD>,
+	Subtle: Subtle,
+	Shortcut: ({ separator, children }) => <Shortcut separator={separator}>{children}</Shortcut>,
 	ShortcutItem: ShortcutItem,
 	ShortcutTable: ShortcutTable,
-	YoutubeEmbed,
+	YoutubeEmbed: ({ title, width = 560, height = 315, src }) => {
+		return <iframe width={width} height={height} src={src} title={title} frameBorder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
+	},
 };
 
 /**
@@ -64,154 +55,98 @@ const MdxWrapper = ({ components, code }: ComponentProps<typeof MDXContent>) => 
 	);
 };
 
-const OuterImageWrapper = styled.span`
-	display: flex;
-	justify-content: center;
-	margin-left: -8px;
-	margin-right: -8px;
-`;
+const DocumentStyles = styled("div", {
+	base: {
+		lineHeight: 1.4,
+		fontSize: "18px",
+		color: "fg.muted",
+		maxWidth: { base: "calc(100vw - 120px)!", md: "calc(100vw - 420px)!" },
 
-const ImageWrapper = styled.span`
-	display: inline-block;
-	max-width: 100%;
-	padding: 8px;
-	border-radius: 6px;
-	/* border: 1px solid ${token.var("colors.slate.100")}; */
-	margin-block: 12px;
-
-	&:hover {
-		background: ${token.var("colors.slate.50")};
-	}
-
-	img {
-		display: block;
-		max-width: 100%;
-		border-radius: 4px;
-	}
-`;
-
-const ImageCaption = styled.span`
-	text-align: center;
-	font-size: 12px;
-	line-height: 1.5;
-	margin-top: 8px;
-`;
-
-const DocumentStyles = styled.div`
-	line-height: 1.4;
-	font-size: 18px;
-	color: ${token.var("colors.slate.900")};
-
-	p:not(:first-of-type) {
-		margin-block: 24px;
-	}
-
-	a {
-		color: ${token.var("colors.blue.700")};
-		text-decoration: none;
-		font-weight: bold;
-
-		&:hover {
-			color: ${token.var("colors.blue.500")};
-			text-decoration: underline;
-		}
-	}
-
-	strong {
-		font-weight: bold;
-	}
-
-	em {
-		font-style: italic;
-	}
-
-	h1,
-	h2,
-	h3,
-	h4 {
-		margin-top: 42px;
-		margin-bottom: 16px;
-	}
-
-	h1 {
-		font-size: 32px;
-		font-weight: 700;
-	}
-
-	h2 {
-		font-size: 28px;
-		font-weight: 700;
-	}
-
-	h3 {
-		font-size: 21px;
-		font-weight: 700;
-		color: ${token.var("colors.slate.500")};
-	}
-
-	h4 {
-		font-size: 18px;
-		font-weight: 700;
-	}
-
-	ul,
-	ol {
-		margin-block: 20px;
-	}
-
-	li {
-		margin-left: 20px;
-		list-style-type: disc;
-		margin-block: 9px;
-	}
-
-	code {
-		display: inline-block;
-		font-family: monospace;
-		padding: 2px 5px;
-		font-size: 0.9em;
-		background: rgba(0, 0, 0, 0.05);
-		border-radius: 4px;
-	}
-
-	table {
-		min-width: 300px;
-		margin-bottom: 25px;
-	}
-
-	th,
-	td {
-		padding: 5px 10px;
-	}
-
-	th {
-		text-align: left;
-		font-weight: bold;
-		border-bottom: 1px solid ${token.var("colors.slate.300")};
-	}
-
-	td {
-		font-size: 15px;
-
-		border-bottom: 1px solid ${token.var("colors.slate.100")};
-	}
-
-	tr:last-of-type td {
-		border-bottom: none;
-	}
-
-	blockquote {
-		padding: 20px;
-		background: hsla(212, 100%, 45%, 0.2);
-		border-left: 3px solid ${token.var("colors.blue.500")};
-		border-radius: 3px;
-		font-size: 0.9em;
-		margin-bottom: 30px;
-
-		*:last-of-type {
-			margin-block: 0;
-		}
-	}
-`;
+		"& p:not(:first-of-type)": {
+			marginBlock: "24px",
+		},
+		"& a": {
+			textStyle: "link",
+			fontWeight: 700,
+			colorPalette: "blue",
+			color: "colorPalette.700",
+		},
+		"& strong": {
+			fontWeight: "bold",
+		},
+		"& em": {
+			fontStyle: "italic",
+		},
+		"& h1, & h2, & h3, & h4": {
+			marginTop: "36px",
+			marginBottom: "16px",
+			color: "fg.default",
+			fontWeight: 700,
+		},
+		"& h1": {
+			fontSize: "32px",
+		},
+		"& h2": {
+			fontSize: "28px",
+		},
+		"& h3": {
+			fontSize: "21px",
+		},
+		"& h4": {
+			fontSize: "18px",
+		},
+		"& ul, & ol": {
+			marginBlock: "20px",
+		},
+		"& li": {
+			marginLeft: "20px",
+			listStyleType: "disc",
+			marginBlock: "8px",
+		},
+		"& code": {
+			display: "inline-block",
+			fontFamily: "monospace",
+			paddingBlock: "1px",
+			paddingInline: "6px",
+			fontSize: "0.875em",
+			maxWidth: "100%",
+			wordBreak: "break-all",
+			wordWrap: "break-word",
+			backgroundColor: "bg.muted",
+			borderRadius: "sm",
+		},
+		"& table": {
+			minWidth: "300px",
+			marginBlock: "25px",
+		},
+		"& th, & td": {
+			paddingBlock: "5px",
+			paddingInline: "10px",
+		},
+		"& th": {
+			textAlign: "left",
+			fontWeight: "bold",
+			borderBottomWidth: "sm",
+			borderColor: "border.default",
+		},
+		"& td": {
+			fontSize: "15px",
+			borderWidth: "sm",
+			borderColor: "border.muted",
+		},
+		"& tr:last-of-type td": {
+			borderBottom: "none",
+		},
+		"& blockquote": {
+			padding: "20px",
+			backgroundColor: "bg.muted",
+			borderLeftWidth: "4px",
+			borderColor: "border.muted",
+			borderRadius: "md",
+			fontSize: "0.9em",
+			marginBlock: { base: "30px", _lastOfType: 0 },
+		},
+	},
+});
 
 export default MdxWrapper;

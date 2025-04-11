@@ -1,17 +1,15 @@
-import styled from "styled-components";
+import { Presence } from "@ark-ui/react/presence";
+import { useMemo } from "react";
 
-import { token } from "$:styled-system/tokens";
 import { useMount } from "$/hooks";
 import { downloadMapFiles, pausePlaying } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectIsDemoSong, selectIsPlaying } from "$/store/selectors";
 import type { SongId } from "$/types";
 
-import Button from "../Button";
-import Heading from "../Heading";
-import MiniButton from "../MiniButton";
-import Paragraph from "../Paragraph";
-import Spacer from "../Spacer";
+import { Container, VStack, styled } from "$:styled-system/jsx";
+import { vstack } from "$:styled-system/patterns";
+import { Button, Heading, Text } from "$/components/ui/compositions";
 
 interface Props {
 	songId: SongId;
@@ -28,41 +26,54 @@ const Download = ({ songId }: Props) => {
 		}
 	});
 
-	if (import.meta.env.PROD && isDemo) {
-		return (
-			<Wrapper>
-				<Heading size={1}>Download Map</Heading>
-				<Spacer size={token.var("spacing.2")} />
-				<Paragraph>Unfortunately, the demo map is not available for download.</Paragraph>
-			</Wrapper>
-		);
-	}
+	const canDownload = useMemo(() => import.meta.env.PROD && isDemo, [isDemo]);
 
 	return (
 		<Wrapper>
-			<Heading size={1}>Download Map</Heading>
-			<Spacer size={token.var("spacing.2")} />
-			<Paragraph>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Paragraph>
-			<Spacer size={token.var("spacing.2")} />
-			<Button style={{ margin: "auto" }} onClick={() => dispatch(downloadMapFiles({ songId, version: 2 }))}>
-				Download map files
-			</Button>
-			<Spacer size={token.var("spacing.6")} />
-			<Paragraph>If you wish to import your map into other map software, you may need to download a legacy version of the map files.</Paragraph>
-			<Spacer size={token.var("spacing.2")} />
-			<MiniButton style={{ margin: "auto" }} onClick={() => dispatch(downloadMapFiles({ songId, version: 1 }))}>
-				Download legacy files
-			</MiniButton>
+			<Content>
+				<Heading rank={1}>Download Map</Heading>
+				<Presence asChild present={canDownload} lazyMount unmountOnExit>
+					<VStack gap={6}>
+						<Text>Unfortunately, the demo map is not available for download.</Text>
+					</VStack>
+				</Presence>
+				<Presence asChild present={!canDownload} lazyMount unmountOnExit>
+					<VStack gap={6}>
+						<VStack gap={2}>
+							<Text>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Text>
+							<Button variant="solid" size="md" onClick={() => dispatch(downloadMapFiles({ songId, version: 2 }))}>
+								Download map files
+							</Button>
+						</VStack>
+						<VStack gap={2}>
+							<Text>If you wish to import your map into other map software, you may need to download a legacy version of the map files.</Text>
+							<Button variant="subtle" size="sm" onClick={() => dispatch(downloadMapFiles({ songId, version: 1 }))}>
+								Download legacy files
+							</Button>
+						</VStack>
+					</VStack>
+				</Presence>
+			</Content>
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  max-width: 400px;
-  margin: ${token.var("spacing.8")} auto;
-  padding: ${token.var("spacing.4")};
-  background: rgba(255, 255, 255, 0.075);
-  text-align: center;
-`;
+const Wrapper = styled(Container, {
+	base: {
+		paddingBlock: 4,
+	},
+});
+
+const Content = styled("div", {
+	base: vstack.raw({
+		gap: 2,
+		colorPalette: "slate",
+		layerStyle: "fill.surface",
+		maxWidth: "400px",
+		marginInline: "auto",
+		padding: 4,
+		textAlign: "center",
+	}),
+});
 
 export default Download;

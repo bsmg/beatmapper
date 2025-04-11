@@ -1,11 +1,12 @@
 import { Fragment, useMemo } from "react";
-import styled from "styled-components";
 
 import { useWindowDimensions } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectEventBackgroundOpacity } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 
+import { styled } from "$:styled-system/jsx";
+import { stack } from "$:styled-system/patterns";
 import { token } from "$:styled-system/tokens";
 import EventsGrid from "../EventsGrid";
 import GlobalShortcuts from "../GlobalShortcuts";
@@ -35,7 +36,7 @@ const Events = ({ songId }: Props) => {
 
 				<MainUI
 					style={{
-						background: `hsla(222, 32%, 4%, ${backgroundOpacity})`,
+						background: `color-mix(in srgb, ${token.var("colors.bg.canvas")}, transparent ${(1 - backgroundOpacity) * 100}%)`,
 					}}
 				>
 					<GridControls contentWidth={contentWidth} />
@@ -50,29 +51,29 @@ const Events = ({ songId }: Props) => {
 	);
 };
 
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-`;
+const Wrapper = styled("div", {
+	base: stack.raw({
+		width: "100%",
+		height: "100vh",
+		justify: "flex-end",
+		align: "center",
+	}),
+});
 
-const Background = styled.div`
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #000;
-`;
+const Background = styled("div", {
+	base: {
+		position: "absolute",
+		zIndex: 0,
+		inset: 0,
+		backgroundColor: "black",
+	},
+});
 
-const MainUI = styled.div`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-`;
+const MainUI = styled("div", {
+	base: stack.raw({
+		position: "relative",
+		gap: 0,
+	}),
+});
 
 export default Events;

@@ -1,55 +1,42 @@
 import type { LucideProps } from "lucide-react";
-import type { ComponentType, MouseEventHandler } from "react";
-import styled from "styled-components";
+import type { ComponentType, PropsWithChildren } from "react";
 
-import { token } from "$:styled-system/tokens";
+import { VStack, styled } from "$:styled-system/jsx";
+import { vstack } from "$:styled-system/patterns";
+import { Heading, Text } from "$/components/ui/compositions";
 
-import Button from "../Button";
-import Heading from "../Heading";
-import Paragraph from "../Paragraph";
-import Spacer from "../Spacer";
-
-interface Props {
+interface Props extends PropsWithChildren {
 	icon: ComponentType<LucideProps>;
 	title: string;
-	disabled?: boolean;
 	description: string;
-	buttonText: string;
-	handleClick: MouseEventHandler;
 }
-
-const OptionColumn = ({ icon: Icon, title, disabled, description, buttonText, handleClick }: Props) => {
+const OptionColumn = ({ icon: Icon, title, description, children }: Props) => {
 	return (
 		<Wrapper>
-			<Icon size={24} />
-			<Spacer size={token.var("spacing.4")} />
-			<Title size={3}>{title}</Title>
-			<Spacer size={token.var("spacing.2")} />
-			<Description>{description}</Description>
-			<Spacer size={token.var("spacing.4")} />
-			<Button onClick={handleClick} disabled={disabled}>
-				{buttonText}
-			</Button>
+			<VStack gap={2}>
+				<Icon size={24} />
+				<Title rank={3}>{title}</Title>
+				<Text>{description}</Text>
+			</VStack>
+			{children}
 		</Wrapper>
 	);
 };
 
-const Wrapper = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: ${token.var("colors.slate.300")};
-  margin-bottom: ${token.var("spacing.5")};
-`;
+const Wrapper = styled("div", {
+	base: vstack.raw({
+		gap: 4,
+		flex: 1,
+		textAlign: "center",
+		color: "fg.muted",
+		minWidth: "250px",
+	}),
+});
 
-const Title = styled(Heading)`
-  color: white;
-`;
-
-const Description = styled(Paragraph)`
-  color: ${token.var("colors.slate.300")};
-  text-align: center;
-`;
+const Title = styled(Heading, {
+	base: {
+		color: "fg.default",
+	},
+});
 
 export default OptionColumn;

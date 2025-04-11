@@ -1,14 +1,10 @@
-import { Tooltip } from "react-tippy";
-import styled from "styled-components";
-
-import { token } from "$:styled-system/tokens";
 import { redoNotes, undoNotes } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
 import { getMetaKeyLabel } from "$/utils";
 
-import MiniButton from "../MiniButton";
-import Spacer from "../Spacer";
+import { Wrap } from "$:styled-system/jsx";
+import { Button, Tooltip } from "$/components/ui/compositions";
 
 const UndoRedo = () => {
 	const canUndo = useAppSelector(selectObjectsCanUndo);
@@ -16,24 +12,19 @@ const UndoRedo = () => {
 	const dispatch = useAppDispatch();
 
 	return (
-		<Row>
-			<Tooltip delay={1000} title={`(${getMetaKeyLabel(navigator)} + Z)`}>
-				<MiniButton width={token.var("sizes.actionPanelHalf")} disabled={!canUndo} onClick={() => dispatch(undoNotes())}>
+		<Wrap gap={1}>
+			<Tooltip render={() => `(${getMetaKeyLabel(navigator)} + Z)`}>
+				<Button variant="subtle" size="sm" disabled={!canUndo} onClick={() => dispatch(undoNotes())}>
 					Undo
-				</MiniButton>
+				</Button>
 			</Tooltip>
-			<Spacer size={token.var("spacing.1")} />
-			<Tooltip delay={1000} title={`(Shift + ${getMetaKeyLabel(navigator)} + Z)`}>
-				<MiniButton width={token.var("sizes.actionPanelHalf")} disabled={!canRedo} onClick={() => dispatch(redoNotes())}>
+			<Tooltip render={() => `(Shift + ${getMetaKeyLabel(navigator)} + Z)`}>
+				<Button variant="subtle" size="sm" disabled={!canRedo} onClick={() => dispatch(redoNotes())}>
 					Redo
-				</MiniButton>
+				</Button>
 			</Tooltip>
-		</Row>
+		</Wrap>
 	);
 };
-
-const Row = styled.div`
-  display: flex;
-`;
 
 export default UndoRedo;

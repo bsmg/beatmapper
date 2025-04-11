@@ -1,5 +1,4 @@
-import styled from "styled-components";
-
+import { styled } from "$:styled-system/jsx";
 import { token } from "$:styled-system/tokens";
 
 interface Props {
@@ -7,7 +6,6 @@ interface Props {
 	height?: number;
 	activeButton: string;
 }
-
 const Mouse = ({ width = 18, height = 27, activeButton }: Props) => {
 	return (
 		<Wrapper>
@@ -25,21 +23,25 @@ const Mouse = ({ width = 18, height = 27, activeButton }: Props) => {
 	);
 };
 
-const Wrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-self: center;
-  margin-inline: 0.25rem;
-`;
+const Wrapper = styled("div", {
+	base: {
+		position: "relative",
+		display: "flex",
+		alignSelf: "center",
+		marginInline: "0.25rem",
+	},
+});
 
-const Cable = styled.svg`
-  position: absolute;
-  width: 7px;
-  height: 12px;
-  margin: auto;
-  left: -2px;
-  right: 0;
-  transform: translateY(-100%);
-`;
+const Cable = styled("svg", {
+	base: {
+		position: "absolute",
+		left: "-2px",
+		right: 0,
+		transform: "translateY(-100%)",
+		width: "7px",
+		height: "12px",
+		margin: "auto",
+	},
+});
 
 export default Mouse;

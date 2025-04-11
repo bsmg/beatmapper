@@ -1,7 +1,6 @@
-import styled from "styled-components";
-
 import { View } from "$/types";
 
+import { styled } from "$:styled-system/jsx";
 import EditorBottomPanel from "../EditorBottomPanel";
 import GlobalShortcuts from "../GlobalShortcuts";
 import ReduxForwardingCanvas from "../ReduxForwardingCanvas";
@@ -22,10 +21,10 @@ const Preview = () => {
 	);
 };
 
-const Wrapper = styled.div`
-  background: #000;
-  width: 100%;
-  height: 100%;
-`;
-
+const Wrapper = styled("div", {
+	base: {
+		backgroundColor: "black",
+		boxSize: "100%",
+	},
+});
 export default Preview;

@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
 import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
+
+import { styled } from "$:styled-system/jsx";
+import { flex } from "$:styled-system/patterns";
 
 interface Props {
 	height: number;
@@ -52,27 +53,28 @@ const GridHeader = ({ height, beatNums, selectedBeat }: Props) => {
 	);
 };
 
-const Header = styled.div`
-  display: flex;
-  border-bottom: 1px solid ${token.var("colors.slate.500")};
-  cursor: col-resize;
-`;
+const Header = styled("div", {
+	base: {
+		display: "flex",
+		borderBottomWidth: "sm",
+		borderColor: "border.muted",
+		cursor: "col-resize",
+	},
+});
 
-const HeaderCell = styled.div`
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-`;
+const HeaderCell = styled("div", {
+	base: flex.raw({
+		align: "flex-end",
+		flex: 1,
+	}),
+});
 
-const BeatNums = styled.span`
-  display: inline-block;
-  transform: translateX(-50%);
-  padding-bottom: 8px;
-
-  ${HeaderCell}:first-of-type & {
-    display: none;
-  }
-`;
+const BeatNums = styled("span", {
+	base: {
+		display: "inline-block",
+		transform: "translateX(-50%)",
+		paddingBlock: 1,
+	},
+});
 
 export default GridHeader;

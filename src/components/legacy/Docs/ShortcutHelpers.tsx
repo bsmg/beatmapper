@@ -1,58 +1,13 @@
-import { PlusIcon } from "lucide-react";
 import { Children, type PropsWithChildren } from "react";
-import styled from "styled-components";
 
-import { token } from "$:styled-system/tokens";
 import { getMetaKeyLabel, getOptionKeyLabel } from "$/utils";
 
+import { styled } from "$:styled-system/jsx";
+import { wrap } from "$:styled-system/patterns";
+import { KBD } from "$/components/ui/styled";
 import Mouse from "./Mouse";
 
-interface Props extends PropsWithChildren {
-	size?: "small" | "medium";
-	type?: "square" | "slightly-wide" | "wide" | "spacebar";
-}
-
-export const KeyIcon = ({ size = "medium", type, children }: Props) => {
-	const componentTypeMap = {
-		square: SquareKey,
-		"slightly-wide": SlightlyWideKey,
-		wide: WideKey,
-		spacebar: UltraWideKey,
-	};
-
-	let derivedType = type;
-	if (!derivedType) {
-		derivedType = children === "Space" ? "spacebar" : Children.count(children) > 1 || typeof children !== "string" || children.length > 1 ? "slightly-wide" : "square";
-	}
-
-	const Component = componentTypeMap[derivedType];
-
-	let shrinkRatio = 1;
-	if (type === "square" && Children.count(children) > 2) {
-		shrinkRatio = 0.75;
-	}
-
-	return (
-		<Component size={size}>
-			<div style={{ transform: `scale(${shrinkRatio})` }}>{children}</div>
-		</Component>
-	);
-};
-
-export const Plus = () => (
-	<PlusWrapper>
-		<PlusIcon size={16} />
-	</PlusWrapper>
-);
-
-export const MetaKey = () => {
-	return getMetaKeyLabel(navigator);
-};
-export const OptionKey = () => {
-	return getOptionKeyLabel(navigator);
-};
-
-function resolveIcon(code: string, size?: "small" | "medium") {
+function resolveIcon(code: string) {
 	const aliases: Record<string, string> = {
 		meta: getMetaKeyLabel(),
 		option: getOptionKeyLabel(),
@@ -67,38 +22,22 @@ function resolveIcon(code: string, size?: "small" | "medium") {
 	const alias = code.toLowerCase() in aliases ? aliases[code.toLowerCase()] : code.toLowerCase();
 
 	if (code.length === 1) {
-		return (
-			<KeyIcon key={alias} size={size} type="square">
-				{alias}
-			</KeyIcon>
-		);
+		return <KBD key={alias}>{alias}</KBD>;
 	}
 	switch (code.toLowerCase()) {
 		case "up":
 		case "down":
 		case "left":
 		case "right": {
-			return (
-				<KeyIcon key={alias} size={size} type="square">
-					{alias}
-				</KeyIcon>
-			);
+			return <KBD key={alias}>{alias}</KBD>;
 		}
 		case "option":
 		case "meta": {
-			return (
-				<KeyIcon key={alias} size={size} type="slightly-wide">
-					{alias}
-				</KeyIcon>
-			);
+			return <KBD key={alias}>{alias}</KBD>;
 		}
 		case "spacebar":
 		case "space": {
-			return (
-				<KeyIcon key={alias} size={size} type="spacebar">
-					{alias}
-				</KeyIcon>
-			);
+			return <KBD key={alias}>{alias}</KBD>;
 		}
 		case "move":
 		case "clickleft":
@@ -108,114 +47,65 @@ function resolveIcon(code: string, size?: "small" | "medium") {
 			return <Mouse key={alias} activeButton={alias} />;
 		}
 		default: {
-			return (
-				<KeyIcon key={alias} size={size} type="slightly-wide">
-					{alias}
-				</KeyIcon>
-			);
+			return <KBD key={alias}>{alias}</KBD>;
 		}
 	}
 }
 
 interface Props extends PropsWithChildren {
 	separator?: string;
-	size?: "small" | "medium";
 }
-
-export const Shortcut = ({ separator = "+", size, children }: Props) => {
+export const Shortcut = ({ separator = "+", children }: Props) => {
 	return Children.map(children, (child) => {
 		if (typeof child !== "string") throw new Error("");
 		const keys = child.toString().trim().split(separator);
 		return (
-			<span>
+			<Row>
 				{keys.map((c, i) => {
-					if (i !== 0) return [separator, resolveIcon(c.trim(), size)];
-					return resolveIcon(c.trim(), size);
+					if (i !== 0) return [separator, resolveIcon(c.trim())];
+					return resolveIcon(c.trim());
 				})}
-			</span>
+			</Row>
 		);
 	});
 };
 
-export const IconRow = styled.span`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
+const Row = styled("span", {
+	base: {
+		display: "inline-block",
+		lineHeight: 1,
+	},
+});
 
-  & > * {
-    margin-right: 4px;
-  }
-`;
+export const IconRow = styled("span", {
+	base: wrap.raw({
+		display: "inline-flex",
+		align: "center",
+		justify: "center",
+		gap: 0.5,
+	}),
+});
 
-export const InlineIcons = styled(IconRow)`
-  display: inline-flex;
-  padding: 0 4px;
-  transform: translateY(-2px);
-`;
-export const Sidenote = styled.div`
-  font-size: 14px;
-  font-weight: 300;
-  margin-top: 8px;
-  line-height: 1.3;
+export const Sidenote = styled("div", {
+	base: {
+		marginTop: "8px",
+		fontSize: "14px",
+		fontWeight: 300,
+		lineHeight: 1.3,
+		"& p": {
+			marginBlock: "0!",
+		},
+	},
+});
 
-  & p {
-    margin-block: 0 !important;
-  }
-`;
+export const OrWrapper = styled("span", {
+	base: {
+		fontSize: "12px",
+		marginBlock: "8px",
+		textTransform: "uppercase",
+	},
+});
 
-export const Or = ({ children = "or" }) => <OrWrapper>— {children} —</OrWrapper>;
-
-export const OrWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  opacity: 0.5;
-`;
-
-const PlusWrapper = styled.span`
-  display: flex;
-  align-items: center;
-	justify-content: center;
-	margin-inline: 0;
-  justify-content: center;
-  transform: translate(-2px, -2px);
-`;
-
-export const Key = styled.kbd<Props>`
-  height: ${(props) => (props.size === "medium" ? 27 : 18)}px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 400;
-  text-transform: uppercase;
-  background: ${token.var("colors.slate.100")};
-  border-bottom: 3px solid ${token.var("colors.slate.300")};
-  border-radius: 3px;
-  font-size: ${(props) => (props.size === "medium" ? 12 : 10)}px;
-  color: ${token.var("colors.gray.900")};
-  transform: translateY(-2px);
-  margin-inline: 0.25em;
-  cursor: default;
-`;
-
-const SquareKey = styled(Key)`
-  width: ${(props) => (props.size === "medium" ? 24 : 15)}px;
-`;
-
-const SlightlyWideKey = styled(Key)`
-  padding-left: 8px;
-  padding-right: 8px;
-`;
-const WideKey = styled(Key)`
-  padding-left: 16px;
-  padding-right: 16px;
-`;
-
-const UltraWideKey = styled(Key)`
-  padding-left: 32px;
-  padding-right: 32px;
-`;
+export function Or({ children = "or" }) {
+	return <OrWrapper>— {children} —</OrWrapper>;
+}
