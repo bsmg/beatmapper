@@ -3,7 +3,7 @@ import { TagsInput, tagsInputAnatomy } from "@ark-ui/react/tags-input";
 
 import { sva } from "$:styled-system/css";
 import { hstack, stack, wrap } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 import { recipe as inputRecipe } from "./input";
 
 const recipe = sva({

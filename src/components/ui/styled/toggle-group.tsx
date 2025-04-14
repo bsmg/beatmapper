@@ -3,7 +3,7 @@ import { ToggleGroup, toggleGroupAnatomy } from "@ark-ui/react/toggle-group";
 
 import { sva } from "$:styled-system/css";
 import { stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: [...toggleGroupAnatomy.keys()],

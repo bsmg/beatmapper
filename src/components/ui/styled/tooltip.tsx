@@ -2,7 +2,7 @@
 import { Tooltip, tooltipAnatomy } from "@ark-ui/react/tooltip";
 
 import { sva } from "$:styled-system/css";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: tooltipAnatomy.keys(),

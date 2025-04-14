@@ -2,7 +2,7 @@
 import { sva } from "$:styled-system/css";
 import { center, grid, stack, vstack } from "$:styled-system/patterns";
 import { FileUpload, fileUploadAnatomy } from "@ark-ui/react/file-upload";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: [...fileUploadAnatomy.keys()],

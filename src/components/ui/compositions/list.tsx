@@ -29,7 +29,7 @@ export function Root({ type, colorPalette = "blue", children, ...rest }: ListRoo
 export interface ListItemProps extends ComponentProps<typeof Builder.Item> {
 	indicator?: ComponentType<LucideProps>;
 }
-export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest }: ListItemProps) {
+export function Item({ asChild, indicator: Indicator = ArrowRightIcon, children, ...rest }: ListItemProps) {
 	return (
 		<Builder.Item {...rest}>
 			<Builder.Context>
@@ -41,7 +41,7 @@ export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest 
 					</Presence>
 				)}
 			</Builder.Context>
-			<span>{children}</span>
+			<ark.span asChild={asChild}>{children}</ark.span>
 		</Builder.Item>
 	);
 }

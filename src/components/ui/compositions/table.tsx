@@ -17,7 +17,9 @@ export function DataTable<T extends RowData>({ table: data }: DataTableProps<T>)
 				{headerGroups.map((headerGroup) => (
 					<Builder.Row key={headerGroup.id}>
 						{headerGroup.headers.map((header) => (
-							<Builder.HeaderCell key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</Builder.HeaderCell>
+							<Builder.HeaderCell key={header.id} style={{ width: `${header.getSize()}px` }}>
+								{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+							</Builder.HeaderCell>
 						))}
 					</Builder.Row>
 				))}

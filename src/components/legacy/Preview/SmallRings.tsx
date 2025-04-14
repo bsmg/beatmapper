@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useOnChange } from "$/hooks";
+import { useOnChange } from "$/components/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectGraphicsQuality, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App, Quality } from "$/types";

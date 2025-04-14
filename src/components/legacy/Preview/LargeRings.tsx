@@ -2,8 +2,8 @@ import { useTrail } from "@react-spring/three";
 import { useState } from "react";
 import type { Vector3Tuple } from "three";
 
+import { useOnChange } from "$/components/hooks";
 import { getColorForItem } from "$/helpers/colors.helpers";
-import { useOnChange } from "$/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectAllBasicEventsForTrack, selectAnimateRingMotion, selectCursorPositionInBeats, selectCustomColors, selectGraphicsQuality, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App, Quality } from "$/types";

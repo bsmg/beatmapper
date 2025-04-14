@@ -3,7 +3,7 @@ import { Toast, toastAnatomy } from "@ark-ui/react/toast";
 
 import { sva } from "$:styled-system/css";
 import { stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: toastAnatomy.keys(),

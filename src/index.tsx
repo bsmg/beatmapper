@@ -3,6 +3,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
+import { ErrorBoundary, PendingBoundary } from "$/components/app/layouts";
 import { routeTree } from "./routeTree.gen";
 import { store } from "./setup";
 
@@ -11,7 +12,11 @@ import "./index.css";
 const root = document.getElementById("root");
 if (!root) throw new Error("No root element.");
 
-export const router = createRouter({ routeTree: routeTree });
+export const router = createRouter({
+	routeTree: routeTree,
+	defaultPendingComponent: PendingBoundary,
+	defaultErrorComponent: ErrorBoundary,
+});
 
 const queryClient = new QueryClient();
 

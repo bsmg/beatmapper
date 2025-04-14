@@ -1,6 +1,7 @@
 export { Accordion, type AccordionItem } from "./accordion";
 export { Button } from "./button";
 export { Checkbox } from "./checkbox";
+export { Collapsible } from "./collapsible";
 export { ColorPicker } from "./color-picker";
 export { Dialog } from "./dialog";
 export { Layer, Text } from "./factory";
@@ -15,6 +16,7 @@ export { RadioGroup, type RadioItem } from "./radio-group";
 export { Select, type SelectItem } from "./select";
 export { Slider } from "./slider";
 export { Spinner } from "./spinner";
+export { Stat } from "./stat";
 export { StrikethroughOnHover } from "./strikethrough-on-hover";
 export { Switch } from "./switch";
 export { DataTable } from "./table";
@@ -24,5 +26,6 @@ export { Toaster } from "./toaster";
 export { Toggle } from "./toggle";
 export { ToggleGroup, type ToggleItem } from "./toggle-group";
 export { Tooltip } from "./tooltip";
+export { Waveform } from "./waveform";
 
 export * as List from "./list";

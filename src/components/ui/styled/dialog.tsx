@@ -3,7 +3,7 @@ import { Dialog, dialogAnatomy } from "@ark-ui/react/dialog";
 
 import { sva } from "$:styled-system/css";
 import { center, stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 import { recipe as heading } from "./heading";
 
 const recipe = sva({
@@ -34,6 +34,7 @@ const recipe = sva({
 			margin: 4,
 			padding: 4,
 			gap: 4,
+			maxWidth: "100vw",
 			maxHeight: "calc(100vh - {spacing.8})",
 			overflowY: "auto",
 			wordWrap: "break-word",
@@ -62,9 +63,9 @@ const recipe = sva({
 	},
 	variants: {
 		size: {
-			sm: { content: { minWidth: "400px" } },
-			md: { content: { minWidth: "600px" } },
-			lg: { content: { minWidth: "800px" } },
+			sm: { content: { width: "400px" } },
+			md: { content: { width: "600px" } },
+			lg: { content: { width: "800px" } },
 		},
 		placement: {
 			top: { positioner: { alignItems: "flex-start" } },

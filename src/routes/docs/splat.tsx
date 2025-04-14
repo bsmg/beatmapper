@@ -2,7 +2,7 @@ import { docs } from "velite:content";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import DocPage from "$/components/legacy/Docs/DocPage";
+import DocsPageLayout from "$/components/docs/templates/page";
 
 export const Route = createFileRoute("/_/docs/_/$")({
 	component: RouteComponent,
@@ -19,5 +19,5 @@ function RouteComponent() {
 		return match;
 	}, [_splat]);
 
-	return <DocPage id={document.id} />;
+	return <DocsPageLayout id={document.id} />;
 }

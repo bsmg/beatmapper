@@ -3,7 +3,7 @@ import { Checkbox, checkboxAnatomy } from "@ark-ui/react/checkbox";
 
 import { sva } from "$:styled-system/css";
 import { center, stack, wrap } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 export const recipe = sva({
 	className: "checkbox",

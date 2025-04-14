@@ -2,7 +2,7 @@
 import { Combobox, comboboxAnatomy } from "@ark-ui/react/combobox";
 
 import { sva } from "$:styled-system/css";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: comboboxAnatomy.keys(),

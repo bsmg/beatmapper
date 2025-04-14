@@ -7,7 +7,7 @@ export function resolveSongId(x: Pick<App.Song, "name">): string {
 }
 
 export function resolveDifficulty(id: BeatmapId): Difficulty {
-	for (const difficulty of Object.values(Difficulty)) {
+	for (const difficulty of Object.values(Difficulty).reverse()) {
 		if (id.toString().includes(difficulty)) return difficulty;
 	}
 	throw new Error(`Could not resolve difficulty from id: ${id}`);

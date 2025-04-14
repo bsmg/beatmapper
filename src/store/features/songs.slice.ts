@@ -24,7 +24,7 @@ import {
 	updateSongDetails,
 } from "$/store/actions";
 import { type App, type Difficulty, Environment, ObjectPlacementMode, type SongId } from "$/types";
-import { deepMerge, omit } from "$/utils";
+import { deepMerge } from "$/utils";
 
 const adapter = createEntityAdapter<App.Song, SongId>({
 	selectId: resolveSongId,
@@ -199,7 +199,15 @@ const slice = createSlice({
 		builder.addCase(deleteBeatmap, (state, action) => {
 			const { songId, difficulty } = action.payload;
 			const song = selectById(state, songId);
-			return adapter.updateOne(state, { id: songId, changes: { difficultiesById: omit(song.difficultiesById, difficulty) } });
+			const difficultiesById = Object.entries(song.difficultiesById).reduce(
+				(acc, [bid, beatmap]) => {
+					if (bid === difficulty) return acc;
+					acc[bid] = beatmap;
+					return acc;
+				},
+				{} as typeof song.difficultiesById,
+			);
+			return adapter.updateOne(state, { id: songId, changes: { difficultiesById: difficultiesById } });
 		});
 		builder.addCase(updateBeatmapMetadata, (state, action) => {
 			const { songId, difficulty, noteJumpSpeed, startBeatOffset, customLabel } = action.payload;
@@ -221,7 +229,7 @@ const slice = createSlice({
 			const { songId, mod } = action.payload;
 			const song = selectById(state, songId);
 			const original = song.modSettings ?? DEFAULT_MOD_SETTINGS;
-			const isModEnabled = !!song.modSettings[mod]?.isEnabled;
+			const isModEnabled = !song.modSettings[mod]?.isEnabled;
 			return adapter.updateOne(state, { id: songId, changes: { modSettings: deepMerge(original, { [mod]: { isEnabled: isModEnabled } }) } });
 		});
 		builder.addCase(updateModColor, (state, action) => {

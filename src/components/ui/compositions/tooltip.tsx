@@ -11,7 +11,7 @@ interface Props extends ComponentProps<typeof Builder.Root> {
 	render: (ctx: UseTooltipContext) => ReactNode;
 	disabled?: boolean;
 }
-export function Tooltip({ showArrow = true, portalled, portalRef, children, render, disabled, ...rest }: Props) {
+export function Tooltip({ showArrow = true, portalled = true, portalRef, children, render, disabled, ...rest }: Props) {
 	if (disabled) return children;
 	return (
 		<Builder.Root {...rest}>

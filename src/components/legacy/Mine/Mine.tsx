@@ -4,7 +4,7 @@ import { memo } from "react";
 import type { ColorRepresentation, Mesh, Vector3Tuple } from "three";
 
 import { mineUrl } from "$/assets";
-import { useObject } from "$/hooks";
+import { useObject } from "$/components/hooks";
 import { ObjectSelectionMode } from "$/types";
 
 interface Props {

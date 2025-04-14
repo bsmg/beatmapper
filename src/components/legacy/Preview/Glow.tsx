@@ -3,7 +3,7 @@ import { useThree } from "@react-three/fiber";
 import { AdditiveBlending, Color, type ColorRepresentation, FrontSide } from "three";
 
 import { glowFragmentShader, glowVertexShader } from "$/assets";
-import { useOnChange } from "$/hooks";
+import { useOnChange } from "$/components/hooks";
 import { App } from "$/types";
 import { normalize } from "$/utils";
 import { getSpringConfigForLight } from "./Preview.helpers";

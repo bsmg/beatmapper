@@ -1,9 +1,9 @@
 import { animated, useSpring } from "@react-spring/three";
 import { Fragment } from "react";
 
+import { useOnChange } from "$/components/hooks/use-on-change";
 import { SURFACE_WIDTH } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
-import { useOnChange } from "$/hooks/use-on-change.hook";
 import { useAppSelector } from "$/store/hooks";
 import { selectActiveSongId, selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectCustomColors, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import { App } from "$/types";

@@ -33,7 +33,7 @@ export function Tabs<T extends TabsItem>({ collection, colorPalette = "pink", ..
 				{(item) => (
 					<Builder.Context key={item.value}>
 						{(ctx) => (
-							<Builder.Content key={item.value} value={item.value}>
+							<Builder.Content key={item.value} value={item.value} tabIndex={-1}>
 								{item.render(ctx)}
 							</Builder.Content>
 						)}

@@ -146,6 +146,7 @@ export const semanticTokens = defineSemanticTokens({
 	fonts: {
 		body: { value: ["'Oswald'", "sans-serif"] },
 		monospace: { value: ["'Inconsolata'", "monospace"] },
+		logo: { value: ["'Raleway'", "sans-serif"] },
 	},
 	sizes: {
 		header: { value: "75px" },
@@ -154,7 +155,7 @@ export const semanticTokens = defineSemanticTokens({
 		mediaRow: { value: "150px" },
 		iconButton: { value: "36px" },
 		statusBar: { value: "30px" },
-		navigationPanel: { value: "180px" },
+		navigationPanel: { value: "150px" },
 		actionPanelFull: { value: "110px" },
 		actionPanelHalf: { value: "calc(({sizes.actionPanelFull} / 2) - {spacing.0.5})" },
 	},
@@ -225,7 +226,7 @@ export const textStyles = defineTextStyles({
 	link: {
 		value: {
 			fontWeight: 400,
-			textDecorationLine: { _hover: "underline" },
+			textDecoration: { _hover: "underline" },
 		},
 	},
 });
@@ -255,6 +256,7 @@ export const layerStyles = defineLayerStyles({
 				base: { _light: "colorPalette.300", _dark: "colorPalette.700" },
 				_disabled: "border.disabled",
 			},
+			backdropFilter: "blur(2px)",
 			opacity: { base: 1, _disabled: "disabled" },
 		},
 	},

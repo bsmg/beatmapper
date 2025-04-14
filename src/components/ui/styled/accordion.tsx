@@ -3,7 +3,7 @@ import { Accordion, accordionAnatomy } from "@ark-ui/react/accordion";
 
 import { sva } from "$:styled-system/css";
 import { hstack, vstack } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: accordionAnatomy.keys(),

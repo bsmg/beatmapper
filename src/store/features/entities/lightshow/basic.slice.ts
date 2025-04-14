@@ -1,6 +1,6 @@
 import { type EntityId, createDraftSafeSelector, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { getMirroredTrack, isLightEvent, isMirroredTrack, resolveEventId } from "$/helpers/events.helpers";
+import { getMirroredTrack, isLightEvent, isMirroredTrack, isValueEvent, resolveEventId } from "$/helpers/events.helpers";
 import { nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
 import {
 	bulkDeleteEvent,
@@ -179,10 +179,13 @@ const slice = createSlice({
 		});
 		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong), () => adapter.getInitialState());
 		builder.addMatcher(isAnyOf(placeEvent, bulkPlaceEvent), (state, action) => {
-			const { beatNum, trackId, eventType, eventColorType, areLasersLocked } = action.payload;
+			const { beatNum, trackId, eventType, eventColorType, eventLaserSpeed, areLasersLocked } = action.payload;
 			const newEvent = { id: resolveEventId({ beatNum, trackId }), beatNum, trackId, type: eventType } as App.BasicEvent;
 			if (isLightEvent(newEvent)) {
 				newEvent.colorType = eventColorType;
+			}
+			if (isValueEvent(newEvent)) {
+				newEvent.laserSpeed = eventLaserSpeed ?? 0;
 			}
 			adapter.upsertOne(state, newEvent);
 			if (areLasersLocked && isMirroredTrack(newEvent.trackId)) {

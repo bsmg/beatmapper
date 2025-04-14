@@ -3,7 +3,7 @@ import { Tabs, tabsAnatomy } from "@ark-ui/react/tabs";
 
 import { sva } from "$:styled-system/css";
 import { hstack } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: tabsAnatomy.keys(),

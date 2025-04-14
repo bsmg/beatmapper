@@ -1,7 +1,7 @@
 import { type Interpolation, animated, useSpring } from "@react-spring/three";
 import { type ColorRepresentation, DoubleSide, type Vector3Tuple } from "three";
 
-import { useOnChange } from "$/hooks";
+import { useOnChange } from "$/components/hooks";
 import { App } from "$/types";
 import { getSpringConfigForLight } from "./Preview.helpers";
 

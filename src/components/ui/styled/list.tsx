@@ -3,7 +3,7 @@ import { type Consumer, createContext } from "react";
 
 import { type RecipeVariantProps, sva } from "$:styled-system/css";
 import { hstack, stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: ["root", "item", "indicator"],

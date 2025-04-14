@@ -47,6 +47,9 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 		case App.BasicEventType.TRIGGER: {
 			return token.var("colors.green.500");
 		}
+		case App.BasicEventType.VALUE: {
+			return token.var("colors.blue.500");
+		}
 		case App.BasicEventType.OFF: {
 			return token.var("colors.slate.400");
 		}

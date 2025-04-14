@@ -78,7 +78,7 @@ export function promptSaveGridPreset(gridPresets: GridPresets, wrappedAction: ty
 	const isValidInput = presetSlots.some((n) => n === providedValue);
 
 	if (!isValidInput) {
-		return APP_TOASTER.create({
+		throw APP_TOASTER.create({
 			id: "invalid-grid-preset",
 			type: "error",
 			description: "The value you provided was not accepted. Please enter 1, 2, 3, or 4.",

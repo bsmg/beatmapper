@@ -3,7 +3,7 @@ import { RadioGroup, radioGroupAnatomy } from "@ark-ui/react/radio-group";
 
 import { sva } from "$:styled-system/css";
 import { center, hstack, wrap } from "$:styled-system/patterns";
-import { createStyleContext } from "../../utils/create-style-context";
+import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: radioGroupAnatomy.keys(),

@@ -42,6 +42,7 @@ export const RouterLink = createLink(
 		base: {
 			textStyle: "link",
 			cursor: "pointer",
+			color: "white",
 		},
 	}),
 );

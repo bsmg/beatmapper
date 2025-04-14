@@ -2,7 +2,7 @@ import type { Assign } from "@ark-ui/react";
 import { type ChangeEvent, type ComponentProps, useCallback } from "react";
 
 import { css, cx } from "$:styled-system/css";
-import { type UseControlledValueProps, useControlledValue } from "../../hooks/use-controlled-value";
+import { type UseControlledValueProps, useControlledValue } from "../hooks/use-controlled-value";
 import { Input as StyledInput, Select as StyledSelect, Textarea as StyledTextarea } from "../styled/input";
 import type { VirtualColorPalette } from "../types";
 

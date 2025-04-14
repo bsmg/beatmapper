@@ -19,8 +19,8 @@ export const Canvas = forwardRef<HTMLCanvasElement, Props>(function Canvas({ dra
 
 			canvas.width = dimensions.width * dpr;
 			canvas.height = dimensions.height * dpr;
-			canvas.style.width = `${dimensions.width}px`;
-			canvas.style.height = `${dimensions.height}px`;
+			canvas.style.width = `${dimensions.width * (1 / dpr)}px`;
+			canvas.style.height = `${dimensions.height / dpr}px`;
 
 			if (!ctx || dimensions.width === 0 || dimensions.height === 0) return;
 			ctx.scale(dpr, dpr);
