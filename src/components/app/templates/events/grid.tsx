@@ -83,12 +83,12 @@ function EventsGrid({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
 		const currentMousePosition = { x, y };
 		mousePositionRef.current = currentMousePosition;
 
-		const hoveringOverBeatNum = convertMousePositionToBeatNum(x, dimensions.width, beatNums, startBeat, snapTo);
-
 		const offset = {
 			x: -PREFIX_WIDTH, // prefix width
 			y: ref.scrollTop - HEADER_HEIGHT,
 		};
+
+		const hoveringOverBeatNum = convertMousePositionToBeatNum(x + offset.x, dimensions.width, beatNums, startBeat, snapTo);
 
 		if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === "left") {
 			const newSelectionBox = {
