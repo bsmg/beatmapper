@@ -143,7 +143,8 @@ export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacl
 	});
 }
 
-export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols: number, numRows: number, colWidth: number, rowHeight: number, mouseDownAt: { colIndex: number; rowIndex: number }, mouseOverAt: { colIndex: number; rowIndex: number }, beatDuration = 4) {
+export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols: number, numRows: number, colWidth: number, rowHeight: number, mouseDownAt: { colIndex: number; rowIndex: number } | null, mouseOverAt: { colIndex: number; rowIndex: number } | null, beatDuration = 4) {
+	if (!mouseDownAt || !mouseOverAt) throw new Error("Unable to create valid obstacle.");
 	const laneIndex = Math.min(mouseDownAt.colIndex, mouseOverAt.colIndex);
 
 	// Our colIndex will be a value from 0 to N-1, where N is the num of columns. Eg in an 8-column grid, the number is 0-7.

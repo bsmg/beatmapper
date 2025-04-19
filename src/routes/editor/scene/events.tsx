@@ -3,13 +3,14 @@ import { Fragment, useMemo } from "react";
 
 import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
-import { selectEventBackgroundOpacity } from "$/store/selectors";
+import { selectEventBackgroundOpacity, selectEventEditorTogglePreview } from "$/store/selectors";
 
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
 import { EventsGrid, GridControls } from "$/components/app/templates/events";
 import { EditorLightshowShortcuts } from "$/components/app/templates/shortcuts";
-import EventLightingPreview from "$/components/legacy/Events/EventLightingPreview";
+import { ReduxForwardingCanvas } from "$/components/scene/atoms";
+import LightingPreview from "$/components/scene/templates/environment";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 	component: RouteComponent,
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 
 function RouteComponent() {
 	const { sid } = Route.useParams();
+	const showLightingPreview = useAppSelector(selectEventEditorTogglePreview);
 	const backgroundOpacity = useAppSelector(selectEventBackgroundOpacity);
 
 	const bgStyle = useMemo(() => ({ background: `color-mix(in srgb, ${token.var("colors.bg.canvas")}, transparent ${(1 - backgroundOpacity) * 100}%)` }), [backgroundOpacity]);
@@ -24,7 +26,11 @@ function RouteComponent() {
 	return (
 		<Fragment>
 			<Background>
-				<EventLightingPreview />
+				{showLightingPreview && (
+					<ReduxForwardingCanvas>
+						<LightingPreview sid={sid} />
+					</ReduxForwardingCanvas>
+				)}
 			</Background>
 			<Wrapper>
 				<GridControls sid={sid} style={bgStyle} />

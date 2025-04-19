@@ -61,17 +61,20 @@ function GlobalShortcuts({ sid }: Props) {
 
 	// This handler handles mousewheel events, as well as up/down/left/right arrow keys.
 	const handleScroll = useThrottledCallback(
-		(direction: "forwards" | "backwards", holdingMeta: boolean, holdingAlt: boolean) => {
+		(direction: "forwards" | "backwards", ev: KeyboardEvent | WheelEvent) => {
 			if (!view) return;
+			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
+
 			// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
-			if (holdingMeta) {
+			if (metaKeyPressed) {
 				return dispatch(direction === "forwards" ? decrementSnapping() : incrementSnapping());
 			}
-
-			if (holdingAlt) {
+			if (ev.altKey) {
 				return dispatch(nudgeSelection({ direction, view }));
 			}
-
+			if (ev.shiftKey) {
+				return;
+			}
 			dispatch(scrollThroughSong({ direction }));
 		},
 		{ wait: 50 },
@@ -126,11 +129,11 @@ function GlobalShortcuts({ sid }: Props) {
 
 				case "ArrowUp":
 				case "ArrowRight": {
-					return handleScroll("forwards", metaKeyPressed, ev.altKey);
+					return handleScroll("forwards", ev);
 				}
 				case "ArrowDown":
 				case "ArrowLeft": {
-					return handleScroll("backwards", metaKeyPressed, ev.altKey);
+					return handleScroll("backwards", ev);
 				}
 
 				case "PageUp": {
@@ -271,11 +274,9 @@ function GlobalShortcuts({ sid }: Props) {
 	});
 
 	useMousewheel((ev) => {
-		const metaKeyPressed = isMetaKeyPressed(ev, navigator);
-
 		const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 
-		handleScroll(direction, metaKeyPressed, ev.altKey);
+		handleScroll(direction, ev);
 	});
 
 	return null;

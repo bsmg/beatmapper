@@ -4,7 +4,9 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { HStack, styled } from "$:styled-system/jsx";
-import Block from "../../legacy/Block";
+import { ColorNote } from "$/components/scene/compositions";
+
+const MOCK_NOTE = { beatNum: 0, colIndex: 0, rowIndex: 0, direction: "down" } as const;
 
 interface Props {
 	size?: "full" | "mini";
@@ -12,10 +14,7 @@ interface Props {
 function Logo({ size = "full" }: Props) {
 	const [isHovering, setIsHovering] = useState(false);
 
-	const spring = useSpring({
-		rotation: isHovering ? 0 : -0.35,
-		config: { tension: 200, friction: 50 },
-	});
+	const [spring] = useSpring(() => ({ rotation: isHovering ? 0 : -0.35 }), [isHovering]);
 
 	const styles = useMemo(() => {
 		return {
@@ -29,9 +28,8 @@ function Logo({ size = "full" }: Props) {
 			<HStack gap={1}>
 				<Canvas style={styles}>
 					<a.group rotation-y={spring.rotation}>
-						<Block x={0} y={0} z={2} direction={1} size={3} />
+						<ColorNote position={[0, 0, 2]} data={MOCK_NOTE} color={"red"} size={3} />
 					</a.group>
-
 					<ambientLight intensity={0.85} />
 					<directionalLight intensity={0.5} position={[0, 30, 8]} />
 					<directionalLight intensity={0.1} position={[5, 0, 20]} />
