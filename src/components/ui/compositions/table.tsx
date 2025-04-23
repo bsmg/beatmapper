@@ -1,5 +1,4 @@
 import { type RowData, type Table, flexRender } from "@tanstack/react-table";
-import { useMemo } from "react";
 
 import * as Builder from "../styled/table";
 
@@ -7,9 +6,9 @@ export interface DataTableProps<T extends RowData> {
 	table: Table<T>;
 }
 export function DataTable<T extends RowData>({ table: data }: DataTableProps<T>) {
-	const headerGroups = useMemo(() => data.getHeaderGroups(), [data]);
-	const rows = useMemo(() => data.getRowModel().rows, [data]);
-	const footerGroups = useMemo(() => data.getFooterGroups(), [data]);
+	const headerGroups = data.getHeaderGroups();
+	const rows = data.getRowModel().rows;
+	const footerGroups = data.getFooterGroups();
 
 	return (
 		<Builder.Root>

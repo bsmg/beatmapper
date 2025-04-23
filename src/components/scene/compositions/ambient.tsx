@@ -1,14 +1,14 @@
 import { Fragment } from "react";
 import { Object3D } from "three";
 
-import { SONG_OFFSET } from "$/constants";
+import { SONG_OFFSET } from "$/components/scene/constants";
 
 const frontLightTarget = new Object3D();
 frontLightTarget.position.set(0, 0, SONG_OFFSET);
 const midLightTarget = new Object3D();
 midLightTarget.position.set(0, -20, -20);
 
-function AmbientLights() {
+function AmbientLight() {
 	return (
 		<Fragment>
 			<primitive object={midLightTarget} />
@@ -26,4 +26,4 @@ function AmbientLights() {
 	);
 }
 
-export default AmbientLights;
+export default AmbientLight;

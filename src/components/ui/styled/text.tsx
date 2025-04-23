@@ -34,7 +34,7 @@ export const AnchorLink = styled(ark.a, {
 	base: {
 		textStyle: "link",
 		cursor: "pointer",
-		color: "white",
+		color: "fg.default",
 	},
 });
 export const RouterLink = createLink(
@@ -42,7 +42,7 @@ export const RouterLink = createLink(
 		base: {
 			textStyle: "link",
 			cursor: "pointer",
-			color: "white",
+			color: "fg.default",
 		},
 	}),
 );

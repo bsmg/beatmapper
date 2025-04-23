@@ -43,7 +43,7 @@ interface Props {
 	trackWidth: number;
 	deleteOnHover: boolean;
 }
-function EventGridBlock({ sid, event, trackWidth, deleteOnHover }: Props) {
+function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 	const dispatch = useAppDispatch();
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
@@ -126,4 +126,4 @@ const SelectedGlow = styled("div", {
 	},
 });
 
-export default memo(EventGridBlock);
+export default memo(EventGridEventItem);

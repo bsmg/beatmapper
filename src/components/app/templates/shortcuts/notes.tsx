@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 
+import { useGlobalEventListener } from "$/components/hooks";
 import { selectNoteDirection, selectTool, swapSelectedNotes, toggleSelectAll } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import { CutDirection, ObjectTool, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-const KeyboardShortcuts = () => {
+function NotesEditorShortcuts() {
 	const dispatch = useAppDispatch();
 
 	const keysDepressed = useRef({
@@ -181,17 +182,10 @@ const KeyboardShortcuts = () => {
 		}
 	}, []);
 
-	useEffect(() => {
-		window.addEventListener("keydown", handleKeyDown);
-		window.addEventListener("keyup", handleKeyUp);
-
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("keyup", handleKeyUp);
-		};
-	});
+	useGlobalEventListener("keydown", handleKeyDown);
+	useGlobalEventListener("keyup", handleKeyUp);
 
 	return null;
-};
+}
 
-export default KeyboardShortcuts;
+export default NotesEditorShortcuts;

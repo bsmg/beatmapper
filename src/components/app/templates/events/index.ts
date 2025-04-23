@@ -1,2 +1,2 @@
-export { default as GridControls } from "./controls";
-export { default as EventsGrid } from "./grid";
+export { default as EventGridControls } from "./controls";
+export { default as EventGridEditor } from "./grid";

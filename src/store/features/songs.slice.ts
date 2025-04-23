@@ -28,7 +28,7 @@ import { deepMerge } from "$/utils";
 
 const adapter = createEntityAdapter<App.Song, SongId>({
 	selectId: resolveSongId,
-	sortComparer: (a, b) => a.lastOpenedAt - b.lastOpenedAt,
+	sortComparer: (a, b) => b.lastOpenedAt - a.lastOpenedAt,
 });
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
 

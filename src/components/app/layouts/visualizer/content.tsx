@@ -63,12 +63,15 @@ function AudioVisualizerContent({ cursorPosition, duration, onVisualizerClick, c
 		});
 	};
 
-	const ratioPlayed = useMemo(() => (duration ? cursorPosition / duration : 0), [cursorPosition, duration]);
+	const progressStyles = useMemo(() => {
+		const ratioPlayed = duration ? cursorPosition / duration : 0;
+		return { transform: `scaleX(${1 - ratioPlayed})` };
+	}, [cursorPosition, duration]);
 
 	return (
 		<Wrapper onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove}>
 			{children(canvasRef)}
-			<ProgressRect style={{ transform: `scaleX(${1 - ratioPlayed})` }} />
+			<ProgressRect style={progressStyles} />
 		</Wrapper>
 	);
 }

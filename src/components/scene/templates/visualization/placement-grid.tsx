@@ -1,15 +1,15 @@
-import type { GroupProps } from "@react-three/fiber";
-
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { type CutDirection, ObjectTool, type SongId } from "$/types";
+import type { ThreeElements } from "@react-three/fiber";
+import { useCallback, useRef, useState } from "react";
 
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectDefaultObstacleDuration, selectGridSize, selectNoteEditorDirection, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
-import { useCallback, useRef, useState } from "react";
-import { PlacementGrid, getDirectionForDrag } from "../../layouts";
+import { type CutDirection, ObjectTool, type SongId } from "$/types";
+
+import { PlacementGrid, resolveNoteDirectionForPlacementMode } from "$/components/scene/layouts";
 
 interface ITentativeBlock {
 	direction: CutDirection;
@@ -17,6 +17,8 @@ interface ITentativeBlock {
 	colIndex: number;
 	selectedTool: ObjectTool;
 }
+
+type GroupProps = ThreeElements["group"];
 
 interface Props extends GroupProps {
 	sid: SongId;
@@ -77,7 +79,7 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
 					if (!mouseDownAt) return;
-					const direction = getDirectionForDrag({ x: mouseDownAt.x, y: mouseDownAt.y }, { x: ev.pageX, y: ev.pageY }, mappingMode, ev.metaKey);
+					const direction = resolveNoteDirectionForPlacementMode({ x: mouseDownAt.x, y: mouseDownAt.y }, { x: ev.pageX, y: ev.pageY }, mappingMode, ev.metaKey);
 
 					// Mousemoves register very quickly; dozens of identical events might be submitted if we don't stop it, causing a backlog to accumulate on the main thread.
 					if (direction === null || direction === cachedDirection.current) return;

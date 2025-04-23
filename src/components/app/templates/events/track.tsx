@@ -1,6 +1,7 @@
 import { type PointerEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 
-import { usePointerUpHandler } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks";
+import { isTriggerTrack, isValueTrack } from "$/helpers/events.helpers";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
@@ -18,12 +19,11 @@ import {
 } from "$/store/selectors";
 import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
 import { clamp, normalize } from "$/utils";
-import { getBackgroundBoxes } from "./block-track.helpers";
+import { createBackgroundBoxes } from "./track.helpers";
 
 import { styled } from "$:styled-system/jsx";
-import { isTriggerTrack, isValueTrack } from "$/helpers/events.helpers";
-import BackgroundBox from "./background-box";
-import EventGridBlock from "./block";
+import EventGridBackgroundBox from "./background-box";
+import EventGridEventItem from "./event";
 
 interface Props {
 	sid: SongId;
@@ -53,7 +53,9 @@ function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props
 		setMouseButtonDepressed(null);
 	}, []);
 
-	usePointerUpHandler(!!mouseButtonDepressed, handlePointerUp);
+	useGlobalEventListener("pointerup", handlePointerUp, {
+		shouldFire: !!mouseButtonDepressed,
+	});
 
 	const resolveEventData = useCallback(
 		(beat: number, eventValue?: number) => {
@@ -100,7 +102,7 @@ function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props
 	}, [dispatch, resolveEventData, trackId, cursorAtBeat, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
 	const backgroundBoxes = useMemo(() => {
-		return getBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow, tracks);
+		return createBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow, tracks);
 	}, [events, trackId, initialTrackLightingColorType, startBeat, numOfBeatsToShow, tracks]);
 
 	const styles = useMemo(() => ({ height }), [height]);
@@ -108,10 +110,10 @@ function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props
 	return (
 		<Wrapper style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			{backgroundBoxes.map((box) => (
-				<BackgroundBox key={box.id} sid={sid} box={box} />
+				<EventGridBackgroundBox key={box.id} sid={sid} box={box} />
 			))}
 			{events.map((event) => {
-				return <EventGridBlock key={event.id} sid={sid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
+				return <EventGridEventItem key={event.id} sid={sid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
 			})}
 		</Wrapper>
 	);

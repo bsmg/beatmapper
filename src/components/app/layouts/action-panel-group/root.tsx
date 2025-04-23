@@ -6,7 +6,7 @@ import { Heading } from "$/components/ui/compositions";
 interface Props extends PropsWithChildren {
 	label: ReactNode;
 }
-function ActionPanelGroup({ label, children }: Props) {
+function ActionPanelGroupRoot({ label, children }: Props) {
 	return (
 		<VStack gap={1.5}>
 			<Heading rank={3}>{label}</Heading>
@@ -15,4 +15,4 @@ function ActionPanelGroup({ label, children }: Props) {
 	);
 }
 
-export default ActionPanelGroup;
+export default ActionPanelGroupRoot;

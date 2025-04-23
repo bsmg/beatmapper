@@ -1,17 +1,17 @@
 import { stack, vstack } from "$:styled-system/patterns";
 
-import { Stack, styled } from "$:styled-system/jsx";
+import { styled } from "$:styled-system/jsx";
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
+import { SongsDataTable } from "$/components/app/templates/tables";
 import { Button, Dialog, Heading } from "$/components/ui/compositions";
-import { SongDataTable } from "../tables";
 
 function ReturningHome() {
 	return (
-		<Stack gap={4}>
+		<Wrapper>
 			<Heading rank={1}>Select map to edit</Heading>
 			<Contents>
 				<MainColumn>
-					<SongDataTable />
+					<SongsDataTable />
 				</MainColumn>
 				<SideColumn>
 					<Dialog title="Create new song" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
@@ -26,12 +26,20 @@ function ReturningHome() {
 					</Dialog>
 				</SideColumn>
 			</Contents>
-		</Stack>
+		</Wrapper>
 	);
 }
 
+const Wrapper = styled("div", {
+	base: stack.raw({
+		gap: 4,
+		align: { base: "center", md: "flex-start" },
+	}),
+});
+
 const Contents = styled("div", {
 	base: stack.raw({
+		width: "100%",
 		direction: { base: "column-reverse", md: "row" },
 		align: { base: "center", md: "flex-start" },
 		gap: 4,
@@ -41,7 +49,6 @@ const Contents = styled("div", {
 const MainColumn = styled("div", {
 	base: stack.raw({
 		gap: 2,
-		flex: 6,
 		width: "100%",
 	}),
 });
@@ -51,7 +58,6 @@ const SideColumn = styled("div", {
 		colorPalette: "slate",
 		layerStyle: "fill.surface",
 		gap: 2,
-		flex: 2,
 		padding: 4,
 		borderRadius: "sm",
 		minWidth: "280px",

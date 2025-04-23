@@ -12,7 +12,7 @@ interface Props {
 	sid: SongId;
 	box: IBackgroundBox;
 }
-function BackgroundBox({ sid, box }: Props) {
+function EventGridBackgroundBox({ sid, box }: Props) {
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 
@@ -37,4 +37,4 @@ const Wrapper = styled("div", {
 	},
 });
 
-export default BackgroundBox;
+export default EventGridBackgroundBox;

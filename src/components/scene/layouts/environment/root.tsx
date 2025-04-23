@@ -8,9 +8,7 @@ import { AmbientLight, Bloom, NoBloom } from "$/components/scene/compositions";
 import Runway from "$/components/scene/compositions/environment/runway";
 import { useControls } from "$/components/scene/hooks";
 
-interface Props extends PropsWithChildren {}
-
-function EnvironmentRoot({ children }: Props) {
+function EnvironmentRoot({ children }: PropsWithChildren) {
 	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	const isBlooming = useMemo(() => graphicsLevel === Quality.HIGH, [graphicsLevel]);

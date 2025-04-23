@@ -7,8 +7,8 @@ import { Quality, type SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 
 import { AudioVisualizer } from "$/components/app/layouts";
+import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
 import { Waveform } from "$/components/ui/compositions";
-import { useParentDimensions } from "$/components/ui/hooks/use-parent-dimensions";
 import EditorBookmark from "./bookmark";
 
 interface Props {

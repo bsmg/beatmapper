@@ -14,7 +14,7 @@ import { selectSongIds } from "$/store/selectors";
 interface Props {
 	dialog?: UseDialogContext;
 }
-function AddSongForm({ dialog }: Props) {
+function CreateMapForm({ dialog }: Props) {
 	const currentSongIds = useAppSelector(selectSongIds);
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -122,4 +122,4 @@ function AddSongForm({ dialog }: Props) {
 	);
 }
 
-export default AddSongForm;
+export default CreateMapForm;

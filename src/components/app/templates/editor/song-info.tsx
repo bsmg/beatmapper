@@ -1,4 +1,4 @@
-import type { MenuSelectionDetails } from "@ark-ui/react/menu";
+import type { SelectValueChangeDetails } from "@ark-ui/react/select";
 import { useNavigate } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { Fragment, memo, useCallback, useMemo } from "react";
@@ -13,7 +13,7 @@ import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { CoverArtFilePreview } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { Button, Dialog, Menu, Text } from "$/components/ui/compositions";
+import { Button, Dialog, Select, Text } from "$/components/ui/compositions";
 
 const COVER_ART_SIZES = {
 	medium: 75,
@@ -33,11 +33,8 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ song }), [song]);
 
 	const handleBeatmapSelect = useCallback(
-		(details: MenuSelectionDetails) => {
-			if (details.value === "create-new") {
-				return;
-			}
-			return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: details.value } });
+		(details: SelectValueChangeDetails) => {
+			return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: song.id.toString(), bid: details.value[0] } });
 		},
 		[navigate, song.id],
 	);
@@ -66,13 +63,7 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 					{showDifficultySelector && bid && (
 						<Fragment>
 							<HStack gap={0.5}>
-								<Menu collection={BEATMAP_LIST_COLLECTION} onSelect={handleBeatmapSelect}>
-									<Button variant="ghost" size="sm">
-										<Text fontSize="14px" fontWeight={400} lineHeight={1}>
-											{song.selectedDifficulty}
-										</Text>
-									</Button>
-								</Menu>
+								<Select size="sm" collection={BEATMAP_LIST_COLLECTION} value={song.selectedDifficulty ? [song.selectedDifficulty.toString()] : []} onValueChange={handleBeatmapSelect} />
 								<Dialog
 									title="Create New Beatmap"
 									render={(ctx) => (

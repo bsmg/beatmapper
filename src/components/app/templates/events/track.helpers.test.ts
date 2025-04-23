@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { App, type IBackgroundBox } from "$/types";
-import { getBackgroundBoxes } from "./block-track.helpers";
+import { createBackgroundBoxes } from "./track.helpers";
 
 const LIGHTING_TRACK_ID = App.TrackId[4];
 
@@ -37,7 +37,7 @@ describe("BlockTrack helpers", () => {
 			const numOfBeatsToShow = 8;
 
 			const expectedResult: IBackgroundBox[] = [];
-			const actualResult = getBackgroundBoxes(events, trackId, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
+			const actualResult = createBackgroundBoxes(events, trackId, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -50,7 +50,7 @@ describe("BlockTrack helpers", () => {
 			const numOfBeatsToShow = 8;
 
 			const expectedResult: IBackgroundBox[] = [];
-			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -70,7 +70,7 @@ describe("BlockTrack helpers", () => {
 					colorType: App.EventColor.PRIMARY,
 				},
 			];
-			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -104,7 +104,7 @@ describe("BlockTrack helpers", () => {
 					colorType: App.EventColor.PRIMARY,
 				},
 			];
-			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -133,7 +133,7 @@ describe("BlockTrack helpers", () => {
 					colorType: App.EventColor.PRIMARY,
 				},
 			];
-			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -180,7 +180,7 @@ describe("BlockTrack helpers", () => {
 					colorType: App.EventColor.SECONDARY,
 				},
 			];
-			const actualResult = getBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, initialTrackLightingColorType, startBeat, numOfBeatsToShow);
 
 			expect(actualResult).toEqual(expectedResult);
 		});

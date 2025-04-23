@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 
 import { App, type CutDirection } from "$/types";
 
-import { ColorNote, getPositionForBlock } from "$/components/scene/compositions";
+import { ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
 import { Context } from "./context";
 
 interface Props {
@@ -22,7 +22,7 @@ function TentativeNote({ direction, color }: Props) {
 		};
 	}, [mouseDownAt, direction]);
 
-	const { x, y } = getPositionForBlock(mouseDownAt);
+	const { x, y } = resolvePositionForNote(mouseDownAt);
 
 	return <ColorNote position={[x, y, 0]} data={data} color={color} />;
 }

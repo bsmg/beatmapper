@@ -1,1 +1,1 @@
-export { default as SongDataTable } from "./songs";
+export { default as SongsDataTable } from "./songs";

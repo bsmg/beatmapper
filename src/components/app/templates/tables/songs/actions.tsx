@@ -26,7 +26,7 @@ function createSongActionListCollection({ song }: SongActionListCollection) {
 interface Props {
 	sid: SongId;
 }
-function SongRowActions({ sid }: Props) {
+function SongsDataTableActions({ sid }: Props) {
 	const song = useAppSelector((state) => selectSongById(state, sid));
 	const dispatch = useAppDispatch();
 
@@ -62,4 +62,4 @@ function SongRowActions({ sid }: Props) {
 	);
 }
 
-export default SongRowActions;
+export default SongsDataTableActions;

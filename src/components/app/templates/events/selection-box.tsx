@@ -7,7 +7,7 @@ import { styled } from "$:styled-system/jsx";
 interface Props {
 	box: ISelectionBox;
 }
-function EventSelectionBox({ box }: Props) {
+function EventGridSelectionBox({ box }: Props) {
 	const styles = useMemo(() => {
 		const width = box.right - box.left;
 		const height = box.bottom - box.top;
@@ -28,4 +28,4 @@ const Box = styled("div", {
 	},
 });
 
-export default EventSelectionBox;
+export default EventGridSelectionBox;

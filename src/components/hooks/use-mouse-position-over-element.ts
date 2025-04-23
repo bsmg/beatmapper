@@ -33,7 +33,7 @@ export function useMousePositionOverElement<T extends HTMLElement>(container: Re
 		return () => {
 			window.removeEventListener("mousemove", handleMouseMove);
 		};
-	}, [bb, ref.current, callback, options.onlyTriggerInside]);
+	}, [bb, ref.current, callback, options.onlyTriggerInside, ...(options.boxDependencies ?? [])]);
 
 	return ref;
 }

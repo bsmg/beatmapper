@@ -49,20 +49,20 @@ function EditorStatusBar({ sid }: Props) {
 					<StatusBar.Indicator label={"Notes per second"} icon={GaugeIcon}>
 						{noteDensity.toFixed(2)}
 					</StatusBar.Indicator>
-					<StatusBar.RangeGroup disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={7} max={14} value={[beatDepth]} onValueChange={(details) => dispatch(updateBeatDepth({ beatDepth: details.value[0] }))} />
+					<StatusBar.Range disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={7} max={14} value={[beatDepth]} onValueChange={(details) => dispatch(updateBeatDepth({ beatDepth: details.value[0] }))} />
 				</StatusBar.Section>
 			</Presence>
 			<Presence asChild present={view === View.LIGHTSHOW}>
 				<StatusBar.Section>
-					<StatusBar.ToggleGroup disabled={isLoading} checked={showLightingPreview} onIcon={ZapIcon} offIcon={ZapOffIcon} onCheckedChange={() => dispatch(togglePreviewLightingInEventsView())} />
-					<StatusBar.RangeGroup disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={25} max={50} step={1} value={[rowHeight]} onValueChange={(details) => dispatch(tweakEventRowHeight({ newHeight: details.value[0] }))} />
-					<StatusBar.RangeGroup disabled={isLoading} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={[backgroundOpacity]} onValueChange={(details) => dispatch(tweakEventBackgroundOpacity({ newOpacity: details.value[0] }))} />
+					<StatusBar.Toggle disabled={isLoading} checked={showLightingPreview} onIcon={ZapIcon} offIcon={ZapOffIcon} onCheckedChange={() => dispatch(togglePreviewLightingInEventsView())} />
+					<StatusBar.Range disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={25} max={50} step={1} value={[rowHeight]} onValueChange={(details) => dispatch(tweakEventRowHeight({ newHeight: details.value[0] }))} />
+					<StatusBar.Range disabled={isLoading} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={[backgroundOpacity]} onValueChange={(details) => dispatch(tweakEventBackgroundOpacity({ newOpacity: details.value[0] }))} />
 				</StatusBar.Section>
 			</Presence>
 			<StatusBar.Section>
-				<StatusBar.ToggleGroup disabled={isLoading} checked={playNoteTick} onIcon={BellIcon} offIcon={BellOffIcon} onCheckedChange={() => dispatch(toggleNoteTick())} />
-				<StatusBar.RangeGroup marks={[1]} disabled={isLoading} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0.5} max={1.5} step={0.1} value={[playbackRate]} onValueChange={(details) => dispatch(updatePlaybackSpeed({ playbackRate: details.value[0] }))} />
-				<StatusBar.RangeGroup disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[volume]} onValueChange={(details) => dispatch(updateVolume({ volume: details.value[0] }))} />
+				<StatusBar.Toggle disabled={isLoading} checked={playNoteTick} onIcon={BellIcon} offIcon={BellOffIcon} onCheckedChange={() => dispatch(toggleNoteTick())} />
+				<StatusBar.Range marks={[1]} disabled={isLoading} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0.5} max={1.5} step={0.1} value={[playbackRate]} onValueChange={(details) => dispatch(updatePlaybackSpeed({ playbackRate: details.value[0] }))} />
+				<StatusBar.Range disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[volume]} onValueChange={(details) => dispatch(updateVolume({ volume: details.value[0] }))} />
 			</StatusBar.Section>
 		</Wrapper>
 	);

@@ -1,30 +1,27 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Fragment } from "react";
 
-import { useAppSelector } from "$/store/hooks";
+import { APP_TOASTER } from "$/components/app/constants";
+import { store } from "$/setup";
 import { selectInitialized } from "$/store/selectors";
 
-import { APP_TOASTER } from "$/components/app/constants";
-import { PendingBoundary } from "$/components/app/layouts";
 import { Toaster } from "$/components/ui/compositions";
 
 export const Route = createRootRoute({
 	component: RootComponent,
+	loader: async () => {
+		const state = store.getState();
+		return await Promise.resolve(selectInitialized(state));
+	},
 });
 
 function RootComponent() {
-	const hasInitialized = useAppSelector(selectInitialized);
-
-	if (!hasInitialized) {
-		return <PendingBoundary />;
-	}
-
 	return (
 		<Fragment>
 			<Outlet />
 			<Toaster toaster={APP_TOASTER} />
-			<TanStackRouterDevtools position="top-right" />
+			{import.meta.env.DEV && <TanStackRouterDevtools position="top-right" />}
 		</Fragment>
 	);
 }

@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useOnChange, useOnKeydown } from "$/components/hooks";
 import { useAppSelector } from "$/store/hooks";
@@ -45,28 +45,23 @@ function EditorActionPanel({ sid }: Props) {
 		[mappingMode],
 	);
 
-	// On smaller windows, the content won't fit in the side panel.
-	// By default we disable all mousewheel action since it causes problems with our main view,
-	// but if the cursor is over this panel, we'll allow it to behave normally by not bubbling that event to the window handler (which prevents it).
 	return (
 		<OuterWrapper onWheel={(ev) => ev.stopPropagation()}>
-			<Wrapper>
-				<Presence asChild present={!showGridConfig && !isAnythingSelected} lazyMount unmountOnExit>
-					<Fragment>
-						<DefaultActionPanel sid={sid} handleGridConfigClick={() => setShowGridConfig(true)} />
-					</Fragment>
-				</Presence>
-				<Presence asChild present={isAnythingSelected} lazyMount unmountOnExit>
-					<Fragment>
-						<SelectionActionPanel sid={sid} numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />
-					</Fragment>
-				</Presence>
-				<Presence asChild present={showGridConfig} lazyMount unmountOnExit>
-					<Fragment>
-						<GridActionPanel sid={sid} finishTweakingGrid={() => setShowGridConfig(false)} />
-					</Fragment>
-				</Presence>
-			</Wrapper>
+			<Presence asChild present={!showGridConfig && !isAnythingSelected} lazyMount unmountOnExit>
+				<Wrapper>
+					<DefaultActionPanel sid={sid} handleGridConfigClick={() => setShowGridConfig(true)} />
+				</Wrapper>
+			</Presence>
+			<Presence asChild present={isAnythingSelected} lazyMount unmountOnExit>
+				<Wrapper>
+					<SelectionActionPanel sid={sid} numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />
+				</Wrapper>
+			</Presence>
+			<Presence asChild present={showGridConfig} lazyMount unmountOnExit>
+				<Wrapper>
+					<GridActionPanel sid={sid} finishTweakingGrid={() => setShowGridConfig(false)} />
+				</Wrapper>
+			</Presence>
 		</OuterWrapper>
 	);
 }
@@ -90,7 +85,7 @@ const Wrapper = styled("div", {
 		padding: 4,
 		gap: 4,
 		backgroundColor: "bg.translucent",
-		color: "white",
+		color: "fg.default",
 		borderLeftRadius: "md",
 		borderBlockWidth: "sm",
 		borderLeftWidth: "sm",

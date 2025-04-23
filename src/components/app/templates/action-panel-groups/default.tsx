@@ -15,7 +15,7 @@ interface Props {
 	sid: SongId;
 	handleGridConfigClick: MouseEventHandler;
 }
-function DefaultActionPanel({ sid, handleGridConfigClick }: Props) {
+function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
 	const dispatch = useAppDispatch();
 	const mappingExtensionsEnabled = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
 
@@ -46,4 +46,4 @@ function DefaultActionPanel({ sid, handleGridConfigClick }: Props) {
 	);
 }
 
-export default DefaultActionPanel;
+export default DefaultActionPanelGroup;

@@ -1,7 +1,7 @@
-import { BLOCK_PLACEMENT_SQUARE_SIZE, SONG_OFFSET } from "$/constants";
+import { BLOCK_PLACEMENT_SQUARE_SIZE, SONG_OFFSET } from "$/components/scene/constants";
 import { App } from "$/types";
 
-export function getPositionForObstacle(obstacle: Pick<App.Obstacle, "type" | "colIndex" | "colspan" | "beatNum">, obstacleDimensions: { width: number; height: number; depth: number }, zOffset: number): [number, number, number] {
+export function resolvePositionForObstacle(obstacle: Pick<App.Obstacle, "type" | "colIndex" | "colspan" | "beatNum">, obstacleDimensions: { width: number; height: number; depth: number }, zOffset: number): [number, number, number] {
 	const position = { x: 0, y: 0, z: 0 };
 
 	// ----------- X ------------
@@ -29,7 +29,7 @@ export function getPositionForObstacle(obstacle: Pick<App.Obstacle, "type" | "co
 	return [position.x, position.y, position.z];
 }
 
-export function getDimensionsForObstacle(obstacle: Pick<App.Obstacle, "beatDuration" | "colspan" | "type">, beatDepth: number) {
+export function resolveDimensionsForObstacle(obstacle: Pick<App.Obstacle, "beatDuration" | "colspan" | "type">, beatDepth: number) {
 	let width: number;
 	let height: number;
 	let depth: number;

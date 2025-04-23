@@ -37,6 +37,7 @@ export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<t
 			} catch (err) {
 				dispatch(cancelImportingSong());
 				console.error("Could not import map:", err);
+				if (onFileAccept) onFileAccept({ files: [] });
 				return APP_TOASTER.create({
 					id: "import-map-fail",
 					type: "error",

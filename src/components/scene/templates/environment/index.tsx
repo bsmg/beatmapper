@@ -2,28 +2,28 @@ import type { SongId } from "$/types";
 
 import { useControls } from "$/components/scene/hooks";
 import { Environment } from "$/components/scene/layouts";
-import BackLaser from "./back-lasers";
+import BackLasers from "./back-lasers";
 import LargeRings from "./large-rings";
-import PrimaryLight from "./primary-lights";
-import SideLaser from "./side-lasers";
+import PrimaryLights from "./primary-lights";
+import SideLasers from "./side-lasers";
 import SmallRings from "./small-rings";
 
 interface Props {
 	sid: SongId;
 }
-function LightingPreview({ sid }: Props) {
+function DefaultEnvironment({ sid }: Props) {
 	useControls();
 
 	return (
 		<Environment.Root>
-			<SideLaser sid={sid} side="left" />
-			<SideLaser sid={sid} side="right" />
-			<BackLaser sid={sid} />
+			<SideLasers sid={sid} side="left" />
+			<SideLasers sid={sid} side="right" />
+			<BackLasers sid={sid} />
 			<LargeRings sid={sid} />
 			<SmallRings sid={sid} />
-			<PrimaryLight sid={sid} />
+			<PrimaryLights sid={sid} />
 		</Environment.Root>
 	);
 }
 
-export default LightingPreview;
+export default DefaultEnvironment;

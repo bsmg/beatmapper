@@ -8,11 +8,11 @@ import { Button } from "./button";
 import { Checkbox } from "./checkbox";
 import { Field, type FieldProps } from "./field";
 import { Input, NativeSelect, Textarea } from "./input";
-import { RadioButtonGroup } from "./radio-button-group";
-import { RadioGroup } from "./radio-group";
+import { RadioButtonGroup, type RadioButtonGroupProps } from "./radio-button-group";
+import { RadioGroup, type RadioGroupProps, type RadioItem } from "./radio-group";
 import { Switch } from "./switch";
 import { TagsInput } from "./tags-input";
-import { ToggleGroup } from "./toggle-group";
+import { ToggleGroup, type ToggleGroupProps, type ToggleItem } from "./toggle-group";
 
 const { useFieldContext, useFormContext, fieldContext, formContext } = createFormHookContexts();
 
@@ -96,8 +96,8 @@ function SwitchField({ label, helperText, ...rest }: Assign<DataFieldProps, Comp
 		</Field>
 	);
 }
-function RadioGroupField({ label, helperText, ...rest }: Assign<DataFieldProps, ComponentProps<typeof RadioGroup>>) {
-	const field = useFieldContext<string>();
+function RadioGroupField<T extends RadioItem>({ label, helperText, ...rest }: Assign<DataFieldProps, RadioGroupProps<T>>) {
+	const field = useFieldContext<string | null>();
 	const error = useFieldError(field);
 	return (
 		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
@@ -105,8 +105,8 @@ function RadioGroupField({ label, helperText, ...rest }: Assign<DataFieldProps, 
 		</Field>
 	);
 }
-function RadioButtonGroupField({ label, helperText, ...rest }: Assign<DataFieldProps, ComponentProps<typeof RadioButtonGroup>>) {
-	const field = useFieldContext<string>();
+function RadioButtonGroupField<T extends RadioItem>({ label, helperText, ...rest }: Assign<DataFieldProps, RadioButtonGroupProps<T>>) {
+	const field = useFieldContext<string | null>();
 	const error = useFieldError(field);
 	return (
 		<Field id={rest.id ?? field.name} cosmetic label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
@@ -123,7 +123,7 @@ function TagsInputField({ label, helperText, ...rest }: Assign<DataFieldProps, C
 		</Field>
 	);
 }
-function ToggleGroupField({ label, helperText, ...rest }: Assign<DataFieldProps, ComponentProps<typeof ToggleGroup>>) {
+function ToggleGroupField<T extends ToggleItem>({ label, helperText, ...rest }: Assign<DataFieldProps, ToggleGroupProps<T>>) {
 	const field = useFieldContext<string[]>();
 	const error = useFieldError(field);
 	return (

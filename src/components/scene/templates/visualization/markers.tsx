@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
-import { SONG_OFFSET, SURFACE_DEPTHS } from "$/constants";
+import { SONG_OFFSET } from "$/components/scene/constants";
+import { SURFACE_DEPTHS } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectCursorPositionInBeats, selectDurationInBeats, selectGraphicsQuality } from "$/store/selectors";
 import type { SongId } from "$/types";
@@ -11,7 +12,7 @@ import { BeatMarker } from "$/components/scene/compositions";
 interface Props {
 	sid: SongId;
 }
-function BarMarkers({ sid }: Props) {
+function EditorBeatMarkers({ sid }: Props) {
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const beatDepth = useAppSelector(selectBeatDepth);
@@ -42,4 +43,4 @@ function BarMarkers({ sid }: Props) {
 	});
 }
 
-export default BarMarkers;
+export default EditorBeatMarkers;

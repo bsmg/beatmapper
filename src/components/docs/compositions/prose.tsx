@@ -7,7 +7,6 @@ import * as ContentComponents from "$/components/docs/content";
 import { MDXContent } from "$/components/ui/atoms";
 import { Text } from "$/components/ui/compositions";
 import { KBD } from "$/components/ui/styled";
-import Mouse from "../../app/compositions/mouse";
 import DocsMedia from "./media";
 
 const Subtle = styled("span", {
@@ -29,7 +28,6 @@ const sharedComponents: MDXComponents = {
 		</DocsMedia>
 	),
 	Key: ({ children }) => <KBD>{children}</KBD>,
-	Mouse: Mouse,
 	Subtle: Subtle,
 	Shortcut: ({ separator, children }) => <Shortcut separator={separator}>{children}</Shortcut>,
 	YoutubeEmbed: ({ title, width = 560, height = 315, src }) => {
@@ -58,6 +56,7 @@ function DocsProse({ components, code }: ComponentProps<typeof MDXContent>) {
 
 const DocumentStyles = styled("div", {
 	base: {
+		marginInline: "auto",
 		lineHeight: 1.4,
 		fontSize: "18px",
 		color: "fg.muted",
@@ -68,9 +67,9 @@ const DocumentStyles = styled("div", {
 		},
 		"& a": {
 			textStyle: "link",
-			fontWeight: 700,
+			fontWeight: "bold",
 			colorPalette: "blue",
-			color: "colorPalette.700",
+			color: { _light: "colorPalette.700", _dark: "colorPalette.300" },
 		},
 		"& strong": {
 			fontWeight: "bold",
@@ -82,7 +81,7 @@ const DocumentStyles = styled("div", {
 			marginTop: "36px",
 			marginBottom: "16px",
 			color: "fg.default",
-			fontWeight: 700,
+			fontWeight: "bold",
 		},
 		"& h1": {
 			fontSize: "32px",

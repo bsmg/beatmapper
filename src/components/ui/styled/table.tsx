@@ -26,7 +26,8 @@ const recipe = sva({
 			borderColor: { base: "border.default" },
 		},
 		row: {
-			borderBlockWidth: { base: "sm", _first: 0, _last: 0 },
+			borderTopWidth: { base: "sm", _first: 0 },
+			borderBottomWidth: { base: "sm", _last: 0 },
 			borderColor: { base: "border.muted" },
 		},
 		cell: {

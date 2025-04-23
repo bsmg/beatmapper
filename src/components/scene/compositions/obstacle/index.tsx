@@ -1,14 +1,13 @@
-import { type GroupProps, type ThreeEvent, extend } from "@react-three/fiber";
+import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { memo, useCallback, useMemo } from "react";
 import { BoxGeometry, DoubleSide } from "three";
-import { TextGeometry } from "three-stdlib";
 
 import { token } from "$:styled-system/tokens";
-import { useMousewheel } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks";
 import type { App } from "$/types";
-import { getDimensionsForObstacle, getPositionForObstacle } from "./helpers";
+import { resolveDimensionsForObstacle, resolvePositionForObstacle } from "./helpers";
 
-extend({ TextGeometry });
+type GroupProps = ThreeElements["group"];
 
 interface Props extends GroupProps {
 	data: App.Obstacle;
@@ -23,12 +22,12 @@ interface Props extends GroupProps {
 	onObstacleWheel?: (event: WheelEvent, obstacle: App.Obstacle) => void;
 }
 
-function ObstacleBox({ data: obstacle, color, beatDepth, onObstaclePointerDown, onObstaclePointerUp, onObstaclePointerOver, onObstaclePointerOut, onObstacleWheel, ...rest }: Props) {
-	const obstacleDimensions = useMemo(() => getDimensionsForObstacle(obstacle, beatDepth), [obstacle, beatDepth]);
+function Obstacle({ data: obstacle, color, beatDepth, onObstaclePointerDown, onObstaclePointerUp, onObstaclePointerOver, onObstaclePointerOut, onObstacleWheel, ...rest }: Props) {
+	const obstacleDimensions = useMemo(() => resolveDimensionsForObstacle(obstacle, beatDepth), [obstacle, beatDepth]);
 
 	const boxGeometry = useMemo(() => new BoxGeometry(obstacleDimensions.width, obstacleDimensions.height, obstacleDimensions.depth), [obstacleDimensions]);
 
-	const actualPosition = useMemo(() => getPositionForObstacle(obstacle, obstacleDimensions, beatDepth), [obstacle, obstacleDimensions, beatDepth]);
+	const actualPosition = useMemo(() => resolvePositionForObstacle(obstacle, obstacleDimensions, beatDepth), [obstacle, obstacleDimensions, beatDepth]);
 
 	const handlePointerDown = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
@@ -66,7 +65,7 @@ function ObstacleBox({ data: obstacle, color, beatDepth, onObstaclePointerDown, 
 		[obstacle, onObstacleWheel],
 	);
 
-	useMousewheel((ev) => handleWheel(ev));
+	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
 
 	return (
 		<group {...rest}>
@@ -82,4 +81,4 @@ function ObstacleBox({ data: obstacle, color, beatDepth, onObstaclePointerDown, 
 	);
 }
 
-export default memo(ObstacleBox);
+export default memo(Obstacle);

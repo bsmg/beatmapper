@@ -13,7 +13,7 @@ interface Props {
 	active?: boolean;
 	children: (icon: ReactNode) => ReactNode;
 }
-function SidebarNavItem({ icon: Icon, tooltip, active, children, ...delegated }: Props) {
+function AppSidebarNavItem({ icon: Icon, tooltip, active, children, ...delegated }: Props) {
 	return (
 		<Tooltip disabled={!tooltip} render={() => <Text fontWeight={500}>{tooltip}</Text>} positioning={TOOLTIP_POSITIONING}>
 			<Wrapper>
@@ -66,4 +66,4 @@ const Overlay = styled("div", {
 	base: linkOverlay.raw(),
 });
 
-export default SidebarNavItem;
+export default AppSidebarNavItem;

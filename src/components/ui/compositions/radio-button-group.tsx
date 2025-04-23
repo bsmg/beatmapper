@@ -20,11 +20,15 @@ export function RadioButtonGroup<T extends RadioButtonItem>({ collection, childr
 			<Builder.Indicator />
 			<ListCollectionFor collection={collection}>
 				{(item) => {
+					const value = collection.getItemValue(item);
+					if (!value) return null;
+					const label = collection.stringifyItem(item);
+					const disabled = collection.getItemDisabled(item);
 					const style = { "--current-color": item.color } as CSSProperties;
 					return (
-						<Tooltip key={item.value} disabled={!item.tooltip} render={() => item.tooltip}>
-							<Builder.Item value={item.value} disabled={item.disabled} data-disabled={item.disabled} style={style}>
-								<Builder.ItemText>{item.label}</Builder.ItemText>
+						<Tooltip key={value} disabled={!item.tooltip} render={() => item.tooltip}>
+							<Builder.Item value={value} disabled={disabled} data-disabled={disabled} style={style}>
+								<Builder.ItemText>{label}</Builder.ItemText>
 								<Builder.ItemHiddenInput />
 							</Builder.Item>
 						</Tooltip>

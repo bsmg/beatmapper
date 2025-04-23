@@ -1,6 +1,8 @@
 import { Fragment, useCallback, useMemo } from "react";
 
-import { HIGHEST_PRECISION, SONG_OFFSET } from "$/constants";
+import { useGlobalEventListener } from "$/components/hooks";
+import { SONG_OFFSET } from "$/components/scene/constants";
+import { HIGHEST_PRECISION } from "$/constants";
 import { getColorForItem } from "$/helpers/colors.helpers";
 import { clickNote, finishManagingNoteSelection, mouseOverNote, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -8,13 +10,12 @@ import { selectBeatDepth, selectCursorPositionInBeats, selectCustomColors, selec
 import { App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
-import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { BombNote, ColorNote, getPositionForBlock } from "$/components/scene/compositions";
+import { BombNote, ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
 
 interface Props {
 	sid: SongId;
 }
-function Notes({ sid }: Props) {
+function EditorNotes({ sid }: Props) {
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const notes = useAppSelector((state) => selectVisibleNotes(state, sid));
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid));
@@ -79,7 +80,7 @@ function Notes({ sid }: Props) {
 	return (
 		<Fragment>
 			{notes.map((note) => {
-				const { x, y, z } = getPositionForBlock(note, beatDepth);
+				const { x, y, z } = resolvePositionForNote(note, beatDepth);
 				const noteZPosition = roundAwayFloatingPointNonsense(zPosition + z);
 				// HACK: So I'm winding up with zPositions of like 11.999994, and it's making the notes transparent because they're 0.000006 before the placement grid.
 				// I imagine there's a better place to manage this than here, but I'm sick of this problem.
@@ -91,7 +92,7 @@ function Notes({ sid }: Props) {
 				return <ColorNote key={note.id} data={note} position={[x, y, z]} color={getColorForItem(color, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
 			})}
 			{bombs.map((note) => {
-				const { x, y, z } = getPositionForBlock(note, beatDepth);
+				const { x, y, z } = resolvePositionForNote(note, beatDepth);
 				const noteZPosition = roundAwayFloatingPointNonsense(zPosition + z);
 				// HACK: So I'm winding up with zPositions of like 11.999994, and it's making the notes transparent because they're 0.000006 before the placement grid.
 				// I imagine there's a better place to manage this than here, but I'm sick of this problem.
@@ -104,4 +105,4 @@ function Notes({ sid }: Props) {
 	);
 }
 
-export default Notes;
+export default EditorNotes;

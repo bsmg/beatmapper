@@ -1,6 +1,6 @@
 import { type ComponentProps, type PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useMousePositionOverElement, usePointerUpHandler } from "$/components/hooks";
+import { useMousePositionOverElement } from "$/components/hooks";
 import { COMMON_EVENT_TRACKS } from "$/constants";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -8,14 +8,14 @@ import { selectDurationInBeats, selectEventEditorEditMode, selectEventEditorRowH
 import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
-import { Stack, styled } from "$:styled-system/jsx";
+import { styled } from "$:styled-system/jsx";
 import { center, hstack, stack } from "$:styled-system/patterns";
+import { useGlobalEventListener, useParentDimensions } from "$/components/hooks";
 import { Button } from "$/components/ui/compositions";
-import { useParentDimensions } from "$/components/ui/hooks/use-parent-dimensions";
 import EventGridCursor from "./cursor";
-import EventGridTimeline from "./header";
 import EventGridMarkers from "./markers";
-import EventSelectionBox from "./selection-box";
+import EventGridSelectionBox from "./selection-box";
+import EventGridTimeline from "./timeline";
 import EventGridTrack from "./track";
 
 const PREFIX_WIDTH = 170;
@@ -36,7 +36,7 @@ interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
 	tracks?: IEventTrack[];
 }
-function EventsGrid({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
+function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
@@ -73,54 +73,60 @@ function EventsGrid({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
 		dispatch(commitSelection());
 	}, [dispatch]);
 
-	const shouldCompleteSelectionOnPointerUp = useMemo(() => selectedEditMode === EventEditMode.SELECT && !!mouseDownAt, [selectedEditMode, mouseDownAt]);
-
-	usePointerUpHandler(shouldCompleteSelectionOnPointerUp, handleCompleteSelection);
+	useGlobalEventListener("pointerup", handleCompleteSelection, {
+		shouldFire: selectedEditMode === EventEditMode.SELECT && !!mouseDownAt,
+	});
 
 	const tracksScrollContainer = useRef<HTMLDivElement>(null);
 
-	const tracksSelectionBoxRef = useMousePositionOverElement<HTMLDivElement>(tracksScrollContainer, (ref, x, y) => {
-		const currentMousePosition = { x, y };
-		mousePositionRef.current = currentMousePosition;
+	const tracksSelectionBoxRef = useMousePositionOverElement<HTMLDivElement>(
+		tracksScrollContainer,
+		(ref, x, y) => {
+			const currentMousePosition = { x, y };
+			mousePositionRef.current = currentMousePosition;
 
-		const offset = {
-			x: -PREFIX_WIDTH, // prefix width
-			y: ref.scrollTop - HEADER_HEIGHT,
-		};
-
-		const hoveringOverBeatNum = convertMousePositionToBeatNum(x + offset.x, dimensions.width, beatNums, startBeat, snapTo);
-
-		if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === "left") {
-			const newSelectionBox = {
-				top: Math.min(mouseDownAt.y, currentMousePosition.y) + offset.y,
-				left: Math.min(mouseDownAt.x, currentMousePosition.x) + offset.x,
-				right: Math.max(mouseDownAt.x, currentMousePosition.x) + offset.x,
-				bottom: Math.max(mouseDownAt.y, currentMousePosition.y) + offset.y,
+			const offset = {
+				x: -PREFIX_WIDTH, // prefix width
+				y: ref.scrollTop - HEADER_HEIGHT,
 			};
 
-			// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
-			const startTrackIndex = Math.floor(newSelectionBox.top / rowHeight);
-			const endTrackIndex = Math.floor(newSelectionBox.bottom / rowHeight);
+			const hoveringOverBeatNum = convertMousePositionToBeatNum(x + offset.x, dimensions.width, beatNums, startBeat, snapTo);
 
-			const start = convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat);
+			if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === "left") {
+				const newSelectionBox = {
+					top: Math.min(mouseDownAt.y, currentMousePosition.y) + offset.y,
+					left: Math.min(mouseDownAt.x, currentMousePosition.x) + offset.x,
+					right: Math.max(mouseDownAt.x, currentMousePosition.x) + offset.x,
+					bottom: Math.max(mouseDownAt.y, currentMousePosition.y) + offset.y,
+				};
 
-			const end = convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat);
+				// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
+				const startTrackIndex = Math.floor(newSelectionBox.top / rowHeight);
+				const endTrackIndex = Math.floor(newSelectionBox.bottom / rowHeight);
 
-			const newSelectionBoxInBeats = {
-				startTrackIndex,
-				endTrackIndex,
-				startBeat: start,
-				endBeat: end,
-			};
+				const start = convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat);
 
-			dispatch(drawSelectionBox({ tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
-		}
+				const end = convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat);
 
-		if (hoveringOverBeatNum !== selectedBeat) dispatch(moveMouseAcrossEventsGrid({ selectedBeat: hoveringOverBeatNum }));
-	});
+				const newSelectionBoxInBeats = {
+					startTrackIndex,
+					endTrackIndex,
+					startBeat: start,
+					endBeat: end,
+				};
+
+				dispatch(drawSelectionBox({ tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
+			}
+
+			if (hoveringOverBeatNum !== selectedBeat) dispatch(moveMouseAcrossEventsGrid({ selectedBeat: hoveringOverBeatNum }));
+		},
+		{
+			boxDependencies: [rowHeight],
+		},
+	);
 
 	const mousePositionInPx = useMemo(() => {
-		return selectedBeat !== null ? normalize(selectedBeat - startBeat, 0, beatNums.length, 0, dimensions.width) : 0;
+		return selectedBeat !== null && selectedBeat - startBeat >= 0 ? normalize(selectedBeat - startBeat, 0, beatNums.length, 0, dimensions.width) : 0;
 	}, [selectedBeat, startBeat, beatNums, dimensions.width]);
 
 	const handlePointerDown = useCallback<PointerEventHandler>((ev) => {
@@ -157,14 +163,14 @@ function EventsGrid({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
 				</TimelineWrapper>
 			</HeaderWrapper>
 			<MainWrapper>
-				<Stack gap={0} onWheel={(ev) => ev.stopPropagation()}>
+				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
 					{tracks.map(({ id, label }) => (
-						<TrackPrefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(id)}>
+						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(id)}>
 							{label}
-						</TrackPrefix>
+						</Prefix>
 					))}
-				</Stack>
-				<GridWrapper editMode={selectedEditMode}>
+				</PrefixWrapper>
+				<TracksWrapper editMode={selectedEditMode}>
 					<TrackMarkersWrapper ref={container}>
 						<EventGridMarkers width={dimensions.width} height={dimensions.height} primaryDivisions={4} />
 					</TrackMarkersWrapper>
@@ -174,10 +180,10 @@ function EventsGrid({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
 							return <EventGridTrack key={id} sid={sid} trackId={id} tracks={tracks} width={dimensions.width} height={rowHeight} disabled={isDisabled} />;
 						})}
 					</TrackContentsWrapper>
-					{selectionBox && <EventSelectionBox box={selectionBox} />}
+					{selectionBox && <EventGridSelectionBox box={selectionBox} />}
 					<EventGridCursor sid={sid} gridWidth={dimensions.width} />
 					{typeof mousePositionInPx === "number" && <MouseCursor style={{ left: mousePositionInPx }} />}
-				</GridWrapper>
+				</TracksWrapper>
 			</MainWrapper>
 		</Wrapper>
 	);
@@ -206,6 +212,13 @@ const HeaderWrapper = styled("div", {
 	}),
 });
 
+const MainWrapper = styled("div", {
+	base: hstack.raw({
+		gap: 0,
+		backdropFilter: "blur(4px)",
+	}),
+});
+
 const ActionsWrapper = styled("div", {
 	base: center.raw({
 		minWidth: "170px",
@@ -223,7 +236,28 @@ const TimelineWrapper = styled("div", {
 	},
 });
 
-const GridWrapper = styled("div", {
+const PrefixWrapper = styled("div", {
+	base: stack.raw({
+		gap: 0,
+	}),
+});
+
+const Prefix = styled("div", {
+	base: hstack.raw({
+		width: "170px",
+		justify: "flex-end",
+		paddingInline: 1,
+		position: "relative",
+		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
+		borderBlockWidth: { base: "sm", _lastOfType: 0 },
+		borderRightWidth: "md",
+		borderColor: "border.muted",
+		opacity: { base: 1, _disabled: "disabled" },
+		cursor: { base: undefined, _disabled: "not-allowed" },
+	}),
+});
+
+const TracksWrapper = styled("div", {
 	base: {
 		position: "relative",
 		flex: 1,
@@ -241,28 +275,6 @@ const TrackMarkersWrapper = styled("div", {
 		position: "absolute",
 		inset: 0,
 	},
-});
-
-const MainWrapper = styled("div", {
-	base: hstack.raw({
-		gap: 0,
-		backdropFilter: "blur(4px)",
-	}),
-});
-
-const TrackPrefix = styled("div", {
-	base: hstack.raw({
-		width: "170px",
-		justify: "flex-end",
-		paddingInline: 1,
-		position: "relative",
-		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
-		borderBlockWidth: { base: "sm", _lastOfType: 0 },
-		borderRightWidth: "md",
-		borderColor: "border.muted",
-		opacity: { base: 1, _disabled: "disabled" },
-		cursor: { base: undefined, _disabled: "not-allowed" },
-	}),
 });
 
 const TrackContentsWrapper = styled("div", {
@@ -285,4 +297,4 @@ const MouseCursor = styled("div", {
 	},
 });
 
-export default EventsGrid;
+export default EventGridEditor;

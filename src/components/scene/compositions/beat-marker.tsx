@@ -2,7 +2,8 @@ import { Text3D } from "@react-three/drei";
 import { Fragment, memo, useMemo } from "react";
 
 import { oswaldGlyphsUrl } from "$/assets";
-import { BLOCK_COLUMN_WIDTH, DEFAULT_NUM_ROWS, SURFACE_WIDTH } from "$/constants";
+import { BLOCK_COLUMN_WIDTH, SURFACE_WIDTH } from "$/components/scene/constants";
+import { DEFAULT_NUM_ROWS } from "$/constants";
 
 const Y_PADDING = 0.0075;
 const Y_OFFSET = BLOCK_COLUMN_WIDTH * (DEFAULT_NUM_ROWS * -0.5) + Y_PADDING;
@@ -14,7 +15,7 @@ interface Props {
 	offset: number;
 	type: "beat" | "sub-beat";
 }
-function Marker({ beatNum, offset, type }: Props) {
+function BeatMarker({ beatNum, offset, type }: Props) {
 	const depth = useMemo(() => (type === "beat" ? 0.2 : 0.08), [type]);
 	const color = useMemo(() => (type === "sub-beat" ? "#AAAAAA" : "#FFFFFF"), [type]);
 	const label = useMemo(() => (type === "beat" ? beatNum.toString() : ""), [type, beatNum]);
@@ -39,4 +40,4 @@ function Marker({ beatNum, offset, type }: Props) {
 	);
 }
 
-export default memo(Marker);
+export default memo(BeatMarker);

@@ -1,9 +1,9 @@
 import { blockCenterUrl, blockDirectionalUrl } from "$/assets";
-import { BLOCK_COLUMN_WIDTH, SONG_OFFSET } from "$/constants";
+import { BLOCK_COLUMN_WIDTH, SONG_OFFSET } from "$/components/scene/constants";
 import { CutDirection } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
-export function getBlockUrlForDirection(direction: CutDirection) {
+export function resolvePathForNoteDirection(direction: CutDirection) {
 	// If the direction is >=1000, that means it's a MappingExtensions thing.
 	// Must be directional.
 	if (direction >= 1000) {
@@ -30,7 +30,7 @@ export function getBlockUrlForDirection(direction: CutDirection) {
 	}
 }
 
-export function getRotationForDirection(direction: CutDirection) {
+export function resolveRotationForNoteDirection(direction: CutDirection) {
 	// If the rotation is >=1000, we're in MappingExtensions land :D
 	// It uses a 1000-1360 system, from down clockwise.
 	// We have some conversions to do, to get an angle in radians.
@@ -86,7 +86,7 @@ export function getRotationForDirection(direction: CutDirection) {
 	}
 }
 
-export function getPositionForBlock<T extends { beatNum?: number; colIndex: number; rowIndex: number }>(note: T, beatDepth?: number) {
+export function resolvePositionForNote<T extends { beatNum?: number; colIndex: number; rowIndex: number }>(note: T, beatDepth?: number) {
 	const x = note.colIndex * BLOCK_COLUMN_WIDTH - BLOCK_COLUMN_WIDTH * 1.5;
 	const y = note.rowIndex * BLOCK_COLUMN_WIDTH - BLOCK_COLUMN_WIDTH;
 

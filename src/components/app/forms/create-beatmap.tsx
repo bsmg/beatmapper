@@ -16,7 +16,7 @@ interface Props {
 	onSubmit: (bid: BeatmapId) => void;
 	children: (beatmap: { id: BeatmapId }) => ReactNode;
 }
-function CreateDifficultyForm({ dialog, sid, bid, onSubmit: afterCreate, children }: Props) {
+function CreateBeatmapForm({ dialog, sid, bid, onSubmit: afterCreate, children }: Props) {
 	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, sid));
 
 	const Form = useAppForm({
@@ -53,4 +53,4 @@ function CreateDifficultyForm({ dialog, sid, bid, onSubmit: afterCreate, childre
 	);
 }
 
-export default CreateDifficultyForm;
+export default CreateBeatmapForm;

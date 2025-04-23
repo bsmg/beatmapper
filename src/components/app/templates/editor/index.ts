@@ -4,3 +4,4 @@ export { default as EditorPrompts } from "./prompts";
 export { default as EditorSidebar } from "./sidebar";
 export { default as EditorSongInfo } from "./song-info";
 export { default as EditorStatusBar } from "./status-bar";
+export { default as EditorAudioVisualizer } from "./visualizer";

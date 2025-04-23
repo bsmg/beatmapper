@@ -56,7 +56,7 @@ function FirstTimeHome() {
 
 const Title = styled(Heading, {
 	base: {
-		fontWeight: 400,
+		fontWeight: "normal",
 		whiteSpace: "wrap",
 		textAlign: "center",
 	},

@@ -17,21 +17,26 @@ export function RadioGroup<T extends CollectionItem>({ collection, children, ...
 		<Builder.Root defaultValue={collection.firstValue} {...rest}>
 			{children && <Builder.Label>{children}</Builder.Label>}
 			<ListCollectionFor collection={collection}>
-				{(item) => (
-					<Builder.Item key={item.value} value={item.value}>
-						<Builder.ItemControl>
-							<Builder.Context>
-								{(ctx) => (
-									<Presence asChild present={ctx.value === item.value}>
-										<Circle size={8} className={css({ backgroundColor: "black" })} />
-									</Presence>
-								)}
-							</Builder.Context>
-						</Builder.ItemControl>
-						<Builder.ItemText>{item.label}</Builder.ItemText>
-						<Builder.ItemHiddenInput />
-					</Builder.Item>
-				)}
+				{(item) => {
+					const value = collection.getItemValue(item);
+					if (!value) return null;
+					const label = collection.stringifyItem(item);
+					return (
+						<Builder.Item key={value} value={value}>
+							<Builder.ItemControl>
+								<Builder.Context>
+									{(ctx) => (
+										<Presence asChild present={ctx.value === value}>
+											<Circle size={8} className={css({ backgroundColor: "black" })} />
+										</Presence>
+									)}
+								</Builder.Context>
+							</Builder.ItemControl>
+							<Builder.ItemText>{label ?? value}</Builder.ItemText>
+							<Builder.ItemHiddenInput />
+						</Builder.Item>
+					);
+				}}
 			</ListCollectionFor>
 		</Builder.Root>
 	);

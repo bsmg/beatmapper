@@ -12,6 +12,7 @@ const container = document.querySelector("main");
 
 type TocEntry = Member<Doc["tableOfContents"]>;
 
+// TODO: fix this container hell
 function useActiveHeading(headings: TocEntry[]) {
 	const [activeHeadingId, setActiveHeading] = useState<string | null>(null);
 
@@ -65,37 +66,22 @@ function useActiveHeading(headings: TocEntry[]) {
 	return activeHeadingId;
 }
 
-function getGithubLink(pathname: string) {
-	const prefix = "https://github.com/bsmg/beatmapper/edit/master/src/content";
-	return `${prefix + pathname}/index.mdx`;
-}
-
 interface Props {
 	toc: TocEntry[];
 }
-
-const TableOfContents = ({ toc }: Props) => {
-	const activeHeadingId = useActiveHeading(toc);
-
-	const handleClickIntro = () => {
-		container?.scrollTo({ top: 0 });
-	};
-
+function DocsTableOfContents({ toc }: Props) {
 	return (
 		<Wrapper>
 			<Title>Table of Contents</Title>
-			<HeadingLink href="#" onClick={handleClickIntro} data-active={!activeHeadingId}>
+			<HeadingLink href="#" onClick={() => container?.scrollTo({ top: 0 })}>
 				Introduction
 			</HeadingLink>
-			{toc.map((entry) => {
-				const id = entry.url.replace("#", "");
-				return (
-					<HeadingLink key={id} href={entry.url} data-active={id === activeHeadingId}>
-						{entry.title}
-					</HeadingLink>
-				);
-			})}
-			<GithubLink href={getGithubLink(location.pathname)}>
+			{toc.map((entry) => (
+				<HeadingLink key={entry.url.replace("#", "")} href={entry.url}>
+					{entry.title}
+				</HeadingLink>
+			))}
+			<GithubLink href={`https://github.com/bsmg/beatmapper/edit/master/src/content${location.pathname}/index.mdx`}>
 				<HStack gap={1}>
 					Suggest an edit
 					<ExternalLinkIcon size={15} />
@@ -103,7 +89,7 @@ const TableOfContents = ({ toc }: Props) => {
 			</GithubLink>
 		</Wrapper>
 	);
-};
+}
 
 const Wrapper = styled("div", {
 	base: stack.raw({
@@ -131,7 +117,7 @@ const HeadingLink = styled("a", {
 	base: {
 		textStyle: "link",
 		colorPalette: "pink",
-		color: { base: "fg.muted", _active: "colorPalette.700" },
+		color: { base: "fg.muted", _hover: "fg.default", _active: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
 		paddingBlock: 1,
 	},
 });
@@ -148,4 +134,4 @@ const GithubLink = styled("a", {
 	}),
 });
 
-export default TableOfContents;
+export default DocsTableOfContents;

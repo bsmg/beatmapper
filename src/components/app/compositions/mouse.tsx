@@ -17,7 +17,7 @@ function Mouse({ width = 18, height = 27, activeButton }: Props) {
 				{activeButton === "clickmiddle" && <rect x={6} y={7} width={7} height={7} rx={2} ry={2} fill={token.var("colors.pink.500")} stroke="white" strokeWidth={2} />}
 			</svg>
 			<Cable width="7" height="12" viewBox="0 0 7 12" fill="none">
-				<path d="M5.7264 11C5.7264 11 6.342 8.9278 5.7264 7.81818C4.86025 6.25698 2.11538 7.54906 1.2232 6C0.162898 4.15905 3.22462 1 3.22462 1" stroke={token.var("colors.slate.900")} strokeOpacity="0.6" strokeWidth="1.5" strokeLinejoin="round" />
+				<path d="M5.7264 11C5.7264 11 6.342 8.9278 5.7264 7.81818C4.86025 6.25698 2.11538 7.54906 1.2232 6C0.162898 4.15905 3.22462 1 3.22462 1" stroke={token.var("colors.slate.500")} strokeOpacity="0.6" strokeWidth="1.5" strokeLinejoin="round" />
 			</Cable>
 		</Wrapper>
 	);

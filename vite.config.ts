@@ -23,7 +23,15 @@ export default defineConfig(async (ctx) => {
 	await startVelite(isDev, isBuild);
 
 	return {
-		plugins: [react(), pwa({ registerType: "autoUpdate" })],
+		plugins: [
+			react(),
+			pwa({
+				registerType: "autoUpdate",
+				workbox: {
+					maximumFileSizeToCacheInBytes: 2621440, // 2.5 MiB
+				},
+			}),
+		],
 		define: {
 			global: "window",
 			version: `\"${packageJson.version}\"`,

@@ -12,15 +12,14 @@ const ReduxForwardingCanvas = forwardRef<HTMLCanvasElement, ComponentProps<"div"
 	return (
 		<ReactReduxContext.Consumer>
 			{(ctx) => {
-				if (ctx) {
-					return (
-						<span ref={ref}>
-							<Canvas {...forwarded} onContextMenu={(ev) => ev.preventDefault()} onCreated={handleCreated}>
-								<Provider store={ctx.store}>{children}</Provider>
-							</Canvas>
-						</span>
-					);
-				}
+				if (!ctx) return null;
+				return (
+					<span ref={ref}>
+						<Canvas {...forwarded} onContextMenu={(ev) => ev.preventDefault()} onCreated={handleCreated}>
+							<Provider store={ctx.store}>{children}</Provider>
+						</Canvas>
+					</span>
+				);
 			}}
 		</ReactReduxContext.Consumer>
 	);

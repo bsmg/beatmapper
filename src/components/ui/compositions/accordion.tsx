@@ -18,19 +18,25 @@ export function Accordion<T extends AccordionItem>({ collection, ...rest }: Acco
 	return (
 		<Builder.Root {...rest}>
 			<ListCollectionFor collection={collection}>
-				{(item) => (
-					<Builder.Item key={item.value} value={item.value} disabled={item.disabled}>
-						<Builder.ItemTrigger>
-							{item.label}
-							<Builder.ItemIndicator>
-								<ChevronDownIcon size={18} />
-							</Builder.ItemIndicator>
-						</Builder.ItemTrigger>
-						<Builder.ItemContent>
-							<Builder.ItemContext>{(ctx) => item.render(ctx)}</Builder.ItemContext>
-						</Builder.ItemContent>
-					</Builder.Item>
-				)}
+				{(item) => {
+					const value = collection.getItemValue(item);
+					if (!value) return null;
+					const label = collection.stringifyItem(item);
+					const disabled = collection.getItemDisabled(item);
+					return (
+						<Builder.Item key={value} value={value} disabled={disabled}>
+							<Builder.ItemTrigger>
+								{label}
+								<Builder.ItemIndicator>
+									<ChevronDownIcon size={18} />
+								</Builder.ItemIndicator>
+							</Builder.ItemTrigger>
+							<Builder.ItemContent>
+								<Builder.ItemContext>{(ctx) => item.render(ctx)}</Builder.ItemContext>
+							</Builder.ItemContent>
+						</Builder.Item>
+					);
+				}}
 			</ListCollectionFor>
 		</Builder.Root>
 	);

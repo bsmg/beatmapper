@@ -1,6 +1,5 @@
 export { default as defaultSfxPath } from "./audio/tick.mp3";
 
-export { default as oswaldGlyphs } from "./fonts/oswald.json";
 export { default as oswaldGlyphsUrl } from "./fonts/oswald.json?url";
 
 export { default as pixelSrc } from "./images/pixel.png";

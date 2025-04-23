@@ -10,7 +10,6 @@ import { getMetaKeyLabel } from "$/utils";
 import { useViewFromLocation } from "$/components/app/hooks";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button, Tooltip } from "$/components/ui/compositions";
-import { Fragment } from "react/jsx-runtime";
 
 function ClipboardActionPanelActionGroup() {
 	const dispatch = useAppDispatch();
@@ -21,7 +20,7 @@ function ClipboardActionPanelActionGroup() {
 	return (
 		<ActionPanelGroup.ActionGroup>
 			<Presence asChild present={isAnythingSelected}>
-				<Fragment>
+				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => `Copy and remove selection (${getMetaKeyLabel()} + X)`}>
 						<Button variant="subtle" size="sm" disabled={!isAnythingSelected} onClick={() => dispatch(cutSelection({ view: view ?? View.BEATMAP }))}>
 							Cut
@@ -32,7 +31,7 @@ function ClipboardActionPanelActionGroup() {
 							Copy
 						</Button>
 					</Tooltip>
-				</Fragment>
+				</ActionPanelGroup.ActionGroup>
 			</Presence>
 			<Tooltip render={() => `Paste copied notes and obstacles (${getMetaKeyLabel()} + V)`}>
 				<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} onClick={() => dispatch(pasteSelection({ view: view ?? View.BEATMAP }))}>

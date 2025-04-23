@@ -1,9 +1,9 @@
 import { useThrottledCallback } from "@tanstack/react-pacer";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { useViewFromLocation } from "$/components/app/hooks";
-import { useMousewheel } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import {
@@ -50,7 +50,7 @@ interface Props {
  * - Events
  * - Demo
  */
-function GlobalShortcuts({ sid }: Props) {
+function DefaultEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();
 	const isDemo = useAppSelector((state) => selectIsDemoSong(state, sid));
@@ -263,23 +263,14 @@ function GlobalShortcuts({ sid }: Props) {
 		[view],
 	);
 
-	useEffect(() => {
-		window.addEventListener("keydown", handleKeyDown);
-		window.addEventListener("keyup", handleKeyUp);
-
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("keyup", handleKeyUp);
-		};
-	});
-
-	useMousewheel((ev) => {
+	useGlobalEventListener("keydown", handleKeyDown);
+	useGlobalEventListener("keyup", handleKeyUp);
+	useGlobalEventListener("wheel", (ev) => {
 		const direction = ev.deltaY > 0 ? "backwards" : "forwards";
-
 		handleScroll(direction, ev);
 	});
 
 	return null;
 }
 
-export default GlobalShortcuts;
+export default DefaultEditorShortcuts;

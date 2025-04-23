@@ -8,7 +8,7 @@ interface Props extends PropsWithChildren {
 	label: string;
 	icon: ComponentType<LucideProps>;
 }
-function CountIndicator({ label, icon: Icon, children }: Props) {
+function StatusBarIndicator({ label, icon: Icon, children }: Props) {
 	return (
 		<Tooltip render={() => label}>
 			<HStack gap={1}>
@@ -21,4 +21,4 @@ function CountIndicator({ label, icon: Icon, children }: Props) {
 	);
 }
 
-export default CountIndicator;
+export default StatusBarIndicator;

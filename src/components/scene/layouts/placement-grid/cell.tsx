@@ -1,12 +1,14 @@
-import type { MeshProps, ThreeEvent } from "@react-three/fiber";
+import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
 import { memo, useCallback, useContext, useMemo } from "react";
 import { DoubleSide } from "three";
 
-import { BLOCK_PLACEMENT_SQUARE_SIZE } from "$/constants";
+import { BLOCK_PLACEMENT_SQUARE_SIZE } from "$/components/scene/constants";
 import { Context } from "./context";
 
 const CELL_PADDING = 0.05;
 const VERTICAL_OFFSET = -BLOCK_PLACEMENT_SQUARE_SIZE;
+
+type MeshProps = ThreeElements["mesh"];
 
 export interface CellProps extends MeshProps {
 	rowIndex: number;

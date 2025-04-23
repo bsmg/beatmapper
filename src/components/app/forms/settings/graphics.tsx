@@ -5,13 +5,13 @@ import { updateGraphicsLevel } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGraphicsQuality } from "$/store/selectors";
 import { Quality } from "$/types";
-import { capitalize } from "$/utils";
 
 import { Field, RadioGroup } from "$/components/ui/compositions";
+import { capitalize } from "$/utils";
 
 const QUALITY_LIST_COLLECTION = createListCollection({
-	items: Object.values(Quality),
-	itemToString: (item) => capitalize(item),
+	items: Object.values(Quality).map((value) => ({ value })),
+	itemToString: (item) => capitalize(item.value),
 });
 
 function AppGraphicsSettings() {

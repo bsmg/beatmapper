@@ -43,7 +43,7 @@ function createEventEffectListCollection({ customColors, selectedColor }: EventL
 interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
 }
-function GridControls({ sid, ...rest }: Props) {
+function EventGridControls({ sid, ...rest }: Props) {
 	const dispatch = useAppDispatch();
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
@@ -122,4 +122,4 @@ const Box = styled("div", {
 	},
 });
 
-export default GridControls;
+export default EventGridControls;

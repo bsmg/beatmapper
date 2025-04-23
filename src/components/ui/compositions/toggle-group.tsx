@@ -13,11 +13,17 @@ export function ToggleGroup<T extends ToggleItem>({ collection, ...rest }: Toggl
 	return (
 		<Builder.Root {...rest}>
 			<ListCollectionFor collection={collection}>
-				{(item) => (
-					<Builder.Item key={item.value} value={item.value} disabled={item.disabled}>
-						{item.label}
-					</Builder.Item>
-				)}
+				{(item) => {
+					const value = collection.getItemValue(item);
+					if (!value) return null;
+					const label = collection.stringifyItem(item);
+					const disabled = collection.getItemDisabled(item);
+					return (
+						<Builder.Item key={value} value={value} disabled={disabled}>
+							{label}
+						</Builder.Item>
+					);
+				}}
 			</ListCollectionFor>
 		</Builder.Root>
 	);

@@ -22,4 +22,4 @@ const { withProvider, withContext } = createStyleContext(recipe);
 export const Root = withProvider(Toggle.Root, "root");
 export const Indicator = withContext(Toggle.Indicator, "indicator");
 
-export { ToggleGroupContext as Context } from "@ark-ui/react/toggle-group";
+export { ToggleContext as Context } from "@ark-ui/react/toggle";

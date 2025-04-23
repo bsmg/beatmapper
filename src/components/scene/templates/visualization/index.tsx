@@ -1,13 +1,13 @@
 import { Fragment } from "react";
 
-import { SONG_OFFSET } from "$/constants";
+import { SONG_OFFSET } from "$/components/scene/constants";
+import { useControls } from "$/components/scene/hooks";
 import type { SongId } from "$/types";
 
 import { TrackMover } from "$/components/scene/compositions";
-import { useControls } from "$/components/scene/hooks";
-import BarMarkers from "./markers";
-import Notes from "./notes";
-import Obstacles from "./obstacles";
+import EditorBeatMarkers from "./markers";
+import EditorNotes from "./notes";
+import EditorObstacles from "./obstacles";
 import EditorPlacementGrid from "./placement-grid";
 
 interface Props {
@@ -25,9 +25,9 @@ function MapVisualization({ sid, interactive }: Props) {
 	return (
 		<Fragment>
 			<TrackMover sid={sid}>
-				{interactive && <BarMarkers sid={sid} />}
-				<Notes sid={sid} />
-				<Obstacles sid={sid} />
+				{interactive && <EditorBeatMarkers sid={sid} />}
+				<EditorNotes sid={sid} />
+				<EditorObstacles sid={sid} />
 			</TrackMover>
 			{interactive && <EditorPlacementGrid sid={sid} position-z={-SONG_OFFSET} />}
 		</Fragment>

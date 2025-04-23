@@ -4,7 +4,7 @@ import { Fragment } from "react/jsx-runtime";
 import type { BeatmapId, SongId } from "$/types";
 
 import { EditorNavigationPanel, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
-import { EditorDefaultShortcuts } from "$/components/app/templates/shortcuts";
+import { DefaultEditorShortcuts } from "$/components/app/templates/shortcuts";
 
 interface Props extends PropsWithChildren {
 	sid: SongId;
@@ -18,7 +18,7 @@ function EditorViewScene({ sid, bid, showBeatmapPicker, children }: Props) {
 			{children}
 			<EditorNavigationPanel sid={sid} />
 			<EditorStatusBar sid={sid} />
-			<EditorDefaultShortcuts sid={sid} />
+			<DefaultEditorShortcuts sid={sid} />
 		</Fragment>
 	);
 }

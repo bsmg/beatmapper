@@ -14,7 +14,7 @@ interface Props extends GroupProps {
 	length?: number;
 	radius?: number;
 }
-function LaserBeam({ color, status, lastEventId, length = 500, radius = 0.35, ...rest }: Props) {
+function TubeLight({ color, status, lastEventId, length = 500, radius = 0.35, ...rest }: Props) {
 	return (
 		<group {...rest}>
 			<mesh>
@@ -25,4 +25,4 @@ function LaserBeam({ color, status, lastEventId, length = 500, radius = 0.35, ..
 	);
 }
 
-export default LaserBeam;
+export default TubeLight;

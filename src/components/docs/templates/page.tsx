@@ -77,6 +77,7 @@ const ContentWrapper = styled("div", {
 
 const MainContent = styled("div", {
 	base: {
+		width: "100%",
 		flex: 1,
 	},
 });

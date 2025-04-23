@@ -10,7 +10,7 @@ import { Button } from "$/components/ui/compositions";
 interface Props {
 	sid: SongId;
 }
-function ObstacleTweaks({ sid }: Props) {
+function ObstaclesActionPanelGroup({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
 	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, sid));
@@ -31,4 +31,4 @@ function ObstacleTweaks({ sid }: Props) {
 	);
 }
 
-export default ObstacleTweaks;
+export default ObstaclesActionPanelGroup;

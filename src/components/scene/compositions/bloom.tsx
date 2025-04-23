@@ -5,7 +5,7 @@ import { EffectComposer, RenderPass, UnrealBloomPass } from "three-stdlib";
 
 interface Props extends PropsWithChildren {}
 
-export function Bloom({ children }: Props) {
+export function BloomWrapper({ children }: Props) {
 	const { gl, camera, size } = useThree();
 	const scene = useRef<Scene>(null);
 	const composer = useRef<EffectComposer>();
@@ -39,7 +39,7 @@ export function Bloom({ children }: Props) {
 	return <scene ref={scene}>{children}</scene>;
 }
 
-export function NoBloom({ children }: Props) {
+export function NoBloomWrapper({ children }: Props) {
 	const scene = useRef<Scene>(null);
 	const { gl, camera } = useThree();
 	useFrame(() => {
@@ -51,4 +51,4 @@ export function NoBloom({ children }: Props) {
 	return <scene ref={scene}>{children}</scene>;
 }
 
-export default Bloom;
+export default BloomWrapper;

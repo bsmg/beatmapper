@@ -1,4 +1,3 @@
-import type { Assign } from "@ark-ui/react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { type ComponentProps, useCallback, useMemo } from "react";
 import type { ColorRepresentation } from "three";
@@ -6,19 +5,16 @@ import type { ColorRepresentation } from "three";
 import { Obj } from "$/components/scene/atoms";
 import type { App } from "$/types";
 
-export type BaseNoteProps<T extends App.IBaseNote> = Assign<
-	ComponentProps<typeof Obj>,
-	{
-		data: Omit<T, "id">;
-		color?: ColorRepresentation;
-		size?: number;
-		metalness?: number;
-		roughness?: number;
-		transparent?: boolean;
-		onNoteClick?: (event: PointerEvent, data: Omit<T, "id">) => void;
-		onNoteMouseOver?: (event: PointerEvent, data: Omit<T, "id">) => void;
-	}
->;
+export interface BaseNoteProps<T extends App.IBaseNote> extends ComponentProps<typeof Obj> {
+	data: Omit<T, "id">;
+	color?: ColorRepresentation;
+	size?: number;
+	metalness?: number;
+	roughness?: number;
+	transparent?: boolean;
+	onNoteClick?: (event: PointerEvent, data: Omit<T, "id">) => void;
+	onNoteMouseOver?: (event: PointerEvent, data: Omit<T, "id">) => void;
+}
 function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size = 1, metalness, roughness, transparent, onNoteClick: handleClick, onNoteMouseOver: handleMouseOver, ...rest }: BaseNoteProps<T>) {
 	const scaleFactor = useMemo(() => size * 0.5, [size]);
 
@@ -41,7 +37,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size =
 	return (
 		<group onPointerDown={handlePointerDown} onPointerOver={handlePointerOver}>
 			<Obj {...rest} path={path} castShadow scale={[scaleFactor, scaleFactor, scaleFactor]}>
-				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={transparent ? 0.25 : 1} />
+				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={transparent ? 0.25 : 1} />
 			</Obj>
 			{children}
 		</group>

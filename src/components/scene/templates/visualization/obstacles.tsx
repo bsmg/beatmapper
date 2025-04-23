@@ -4,14 +4,14 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllVisibleObstacles, selectBeatDepth, selectCustomColors, selectNoteEditorSelectionMode, selectSnapTo } from "$/store/selectors";
 import { type App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
 
-import { ObstacleBox } from "$/components/scene/compositions";
+import { Obstacle } from "$/components/scene/compositions";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import { useCallback, useMemo, useState } from "react";
 
 interface Props {
 	sid: SongId;
 }
-function Obstacles({ sid }: Props) {
+function EditorObstacles({ sid }: Props) {
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid));
 	const beatDepth = useAppSelector(selectBeatDepth);
@@ -105,8 +105,8 @@ function Obstacles({ sid }: Props) {
 	);
 
 	return obstacles.map((obstacle) => (
-		<ObstacleBox key={obstacle.id} data={obstacle} color={obstacleColor} beatDepth={beatDepth} onObstaclePointerDown={handlePointerDown} onObstaclePointerUp={handlePointerUp} onObstaclePointerOver={handlePointerOver} onObstaclePointerOut={handlePointerOut} onObstacleWheel={handleWheel} />
+		<Obstacle key={obstacle.id} data={obstacle} color={obstacleColor} beatDepth={beatDepth} onObstaclePointerDown={handlePointerDown} onObstaclePointerUp={handlePointerUp} onObstaclePointerOver={handlePointerOver} onObstaclePointerOut={handlePointerOut} onObstacleWheel={handleWheel} />
 	));
 }
 
-export default Obstacles;
+export default EditorObstacles;

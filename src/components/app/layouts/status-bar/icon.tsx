@@ -11,7 +11,7 @@ interface Props {
 	opacity?: number;
 	disabled?: boolean;
 }
-function StatusIcon({ icon: Icon, onClick, size = 16, disabled }: Props) {
+function StatusBarIcon({ icon: Icon, onClick, size = 16, disabled }: Props) {
 	return (
 		<Wrapper unfocusOnClick disabled={disabled} onClick={onClick}>
 			<Icon size={size} />
@@ -25,4 +25,4 @@ const Wrapper = styled(Button, {
 	},
 });
 
-export default StatusIcon;
+export default StatusBarIcon;

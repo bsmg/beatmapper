@@ -17,7 +17,7 @@ interface Props {
 	sid: SongId;
 	bid: BeatmapId;
 }
-function BeatmapSettings({ sid, bid }: Props) {
+function UpdateBeatmapForm({ sid, bid }: Props) {
 	const song = useAppSelector((state) => selectSongById(state, sid));
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -125,4 +125,4 @@ function BeatmapSettings({ sid, bid }: Props) {
 	);
 }
 
-export default BeatmapSettings;
+export default UpdateBeatmapForm;

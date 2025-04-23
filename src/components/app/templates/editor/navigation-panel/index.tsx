@@ -2,8 +2,8 @@ import type { SongId } from "$/types";
 
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import SongVisualizer from "../visualizer";
-import PlaybackControls from "./playback";
+import { EditorAudioVisualizer } from "$/components/app/templates/editor";
+import EditorNavigationControls from "./playback";
 
 interface Props {
 	sid: SongId;
@@ -12,10 +12,10 @@ function EditorNavigationPanel({ sid }: Props) {
 	return (
 		<Wrapper>
 			<SubWrapper>
-				<PlaybackControls sid={sid} />
+				<EditorNavigationControls sid={sid} />
 			</SubWrapper>
 			<SubWrapper>
-				<SongVisualizer sid={sid} />
+				<EditorAudioVisualizer sid={sid} />
 			</SubWrapper>
 		</Wrapper>
 	);

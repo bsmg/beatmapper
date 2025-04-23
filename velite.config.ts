@@ -8,7 +8,7 @@ import { default as remarkGfm } from "remark-gfm";
 
 const mdx = s.mdx({
 	remarkPlugins: [[remarkGfm]],
-	rehypePlugins: [[rehypeSlug], [rehypeExpressiveCode, { themes: ["light-plus"], styleOverrides: { frames: { shadowColor: "transparent" } } }]],
+	rehypePlugins: [[rehypeSlug], [rehypeExpressiveCode, { themes: ["github-light-default", "github-dark-default"], styleOverrides: { frames: { shadowColor: "transparent" } } }]],
 });
 
 function resolveId(path: string, collection: string) {

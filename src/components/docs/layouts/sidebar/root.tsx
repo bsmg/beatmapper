@@ -38,7 +38,7 @@ const Header = styled("header", {
 
 const Navigation = styled("nav", {
 	base: stack.raw({
-		gap: 0,
+		gap: 1,
 		padding: 1.5,
 		overflowY: { base: "visible", md: "auto" },
 	}),

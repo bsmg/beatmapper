@@ -2,8 +2,8 @@ import { styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
 
 export { default as Indicator } from "./indicator";
-export { default as RangeGroup } from "./range";
-export { default as ToggleGroup } from "./toggle";
+export { default as Range } from "./range";
+export { default as Toggle } from "./toggle";
 
 export const Root = styled("div", {
 	base: hstack.raw({

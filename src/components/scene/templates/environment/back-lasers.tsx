@@ -17,7 +17,7 @@ interface Props {
 	sid: SongId;
 	secondsSinceSongStart?: number;
 }
-function BackLaser({ sid }: Props) {
+function BackLasers({ sid }: Props) {
 	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: App.TrackId[0] });
 
 	const { lastEventId: eventId, status, color } = useLightProps({ sid, lastEvent });
@@ -33,4 +33,4 @@ function BackLaser({ sid }: Props) {
 	});
 }
 
-export default BackLaser;
+export default BackLasers;

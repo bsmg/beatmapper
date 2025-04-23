@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react";
 
 import { styled } from "$:styled-system/jsx";
-import { center } from "$:styled-system/patterns";
+import { center, stack } from "$:styled-system/patterns";
 
 interface Props extends PropsWithChildren {
 	caption?: string;
@@ -25,23 +25,22 @@ const OuterImageWrapper = styled("span", {
 });
 
 const ImageWrapper = styled("span", {
-	base: {
+	base: stack.raw({
 		layerStyle: "fill.ghost",
 		padding: 1,
-		borderRadius: "sm",
 		marginBlock: 1.5,
+		borderRadius: "sm",
 		"& img": {
 			borderRadius: "sm",
 		},
-	},
+	}),
 });
 
 const ImageCaption = styled("span", {
 	base: {
-		textAlign: "center",
-		fontSize: "12px",
+		textAlign: "start",
+		fontSize: "14px",
 		lineHeight: 1.5,
-		marginTop: 1,
 	},
 });
 

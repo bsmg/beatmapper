@@ -1,11 +1,12 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 
+import { useGlobalEventListener } from "$/components/hooks";
 import { selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, toggleSelectAll, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import { EventEditMode, EventTool, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-const KeyboardShortcuts = () => {
+function EventsEditorShortcuts() {
 	const dispatch = useAppDispatch();
 
 	const handleKeyDown = useCallback(
@@ -79,15 +80,9 @@ const KeyboardShortcuts = () => {
 		[dispatch],
 	);
 
-	useEffect(() => {
-		window.addEventListener("keydown", handleKeyDown);
-
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-		};
-	});
+	useGlobalEventListener("keydown", handleKeyDown);
 
 	return null;
-};
+}
 
-export default KeyboardShortcuts;
+export default EventsEditorShortcuts;

@@ -1,10 +1,12 @@
-import type { GroupProps } from "@react-three/fiber";
+import type { ThreeElements } from "@react-three/fiber";
 import { useCallback, useState } from "react";
 
 import type { IGrid } from "$/types";
 
-import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { useGlobalEventListener } from "$/components/hooks";
 import { type IPlacementGridContext, Provider } from "./context";
+
+type GroupProps = ThreeElements["group"];
 
 interface Props extends IGrid, GroupProps {
 	onCellPointerDown?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "mouseDownAt">) => void;

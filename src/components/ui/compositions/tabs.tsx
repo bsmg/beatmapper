@@ -21,24 +21,34 @@ export function Tabs<T extends TabsItem>({ collection, colorPalette = "pink", ..
 		<Builder.Root defaultValue={rest.defaultValue ?? collection.firstValue} {...rest}>
 			<Builder.List className={css({ colorPalette })}>
 				<ListCollectionFor collection={collection}>
-					{(item) => (
-						<Builder.Trigger key={item.value} value={item.value} disabled={item.disabled}>
-							{item.label}
-						</Builder.Trigger>
-					)}
+					{(item) => {
+						const value = collection.getItemValue(item);
+						if (!value) return null;
+						const label = collection.stringifyItem(item);
+						const disabled = collection.getItemDisabled(item);
+						return (
+							<Builder.Trigger key={value} value={value} disabled={disabled}>
+								{label}
+							</Builder.Trigger>
+						);
+					}}
 				</ListCollectionFor>
 				<Builder.Indicator />
 			</Builder.List>
 			<ListCollectionFor collection={collection}>
-				{(item) => (
-					<Builder.Context key={item.value}>
-						{(ctx) => (
-							<Builder.Content key={item.value} value={item.value} tabIndex={-1}>
-								{item.render(ctx)}
-							</Builder.Content>
-						)}
-					</Builder.Context>
-				)}
+				{(item) => {
+					const value = collection.getItemValue(item);
+					if (!value) return null;
+					return (
+						<Builder.Context key={value}>
+							{(ctx) => (
+								<Builder.Content key={value} value={value} tabIndex={-1}>
+									{item.render(ctx)}
+								</Builder.Content>
+							)}
+						</Builder.Context>
+					);
+				}}
 			</ListCollectionFor>
 		</Builder.Root>
 	);

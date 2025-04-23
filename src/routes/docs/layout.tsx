@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_/docs/_")({
 
 function RouteComponent() {
 	return (
-		<Wrapper className="light">
+		<Wrapper>
 			<DocsSidebar />
 			<MainContent>
 				<Outlet />

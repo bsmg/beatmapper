@@ -2,7 +2,6 @@ import { type ComponentProps, forwardRef, useCallback } from "react";
 import type WaveformData from "waveform-data";
 
 import { Canvas } from "$/components/ui/atoms";
-import { getScaledCanvasProps } from "$/helpers/canvas.helpers";
 
 function getY(totalHeight: number, val: number) {
 	const amplitude = 256;
@@ -16,8 +15,6 @@ interface Props extends Omit<ComponentProps<typeof Canvas>, "dimensions" | "draw
 	duration: number | null;
 }
 export const Waveform = forwardRef<HTMLCanvasElement, Props>(({ width, height, waveformData, duration, ...rest }: Props, ref) => {
-	const { style, ...dimensions } = getScaledCanvasProps(width, height);
-
 	const drawWaveform = useCallback(
 		(ctx: CanvasRenderingContext2D, { width, height }: { width: number; height: number }) => {
 			if (!waveformData) return;
@@ -40,5 +37,5 @@ export const Waveform = forwardRef<HTMLCanvasElement, Props>(({ width, height, w
 
 	if (!duration) return;
 
-	return <Canvas {...rest} ref={ref} dimensions={dimensions} draw={drawWaveform} style={style} />;
+	return <Canvas {...rest} ref={ref} width={width} height={height} draw={drawWaveform} />;
 });

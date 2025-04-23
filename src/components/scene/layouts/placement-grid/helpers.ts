@@ -3,7 +3,7 @@ import type { Vector2Like } from "three";
 import { CutDirection, ObjectPlacementMode } from "$/types";
 import { convertCartesianToPolar } from "$/utils";
 
-function getDirectionForStandardMode(angle: number) {
+function resolveNoteDirectionForStandardPlacementMode(angle: number) {
 	// We have 8 possible directions in a 360-degree circle, so each direction gets a 45-degree wedge. The angles start going straight to the right and move clockwise:
 	//
 	//                   270deg
@@ -58,7 +58,7 @@ function getDirectionForStandardMode(angle: number) {
 	}
 }
 
-function getDirectionForMappingExtensions(angle: number) {
+function resolveNoteDirectionForExtendedPlacementMode(angle: number) {
 	// Angles in JS start at the 3 o'clock position (to the right), and count clockwise from 0 to 360.
 	// For mapping extensions, we need to start at 6 o'clock (down), and count clockwise from 1000 to 1360.
 	// First, let's reorient the JS angle to start down and go from 0 to 360.
@@ -68,7 +68,7 @@ function getDirectionForMappingExtensions(angle: number) {
 	return reorientedAngle + 1000;
 }
 
-export function getDirectionForDrag(initialPosition: Vector2Like, currentPosition: Vector2Like, mappingMode: ObjectPlacementMode, precisionPlacement: boolean): CutDirection | null {
+export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, mappingMode: ObjectPlacementMode, precisionPlacement: boolean): CutDirection | null {
 	const deltaX = currentPosition.x - initialPosition.x;
 	const deltaY = currentPosition.y - initialPosition.y;
 
@@ -84,7 +84,7 @@ export function getDirectionForDrag(initialPosition: Vector2Like, currentPositio
 
 	// We need to convert this index to the batty set of directions the app uses.
 	if (mappingMode === ObjectPlacementMode.EXTENSIONS && precisionPlacement) {
-		return getDirectionForMappingExtensions(angle);
+		return resolveNoteDirectionForExtendedPlacementMode(angle);
 	}
-	return getDirectionForStandardMode(angle);
+	return resolveNoteDirectionForStandardPlacementMode(angle);
 }

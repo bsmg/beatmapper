@@ -1,6 +1,7 @@
 import { Fragment, useMemo } from "react";
 
-import { BLOCK_COLUMN_WIDTH, DEFAULT_NUM_ROWS, SONG_OFFSET, SURFACE_DEPTHS, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/constants";
+import { BLOCK_COLUMN_WIDTH, SONG_OFFSET, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/components/scene/constants";
+import { DEFAULT_NUM_ROWS, SURFACE_DEPTHS } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
 import { selectGraphicsQuality } from "$/store/selectors";
 
@@ -22,7 +23,7 @@ interface Props {
 	includeEdgeStrips?: boolean;
 	trackGridRows?: boolean;
 }
-function StaticEnvironment({ includeEdgeStrips }: Props) {
+function EnvironmentRunway({ includeEdgeStrips }: Props) {
 	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 
 	const surfaceDepth = useMemo(() => SURFACE_DEPTHS[graphicsLevel], [graphicsLevel]);
@@ -63,4 +64,4 @@ function StaticEnvironment({ includeEdgeStrips }: Props) {
 	);
 }
 
-export default StaticEnvironment;
+export default EnvironmentRunway;

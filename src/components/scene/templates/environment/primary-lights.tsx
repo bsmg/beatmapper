@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { SURFACE_WIDTH } from "$/constants";
+import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { App, type SongId } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
@@ -21,7 +21,7 @@ const SIDE_BEAM_LENGTH = 250;
 interface Props {
 	sid: SongId;
 }
-function PrimaryLight({ sid }: Props) {
+function PrimaryLights({ sid }: Props) {
 	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: App.TrackId[4] });
 
 	const { lastEventId, status, color } = useLightProps({ sid, lastEvent });
@@ -46,4 +46,4 @@ function PrimaryLight({ sid }: Props) {
 	);
 }
 
-export default PrimaryLight;
+export default PrimaryLights;

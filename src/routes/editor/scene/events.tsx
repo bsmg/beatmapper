@@ -7,10 +7,10 @@ import { selectEventBackgroundOpacity, selectEventEditorTogglePreview } from "$/
 
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import { EventsGrid, GridControls } from "$/components/app/templates/events";
-import { EditorLightshowShortcuts } from "$/components/app/templates/shortcuts";
+import { EventGridControls, EventGridEditor } from "$/components/app/templates/events";
+import { EventsEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
-import LightingPreview from "$/components/scene/templates/environment";
+import DefaultEnvironment from "$/components/scene/templates/environment";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 	component: RouteComponent,
@@ -28,14 +28,14 @@ function RouteComponent() {
 			<Background>
 				{showLightingPreview && (
 					<ReduxForwardingCanvas>
-						<LightingPreview sid={sid} />
+						<DefaultEnvironment sid={sid} />
 					</ReduxForwardingCanvas>
 				)}
 			</Background>
 			<Wrapper>
-				<GridControls sid={sid} style={bgStyle} />
-				<EventsGrid sid={sid} style={bgStyle} />
-				<EditorLightshowShortcuts />
+				<EventGridControls sid={sid} style={bgStyle} />
+				<EventGridEditor sid={sid} style={bgStyle} />
+				<EventsEditorShortcuts />
 			</Wrapper>
 		</Fragment>
 	);

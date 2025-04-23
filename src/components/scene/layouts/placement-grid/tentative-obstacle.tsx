@@ -1,18 +1,20 @@
-import type { GroupProps } from "@react-three/fiber";
+import type { ThreeElements } from "@react-three/fiber";
 import { useContext, useMemo } from "react";
 
-import { SONG_OFFSET } from "$/constants";
+import { SONG_OFFSET } from "$/components/scene/constants";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectDefaultObstacleDuration, selectGridSize, selectPlacementMode } from "$/store/selectors";
 import type { SongId } from "$/types";
 
-import { ObstacleBox } from "$/components/scene/compositions";
+import { Obstacle } from "$/components/scene/compositions";
 import { Context } from "./context";
 
 // hack: a tiny bit of fudge factor is added to the z position, so that the grid cells are still interactable while resizing the obstacle.
 // that way, you're still able to update the mouseOverAt property without the hitbox of the obstacle interfering.
 const Z_POSITION = SONG_OFFSET - 0.05;
+
+type GroupProps = ThreeElements["group"];
 
 interface Props extends GroupProps {
 	sid: SongId;
@@ -41,7 +43,7 @@ function TentativeObstacle({ sid, color, ...rest }: Props) {
 	tentativeObstacle.tentative = true;
 	tentativeObstacle.beatNum = 0;
 
-	return <ObstacleBox {...rest} position-z={Z_POSITION} data={tentativeObstacle} beatDepth={beatDepth} color={color} gridRows={gridRows} gridCols={gridCols} />;
+	return <Obstacle {...rest} position-z={Z_POSITION} data={tentativeObstacle} beatDepth={beatDepth} color={color} gridRows={gridRows} gridCols={gridCols} />;
 }
 
 export default TentativeObstacle;

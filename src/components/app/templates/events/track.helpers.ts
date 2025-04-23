@@ -3,7 +3,7 @@ import { App, type IBackgroundBox, type IEventTrack } from "$/types";
 
 const ON_EVENT_TYPES: App.BasicEventType[] = [App.BasicEventType.ON, App.BasicEventType.FLASH];
 
-export function getBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number, tracks?: IEventTrack[]) {
+export function createBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number, tracks?: IEventTrack[]) {
 	// If this track isn't a lighting track, bail early.
 	if (!isLightTrack(trackId, tracks)) return [];
 

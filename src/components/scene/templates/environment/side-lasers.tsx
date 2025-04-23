@@ -53,7 +53,7 @@ interface Props {
 	side: "left" | "right";
 	timescale?: (cursorPosition: number) => number;
 }
-function SideLaser({ sid, side, timescale = scaleToSeconds }: Props) {
+function SideLasers({ sid, side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: side === "left" ? App.TrackId[2] : App.TrackId[3] });
 	const lastSpeedEvent = useEventTrack<App.IBasicValueEvent>({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
@@ -84,4 +84,4 @@ function SideLaser({ sid, side, timescale = scaleToSeconds }: Props) {
 	);
 }
 
-export default SideLaser;
+export default SideLasers;

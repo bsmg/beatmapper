@@ -13,7 +13,7 @@ import { center } from "$:styled-system/patterns";
 import { CoverArtFilePreview } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
-import SongRowActions from "./actions";
+import SongsDataTableActions from "./actions";
 
 const helper = createColumnHelper<App.Song>();
 
@@ -66,7 +66,7 @@ const SONG_TABLE = [
 			const selectedDifficulty = useMemo(() => song.selectedDifficulty?.toString() ?? Object.keys(song.difficultiesById)[0], [song]);
 			return (
 				<HStack gap={1}>
-					<SongRowActions sid={sid} />
+					<SongsDataTableActions sid={sid} />
 					<Link to={"/edit/$sid/$bid/notes"} params={{ sid: sid.toString(), bid: selectedDifficulty.toString() }}>
 						<Button variant="subtle" size="icon">
 							<ArrowRightToLineIcon />
@@ -78,7 +78,7 @@ const SONG_TABLE = [
 	}),
 ];
 
-function SongDataTable() {
+function SongsDataTable() {
 	const songs = useAppSelector(selectAllSongs);
 	const isProcessingImport = useAppSelector(selectIsProcessingImport);
 
@@ -103,6 +103,12 @@ function SongDataTable() {
 const Wrapper = styled("div", {
 	base: {
 		position: "relative",
+		"& th:nth-child(3)": {
+			display: { base: "none", md: "block" },
+		},
+		"& td:nth-child(3)": {
+			display: { base: "none", md: "block" },
+		},
 	},
 });
 
@@ -118,7 +124,7 @@ const LoadingBlocker = styled("div", {
 const Title = styled("div", {
 	base: {
 		fontSize: "16px",
-		fontWeight: 400,
+		fontWeight: "normal",
 		color: "fg.default",
 	},
 });
@@ -140,4 +146,4 @@ const Demo = styled("span", {
 	},
 });
 
-export default SongDataTable;
+export default SongsDataTable;

@@ -1,3 +1,4 @@
+import { Quality } from "$/types";
 import { getMetaKeyLabel, pluralize, roundTo } from "$/utils";
 
 const META_KEY_LABEL = Object.freeze(getMetaKeyLabel());
@@ -35,3 +36,9 @@ export const ZOOM_LEVEL_MIN = 0;
 export const ZOOM_LEVEL_MAX = 4;
 
 export const GRID_PRESET_SLOTS = ["1", "2", "3", "4"] as const;
+
+export const SURFACE_DEPTHS = {
+	[Quality.LOW]: 38,
+	[Quality.MEDIUM]: 55,
+	[Quality.HIGH]: 75,
+} as const;
