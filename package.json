@@ -5,6 +5,7 @@
 	"private": true,
 	"packageManager": "yarn@4.5.1",
 	"scripts": {
+		"prepare": "yarn prepare:panda && yarn prepare:tsr",
 		"prepare:panda": "panda codegen --clean",
 		"prepare:tsr": "tsr generate",
 		"dev": "vite",

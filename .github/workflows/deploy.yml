@@ -37,6 +37,8 @@ jobs:
           cache: yarn
       - name: Install dependencies
         run: yarn install --immutable
+      - name: Prepare
+        run: yarn prepare
       - name: Build
         run: |
           yarn build
