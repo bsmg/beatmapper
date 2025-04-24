@@ -3,6 +3,7 @@
  * Currently uses window.prompt, but I should build something prettier.
  */
 
+import { APP_TOASTER } from "$/components/app/constants";
 import { GRID_PRESET_SLOTS } from "$/constants";
 import type { jumpToBeat, resizeSelectedObstacles, saveGridPreset, selectAllInRange } from "$/store/actions";
 import type { App, GridPresets, View } from "$/types";
@@ -77,7 +78,11 @@ export function promptSaveGridPreset(gridPresets: GridPresets, wrappedAction: ty
 	const isValidInput = presetSlots.some((n) => n === providedValue);
 
 	if (!isValidInput) {
-		window.alert("The value you provided was not accepted. Please enter 1, 2, 3, or 4.");
+		throw APP_TOASTER.create({
+			id: "invalid-grid-preset",
+			type: "error",
+			description: "The value you provided was not accepted. Please enter 1, 2, 3, or 4.",
+		});
 	}
 
 	return wrappedAction({ presetSlot: providedValue });

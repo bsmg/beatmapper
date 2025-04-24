@@ -68,9 +68,10 @@ const slice = createSlice({
 		builder.addCase(setBlockByDragging.fulfilled, (state, action) => {
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction: selectedDirection } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
-			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
-			if (!match) return state;
+			const color = Object.values(App.SaberColor)[Object.values(ObjectTool).indexOf(selectedTool)];
 			const direction = Object.values(App.CutDirection)[Object.values<number>(CutDirection).indexOf(selectedDirection)];
+			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
+			if (!match) return adapter.upsertOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex, color: color, direction: direction });
 			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { direction: direction } });
 		});
 		builder.addCase(toggleNoteColor, (state, action) => {

@@ -27,8 +27,10 @@
 
 		"baseUrl": ".",
 		"paths": {
-			"$/*": ["src/*"]
+			"$/*": ["src/*"],
+			"$:styled-system/*": ["styled-system/*"],
+			"velite:content": [".velite"]
 		}
 	},
-	"include": ["src"]
+	"include": ["src", "styled-system"]
 }

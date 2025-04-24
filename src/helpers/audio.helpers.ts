@@ -59,11 +59,5 @@ export function getFormattedTimestamp(cursorPosition: number) {
 }
 
 export function getFormattedBeatNum(cursorPositionInBeats: number) {
-	const beatNum = Math.floor(cursorPositionInBeats);
-	const remainder = String(roundToNearest(Math.abs(cursorPositionInBeats) % 1, 1 / 96))
-		.replace("0.", "")
-		.slice(0, 3)
-		.padEnd(3, "0");
-
-	return `${beatNum}.${remainder}`;
+	return cursorPositionInBeats.toFixed(3);
 }

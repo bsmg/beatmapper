@@ -1,0 +1,28 @@
+@layer reset, base, tokens, recipes, utilities;
+
+@font-face {
+	font-family: system;
+	font-style: normal;
+	font-weight: 300;
+	src: local(".SFNSText-Light"), local(".HelveticaNeueDeskInterface-Light"), local(".LucidaGrandeUI"), local("Ubuntu Light"), local("Segoe UI Light"), local("Roboto-Light"), local("DroidSans"), local("Tahoma");
+}
+
+body {
+	line-height: 1;
+	font-family: "Oswald", sans-serif;
+}
+
+#root {
+	min-height: 100vh;
+	background-color: var(--colors-bg-canvas);
+	color: var(--colors-fg-default);
+}
+
+option {
+	color: black;
+}
+
+.expressive-code pre[data-language] {
+	width: 0 !important;
+	min-width: 100% !important;
+}

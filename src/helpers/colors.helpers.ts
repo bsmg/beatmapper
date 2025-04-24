@@ -1,6 +1,7 @@
 import { default as Color } from "color";
 
-import { COLORS, COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_COLOR_SCHEME } from "$/constants";
+import { token } from "$:styled-system/tokens";
+import { COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_COLOR_SCHEME } from "$/constants";
 import { App, EventColor, ObjectTool } from "$/types";
 import { clamp, normalize } from "$/utils";
 
@@ -44,10 +45,13 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 			return "white";
 		}
 		case App.BasicEventType.TRIGGER: {
-			return COLORS.green[500];
+			return token.var("colors.green.500");
+		}
+		case App.BasicEventType.VALUE: {
+			return token.var("colors.blue.500");
 		}
 		case App.BasicEventType.OFF: {
-			return COLORS.blueGray[400];
+			return token.var("colors.slate.400");
 		}
 		default: {
 			throw new Error(`Cannot resolve color for ${item}`);

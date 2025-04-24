@@ -138,7 +138,7 @@ const slice = createSlice({
 		});
 		builder.addMatcher(isAnyOf(selectNextTool, selectPreviousTool), (state, action) => {
 			const { view } = action.payload;
-			if (view !== View.BEATMAP) return state;
+			if (view !== View.LIGHTSHOW) return state;
 			const currentlySelectedTool = state.selectedTool;
 			const incrementBy = selectNextTool.match(action) ? +1 : -1;
 			const currentToolIndex = EVENT_TOOLS.indexOf(currentlySelectedTool);

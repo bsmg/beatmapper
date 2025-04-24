@@ -2,6 +2,7 @@ import { type StorageValue, createStorage } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
 import { type LegacyStorageSchema, createDriver } from "./services/storage.service";
+import { createAppStore } from "./store/setup";
 import { createAutosaveWorker } from "./workers";
 
 export const driver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
@@ -41,3 +42,5 @@ export const filestore = new BeatmapFilestore({
 
 // Saving is a significantly expensive operation, and it's one that is done very often, so it makes sense to do it in a web worker.
 export const autosaveWorker = createAutosaveWorker({ filestore: filestore });
+
+export const store = await createAppStore();

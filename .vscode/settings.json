@@ -21,5 +21,20 @@
 		"**/node_modules": true,
 		"**/yarn.lock": true
 	},
-	"typescript.tsdk": "node_modules\\typescript\\lib"
+	"editor.codeActionsOnSave": {
+		"source.organizeImports": "always",
+		"source.organizeImports.biome": "never",
+		"source.fixAll.biome": "never",
+		"source.fixAll.ts": "always"
+	},
+	"typescript.tsdk": "node_modules\\typescript\\lib",
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[mdx]": {
+		"editor.defaultFormatter": "unifiedjs.vscode-mdx"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	}
 }
