@@ -1,4 +1,10 @@
+import type { EntityId } from "@reduxjs/toolkit";
+
 import type { Accept, Member } from "../../utils";
+
+export interface IEntity {
+	id: EntityId;
+}
 
 export interface IEditorObject {
 	selected?: boolean;

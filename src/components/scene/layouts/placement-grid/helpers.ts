@@ -1,6 +1,7 @@
+import { NoteDirection } from "bsmap";
 import type { Vector2Like } from "three";
 
-import { CutDirection, ObjectPlacementMode } from "$/types";
+import { ObjectPlacementMode } from "$/types";
 import { convertCartesianToPolar } from "$/utils";
 
 function resolveNoteDirectionForStandardPlacementMode(angle: number) {
@@ -29,28 +30,28 @@ function resolveNoteDirectionForStandardPlacementMode(angle: number) {
 
 	switch (chunkIndex) {
 		case 0: {
-			return CutDirection.RIGHT;
+			return NoteDirection.RIGHT;
 		}
 		case 1: {
-			return CutDirection.DOWN_RIGHT;
+			return NoteDirection.DOWN_RIGHT;
 		}
 		case 2: {
-			return CutDirection.DOWN;
+			return NoteDirection.DOWN;
 		}
 		case 3: {
-			return CutDirection.DOWN_LEFT;
+			return NoteDirection.DOWN_LEFT;
 		}
 		case 4: {
-			return CutDirection.LEFT;
+			return NoteDirection.LEFT;
 		}
 		case 5: {
-			return CutDirection.UP_LEFT;
+			return NoteDirection.UP_LEFT;
 		}
 		case 6: {
-			return CutDirection.UP;
+			return NoteDirection.UP;
 		}
 		case 7: {
-			return CutDirection.UP_RIGHT;
+			return NoteDirection.UP_RIGHT;
 		}
 		default: {
 			throw new Error(`Unrecognized chunk index: ${chunkIndex}`);
@@ -68,7 +69,7 @@ function resolveNoteDirectionForExtendedPlacementMode(angle: number) {
 	return reorientedAngle + 1000;
 }
 
-export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, mappingMode: ObjectPlacementMode, precisionPlacement: boolean): CutDirection | null {
+export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, mappingMode: ObjectPlacementMode, precisionPlacement: boolean): number | null {
 	const deltaX = currentPosition.x - initialPosition.x;
 	const deltaY = currentPosition.y - initialPosition.y;
 

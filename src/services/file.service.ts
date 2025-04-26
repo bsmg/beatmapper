@@ -1,8 +1,9 @@
+import type { v2 } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
 import { resolveExtension } from "$/helpers/file.helpers";
-import type { BeatmapId, Json, MaybeDefined, SongId } from "$/types";
+import type { BeatmapId, MaybeDefined, SongId } from "$/types";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -29,7 +30,7 @@ export class Filestore {
 
 type BeatmapFileType = "info" | "song" | "cover" | "beatmap";
 type BeatmapFileOptions<T extends BeatmapFileType> = T extends "song" | "cover" ? { extension: string } : T extends "beatmap" ? { id: BeatmapId } : Record<string, never>;
-type BeatmapFileImplicitReturn<T extends BeatmapFileType> = T extends "song" | "cover" ? File | Blob : T extends "beatmap" ? Json.Beatmap : Saveable;
+type BeatmapFileImplicitReturn<T extends BeatmapFileType> = T extends "song" | "cover" ? File | Blob : T extends "beatmap" ? v2.IDifficulty : Saveable;
 
 export class BeatmapFilestore extends Filestore {
 	static resolveFilename<T extends BeatmapFileType>(songId: SongId, type: T, options: BeatmapFileOptions<T>) {

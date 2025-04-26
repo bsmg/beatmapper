@@ -1,5 +1,4 @@
-import type { IEntity } from "../shared";
-import type { CutDirection, IEditorObject, ObstacleType, SaberColor } from "./shared";
+import type { CutDirection, IEditorObject, IEntity, ObstacleType, SaberColor } from "./shared";
 
 export interface IBaseNote extends IEntity, IEditorObject {
 	beatNum: number;

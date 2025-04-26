@@ -1,10 +1,11 @@
+import type { v2 } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
-import { App, type Json } from "$/types";
+import { App } from "$/types";
 import { omit } from "$/utils";
 import { convertObstaclesToExportableJson, convertObstaclesToRedux } from "./obstacles.helpers";
 
-const SAMPLE_PROPRIETARY_DATA: Json.Obstacle[] = [
+const SAMPLE_PROPRIETARY_DATA: v2.IObstacle[] = [
 	{ _time: 0, _lineIndex: 0, _type: 0, _duration: 1, _width: 1 },
 	{ _time: 2, _lineIndex: 1, _type: 0, _duration: 2, _width: 1 },
 	{ _time: 9, _lineIndex: 0, _type: 0, _duration: 1, _width: 2 },
@@ -45,7 +46,7 @@ describe("Obstacles helpers", () => {
 
 	it("converts from redux to proprietary", () => {
 		const actualResult = convertObstaclesToExportableJson(SAMPLE_REDUX_DATA);
-		const expectedResult: Json.Obstacle[] = [
+		const expectedResult: v2.IObstacle[] = [
 			{ _time: 2, _lineIndex: 0, _type: 0, _duration: 4, _width: 2 },
 			{ _time: 4, _lineIndex: 2, _type: 1, _duration: 0.01, _width: 2 },
 			{ _time: 4, _lineIndex: 0, _type: 0, _duration: 4, _width: 1 },
@@ -80,7 +81,7 @@ describe("Obstacles helpers", () => {
 			};
 
 			const actualResult = convertObstaclesToExportableJson([obstacle]);
-			const expectedResult: Json.Obstacle[] = [
+			const expectedResult: v2.IObstacle[] = [
 				{
 					_time: 2,
 					_lineIndex: 1000,
@@ -111,7 +112,7 @@ describe("Obstacles helpers", () => {
 		};
 
 		const actualResult = convertObstaclesToExportableJson([obstacle], gridCols);
-		const expectedResult: Json.Obstacle[] = [
+		const expectedResult: v2.IObstacle[] = [
 			{
 				_time: 2,
 				_lineIndex: -3000,
@@ -125,7 +126,7 @@ describe("Obstacles helpers", () => {
 	});
 
 	it("Converts an 8x3 grid to Redux", () => {
-		const proprietaryData: Json.Obstacle[] = [
+		const proprietaryData: v2.IObstacle[] = [
 			{
 				_time: 2,
 				_lineIndex: -3000,

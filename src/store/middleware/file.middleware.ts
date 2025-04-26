@@ -1,4 +1,5 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
+import type { v2 } from "bsmap/types";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 import { HIGHEST_PRECISION } from "$/constants";
@@ -13,7 +14,6 @@ import { shiftEntitiesByOffset, unshiftEntitiesByOffset } from "$/services/packa
 import { copyDifficulty, createDifficulty, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
 import { selectAllBasicEvents, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { Json } from "$/types";
 import { roundToNearest } from "$/utils";
 
 interface Options {
@@ -35,22 +35,22 @@ export default function createFileMiddleware({ filestore }: Options) {
 			}
 			// Fetch the json for this beatmap from our local store.
 
-			let beatmapJson: Json.Beatmap | null = null;
+			let beatmapJson: v2.IDifficulty | null = null;
 			try {
 				beatmapJson = await filestore.loadBeatmapFile(songId, difficulty);
 			} catch (err) {
 				console.error(err);
 			}
 			if (beatmapJson) {
-				let notes = beatmapJson._notes;
+				let notes = beatmapJson._notes ?? [];
 				if (song.modSettings.mappingExtensions?.isEnabled) {
 					// If this song uses mapping extensions, the note values will be in the thousands. We need to pull them down to the normal range.
 					notes = convertNotesFromMappingExtensions(notes);
 				}
 				// If we do, we need to manage a little dance related to offsets.
 				// See offsets.md for more context, but essentially we need to transform our timing to match the beat, by undoing a transformation previously applied.
-				let unshiftedNotes = unshiftEntitiesByOffset(notes.filter((x) => [0, 1].includes(x._type)) || [], song.offset, song.bpm);
-				let unshiftedBombs = unshiftEntitiesByOffset(notes.filter((x) => [3].includes(x._type)) || [], song.offset, song.bpm);
+				let unshiftedNotes = unshiftEntitiesByOffset(notes.filter((x) => [0, 1].includes(x._type ?? 0)) || [], song.offset, song.bpm);
+				let unshiftedBombs = unshiftEntitiesByOffset(notes.filter((x) => [3].includes(x._type ?? 0)) || [], song.offset, song.bpm);
 				const unshiftedEvents = unshiftEntitiesByOffset(beatmapJson._events || [], song.offset, song.bpm);
 				const unshiftedObstacles = unshiftEntitiesByOffset(beatmapJson._obstacles || [], song.offset, song.bpm);
 				// Round all notes, so that no floating-point imprecision drift happens
@@ -87,7 +87,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
 			// No notes/obstacles/bookmarks by default, but copy the lighting
 			const beatmapContents = createBeatmapContents({ notes: [], obstacles: [], events: shiftedEvents, bookmarks: [] }, { version: 2 });
-			await filestore.saveBeatmapFile(song.id, difficulty, beatmapContents);
+			await filestore.saveBeatmapFile(song.id, difficulty, beatmapContents as v2.IDifficulty);
 			if (typeof afterCreate === "function") {
 				afterCreate(difficulty);
 			}

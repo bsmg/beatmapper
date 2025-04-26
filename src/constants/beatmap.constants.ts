@@ -1,4 +1,7 @@
-import { App, Difficulty } from "$/types/beatmap";
+import { App } from "$/types/beatmap";
+import { DifficultyName } from "bsmap/types";
+
+export const DIFFICULTIES = [DifficultyName[0], DifficultyName[1], DifficultyName[2], DifficultyName[3], DifficultyName[4]] as const;
 
 export const DEFAULT_NUM_COLS = 4;
 export const DEFAULT_NUM_ROWS = 3;
@@ -13,11 +16,11 @@ export const DEFAULT_GRID = {
 } as const;
 
 export const DEFAULT_NOTE_JUMP_SPEEDS = {
-	[Difficulty.EASY]: 10,
-	[Difficulty.NORMAL]: 10,
-	[Difficulty.HARD]: 12,
-	[Difficulty.EXPERT]: 15,
-	[Difficulty.EXPERT_PLUS]: 18,
+	[DifficultyName[0]]: 10,
+	[DifficultyName[1]]: 10,
+	[DifficultyName[2]]: 12,
+	[DifficultyName[3]]: 15,
+	[DifficultyName[4]]: 18,
 } as const;
 
 export const DEFAULT_COLOR_SCHEME = {

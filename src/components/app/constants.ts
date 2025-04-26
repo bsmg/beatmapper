@@ -1,10 +1,12 @@
+import { createListCollection } from "@ark-ui/react/collection";
 import { createToaster } from "@ark-ui/react/toast";
+import { EnvironmentRename } from "bsmap";
+import { EnvironmentName } from "bsmap/types";
 
 import { token } from "$:styled-system/tokens";
-import { ENVIRONMENT_RENAME } from "$/constants";
+import { DIFFICULTIES } from "$/constants";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
-import { type App, type BeatmapId, Difficulty, Environment } from "$/types";
-import { createListCollection } from "@ark-ui/react";
+import type { App, BeatmapId } from "$/types";
 
 export const APP_TOASTER = createToaster({
 	placement: "bottom-end",
@@ -13,13 +15,13 @@ export const APP_TOASTER = createToaster({
 });
 
 export const DIFFICULTY_COLLECTION = createListCollection({
-	items: Object.values(Difficulty).map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
+	items: DIFFICULTIES.map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
 	itemToString: (item) => getLabelForDifficulty(item.value),
 });
 
 export const ENVIRONMENT_COLLECTION = createListCollection({
-	items: Object.values(Environment),
-	itemToString: (item) => ENVIRONMENT_RENAME[item],
+	items: EnvironmentName,
+	itemToString: (item) => EnvironmentRename[item],
 });
 
 interface BeatmapListCollectionOptions {
@@ -37,7 +39,7 @@ interface BeatmapDifficultyListCollection {
 }
 export function createBeatmapDifficultyListCollection({ beatmapIds, currentBeatmapId }: BeatmapDifficultyListCollection) {
 	return createListCollection({
-		items: Object.values(Difficulty).map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
+		items: DIFFICULTIES.map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
 		itemToString: (item) => getLabelForDifficulty(item.value),
 		isItemDisabled: (item) => item.value === currentBeatmapId || beatmapIds.includes(item.value),
 	});

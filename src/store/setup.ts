@@ -1,4 +1,5 @@
 import { type DevToolsEnhancerOptions, configureStore } from "@reduxjs/toolkit";
+import type { NoteDirection } from "bsmap";
 import { createStorage } from "unstorage";
 import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
@@ -55,7 +56,7 @@ export type SessionStorageObservers = {
 	"playback.volume": StorageObserver<RootState, number>;
 	"playback.tick": StorageObserver<RootState, boolean>;
 	"notes.tool": StorageObserver<RootState, number>;
-	"notes.direction": StorageObserver<RootState, number>;
+	"notes.direction": StorageObserver<RootState, NoteDirection>;
 	"notes.duration": StorageObserver<RootState, number>;
 	"events.mode": StorageObserver<RootState, number>;
 	"events.tool": StorageObserver<RootState, number>;

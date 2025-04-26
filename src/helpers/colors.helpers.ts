@@ -1,9 +1,9 @@
-import { default as Color } from "color";
+import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import { token } from "$:styled-system/tokens";
 import { COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_COLOR_SCHEME } from "$/constants";
 import { App, EventColor, ObjectTool } from "$/types";
-import { clamp, normalize } from "$/utils";
+import { normalize } from "$/utils";
 
 export function getColorForItem<T extends string | number>(item: T | undefined, customColors?: App.ModSettings["customColors"]) {
 	const customColorsEnabled = !!customColors?.isEnabled;
@@ -64,7 +64,7 @@ export function formatColorForMods(element: App.BeatmapColorKey, hex: string, ov
 	// Different elements are affected by different amounts, though: left/right environment colors range from 1 to 3, whereas obstacles range from 1 to 10.
 	const overdriveMultiple = normalize(overdrive, 0, 1, 1, COLOR_OVERDRIVE_MULTIPLIER[element]);
 
-	const rgb = Color(hex).rgb().unitArray();
+	const rgb = hexToRgba(hex);
 
 	return {
 		r: rgb[0] * overdriveMultiple,
@@ -77,7 +77,5 @@ export function formatColorForMods(element: App.BeatmapColorKey, hex: string, ov
 // This is NOT used for maps re-imported; we use _editorSettings to store the hex values directly. This is done since we lose "overdrive" information when we do it this way :(
 // This is only used when importing maps from other editors.
 export function formatColorFromImport(rgb: { r: number; g: number; b: number }) {
-	const normalizedRgb = [clamp(Math.round(rgb.r * 255), 0, 255), clamp(Math.round(rgb.g * 255), 0, 255), clamp(Math.round(rgb.b * 255), 0, 255)];
-
-	return Color(normalizedRgb).hex();
+	return colorToHex(rgb);
 }

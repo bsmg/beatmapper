@@ -23,10 +23,10 @@ import {
 	selectPastObstacles,
 } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { BeatmapEntities } from "$/types";
+import type { App } from "$/types";
 import { findUniquesWithinArrays } from "$/utils";
 
-function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" | "obstacles"]: { past: BeatmapEntities[K]; future: BeatmapEntities[K] } }) {
+function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" | "obstacles"]: { past: App.BeatmapEntities[K]; future: App.BeatmapEntities[K] } }) {
 	const relevantNotes = findUniquesWithinArrays(args.notes.past, args.notes.future);
 	const relevantBombs = findUniquesWithinArrays(args.bombs.past, args.bombs.future);
 	const relevantObstacles = findUniquesWithinArrays(args.obstacles.past, args.obstacles.future);
@@ -59,7 +59,7 @@ function jumpToEarliestNote(api: MiddlewareAPI, args: { [K in "notes" | "bombs" 
 	}
 }
 
-function switchEventPagesIfNecessary(api: MiddlewareAPI, args: { [K in "events"]: { past: BeatmapEntities[K]; future: BeatmapEntities[K] } }) {
+function switchEventPagesIfNecessary(api: MiddlewareAPI, args: { [K in "events"]: { past: App.BeatmapEntities[K]; future: App.BeatmapEntities[K] } }) {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
 	const relevantEvents = findUniquesWithinArrays(args.events.past, args.events.future);

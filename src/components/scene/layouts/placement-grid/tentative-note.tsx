@@ -1,12 +1,12 @@
 import { useContext, useMemo } from "react";
 
-import { App, type CutDirection } from "$/types";
+import { App } from "$/types";
 
 import { ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
 import { Context } from "./context";
 
 interface Props {
-	direction: CutDirection;
+	direction: number;
 	color: string;
 }
 function TentativeNote({ direction, color }: Props) {

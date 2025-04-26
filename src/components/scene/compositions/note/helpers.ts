@@ -1,9 +1,10 @@
+import { NoteDirection } from "bsmap";
+
 import { blockCenterUrl, blockDirectionalUrl } from "$/assets";
 import { BLOCK_COLUMN_WIDTH, SONG_OFFSET } from "$/components/scene/constants";
-import { CutDirection } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
-export function resolvePathForNoteDirection(direction: CutDirection) {
+export function resolvePathForNoteDirection(direction: NoteDirection) {
 	// If the direction is >=1000, that means it's a MappingExtensions thing.
 	// Must be directional.
 	if (direction >= 1000) {
@@ -11,17 +12,17 @@ export function resolvePathForNoteDirection(direction: CutDirection) {
 	}
 
 	switch (direction) {
-		case CutDirection.UP:
-		case CutDirection.DOWN:
-		case CutDirection.LEFT:
-		case CutDirection.RIGHT:
-		case CutDirection.UP_LEFT:
-		case CutDirection.UP_RIGHT:
-		case CutDirection.DOWN_LEFT:
-		case CutDirection.DOWN_RIGHT: {
+		case NoteDirection.UP:
+		case NoteDirection.DOWN:
+		case NoteDirection.LEFT:
+		case NoteDirection.RIGHT:
+		case NoteDirection.UP_LEFT:
+		case NoteDirection.UP_RIGHT:
+		case NoteDirection.DOWN_LEFT:
+		case NoteDirection.DOWN_RIGHT: {
 			return blockDirectionalUrl;
 		}
-		case CutDirection.ANY: {
+		case NoteDirection.ANY: {
 			return blockCenterUrl;
 		}
 		default: {
@@ -30,7 +31,7 @@ export function resolvePathForNoteDirection(direction: CutDirection) {
 	}
 }
 
-export function resolveRotationForNoteDirection(direction: CutDirection) {
+export function resolveRotationForNoteDirection(direction: NoteDirection) {
 	// If the rotation is >=1000, we're in MappingExtensions land :D
 	// It uses a 1000-1360 system, from down clockwise.
 	// We have some conversions to do, to get an angle in radians.
@@ -51,32 +52,32 @@ export function resolveRotationForNoteDirection(direction: CutDirection) {
 	//
 	// Our block by default points downwards, so we'll do x-axis rotations depending on the number
 	switch (direction) {
-		case CutDirection.UP: {
+		case NoteDirection.UP: {
 			return Math.PI;
 		}
-		case CutDirection.DOWN: {
+		case NoteDirection.DOWN: {
 			return 0;
 		}
-		case CutDirection.LEFT: {
+		case NoteDirection.LEFT: {
 			return Math.PI * -0.5;
 		}
-		case CutDirection.RIGHT: {
+		case NoteDirection.RIGHT: {
 			return Math.PI * 0.5;
 		}
-		case CutDirection.UP_LEFT: {
+		case NoteDirection.UP_LEFT: {
 			return Math.PI * -0.75;
 		}
-		case CutDirection.UP_RIGHT: {
+		case NoteDirection.UP_RIGHT: {
 			return Math.PI * 0.75;
 		}
-		case CutDirection.DOWN_LEFT: {
+		case NoteDirection.DOWN_LEFT: {
 			return Math.PI * -0.25;
 		}
-		case CutDirection.DOWN_RIGHT: {
+		case NoteDirection.DOWN_RIGHT: {
 			return Math.PI * 0.25;
 		}
 
-		case CutDirection.ANY: {
+		case NoteDirection.ANY: {
 			return 0;
 		}
 

@@ -1,5 +1,7 @@
 import type { EntityId } from "@reduxjs/toolkit";
-import type { Environment } from "../shared";
+import type { EnvironmentName } from "bsmap/types";
+
+import type { Accept } from "$/types/utils";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;
@@ -46,7 +48,7 @@ export interface Song {
 	swingPeriod?: number;
 	previewStartTime: number;
 	previewDuration: number;
-	environment: Environment;
+	environment: Accept<EnvironmentName, string>;
 	songFilename: string;
 	coverArtFilename: string;
 	difficultiesById: { [key: BeatmapId | string]: Beatmap };

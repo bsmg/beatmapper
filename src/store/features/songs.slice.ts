@@ -1,6 +1,7 @@
 import { createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { EnvironmentName } from "bsmap/types";
 
-import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT } from "$/constants";
+import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT, type DIFFICULTIES } from "$/constants";
 import { resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
 import {
 	changeSelectedDifficulty,
@@ -23,7 +24,7 @@ import {
 	updateModColorOverdrive,
 	updateSongDetails,
 } from "$/store/actions";
-import { type App, type Difficulty, Environment, ObjectPlacementMode, type SongId } from "$/types";
+import { type App, type Member, ObjectPlacementMode, type SongId } from "$/types";
 import { deepMerge } from "$/utils";
 
 const adapter = createEntityAdapter<App.Song, SongId>({
@@ -114,7 +115,7 @@ const slice = createSlice({
 				previewDuration: 10,
 				songFilename,
 				coverArtFilename,
-				environment: Environment.THE_FIRST,
+				environment: EnvironmentName[0],
 				mapAuthorName: mapAuthorName ?? undefined,
 				createdAt,
 				lastOpenedAt,
@@ -122,7 +123,7 @@ const slice = createSlice({
 				difficultiesById: {
 					[selectedDifficulty]: {
 						id: selectedDifficulty,
-						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty as Difficulty],
+						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty as Member<typeof DIFFICULTIES>],
 						startBeatOffset: 0,
 						customLabel: "",
 					},
@@ -174,7 +175,7 @@ const slice = createSlice({
 				changes: {
 					selectedDifficulty: difficulty,
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[difficulty]: { id: difficulty, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[difficulty as Difficulty], startBeatOffset: 0, customLabel: "" },
+						[difficulty]: { id: difficulty, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[difficulty as Member<typeof DIFFICULTIES>], startBeatOffset: 0, customLabel: "" },
 					}),
 				},
 			});

@@ -2,7 +2,7 @@ import { defineAnimationStyles, defineKeyframes, defineLayerStyles, defineSemant
 
 import base from "@pandacss/dev/presets";
 
-import { Difficulty } from "../types";
+import { DifficultyName } from "bsmap/types";
 
 const { radii, shadows, durations, animations, aspectRatios, blurs } = base.theme.tokens;
 const { spin, pulse } = base.theme.keyframes;
@@ -136,11 +136,11 @@ export const semanticTokens = defineSemanticTokens({
 			error: { value: { _light: "{colors.red.500}", _dark: "{colors.red.500}" } },
 		},
 		difficulty: {
-			[Difficulty.EASY]: { value: "#4AFFBE" },
-			[Difficulty.NORMAL]: { value: "#FCFF6A" },
-			[Difficulty.HARD]: { value: "#4AE9FF" },
-			[Difficulty.EXPERT]: { value: "#FF4A6B" },
-			[Difficulty.EXPERT_PLUS]: { value: "#FF5FF9" },
+			[DifficultyName[0]]: { value: "#4AFFBE" },
+			[DifficultyName[1]]: { value: "#FCFF6A" },
+			[DifficultyName[2]]: { value: "#4AE9FF" },
+			[DifficultyName[3]]: { value: "#FF4A6B" },
+			[DifficultyName[4]]: { value: "#FF5FF9" },
 		},
 	},
 	fonts: {

@@ -1,12 +1,13 @@
+import type { v2 } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
-import { App, type Json } from "$/types";
+import { App } from "$/types";
 import { calculateNoteDensity, convertBlocksToExportableJson, convertBlocksToRedux, convertNotesFromMappingExtensions, convertNotesToMappingExtensions } from "./notes.helpers";
 
 describe("Notes helpers", () => {
 	describe("convertBlocksToRedux", () => {
 		it("converts", () => {
-			const blocks: Json.Note[] = [
+			const blocks: v2.INote[] = [
 				{
 					_time: 2,
 					_lineIndex: 2,
@@ -70,7 +71,7 @@ describe("Notes helpers", () => {
 
 			const actualResult = convertBlocksToExportableJson(blocks);
 
-			const expectedResult: Json.Note[] = [
+			const expectedResult: v2.INote[] = [
 				{
 					_time: 2,
 					_lineIndex: 2,
@@ -90,7 +91,7 @@ describe("Notes helpers", () => {
 		});
 
 		it("converts full-circle", () => {
-			const blocks: Json.Note[] = [
+			const blocks: v2.INote[] = [
 				{
 					_time: 2,
 					_lineIndex: 2,
@@ -151,7 +152,7 @@ describe("Notes helpers", () => {
 
 	describe("Mapping Extensions conversions", () => {
 		it("converts to MapEx format", () => {
-			const notes: Json.Note[] = [
+			const notes: v2.INote[] = [
 				{ _time: 4, _lineIndex: 0, _lineLayer: 0, _type: 0, _cutDirection: 0 },
 				{ _time: 4, _lineIndex: 1.5, _lineLayer: 2, _type: 0, _cutDirection: 0 },
 				{ _time: 6, _lineIndex: -0.5, _lineLayer: 1, _type: 0, _cutDirection: 0 },
@@ -159,7 +160,7 @@ describe("Notes helpers", () => {
 			];
 
 			const actualResult = convertNotesToMappingExtensions(notes);
-			const expectedResult: Json.Note[] = [
+			const expectedResult: v2.INote[] = [
 				{ _time: 4, _lineIndex: 1000, _lineLayer: 1000, _type: 0, _cutDirection: 0 },
 				{ _time: 4, _lineIndex: 2500, _lineLayer: 3000, _type: 0, _cutDirection: 0 },
 				{ _time: 6, _lineIndex: -1500, _lineLayer: 2000, _type: 0, _cutDirection: 0 },
@@ -170,7 +171,7 @@ describe("Notes helpers", () => {
 		});
 
 		it("converts from MapEx format", () => {
-			const notes: Json.Note[] = [
+			const notes: v2.INote[] = [
 				{ _time: 4, _lineIndex: 1000, _lineLayer: 1000, _type: 0, _cutDirection: 0 },
 				{ _time: 4, _lineIndex: 2500, _lineLayer: 3000, _type: 0, _cutDirection: 0 },
 				{ _time: 6, _lineIndex: -1500, _lineLayer: 2000, _type: 0, _cutDirection: 0 },
@@ -178,7 +179,7 @@ describe("Notes helpers", () => {
 			];
 
 			const actualResult = convertNotesFromMappingExtensions(notes);
-			const expectedResult: Json.Note[] = [
+			const expectedResult: v2.INote[] = [
 				{ _time: 4, _lineIndex: 0, _lineLayer: 0, _type: 0, _cutDirection: 0 },
 				{ _time: 4, _lineIndex: 1.5, _lineLayer: 2, _type: 0, _cutDirection: 0 },
 				{ _time: 6, _lineIndex: -0.5, _lineLayer: 1, _type: 0, _cutDirection: 0 },

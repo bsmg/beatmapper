@@ -1,5 +1,7 @@
+import type { v2 } from "bsmap/types";
+
 import { EVENT_TRACKS } from "$/constants";
-import { App, type Json, TrackType } from "$/types";
+import { App, TrackType } from "$/types";
 
 export function resolveEventId<T extends Pick<App.BasicEvent, "beatNum" | "trackId">>(x: T) {
 	return `${EVENT_TRACKS.map((x) => x.id).indexOf(x.trackId)}-${x.beatNum}`;
@@ -61,21 +63,21 @@ function serializeEventValue<T extends App.BasicEvent>(event: T) {
 	return 0;
 }
 
-function convertLightingEventToJson<T extends App.IBasicLightEvent>(event: T): Json.Event {
+function convertLightingEventToJson<T extends App.IBasicLightEvent>(event: T): v2.IEvent {
 	return {
 		_time: event.beatNum,
 		_type: serializeEventType(event),
 		_value: serializeEventValue(event),
 	};
 }
-function convertLaserSpeedEventToJson<T extends App.IBasicValueEvent>(event: T): Json.Event {
+function convertLaserSpeedEventToJson<T extends App.IBasicValueEvent>(event: T): v2.IEvent {
 	return {
 		_time: event.beatNum,
 		_type: serializeEventType(event),
 		_value: event.laserSpeed,
 	};
 }
-function convertRotationEventToJson<T extends App.IBasicTriggerEvent>(event: T): Json.Event {
+function convertRotationEventToJson<T extends App.IBasicTriggerEvent>(event: T): v2.IEvent {
 	return {
 		_time: event.beatNum,
 		_type: serializeEventType(event),
@@ -94,10 +96,15 @@ export function convertEventsToExportableJson<T extends App.BasicEvent>(events: 
 		if (isValueTrack(event.trackId, tracks)) {
 			return convertLaserSpeedEventToJson(event as App.IBasicValueEvent);
 		}
+		return {
+			_time: event.beatNum,
+			_type: serializeEventType(event),
+			_value: 0,
+		};
 	});
 }
 
-export function convertEventsToRedux<T extends Json.Event>(events: T[], tracks = EVENT_TRACKS): App.BasicEvent[] {
+export function convertEventsToRedux<T extends v2.IEvent>(events: T[], tracks = EVENT_TRACKS): App.BasicEvent[] {
 	const TRACK_IDS_ARRAY = Object.entries(App.TrackId).reduce(
 		(acc, [index, value]) => {
 			acc[Number(index)] = value;
@@ -106,8 +113,8 @@ export function convertEventsToRedux<T extends Json.Event>(events: T[], tracks =
 		[] as (App.TrackId | null)[],
 	);
 	return events.map((event) => {
-		const trackId = TRACK_IDS_ARRAY[event._type] as App.TrackId;
-		const beatNum = event._time;
+		const trackId = TRACK_IDS_ARRAY[event._type ?? 0] as App.TrackId;
+		const beatNum = event._time ?? 0;
 		const id = resolveEventId({ beatNum, trackId: trackId });
 		if (isTriggerTrack(trackId, tracks)) {
 			return { id, trackId, beatNum, type: App.BasicEventType.TRIGGER } as App.IBasicTriggerEvent;
@@ -117,8 +124,8 @@ export function convertEventsToRedux<T extends Json.Event>(events: T[], tracks =
 			return { id, trackId, beatNum, type: App.BasicEventType.VALUE, laserSpeed } as App.IBasicValueEvent;
 		}
 		if (isLightTrack(trackId, tracks)) {
-			const lightingType = event._value === 0 ? App.BasicEventType.OFF : LIGHT_EVENT_TYPES[event._value % 4];
-			const colorType = event._value === 0 ? undefined : Object.values(App.EventColor)[Math.floor((event._value - 1) / 4)];
+			const lightingType = event._value === 0 ? App.BasicEventType.OFF : LIGHT_EVENT_TYPES[(event._value ?? 0) % 4];
+			const colorType = event._value === 0 ? undefined : Object.values(App.EventColor)[Math.floor(((event._value ?? 0) - 1) / 4)];
 			return { id, trackId, beatNum, type: lightingType, colorType } as App.IBasicLightEvent;
 		}
 		throw new Error(`Unrecognized event track: ${JSON.stringify(event._type, null, 2)}`);

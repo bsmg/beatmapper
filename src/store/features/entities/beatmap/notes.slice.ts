@@ -26,8 +26,9 @@ import {
 	toggleNoteColor,
 } from "$/store/actions";
 import { createByPositionSelector, createSelectedEntitiesSelector } from "$/store/helpers";
-import { App, CutDirection, ObjectTool, ObjectType, View } from "$/types";
+import { App, ObjectTool, ObjectType, View } from "$/types";
 import { cycle } from "$/utils";
+import { NoteDirection } from "bsmap";
 
 const adapter = createEntityAdapter<App.ColorNote, EntityId>({
 	selectId: resolveNoteId,
@@ -55,7 +56,7 @@ const slice = createSlice({
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
 			if (!selectedDirection) return state;
 			const color = Object.values(App.SaberColor)[Object.values(ObjectTool).indexOf(selectedTool)];
-			const direction = Object.values(App.CutDirection)[Object.values<number>(CutDirection).indexOf(selectedDirection)];
+			const direction = Object.values(App.CutDirection)[Object.values(NoteDirection).indexOf(selectedDirection)];
 			return adapter.addOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex, color: color, direction: direction });
 		});
 		builder.addCase(clearCellOfNotes.fulfilled, (state, action) => {
@@ -69,7 +70,7 @@ const slice = createSlice({
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction: selectedDirection } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
 			const color = Object.values(App.SaberColor)[Object.values(ObjectTool).indexOf(selectedTool)];
-			const direction = Object.values(App.CutDirection)[Object.values<number>(CutDirection).indexOf(selectedDirection)];
+			const direction = Object.values(App.CutDirection)[Object.values(NoteDirection).indexOf(selectedDirection)];
 			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
 			if (!match) return adapter.upsertOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex, color: color, direction: direction });
 			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { direction: direction } });

@@ -69,12 +69,12 @@ describe("Bookmarks helpers", () => {
 				{
 					_time: 32,
 					_name: "buildup",
-					__meta: { color: { background: "#F00", text: "#000" } },
+					_color: [1, 0, 0],
 				},
 				{
 					_time: 128,
 					_name: "drop",
-					__meta: { color: { background: "#F00", text: "#000" } },
+					_color: [1, 0, 0],
 				},
 			]);
 		});

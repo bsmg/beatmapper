@@ -1,6 +1,7 @@
+import type { v2 } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
-import { App, type Json } from "$/types";
+import { App } from "$/types";
 import { omit } from "$/utils";
 import { convertEventsToExportableJson, convertEventsToRedux } from "./events.helpers";
 
@@ -18,7 +19,7 @@ describe("Event helpers", () => {
 			];
 
 			const actualResult = convertEventsToExportableJson(events);
-			const expectedResult: Json.Event[] = [
+			const expectedResult: v2.IEvent[] = [
 				{
 					_time: 12,
 					_type: 4, // track ID
@@ -60,7 +61,7 @@ describe("Event helpers", () => {
 			];
 
 			const actualResult = convertEventsToExportableJson(events);
-			const expectedResult: Json.Event[] = [
+			const expectedResult: v2.IEvent[] = [
 				{ _time: 1, _type: 2, _value: 6 },
 				{ _time: 2, _type: 2, _value: 0 },
 				{ _time: 2, _type: 3, _value: 2 },
@@ -112,7 +113,7 @@ describe("Event helpers", () => {
 
 	describe("Converting from v2 json to redux", () => {
 		it("converts a lighting event", () => {
-			const events: Json.Event[] = [
+			const events: v2.IEvent[] = [
 				{
 					_time: 12,
 					_type: 4, // track ID
@@ -138,7 +139,7 @@ describe("Event helpers", () => {
 		});
 
 		it("converts multiple lighting event", () => {
-			const events: Json.Event[] = [
+			const events: v2.IEvent[] = [
 				{ _time: 1, _type: 2, _value: 6 },
 				{ _time: 2, _type: 2, _value: 0 },
 				{ _time: 2, _type: 3, _value: 2 },
@@ -182,7 +183,7 @@ describe("Event helpers", () => {
 		});
 
 		it("converts laser speed and rotation events", () => {
-			const events: Json.Event[] = [
+			const events: v2.IEvent[] = [
 				{ _time: 1, _type: 9, _value: 0 },
 				{ _time: 1, _type: 8, _value: 0 },
 				{ _time: 2, _type: 12, _value: 8 },

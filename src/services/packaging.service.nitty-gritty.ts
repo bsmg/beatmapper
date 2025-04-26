@@ -1,9 +1,11 @@
+import type { v2 } from "bsmap/types";
+import type JSZip from "jszip";
+
 import { DEFAULT_GRID } from "$/constants";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { formatColorFromImport } from "$/helpers/colors.helpers";
-import { App, type Json } from "$/types";
+import { App } from "$/types";
 import { isEmpty, roundAwayFloatingPointNonsense } from "$/utils";
-import type JSZip from "jszip";
 
 export function getFileFromArchive(archive: JSZip, filename: string) {
 	// Ideally, our .zip archive will just have all the files we need.
@@ -20,9 +22,9 @@ export function getArchiveVersion(archive: JSZip) {
 	return getFileFromArchive(archive, "Info.dat") ? 2 : 1;
 }
 
-function shiftEntitiesByOffsetInBeats<T extends { _time: number }>(entities: T[], offsetInBeats: number) {
+function shiftEntitiesByOffsetInBeats<T extends v2.IBaseObject>(entities: T[], offsetInBeats: number) {
 	return entities.map((entity) => {
-		let time = roundAwayFloatingPointNonsense(entity._time + offsetInBeats);
+		let time = roundAwayFloatingPointNonsense((entity._time ?? 0) + offsetInBeats);
 
 		// For some reason, with offsets we can end up with a time of -0, which doesn't really make sense.
 		if (time === 0) {
@@ -35,13 +37,13 @@ function shiftEntitiesByOffsetInBeats<T extends { _time: number }>(entities: T[]
 	});
 }
 
-export function shiftEntitiesByOffset<T extends { _time: number }>(entities: T[], offset: number, bpm: number) {
+export function shiftEntitiesByOffset<T extends v2.IBaseObject>(entities: T[], offset: number, bpm: number) {
 	const offsetInBeats = convertMillisecondsToBeats(offset, bpm);
 
 	return shiftEntitiesByOffsetInBeats(entities, offsetInBeats);
 }
 
-export function unshiftEntitiesByOffset<T extends { _time: number }>(entities: T[], offset: number, bpm: number) {
+export function unshiftEntitiesByOffset<T extends v2.IBaseObject>(entities: T[], offset: number, bpm: number) {
 	let offsetInBeats = convertMillisecondsToBeats(offset, bpm);
 
 	// Because we're UNshifting, we need to invert the offset
@@ -50,7 +52,7 @@ export function unshiftEntitiesByOffset<T extends { _time: number }>(entities: T
 	return shiftEntitiesByOffsetInBeats(entities, offsetInBeats);
 }
 
-export function deriveDefaultModSettingsFromBeatmap(beatmapSet: Json.BeatmapSet) {
+export function deriveDefaultModSettingsFromBeatmap(beatmapSet: v2.IInfoSet) {
 	const modSettings = {} as App.ModSettings;
 
 	for (const beatmap of beatmapSet._difficultyBeatmaps) {

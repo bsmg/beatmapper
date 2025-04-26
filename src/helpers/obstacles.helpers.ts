@@ -1,5 +1,7 @@
+import type { v2 } from "bsmap/types";
+
 import { DEFAULT_NUM_COLS } from "$/constants";
-import { App, type Json, ObjectPlacementMode } from "$/types";
+import { App, ObjectPlacementMode } from "$/types";
 import { clamp, normalize, roundToNearest } from "$/utils";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
 
@@ -24,23 +26,26 @@ export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.IExt
 	return obstacle.type === App.ObstacleType.EXTENDED;
 }
 
-export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): App.Obstacle[] {
+export function convertObstaclesToRedux<T extends v2.IObstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): App.Obstacle[] {
 	return obstacles.map((o) => {
-		const obstacleData = { beatNum: o._time } as App.Obstacle;
-		if (o._type <= 1) {
-			obstacleData.type = o._type === 0 ? App.ObstacleType.FULL : App.ObstacleType.TOP;
+		const obstacleData = { beatNum: o._time ?? 0 } as App.Obstacle;
+		const type = o._type ?? 0;
+		const lineIndex = o._lineIndex ?? 0;
+		const width = o._width ?? 0;
+		if (type <= 1) {
+			obstacleData.type = type === 0 ? App.ObstacleType.FULL : App.ObstacleType.TOP;
 
 			// We want to truncate widths that fall outside the acceptable parameters (4 columns).
-			let truncatedColspan = o._width;
-			if (truncatedColspan + o._lineIndex > 4) {
-				truncatedColspan = 4 - o._lineIndex;
+			let truncatedColspan = width;
+			if (truncatedColspan + lineIndex > 4) {
+				truncatedColspan = 4 - lineIndex;
 			}
 
 			obstacleData.colspan = truncatedColspan;
 		} else {
 			// If this is a Mapping Extension map, we have some extra work to do.
 			// Annoyingly, the 'type' field conveys information about BOTH the wall  height, and the wall Y offset.
-			const typeValue = o._type - RIDICULOUS_MAP_EX_CONSTANT;
+			const typeValue = type - RIDICULOUS_MAP_EX_CONSTANT;
 			const wallHeight = Math.round(typeValue / 1000);
 			const wallStartHeight = typeValue % 1000;
 
@@ -52,12 +57,12 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 			if (isExtendedObstacle(obstacleData)) {
 				obstacleData.rowspan = rowspan;
 				obstacleData.rowIndex = rowIndex;
-				obstacleData.colIndex = o._lineIndex < 0 ? o._lineIndex / 1000 + 1 : o._lineIndex / 1000 - 1;
-				obstacleData.colspan = (o._width - 1000) / 1000;
+				obstacleData.colIndex = lineIndex < 0 ? lineIndex / 1000 + 1 : lineIndex / 1000 - 1;
+				obstacleData.colspan = (width - 1000) / 1000;
 			}
 		}
 
-		let duration = o._duration;
+		let duration = o._duration ?? 0;
 		if (duration < 0) {
 			duration = Math.abs(duration);
 			obstacleData.fast = true;
@@ -65,21 +70,21 @@ export function convertObstaclesToRedux<T extends Json.Obstacle>(obstacles: T[],
 
 		const data = {
 			...obstacleData,
-			id: resolveObstacleId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? o._lineIndex, type: obstacleData.type }),
+			id: resolveObstacleId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? lineIndex, type: obstacleData.type }),
 			beatNum: o._time,
 			beatDuration: duration,
-			colIndex: obstacleData.colIndex ?? o._lineIndex,
+			colIndex: obstacleData.colIndex ?? lineIndex,
 		} as App.Obstacle;
 		return data;
 	});
 }
 
-export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): Json.Obstacle[] {
+export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): v2.IObstacle[] {
 	return obstacles.map((o, i) => {
 		// Normally, type is either 0 or 1, for walls or ceilings. With Mapping Extensions, type is used to control both height and y position @_@
 		// We can tell if we're managing a MapEx wall by the `type`. It works according to this formula:
 		//    wallHeight * 1000 + startHeight + 4001
-		const obstacleData = {} as Json.Obstacle;
+		const obstacleData = {} as v2.IObstacle;
 
 		switch (o.type) {
 			case App.ObstacleType.FULL: {
@@ -137,7 +142,7 @@ export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacl
 			...obstacleData,
 			_time: o.beatNum,
 			_duration: duration,
-		} as Json.Obstacle;
+		} as v2.IObstacle;
 
 		return data;
 	});

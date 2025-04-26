@@ -1,4 +1,5 @@
 import type { ThreeElements } from "@react-three/fiber";
+import type { NoteDirection } from "bsmap";
 import { useCallback, useRef, useState } from "react";
 
 import { getColorForItem } from "$/helpers/colors.helpers";
@@ -7,12 +8,12 @@ import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectDefaultObstacleDuration, selectGridSize, selectNoteEditorDirection, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
-import { type CutDirection, ObjectTool, type SongId } from "$/types";
+import { ObjectTool, type SongId } from "$/types";
 
 import { PlacementGrid, resolveNoteDirectionForPlacementMode } from "$/components/scene/layouts";
 
 interface ITentativeBlock {
-	direction: CutDirection;
+	direction: number;
 	rowIndex: number;
 	colIndex: number;
 	selectedTool: ObjectTool;
@@ -32,7 +33,7 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
 	const mappingMode = useAppSelector((state) => selectPlacementMode(state, sid));
 
-	const cachedDirection = useRef<CutDirection | null>(null);
+	const cachedDirection = useRef<NoteDirection | null>(null);
 	const [tentativeBlock, setTentativeBlock] = useState<ITentativeBlock | null>(null);
 
 	const handlePointerDown = useCallback(() => {
@@ -53,11 +54,11 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
-					dispatch(setBlockByDragging({ tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: tentativeBlock?.direction ?? selectedDirection }));
+					dispatch(setBlockByDragging({ tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: (tentativeBlock?.direction ?? selectedDirection) as NoteDirection }));
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
-					dispatch(clickPlacementGrid({ tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: tentativeBlock?.direction ?? selectedDirection }));
+					dispatch(clickPlacementGrid({ tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: (tentativeBlock?.direction ?? selectedDirection) as NoteDirection }));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
@@ -94,7 +95,7 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 						selectedTool,
 					});
 
-					cachedDirection.current = direction;
+					cachedDirection.current = direction as NoteDirection;
 
 					break;
 				}

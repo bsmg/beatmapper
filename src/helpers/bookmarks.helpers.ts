@@ -1,4 +1,8 @@
-import type { App, Json } from "$/types";
+import type { v2 } from "bsmap/types";
+import { colorToHex, hexToRgba } from "bsmap/utils";
+
+import type { App } from "$/types";
+import { isColorDark } from "$/utils";
 
 export function resolveBookmarkId(x: Pick<App.Bookmark, "beatNum">) {
 	return `${x.beatNum}`;
@@ -29,31 +33,24 @@ export function getNewBookmarkColor(bookmarks: Pick<App.Bookmark, "color">[]) {
 	return firstUnusedColor ?? BOOKMARK_COLORS[0];
 }
 
-export function convertBookmarksToExportableJson<T extends App.Bookmark>(bookmarks: T[]): Json.Bookmark[] {
+export function convertBookmarksToExportableJson<T extends App.Bookmark>(bookmarks: T[]): v2.IBookmark[] {
 	return (bookmarks || []).map((bookmark) => {
 		return {
 			_time: bookmark.beatNum,
 			_name: bookmark.name,
-			__meta: {
-				color: bookmark.color,
-			},
+			_color: hexToRgba(bookmark.color.background),
 		};
 	});
 }
 
-export function convertBookmarksToRedux<T extends Json.Bookmark>(bookmarks: T[]): App.Bookmark[] {
+export function convertBookmarksToRedux<T extends v2.IBookmark>(bookmarks: T[]): App.Bookmark[] {
 	return (bookmarks || []).map((bookmark, i) => {
-		let color = bookmark._color ? { background: bookmark._color, text: "white" } : undefined;
-
-		// If we're parsing bookmarks created outside of Beatmapper, we won't yet have assigned colors.
-		if (!color) {
-			color = BOOKMARK_COLORS[i % BOOKMARK_COLORS.length];
-		}
+		const color = bookmark._color ? colorToHex(bookmark._color) : undefined;
 
 		return {
 			beatNum: bookmark._time,
 			name: bookmark._name,
-			color,
+			color: color ? { background: color, text: isColorDark(color) ? "white" : "black" } : BOOKMARK_COLORS[i % BOOKMARK_COLORS.length],
 		};
 	});
 }

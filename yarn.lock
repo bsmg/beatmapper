@@ -3923,6 +3923,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@standard-schema/spec@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@standard-schema/spec@npm:1.0.0"
+  checksum: 10/aee780cc1431888ca4b9aba9b24ffc8f3073fc083acc105e3951481478a2f4dc957796931b2da9e2d8329584cf211e4542275f188296c1cdff3ed44fd93a8bc8
+  languageName: node
+  linkType: hard
+
 "@surma/rollup-plugin-off-main-thread@npm:^2.2.3":
   version: 2.2.3
   resolution: "@surma/rollup-plugin-off-main-thread@npm:2.2.3"
@@ -5956,6 +5963,7 @@ __metadata:
     "@types/redux-state-sync": "npm:^3.1.10"
     "@types/three": "npm:^0.176.0"
     "@vitejs/plugin-react": "npm:^4.4.1"
+    bsmap: "npm:^2.2.2"
     color: "npm:^4.2.3"
     concurrently: "npm:^9.0.1"
     date-fns: "npm:^4.1.0"
@@ -6148,6 +6156,16 @@ __metadata:
   bin:
     browserslist: cli.js
   checksum: 10/f8a9d78bbabe466c57ffd5c50a9e5582a5df9aa68f43078ca62a9f6d0d6c70ba72eca72d0a574dbf177cf55cdca85a46f7eb474917a47ae5398c66f8b76f7d1c
+  languageName: node
+  linkType: hard
+
+"bsmap@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "bsmap@npm:2.2.2"
+  dependencies:
+    "@standard-schema/spec": "npm:^1.0.0"
+    valibot: "npm:valibot@^1.0.0"
+  checksum: 10/037543d582d1d31dc8fc3084fc2eddbc3589bbf33af506f353004e038a8da9157f597251786ffa9224cfed8f3f4972d5274b7ca48971d7a7d560782705560ae4
   languageName: node
   linkType: hard
 
@@ -13899,7 +13917,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"valibot@npm:^1.0.0":
+"valibot@npm:^1.0.0, valibot@npm:valibot@^1.0.0":
   version: 1.0.0
   resolution: "valibot@npm:1.0.0"
   peerDependencies:

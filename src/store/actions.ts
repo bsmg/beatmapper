@@ -1,30 +1,11 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
+import type { NoteDirection } from "bsmap";
 import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
 import { resolveBeatForItem } from "$/helpers/item.helpers";
-import {
-	type App,
-	type BeatmapEntities,
-	type BeatmapId,
-	type CutDirection,
-	type EventColor,
-	type EventEditMode,
-	type EventTool,
-	type GridPresets,
-	type IEventTrack,
-	type IGrid,
-	type ISelectionBox,
-	type ISelectionBoxInBeats,
-	type Member,
-	type ObjectSelectionMode,
-	type ObjectTool,
-	type ObjectType,
-	type Quality,
-	type SongId,
-	View,
-} from "$/types";
+import { type App, type BeatmapId, type EventColor, type EventEditMode, type EventTool, type GridPresets, type IEventTrack, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
@@ -99,7 +80,7 @@ export const startLoadingSong = createAction("START_LOADING_SONG", (args: { song
 	return { payload: { ...args } };
 });
 
-export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: Partial<BeatmapEntities>) => {
+export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: Partial<App.BeatmapEntities>) => {
 	return { payload: { ...args } };
 });
 
@@ -173,7 +154,7 @@ export const deleteBookmark = createAction("DELETE_BOOKMARK", (args: { beatNum: 
 	return { payload: { ...args } };
 });
 
-export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: CutDirection; tool: ObjectTool }, api) => {
+export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { rowIndex: number; colIndex: number; direction?: NoteDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
 	const selectedDirection = selectNoteEditorDirection(state);
@@ -196,7 +177,7 @@ export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: {
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats });
 });
 
-export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: CutDirection; tool: ObjectTool }, api) => {
+export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { rowIndex: number; colIndex: number; direction: NoteDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const songId = selectActiveSongId(state);
 	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
@@ -239,7 +220,7 @@ export const incrementSnapping = createAction("INCREMENT_SNAPPING");
 
 export const decrementSnapping = createAction("DECREMENT_SNAPPING");
 
-export const selectNoteDirection = createAction("SELECT_NOTE_DIRECTION", (args: { direction: CutDirection }) => {
+export const selectNoteDirection = createAction("SELECT_NOTE_DIRECTION", (args: { direction: NoteDirection }) => {
 	return { payload: { ...args } };
 });
 

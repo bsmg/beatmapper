@@ -2,11 +2,11 @@ import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { sortByBeat } from "$/helpers/item.helpers";
 import { copySelection, cutSelection } from "$/store/actions";
-import { type BeatmapEntities, View } from "$/types";
+import { type App, View } from "$/types";
 
 const initialState = {
 	view: null as View | null,
-	data: {} as Partial<Omit<BeatmapEntities, "bookmarks">> | null,
+	data: {} as Partial<Omit<App.BeatmapEntities, "bookmarks">> | null,
 };
 
 const slice = createSlice({

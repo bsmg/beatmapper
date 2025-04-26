@@ -2,6 +2,8 @@
  * This service zips up the current state, to let the user download it.
  */
 
+import { sortV2NoteFn, sortV2ObjectFn } from "bsmap";
+import { DifficultyName, type v2 } from "bsmap/types";
 import { formatDate } from "date-fns/format";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
@@ -15,7 +17,7 @@ import { resolveDifficulty, resolveRankForDifficulty, resolveSongId, sortBeatmap
 import { filestore } from "$/setup";
 import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { App, Difficulty, type Json, type SongId } from "$/types";
+import { App, type SongId } from "$/types";
 import { isEmpty, omit } from "$/utils";
 import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
 
@@ -81,7 +83,7 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 							_editorOffset: offset !== 0 ? offset : undefined,
 							_requirements: requirements.length > 0 ? requirements : undefined,
 						},
-					} as Json.BeatmapDifficulty;
+					} as v2.IInfoDifficulty;
 
 					if (beatmap.customLabel) {
 						difficultyData._customData ??= {};
@@ -98,11 +100,13 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
 				_beatmapCharacteristicName: "Lightshow",
 				_difficultyBeatmaps: [
 					{
-						_difficulty: Difficulty.EASY,
+						_difficulty: DifficultyName[0],
 						_difficultyRank: 1,
 						_beatmapFilename: "EasyLightshow.dat",
 						_noteJumpMovementSpeed: 16,
 						_noteJumpStartBeatOffset: 0,
+						_beatmapColorSchemeIdx: -1,
+						_environmentNameIdx: 0,
 						_customData: {
 							_editorOffset: offset !== 0 ? offset : undefined,
 							_requirements: requirements.length > 1 ? requirements : undefined,
@@ -174,7 +178,7 @@ export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "
  * This method takes JSON-formatted entities and produces a JSON string to be saved to the persistence system as a file. This is for the beatmap itself, eg. 'Expert.dat'.
  */
 export function createBeatmapContents(
-	{ notes = [], obstacles = [], events = [], bookmarks = [] }: { notes?: Json.Note[]; obstacles?: Json.Obstacle[]; events: Json.Event[]; bookmarks?: Json.Bookmark[] },
+	{ notes = [], obstacles = [], events = [], bookmarks = [] }: { notes?: v2.INote[]; obstacles?: v2.IObstacle[]; events?: v2.IEvent[]; bookmarks?: v2.IBookmark[] },
 	meta: { version: number },
 	// The following fields are only necessary for v1.
 	bpm?: number,
@@ -185,33 +189,17 @@ export function createBeatmapContents(
 	// biome-ignore lint/suspicious/noImplicitAnyLet: awaiting rewrite
 	let contents;
 
-	// We need to sort all notes, obstacles, and events, since the game can be funny when things aren't in order.
-	function sortByTime<T extends { _time: number }>(a: T, b: T) {
-		return a._time - b._time;
-	}
-	function sortByTimeAndPosition<T extends { _time: number; _lineIndex: number; _lineLayer: number }>(a: T, b: T) {
-		if (a._time === b._time && a._lineLayer === b._lineLayer) {
-			return a._lineIndex - b._lineIndex;
-		}
-
-		if (a._time === b._time) {
-			return a._lineLayer - b._lineLayer;
-		}
-
-		return sortByTime(a, b);
-	}
-
-	let sortedNotes = [...notes].sort(sortByTimeAndPosition);
-	let sortedObstacles = [...obstacles].sort(sortByTime);
-	let sortedEvents = [...events].sort(sortByTime);
+	let sortedNotes = [...notes].sort(sortV2NoteFn);
+	let sortedObstacles = [...obstacles].sort(sortV2ObjectFn);
+	let sortedEvents = [...events].sort(sortV2ObjectFn);
 
 	// Annoyingly sometimes we can end up with floating-point issues on lineIndex and lineLayer. Usually I deal with this in the helpers, but notes don't have a helper yet.
 	// Also, now that 'cutDirection' can be 360 degrees, it also needs to be rounded
 	sortedNotes = sortedNotes.map((note) => ({
 		...note,
-		_lineIndex: Math.round(note._lineIndex),
-		_lineLayer: Math.round(note._lineLayer),
-		_cutDirection: Math.round(note._cutDirection),
+		_lineIndex: Math.round(note._lineIndex ?? 0),
+		_lineLayer: Math.round(note._lineLayer ?? 0),
+		_cutDirection: Math.round(note._cutDirection ?? 0),
 	}));
 
 	// Remove 'selected' property
@@ -507,7 +495,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	const enabledLightshow = infoDatJson._difficultyBeatmapSets.some((set: { _beatmapCharacteristicName: string }) => set._beatmapCharacteristicName === "Lightshow");
 
 	const difficultyFiles = await Promise.all(
-		beatmapSet._difficultyBeatmaps.map(async (beatmap: Json.BeatmapDifficulty) => {
+		beatmapSet._difficultyBeatmaps.map(async (beatmap: v2.IInfoDifficulty) => {
 			const file = getFileFromArchive(archive, beatmap._beatmapFilename);
 			if (!file) throw new Error(`No level file for ${beatmap._beatmapFilename}`);
 			const fileContents = await file.async("string");

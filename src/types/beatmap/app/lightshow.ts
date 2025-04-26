@@ -1,5 +1,4 @@
-import type { IEntity } from "../shared";
-import type { EventColor, IEditorObject, LightEventType, TrackId, TriggerEventType, ValueEventType } from "./shared";
+import type { EventColor, IEditorObject, IEntity, LightEventType, TrackId, TriggerEventType, ValueEventType } from "./shared";
 
 export interface IBaseBasicEvent extends IEntity, IEditorObject {
 	beatNum: number;
