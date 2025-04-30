@@ -10,3 +10,5 @@ export type Predicate<Item, Index, Object, Result> = (value: Item, index: Index,
 export type ArrayPredicate<T, R> = Predicate<T, number, T[], R>;
 
 export type MaybeDefined<T> = T extends any ? T : any;
+
+export type AnyObject = Record<PropertyKey, any>;
