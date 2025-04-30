@@ -1,8 +1,9 @@
-import type { v2 } from "bsmap/types";
+import type { v2 as v2t, v3 as v3t } from "bsmap/types";
 import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import type { App } from "$/types";
-import { isColorDark } from "$/utils";
+import { isColorDark, random } from "$/utils";
+import { createSerializationFactory } from "./serialization.helpers";
 
 export function resolveBookmarkId(x: Pick<App.Bookmark, "beatNum">) {
 	return `${x.beatNum}`;
@@ -33,24 +34,65 @@ export function getNewBookmarkColor(bookmarks: Pick<App.Bookmark, "color">[]) {
 	return firstUnusedColor ?? BOOKMARK_COLORS[0];
 }
 
-export function convertBookmarksToExportableJson<T extends App.Bookmark>(bookmarks: T[]): v2.IBookmark[] {
-	return (bookmarks || []).map((bookmark) => {
-		return {
-			_time: bookmark.beatNum,
-			_name: bookmark.name,
-			_color: hexToRgba(bookmark.color.background),
-		};
-	});
-}
+type SerializationOptions = [{}, {}, {}, {}, {}];
+type DeserializationOptions = [{ index?: number }, {}, {}, {}, {}];
 
-export function convertBookmarksToRedux<T extends v2.IBookmark>(bookmarks: T[]): App.Bookmark[] {
-	return (bookmarks || []).map((bookmark, i) => {
-		const color = bookmark._color ? colorToHex(bookmark._color) : undefined;
-
-		return {
-			beatNum: bookmark._time,
-			name: bookmark._name,
-			color: color ? { background: color, text: isColorDark(color) ? "white" : "black" } : BOOKMARK_COLORS[i % BOOKMARK_COLORS.length],
-		};
-	});
-}
+export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createSerializationFactory<App.Bookmark, [Omit<v2t.IBookmark, "_color">, v2t.IBookmark, v3t.IBookmark], SerializationOptions, DeserializationOptions>("CustomBookmark", () => {
+	return {
+		1: {
+			container: {
+				serialize: (data) => {
+					return {
+						_time: data.beatNum,
+						_name: data.name,
+					};
+				},
+				deserialize: (data, { index = random(0, 5) }) => {
+					return {
+						beatNum: data._time,
+						name: data._name,
+						color: BOOKMARK_COLORS[index % BOOKMARK_COLORS.length],
+					};
+				},
+			},
+		},
+		2: {
+			container: {
+				serialize: (data) => {
+					return {
+						_time: data.beatNum,
+						_name: data.name,
+						_color: hexToRgba(data.color.background),
+					};
+				},
+				deserialize: (data, { index = random(0, 5) }) => {
+					const color = data._color ? colorToHex(data._color) : undefined;
+					return {
+						beatNum: data._time,
+						name: data._name,
+						color: color ? { background: color, text: isColorDark(color) ? "white" : "black" } : BOOKMARK_COLORS[index % BOOKMARK_COLORS.length],
+					};
+				},
+			},
+		},
+		3: {
+			container: {
+				serialize: (data) => {
+					return {
+						b: data.beatNum,
+						n: data.name,
+						c: hexToRgba(data.color.background),
+					};
+				},
+				deserialize: (data, { index = random(0, 5) }) => {
+					const color = data.c ? colorToHex(data.c) : undefined;
+					return {
+						beatNum: data.b,
+						name: data.n,
+						color: color ? { background: color, text: isColorDark(color) ? "white" : "black" } : BOOKMARK_COLORS[index % BOOKMARK_COLORS.length],
+					};
+				},
+			},
+		},
+	};
+});

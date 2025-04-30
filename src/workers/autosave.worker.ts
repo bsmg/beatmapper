@@ -1,6 +1,6 @@
 import type { BeatmapFilestore } from "$/services/file.service";
-import { createBeatmapContentsFromState } from "$/services/packaging.service";
-import { selectActiveBeatmapId, selectSongById } from "$/store/selectors";
+import { serializeBeatmapContentsFromState } from "$/services/packaging.service";
+import { selectActiveBeatmapId } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
@@ -14,17 +14,16 @@ import type { SongId } from "$/types";
 // So I store non-loaded songs to disk, stored in indexeddb. It uses the same mechanism as Redux Storage, but it's treated separately.)
 
 export function save(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
-	const song = selectSongById(state, songId);
 	const difficulty = selectActiveBeatmapId(state);
 
 	// We only want to autosave when a song is currently selected
-	if (!song || !difficulty) {
+	if (!difficulty) {
 		return;
 	}
 
-	const beatmapContents = createBeatmapContentsFromState(state, song);
+	const { difficulty: beatmapContents } = serializeBeatmapContentsFromState(2, state, songId);
 
-	filestore.saveBeatmapFile(song.id, difficulty, beatmapContents).catch((err) => {
+	filestore.saveBeatmapFile(songId, difficulty, beatmapContents).catch((err) => {
 		console.error("Could not run backup for beatmap file", err);
 	});
 }

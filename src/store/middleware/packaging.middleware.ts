@@ -1,8 +1,9 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { convertEventsToExportableJson } from "$/helpers/events.helpers";
+import { serializeInfoContents } from "$/helpers/packaging.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
-import { createBeatmapContentsFromState, createInfoContent, zipFiles } from "$/services/packaging.service";
+import { serializeBeatmapContentsFromState, zipFiles } from "$/services/packaging.service";
 import { shiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { downloadMapFiles } from "$/store/actions";
 import { selectActiveBeatmapId, selectAllBasicEvents, selectBeatmapIds, selectSongById } from "$/store/selectors";
@@ -44,8 +45,8 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 				if (!songId) throw new Error("Tried to download a song with no supplied songId, and no currently-selected song.");
 				song = selectSongById(state, songId);
 			}
-			const infoContent = createInfoContent(song, { version: 2 });
-			const beatmapContent = createBeatmapContentsFromState(state, song);
+			const infoContent = serializeInfoContents(2, song, {});
+			const { difficulty: beatmapContent } = serializeBeatmapContentsFromState(2, state, songId);
 			// If we have an actively-loaded song, we want to first persist that song so that we download the very latest stuff.
 			// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 			if (selectedSong) {

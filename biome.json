@@ -19,7 +19,8 @@
 				"useKeyWithMouseEvents": "info"
 			},
 			"complexity": {
-				"noForEach": "warn"
+				"noForEach": "warn",
+				"noBannedTypes": "off"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "warn"

@@ -2,19 +2,17 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import type { v2 } from "bsmap/types";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
-import { HIGHEST_PRECISION } from "$/constants";
 import { getWaveformDataForFile } from "$/helpers/audio.helpers";
-import { convertBookmarksToRedux } from "$/helpers/bookmarks.helpers";
-import { convertEventsToExportableJson, convertEventsToRedux } from "$/helpers/events.helpers";
-import { convertBlocksToRedux, convertMinesToRedux, convertNotesFromMappingExtensions } from "$/helpers/notes.helpers";
-import { convertObstaclesToRedux } from "$/helpers/obstacles.helpers";
+import { deserializeCustomBookmark } from "$/helpers/bookmarks.helpers";
+import { convertEventsToRedux } from "$/helpers/events.helpers";
+import { deserializeBombNote, deserializeColorNote } from "$/helpers/notes.helpers";
+import { deserializeObstacle } from "$/helpers/obstacles.helpers";
+import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { createBeatmapContents, createInfoContent } from "$/services/packaging.service";
-import { shiftEntitiesByOffset, unshiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
+import { unshiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
 import { copyDifficulty, createDifficulty, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { selectAllBasicEvents, selectSongById } from "$/store/selectors";
+import { selectAllBasicEvents, selectOffsetInBeats, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { roundToNearest } from "$/utils";
 
 interface Options {
 	filestore: BeatmapFilestore;
@@ -42,32 +40,22 @@ export default function createFileMiddleware({ filestore }: Options) {
 				console.error(err);
 			}
 			if (beatmapJson) {
-				let notes = beatmapJson._notes ?? [];
-				if (song.modSettings.mappingExtensions?.isEnabled) {
-					// If this song uses mapping extensions, the note values will be in the thousands. We need to pull them down to the normal range.
-					notes = convertNotesFromMappingExtensions(notes);
-				}
+				const extensionsProvider = song.modSettings.mappingExtensions?.isEnabled ? "mapping-extensions" : undefined;
+				const notes = beatmapJson._notes ?? [];
 				// If we do, we need to manage a little dance related to offsets.
 				// See offsets.md for more context, but essentially we need to transform our timing to match the beat, by undoing a transformation previously applied.
-				let unshiftedNotes = unshiftEntitiesByOffset(notes.filter((x) => [0, 1].includes(x._type ?? 0)) || [], song.offset, song.bpm);
-				let unshiftedBombs = unshiftEntitiesByOffset(notes.filter((x) => [3].includes(x._type ?? 0)) || [], song.offset, song.bpm);
+				const unshiftedNotes = unshiftEntitiesByOffset(notes.filter((x) => [0, 1].includes(x._type ?? 0)) || [], song.offset, song.bpm);
+				const unshiftedBombs = unshiftEntitiesByOffset(notes.filter((x) => [3].includes(x._type ?? 0)) || [], song.offset, song.bpm);
 				const unshiftedEvents = unshiftEntitiesByOffset(beatmapJson._events || [], song.offset, song.bpm);
 				const unshiftedObstacles = unshiftEntitiesByOffset(beatmapJson._obstacles || [], song.offset, song.bpm);
-				// Round all notes, so that no floating-point imprecision drift happens
-				unshiftedNotes = unshiftedNotes.map((note) => {
-					return { ...note, _time: roundToNearest(note._time, HIGHEST_PRECISION) };
-				});
-				unshiftedBombs = unshiftedBombs.map((note) => {
-					return { ...note, _time: roundToNearest(note._time, HIGHEST_PRECISION) };
-				});
 
 				// Our beatmap comes in a "raw" form, using proprietary fields.
 				// I need to convert the JSON format to something manageable.
-				const convertedNotes = convertBlocksToRedux(unshiftedNotes);
-				const convertedBombs = convertMinesToRedux(unshiftedBombs);
-				const convertedObstacles = convertObstaclesToRedux(unshiftedObstacles);
+				const convertedNotes = unshiftedNotes.map((o) => deserializeColorNote(2, o, { extensionsProvider: extensionsProvider }));
+				const convertedBombs = unshiftedBombs.map((o) => deserializeBombNote(2, o, { extensionsProvider: extensionsProvider }));
+				const convertedObstacles = unshiftedObstacles.map((o) => deserializeObstacle(2, o, { extensionsProvider: extensionsProvider }));
 				const convertedEvents = convertEventsToRedux(unshiftedEvents);
-				const convertedBookmarks = beatmapJson._customData?._bookmarks ? convertBookmarksToRedux(beatmapJson._customData._bookmarks) : [];
+				const convertedBookmarks = beatmapJson._customData?._bookmarks?.map((o) => deserializeCustomBookmark(2, o, {}));
 				api.dispatch(loadBeatmapEntities({ notes: convertedNotes, bombs: convertedBombs, events: convertedEvents, obstacles: convertedObstacles, bookmarks: convertedBookmarks }));
 			}
 			api.dispatch(ReduxUndoActionCreators.clearHistory());
@@ -82,12 +70,11 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId, difficulty, afterCreate } = action.payload;
 			const state = api.getState();
-			const song = selectSongById(state, songId);
-			const events = convertEventsToExportableJson(selectAllBasicEvents(state));
-			const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
+			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+			const events = selectAllBasicEvents(state);
 			// No notes/obstacles/bookmarks by default, but copy the lighting
-			const beatmapContents = createBeatmapContents({ notes: [], obstacles: [], events: shiftedEvents, bookmarks: [] }, { version: 2 });
-			await filestore.saveBeatmapFile(song.id, difficulty, beatmapContents as v2.IDifficulty);
+			const { difficulty: beatmapContents } = serializeBeatmapContents(2, { notes: [], obstacles: [], events: events, bookmarks: [] }, { editorOffsetInBeats });
+			await filestore.saveBeatmapFile(songId, difficulty, beatmapContents);
 			if (typeof afterCreate === "function") {
 				afterCreate(difficulty);
 			}
@@ -106,7 +93,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			// Pull that updated redux state and save it to our Info.dat
 			const song = selectSongById(state, songId);
 			// Back up our latest data!
-			await filestore.saveInfoFile(song.id, createInfoContent(song, { version: 2 }));
+			await filestore.saveInfoFile(song.id, serializeInfoContents(2, song, {}));
 			if (typeof afterCopy === "function") {
 				afterCopy(toDifficultyId);
 			}

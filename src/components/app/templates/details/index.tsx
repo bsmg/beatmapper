@@ -3,7 +3,6 @@ import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { useMount } from "$/components/hooks";
-import { createInfoContent } from "$/services/packaging.service";
 import { filestore } from "$/setup";
 import { stopPlaying, toggleModForSong, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -15,6 +14,8 @@ import { LocalFileUpload } from "$/components/app/compositions";
 import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { serializeInfoContents } from "$/helpers/packaging.helpers";
+import { EnvironmentNameSchema } from "bsmap";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -67,7 +68,7 @@ function SongDetails({ sid }: Props) {
 				),
 				previewStartTime: pipe(number()),
 				previewDuration: pipe(number()),
-				environment: pipe(string()),
+				environment: pipe(EnvironmentNameSchema),
 			}),
 		},
 		onSubmit: async ({ value }) => {
@@ -102,7 +103,7 @@ function SongDetails({ sid }: Props) {
 			dispatch(updateSongDetails({ songId: song.id, songData: newSongObject }));
 
 			// Back up our latest data!
-			await filestore.saveInfoFile(song.id, createInfoContent(newSongObject, { version: 2 }));
+			await filestore.saveInfoFile(song.id, serializeInfoContents(2, newSongObject, {}));
 		},
 	});
 

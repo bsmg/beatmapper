@@ -1,25 +1,27 @@
 import { NoteDirectionAngle } from "bsmap";
 
 import type { EVENT_TRACKS } from "$/constants";
-import { clamp } from "$/utils";
+import { clamp, roundToNearest } from "$/utils";
 import { createPropertySerializationFactory } from "./serialization.helpers";
 
 type BeatmapExtensionsProvider = string;
 
 export interface BeatmapEntitySerializationOptions<T extends BeatmapExtensionsProvider> {
 	/** The provider for which to handle extended properties. If left undefined, will parse as a vanilla property. */
-	provider?: T;
+	extensionsProvider?: T;
 }
 export interface LightshowEntitySerializationOptions {
 	tracks?: typeof EVENT_TRACKS;
 }
 
+type BeatmapExtensionsResolverMap<TWrapper, TSerial> = {
+	validate: (data: TSerial) => boolean;
+	serialize: (data: TWrapper) => TSerial;
+	deserialize: (data: TSerial) => TWrapper;
+};
+
 type BeatmapExtensionsSerializationOptions<TProvider extends BeatmapExtensionsProvider, TWrapper, TSerial> = {
-	[key in TProvider]: {
-		validate: (data: TSerial) => boolean;
-		serialize: (data: TWrapper) => TSerial;
-		deserialize: (data: TSerial) => TWrapper;
-	};
+	[key in TProvider]: BeatmapExtensionsResolverMap<TWrapper, TSerial>;
 };
 
 interface CoordinateSerializationOptions<TProvider extends BeatmapExtensionsProvider, TWrapper, TSerial> {
@@ -32,7 +34,7 @@ export function createCoordinateSerializationFactory<TProvider extends BeatmapEx
 	return createPropertySerializationFactory<number, number, BeatmapEntitySerializationOptions<TProvider>, BeatmapEntitySerializationOptions<TProvider>>(() => {
 		return {
 			container: {
-				serialize: (index, { provider }) => {
+				serialize: (index, { extensionsProvider: provider }) => {
 					if (withExtensions && provider) {
 						// if we're parsing a vanilla-compatible value, we should just parse it as-is for better compatibility.
 						if (index >= min && index <= max && index % 1 === 0) return index;
@@ -42,7 +44,7 @@ export function createCoordinateSerializationFactory<TProvider extends BeatmapEx
 					// if extensions is not enabled and we get a decimal index, round it to the nearest inbounds cell.
 					return clamp(Math.round(index), min, max);
 				},
-				deserialize: (index, { provider }) => {
+				deserialize: (index, { extensionsProvider: provider }) => {
 					if (withExtensions && provider) {
 						if (withExtensions[provider].validate(index)) return withExtensions[provider].deserialize(index);
 					}
@@ -54,6 +56,17 @@ export function createCoordinateSerializationFactory<TProvider extends BeatmapEx
 	});
 }
 
+export const MAPPING_EXTENSIONS_INDEX_RESOLVERS: BeatmapExtensionsResolverMap<number, number> = {
+	validate: (index) => index >= 1000 || index <= -1000,
+	serialize: (index) => Math.round(index < 0 ? index * 1000 - 1000 : index * 1000 + 1000),
+	deserialize: (index) => roundToNearest(index < 0 ? index / 1000 + 1 : index / 1000 - 1, 1 / 1000),
+};
+export const MAPPING_EXTENSIONS_DIMENSION_RESOLVERS: BeatmapExtensionsResolverMap<number, number> = {
+	validate: (index) => index >= 1000,
+	serialize: (index) => Math.round(index < 0 ? index * 1000 - 1000 : index * 1000 + 1000),
+	deserialize: (index) => roundToNearest(index < 0 ? index / 1000 + 1 : index / 1000 - 1, 1 / 1000),
+};
+
 interface AngleSerializationOptions<T extends BeatmapExtensionsProvider> {
 	extensions?: BeatmapExtensionsSerializationOptions<T, { angle: number; isDot: boolean }, { direction: number; offset: number }>;
 }
@@ -61,7 +74,7 @@ export function createAngleSerializationFactory<TProvider extends BeatmapExtensi
 	return createPropertySerializationFactory<{ angle: number; isDot: boolean }, { direction: number; offset: number }, BeatmapEntitySerializationOptions<TProvider>, BeatmapEntitySerializationOptions<TProvider>>(() => {
 		return {
 			container: {
-				serialize: (data, { provider }) => {
+				serialize: (data, { extensionsProvider: provider }) => {
 					if (withExtensions && provider) {
 						return withExtensions[provider].serialize({ angle: data.angle % 360, isDot: data.isDot });
 					}
@@ -75,7 +88,7 @@ export function createAngleSerializationFactory<TProvider extends BeatmapExtensi
 						offset: Math.round(offset),
 					};
 				},
-				deserialize: (data, { provider }) => {
+				deserialize: (data, { extensionsProvider: provider }) => {
 					if (withExtensions && provider) {
 						if (withExtensions[provider].validate(data)) return withExtensions[provider].deserialize(data);
 					}

@@ -1,3 +1,5 @@
+export type { Merge } from "@react-spring/three";
+
 // biome-ignore lint/complexity/noBannedTypes: acceptable (heh) use case
 type Acceptable<As> = As & Readonly<Object>;
 /** Creates a loose type (one that accepts a wider definition while providing autocomplete for known values). */
@@ -10,5 +12,7 @@ export type Predicate<Item, Index, Object, Result> = (value: Item, index: Index,
 export type ArrayPredicate<T, R> = Predicate<T, number, T[], R>;
 
 export type MaybeDefined<T> = T extends any ? T : any;
+
+export type OrderedTuple<T, K extends (keyof T)[]> = { [I in keyof K]: T[K[I]] };
 
 export type AnyObject = Record<PropertyKey, any>;

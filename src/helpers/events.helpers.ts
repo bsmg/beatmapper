@@ -1,10 +1,31 @@
-import type { v2 } from "bsmap/types";
+import type { container, v1 as v1t, v2 as v2t, v3 as v3t } from "bsmap/types";
 
 import { EVENT_TRACKS } from "$/constants";
-import { App, TrackType } from "$/types";
+import { App, type Member, TrackType } from "$/types";
+import { v1, v2, v3, v4 } from "bsmap";
+import { object } from "valibot";
+import type { LightshowEntitySerializationOptions } from "./object.helpers";
+import { createPropertySerializationFactory, createSerializationFactory } from "./serialization.helpers";
 
 export function resolveEventId<T extends Pick<App.BasicEvent, "beatNum" | "trackId">>(x: T) {
 	return `${EVENT_TRACKS.map((x) => x.id).indexOf(x.trackId)}-${x.beatNum}`;
+}
+
+function convertTracksToArray(tracks = EVENT_TRACKS, filter = (track: Member<typeof EVENT_TRACKS>) => !!track.type) {
+	const filtered = tracks.filter(filter);
+	return filtered.reduce(
+		(acc, { id }) => {
+			const key = Object.values(App.TrackId).indexOf(id);
+			acc[key] = id;
+			return acc;
+		},
+		[] as (App.TrackId | null)[],
+	);
+}
+function resolveTrackType(trackId: App.TrackId, tracks = EVENT_TRACKS) {
+	const match = tracks.find((track) => track.id === trackId);
+	if (!match) return TrackType.UNSUPPORTED;
+	return match.type;
 }
 
 export function isLightTrack(trackId: App.TrackId, tracks = EVENT_TRACKS) {
@@ -40,94 +61,186 @@ export function isValueEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): even
 	return isValueTrack(event.trackId, tracks);
 }
 
-const LIGHT_EVENT_TYPES = [App.BasicEventType.TRANSITION, App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE] as const;
-
-function serializeEventType<T extends App.BasicEvent>(event: T) {
-	const TRACK_ID_MAP = Object.entries(App.TrackId).reduce(
-		(acc: Record<App.TrackId, number>, [index, value]) => {
-			acc[`${value}`] = Number(index);
-			return acc;
-		},
-		{} as Record<App.TrackId, number>,
-	);
-	return TRACK_ID_MAP[event.trackId];
-}
-function serializeEventValue<T extends App.BasicEvent>(event: T) {
-	if (isValueEvent(event)) return event.laserSpeed;
-	if (isLightEvent(event)) {
-		// `Off` events have no color attribute, since there is no way to tell when importing whether it was supposed to be red or blue.
-		if (event.type === App.BasicEventType.OFF || !event.colorType) return 0;
-		const value = 4 * Object.values(App.EventColor).indexOf(event.colorType) + LIGHT_EVENT_TYPES.indexOf(event.type) + 1;
-		return value - 1;
-	}
-	return 0;
-}
-
-function convertLightingEventToJson<T extends App.IBasicLightEvent>(event: T): v2.IEvent {
-	return {
-		_time: event.beatNum,
-		_type: serializeEventType(event),
-		_value: serializeEventValue(event),
-	};
-}
-function convertLaserSpeedEventToJson<T extends App.IBasicValueEvent>(event: T): v2.IEvent {
-	return {
-		_time: event.beatNum,
-		_type: serializeEventType(event),
-		_value: event.laserSpeed,
-	};
-}
-function convertRotationEventToJson<T extends App.IBasicTriggerEvent>(event: T): v2.IEvent {
-	return {
-		_time: event.beatNum,
-		_type: serializeEventType(event),
-		_value: 0,
-	};
-}
-
 export function convertEventsToExportableJson<T extends App.BasicEvent>(events: T[], tracks = EVENT_TRACKS) {
-	return events.map((event) => {
-		if (isLightTrack(event.trackId, tracks)) {
-			return convertLightingEventToJson(event as App.IBasicLightEvent);
-		}
-		if (isTriggerTrack(event.trackId, tracks)) {
-			return convertRotationEventToJson(event as App.IBasicTriggerEvent);
-		}
-		if (isValueTrack(event.trackId, tracks)) {
-			return convertLaserSpeedEventToJson(event as App.IBasicValueEvent);
-		}
-		return {
-			_time: event.beatNum,
-			_type: serializeEventType(event),
-			_value: 0,
-		};
-	});
+	return events.map((event) => serializeBasicEvent(2, event, { tracks }));
+}
+export function convertEventsToRedux<T extends v2t.IEvent>(events: T[], tracks = EVENT_TRACKS): App.BasicEvent[] {
+	return events.map((event) => deserializeBasicEvent(2, event, { tracks }));
 }
 
-export function convertEventsToRedux<T extends v2.IEvent>(events: T[], tracks = EVENT_TRACKS): App.BasicEvent[] {
-	const TRACK_IDS_ARRAY = Object.entries(App.TrackId).reduce(
-		(acc, [index, value]) => {
-			acc[Number(index)] = value;
-			return acc;
+const { serialize: serializeEventValue, deserialize: deserializeEventValue } = createPropertySerializationFactory<{ effect: App.BasicEventType; color?: App.EventColor; value?: number }, number, LightshowEntitySerializationOptions, LightshowEntitySerializationOptions & { trackId: App.TrackId | "unknown" }>(() => {
+	return {
+		validate: (value, { tracks, trackId }) => {
+			const type = trackId && trackId !== "unknown" ? resolveTrackType(trackId, tracks) : TrackType.UNSUPPORTED;
+			if (type === TrackType.LIGHT) return value >= 0 && value <= 12;
+			return true;
 		},
-		[] as (App.TrackId | null)[],
-	);
-	return events.map((event) => {
-		const trackId = TRACK_IDS_ARRAY[event._type ?? 0] as App.TrackId;
-		const beatNum = event._time ?? 0;
-		const id = resolveEventId({ beatNum, trackId: trackId });
-		if (isTriggerTrack(trackId, tracks)) {
-			return { id, trackId, beatNum, type: App.BasicEventType.TRIGGER } as App.IBasicTriggerEvent;
-		}
-		if (isValueTrack(trackId, tracks)) {
-			const laserSpeed = event._value;
-			return { id, trackId, beatNum, type: App.BasicEventType.VALUE, laserSpeed } as App.IBasicValueEvent;
-		}
-		if (isLightTrack(trackId, tracks)) {
-			const lightingType = event._value === 0 ? App.BasicEventType.OFF : LIGHT_EVENT_TYPES[(event._value ?? 0) % 4];
-			const colorType = event._value === 0 ? undefined : Object.values(App.EventColor)[Math.floor(((event._value ?? 0) - 1) / 4)];
-			return { id, trackId, beatNum, type: lightingType, colorType } as App.IBasicLightEvent;
-		}
-		throw new Error(`Unrecognized event track: ${JSON.stringify(event._type, null, 2)}`);
-	});
-}
+		container: {
+			serialize: (data) => {
+				if (data.effect === App.BasicEventType.TRIGGER) return 0;
+				if (data.effect === App.BasicEventType.VALUE && data.value) return data.value;
+				if (!data.color || !data.effect || data.effect === App.BasicEventType.OFF) return 0;
+				const c = Object.values([App.EventColor.SECONDARY, App.EventColor.PRIMARY, App.EventColor.WHITE]).indexOf(data.color);
+				const e = Object.values<App.BasicEventType>([App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.FADE, App.BasicEventType.TRANSITION]).indexOf(data.effect);
+				return 4 * c + (e + 1);
+			},
+			deserialize: (value, { tracks, trackId }) => {
+				const type = trackId && trackId !== "unknown" ? resolveTrackType(trackId, tracks) : TrackType.UNSUPPORTED;
+				switch (type) {
+					case TrackType.LIGHT: {
+						function resolveEventColor(value: number) {
+							if (value > 8) return App.EventColor.WHITE;
+							if (value > 4) return App.EventColor.PRIMARY;
+							if (value > 0) return App.EventColor.SECONDARY;
+							return undefined;
+						}
+						function resolveEventEffect(value: number) {
+							if (value === 0) return App.BasicEventType.OFF;
+							if (value % 4 === 1) return App.BasicEventType.ON;
+							if (value % 4 === 2) return App.BasicEventType.FLASH;
+							if (value % 4 === 3) return App.BasicEventType.FADE;
+							if (value % 4 === 0) return App.BasicEventType.TRANSITION;
+							return undefined;
+						}
+						return { effect: resolveEventEffect(value) ?? "rotate", color: resolveEventColor(value) };
+					}
+					case TrackType.VALUE: {
+						return { effect: App.BasicEventType.VALUE, value };
+					}
+					case TrackType.TRIGGER: {
+						return { effect: App.BasicEventType.TRIGGER };
+					}
+					default: {
+						throw new Error("Invalid value.");
+					}
+				}
+			},
+		},
+	};
+});
+
+type SharedOptions = [LightshowEntitySerializationOptions, {}, {}, {}, {}];
+
+export const { serialize: serializeBasicEvent, deserialize: deserializeBasicEvent } = createSerializationFactory<App.BasicEvent, [v1t.IEvent, v2t.IEvent, v3t.IBasicEvent, container.v4.IBasicEventContainer], SharedOptions, SharedOptions>("BasicEvent", () => {
+	return {
+		1: {
+			schema: v1.EventSchema,
+			container: {
+				serialize: (s, { tracks }) => {
+					const allTracks = convertTracksToArray(tracks);
+					const value = serializeEventValue({ effect: s.type, color: isLightEvent(s) ? s.colorType : undefined, value: isValueEvent(s) ? s.laserSpeed : undefined }, { tracks });
+					return {
+						_time: s.beatNum,
+						_type: allTracks.indexOf(s.trackId),
+						_value: value,
+					};
+				},
+				deserialize: (s, { tracks }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks);
+					const trackId = allTracks[s._type ?? 0];
+					const fromValue = deserializeEventValue(s._value ?? 0, { tracks, trackId: trackId ?? "unknown" });
+					if (!trackId) throw new Error(`Invalid track id: ${s._type}`);
+					return {
+						id: resolveEventId({ beatNum: s._time ?? 0, trackId }),
+						beatNum: s._time ?? 0,
+						trackId: trackId,
+						type: isLightTrack(trackId, tracks) ? fromValue.effect : isValueTrack(trackId, tracks) ? "change-speed" : "rotate",
+						colorType: isLightTrack(trackId, tracks) ? fromValue.color : undefined,
+						laserSpeed: isValueTrack(trackId, tracks) ? (s._value ?? 0) : undefined,
+					} as App.BasicEvent;
+				},
+			},
+		},
+		2: {
+			schema: v2.EventSchema,
+			container: {
+				serialize: (s, { tracks }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks);
+					const value = serializeEventValue({ effect: s.type, color: isLightEvent(s) ? s.colorType : undefined, value: isValueEvent(s) ? s.laserSpeed : undefined }, { tracks });
+					return {
+						_time: s.beatNum,
+						_type: allTracks.indexOf(s.trackId),
+						_value: value,
+						_floatValue: isLightEvent(s) ? 1 : 0,
+					};
+				},
+				deserialize: (s, { tracks }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks);
+					const trackId = allTracks[s._type ?? 0];
+					const fromValue = deserializeEventValue(s._value ?? 0, { tracks, trackId: trackId ?? "unknown" });
+					if (!trackId) throw new Error(`Invalid track id: ${s._type}`);
+					return {
+						id: resolveEventId({ beatNum: s._time ?? 0, trackId }),
+						beatNum: s._time ?? 0,
+						trackId: trackId,
+						type: isLightTrack(trackId, tracks) ? fromValue.effect : isValueTrack(trackId, tracks) ? "change-speed" : "rotate",
+						colorType: isLightTrack(trackId, tracks) ? fromValue.color : undefined,
+						laserSpeed: isValueTrack(trackId, tracks) ? (s._value ?? 0) : undefined,
+					} as App.BasicEvent;
+				},
+			},
+		},
+		3: {
+			schema: v3.BasicEventSchema,
+			container: {
+				serialize: (s, { tracks }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks ?? EVENT_TRACKS);
+					const value = serializeEventValue({ effect: s.type, color: isLightEvent(s) ? s.colorType : undefined, value: isValueEvent(s) ? s.laserSpeed : undefined }, { tracks });
+					return {
+						b: s.beatNum,
+						et: allTracks.indexOf(s.trackId),
+						i: value,
+						f: isLightEvent(s) ? 1 : 0,
+					};
+				},
+				deserialize: (s, { tracks }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks);
+					const trackId = allTracks[s.et ?? 0];
+					const fromValue = deserializeEventValue(s.i ?? 0, { tracks, trackId: trackId ?? "unknown" });
+					if (!trackId) throw new Error(`Invalid track id: ${s.et}`);
+					return {
+						id: resolveEventId({ beatNum: s.b ?? 0, trackId }),
+						beatNum: s.b ?? 0,
+						trackId: trackId,
+						type: isLightTrack(trackId, tracks) ? fromValue.effect : isValueTrack(trackId, tracks) ? "change-speed" : "rotate",
+						colorType: isLightTrack(trackId, tracks) ? fromValue.color : undefined,
+						laserSpeed: isValueTrack(trackId, tracks) ? (s.i ?? 0) : undefined,
+					} as App.BasicEvent;
+				},
+			},
+		},
+		4: {
+			schema: object({ object: v4.ObjectSchema, data: v4.BasicEventSchema }),
+			container: {
+				serialize: (data, { tracks = EVENT_TRACKS }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks ?? EVENT_TRACKS);
+					const value = serializeEventValue({ effect: data.type, color: isLightEvent(data) ? data.colorType : undefined, value: isValueEvent(data) ? data.laserSpeed : undefined }, { tracks });
+					return {
+						object: {
+							b: data.beatNum,
+						},
+						data: {
+							t: allTracks.indexOf(data.trackId),
+							i: value,
+							f: isLightEvent(data) ? 1 : 0,
+						},
+					};
+				},
+				deserialize: (s, { tracks }: LightshowEntitySerializationOptions) => {
+					const allTracks = convertTracksToArray(tracks);
+					const trackId = allTracks[s.data.t ?? 0];
+					const fromValue = deserializeEventValue(s.data.i ?? 0, { tracks, trackId: trackId ?? "unknown" });
+					if (!trackId) throw new Error(`Invalid track id: ${s.data.t}`);
+					return {
+						id: resolveEventId({ beatNum: s.object.b ?? 0, trackId }),
+						beatNum: s.object.b ?? 0,
+						trackId: trackId,
+						type: isLightTrack(trackId, tracks) ? fromValue.effect : isValueTrack(trackId, tracks) ? "change-speed" : "rotate",
+						colorType: isLightTrack(trackId, tracks) ? fromValue.color : undefined,
+						laserSpeed: isValueTrack(trackId, tracks) ? (s.data.i ?? 0) : undefined,
+					} as App.BasicEvent;
+				},
+			},
+		},
+	};
+});

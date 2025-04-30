@@ -1,19 +1,12 @@
-import type { v2 } from "bsmap/types";
+import { v1, v2, v3, v4 } from "bsmap";
+import type { container, v1 as v1t, v2 as v2t, v3 as v3t } from "bsmap/types";
 
-import { DEFAULT_NUM_COLS } from "$/constants";
 import { App, ObjectPlacementMode } from "$/types";
 import { clamp, normalize, roundToNearest } from "$/utils";
+import { object } from "valibot";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
-
-// These constants relate to the conversion to/from MappingExtensions obstacles.
-const FULL_WALL_HEIGHT_IN_ROWS = 5;
-const WALL_HEIGHT_MIN = 0;
-const WALL_HEIGHT_MAX = 1000;
-
-const WALL_START_BASE = 100;
-const WALL_START_MAX = 400;
-
-const RIDICULOUS_MAP_EX_CONSTANT = 4001;
+import { type BeatmapEntitySerializationOptions, MAPPING_EXTENSIONS_DIMENSION_RESOLVERS, MAPPING_EXTENSIONS_INDEX_RESOLVERS, createCoordinateSerializationFactory } from "./object.helpers";
+import { createPropertySerializationFactory, createSerializationFactory } from "./serialization.helpers";
 
 export function resolveObstacleId(x: Pick<App.Obstacle, "beatNum" | "colIndex" | "type">) {
 	return `${x.beatNum}-${x.colIndex}-${Object.values(App.ObstacleType).indexOf(x.type)}`;
@@ -26,127 +19,203 @@ export function isExtendedObstacle(obstacle: App.Obstacle): obstacle is App.IExt
 	return obstacle.type === App.ObstacleType.EXTENDED;
 }
 
-export function convertObstaclesToRedux<T extends v2.IObstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): App.Obstacle[] {
-	return obstacles.map((o) => {
-		const obstacleData = { beatNum: o._time ?? 0 } as App.Obstacle;
-		const type = o._type ?? 0;
-		const lineIndex = o._lineIndex ?? 0;
-		const width = o._width ?? 0;
-		if (type <= 1) {
-			obstacleData.type = type === 0 ? App.ObstacleType.FULL : App.ObstacleType.TOP;
+const FULL_WALL_HEIGHT_IN_ROWS = 5;
 
-			// We want to truncate widths that fall outside the acceptable parameters (4 columns).
-			let truncatedColspan = width;
-			if (truncatedColspan + lineIndex > 4) {
-				truncatedColspan = 4 - lineIndex;
-			}
+const { serialize: serializeColumn, deserialize: deserializeColumn } = createCoordinateSerializationFactory({ min: undefined, max: undefined, extensions: { "mapping-extensions": MAPPING_EXTENSIONS_INDEX_RESOLVERS } });
+const { serialize: serializeRow, deserialize: deserializeRow } = createCoordinateSerializationFactory({ min: 0, max: 2, extensions: { "mapping-extensions": MAPPING_EXTENSIONS_INDEX_RESOLVERS } });
+const { serialize: serializeWidth, deserialize: deserializeWidth } = createCoordinateSerializationFactory({ min: undefined, max: undefined, extensions: { "mapping-extensions": MAPPING_EXTENSIONS_DIMENSION_RESOLVERS } });
+const { serialize: serializeHeight, deserialize: deserializeHeight } = createCoordinateSerializationFactory({ min: 0, max: FULL_WALL_HEIGHT_IN_ROWS, extensions: { "mapping-extensions": MAPPING_EXTENSIONS_DIMENSION_RESOLVERS } });
 
-			obstacleData.colspan = truncatedColspan;
-		} else {
-			// If this is a Mapping Extension map, we have some extra work to do.
-			// Annoyingly, the 'type' field conveys information about BOTH the wall  height, and the wall Y offset.
-			const typeValue = type - RIDICULOUS_MAP_EX_CONSTANT;
-			const wallHeight = Math.round(typeValue / 1000);
-			const wallStartHeight = typeValue % 1000;
+const { serialize: serializeExtendedType, deserialize: deserializeExtendedType } = createPropertySerializationFactory<{ rowIndex: number; height: number }, number>(() => {
+	// These constants relate to the conversion to/from MappingExtensions obstacles.
+	const EXTENSIONS_CONSTANT = 4001;
+	const WALL_HEIGHT_MIN = 0;
+	const WALL_HEIGHT_MAX = 1000;
+	const WALL_START_BASE = 100;
+	const WALL_START_MAX = 400;
 
-			const rowspan = roundToNearest(normalize(wallHeight, WALL_HEIGHT_MIN, WALL_HEIGHT_MAX, 0, FULL_WALL_HEIGHT_IN_ROWS), 0.001);
-
-			const rowIndex = roundToNearest(normalize(wallStartHeight, WALL_START_BASE, WALL_START_MAX, 0, 2), 0.01);
-
-			obstacleData.type = App.ObstacleType.EXTENDED;
-			if (isExtendedObstacle(obstacleData)) {
-				obstacleData.rowspan = rowspan;
-				obstacleData.rowIndex = rowIndex;
-				obstacleData.colIndex = lineIndex < 0 ? lineIndex / 1000 + 1 : lineIndex / 1000 - 1;
-				obstacleData.colspan = (width - 1000) / 1000;
-			}
-		}
-
-		let duration = o._duration ?? 0;
-		if (duration < 0) {
-			duration = Math.abs(duration);
-			obstacleData.fast = true;
-		}
-
-		const data = {
-			...obstacleData,
-			id: resolveObstacleId({ beatNum: obstacleData.beatNum, colIndex: obstacleData.colIndex ?? lineIndex, type: obstacleData.type }),
-			beatNum: o._time,
-			beatDuration: duration,
-			colIndex: obstacleData.colIndex ?? lineIndex,
-		} as App.Obstacle;
-		return data;
-	});
-}
-
-export function convertObstaclesToExportableJson<T extends App.Obstacle>(obstacles: T[], gridCols = DEFAULT_NUM_COLS): v2.IObstacle[] {
-	return obstacles.map((o, i) => {
-		// Normally, type is either 0 or 1, for walls or ceilings. With Mapping Extensions, type is used to control both height and y position @_@
-		// We can tell if we're managing a MapEx wall by the `type`. It works according to this formula:
-		//    wallHeight * 1000 + startHeight + 4001
-		const obstacleData = {} as v2.IObstacle;
-
-		switch (o.type) {
-			case App.ObstacleType.FULL: {
-				obstacleData._type = 0;
-				obstacleData._lineIndex = o.colIndex;
-				obstacleData._width = o.colspan;
-				break;
-			}
-			case App.ObstacleType.TOP: {
-				obstacleData._type = 1;
-				obstacleData._lineIndex = o.colIndex;
-				obstacleData._width = o.colspan;
-				break;
-			}
-			case App.ObstacleType.EXTENDED: {
-				if (!isExtendedObstacle(o)) break;
+	return {
+		container: {
+			serialize: ({ rowIndex, height }) => {
 				// `wallHeight` is a value from 0 to 4000:
 				// - 0 is flat
 				// - 1000 is normal height (which I think is like 4 rows?)
 				// - 4000 is max
-				let normalizedWallHeight = Math.round(normalize(o.rowspan, 0, FULL_WALL_HEIGHT_IN_ROWS, WALL_HEIGHT_MIN, WALL_HEIGHT_MAX));
+				let normalizedWallHeight = Math.round(normalize(height, 0, FULL_WALL_HEIGHT_IN_ROWS, WALL_HEIGHT_MIN, WALL_HEIGHT_MAX));
 				normalizedWallHeight = clamp(normalizedWallHeight, 0, 4000);
-
-				// Wall start height is a number between 0 and 999. A wall start height of 0 means the bottom of the wall is on the platform. A wall start height of 1000 is on the first cell.
-				let normalizedWallStart = Math.round(normalize(o.rowIndex, 0, 2, WALL_START_BASE, WALL_START_MAX));
+				let normalizedWallStart = Math.round(normalize(rowIndex, 0, 2, WALL_START_BASE, WALL_START_MAX));
 				normalizedWallStart = clamp(normalizedWallStart, 0, 999);
+				const type = normalizedWallHeight * 1000 + normalizedWallStart + EXTENSIONS_CONSTANT;
+				return type;
+			},
+			deserialize: (type) => {
+				const typeValue = type - EXTENSIONS_CONSTANT;
+				const wallHeight = Math.round(typeValue / 1000);
+				const wallStartHeight = typeValue % 1000;
+				const rowspan = roundToNearest(normalize(wallHeight, WALL_HEIGHT_MIN, WALL_HEIGHT_MAX, 0, FULL_WALL_HEIGHT_IN_ROWS), 0.001);
+				const rowIndex = roundToNearest(normalize(wallStartHeight, WALL_START_BASE, WALL_START_MAX, 0, 2), 0.01);
+				return { rowIndex: rowIndex, height: rowspan };
+			},
+		},
+	};
+});
 
-				obstacleData._type = normalizedWallHeight * 1000 + normalizedWallStart + RIDICULOUS_MAP_EX_CONSTANT;
+type SharedOptions = [BeatmapEntitySerializationOptions<"mapping-extensions">, {}, {}, {}, {}];
 
-				// Lanes are values from 0-3 in a standard 4-column grid, but they could be lower or higher than that in a larger grid (eg. in an 8-col grid, the range is -2 through 5).
-				// As with notes, we need to convert them to the thousands-scale used by MappingExtensions.
-				obstacleData._lineIndex = Math.round(o.colIndex < 0 ? o.colIndex * 1000 - 1000 : o.colIndex * 1000 + 1000);
-
-				obstacleData._width = Math.round(o.colspan * 1000 + 1000);
-
-				break;
-			}
-
-			default: {
-				// @ts-expect-error
-				throw new Error(`Unrecognized type: ${o.type}`);
-			}
-		}
-
-		let duration = o.beatDuration;
-		if (o.fast) {
-			duration *= -1;
-		}
-		// Obstacles need to be at least 1/100th of a beat to be visible. Stealing this from MediocreMapper
-		if (Math.abs(duration) === 0) {
-			duration = 0.01;
-		}
-
-		const data = {
-			...obstacleData,
-			_time: o.beatNum,
-			_duration: duration,
-		} as v2.IObstacle;
-
-		return data;
-	});
-}
+export const { serialize: serializeObstacle, deserialize: deserializeObstacle } = createSerializationFactory<App.Obstacle, [v1t.IObstacle, v2t.IObstacle, v3t.IObstacle, container.v4.IObstacleContainer], SharedOptions, SharedOptions>("Obstacle", () => {
+	return {
+		1: {
+			schema: v1.ObstacleSchema,
+			container: {
+				serialize: (data) => {
+					const posX = serializeColumn(data.colIndex, {});
+					const width = serializeWidth(data.colspan, {});
+					const type = isExtendedObstacle(data) ? serializeExtendedType({ rowIndex: data.rowIndex, height: data.rowspan }, {}) : Object.values(App.ObstacleType).indexOf(data.type);
+					return {
+						_type: type,
+						_time: data.beatNum,
+						_duration: data.beatDuration * (data.fast ? -1 : 1),
+						_lineIndex: posX,
+						_width: width,
+					};
+				},
+				deserialize: (data) => {
+					const fromType = data._type && data._type > 2 ? deserializeExtendedType(data._type, {}) : undefined;
+					const type = data._type && data._type > 2 ? App.ObstacleType.EXTENDED : Object.values(App.ObstacleType)[data._type ?? 0];
+					const posX = deserializeColumn(data._lineIndex ?? 0, {});
+					const width = deserializeWidth(data._width ?? 0, {});
+					const fast = data._duration && data._duration < 0 ? true : undefined;
+					return {
+						id: resolveObstacleId({ beatNum: data._time ?? 0, colIndex: posX, type: type }),
+						type: type,
+						beatNum: data._time ?? 0,
+						beatDuration: data._duration ?? 0,
+						colIndex: posX,
+						rowIndex: fromType?.rowIndex,
+						colspan: width,
+						rowspan: fromType?.height,
+						fast,
+					} as App.Obstacle;
+				},
+			},
+		},
+		2: {
+			schema: v2.ObstacleSchema,
+			container: {
+				serialize: (data, options) => {
+					const posX = serializeColumn(data.colIndex, options);
+					const width = serializeWidth(data.colspan, options);
+					const type = isExtendedObstacle(data) ? serializeExtendedType({ rowIndex: data.rowIndex, height: data.rowspan }, {}) : Object.values(App.ObstacleType).indexOf(data.type);
+					return {
+						_type: type,
+						_time: data.beatNum,
+						_duration: data.beatDuration * (data.fast ? -1 : 1),
+						_lineIndex: posX,
+						_width: width,
+					};
+				},
+				deserialize: (data, options) => {
+					const fromType = data._type && data._type > 2 ? deserializeExtendedType(data._type, options) : undefined;
+					const type = data._type && data._type > 2 ? App.ObstacleType.EXTENDED : Object.values(App.ObstacleType)[data._type ?? 0];
+					const posX = deserializeColumn(data._lineIndex ?? 0, options);
+					const width = deserializeWidth(data._width ?? 0, options);
+					const fast = data._duration && data._duration < 0 ? true : undefined;
+					return {
+						id: resolveObstacleId({ beatNum: data._time ?? 0, colIndex: posX, type: type }),
+						type: type,
+						beatNum: data._time ?? 0,
+						beatDuration: Math.abs(data._duration ?? 0),
+						colIndex: posX,
+						rowIndex: fromType?.rowIndex,
+						colspan: width,
+						rowspan: fromType?.height,
+						fast,
+					} as App.Obstacle;
+				},
+			},
+		},
+		3: {
+			schema: v3.ObstacleSchema,
+			container: {
+				serialize: (data, options) => {
+					const posX = serializeColumn(data.colIndex, options);
+					const posY = serializeRow(isExtendedObstacle(data) ? data.rowIndex : data.type === App.ObstacleType.FULL ? 0 : 2, options);
+					const width = serializeWidth(data.colspan, options);
+					const height = serializeHeight(isExtendedObstacle(data) ? data.rowspan : data.type === App.ObstacleType.FULL ? 5 : 3, options);
+					return {
+						b: data.beatNum,
+						d: data.beatDuration * (data.fast ? -1 : 1),
+						x: posX,
+						y: posY,
+						w: width,
+						h: height,
+					};
+				},
+				deserialize: (data, options) => {
+					const type = data.y === 0 && data.h === 5 ? App.ObstacleType.FULL : data.y === 2 && data.h === 3 ? App.ObstacleType.TOP : App.ObstacleType.EXTENDED;
+					const posX = deserializeColumn(data.x ?? 0, options);
+					const posY = deserializeRow(data.y ?? 0, options);
+					const width = deserializeWidth(data.w ?? 0, options);
+					const height = deserializeHeight(data.h ?? 0, options);
+					const fast = data.d && data.d < 0 ? true : undefined;
+					return {
+						id: resolveObstacleId({ beatNum: data.b ?? 0, colIndex: posX, type: type }),
+						type: type,
+						beatNum: data.b ?? 0,
+						beatDuration: data.d ?? 0,
+						colIndex: posX,
+						rowIndex: type === App.ObstacleType.EXTENDED ? posY : undefined,
+						colspan: width,
+						rowspan: type === App.ObstacleType.EXTENDED ? height : undefined,
+						fast,
+					} as App.Obstacle;
+				},
+			},
+		},
+		4: {
+			schema: object({ object: v4.ObjectLaneSchema, data: v4.ObstacleSchema }),
+			container: {
+				serialize: (data) => {
+					const posX = serializeColumn(data.colIndex, {});
+					const posY = serializeRow(isExtendedObstacle(data) ? data.rowIndex : data.type === App.ObstacleType.FULL ? 0 : 2, {});
+					const width = serializeWidth(data.colspan, {});
+					const height = serializeHeight(isExtendedObstacle(data) ? data.rowspan : data.type === App.ObstacleType.FULL ? 5 : 3, {});
+					return {
+						object: {
+							b: data.beatNum,
+						},
+						data: {
+							d: data.beatDuration * (data.fast ? -1 : 1),
+							x: posX,
+							y: posY,
+							w: width,
+							h: height,
+						},
+					};
+				},
+				deserialize: (data) => {
+					const type = data.data.y === 0 && data.data.h === 5 ? App.ObstacleType.FULL : data.data.y === 2 && data.data.h === 3 ? App.ObstacleType.TOP : App.ObstacleType.EXTENDED;
+					const posX = deserializeColumn(data.data.x ?? 0, {});
+					const posY = deserializeRow(data.data.y ?? 0, {});
+					const width = deserializeWidth(data.data.w ?? 0, {});
+					const height = deserializeHeight(data.data.h ?? 0, {});
+					const fast = data.data.d && data.data.d < 0 ? true : undefined;
+					return {
+						id: resolveObstacleId({ beatNum: data.object.b ?? 0, colIndex: posX, type: type }),
+						type: type,
+						beatNum: data.object.b ?? 0,
+						beatDuration: data.data.d ?? 0,
+						colIndex: posX,
+						rowIndex: type === App.ObstacleType.EXTENDED ? posY : undefined,
+						colspan: width,
+						rowspan: type === App.ObstacleType.EXTENDED ? height : undefined,
+						fast,
+					} as App.Obstacle;
+				},
+			},
+		},
+	};
+});
 
 export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols: number, numRows: number, colWidth: number, rowHeight: number, mouseDownAt: { colIndex: number; rowIndex: number } | null, mouseOverAt: { colIndex: number; rowIndex: number } | null, beatDuration = 4) {
 	if (!mouseDownAt || !mouseOverAt) throw new Error("Unable to create valid obstacle.");

@@ -7,6 +7,13 @@ import { slugify } from "$/utils";
 export function resolveSongId(x: Pick<App.Song, "name">): string {
 	return slugify(x.name);
 }
+export function resolveBeatmapId(filename: string): string {
+	let fn = filename;
+	for (const ext of [".json", ".dat", ".beatmap", ".lightshow"]) {
+		fn = fn.replace(ext, "");
+	}
+	return fn;
+}
 
 export function resolveDifficulty(id: BeatmapId): Member<typeof DIFFICULTIES> {
 	for (const difficulty of [...DIFFICULTIES].reverse()) {

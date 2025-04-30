@@ -1,3 +1,5 @@
+import { isEmpty } from "./guards";
+
 export function pick<T extends object, K extends keyof T>(obj: T, ...keys: readonly K[]): Pick<T, K> {
 	const result = {} as T;
 	for (const key of keys) {
@@ -76,4 +78,8 @@ export function deepMerge<T extends Record<string, any>>(target: T, ...sources: 
 		}
 	}
 	return deepMerge(output, ...sources);
+}
+
+export function maybeObject<T extends object>(object: T) {
+	return !isEmpty(object) ? object : undefined;
 }

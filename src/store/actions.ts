@@ -5,6 +5,7 @@ import type WaveformData from "waveform-data";
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
 import { resolveBeatForItem } from "$/helpers/item.helpers";
+import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { type App, type BeatmapId, type EventColor, type EventEditMode, type EventTool, type GridPresets, type IEventTrack, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
@@ -334,7 +335,7 @@ export const moveMouseAcrossEventsGrid = createAction("MOVE_MOUSE_ACROSS_EVENTS_
 	return { payload: { ...args } };
 });
 
-export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { songId: SongId; version?: number }) => {
+export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { songId: SongId; version?: ImplicitVersion }) => {
 	return { payload: { ...args, version: args.version ?? 2 } };
 });
 

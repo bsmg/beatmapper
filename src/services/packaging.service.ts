@@ -1,296 +1,42 @@
-/**
- * This service zips up the current state, to let the user download it.
- */
-
-import { sortV2NoteFn, sortV2ObjectFn } from "bsmap";
-import { DifficultyName, type v2 } from "bsmap/types";
+import type { v1 as v1t, v2 as v2t } from "bsmap/types";
 import { formatDate } from "date-fns/format";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
-import { convertBookmarksToExportableJson } from "$/helpers/bookmarks.helpers";
-import { formatColorForMods } from "$/helpers/colors.helpers";
-import { convertEventsToExportableJson } from "$/helpers/events.helpers";
-import { convertBlocksToExportableJson, convertMinesToExportableJson, convertNotesToMappingExtensions } from "$/helpers/notes.helpers";
-import { convertObstaclesToExportableJson } from "$/helpers/obstacles.helpers";
-import { resolveDifficulty, resolveRankForDifficulty, resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
+import { deserializeBasicEvent } from "$/helpers/events.helpers";
+import { type InferBeatmapSerializationOptions, deserializeBeatmapContents, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import type { ImplicitVersion } from "$/helpers/serialization.helpers";
+import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
-import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles } from "$/store/selectors";
+import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles, selectIsModuleEnabled, selectOffsetInBeats } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { App, type SongId } from "$/types";
-import { isEmpty, omit } from "$/utils";
-import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getFileFromArchive, shiftEntitiesByOffset } from "./packaging.service.nitty-gritty";
+import type { App, SongId } from "$/types";
+import { deriveDefaultModSettingsFromBeatmap, getArchiveVersion, getFileFromArchive } from "./packaging.service.nitty-gritty";
 
 const LIGHTSHOW_FILENAME = "EasyLightshow.dat";
 
-export function createInfoContent(song: Omit<App.Song, "id" | "songFilename" | "coverArtFilename" | "createdAt" | "lastOpenedAt">, meta = { version: 2 }) {
-	const difficultyIds = sortBeatmapIds(Object.keys(song.difficultiesById));
-	const difficulties = difficultyIds.map((id) => song.difficultiesById[id]);
+export function serializeBeatmapContentsFromState<T extends ImplicitVersion>(version: T, state: RootState, songId: SongId) {
+	const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
-	// We need to make sure we store numbers as numbers. This SHOULD be done at a higher level, but may not be.
-	const bpm = Number(song.bpm);
-	const offset = Number(song.offset);
-
-	// Has this song enabled any mod support?
-	const requirements: string[] = [];
-	const mappingExtensionsEnabled = !!song.modSettings.mappingExtensions?.isEnabled;
-	if (mappingExtensionsEnabled) {
-		requirements.push("Mapping Extensions");
-	}
-
-	const editorSettings = {
-		enabledFastWalls: song.enabledFastWalls,
-		modSettings: !isEmpty(song.modSettings) ? song.modSettings : undefined,
+	const contents = {
+		notes: selectAllColorNotes(state),
+		bombs: selectAllBombNotes(state),
+		obstacles: selectAllObstacles(state),
+		events: selectAllBasicEvents(state),
+		bookmarks: selectAllBookmarks(state),
 	};
 
-	// biome-ignore lint/suspicious/noImplicitAnyLet: awaiting rewrite
-	let contents;
-	if (meta.version === 1) {
-		contents = {
-			songName: song.name,
-			songSubName: song.subName,
-			authorName: song.artistName,
-			beatsPerMinute: bpm,
-			previewStartTime: song.previewStartTime,
-			previewDuration: song.previewDuration,
-			coverImagePath: "cover.jpg",
-			environmentName: song.environment,
-			difficultyLevels: difficulties.map((beatmap) => {
-				const difficulty = resolveDifficulty(beatmap.id);
-				return {
-					difficulty: beatmap.id,
-					difficultyRank: resolveRankForDifficulty(difficulty) + 1,
-					audioPath: "song.ogg",
-					jsonPath: `${beatmap.id}.json`,
-					offset: offset,
-					oldOffset: offset,
-				};
-			}),
-		};
-	} else if (meta.version === 2) {
-		const beatmapSets = [
-			{
-				_beatmapCharacteristicName: "Standard",
-				_difficultyBeatmaps: difficulties.map((beatmap) => {
-					const difficulty = resolveDifficulty(beatmap.id);
-					const difficultyData = {
-						_difficulty: beatmap.id,
-						_difficultyRank: resolveRankForDifficulty(difficulty),
-						_beatmapFilename: `${beatmap.id}.dat`,
-						_noteJumpMovementSpeed: beatmap.noteJumpSpeed,
-						_noteJumpStartBeatOffset: beatmap.startBeatOffset,
-						_customData: {
-							_editorOffset: offset !== 0 ? offset : undefined,
-							_requirements: requirements.length > 0 ? requirements : undefined,
-						},
-					} as v2.IInfoDifficulty;
-
-					if (beatmap.customLabel) {
-						difficultyData._customData ??= {};
-						difficultyData._customData._difficultyLabel = beatmap.customLabel;
-					}
-
-					return difficultyData;
-				}),
-			},
-		];
-
-		if (song.enabledLightshow) {
-			beatmapSets.push({
-				_beatmapCharacteristicName: "Lightshow",
-				_difficultyBeatmaps: [
-					{
-						_difficulty: DifficultyName[0],
-						_difficultyRank: 1,
-						_beatmapFilename: "EasyLightshow.dat",
-						_noteJumpMovementSpeed: 16,
-						_noteJumpStartBeatOffset: 0,
-						_beatmapColorSchemeIdx: -1,
-						_environmentNameIdx: 0,
-						_customData: {
-							_editorOffset: offset !== 0 ? offset : undefined,
-							_requirements: requirements.length > 1 ? requirements : undefined,
-							_difficultyLabel: "Lightshow",
-						},
-					},
-				],
-			});
-		}
-
-		contents = {
-			_version: "2.0.0",
-			_songName: song.name,
-			_songSubName: song.subName || "",
-			_songAuthorName: song.artistName,
-			_levelAuthorName: song.mapAuthorName || "",
-			_beatsPerMinute: bpm,
-			_songTimeOffset: 0,
-			_shuffle: 0,
-			_shufflePeriod: 0.5,
-			_previewStartTime: song.previewStartTime,
-			_previewDuration: song.previewDuration,
-			_songFilename: "song.ogg",
-			_coverImageFilename: "cover.jpg",
-			_environmentName: song.environment,
-			_allDirectionsEnvironmentName: "GlassDesertEnvironment",
-			_customData: {
-				_editors: {
-					_lastEditedBy: "Beatmapper",
-					Beatmapper: {
-						version: version,
-						editorSettings: !isEmpty(editorSettings) ? editorSettings : undefined,
-					},
-				},
-			},
-			_difficultyBeatmapSets: beatmapSets,
-		};
-
-		// If the user has enabled custom colors, we need to include that as well
-		const enabledCustomColors = !!song.modSettings.customColors?.isEnabled;
-		if (enabledCustomColors && song.modSettings.customColors) {
-			const colors = song.modSettings.customColors;
-
-			const colorData = {
-				_colorLeft: colors.colorLeft ? formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
-				_colorRight: colors.colorRight ? formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive) : undefined,
-				_envColorLeft: colors.envColorLeft ? formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive) : undefined,
-				_envColorRight: colors.envColorRight ? formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive) : undefined,
-				_obstacleColor: colors.obstacleColor ? formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive) : undefined,
-			};
-
-			for (const set of contents._difficultyBeatmapSets) {
-				for (const difficulty of set._difficultyBeatmaps) {
-					difficulty._customData = {
-						...difficulty._customData,
-						...colorData,
-					};
-				}
-			}
-		}
-	} else {
-		throw new Error(`Unrecognized version: ${meta.version}`);
-	}
-
-	return contents;
+	return serializeBeatmapContents<T>(version, contents, {
+		editorOffsetInBeats: editorOffsetInBeats,
+		extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
+	} as InferBeatmapSerializationOptions<T>);
 }
 
-/**
- * This method takes JSON-formatted entities and produces a JSON string to be saved to the persistence system as a file. This is for the beatmap itself, eg. 'Expert.dat'.
- */
-export function createBeatmapContents(
-	{ notes = [], obstacles = [], events = [], bookmarks = [] }: { notes?: v2.INote[]; obstacles?: v2.IObstacle[]; events?: v2.IEvent[]; bookmarks?: v2.IBookmark[] },
-	meta: { version: number },
-	// The following fields are only necessary for v1.
-	bpm?: number,
-	noteJumpSpeed?: number,
-	swing?: number,
-	swingPeriod?: number,
-) {
-	// biome-ignore lint/suspicious/noImplicitAnyLet: awaiting rewrite
-	let contents;
-
-	let sortedNotes = [...notes].sort(sortV2NoteFn);
-	let sortedObstacles = [...obstacles].sort(sortV2ObjectFn);
-	let sortedEvents = [...events].sort(sortV2ObjectFn);
-
-	// Annoyingly sometimes we can end up with floating-point issues on lineIndex and lineLayer. Usually I deal with this in the helpers, but notes don't have a helper yet.
-	// Also, now that 'cutDirection' can be 360 degrees, it also needs to be rounded
-	sortedNotes = sortedNotes.map((note) => ({
-		...note,
-		_lineIndex: Math.round(note._lineIndex ?? 0),
-		_lineLayer: Math.round(note._lineLayer ?? 0),
-		_cutDirection: Math.round(note._cutDirection ?? 0),
-	}));
-
-	// Remove 'selected' property
-	function removeSelected<T extends object>(entity: T) {
-		if ("selected" in entity) {
-			const copy = omit(entity, "selected");
-			return copy;
-		}
-		return entity;
-	}
-
-	sortedNotes = sortedNotes.map(removeSelected);
-	sortedObstacles = sortedObstacles.map(removeSelected);
-	sortedEvents = sortedEvents.map(removeSelected);
-
-	if (meta.version === 2) {
-		contents = {
-			_version: "2.0.0",
-			_events: sortedEvents,
-			_notes: sortedNotes,
-			_obstacles: sortedObstacles,
-			_customData: {
-				_bookmarks: bookmarks,
-			},
-		};
-	} else if (meta.version === 1) {
-		contents = {
-			_version: "1.5.0",
-			_beatsPerMinute: Number(bpm),
-			_beatsPerBar: 16,
-			_noteJumpSpeed: Number(noteJumpSpeed),
-			_shuffle: Number(swing || 0),
-			_shufflePeriod: Number(swingPeriod || 0.5),
-			_events: sortedEvents,
-			_notes: sortedNotes,
-			_obstacles: sortedObstacles,
-		};
-	} else {
-		throw new Error(`unrecognized version: ${meta.version}`);
-	}
-
-	return contents;
-}
-
-export function createBeatmapContentsFromState(state: RootState, song: Pick<App.Song, "offset" | "bpm" | "modSettings">) {
-	const notes = convertBlocksToExportableJson(selectAllColorNotes(state));
-	const bombs = convertMinesToExportableJson(selectAllBombNotes(state));
-	const events = convertEventsToExportableJson(selectAllBasicEvents(state));
-	const obstacles = convertObstaclesToExportableJson(selectAllObstacles(state));
-	const bookmarks = convertBookmarksToExportableJson(selectAllBookmarks(state));
-
-	// It's important that notes are sorted by their _time property primarily, and then by _lineLayer secondarily.
-
-	const shiftedNotes = shiftEntitiesByOffset(notes, song.offset, song.bpm);
-	const shiftedBombs = shiftEntitiesByOffset(bombs, song.offset, song.bpm);
-	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
-	const shiftedObstacles = shiftEntitiesByOffset(obstacles, song.offset, song.bpm);
-
-	// Deselect all entities before saving, we don't want to persist that info.
-	const deselect = <T extends object>(entity: T) => ({
-		...entity,
-		selected: false,
-	});
-	let deselectedNotes = shiftedNotes.map(deselect);
-	let deselectedBombs = shiftedBombs.map(deselect);
-	const deselectedObstacles = shiftedObstacles.map(deselect);
-	const deselectedEvents = shiftedEvents.map(deselect);
-
-	// If the user has mapping extensions enabled, multiply the notes to sit in the 1000+ range.
-	if (song.modSettings.mappingExtensions?.isEnabled) {
-		deselectedNotes = convertNotesToMappingExtensions(deselectedNotes);
-		deselectedBombs = convertNotesToMappingExtensions(deselectedBombs);
-	}
-
-	return createBeatmapContents(
-		{
-			notes: [...deselectedNotes, ...deselectedBombs],
-			obstacles: deselectedObstacles,
-			events: deselectedEvents,
-			bookmarks,
-		},
-		{
-			version: 2,
-		},
-	);
-}
-
-export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blob, version: number) => {
+export async function zipFiles(song: App.Song, songFile: Blob, coverArtFile: Blob, version: ImplicitVersion) {
 	const zip = new JSZip();
 
-	const infoContent = createInfoContent(song, { version });
+	const infoContent = serializeInfoContents(version, song, {});
 
 	zip.file("song.ogg", songFile, { binary: true });
 	zip.file("cover.jpg", coverArtFile, { binary: true });
@@ -318,19 +64,15 @@ export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blo
 			// I also need to save the v1 difficulties so that folks can edit their map in other mapping software, and this is annoying because it requires totally different info.
 			const beatmapData = fileContents;
 
-			const legacyFileContents = createBeatmapContents(
-				{
-					notes: beatmapData._notes,
-					obstacles: beatmapData._obstacles,
-					events: beatmapData._events,
-					bookmarks: beatmapData._customData?._bookmarks ?? [],
-				},
-				{ version: 1 },
-				song.bpm,
-				song.difficultiesById[difficulty].noteJumpSpeed,
-				song.swingAmount,
-				song.swingPeriod,
-			);
+			const legacyFileContents = serializeBeatmapContents(1, deserializeBeatmapContents(2, { difficulty: beatmapData, lightshow: undefined }, { editorOffsetInBeats: 0 }), {
+				editorOffsetInBeats: 0,
+				beatsPerMinute: song.bpm,
+				jumpSpeed: song.difficultiesById[difficulty].noteJumpSpeed,
+				jumpOffset: song.difficultiesById[difficulty].startBeatOffset,
+				swingAmount: song.swingAmount,
+				swingPeriod: song.swingPeriod,
+			});
+
 			zip.file(`${difficulty}.json`, JSON.stringify(legacyFileContents), { binary: false });
 		}
 	}
@@ -340,27 +82,19 @@ export const zipFiles = async (song: App.Song, songFile: Blob, coverArtFile: Blo
 		const { fileContents } = difficultyContents[0];
 		if (!fileContents) throw new Error("No file.");
 
-		const events = fileContents._events;
+		const events = fileContents._events?.map((x) => deserializeBasicEvent(2, x, {}));
 
-		const lightshowFileContents = createBeatmapContents({ events }, { version: 2 });
+		const lightshowFileContents = serializeBeatmapContents(2, { events }, { editorOffsetInBeats: 0 });
 
 		zip.file(LIGHTSHOW_FILENAME, JSON.stringify(lightshowFileContents), { binary: false });
 	}
 
-	zip
-		.generateAsync({
-			type: "blob",
-			compression: "DEFLATE",
-			compressionOptions: {
-				level: 9,
-			},
-		})
-		.then((blob) => {
-			const timestamp = formatDate(new Date(), "yyyyMMddTHHmm");
-			const filename = version === 1 ? `${song.id}_${timestamp}.legacy.zip` : `${song.id}_${timestamp}.zip`;
-			saveAs(blob, filename);
-		});
-};
+	zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 9 } }).then((blob) => {
+		const timestamp = formatDate(new Date(), "yyyyMMddTHHmm");
+		const filename = version === 1 ? `${song.id}_${timestamp}.legacy.zip` : `${song.id}_${timestamp}.zip`;
+		saveAs(blob, filename);
+	});
+}
 
 // If the user uploads a legacy song, we first need to convert it to our modern file format.
 // To make life simpler, this method creates a new ZIP as if this is the work that the user selected, except its contents are in v2 format.
@@ -370,7 +104,7 @@ export async function convertLegacyArchive(archive: JSZip) {
 	const info = getFileFromArchive(archive, "info.json");
 	if (!info) throw new Error("No info file.");
 	const infoDatString = await info.async("string");
-	const infoDatJson = JSON.parse(infoDatString);
+	const infoDatJson = JSON.parse(infoDatString) as v1t.IInfo;
 
 	if (infoDatJson.difficultyLevels.length === 0) {
 		throw new Error("This song has no difficulty levels. Because it's in the legacy format, this means we cannot determine critical information about the song.");
@@ -396,17 +130,9 @@ export async function convertLegacyArchive(archive: JSZip) {
 			const file = getFileFromArchive(archive, level.jsonPath);
 			if (!file) throw new Error(`No level file for ${level.difficulty}.`);
 			const fileContents = await file.async("string");
-			const fileJson = JSON.parse(fileContents);
+			const fileJson = JSON.parse(fileContents) as v1t.IDifficulty;
 
-			const newFileContents = createBeatmapContents(
-				{
-					notes: fileJson._notes,
-					obstacles: fileJson._obstacles,
-					events: fileJson._events,
-					bookmarks: fileJson._customData?._bookmarks,
-				},
-				{ version: 2 },
-			);
+			const newFileContents = serializeBeatmapContents(2, deserializeBeatmapContents(1, { difficulty: fileJson, lightshow: undefined }, { editorOffsetInBeats: 0 }), { editorOffsetInBeats: 0 });
 
 			zip.file(`${level.difficulty}.dat`, JSON.stringify(newFileContents), { binary: false });
 
@@ -419,10 +145,13 @@ export async function convertLegacyArchive(archive: JSZip) {
 	);
 
 	// Finally, create our new Info.dat, and zip it up.
-	const difficultiesById = loadedDifficultyFiles.reduce((acc, level) => {
-		acc[level.id] = level;
-		return acc;
-	}, {});
+	const difficultiesById = loadedDifficultyFiles.reduce(
+		(acc, level) => {
+			acc[level.id] = level;
+			return acc;
+		},
+		{} as App.Song["difficultiesById"],
+	);
 
 	const fakeSong = {
 		name: infoDatJson.songName,
@@ -436,7 +165,7 @@ export async function convertLegacyArchive(archive: JSZip) {
 		difficultiesById,
 	} as App.Song;
 
-	const newInfoContent = createInfoContent(fakeSong, { version: 2 });
+	const newInfoContent = serializeInfoContents(2, fakeSong, {});
 	zip.file("Info.dat", JSON.stringify(newInfoContent), { binary: false });
 
 	return zip;
@@ -495,7 +224,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	const enabledLightshow = infoDatJson._difficultyBeatmapSets.some((set: { _beatmapCharacteristicName: string }) => set._beatmapCharacteristicName === "Lightshow");
 
 	const difficultyFiles = await Promise.all(
-		beatmapSet._difficultyBeatmaps.map(async (beatmap: v2.IInfoDifficulty) => {
+		beatmapSet._difficultyBeatmaps.map(async (beatmap: v2t.IInfoDifficulty) => {
 			const file = getFileFromArchive(archive, beatmap._beatmapFilename);
 			if (!file) throw new Error(`No level file for ${beatmap._beatmapFilename}`);
 			const fileContents = await file.async("string");

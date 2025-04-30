@@ -26,23 +26,23 @@ describe("coordinate helpers", () => {
 			expect(serializeCoordinate(0, {})).toEqual(0);
 			expect(serializeCoordinate(3, {})).toEqual(3);
 			// if extensions is enabled, parse as vanilla
-			expect(serializeCoordinate(1, { provider: "mapping-extensions" })).toEqual(1);
-			expect(serializeCoordinate(1, { provider: "noodle-extensions" })).toEqual(1);
+			expect(serializeCoordinate(1, { extensionsProvider: "mapping-extensions" })).toEqual(1);
+			expect(serializeCoordinate(1, { extensionsProvider: "noodle-extensions" })).toEqual(1);
 		});
 		it("parses extended grids", () => {
 			// if extensions is disabled, snaps to inbounds cell
 			expect(serializeCoordinate(4, {})).toEqual(3);
 			expect(serializeCoordinate(-1, {})).toEqual(0);
-			expect(serializeCoordinate(4, { provider: "mapping-extensions" })).toEqual(5000);
-			expect(serializeCoordinate(-1, { provider: "mapping-extensions" })).toEqual(-2000);
-			expect(serializeCoordinate(4, { provider: "noodle-extensions" })).toEqual(2.5);
-			expect(serializeCoordinate(-1, { provider: "noodle-extensions" })).toEqual(-2.5);
+			expect(serializeCoordinate(4, { extensionsProvider: "mapping-extensions" })).toEqual(5000);
+			expect(serializeCoordinate(-1, { extensionsProvider: "mapping-extensions" })).toEqual(-2000);
+			expect(serializeCoordinate(4, { extensionsProvider: "noodle-extensions" })).toEqual(2.5);
+			expect(serializeCoordinate(-1, { extensionsProvider: "noodle-extensions" })).toEqual(-2.5);
 		});
 		it("parses precision placement", () => {
 			// if extensions is disabled, round to nearest cell
 			expect(serializeCoordinate(1.25, {})).toEqual(1);
-			expect(serializeCoordinate(1.25, { provider: "mapping-extensions" })).toEqual(2250);
-			expect(serializeCoordinate(1.25, { provider: "noodle-extensions" })).toEqual(-0.25);
+			expect(serializeCoordinate(1.25, { extensionsProvider: "mapping-extensions" })).toEqual(2250);
+			expect(serializeCoordinate(1.25, { extensionsProvider: "noodle-extensions" })).toEqual(-0.25);
 		});
 	});
 	describe(deserializeCoordinate.name, () => {
@@ -52,16 +52,16 @@ describe("coordinate helpers", () => {
 			expect(() => deserializeCoordinate(-1000, {})).toThrow();
 		});
 		it("handles mapping extensions", () => {
-			expect(deserializeCoordinate(1, { provider: "mapping-extensions" })).toEqual(1);
-			expect(deserializeCoordinate(1000, { provider: "mapping-extensions" })).toEqual(0);
-			expect(deserializeCoordinate(-2250, { provider: "mapping-extensions" })).toEqual(-1.25);
-			expect(() => deserializeCoordinate(-999, { provider: "mapping-extensions" })).toThrow();
-			expect(() => deserializeCoordinate(999, { provider: "mapping-extensions" })).toThrow();
+			expect(deserializeCoordinate(1, { extensionsProvider: "mapping-extensions" })).toEqual(1);
+			expect(deserializeCoordinate(1000, { extensionsProvider: "mapping-extensions" })).toEqual(0);
+			expect(deserializeCoordinate(-2250, { extensionsProvider: "mapping-extensions" })).toEqual(-1.25);
+			expect(() => deserializeCoordinate(-999, { extensionsProvider: "mapping-extensions" })).toThrow();
+			expect(() => deserializeCoordinate(999, { extensionsProvider: "mapping-extensions" })).toThrow();
 		});
 		it("handles noodle extensions", () => {
-			expect(deserializeCoordinate(1, { provider: "noodle-extensions" })).toEqual(2.5);
-			expect(deserializeCoordinate(-2.75, { provider: "noodle-extensions" })).toEqual(-1.25);
-			expect(deserializeCoordinate(-1.175, { provider: "noodle-extensions" })).toBeCloseTo(0.325);
+			expect(deserializeCoordinate(1, { extensionsProvider: "noodle-extensions" })).toEqual(2.5);
+			expect(deserializeCoordinate(-2.75, { extensionsProvider: "noodle-extensions" })).toEqual(-1.25);
+			expect(deserializeCoordinate(-1.175, { extensionsProvider: "noodle-extensions" })).toBeCloseTo(0.325);
 		});
 	});
 });
@@ -91,9 +91,9 @@ describe("angle helpers", () => {
 		it("parses precision rotation", () => {
 			expect(serializeAngle({ angle: 5.25, isDot: false }, {})).toEqual({ direction: 1, offset: 5 });
 			expect(serializeAngle({ angle: 22.5, isDot: false }, {})).toEqual({ direction: 7, offset: -22 });
-			expect(serializeAngle({ angle: 5.25, isDot: false }, { provider: "mapping-extensions" })).toEqual({ direction: 1355, offset: 0 });
-			expect(serializeAngle({ angle: 22.5, isDot: false }, { provider: "mapping-extensions" })).toEqual({ direction: 1337, offset: 0 });
-			expect(serializeAngle({ angle: 5.25, isDot: true }, { provider: "mapping-extensions" })).toEqual({ direction: 2355, offset: 0 });
+			expect(serializeAngle({ angle: 5.25, isDot: false }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 1355, offset: 0 });
+			expect(serializeAngle({ angle: 22.5, isDot: false }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 1337, offset: 0 });
+			expect(serializeAngle({ angle: 5.25, isDot: true }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 2355, offset: 0 });
 		});
 	});
 	describe(deserializeAngle.name, () => {
@@ -109,12 +109,12 @@ describe("angle helpers", () => {
 			expect(() => deserializeAngle({ direction: 1000, offset: 0 }, {})).toThrow();
 		});
 		it("handles mapping extensions", () => {
-			expect(() => deserializeAngle({ direction: 999, offset: 0 }, { provider: "mapping-extensions" })).toThrow();
-			expect(() => deserializeAngle({ direction: 1361, offset: 0 }, { provider: "mapping-extensions" })).toThrow();
-			expect(deserializeAngle({ direction: 1000, offset: 0 }, { provider: "mapping-extensions" })).toEqual({ angle: 0, isDot: false });
-			expect(deserializeAngle({ direction: 1090, offset: 0 }, { provider: "mapping-extensions" })).toEqual({ angle: 270, isDot: false });
-			expect(deserializeAngle({ direction: 2000, offset: 0 }, { provider: "mapping-extensions" })).toEqual({ angle: 0, isDot: true });
-			expect(deserializeAngle({ direction: 2090, offset: 0 }, { provider: "mapping-extensions" })).toEqual({ angle: 270, isDot: true });
+			expect(() => deserializeAngle({ direction: 999, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toThrow();
+			expect(() => deserializeAngle({ direction: 1361, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toThrow();
+			expect(deserializeAngle({ direction: 1000, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 0, isDot: false });
+			expect(deserializeAngle({ direction: 1090, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 270, isDot: false });
+			expect(deserializeAngle({ direction: 2000, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 0, isDot: true });
+			expect(deserializeAngle({ direction: 2090, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 270, isDot: true });
 		});
 	});
 });
