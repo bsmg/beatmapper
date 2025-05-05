@@ -118,7 +118,6 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const volume = selectVolume(state);
 			const playbackRate = selectPlaybackRate(state);
 			const file = await filestore.loadFile<Blob>(song.songFilename);
-			if (!file) return;
 			const arrayBuffer = await convertFileToArrayBuffer(file);
 			await audioSample.load(arrayBuffer);
 			audioSample.changeVolume(volume);
@@ -199,7 +198,6 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const { songFilename, offset } = action.payload;
 			if (!songFilename) return;
 			const file = await filestore.loadFile<Blob>(songFilename);
-			if (!file) return;
 			const arrayBuffer = await convertFileToArrayBuffer(file);
 			await audioSample.load(arrayBuffer);
 			audioSample.setCurrentTime((offset ?? 0) / 1000);

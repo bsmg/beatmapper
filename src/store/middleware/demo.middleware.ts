@@ -21,7 +21,7 @@ export default function createDemoMiddleware() {
 			if (isNewUser) {
 				const res = await fetch(demoFileUrl);
 				const blob = await res.blob();
-				const songData = await processImportedMap(blob, []);
+				const songData = await processImportedMap(blob, {});
 				songData.demo = true;
 				await api.dispatch(importExistingSong({ songData }));
 				// TODO: Should pull data from demoSong

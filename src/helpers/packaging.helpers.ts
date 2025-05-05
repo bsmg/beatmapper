@@ -2,8 +2,8 @@ import { remapDedupe, sortV2NoteFn, v1, v2, v3, v4 } from "bsmap";
 import { type BeatmapFileType, DifficultyName, type DifficultyRank, type EnvironmentAllName, type EnvironmentName, type InferBeatmapSerial, type InferBeatmapVersion, type v1 as v1t, type v2 as v2t, type v4 as v4t } from "bsmap/types";
 import { object, optional } from "valibot";
 
-import { DEFAULT_NOTE_JUMP_SPEEDS, type DIFFICULTIES } from "$/constants";
-import { App, type Member, type Merge, type OrderedTuple } from "$/types";
+import { DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
+import { App, type Merge, type OrderedTuple } from "$/types";
 import { maybeObject } from "$/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
 import { formatColorForMods } from "./colors.helpers";
@@ -24,13 +24,15 @@ export type InferBeatmapSerials<TFileType extends BeatmapFileType> = {
 
 export type PickInferBeatmapSerials<TFileType extends BeatmapFileType> = OrderedTuple<{ [index in 0 | 1 | 2 | 3]: { [K in TFileType]: InferBeatmapSerials<K>[index] } }, [0, 1, 2, 3]>;
 
+export type PickBeatmapSerials<TFileType extends BeatmapFileType> = PickInferBeatmapSerials<TFileType>[0 | 1 | 2 | 3];
+
 type InfoSerializationOptions = OrderedTuple<
 	{
 		0: {};
 		1: {};
 		2: {};
 		3: {};
-		4: { songDuration: number };
+		4: { songDuration?: number };
 	},
 	[0, 1, 2, 3, 4]
 >;
@@ -45,6 +47,9 @@ type InfoDeserializationOptions = OrderedTuple<
 	},
 	[0, 1, 2, 3, 4]
 >;
+
+export type InferInfoSerializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<InfoSerializationOptions[0], InfoSerializationOptions[T]>;
+export type InferInfoDeserializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<InfoDeserializationOptions[0], InfoDeserializationOptions[T]>;
 
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createSerializationFactory<App.Song, InferBeatmapSerials<"info">, InfoSerializationOptions, InfoDeserializationOptions>("Info", () => {
 	function coalesceBeatmapCollection(data: App.Song) {
@@ -119,7 +124,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						const id = resolveBeatmapId(beatmap.jsonPath);
 						acc[id] = {
 							id,
-							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmap.difficulty as Member<typeof DIFFICULTIES>],
+							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmap.difficulty],
 							startBeatOffset: 0,
 							customLabel: beatmap.difficultyLabel,
 						};
@@ -167,7 +172,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 									_customData: maybeObject({
 										_editorOffset: data.offset !== 0 ? data.offset : undefined,
 										_requirements: requirements.length > 0 ? requirements : undefined,
-										_difficultyLabel: beatmap.customLabel,
+										_difficultyLabel: beatmap.customLabel && beatmap.customLabel.length > 0 ? beatmap.customLabel : undefined,
 										...customColors,
 									}),
 								};
@@ -312,7 +317,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 								customData: maybeObject({
 									_editorOffset: data.offset !== 0 ? data.offset : undefined,
 									_requirements: requirements.length > 0 ? requirements : undefined,
-									_difficultyLabel: beatmap.customLabel,
+									_difficultyLabel: beatmap.customLabel && beatmap.customLabel.length > 0 ? beatmap.customLabel : undefined,
 									...customColors,
 								}),
 							};
@@ -397,8 +402,8 @@ type BeatmapDeserializationOptions = OrderedTuple<
 	[0, 1, 2, 3, 4]
 >;
 
-export type InferBeatmapSerializationOptions<T extends ImplicitVersion> = Merge<BeatmapSerializationOptions[0], BeatmapSerializationOptions[T]>;
-export type InferBeatmapDeserializationOptions<T extends ImplicitVersion> = Merge<BeatmapDeserializationOptions[0], BeatmapDeserializationOptions[T]>;
+export type InferBeatmapSerializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<BeatmapSerializationOptions[0], BeatmapSerializationOptions[T]>;
+export type InferBeatmapDeserializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<BeatmapDeserializationOptions[0], BeatmapDeserializationOptions[T]>;
 
 export const { serialize: serializeBeatmapContents, deserialize: deserializeBeatmapContents } = createSerializationFactory<Partial<App.BeatmapEntities>, PickInferBeatmapSerials<"difficulty" | "lightshow">, BeatmapSerializationOptions, BeatmapDeserializationOptions>("Beatmap", () => {
 	function shiftByOffset<T extends { beatNum: number }>(options: { editorOffsetInBeats: number }) {

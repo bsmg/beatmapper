@@ -24,7 +24,7 @@ import {
 	updateModColorOverdrive,
 	updateSongDetails,
 } from "$/store/actions";
-import { type App, type Member, ObjectPlacementMode, type SongId } from "$/types";
+import { type App, type BeatmapId, type Member, ObjectPlacementMode, type SongId } from "$/types";
 import { deepMerge } from "$/utils";
 
 const adapter = createEntityAdapter<App.Song, SongId>({
@@ -50,6 +50,10 @@ const slice = createSlice({
 		selectBeatmapIds: createSelector(selectByIdOrNull, (song) => {
 			if (!song) return [];
 			return sortBeatmapIds(Object.keys(song.difficultiesById));
+		}),
+		selectBeatmapById: createSelector([selectByIdOrNull, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			if (!song) throw new Error(`No beatmap found for id: ${beatmapId}`);
+			return song.difficultiesById[beatmapId];
 		}),
 		selectIsDemo: createSelector(selectByIdOrNull, (song) => {
 			return !!song?.demo;
@@ -92,8 +96,8 @@ const slice = createSlice({
 			return adapter.upsertMany(state, Object.values(byId));
 		});
 		builder.addCase(startLoadingSong, (state, action) => {
-			const { songId, difficulty } = action.payload;
-			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: difficulty } });
+			const { songId, beatmapId } = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(finishLoadingSong, (state, action) => {
 			const {
@@ -132,77 +136,49 @@ const slice = createSlice({
 			});
 		});
 		builder.addCase(importExistingSong, (state, action) => {
-			const {
-				createdAt,
-				lastOpenedAt,
-				songData: { songId, songFilename, coverArtFilename, name, subName, artistName, mapAuthorName, bpm, offset, swingAmount, swingPeriod, previewStartTime, previewDuration, environment, difficultiesById, demo, modSettings = {}, enabledFastWalls = false, enabledLightshow = false },
-			} = action.payload;
-			const selectedDifficulty = Object.keys(difficultiesById)[0];
-			return adapter.upsertOne(state, {
-				id: songId,
-				name,
-				subName,
-				artistName,
-				mapAuthorName,
-				bpm,
-				offset,
-				swingAmount,
-				swingPeriod,
-				previewStartTime,
-				previewDuration,
-				songFilename,
-				coverArtFilename,
-				environment,
-				selectedDifficulty,
-				difficultiesById,
-				createdAt,
-				lastOpenedAt,
-				demo,
-				modSettings,
-				enabledFastWalls,
-				enabledLightshow,
-			});
+			const { songData } = action.payload;
+			return adapter.upsertOne(state, songData);
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
 			const { songId, ...fieldsToUpdate } = action.payload;
 			return adapter.updateOne(state, { id: songId, changes: fieldsToUpdate });
 		});
 		builder.addCase(createDifficulty, (state, action) => {
-			const { songId, difficulty } = action.payload;
+			const { songId, beatmapId } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					selectedDifficulty: difficulty,
+					selectedDifficulty: beatmapId,
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[difficulty]: { id: difficulty, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[difficulty as Member<typeof DIFFICULTIES>], startBeatOffset: 0, customLabel: "" },
+						[beatmapId]: { id: beatmapId, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapId as Member<typeof DIFFICULTIES>], startBeatOffset: 0, customLabel: "" },
 					}),
 				},
 			});
 		});
 		builder.addCase(copyDifficulty, (state, action) => {
-			const { songId, fromDifficultyId, toDifficultyId } = action.payload;
+			const { songId, fromBeatmapId, toBeatmapId } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					selectedDifficulty: toDifficultyId,
+					selectedDifficulty: toBeatmapId,
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[toDifficultyId]: { ...song.difficultiesById[fromDifficultyId], id: toDifficultyId },
+						[toBeatmapId]: { ...song.difficultiesById[fromBeatmapId], id: toBeatmapId },
 					}),
 				},
 			});
 		});
 		builder.addCase(changeSelectedDifficulty, (state, action) => {
-			const { songId, difficulty } = action.payload;
-			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: difficulty } });
+			const { songId, beatmapId } = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(deleteBeatmap, (state, action) => {
-			const { songId, difficulty } = action.payload;
+			const { songId, beatmapId } = action.payload;
 			const song = selectById(state, songId);
 			const difficultiesById = Object.entries(song.difficultiesById).reduce(
 				(acc, [bid, beatmap]) => {
-					if (bid === difficulty) return acc;
+					if (bid === beatmapId) return acc;
 					acc[bid] = beatmap;
 					return acc;
 				},
@@ -211,13 +187,13 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: { difficultiesById: difficultiesById } });
 		});
 		builder.addCase(updateBeatmapMetadata, (state, action) => {
-			const { songId, difficulty, noteJumpSpeed, startBeatOffset, customLabel } = action.payload;
+			const { songId, beatmapId, noteJumpSpeed, startBeatOffset, customLabel } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[difficulty]: { id: difficulty, noteJumpSpeed, startBeatOffset, customLabel },
+						[beatmapId]: { id: beatmapId, noteJumpSpeed, startBeatOffset, customLabel },
 					}),
 				},
 			});

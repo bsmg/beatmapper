@@ -39,6 +39,7 @@ export const {
 	selectById: selectSongById,
 	selectByIdOrNull: selectSongByIdOrNull,
 	selectBeatmapIds,
+	selectBeatmapById,
 	selectIsDemo: selectIsDemoSong,
 	selectIsModuleEnabled,
 	selectIsFastWallsEnabled,
@@ -305,6 +306,10 @@ export const selectAllSelectedEntities = createSelector([selectAllSelectedObject
 
 export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: Pick<RootState, "entities">) => {
 	return state.entities.editor.bookmarks;
+});
+
+export const selectAllEntities = createSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBookmarks], (notes, bombs, obstacles, events, bookmarks) => {
+	return { notes, bombs, obstacles, events, bookmarks };
 });
 
 export const { selectData: selectClipboardData, selectHasObjects: selectClipboardHasObjects } = clipboard.getSelectors((state: Pick<RootState, "clipboard">) => {

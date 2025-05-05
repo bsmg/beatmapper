@@ -61,13 +61,6 @@ export function isValueEvent(event: App.BasicEvent, tracks = EVENT_TRACKS): even
 	return isValueTrack(event.trackId, tracks);
 }
 
-export function convertEventsToExportableJson<T extends App.BasicEvent>(events: T[], tracks = EVENT_TRACKS) {
-	return events.map((event) => serializeBasicEvent(2, event, { tracks }));
-}
-export function convertEventsToRedux<T extends v2t.IEvent>(events: T[], tracks = EVENT_TRACKS): App.BasicEvent[] {
-	return events.map((event) => deserializeBasicEvent(2, event, { tracks }));
-}
-
 const { serialize: serializeEventValue, deserialize: deserializeEventValue } = createPropertySerializationFactory<{ effect: App.BasicEventType; color?: App.EventColor; value?: number }, number, LightshowEntitySerializationOptions, LightshowEntitySerializationOptions & { trackId: App.TrackId | "unknown" }>(() => {
 	return {
 		validate: (value, { tracks, trackId }) => {

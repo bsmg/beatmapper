@@ -41,13 +41,13 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			}),
 		},
 		onSubmit: async ({ value }) => {
-			dispatch(updateBeatmapMetadata({ songId: sid, difficulty: bid, noteJumpSpeed: value.noteJumpSpeed, startBeatOffset: value.startBeatOffset, customLabel: value.customLabel }));
+			dispatch(updateBeatmapMetadata({ songId: sid, beatmapId: bid, noteJumpSpeed: value.noteJumpSpeed, startBeatOffset: value.startBeatOffset, customLabel: value.customLabel }));
 		},
 	});
 
 	const handleCopyBeatmap = useCallback(
 		(id: BeatmapId) => {
-			dispatch(copyDifficulty({ songId: sid, fromDifficultyId: bid, toDifficultyId: id, afterCopy: () => {} }));
+			dispatch(copyDifficulty({ songId: sid, fromBeatmapId: bid, toBeatmapId: id, afterCopy: () => {} }));
 			navigate({ to: "/edit/$sid/$bid/details", params: { sid: sid.toString(), bid: id.toString() } });
 		},
 		[navigate, dispatch, sid, bid],
@@ -78,7 +78,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
 			const nextDifficultyId = remainingDifficultyIds[0];
 
-			dispatch(deleteBeatmap({ songId: sid, difficulty: bid }));
+			dispatch(deleteBeatmap({ songId: sid, beatmapId: bid }));
 
 			return navigate({ to: "/edit/$sid/$bid/details", params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
 		},

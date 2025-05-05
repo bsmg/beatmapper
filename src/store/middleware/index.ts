@@ -30,7 +30,7 @@ export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options
 	const fileMiddleware = createFileMiddleware({ filestore });
 	const selectionMiddleware = createSelectionMiddleware();
 	const downloadMiddleware = createPackagingMiddleware({ filestore });
-	const backupMiddleware = createBackupMiddleware({ filestore, worker: autosaveWorker });
+	const backupMiddleware = createBackupMiddleware({ worker: autosaveWorker });
 	const demoMiddleware = createDemoMiddleware();
 	const historyMiddleware = createHistoryMiddleware();
 

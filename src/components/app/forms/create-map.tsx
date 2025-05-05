@@ -1,5 +1,4 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
@@ -17,7 +16,6 @@ interface Props {
 function CreateMapForm({ dialog }: Props) {
 	const currentSongIds = useAppSelector(selectSongIds);
 	const dispatch = useAppDispatch();
-	const navigate = useNavigate();
 
 	// These files are sent to the redux middleware.
 	// We'll store them on disk (currently in indexeddb, but that may change), and capture a reference to them by a filename, which we'll store in redux.
@@ -79,8 +77,6 @@ function CreateMapForm({ dialog }: Props) {
 				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedDifficulty: value.selectedDifficulty }));
 
 				if (dialog) dialog.setOpen(false);
-
-				navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId, bid: value.selectedDifficulty } });
 			} catch (err) {
 				console.error("Could not save files to local storage", err);
 				return APP_TOASTER.create({

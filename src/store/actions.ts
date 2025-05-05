@@ -61,23 +61,23 @@ export const startImportingSong = createAction("START_IMPORTING_SONG");
 
 export const cancelImportingSong = createAction("CANCEL_IMPORTING_SONG");
 
-export const importExistingSong = createAction("IMPORT_EXISTING_SONG", (args: { songData: Omit<App.Song, "id"> & { songId: SongId } }) => {
-	return { payload: { ...args, createdAt: Date.now(), lastOpenedAt: Date.now() } };
-});
-
-export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY", (args: { songId: SongId; difficulty: BeatmapId }) => {
+export const importExistingSong = createAction("IMPORT_EXISTING_SONG", (args: { songData: App.Song }) => {
 	return { payload: { ...args } };
 });
 
-export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; difficulty: BeatmapId; afterCreate: (id: BeatmapId) => void }) => {
+export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 
-export const copyDifficulty = createAction("COPY_DIFFICULTY", (args: { songId: SongId; fromDifficultyId: BeatmapId; toDifficultyId: BeatmapId; afterCopy: (id: BeatmapId) => void }) => {
+export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; afterCreate: (id: BeatmapId) => void }) => {
 	return { payload: { ...args } };
 });
 
-export const startLoadingSong = createAction("START_LOADING_SONG", (args: { songId: SongId; difficulty: BeatmapId }) => {
+export const copyDifficulty = createAction("COPY_DIFFICULTY", (args: { songId: SongId; fromBeatmapId: BeatmapId; toBeatmapId: BeatmapId; afterCopy: (id: BeatmapId) => void }) => {
+	return { payload: { ...args } };
+});
+
+export const startLoadingSong = createAction("START_LOADING_SONG", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 
@@ -339,11 +339,11 @@ export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { song
 	return { payload: { ...args, version: args.version ?? 2 } };
 });
 
-export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; difficulty: BeatmapId; noteJumpSpeed: number; startBeatOffset: number; customLabel?: string }) => {
+export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; beatmapId: BeatmapId; noteJumpSpeed: number; startBeatOffset: number; customLabel?: string }) => {
 	return { payload: { ...args } };
 });
 
-export const deleteBeatmap = createAction("DELETE_BEATMAP", (args: { songId: SongId; difficulty: BeatmapId }) => {
+export const deleteBeatmap = createAction("DELETE_BEATMAP", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 
@@ -399,7 +399,7 @@ export const deleteSong = createAction("DELETE_SONG", (args: Pick<App.Song, "id"
 
 export const toggleNoteTick = createAction("TOGGLE_NOTE_TICK");
 
-export const leaveEditor = createAction("LEAVE_EDITOR", (args: { songId: SongId; difficulty: BeatmapId }) => {
+export const leaveEditor = createAction("LEAVE_EDITOR", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 

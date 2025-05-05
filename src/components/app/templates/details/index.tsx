@@ -6,7 +6,7 @@ import { useMount } from "$/components/hooks";
 import { filestore } from "$/setup";
 import { stopPlaying, toggleModForSong, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIds, selectDuration, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
@@ -14,7 +14,6 @@ import { LocalFileUpload } from "$/components/app/compositions";
 import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
-import { serializeInfoContents } from "$/helpers/packaging.helpers";
 import { EnvironmentNameSchema } from "bsmap";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
@@ -25,6 +24,7 @@ interface Props {
 function SongDetails({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
+	const duration = useAppSelector(selectDuration);
 	const enabledCustomColors = useAppSelector((state) => selectIsModuleEnabled(state, sid, "customColors"));
 	const enabledMappingExtensions = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
 	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, sid));
@@ -103,7 +103,10 @@ function SongDetails({ sid }: Props) {
 			dispatch(updateSongDetails({ songId: song.id, songData: newSongObject }));
 
 			// Back up our latest data!
-			await filestore.saveInfoFile(song.id, serializeInfoContents(2, newSongObject, {}));
+			await filestore.updateInfoContents(song.id, newSongObject, {
+				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
+				deserializationOptions: {},
+			});
 		},
 	});
 

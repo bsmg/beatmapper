@@ -53,7 +53,7 @@ const SONG_TABLE = [
 			const [sid, collection] = ctx.getValue();
 			const song = useAppSelector((state) => selectSongById(state, sid));
 			const initialValue = useMemo(() => [song.selectedDifficulty?.toString() ?? Object.keys(song.difficultiesById)[0]], [song]);
-			return <Select collection={collection} value={initialValue} onValueChange={(details) => dispatch(changeSelectedDifficulty({ songId: sid, difficulty: details.value[0] }))} />;
+			return <Select collection={collection} value={initialValue} onValueChange={(details) => dispatch(changeSelectedDifficulty({ songId: sid, beatmapId: details.value[0] }))} />;
 		},
 	}),
 	helper.accessor((data) => [data.id] as const, {

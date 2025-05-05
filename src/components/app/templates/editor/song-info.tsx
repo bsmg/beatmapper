@@ -41,7 +41,7 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleCreate = useCallback(
 		(id: BeatmapId) => {
-			dispatch(createDifficulty({ songId: sid, difficulty: id, afterCreate: () => {} }));
+			dispatch(createDifficulty({ songId: sid, beatmapId: id, afterCreate: () => {} }));
 			navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: id.toString() } });
 		},
 		[navigate, dispatch, sid],

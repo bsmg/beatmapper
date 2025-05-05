@@ -21,6 +21,7 @@ export const DEFAULT_NOTE_JUMP_SPEEDS = {
 	[DifficultyName[2]]: 12,
 	[DifficultyName[3]]: 15,
 	[DifficultyName[4]]: 18,
+	[DifficultyName[5]]: 18,
 } as const;
 
 export const DEFAULT_COLOR_SCHEME = {

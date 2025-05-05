@@ -1,25 +1,36 @@
+import { retrieveVersion } from "bsmap";
 import type { v2 } from "bsmap/types";
 import type JSZip from "jszip";
 
 import { DEFAULT_GRID } from "$/constants";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { formatColorFromImport } from "$/helpers/colors.helpers";
+import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { App } from "$/types";
 import { isEmpty, roundAwayFloatingPointNonsense } from "$/utils";
 
-export function getFileFromArchive(archive: JSZip, filename: string) {
-	// Ideally, our .zip archive will just have all the files we need.
-	const allFilenamesInArchive = Object.keys(archive.files);
-	const matchingFilename = allFilenamesInArchive.find((name) => name.toLowerCase().includes(filename.toLowerCase()));
-	if (!matchingFilename) return null;
-	return archive.files[matchingFilename];
+export function resolveImplicitVersion(data: object, fallback: ImplicitVersion) {
+	const version = retrieveVersion(data);
+	if (!version) return fallback;
+	const major = version.split(".")[0];
+	return Number.parseInt(major) as ImplicitVersion;
 }
 
-export function getArchiveVersion(archive: JSZip) {
-	// We could be importing a v1 or v2 song, we don't know which.
-	// For now, I'm going to do the very lazy thing of just assuming based on the file type; v1 has `info.json` while v2 has `Info.dat`
-	// TODO: More reliable version checking
-	return getFileFromArchive(archive, "Info.dat") ? 2 : 1;
+export function getFileFromArchive(archive: JSZip, ...filenames: string[]) {
+	// Ideally, our .zip archive will just have all the files we need.
+	const allFilenamesInArchive = Object.keys(archive.files);
+	for (const filename of filenames) {
+		const matchingFilename = allFilenamesInArchive.find((name) => name.toLowerCase() === filename.toLowerCase());
+		if (matchingFilename) return archive.files[matchingFilename];
+	}
+	throw new Error(`No matching file in archive for filenames: ${filenames.toString()}`);
+}
+
+export async function getArchiveVersion(archive: JSZip) {
+	const file = getFileFromArchive(archive, "Info.dat", "info.json");
+	const raw = await file.async("text");
+	const json = JSON.parse(raw) as object;
+	return resolveImplicitVersion(json, 2);
 }
 
 function shiftEntitiesByOffsetInBeats<T extends v2.IBaseObject>(entities: T[], offsetInBeats: number) {

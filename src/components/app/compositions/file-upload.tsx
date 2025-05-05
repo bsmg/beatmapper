@@ -32,8 +32,8 @@ export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<t
 		dispatch(startImportingSong());
 		for (const file of details.files) {
 			try {
-				const songData = await processImportedMap(file, songIds);
-				dispatch(importExistingSong({ songData: { ...songData, createdAt: Date.now(), lastOpenedAt: Date.now() } }));
+				const songData = await processImportedMap(file, { currentSongIds: songIds });
+				dispatch(importExistingSong({ songData: { ...songData } }));
 			} catch (err) {
 				dispatch(cancelImportingSong());
 				console.error("Could not import map:", err);
