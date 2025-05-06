@@ -96,7 +96,7 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.loadFile<InferBeatmapSerial<"info", V>>(filename);
 	}
-	async loadBeatmapFile<V extends DifficultyImplicitVersion>(songId: SongId, beatmapId: BeatmapId) {
+	async loadDifficultyFile<V extends DifficultyImplicitVersion>(songId: SongId, beatmapId: BeatmapId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "difficulty", { id: beatmapId });
 		return this.loadFile<InferBeatmapSerial<"difficulty", V>>(filename);
 	}
@@ -122,7 +122,7 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveBeatmapFile<V extends DifficultyImplicitVersion, T extends InferBeatmapFile<"difficulty"> = InferBeatmapSerial<"difficulty", V>>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+	async saveDifficultyFile<V extends DifficultyImplicitVersion, T extends InferBeatmapFile<"difficulty"> = InferBeatmapSerial<"difficulty", V>>(songId: SongId, beatmapId: BeatmapId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "difficulty", { id: beatmapId });
 		return this.saveFile<T>(filename, contents);
 	}
@@ -138,21 +138,29 @@ export class BeatmapFilestore extends Filestore {
 		const newContents = serializeInfoContents(version, structuredClone({ ...currentContents, ...contents }), options.serializationOptions);
 		await this.saveInfoFile(songId, newContents);
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, contents: Partial<App.BeatmapEntities>, options: { serializationOptions: InferBeatmapSerializationOptions; deserializationOptions: InferBeatmapDeserializationOptions }) {
-		const beatmapFile = await this.loadBeatmapFile(songId, beatmapId);
-		const beatmapContents = { difficulty: beatmapFile, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
-		const version = resolveImplicitVersion(beatmapFile, 2);
-		const currentContents = deserializeBeatmapContents(version, beatmapContents, options.deserializationOptions);
-		const newContents = serializeBeatmapContents(version, structuredClone({ ...currentContents, ...contents }), options.serializationOptions);
-		await this.saveBeatmapFile(songId, beatmapId, newContents.difficulty);
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, lightshowId: BeatmapId | null, entities: Partial<App.BeatmapEntities>, options: { serializationOptions: InferBeatmapSerializationOptions; deserializationOptions: InferBeatmapDeserializationOptions }) {
+		const difficulty = await this.loadDifficultyFile(songId, beatmapId);
+		const contents = { difficulty: difficulty, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
+		if (lightshowId) {
+			const lightshow = await this.loadLightshowFile(songId, lightshowId);
+			contents.lightshow = lightshow;
+		}
+		const version = resolveImplicitVersion(difficulty, 2);
+		const currentContents = deserializeBeatmapContents(version, contents, options.deserializationOptions);
+		const newContents = serializeBeatmapContents(version, structuredClone({ ...currentContents, ...entities }), options.serializationOptions);
+		await this.saveDifficultyFile(songId, beatmapId, newContents.difficulty);
+		if (lightshowId && newContents.lightshow) {
+			await this.saveLightshowFile(songId, lightshowId, newContents.lightshow);
+		}
 	}
 
-	async removeAllFilesForSong(songId: SongId, songFilename: string, coverFilename: string, beatmapIds: BeatmapId[]) {
+	async removeAllFilesForSong(songId: SongId, songFilename: string, coverFilename: string, beatmapIds: BeatmapId[], lightshowIds: BeatmapId[]) {
 		return Promise.all([
 			this.removeFile(BeatmapFilestore.resolveFilename(songId, "info", {})),
 			this.removeFile(songFilename),
 			this.removeFile(coverFilename),
 			...beatmapIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "difficulty", { id: id }))),
+			...lightshowIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "lightshow", { id: id }))),
 			//
 		]);
 	}

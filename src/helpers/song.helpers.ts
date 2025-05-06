@@ -17,7 +17,7 @@ export function resolveBeatmapId(filename: string): string {
 
 export function resolveDifficulty(id: BeatmapId): Member<typeof DIFFICULTIES> {
 	for (const difficulty of [...DIFFICULTIES].reverse()) {
-		if (id.toString().includes(difficulty)) return difficulty;
+		if (id.toString().includes(difficulty)) return difficulty.substring(0, difficulty.length) as Member<typeof DIFFICULTIES>;
 	}
 	throw new Error(`Could not resolve difficulty from id: ${id}`);
 }

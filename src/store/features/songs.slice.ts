@@ -126,7 +126,8 @@ const slice = createSlice({
 				selectedDifficulty,
 				difficultiesById: {
 					[selectedDifficulty]: {
-						id: selectedDifficulty,
+						beatmapId: selectedDifficulty,
+						lightshowId: "Common",
 						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty as Member<typeof DIFFICULTIES>],
 						startBeatOffset: 0,
 						customLabel: "",
@@ -144,14 +145,20 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: fieldsToUpdate });
 		});
 		builder.addCase(createDifficulty, (state, action) => {
-			const { songId, beatmapId } = action.payload;
+			const { songId, beatmapId, lightshowId } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
 					selectedDifficulty: beatmapId,
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[beatmapId]: { id: beatmapId, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapId as Member<typeof DIFFICULTIES>], startBeatOffset: 0, customLabel: "" },
+						[beatmapId]: {
+							beatmapId: beatmapId,
+							lightshowId: lightshowId,
+							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapId as Member<typeof DIFFICULTIES>],
+							startBeatOffset: 0,
+							customLabel: "",
+						},
 					}),
 				},
 			});
@@ -164,7 +171,7 @@ const slice = createSlice({
 				changes: {
 					selectedDifficulty: toBeatmapId,
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[toBeatmapId]: { ...song.difficultiesById[fromBeatmapId], id: toBeatmapId },
+						[toBeatmapId]: { ...song.difficultiesById[fromBeatmapId], beatmapId: toBeatmapId },
 					}),
 				},
 			});
@@ -193,7 +200,7 @@ const slice = createSlice({
 				id: songId,
 				changes: {
 					difficultiesById: deepMerge(song.difficultiesById, {
-						[beatmapId]: { id: beatmapId, noteJumpSpeed, startBeatOffset, customLabel },
+						[beatmapId]: { ...song.difficultiesById[beatmapId], noteJumpSpeed, startBeatOffset, customLabel },
 					}),
 				},
 			});

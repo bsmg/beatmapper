@@ -6,7 +6,7 @@ import { Fragment, memo, useCallback, useMemo } from "react";
 import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectSongById } from "$/store/selectors";
+import { selectBeatmapById, selectSongById } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
 import { HStack, Stack, styled } from "$:styled-system/jsx";
@@ -28,6 +28,7 @@ interface Props {
 function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
+	const beatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 	const navigate = useNavigate();
 
 	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ song }), [song]);
@@ -41,10 +42,10 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleCreate = useCallback(
 		(id: BeatmapId) => {
-			dispatch(createDifficulty({ songId: sid, beatmapId: id, afterCreate: () => {} }));
+			dispatch(createDifficulty({ songId: sid, beatmapId: id, lightshowId: beatmap.lightshowId, afterCreate: () => {} }));
 			navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: id.toString() } });
 		},
-		[navigate, dispatch, sid],
+		[navigate, dispatch, sid, beatmap.lightshowId],
 	);
 
 	return (

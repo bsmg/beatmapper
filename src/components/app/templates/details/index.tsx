@@ -110,7 +110,7 @@ function SongDetails({ sid }: Props) {
 		},
 	});
 
-	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
 
 	useMount(() => {
 		// We want to stop & reset the song when the user goes to edit it.
@@ -163,10 +163,10 @@ function SongDetails({ sid }: Props) {
 			<Stack gap={6}>
 				<Heading rank={1}>Edit Difficulties</Heading>
 				<Wrap gap={2} justify={"center"}>
-					{difficultyIds.map((difficultyId) => {
+					{beatmapIds.map((beatmapId) => {
 						return (
-							<BeatmapWrapper key={difficultyId}>
-								<UpdateBeatmapForm sid={sid} bid={difficultyId} />
+							<BeatmapWrapper key={beatmapId}>
+								<UpdateBeatmapForm sid={sid} bid={beatmapId} />
 							</BeatmapWrapper>
 						);
 					})}

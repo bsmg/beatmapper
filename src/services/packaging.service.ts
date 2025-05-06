@@ -59,9 +59,9 @@ export async function zipFiles(version: ImplicitVersion, filestore: BeatmapFiles
 	const beatmapContents = await Promise.all(
 		Object.values(song.difficultiesById).map(async (beatmap) => {
 			const contents = { difficulty: {}, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
-			const difficulty = await filestore.loadBeatmapFile(song.id, beatmap.id);
+			const difficulty = await filestore.loadDifficultyFile(song.id, beatmap.beatmapId);
 			contents.difficulty = difficulty;
-			const difficultyFilename = `${beatmap.id}.dat`;
+			const difficultyFilename = `${beatmap.beatmapId}.dat`;
 
 			const version = resolveImplicitVersion(contents.difficulty, 2);
 			const entities = deserializeBeatmapContents(version, contents, {
@@ -143,8 +143,12 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	// We won't load any of them into redux; instead we'll write it all to disk using our local persistence layer, so that it can be loaded like any other song from the list.
 
 	for (const beatmap of Object.values(info.difficultiesById)) {
-		const rawSerialBeatmap = await getFileFromArchive(archive, `${beatmap.id}.json`, `${beatmap.id}.dat`, `${beatmap.id}.beatmap.dat`).async("string");
-		await filestore.saveBeatmapFile(info.id, beatmap.id, JSON.parse(rawSerialBeatmap));
+		const rawSerialBeatmap = await getFileFromArchive(archive, `${beatmap.beatmapId}.json`, `${beatmap.beatmapId}.dat`, `${beatmap.beatmapId}.beatmap.dat`).async("string");
+		await filestore.saveDifficultyFile(info.id, beatmap.beatmapId, JSON.parse(rawSerialBeatmap));
+		if (beatmap.lightshowId) {
+			const rawSerialLightshow = await getFileFromArchive(archive, `${beatmap.lightshowId}.json`, `${beatmap.lightshowId}.dat`, `${beatmap.lightshowId}.lightshow.dat`).async("string");
+			await filestore.saveLightshowFile(info.id, beatmap.lightshowId, JSON.parse(rawSerialLightshow));
+		}
 	}
 
 	return {

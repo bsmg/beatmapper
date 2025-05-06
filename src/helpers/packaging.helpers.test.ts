@@ -23,12 +23,14 @@ describe("info serialization", () => {
 		environment: "NiceEnvironment",
 		difficultiesById: {
 			Hard: {
-				id: "Hard",
+				beatmapId: "Hard",
+				lightshowId: null,
 				noteJumpSpeed: 12,
 				startBeatOffset: 0,
 			},
 			Expert: {
-				id: "Expert",
+				beatmapId: "Expert",
+				lightshowId: null,
 				noteJumpSpeed: 15,
 				startBeatOffset: 0,
 			},
@@ -191,7 +193,13 @@ describe("info serialization", () => {
 			expect(serializeInfoContents(4, wrapper, { songDuration: 0 })).toMatchObject(v4);
 		});
 		it("converts from wrapper to serial", () => {
-			expect(deserializeInfoContents(4, v4, {})).toMatchObject(wrapper);
+			expect(deserializeInfoContents(4, v4, {})).toMatchObject({
+				...wrapper,
+				difficultiesById: {
+					Hard: { ...wrapper.difficultiesById.Hard, lightshowId: "Hard" },
+					Expert: { ...wrapper.difficultiesById.Expert, lightshowId: "Expert" },
+				},
+			});
 		});
 	});
 

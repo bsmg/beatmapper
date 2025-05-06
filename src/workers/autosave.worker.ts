@@ -1,5 +1,5 @@
 import type { BeatmapFilestore } from "$/services/file.service";
-import { selectActiveBeatmapId, selectAllEntities, selectIsModuleEnabled, selectOffsetInBeats } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllEntities, selectBeatmapById, selectIsModuleEnabled, selectOffsetInBeats } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
@@ -16,13 +16,15 @@ export async function save(state: RootState, songId: SongId, filestore: BeatmapF
 	const editorOffsetInBeats = selectOffsetInBeats(state, songId);
 	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
-	const difficulty = selectActiveBeatmapId(state);
+	const beatmapId = selectActiveBeatmapId(state);
 	// We only want to autosave when a song is currently selected
-	if (!difficulty) return;
+	if (!beatmapId) return;
+
+	const beatmap = selectBeatmapById(state, songId, beatmapId);
 
 	const entities = selectAllEntities(state);
 
-	await filestore.updateBeatmapContents(songId, difficulty, entities, {
+	await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
 		serializationOptions: {
 			editorOffsetInBeats,
 			extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,

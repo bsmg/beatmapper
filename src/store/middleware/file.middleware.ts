@@ -6,8 +6,10 @@ import { type PickBeatmapSerials, deserializeBeatmapContents, serializeInfoConte
 import { BeatmapFilestore } from "$/services/file.service";
 import { resolveImplicitVersion } from "$/services/packaging.service.nitty-gritty";
 import { copyDifficulty, createDifficulty, createNewSong, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { selectAllBasicEvents, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
+import { selectAllBasicEvents, selectBeatmapById, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
+import type { BeatmapId } from "$/types";
+import { uniq } from "$/utils";
 
 interface Options {
 	filestore: BeatmapFilestore;
@@ -21,13 +23,15 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId: sid, selectedDifficulty: bid } = action.payload;
 			const state = api.getState();
+
 			const song = selectSongById(state, sid);
 
 			// we'll always use the latest supported beatmap format
 			const infoContents = serializeInfoContents(4, song, {});
 			// song/cover files are already stored via the dispatched action, so we just need to populate the info/beatmap/lightshow contents
 			await filestore.saveInfoFile(sid, infoContents);
-			await filestore.saveBeatmapFile(sid, bid, { version: "4.0.0" });
+			await filestore.saveDifficultyFile(sid, bid, { version: "4.0.0" });
+			await filestore.saveLightshowFile(sid, "Common", { version: "4.0.0" });
 		},
 	});
 	instance.startListening({
@@ -35,19 +39,28 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId, beatmapId } = action.payload;
 			const state = api.getState();
+
+			const beatmap = selectBeatmapById(state, songId, beatmapId);
+
+			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 			// Fetch the json for this beatmap from our local store.
 			const contents = { difficulty: {}, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
-			const difficulty = await filestore.loadBeatmapFile(songId, beatmapId);
+			const difficulty = await filestore.loadDifficultyFile(songId, beatmap.beatmapId);
 			contents.difficulty = difficulty;
+
+			if (beatmap.lightshowId) {
+				const lightshow = await filestore.loadLightshowFile(songId, beatmap.lightshowId);
+				contents.lightshow = lightshow;
+			}
 
 			// Our beatmap comes in a "raw" form, using proprietary fields.
 			// I need to convert the JSON format to something manageable.
 			console.log(difficulty);
 			const version = resolveImplicitVersion(difficulty, 2);
 			const entities = deserializeBeatmapContents(version, contents, {
-				editorOffsetInBeats: selectOffsetInBeats(state, songId),
+				editorOffsetInBeats,
 				extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
 			});
 			api.dispatch(loadBeatmapEntities(entities));
@@ -64,13 +77,14 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId, beatmapId, afterCreate } = action.payload;
 			const state = api.getState();
+			const beatmap = selectBeatmapById(state, songId, beatmapId);
 
 			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 			const entities = { events: selectAllBasicEvents(state) };
 			// No notes/obstacles/bookmarks by default, but copy the lighting
-			await filestore.updateBeatmapContents(songId, beatmapId, entities, {
+			await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
 				serializationOptions: {
 					editorOffsetInBeats,
 					extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
@@ -93,10 +107,19 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const state = api.getState();
 			const duration = selectDuration(state);
 
+			const source = selectBeatmapById(state, songId, fromBeatmapId);
+			const target = selectBeatmapById(state, songId, toBeatmapId);
+
 			// First, we need to load the file which contains the notes, events, etc for the difficulty we want to copy.
-			const sourceDifficultyFileContents = await filestore.loadBeatmapFile(songId, fromBeatmapId);
+			const sourceDifficultyFileContents = await filestore.loadDifficultyFile(songId, source.beatmapId);
 			// Save it to our destination difficulty.
-			await filestore.saveBeatmapFile(songId, toBeatmapId, sourceDifficultyFileContents);
+			await filestore.saveDifficultyFile(songId, target.beatmapId, sourceDifficultyFileContents);
+
+			if (source.lightshowId && target.lightshowId && source.lightshowId !== target.lightshowId) {
+				const sourceLightshowFileContents = await filestore.loadLightshowFile(songId, source.lightshowId).catch(() => null);
+				if (sourceLightshowFileContents) await filestore.saveLightshowFile(songId, target.lightshowId, sourceLightshowFileContents);
+			}
+
 			// Pull that updated redux state and save it to our Info.dat
 			const song = selectSongById(state, songId);
 
@@ -134,7 +157,13 @@ export default function createFileMiddleware({ filestore }: Options) {
 		actionCreator: deleteSong,
 		effect: async (action) => {
 			const { id, songFilename, coverArtFilename, difficultiesById } = action.payload;
-			await filestore.removeAllFilesForSong(id, songFilename, coverArtFilename, Object.keys(difficultiesById));
+			const beatmapIds = uniq(Object.values(difficultiesById).map((beatmap) => beatmap.beatmapId));
+			const lightshowIds = uniq(
+				Object.values(difficultiesById)
+					.map((beatmap) => beatmap.lightshowId)
+					.filter((x) => !!x) as BeatmapId[],
+			);
+			await filestore.removeAllFilesForSong(id, songFilename, coverArtFilename, beatmapIds, lightshowIds);
 		},
 	});
 

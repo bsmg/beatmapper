@@ -28,7 +28,8 @@ export interface ModSettings {
 }
 
 export interface Beatmap {
-	id: BeatmapId;
+	beatmapId: BeatmapId;
+	lightshowId: BeatmapId | null;
 	noteJumpSpeed: number;
 	startBeatOffset: number;
 	customLabel?: string;

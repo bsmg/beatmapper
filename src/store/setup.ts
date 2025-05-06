@@ -8,9 +8,9 @@ import { type LegacyStorageSchema, createDriver } from "$/services/storage.servi
 import { autosaveWorker, filestore } from "$/setup";
 import { type App, EventColor, EventEditMode, EventTool, type GridPresets, type Member, ObjectTool, Quality } from "$/types";
 
+import { omit } from "$/utils";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
-import type { Snapshot } from "./helpers";
 import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
 import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
 import {
@@ -81,7 +81,7 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 			await idb.createStore("grids", tx);
 			const value = (await idb.get("keyvaluepairs", import.meta.env.DEV ? "redux-state-dev" : "redux-state", tx)) as string;
 			if (value) {
-				const snapshot = (typeof value === "string" ? JSON.parse(value) : value) as Snapshot;
+				const snapshot = typeof value === "string" ? JSON.parse(value) : value;
 				const username = selectUserName(snapshot);
 				localStorage.setItem("beatmapper:user.new", String(selectIsNew(snapshot)));
 				if (username) localStorage.setItem("beatmapper:user.username", username);
@@ -89,10 +89,30 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
 				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(selectGraphicsQuality(snapshot)).toString());
 				for (const [id, song] of Object.entries(snapshot.songs.byId)) {
-					await idb.set("songs", id, { ...song, songFilename: song.songFilename.replace("_", "."), coverArtFilename: song.coverArtFilename.replace("_", ".") }, tx);
+					await idb.set(
+						"songs",
+						id.toString(),
+						{
+							...song,
+							songFilename: song.songFilename.replace("_", "."),
+							coverArtFilename: song.coverArtFilename.replace("_", "."),
+							difficultiesById: Object.entries(song.difficultiesById).reduce(
+								(acc, [id, beatmap]) => {
+									acc[id.toString()] = {
+										...omit(beatmap, "id"),
+										beatmapId: beatmap.id,
+										lightshowId: null,
+									};
+									return acc;
+								},
+								{} as Record<string, any>,
+							),
+						},
+						tx,
+					);
 				}
 				for (const [id, grid] of Object.entries(snapshot.editor.notes.gridPresets)) {
-					await idb.set("grids", id, grid, tx);
+					await idb.set("grids", id.toString(), grid, tx);
 				}
 			}
 			await idb.removeStore("keyvaluepairs", tx);

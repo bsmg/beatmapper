@@ -3,7 +3,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import type { BeatmapFilestore } from "$/services/file.service";
 import { zipFiles } from "$/services/packaging.service";
 import { downloadMapFiles } from "$/store/actions";
-import { selectActiveBeatmapId, selectAllBasicEvents, selectAllEntities, selectBeatmapIds, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllBasicEvents, selectAllEntities, selectBeatmapById, selectBeatmapIds, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
@@ -18,7 +18,9 @@ async function saveEventsToAllDifficulties(state: RootState, songId: SongId, fil
 	const beatmapIds = selectBeatmapIds(state, songId);
 
 	for (const beatmapId of beatmapIds) {
-		await filestore.updateBeatmapContents(songId, beatmapId, entities, {
+		const beatmap = selectBeatmapById(state, songId, beatmapId);
+
+		await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
 			serializationOptions: {
 				editorOffsetInBeats,
 				extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
@@ -58,9 +60,11 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 			// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 			const beatmapId = selectActiveBeatmapId(state);
 			if (beatmapId) {
+				const beatmap = selectBeatmapById(state, songId, beatmapId);
+
 				const entities = selectAllEntities(state);
 
-				await filestore.updateBeatmapContents(songId, beatmapId, entities, {
+				await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
 					serializationOptions: {
 						editorOffsetInBeats,
 						extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
