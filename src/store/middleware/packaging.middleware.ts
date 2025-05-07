@@ -42,7 +42,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: downloadMapFiles,
 		effect: async (action, api) => {
-			const { songId, version } = action.payload;
+			const { songId, version = 4 } = action.payload;
 			const state = api.getState();
 			const duration = selectDuration(state);
 			const editorOffsetInBeats = selectOffsetInBeats(state, songId);

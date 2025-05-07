@@ -84,10 +84,10 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 			// we need to reference the currently selected song to supply the correct serial version for the filestore.
-			const currentBeatmapId = selectActiveBeatmapId(state);
-			if (!currentBeatmapId) throw new Error("Could not reference active beatmap.");
+			const activeBeatmapId = selectActiveBeatmapId(state);
+			if (!activeBeatmapId) throw new Error("Could not reference active beatmap.");
 
-			const currentBeatmapFile = await filestore.loadDifficultyFile(songId, currentBeatmapId);
+			const currentBeatmapFile = await filestore.loadDifficultyFile(songId, activeBeatmapId);
 
 			const version = resolveImplicitVersion(currentBeatmapFile, 2);
 			const entities = { events: selectAllBasicEvents(state) };

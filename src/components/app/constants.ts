@@ -28,6 +28,11 @@ export const ENVIRONMENT_COLLECTION = createListCollection({
 	itemToString: (item) => EnvironmentRename[item],
 });
 
+export const VERSION_COLLECTION = createListCollection({
+	items: ["1", "2", "3", "4"],
+	itemToString: (item) => ["1.5.0", "2.6.0", "3.3.0", "4.1.0"][Number.parseInt(item) - 1],
+});
+
 interface BeatmapListCollectionOptions {
 	song: App.Song;
 }

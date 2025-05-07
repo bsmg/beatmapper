@@ -340,7 +340,7 @@ export const moveMouseAcrossEventsGrid = createAction("MOVE_MOUSE_ACROSS_EVENTS_
 });
 
 export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { songId: SongId; version?: ImplicitVersion }) => {
-	return { payload: { ...args, version: args.version ?? 2 } };
+	return { payload: { ...args } };
 });
 
 export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; beatmapId: BeatmapId; noteJumpSpeed: number; startBeatOffset: number; customLabel?: string }) => {

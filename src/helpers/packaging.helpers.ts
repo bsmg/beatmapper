@@ -3,7 +3,7 @@ import { type BeatmapFileType, CharacteristicName, DifficultyName, type Difficul
 import { object, optional } from "valibot";
 
 import { DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
-import { App, type Merge, type OrderedTuple } from "$/types";
+import { App, type BeatmapId, type Merge, type OrderedTuple } from "$/types";
 import { maybeObject } from "$/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
 import { formatColorForMods } from "./colors.helpers";
@@ -13,6 +13,20 @@ import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOpt
 import { deserializeObstacle, serializeObstacle } from "./obstacles.helpers";
 import { type ImplicitVersion, createSerializationFactory } from "./serialization.helpers";
 import { resolveBeatmapIdFromFilename, resolveSongId, sortBeatmaps } from "./song.helpers";
+
+export function resolveBeatmapFilenameForImplicitVersion(version: ImplicitVersion, beatmapId: BeatmapId, type: "beatmap" | "lightshow") {
+	switch (version) {
+		case 1: {
+			return `${beatmapId}.json`;
+		}
+		case 4: {
+			return `${beatmapId}.${type}.dat`;
+		}
+		default: {
+			return `${beatmapId}.dat`;
+		}
+	}
+}
 
 export type InferBeatmapSerialForType<TFileType extends BeatmapFileType, TVersion extends ImplicitVersion> = TVersion extends InferBeatmapVersion<TFileType> ? InferBeatmapSerial<TFileType, TVersion> : undefined;
 
@@ -104,7 +118,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 								difficulty: beatmap.difficulty,
 								difficultyRank: (DifficultyRanking[beatmap.difficulty] + 1) as DifficultyRank,
 								audioPath: data.songFilename,
-								jsonPath: `${beatmap.beatmapId}.json`,
+								jsonPath: resolveBeatmapFilenameForImplicitVersion(1, beatmap.beatmapId, "beatmap"),
 								offset: data.offset,
 								customColors: editorSettings.modSettings?.customColors?.isEnabled,
 								difficultyLabel: beatmap.customLabel,
@@ -164,7 +178,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 							_difficultyBeatmaps: forCharacteristic.map((beatmap) => ({
 								_difficulty: beatmap.difficulty,
 								_difficultyRank: DifficultyRanking[beatmap.difficulty],
-								_beatmapFilename: `${beatmap.beatmapId}.dat`,
+								_beatmapFilename: resolveBeatmapFilenameForImplicitVersion(2, beatmap.beatmapId, "beatmap"),
 								_noteJumpMovementSpeed: beatmap.noteJumpSpeed,
 								_noteJumpStartBeatOffset: beatmap.startBeatOffset,
 								_beatmapColorSchemeIdx: -1,
@@ -303,8 +317,8 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						environmentNames: [data.environment as EnvironmentAllName],
 						difficultyBeatmaps: beatmaps.map((beatmap) => {
 							return {
-								beatmapDataFilename: `${beatmap.beatmapId}.beatmap.dat`,
-								lightshowDataFilename: `${beatmap.lightshowId ?? beatmap.beatmapId}.lightshow.dat`,
+								beatmapDataFilename: resolveBeatmapFilenameForImplicitVersion(4, beatmap.beatmapId, "beatmap"),
+								lightshowDataFilename: resolveBeatmapFilenameForImplicitVersion(4, beatmap.lightshowId ?? beatmap.beatmapId, "lightshow"),
 								characteristic: beatmap.characteristic,
 								difficulty: beatmap.difficulty,
 								noteJumpMovementSpeed: beatmap.noteJumpSpeed,

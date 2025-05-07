@@ -2,7 +2,7 @@ import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
-import { type InferBeatmapSerializationOptions, type PickBeatmapSerials, deserializeBeatmapContents, deserializeInfoContents, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { type InferBeatmapSerializationOptions, type PickBeatmapSerials, deserializeBeatmapContents, deserializeInfoContents, resolveBeatmapFilenameForImplicitVersion, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { filestore } from "$/setup";
 import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles, selectIsModuleEnabled, selectOffsetInBeats } from "$/store/selectors";
@@ -61,25 +61,33 @@ export async function zipFiles(version: ImplicitVersion, filestore: BeatmapFiles
 			const contents = { difficulty: {}, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
 			const difficulty = await filestore.loadDifficultyFile(song.id, beatmap.beatmapId);
 			contents.difficulty = difficulty;
-			const difficultyFilename = `${beatmap.beatmapId}.dat`;
 
-			const version = resolveImplicitVersion(contents.difficulty, 2);
-			const entities = deserializeBeatmapContents(version, contents, {
+			if (beatmap.lightshowId) {
+				const lightshow = await filestore.loadLightshowFile(song.id, beatmap.lightshowId);
+				contents.lightshow = lightshow;
+			}
+
+			const beatmapVersion = resolveImplicitVersion(contents.difficulty, 2);
+			const entities = deserializeBeatmapContents(beatmapVersion, contents, {
 				editorOffsetInBeats,
 				extensionsProvider,
 			});
 
-			return { difficultyFilename, entities };
+			return { beatmapId: beatmap.beatmapId, lightshowId: beatmap.lightshowId, entities };
 		}),
 	);
 
-	for (const { difficultyFilename, entities } of beatmapContents) {
+	for (const { beatmapId, lightshowId, entities } of beatmapContents) {
 		const serialized = serializeBeatmapContents(version, entities, {
 			editorOffsetInBeats,
 		});
 
-		if (difficultyFilename) {
-			zip.file(difficultyFilename, JSON.stringify(serialized.difficulty), {
+		zip.file(resolveBeatmapFilenameForImplicitVersion(version, beatmapId, "beatmap"), JSON.stringify(serialized.difficulty), {
+			binary: false,
+		});
+
+		if (lightshowId) {
+			zip.file(resolveBeatmapFilenameForImplicitVersion(version, lightshowId, "lightshow"), JSON.stringify(serialized.lightshow), {
 				binary: false,
 			});
 		}

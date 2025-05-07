@@ -233,7 +233,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 							description: "Unfortunately, the demo map is not available for download.",
 						});
 					}
-					if (sid) return dispatch(downloadMapFiles({ songId: sid, version: 2 }));
+					if (sid) return dispatch(downloadMapFiles({ songId: sid }));
 					return;
 				}
 
