@@ -1,5 +1,5 @@
-import { remapDedupe, sortV2NoteFn, v1, v2, v3, v4 } from "bsmap";
-import { type BeatmapFileType, DifficultyName, type DifficultyRank, type EnvironmentAllName, type EnvironmentName, type InferBeatmapSerial, type InferBeatmapVersion, type v1 as v1t, type v2 as v2t, type v4 as v4t } from "bsmap/types";
+import { DifficultyRanking, remapDedupe, sortV2NoteFn, v1, v2, v3, v4 } from "bsmap";
+import { type BeatmapFileType, CharacteristicName, DifficultyName, type DifficultyRank, type EnvironmentAllName, type EnvironmentName, type InferBeatmapSerial, type InferBeatmapVersion, type v1 as v1t, type v2 as v2t, type v4 as v4t } from "bsmap/types";
 import { object, optional } from "valibot";
 
 import { DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
@@ -12,7 +12,7 @@ import { deserializeBombNote, deserializeColorNote, serializeBombNote, serialize
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
 import { deserializeObstacle, serializeObstacle } from "./obstacles.helpers";
 import { type ImplicitVersion, createSerializationFactory } from "./serialization.helpers";
-import { resolveBeatmapId, resolveDifficulty, resolveRankForDifficulty, resolveSongId, sortBeatmapIds } from "./song.helpers";
+import { resolveBeatmapIdFromFilename, resolveSongId, sortBeatmaps } from "./song.helpers";
 
 export type InferBeatmapSerialForType<TFileType extends BeatmapFileType, TVersion extends ImplicitVersion> = TVersion extends InferBeatmapVersion<TFileType> ? InferBeatmapSerial<TFileType, TVersion> : undefined;
 
@@ -53,8 +53,7 @@ export type InferInfoDeserializationOptions<T extends ImplicitVersion = Implicit
 
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createSerializationFactory<App.Song, InferBeatmapSerials<"info">, InfoSerializationOptions, InfoDeserializationOptions>("Info", () => {
 	function coalesceBeatmapCollection(data: App.Song) {
-		const beatmapIds = sortBeatmapIds(Object.keys(data.difficultiesById));
-		const beatmaps = beatmapIds.map((id) => data.difficultiesById[id]);
+		const beatmaps = Object.values(data.difficultiesById).sort(sortBeatmaps);
 
 		// Has this song enabled any mod support?
 		const enabledCustomColors = !!data.modSettings?.customColors?.isEnabled;
@@ -100,11 +99,10 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						environmentName: data.environment,
 						oneSaber: false,
 						difficultyLevels: beatmaps.map((beatmap): v1t.IInfoDifficulty => {
-							const difficulty = resolveDifficulty(beatmap.beatmapId);
 							return {
-								characteristic: "Standard",
-								difficulty: difficulty,
-								difficultyRank: (resolveRankForDifficulty(difficulty) + 1) as DifficultyRank,
+								characteristic: beatmap.characteristic,
+								difficulty: beatmap.difficulty,
+								difficultyRank: (DifficultyRanking[beatmap.difficulty] + 1) as DifficultyRank,
 								audioPath: data.songFilename,
 								jsonPath: `${beatmap.beatmapId}.json`,
 								offset: data.offset,
@@ -121,10 +119,12 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				},
 				deserialize: (data, { mapAuthorName }) => {
 					const beatmapsById = data.difficultyLevels.reduce((acc: App.Song["difficultiesById"], beatmap) => {
-						const beatmapId = resolveBeatmapId(beatmap.jsonPath);
+						const beatmapId = resolveBeatmapIdFromFilename(beatmap.jsonPath);
 						acc[beatmapId] = {
 							beatmapId: beatmapId,
 							lightshowId: null,
+							characteristic: beatmap.characteristic,
+							difficulty: beatmap.difficulty,
 							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmap.difficulty],
 							startBeatOffset: 0,
 							customLabel: beatmap.difficultyLabel,
@@ -157,29 +157,27 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				serialize: (data) => {
 					const { beatmaps, requirements, customColors, editorSettings } = coalesceBeatmapCollection(data);
 
-					const sets: v2t.IInfoSet[] = [
-						{
-							_beatmapCharacteristicName: "Standard",
-							_difficultyBeatmaps: beatmaps.map((beatmap): v2t.IInfoDifficulty => {
-								const difficulty = resolveDifficulty(beatmap.beatmapId);
-								return {
-									_difficulty: difficulty,
-									_difficultyRank: resolveRankForDifficulty(difficulty),
-									_beatmapFilename: `${beatmap.beatmapId}.dat`,
-									_noteJumpMovementSpeed: beatmap.noteJumpSpeed,
-									_noteJumpStartBeatOffset: beatmap.startBeatOffset,
-									_beatmapColorSchemeIdx: -1,
-									_environmentNameIdx: 0,
-									_customData: maybeObject({
-										_editorOffset: data.offset !== 0 ? data.offset : undefined,
-										_requirements: requirements.length > 0 ? requirements : undefined,
-										_difficultyLabel: beatmap.customLabel && beatmap.customLabel.length > 0 ? beatmap.customLabel : undefined,
-										...customColors,
-									}),
-								};
-							}),
-						},
-					];
+					const sets: v2t.IInfoSet[] = CharacteristicName.reduce((acc, characteristic) => {
+						const forCharacteristic = beatmaps.filter((x) => x.characteristic === characteristic);
+						return acc.concat({
+							_beatmapCharacteristicName: characteristic,
+							_difficultyBeatmaps: forCharacteristic.map((beatmap) => ({
+								_difficulty: beatmap.difficulty,
+								_difficultyRank: DifficultyRanking[beatmap.difficulty],
+								_beatmapFilename: `${beatmap.beatmapId}.dat`,
+								_noteJumpMovementSpeed: beatmap.noteJumpSpeed,
+								_noteJumpStartBeatOffset: beatmap.startBeatOffset,
+								_beatmapColorSchemeIdx: -1,
+								_environmentNameIdx: 0,
+								_customData: maybeObject({
+									_editorOffset: data.offset !== 0 ? data.offset : undefined,
+									_requirements: requirements.length > 1 ? requirements : undefined,
+									_difficultyLabel: beatmap.customLabel && beatmap.customLabel.length > 0 ? beatmap.customLabel : undefined,
+									...customColors,
+								}),
+							})),
+						});
+					}, [] as v2t.IInfoSet[]);
 
 					if (data.enabledLightshow) {
 						sets.push({
@@ -235,13 +233,14 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 					};
 				},
 				deserialize: (data) => {
-					const allBeatmaps = data._difficultyBeatmapSets.filter((set) => set._beatmapCharacteristicName === "Standard");
-					const beatmapsById = allBeatmaps.reduce((acc: App.Song["difficultiesById"], set) => {
+					const beatmapsById = data._difficultyBeatmapSets.reduce((acc: App.Song["difficultiesById"], set) => {
 						for (const beatmap of set._difficultyBeatmaps) {
-							const beatmapId = resolveBeatmapId(beatmap._beatmapFilename);
+							const beatmapId = resolveBeatmapIdFromFilename(beatmap._beatmapFilename);
 							acc[beatmapId] = {
 								beatmapId: beatmapId,
 								lightshowId: null,
+								characteristic: set._beatmapCharacteristicName,
+								difficulty: beatmap._difficulty,
 								noteJumpSpeed: beatmap._noteJumpMovementSpeed,
 								startBeatOffset: beatmap._noteJumpStartBeatOffset,
 								customLabel: beatmap._customData?._difficultyLabel,
@@ -303,12 +302,11 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						colorSchemes: [],
 						environmentNames: [data.environment as EnvironmentAllName],
 						difficultyBeatmaps: beatmaps.map((beatmap) => {
-							const difficulty = resolveDifficulty(beatmap.beatmapId);
 							return {
 								beatmapDataFilename: `${beatmap.beatmapId}.beatmap.dat`,
 								lightshowDataFilename: `${beatmap.lightshowId ?? beatmap.beatmapId}.lightshow.dat`,
-								characteristic: "Standard",
-								difficulty: difficulty,
+								characteristic: beatmap.characteristic,
+								difficulty: beatmap.difficulty,
 								noteJumpMovementSpeed: beatmap.noteJumpSpeed,
 								noteJumpStartBeatOffset: beatmap.startBeatOffset,
 								beatmapColorSchemeIdx: -1,
@@ -338,11 +336,13 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				},
 				deserialize: (data) => {
 					const beatmapsById = data.difficultyBeatmaps.reduce((acc: App.Song["difficultiesById"], beatmap) => {
-						const beatmapId = resolveBeatmapId(beatmap.beatmapDataFilename);
-						const lightshowId = resolveBeatmapId(beatmap.lightshowDataFilename);
+						const beatmapId = resolveBeatmapIdFromFilename(beatmap.beatmapDataFilename);
+						const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowDataFilename);
 						acc[beatmapId] = {
 							beatmapId: beatmapId,
 							lightshowId: lightshowId,
+							characteristic: beatmap.characteristic,
+							difficulty: beatmap.difficulty,
 							noteJumpSpeed: beatmap.noteJumpMovementSpeed,
 							startBeatOffset: beatmap.noteJumpStartBeatOffset,
 							customLabel: beatmap.customData?._difficultyLabel,

@@ -25,12 +25,16 @@ describe("info serialization", () => {
 			Hard: {
 				beatmapId: "Hard",
 				lightshowId: null,
+				characteristic: "Standard",
+				difficulty: "Hard",
 				noteJumpSpeed: 12,
 				startBeatOffset: 0,
 			},
 			Expert: {
 				beatmapId: "Expert",
 				lightshowId: null,
+				characteristic: "Standard",
+				difficulty: "Expert",
 				noteJumpSpeed: 15,
 				startBeatOffset: 0,
 			},

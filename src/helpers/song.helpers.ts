@@ -1,13 +1,16 @@
-import { DifficultyRename } from "bsmap";
-
 import { DIFFICULTIES } from "$/constants";
 import type { App, BeatmapId, Member } from "$/types";
 import { slugify } from "$/utils";
+import { CharacteristicName, DifficultyName } from "bsmap/types";
 
 export function resolveSongId(x: Pick<App.Song, "name">): string {
 	return slugify(x.name);
 }
-export function resolveBeatmapId(filename: string): string {
+export function resolveBeatmapId(x: Pick<App.Beatmap, "characteristic" | "difficulty">): string {
+	if (x.characteristic !== "Standard") return `${x.difficulty}${x.characteristic}`;
+	return `${x.difficulty}`;
+}
+export function resolveBeatmapIdFromFilename(filename: string): string {
 	let fn = filename;
 	for (const ext of [".json", ".dat", ".beatmap", ".lightshow"]) {
 		fn = fn.replace(ext, "");
@@ -15,27 +18,18 @@ export function resolveBeatmapId(filename: string): string {
 	return fn;
 }
 
+/** @deprecated this is really only used during migration flow, don't use this elsewhere */
 export function resolveDifficulty(id: BeatmapId): Member<typeof DIFFICULTIES> {
-	for (const difficulty of [...DIFFICULTIES].reverse()) {
-		if (id.toString().includes(difficulty)) return difficulty.substring(0, difficulty.length) as Member<typeof DIFFICULTIES>;
+	for (const id of [...DIFFICULTIES].reverse()) {
+		if (id.toString().includes(id)) return id.substring(0, id.length) as Member<typeof DIFFICULTIES>;
 	}
 	throw new Error(`Could not resolve difficulty from id: ${id}`);
 }
-export function resolveRankForDifficulty(difficulty: Member<typeof DIFFICULTIES>) {
-	const rank = DIFFICULTIES.indexOf(difficulty);
-	if (rank === -1) throw new Error(`Unrecognized difficulty: ${difficulty}`);
-	return ((rank + 1) * 2 - 1) as 1 | 3 | 5 | 7 | 9;
-}
 
-export function getLabelForDifficulty(beatmapId: BeatmapId) {
-	const difficulty = resolveDifficulty(beatmapId);
-	return DifficultyRename[difficulty];
-}
-
-export function sortBeatmapIds(ids: BeatmapId[]) {
-	return ids.sort((a, b) => {
-		const aIndex = DIFFICULTIES.indexOf(resolveDifficulty(a));
-		const bIndex = DIFFICULTIES.indexOf(resolveDifficulty(b));
-		return aIndex > bIndex ? 1 : -1;
-	});
+export function sortBeatmaps(a: App.Beatmap, b: App.Beatmap) {
+	const byCharacteristic = CharacteristicName.indexOf(a.characteristic) - CharacteristicName.indexOf(b.characteristic);
+	if (byCharacteristic !== 0) return byCharacteristic;
+	const byDifficulty = DifficultyName.indexOf(a.difficulty) - DifficultyName.indexOf(b.difficulty);
+	if (byDifficulty !== 0) return byDifficulty;
+	return 0;
 }

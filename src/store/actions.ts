@@ -1,5 +1,6 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
+import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
@@ -43,13 +44,16 @@ export const rehydrate = createAction("@@STORAGE/REHYDRATE");
 
 export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 
-export const createNewSong = createAsyncThunk("CREATE_NEW_SONG", (args: Pick<App.Song, "coverArtFilename" | "songFilename" | "name" | "subName" | "artistName" | "bpm" | "offset"> & { coverArtFile: Blob; songFile: Blob; songId: SongId; selectedDifficulty: BeatmapId }, api) => {
-	const state = api.getState() as RootState;
+export const createNewSong = createAsyncThunk(
+	"CREATE_NEW_SONG",
+	(args: Pick<App.Song, "coverArtFilename" | "songFilename" | "name" | "subName" | "artistName" | "bpm" | "offset"> & { coverArtFile: Blob; songFile: Blob; songId: SongId; selectedCharacteristic: CharacteristicName; selectedDifficulty: DifficultyName }, api) => {
+		const state = api.getState() as RootState;
 
-	const mapAuthorName = selectUserName(state);
+		const mapAuthorName = selectUserName(state);
 
-	return api.fulfillWithValue({ ...args, mapAuthorName, createdAt: Date.now(), lastOpenedAt: Date.now() });
-});
+		return api.fulfillWithValue({ ...args, mapAuthorName, createdAt: Date.now(), lastOpenedAt: Date.now() });
+	},
+);
 
 export const updateSongDetails = createAction("UPDATE_SONG_DETAILS", (args: { songId: SongId; songData: Partial<App.Song> }) => {
 	return { payload: { songId: args.songId, ...args.songData } };
@@ -69,11 +73,11 @@ export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY
 	return { payload: { ...args } };
 });
 
-export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; lightshowId: BeatmapId | null; afterCreate: (id: BeatmapId) => void }) => {
+export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; lightshowId: BeatmapId | null; data: { characteristic: CharacteristicName; difficulty: DifficultyName } }) => {
 	return { payload: { ...args } };
 });
 
-export const copyDifficulty = createAction("COPY_DIFFICULTY", (args: { songId: SongId; fromBeatmapId: BeatmapId; toBeatmapId: BeatmapId; afterCopy: (id: BeatmapId) => void }) => {
+export const copyDifficulty = createAction("COPY_DIFFICULTY", (args: { songId: SongId; fromBeatmapId: BeatmapId; toBeatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 

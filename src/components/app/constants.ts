@@ -1,12 +1,12 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import { createToaster } from "@ark-ui/react/toast";
-import { EnvironmentRename } from "bsmap";
-import { EnvironmentName } from "bsmap/types";
+import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
+import { type CharacteristicName, EnvironmentName } from "bsmap/types";
 
 import { token } from "$:styled-system/tokens";
-import { DIFFICULTIES } from "$/constants";
-import { getLabelForDifficulty } from "$/helpers/song.helpers";
-import type { App, BeatmapId } from "$/types";
+import { CHARACTERISTICS, DIFFICULTIES } from "$/constants";
+import { sortBeatmaps } from "$/helpers/song.helpers";
+import type { App } from "$/types";
 
 export const APP_TOASTER = createToaster({
 	placement: "bottom-end",
@@ -14,9 +14,13 @@ export const APP_TOASTER = createToaster({
 	max: 8,
 });
 
+export const CHARACTERISTIC_COLLECTION = createListCollection({
+	items: CHARACTERISTICS,
+	itemToString: (item) => CharacteristicRename[item],
+});
 export const DIFFICULTY_COLLECTION = createListCollection({
 	items: DIFFICULTIES.map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
-	itemToString: (item) => getLabelForDifficulty(item.value),
+	itemToString: (item) => DifficultyRename[item.value],
 });
 
 export const ENVIRONMENT_COLLECTION = createListCollection({
@@ -29,18 +33,43 @@ interface BeatmapListCollectionOptions {
 }
 export function createBeatmapListCollection({ song }: BeatmapListCollectionOptions) {
 	return createListCollection({
-		items: Object.keys(song.difficultiesById),
+		items: Object.values(song.difficultiesById)
+			.sort(sortBeatmaps)
+			.map((beatmap) => beatmap.beatmapId),
+	});
+}
+
+interface BeatmapCharacteristicListCollection {
+	beatmaps: App.Beatmap[];
+	currentBeatmap?: App.Beatmap;
+}
+export function createBeatmapCharacteristicListCollection({ beatmaps, currentBeatmap }: BeatmapCharacteristicListCollection) {
+	return createListCollection({
+		items: CHARACTERISTICS,
+		itemToString: (item) => CharacteristicRename[item],
+		isItemDisabled: (item) => {
+			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item);
+			if (withMatchingCharacteristic.length >= DIFFICULTIES.length) return true;
+			return currentBeatmap?.characteristic === item;
+		},
 	});
 }
 
 interface BeatmapDifficultyListCollection {
-	beatmapIds: BeatmapId[];
-	currentBeatmapId?: BeatmapId;
+	beatmaps: App.Beatmap[];
+	currentBeatmap?: App.Beatmap;
+	selectedCharacteristic: CharacteristicName;
 }
-export function createBeatmapDifficultyListCollection({ beatmapIds, currentBeatmapId }: BeatmapDifficultyListCollection) {
+export function createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic }: BeatmapDifficultyListCollection) {
 	return createListCollection({
 		items: DIFFICULTIES.map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
-		itemToString: (item) => getLabelForDifficulty(item.value),
-		isItemDisabled: (item) => item.value === currentBeatmapId || beatmapIds.includes(item.value),
+		itemToString: (item) => DifficultyRename[item.value],
+		isItemDisabled: (item) => {
+			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === selectedCharacteristic);
+			if (withMatchingCharacteristic.length >= DIFFICULTIES.length) return true;
+			const withMatchingDifficulty = withMatchingCharacteristic.some((beatmap) => beatmap.difficulty === item.value);
+			if (withMatchingDifficulty) return true;
+			return currentBeatmap?.characteristic === selectedCharacteristic && currentBeatmap?.difficulty === item.value;
+		},
 	});
 }

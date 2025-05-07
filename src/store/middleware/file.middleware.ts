@@ -2,11 +2,12 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 import { getWaveformDataForFile } from "$/helpers/audio.helpers";
-import { type PickBeatmapSerials, deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { type PickBeatmapSerials, deserializeBeatmapContents, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { resolveImplicitVersion } from "$/services/packaging.service.nitty-gritty";
 import { copyDifficulty, createDifficulty, createNewSong, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { selectAllBasicEvents, selectBeatmapById, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllBasicEvents, selectBeatmapById, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { BeatmapId } from "$/types";
 import { uniq } from "$/utils";
@@ -21,16 +22,18 @@ export default function createFileMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: createNewSong.fulfilled,
 		effect: async (action, api) => {
-			const { songId: sid, selectedDifficulty: bid } = action.payload;
+			const { songId: sid, selectedCharacteristic: characteristic, selectedDifficulty: difficulty } = action.payload;
 			const state = api.getState();
 
 			const song = selectSongById(state, sid);
+
+			const beatmapId = resolveBeatmapId({ characteristic, difficulty });
 
 			// we'll always use the latest supported beatmap format
 			const infoContents = serializeInfoContents(4, song, {});
 			// song/cover files are already stored via the dispatched action, so we just need to populate the info/beatmap/lightshow contents
 			await filestore.saveInfoFile(sid, infoContents);
-			await filestore.saveDifficultyFile(sid, bid, { version: "4.0.0" });
+			await filestore.saveDifficultyFile(sid, beatmapId, { version: "4.0.0" });
 			await filestore.saveLightshowFile(sid, "Common", { version: "4.0.0" });
 		},
 	});
@@ -57,7 +60,6 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 			// Our beatmap comes in a "raw" form, using proprietary fields.
 			// I need to convert the JSON format to something manageable.
-			console.log(difficulty);
 			const version = resolveImplicitVersion(difficulty, 2);
 			const entities = deserializeBeatmapContents(version, contents, {
 				editorOffsetInBeats,
@@ -75,37 +77,43 @@ export default function createFileMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: createDifficulty,
 		effect: async (action, api) => {
-			const { songId, beatmapId, afterCreate } = action.payload;
+			const { songId, beatmapId, lightshowId } = action.payload;
 			const state = api.getState();
-			const beatmap = selectBeatmapById(state, songId, beatmapId);
 
 			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
-			const entities = { events: selectAllBasicEvents(state) };
-			// No notes/obstacles/bookmarks by default, but copy the lighting
-			await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
-				serializationOptions: {
-					editorOffsetInBeats,
-					extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
-				},
-				deserializationOptions: {
-					editorOffsetInBeats,
-					extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
-				},
-			});
+			// we need to reference the currently selected song to supply the correct serial version for the filestore.
+			const currentBeatmapId = selectActiveBeatmapId(state);
+			if (!currentBeatmapId) throw new Error("Could not reference active beatmap.");
 
-			if (typeof afterCreate === "function") {
-				afterCreate(beatmapId);
-			}
+			const currentBeatmapFile = await filestore.loadDifficultyFile(songId, currentBeatmapId);
+
+			const version = resolveImplicitVersion(currentBeatmapFile, 2);
+			const entities = { events: selectAllBasicEvents(state) };
+
+			const serialized = serializeBeatmapContents(version, entities, {
+				editorOffsetInBeats,
+				extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
+			});
+			await filestore.saveDifficultyFile(songId, beatmapId, serialized.difficulty);
+			if (lightshowId && serialized.lightshow) await filestore.saveLightshowFile(songId, lightshowId, serialized.lightshow);
+
+			// Pull that updated redux state and save it to our Info.dat
+			const song = selectSongById(state, songId);
+			const duration = selectDuration(state);
+			// Back up our latest data!
+			await filestore.updateInfoContents(song.id, song, {
+				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
+				deserializationOptions: {},
+			});
 		},
 	});
 	instance.startListening({
 		actionCreator: copyDifficulty,
 		effect: async (action, api) => {
-			const { songId, fromBeatmapId, toBeatmapId, afterCopy } = action.payload;
+			const { songId, fromBeatmapId, toBeatmapId } = action.payload;
 			const state = api.getState();
-			const duration = selectDuration(state);
 
 			const source = selectBeatmapById(state, songId, fromBeatmapId);
 			const target = selectBeatmapById(state, songId, toBeatmapId);
@@ -122,15 +130,12 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 			// Pull that updated redux state and save it to our Info.dat
 			const song = selectSongById(state, songId);
-
+			const duration = selectDuration(state);
 			// Back up our latest data!
 			await filestore.updateInfoContents(song.id, song, {
 				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
 				deserializationOptions: {},
 			});
-			if (typeof afterCopy === "function") {
-				afterCopy(toBeatmapId);
-			}
 		},
 	});
 	instance.startListening({

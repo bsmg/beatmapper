@@ -1,8 +1,10 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
+import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
+import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, DIFFICULTY_COLLECTION } from "$/components/app/constants";
+import { APP_TOASTER, CHARACTERISTIC_COLLECTION, DIFFICULTY_COLLECTION } from "$/components/app/constants";
 import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
@@ -29,7 +31,8 @@ function CreateMapForm({ dialog }: Props) {
 			artistName: "",
 			bpm: 120,
 			offset: 0,
-			selectedDifficulty: "",
+			characteristic: "Standard" as CharacteristicName,
+			difficulty: "Easy" as DifficultyName,
 		},
 		validators: {
 			onChange: object({
@@ -41,7 +44,8 @@ function CreateMapForm({ dialog }: Props) {
 					number(),
 					transform((input) => (Number.isNaN(input) ? undefined : input)),
 				),
-				selectedDifficulty: pipe(string()),
+				characteristic: CharacteristicNameSchema,
+				difficulty: DifficultyNameSchema,
 			}),
 		},
 		onSubmit: async ({ value }) => {
@@ -74,7 +78,7 @@ function CreateMapForm({ dialog }: Props) {
 				const { filename: coverArtFilename } = await filestore.saveCoverFile(songId, coverArtFile);
 				const { filename: songFilename } = await filestore.saveSongFile(songId, songFile);
 
-				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedDifficulty: value.selectedDifficulty }));
+				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
 
 				if (dialog) dialog.setOpen(false);
 			} catch (err) {
@@ -111,7 +115,8 @@ function CreateMapForm({ dialog }: Props) {
 					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
 					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
 				</Form.Row>
-				<Form.AppField name="selectedDifficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
 				<Form.Submit>Create new song</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>

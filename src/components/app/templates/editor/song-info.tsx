@@ -1,9 +1,9 @@
 import type { SelectValueChangeDetails } from "@ark-ui/react/select";
 import { useNavigate } from "@tanstack/react-router";
+import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { PlusIcon } from "lucide-react";
 import { Fragment, memo, useCallback, useMemo } from "react";
 
-import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectSongById } from "$/store/selectors";
@@ -41,11 +41,10 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	);
 
 	const handleCreate = useCallback(
-		(id: BeatmapId) => {
-			dispatch(createDifficulty({ songId: sid, beatmapId: id, lightshowId: beatmap.lightshowId, afterCreate: () => {} }));
-			navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: id.toString() } });
+		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
+			dispatch(createDifficulty({ songId: sid, beatmapId: id, lightshowId: beatmap.lightshowId, data }));
 		},
-		[navigate, dispatch, sid, beatmap.lightshowId],
+		[dispatch, sid, beatmap.lightshowId],
 	);
 
 	return (
@@ -67,9 +66,10 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 								<Select size="sm" collection={BEATMAP_LIST_COLLECTION} value={song.selectedDifficulty ? [song.selectedDifficulty.toString()] : []} onValueChange={handleBeatmapSelect} />
 								<Dialog
 									title="Create New Beatmap"
+									unmountOnExit
 									render={(ctx) => (
 										<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCreate}>
-											{({ id }) => `Create ${id && getLabelForDifficulty(id)} beatmap`}
+											{() => "Create beatmap"}
 										</CreateBeatmapForm>
 									)}
 								>

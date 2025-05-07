@@ -39,6 +39,7 @@ export const {
 	selectById: selectSongById,
 	selectByIdOrNull: selectSongByIdOrNull,
 	selectBeatmapIds,
+	selectAllBeatmaps,
 	selectBeatmapById,
 	selectIsDemo: selectIsDemoSong,
 	selectIsModuleEnabled,

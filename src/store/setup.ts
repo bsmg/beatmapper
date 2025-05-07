@@ -8,6 +8,7 @@ import { type LegacyStorageSchema, createDriver } from "$/services/storage.servi
 import { autosaveWorker, filestore } from "$/setup";
 import { type App, EventColor, EventEditMode, EventTool, type GridPresets, type Member, ObjectTool, Quality } from "$/types";
 
+import { resolveDifficulty } from "$/helpers/song.helpers";
 import { omit } from "$/utils";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
@@ -102,6 +103,8 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 										...omit(beatmap, "id"),
 										beatmapId: beatmap.id,
 										lightshowId: null,
+										characteristic: "Standard",
+										difficulty: resolveDifficulty(beatmap.id),
 									};
 									return acc;
 								},

@@ -1,8 +1,8 @@
 import { createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import { EnvironmentName } from "bsmap/types";
 
-import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT, type DIFFICULTIES } from "$/constants";
-import { resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
+import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT } from "$/constants";
+import { resolveBeatmapId, resolveSongId, sortBeatmaps } from "$/helpers/song.helpers";
 import {
 	changeSelectedDifficulty,
 	copyDifficulty,
@@ -24,7 +24,7 @@ import {
 	updateModColorOverdrive,
 	updateSongDetails,
 } from "$/store/actions";
-import { type App, type BeatmapId, type Member, ObjectPlacementMode, type SongId } from "$/types";
+import { type App, type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
 import { deepMerge } from "$/utils";
 
 const adapter = createEntityAdapter<App.Song, SongId>({
@@ -49,7 +49,13 @@ const slice = createSlice({
 		selectByIdOrNull: selectByIdOrNull,
 		selectBeatmapIds: createSelector(selectByIdOrNull, (song) => {
 			if (!song) return [];
-			return sortBeatmapIds(Object.keys(song.difficultiesById));
+			return Object.values(song.difficultiesById)
+				.sort(sortBeatmaps)
+				.map((beatmap) => beatmap.beatmapId);
+		}),
+		selectAllBeatmaps: createSelector(selectByIdOrNull, (song) => {
+			if (!song) return [];
+			return Object.values(song.difficultiesById);
 		}),
 		selectBeatmapById: createSelector([selectByIdOrNull, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			if (!song) throw new Error(`No beatmap found for id: ${beatmapId}`);
@@ -107,7 +113,8 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
 		});
 		builder.addCase(createNewSong.fulfilled, (state, action) => {
-			const { coverArtFilename, songFilename, songId, name, subName, artistName, bpm, offset, selectedDifficulty, mapAuthorName, createdAt, lastOpenedAt } = action.payload;
+			const { coverArtFilename, songFilename, songId, name, subName, artistName, bpm, offset, selectedCharacteristic, selectedDifficulty, mapAuthorName, createdAt, lastOpenedAt } = action.payload;
+			const beatmapId = resolveBeatmapId({ characteristic: selectedCharacteristic, difficulty: selectedDifficulty });
 			return adapter.addOne(state, {
 				id: songId,
 				name,
@@ -125,12 +132,13 @@ const slice = createSlice({
 				lastOpenedAt,
 				selectedDifficulty,
 				difficultiesById: {
-					[selectedDifficulty]: {
-						beatmapId: selectedDifficulty,
+					[beatmapId]: {
+						beatmapId: beatmapId,
 						lightshowId: "Common",
-						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty as Member<typeof DIFFICULTIES>],
+						characteristic: selectedCharacteristic,
+						difficulty: selectedDifficulty,
+						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty],
 						startBeatOffset: 0,
-						customLabel: "",
 					},
 				},
 				modSettings: DEFAULT_MOD_SETTINGS,
@@ -145,19 +153,19 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: fieldsToUpdate });
 		});
 		builder.addCase(createDifficulty, (state, action) => {
-			const { songId, beatmapId, lightshowId } = action.payload;
+			const { songId, beatmapId, lightshowId, data } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					selectedDifficulty: beatmapId,
 					difficultiesById: deepMerge(song.difficultiesById, {
 						[beatmapId]: {
 							beatmapId: beatmapId,
 							lightshowId: lightshowId,
-							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapId as Member<typeof DIFFICULTIES>],
+							characteristic: data.characteristic,
+							difficulty: data.difficulty,
+							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[data.difficulty],
 							startBeatOffset: 0,
-							customLabel: "",
 						},
 					}),
 				},
@@ -169,7 +177,6 @@ const slice = createSlice({
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					selectedDifficulty: toBeatmapId,
 					difficultiesById: deepMerge(song.difficultiesById, {
 						[toBeatmapId]: { ...song.difficultiesById[fromBeatmapId], beatmapId: toBeatmapId },
 					}),

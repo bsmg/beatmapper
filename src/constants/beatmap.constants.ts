@@ -1,6 +1,7 @@
 import { App } from "$/types/beatmap";
-import { DifficultyName } from "bsmap/types";
+import { CharacteristicName, DifficultyName } from "bsmap/types";
 
+export const CHARACTERISTICS = [CharacteristicName[0], CharacteristicName[1], CharacteristicName[2], CharacteristicName[3]];
 export const DIFFICULTIES = [DifficultyName[0], DifficultyName[1], DifficultyName[2], DifficultyName[3], DifficultyName[4]] as const;
 
 export const DEFAULT_NUM_COLS = 4;

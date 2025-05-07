@@ -1,5 +1,5 @@
 import type { EntityId } from "@reduxjs/toolkit";
-import type { EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import type { CharacteristicName, DifficultyName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;
@@ -30,6 +30,8 @@ export interface ModSettings {
 export interface Beatmap {
 	beatmapId: BeatmapId;
 	lightshowId: BeatmapId | null;
+	characteristic: CharacteristicName;
+	difficulty: DifficultyName;
 	noteJumpSpeed: number;
 	startBeatOffset: number;
 	customLabel?: string;

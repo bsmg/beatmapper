@@ -2,7 +2,6 @@ import { useBlocker, useNavigate } from "@tanstack/react-router";
 import { type MouseEventHandler, useCallback, useMemo } from "react";
 import { number, object, pipe, string, transform } from "valibot";
 
-import { getLabelForDifficulty } from "$/helpers/song.helpers";
 import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
@@ -47,10 +46,9 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 
 	const handleCopyBeatmap = useCallback(
 		(id: BeatmapId) => {
-			dispatch(copyDifficulty({ songId: sid, fromBeatmapId: bid, toBeatmapId: id, afterCopy: () => {} }));
-			navigate({ to: "/edit/$sid/$bid/details", params: { sid: sid.toString(), bid: id.toString() } });
+			dispatch(copyDifficulty({ songId: sid, fromBeatmapId: bid, toBeatmapId: id }));
 		},
-		[navigate, dispatch, sid, bid],
+		[dispatch, sid, bid],
 	);
 
 	const handleDeleteBeatmap = useCallback<MouseEventHandler>(
@@ -85,16 +83,14 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		[navigate, dispatch, song.difficultiesById, sid, bid],
 	);
 
-	const difficultyLabel = getLabelForDifficulty(bid);
-
 	useBlocker({
-		shouldBlockFn: () => (Form.state.isDirty ? !window.confirm(`You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the ${difficultyLabel} beatmap)`) : false),
+		shouldBlockFn: () => (Form.state.isDirty ? !window.confirm(`You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`) : false),
 	});
 
 	return (
 		<Form.AppForm>
 			<Form.Root>
-				<Heading rank={3}>{difficultyLabel}</Heading>
+				<Heading rank={3}>{bid}</Heading>
 				<Stack gap={2}>
 					<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Note jump speed" />}</Form.AppField>
 					<Form.AppField name="startBeatOffset">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Start beat offset" />}</Form.AppField>
@@ -106,6 +102,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 					</Form.Submit>
 					<Dialog
 						title="Copy Beatmap"
+						unmountOnExit
 						render={(ctx) => (
 							<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCopyBeatmap}>
 								{() => "Copy beatmap"}
