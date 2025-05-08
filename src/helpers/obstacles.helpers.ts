@@ -1,5 +1,5 @@
-import { v1, v2, v3, v4 } from "bsmap";
-import type { container, v1 as v1t, v2 as v2t, v3 as v3t } from "bsmap/types";
+import { createObstacle, v1, v2, v3, v4 } from "bsmap";
+import type { container, v1 as v1t, v2 as v2t, v3 as v3t, wrapper } from "bsmap/types";
 
 import { App, ObjectPlacementMode } from "$/types";
 import { clamp, normalize, roundToNearest } from "$/utils";
@@ -61,6 +61,42 @@ const { serialize: serializeExtendedType, deserialize: deserializeExtendedType }
 });
 
 type SharedOptions = [BeatmapEntitySerializationOptions<"mapping-extensions">, {}, {}, {}, {}];
+
+export function serializeWrapObstacle(data: App.Obstacle, options: BeatmapEntitySerializationOptions<"mapping-extensions">) {
+	const posX = serializeColumn(data.colIndex, options);
+	const posY = serializeRow(isExtendedObstacle(data) ? data.rowIndex : data.type === App.ObstacleType.FULL ? 0 : 2, options);
+	const width = serializeWidth(data.colspan, options);
+	const height = serializeHeight(isExtendedObstacle(data) ? data.rowspan : data.type === App.ObstacleType.FULL ? 5 : 3, options);
+
+	return createObstacle({
+		time: data.beatNum,
+		posX: posX,
+		posY: posY,
+		duration: data.beatDuration,
+		width: width,
+		height: height,
+	});
+}
+export function deserializeWrapObstacle(data: wrapper.IWrapObstacle, options: BeatmapEntitySerializationOptions<"mapping-extensions">): App.Obstacle {
+	const type = data.posY === 0 && data.height === 5 ? App.ObstacleType.FULL : data.posY === 2 && data.height === 3 ? App.ObstacleType.TOP : App.ObstacleType.EXTENDED;
+	const posX = deserializeColumn(data.posX, options);
+	const posY = deserializeRow(data.posY, options);
+	const width = deserializeWidth(data.width, options);
+	const height = deserializeHeight(data.height, options);
+	const fast = data.duration < 0 ? true : undefined;
+
+	return {
+		id: resolveObstacleId({ beatNum: data.time ?? 0, colIndex: posX, type: type }),
+		type: type,
+		beatNum: data.time,
+		beatDuration: data.duration,
+		colIndex: posX,
+		rowIndex: type === App.ObstacleType.EXTENDED ? posY : undefined,
+		colspan: width,
+		rowspan: type === App.ObstacleType.EXTENDED ? height : undefined,
+		fast,
+	} as App.Obstacle;
+}
 
 export const { serialize: serializeObstacle, deserialize: deserializeObstacle } = createSerializationFactory<App.Obstacle, [v1t.IObstacle, v2t.IObstacle, v3t.IObstacle, container.v4.IObstacleContainer], SharedOptions, SharedOptions>("Obstacle", () => {
 	return {

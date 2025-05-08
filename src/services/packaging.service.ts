@@ -1,169 +1,157 @@
+import { createAudioData, createBeatmap, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
+import type { wrapper } from "bsmap/types";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
-import { type InferBeatmapSerializationOptions, type PickBeatmapSerials, deserializeBeatmapContents, deserializeInfoContents, resolveBeatmapFilenameForImplicitVersion, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { deserializeWrapInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
+import { resolveBeatmapIdFromFilename } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
-import { selectAllBasicEvents, selectAllBombNotes, selectAllBookmarks, selectAllColorNotes, selectAllObstacles, selectIsModuleEnabled, selectOffsetInBeats } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
 import type { BeatmapFilestore } from "./file.service";
-import { getArchiveVersion, getFileFromArchive, resolveImplicitVersion } from "./packaging.service.nitty-gritty";
 
-const LIGHTSHOW_FILENAME = "EasyLightshow.dat";
+function getFileFromArchive(archive: JSZip, ...filenames: string[]) {
+	// Ideally, our .zip archive will just have all the files we need.
+	const allFilenamesInArchive = Object.keys(archive.files);
+	for (const filename of filenames) {
+		const matchingFilename = allFilenamesInArchive.find((name) => name.toString().toLowerCase() === filename.toLowerCase());
+		if (matchingFilename) return archive.files[matchingFilename];
+	}
+	return null;
+}
 
-export function serializeBeatmapContentsFromState<T extends ImplicitVersion>(version: T, state: RootState, songId: SongId) {
-	const editorOffsetInBeats = selectOffsetInBeats(state, songId);
-	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
-
-	const contents = {
-		notes: selectAllColorNotes(state),
-		bombs: selectAllBombNotes(state),
-		obstacles: selectAllObstacles(state),
-		events: selectAllBasicEvents(state),
-		bookmarks: selectAllBookmarks(state),
+interface ZipOptions {
+	version: ImplicitVersion | null;
+	contents: {
+		songId: SongId;
+		beatmapsById: App.Song["difficultiesById"];
+		songFile: Blob;
+		coverArtFile: Blob;
+		songDuration?: number;
 	};
-
-	return serializeBeatmapContents<T>(version, contents, {
-		editorOffsetInBeats: editorOffsetInBeats,
-		extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
-	} as InferBeatmapSerializationOptions<T>);
+	options?: {
+		minify?: boolean;
+	};
 }
+export async function zipFiles(filestore: BeatmapFilestore, { version, contents, options }: ZipOptions) {
+	const { songId, beatmapsById, songFile, coverArtFile } = contents;
 
-interface BeatmapContents {
-	song: App.Song;
-	songDuration?: number;
-	songFile: Blob;
-	coverArtFile: Blob;
-}
-export async function zipFiles(version: ImplicitVersion, filestore: BeatmapFilestore, { song, songDuration, songFile, coverArtFile }: BeatmapContents) {
+	const indent = options?.minify ? 0 : 2;
+
 	const zip = new JSZip();
 
-	zip.file(song.songFilename, songFile, { binary: true });
-	zip.file(song.coverArtFilename, coverArtFile, { binary: true });
+	const wrapperInfo = await filestore.loadInfo(songId);
 
-	const infoContent = serializeInfoContents(version, song, {
-		songDuration: songDuration,
-	});
+	const implicitInfoVersion = version ?? (wrapperInfo.version >= 0 ? wrapperInfo.version : 4);
+	console.log(implicitInfoVersion);
+	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 4 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>);
 
-	if (version === 1) {
-		zip.file("info.json", JSON.stringify(infoContent), { binary: false });
-	} else {
-		zip.file("Info.dat", JSON.stringify(infoContent), { binary: false });
-	}
+	zip.file(wrapperInfo.filename, JSON.stringify(info, null, indent), { binary: false });
 
-	const editorOffsetInBeats = convertMillisecondsToBeats(song.offset, song.bpm);
-	const extensionsProvider = song.modSettings.mappingExtensions?.isEnabled ? "mapping-extensions" : undefined;
+	zip.file(wrapperInfo.audio.filename, songFile, { binary: true });
+	zip.file(wrapperInfo.coverImageFilename, coverArtFile, { binary: true });
 
 	const beatmapContents = await Promise.all(
-		Object.values(song.difficultiesById).map(async (beatmap) => {
-			const contents = { difficulty: {}, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
-			const difficulty = await filestore.loadDifficultyFile(song.id, beatmap.beatmapId);
-			contents.difficulty = difficulty;
-
-			if (beatmap.lightshowId) {
-				const lightshow = await filestore.loadLightshowFile(song.id, beatmap.lightshowId);
-				contents.lightshow = lightshow;
-			}
-
-			const beatmapVersion = resolveImplicitVersion(contents.difficulty, 2);
-			const entities = deserializeBeatmapContents(beatmapVersion, contents, {
-				editorOffsetInBeats,
-				extensionsProvider,
-			});
-
-			return { beatmapId: beatmap.beatmapId, lightshowId: beatmap.lightshowId, entities };
+		Object.values(beatmapsById).map(async (beatmap) => {
+			const difficulty = await filestore.loadBeatmap(songId, beatmap.beatmapId);
+			return { beatmap: difficulty };
 		}),
 	);
 
-	for (const { beatmapId, lightshowId, entities } of beatmapContents) {
-		const serialized = serializeBeatmapContents(version, entities, {
-			editorOffsetInBeats,
+	for (const { beatmap: wrapper } of beatmapContents) {
+		const implicitBeatmapVersion = version ?? (wrapper.version >= 0 ? wrapper.version : 4);
+		const serialDifficulty = saveDifficulty(wrapper.difficulty, implicitBeatmapVersion as ImplicitVersion, {
+			preprocess: [(data) => createBeatmap({ difficulty: data })],
 		});
-
-		zip.file(resolveBeatmapFilenameForImplicitVersion(version, beatmapId, "beatmap"), JSON.stringify(serialized.difficulty), {
+		zip.file(wrapper.filename, JSON.stringify(serialDifficulty, null, indent), {
 			binary: false,
 		});
 
-		if (lightshowId) {
-			zip.file(resolveBeatmapFilenameForImplicitVersion(version, lightshowId, "lightshow"), JSON.stringify(serialized.lightshow), {
+		if (implicitBeatmapVersion === 4) {
+			const serialLightshow = saveLightshow(wrapper.lightshow, implicitBeatmapVersion, {
+				preprocess: [(data) => createBeatmap({ lightshow: data })],
+			});
+			zip.file(wrapper.lightshowFilename, JSON.stringify(serialLightshow, null, indent), {
 				binary: false,
 			});
 		}
 	}
 
-	if (song.enabledLightshow) {
-		// We want to grab the lights (events). Any beatmap will do
-		const { entities } = beatmapContents[0];
-
-		const lightshowContents = { events: entities.events, bookmarks: entities.bookmarks };
-
-		const lightshowFileContents = serializeBeatmapContents(version, lightshowContents, {
-			editorOffsetInBeats: 0,
-		});
-
-		zip.file(LIGHTSHOW_FILENAME, JSON.stringify(lightshowFileContents), { binary: false });
-	}
-
 	if (version === 4) {
-		// HACK: since v4 requires audio data for serialization, we'll just shove this into the final zip until we can add proper support for it :)
-		zip.file("AudioData.dat", '{"version":"4.0.0","bpmData":[]}');
+		// HACK: since v4 requires audio data for serialization, we'll just shove this into the exported zip until we can add proper support for it :)
+		const audioData = createAudioData({});
+		const serialAudioData = saveAudioData(audioData, version, {});
+		zip.file("AudioData.dat", JSON.stringify(serialAudioData, null, indent));
 	}
 
 	zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 9 } }).then((blob) => {
 		const timestamp = new Date().toISOString();
-		const filename = `${song.id}.${timestamp}.zip`;
+		const filename = `${songId}.${timestamp}.zip`;
 		saveAs(blob, filename);
 	});
 }
 
-export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAsync>[0], options: { currentSongIds?: SongId[] }): Promise<App.Song> {
-	// Start by unzipping it
+export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAsync>[0], options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.Song> {
+	// start by unzipping it
 	const archive = await JSZip.loadAsync(zipFile);
+	// pull the info file from the archive
+	const infoFile = getFileFromArchive(archive, "Info.dat", "info.json");
+	if (!infoFile) throw new Error("No info file.");
+	const rawSerialInfo = await infoFile.async("string");
+	// parse the info into the wrapper form
+	const info = loadInfo(JSON.parse(rawSerialInfo));
+	// parse the wrapper into the editor form
+	const song = deserializeWrapInfoContents(info, { readonly: options.readonly });
 
-	const version = await getArchiveVersion(archive);
-
-	const rawSerialInfo = await getFileFromArchive(archive, "Info.dat", "info.json").async("string");
-	const info = deserializeInfoContents(version, JSON.parse(rawSerialInfo), {});
-
-	const songAlreadyExists = options?.currentSongIds?.some((id) => id === info.id);
+	const songAlreadyExists = options.currentSongIds?.some((id) => id === song.id);
 	if (songAlreadyExists) {
 		if (!window.confirm("This song appears to be a duplicate. Would you like to overwrite your existing song?")) {
 			throw new Error("Sorry, you already have a song by this name");
 		}
 	}
 
-	// Save the Info.dat (Not 100% sure that this is necessary, but better to have and not need)
-	await filestore.saveInfoFile(info.id, JSON.parse(rawSerialInfo));
+	// save the info data (Not 100% sure that this is necessary, but better to have and not need)
+	await filestore.saveInfo(song.id, info);
 
-	// Save the assets - cover art and song file - to our local store
-	const songFile = await getFileFromArchive(archive, info.songFilename).async("blob");
-	const coverArtFile = await getFileFromArchive(archive, info.coverArtFilename).async("blob");
+	// save the assets - cover art and song file - to our local store
+	const songFile = getFileFromArchive(archive, song.songFilename);
+	const coverArtFile = getFileFromArchive(archive, song.coverArtFilename);
+	if (!songFile || !coverArtFile) throw new Error("Missing required files");
 
-	const [{ filename: songFilename }, { filename: coverArtFilename }] = await Promise.all([
-		await filestore.saveSongFile(info.id, songFile, "audio/ogg", info.songFilename),
-		await filestore.saveCoverFile(info.id, coverArtFile, "image/jpeg", info.coverArtFilename),
+	await Promise.all([
+		await filestore.saveSongFile(song.id, await songFile.async("blob"), "audio/ogg", song.songFilename),
+		await filestore.saveCoverFile(song.id, await coverArtFile.async("blob"), "image/jpeg", song.coverArtFilename),
 		//
 	]);
 
-	// Tackle the difficulties and their entities (notes, obstacles, events).
-	// We won't load any of them into redux; instead we'll write it all to disk using our local persistence layer, so that it can be loaded like any other song from the list.
+	// tackle the beatmaps and their entities (notes, obstacles, events).
+	// we don't need to load the beatmaps into redux; we'll just write each of them to the filestore so that they can be loaded like any other song from the list.
+	for (const beatmap of info.difficulties) {
+		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
+		const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
 
-	for (const beatmap of Object.values(info.difficultiesById)) {
-		const rawSerialBeatmap = await getFileFromArchive(archive, `${beatmap.beatmapId}.json`, `${beatmap.beatmapId}.dat`, `${beatmap.beatmapId}.beatmap.dat`).async("string");
-		await filestore.saveDifficultyFile(info.id, beatmap.beatmapId, JSON.parse(rawSerialBeatmap));
-		if (beatmap.lightshowId) {
-			const rawSerialLightshow = await getFileFromArchive(archive, `${beatmap.lightshowId}.json`, `${beatmap.lightshowId}.dat`, `${beatmap.lightshowId}.lightshow.dat`).async("string");
-			await filestore.saveLightshowFile(info.id, beatmap.lightshowId, JSON.parse(rawSerialLightshow));
+		let contents = { filename: `${beatmapId}.beatmap.dat`, lightshowFilename: `${lightshowId ?? "Unnamed"}.lightshow.dat` } as wrapper.IWrapBeatmap;
+
+		const difficultyFile = getFileFromArchive(archive, beatmap.filename);
+		if (difficultyFile) {
+			const rawSerialDifficulty = await difficultyFile.async("string");
+			const difficulty = loadDifficulty(JSON.parse(rawSerialDifficulty), {});
+			contents = { ...contents, version: difficulty.version, difficulty: difficulty.difficulty, lightshow: difficulty.lightshow };
 		}
+
+		const lightshowFile = getFileFromArchive(archive, beatmap.lightshowFilename);
+		if (lightshowFile) {
+			const rawSerialLightshow = await lightshowFile.async("string");
+			const lightshow = loadLightshow(JSON.parse(rawSerialLightshow), {});
+			contents = { ...contents, lightshow: lightshow.lightshow };
+		}
+
+		await filestore.saveBeatmap(song.id, beatmapId, createBeatmap(contents));
 	}
 
 	return {
-		...info,
-		songFilename,
-		coverArtFilename,
-		selectedDifficulty: Object.keys(info.difficultiesById)[0],
+		...song,
+		selectedDifficulty: Object.keys(song.difficultiesById)[0],
 		createdAt: Date.now(),
 	};
 }

@@ -73,7 +73,7 @@ describe("angle helpers", () => {
 			// https://github.com/Kylemc1413/MappingExtensions/blob/master/README.md#360-degree-note-rotation
 			"mapping-extensions": {
 				validate: ({ direction }) => (direction >= 1000 && direction <= 1360) || (direction >= 2000 && direction <= 2360),
-				serialize: ({ angle, isDot }) => ({ direction: (isDot ? 2000 : 1000) + ((360 - Math.round(angle)) % 360), offset: 0 }),
+				serialize: ({ angle, isDot }) => ({ direction: (isDot ? 2000 : 1000) + ((360 - Math.round(angle)) % 360), angleOffset: 0 }),
 				deserialize: ({ direction }) => ({ angle: (-(direction % 1000) + 360) % 360, isDot: direction >= 2000 }),
 			},
 		},
@@ -81,40 +81,40 @@ describe("angle helpers", () => {
 
 	describe(serializeAngle.name, () => {
 		it("parses vanilla", () => {
-			expect(serializeAngle({ angle: 0, isDot: false }, {})).toEqual({ direction: 1, offset: 0 });
-			expect(serializeAngle({ angle: 90, isDot: false }, {})).toEqual({ direction: 3, offset: 0 });
-			expect(serializeAngle({ angle: 105, isDot: false }, {})).toEqual({ direction: 3, offset: 15 });
-			expect(serializeAngle({ angle: 375, isDot: false }, {})).toEqual({ direction: 1, offset: 15 });
-			expect(serializeAngle({ angle: 0, isDot: true }, {})).toEqual({ direction: 8, offset: 0 });
-			expect(serializeAngle({ angle: 45, isDot: true }, {})).toEqual({ direction: 8, offset: -45 });
+			expect(serializeAngle({ angle: 0, isDot: false }, {})).toEqual({ direction: 1, angleOffset: 0 });
+			expect(serializeAngle({ angle: 90, isDot: false }, {})).toEqual({ direction: 3, angleOffset: 0 });
+			expect(serializeAngle({ angle: 105, isDot: false }, {})).toEqual({ direction: 3, angleOffset: 15 });
+			expect(serializeAngle({ angle: 375, isDot: false }, {})).toEqual({ direction: 1, angleOffset: 15 });
+			expect(serializeAngle({ angle: 0, isDot: true }, {})).toEqual({ direction: 8, angleOffset: 0 });
+			expect(serializeAngle({ angle: 45, isDot: true }, {})).toEqual({ direction: 8, angleOffset: -45 });
 		});
 		it("parses precision rotation", () => {
-			expect(serializeAngle({ angle: 5.25, isDot: false }, {})).toEqual({ direction: 1, offset: 5 });
-			expect(serializeAngle({ angle: 22.5, isDot: false }, {})).toEqual({ direction: 7, offset: -22 });
-			expect(serializeAngle({ angle: 5.25, isDot: false }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 1355, offset: 0 });
-			expect(serializeAngle({ angle: 22.5, isDot: false }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 1337, offset: 0 });
-			expect(serializeAngle({ angle: 5.25, isDot: true }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 2355, offset: 0 });
+			expect(serializeAngle({ angle: 5.25, isDot: false }, {})).toEqual({ direction: 1, angleOffset: 5 });
+			expect(serializeAngle({ angle: 22.5, isDot: false }, {})).toEqual({ direction: 7, angleOffset: -22 });
+			expect(serializeAngle({ angle: 5.25, isDot: false }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 1355, angleOffset: 0 });
+			expect(serializeAngle({ angle: 22.5, isDot: false }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 1337, angleOffset: 0 });
+			expect(serializeAngle({ angle: 5.25, isDot: true }, { extensionsProvider: "mapping-extensions" })).toEqual({ direction: 2355, angleOffset: 0 });
 		});
 	});
 	describe(deserializeAngle.name, () => {
 		it("handles vanilla", () => {
-			expect(deserializeAngle({ direction: 1, offset: 0 }, {})).toEqual({ angle: 0, isDot: false });
-			expect(deserializeAngle({ direction: 3, offset: 0 }, {})).toEqual({ angle: 90, isDot: false });
-			expect(deserializeAngle({ direction: 0, offset: 15 }, {})).toEqual({ angle: 195, isDot: false });
-			expect(deserializeAngle({ direction: 6, offset: 50 }, {})).toEqual({ angle: 5, isDot: false });
-			expect(deserializeAngle({ direction: 8, offset: 0 }, {})).toEqual({ angle: 0, isDot: true });
-			expect(deserializeAngle({ direction: 8, offset: 45 }, {})).toEqual({ angle: 45, isDot: true });
-			expect(() => deserializeAngle({ direction: -1, offset: 0 }, {})).toThrow();
-			expect(() => deserializeAngle({ direction: 10, offset: 0 }, {})).toThrow();
-			expect(() => deserializeAngle({ direction: 1000, offset: 0 }, {})).toThrow();
+			expect(deserializeAngle({ direction: 1, angleOffset: 0 }, {})).toEqual({ angle: 0, isDot: false });
+			expect(deserializeAngle({ direction: 3, angleOffset: 0 }, {})).toEqual({ angle: 90, isDot: false });
+			expect(deserializeAngle({ direction: 0, angleOffset: 15 }, {})).toEqual({ angle: 195, isDot: false });
+			expect(deserializeAngle({ direction: 6, angleOffset: 50 }, {})).toEqual({ angle: 5, isDot: false });
+			expect(deserializeAngle({ direction: 8, angleOffset: 0 }, {})).toEqual({ angle: 0, isDot: true });
+			expect(deserializeAngle({ direction: 8, angleOffset: 45 }, {})).toEqual({ angle: 45, isDot: true });
+			expect(() => deserializeAngle({ direction: -1, angleOffset: 0 }, {})).toThrow();
+			expect(() => deserializeAngle({ direction: 10, angleOffset: 0 }, {})).toThrow();
+			expect(() => deserializeAngle({ direction: 1000, angleOffset: 0 }, {})).toThrow();
 		});
 		it("handles mapping extensions", () => {
-			expect(() => deserializeAngle({ direction: 999, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toThrow();
-			expect(() => deserializeAngle({ direction: 1361, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toThrow();
-			expect(deserializeAngle({ direction: 1000, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 0, isDot: false });
-			expect(deserializeAngle({ direction: 1090, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 270, isDot: false });
-			expect(deserializeAngle({ direction: 2000, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 0, isDot: true });
-			expect(deserializeAngle({ direction: 2090, offset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 270, isDot: true });
+			expect(() => deserializeAngle({ direction: 999, angleOffset: 0 }, { extensionsProvider: "mapping-extensions" })).toThrow();
+			expect(() => deserializeAngle({ direction: 1361, angleOffset: 0 }, { extensionsProvider: "mapping-extensions" })).toThrow();
+			expect(deserializeAngle({ direction: 1000, angleOffset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 0, isDot: false });
+			expect(deserializeAngle({ direction: 1090, angleOffset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 270, isDot: false });
+			expect(deserializeAngle({ direction: 2000, angleOffset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 0, isDot: true });
+			expect(deserializeAngle({ direction: 2090, angleOffset: 0 }, { extensionsProvider: "mapping-extensions" })).toEqual({ angle: 270, isDot: true });
 		});
 	});
 });

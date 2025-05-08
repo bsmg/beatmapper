@@ -1,22 +1,12 @@
-import type { InferBeatmapSerial } from "bsmap/types";
+import type { wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
 import { resolveExtension } from "$/helpers/file.helpers";
-import {
-	type InferBeatmapDeserializationOptions,
-	type InferBeatmapSerializationOptions,
-	type InferInfoDeserializationOptions,
-	type InferInfoSerializationOptions,
-	type PickBeatmapSerials,
-	deserializeBeatmapContents,
-	deserializeInfoContents,
-	serializeBeatmapContents,
-	serializeInfoContents,
-} from "$/helpers/packaging.helpers";
-import type { ImplicitVersion } from "$/helpers/serialization.helpers";
+import { type InferBeatmapDeserializationOptions, type InferBeatmapSerializationOptions, type InferInfoDeserializationOptions, type InferInfoSerializationOptions, deserializeWrapBeatmapContents, deserializeWrapInfoContents, serializeWrapBeatmapContents, serializeWrapInfoContents } from "$/helpers/packaging.helpers";
 import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
-import { resolveImplicitVersion } from "./packaging.service.nitty-gritty";
+import { deepMerge, omit } from "$/utils";
+import { deepCopy } from "bsmap/utils";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -43,32 +33,21 @@ export class Filestore {
 	}
 }
 
-type InfoImplicitVersion = Extract<ImplicitVersion, 1 | 2 | 4>;
-type DifficultyImplicitVersion = Extract<ImplicitVersion, 1 | 2 | 3 | 4>;
-type LightshowImplicitVersion = Extract<ImplicitVersion, 3 | 4>;
-
-type BeatmapFileType = "info" | "song" | "cover" | "difficulty" | "lightshow";
-type BeatmapFileOptions<T extends BeatmapFileType> = T extends "song" | "cover" ? { extension: string } : T extends "difficulty" | "lightshow" ? { id: BeatmapId; extension?: string } : Record<string, never>;
-type InferBeatmapFile<T extends BeatmapFileType> = T extends "song" | "cover" ? File | Blob : T extends "difficulty" ? InferBeatmapSerial<"difficulty", DifficultyImplicitVersion> : T extends "lightshow" ? InferBeatmapSerial<"lightshow", LightshowImplicitVersion> : Saveable;
+type BeatmapFileType = "info" | "song" | "cover" | "beatmap";
+type BeatmapFileOptions<T extends BeatmapFileType> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
 
 export class BeatmapFilestore extends Filestore {
 	static resolveFilename<T extends BeatmapFileType>(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
 		switch (type) {
-			case "info": {
-				return `${songId}.Info.dat`;
-			}
 			case "song":
-			case "cover": {
-				const { extension } = options as BeatmapFileOptions<"song" | "cover">;
-				if (!extension) throw new Error(`Must supply a file extension for ${type}.`);
-				return `${songId}.${type}.${extension}`;
+			case "cover":
+			case "info": {
+				return `${songId}.${type}`;
 			}
-			case "lightshow":
-			case "difficulty": {
-				const { id, extension = "dat" } = options as BeatmapFileOptions<"difficulty" | "lightshow">;
+			case "beatmap": {
+				const { id } = options as BeatmapFileOptions<"info" | "beatmap">;
 				if (!id) throw new Error(`Must supply an id for ${type}.`);
-				const typeForFilename = type === "difficulty" ? "beatmap" : type;
-				return `${songId}.${id}.${typeForFilename}.${extension}`;
+				return `${songId}.${id}.${type}`;
 			}
 			default: {
 				throw new Error(`Unrecognized type: ${type}`);
@@ -92,75 +71,80 @@ export class BeatmapFilestore extends Filestore {
 		return await this.saveFile(coverArtFilename, blob);
 	}
 
-	async loadInfoFile<V extends InfoImplicitVersion>(songId: SongId) {
+	async loadSongFile(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
+		return this.loadFile<Blob>(filename);
+	}
+	async loadCoverArtFile(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
+		return this.loadFile<Blob>(filename);
+	}
+	async loadInfo(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
-		return this.loadFile<InferBeatmapSerial<"info", V>>(filename);
+		return this.loadFile<wrapper.IWrapInfo>(filename);
 	}
-	async loadDifficultyFile<V extends DifficultyImplicitVersion>(songId: SongId, beatmapId: BeatmapId) {
-		const filename = BeatmapFilestore.resolveFilename(songId, "difficulty", { id: beatmapId });
-		return this.loadFile<InferBeatmapSerial<"difficulty", V>>(filename);
-	}
-	async loadLightshowFile<V extends LightshowImplicitVersion>(songId: SongId, lightshowId: BeatmapId) {
-		const filename = BeatmapFilestore.resolveFilename(songId, "lightshow", { id: lightshowId });
-		return this.loadFile<InferBeatmapSerial<"lightshow", V>>(filename);
+	async loadBeatmap(songId: SongId, beatmapId: BeatmapId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
+		return this.loadFile<wrapper.IWrapBeatmap>(filename);
 	}
 
-	async saveSongFile<T extends InferBeatmapFile<"song">>(songId: SongId, contents: T, type?: string, overrideFilename?: string) {
+	async saveSongFile<T extends File | Blob>(songId: SongId, contents: T, type?: string, overrideFilename?: string) {
 		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
 		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
 		const filename = BeatmapFilestore.resolveFilename(songId, "song", { extension });
 		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
 	}
-	async saveCoverFile<T extends InferBeatmapFile<"cover">>(songId: SongId, contents?: T, type?: string, overrideFilename?: string) {
+	async saveCoverFile<T extends File | Blob>(songId: SongId, contents?: T, type?: string, overrideFilename?: string) {
 		if (!contents) return this.saveBackupCoverFile();
 		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
 		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", { extension });
 		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
 	}
-	async saveInfoFile<V extends InfoImplicitVersion, T extends InferBeatmapFile<"info"> = InferBeatmapSerial<"info", V>>(songId: SongId, contents: T) {
+	async saveInfo<T extends wrapper.IWrapInfo>(songId: SongId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveDifficultyFile<V extends DifficultyImplicitVersion, T extends InferBeatmapFile<"difficulty"> = InferBeatmapSerial<"difficulty", V>>(songId: SongId, beatmapId: BeatmapId, contents: T) {
-		const filename = BeatmapFilestore.resolveFilename(songId, "difficulty", { id: beatmapId });
-		return this.saveFile<T>(filename, contents);
-	}
-	async saveLightshowFile<V extends LightshowImplicitVersion, T extends InferBeatmapFile<"lightshow"> = InferBeatmapSerial<"lightshow", V>>(songId: SongId, lightshowId: BeatmapId, contents: T) {
-		const filename = BeatmapFilestore.resolveFilename(songId, "lightshow", { id: lightshowId });
+	async saveBeatmap<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.saveFile<T>(filename, contents);
 	}
 
-	async updateInfoContents(songId: SongId, contents: App.Song, options: { serializationOptions: InferInfoSerializationOptions; deserializationOptions: InferInfoDeserializationOptions }) {
-		const infoFile = await this.loadInfoFile(songId);
-		const version = resolveImplicitVersion(infoFile, 2);
-		const currentContents = deserializeInfoContents(version, infoFile, options.deserializationOptions);
-		const newContents = serializeInfoContents(version, structuredClone({ ...currentContents, ...contents }), options.serializationOptions);
-		await this.saveInfoFile(songId, newContents);
+	async updateInfoContents(songId: SongId, song: App.Song, options: { serializationOptions: InferInfoSerializationOptions; deserializationOptions: InferInfoDeserializationOptions }) {
+		const contents = await this.loadInfo(songId);
+		const currentContents = deserializeWrapInfoContents(contents, options.deserializationOptions);
+		const newContents = serializeWrapInfoContents(deepCopy({ ...currentContents, ...song }), options.serializationOptions);
+		await this.saveInfo(songId, {
+			...newContents,
+			version: contents.version,
+			filename: contents.filename,
+		});
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, lightshowId: BeatmapId | null, entities: Partial<App.BeatmapEntities>, options: { serializationOptions: InferBeatmapSerializationOptions; deserializationOptions: InferBeatmapDeserializationOptions }) {
-		const difficulty = await this.loadDifficultyFile(songId, beatmapId);
-		const contents = { difficulty: difficulty, lightshow: undefined } as PickBeatmapSerials<"difficulty" | "lightshow">;
-		if (lightshowId) {
-			const lightshow = await this.loadLightshowFile(songId, lightshowId);
-			contents.lightshow = lightshow;
-		}
-		const version = resolveImplicitVersion(difficulty, 2);
-		const currentContents = deserializeBeatmapContents(version, contents, options.deserializationOptions);
-		const newContents = serializeBeatmapContents(version, structuredClone({ ...currentContents, ...entities }), options.serializationOptions);
-		await this.saveDifficultyFile(songId, beatmapId, newContents.difficulty);
-		if (lightshowId && newContents.lightshow) {
-			await this.saveLightshowFile(songId, lightshowId, newContents.lightshow);
-		}
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, entities: Partial<App.BeatmapEntities>, options: { serializationOptions: InferBeatmapSerializationOptions; deserializationOptions: InferBeatmapDeserializationOptions }) {
+		const contents = await this.loadBeatmap(songId, beatmapId);
+		const currentContents = deserializeWrapBeatmapContents(contents, options.deserializationOptions);
+		const newContents = serializeWrapBeatmapContents(deepMerge({ ...currentContents, ...entities }), options.serializationOptions);
+		await this.saveBeatmap(songId, beatmapId, {
+			version: contents.version,
+			filename: contents.filename,
+			lightshowFilename: contents.lightshowFilename,
+			// for difficulty, we'll replace all collections since we can't interact with unsupported objects anyway.
+			difficulty: newContents.difficulty,
+			// for lightshow, we'll merge the contents and only replace collections that are directly supported.
+			lightshow: {
+				...newContents.lightshow,
+				...omit(contents.lightshow, "basicEvents"),
+			},
+			customData: contents.customData,
+		});
 	}
 
-	async removeAllFilesForSong(songId: SongId, songFilename: string, coverFilename: string, beatmapIds: BeatmapId[], lightshowIds: BeatmapId[]) {
+	async removeAllFilesForSong(songId: SongId, beatmapIds: BeatmapId[]) {
 		return Promise.all([
 			this.removeFile(BeatmapFilestore.resolveFilename(songId, "info", {})),
-			this.removeFile(songFilename),
-			this.removeFile(coverFilename),
-			...beatmapIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "difficulty", { id: id }))),
-			...lightshowIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "lightshow", { id: id }))),
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "song", {})),
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "cover", {})),
+			...beatmapIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: id }))),
 			//
 		]);
 	}

@@ -21,11 +21,11 @@ export default function createDemoMiddleware() {
 			if (isNewUser) {
 				const res = await fetch(demoFileUrl);
 				const blob = await res.blob();
-				const songData = await processImportedMap(blob, {});
-				songData.demo = true;
-				await api.dispatch(importExistingSong({ songData }));
-				// TODO: Should pull data from demoSong
-				window.location.href = "/edit/only-now/Normal/notes";
+				const songData = await processImportedMap(blob, { readonly: true }).then((data) => {
+					api.dispatch(importExistingSong({ songData: data }));
+					return data;
+				});
+				window.location.href = `/edit/${songData.id}/${songData.selectedDifficulty}/notes`;
 			}
 		},
 	});

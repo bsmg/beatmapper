@@ -29,7 +29,7 @@ export interface ModSettings {
 
 export interface Beatmap {
 	beatmapId: BeatmapId;
-	lightshowId: BeatmapId | null;
+	lightshowId: BeatmapId;
 	characteristic: CharacteristicName;
 	difficulty: DifficultyName;
 	noteJumpSpeed: number;

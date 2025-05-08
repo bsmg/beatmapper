@@ -1,6 +1,6 @@
 import { type PayloadAction, createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
-import { downloadMapFiles, finishLoadingSong, leaveEditor } from "$/store/actions";
+import { downloadMapFiles, leaveEditor } from "$/store/actions";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 import type { createAutosaveWorker } from "$/workers";
@@ -12,7 +12,7 @@ export default function createBackupMiddleware({ worker }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
-		matcher: isAnyOf(finishLoadingSong, downloadMapFiles, leaveEditor),
+		matcher: isAnyOf(downloadMapFiles, leaveEditor),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			const { songId } = action.payload;
 			const state = api.getState();

@@ -1,5 +1,5 @@
-import { v1, v2, v3, v4 } from "bsmap";
-import type { container, v1 as v1t, v2 as v2t, v3 as v3t } from "bsmap/types";
+import { createBombNote, createColorNote, v1, v2, v3, v4 } from "bsmap";
+import type { container, v1 as v1t, v2 as v2t, v3 as v3t, wrapper } from "bsmap/types";
 import { object } from "valibot";
 
 import { App } from "$/types";
@@ -12,6 +12,42 @@ export function resolveNoteId<T extends Pick<App.IBaseNote, "beatNum" | "colInde
 
 const { serialize: serializeColIndex, deserialize: deserializeColIndex } = createCoordinateSerializationFactory({ min: 0, max: 3, extensions: { "mapping-extensions": MAPPING_EXTENSIONS_INDEX_RESOLVERS } });
 const { serialize: serializeRowIndex, deserialize: deserializeRowIndex } = createCoordinateSerializationFactory({ min: 0, max: 2, extensions: { "mapping-extensions": MAPPING_EXTENSIONS_INDEX_RESOLVERS } });
+
+export function serializeWrapColorNote(data: App.ColorNote, options: BeatmapEntitySerializationOptions<"mapping-extensions">): wrapper.IWrapColorNote {
+	return createColorNote({
+		time: data.beatNum,
+		posX: serializeColIndex(data.colIndex, options),
+		posY: serializeRowIndex(data.rowIndex, options),
+		color: Object.values(App.SaberColor).indexOf(data.color) as 0 | 1,
+		direction: Object.values(App.CutDirection).indexOf(data.direction),
+	});
+}
+export function deserializeWrapColorNote(data: wrapper.IWrapColorNote, options: BeatmapEntitySerializationOptions<"mapping-extensions">): App.ColorNote {
+	return {
+		id: resolveNoteId({ beatNum: data.time, colIndex: data.posX, rowIndex: data.posY }),
+		beatNum: data.time,
+		colIndex: deserializeColIndex(data.posX, options),
+		rowIndex: deserializeRowIndex(data.posY, options),
+		color: Object.values(App.SaberColor)[data.color],
+		direction: Object.values(App.CutDirection)[data.direction],
+	};
+}
+
+export function serializeWrapBombNote(data: App.BombNote, options: BeatmapEntitySerializationOptions<"mapping-extensions">): wrapper.IWrapBombNote {
+	return createBombNote({
+		time: data.beatNum,
+		posX: serializeColIndex(data.colIndex, options),
+		posY: serializeRowIndex(data.rowIndex, options),
+	});
+}
+export function deserializeWrapBombNote(data: wrapper.IWrapBombNote, options: BeatmapEntitySerializationOptions<"mapping-extensions">): App.BombNote {
+	return {
+		id: resolveNoteId({ beatNum: data.time, colIndex: data.posX, rowIndex: data.posY }),
+		beatNum: data.time,
+		colIndex: deserializeColIndex(data.posX, options),
+		rowIndex: deserializeRowIndex(data.posY, options),
+	};
+}
 
 type SharedOptions = [BeatmapEntitySerializationOptions<"mapping-extensions">, {}, {}, {}, {}];
 

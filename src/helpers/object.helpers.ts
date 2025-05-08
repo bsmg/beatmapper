@@ -1,4 +1,5 @@
 import { NoteDirectionAngle } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
 import type { EVENT_TRACKS } from "$/constants";
 import { clamp, roundToNearest } from "$/utils";
@@ -66,12 +67,17 @@ export const MAPPING_EXTENSIONS_DIMENSION_RESOLVERS: BeatmapExtensionsResolverMa
 	serialize: (index) => Math.round(index < 0 ? index * 1000 - 1000 : index * 1000 + 1000),
 	deserialize: (index) => roundToNearest(index < 0 ? index / 1000 + 1 : index / 1000 - 1, 1 / 1000),
 };
+export const MAPPING_EXTENSIONS_ANGLE_RESOLVERS: BeatmapExtensionsResolverMap<{ angle: number; isDot: boolean }, Pick<wrapper.IWrapColorNote, "direction" | "angleOffset">> = {
+	validate: ({ direction }) => (direction >= 1000 && direction <= 1360) || (direction >= 2000 && direction <= 2360),
+	serialize: ({ angle, isDot }) => ({ direction: (isDot ? 2000 : 1000) + ((360 - Math.round(angle)) % 360), angleOffset: 0 }),
+	deserialize: ({ direction }) => ({ angle: (-(direction % 1000) + 360) % 360, isDot: direction >= 2000 }),
+};
 
 interface AngleSerializationOptions<T extends BeatmapExtensionsProvider> {
-	extensions?: BeatmapExtensionsSerializationOptions<T, { angle: number; isDot: boolean }, { direction: number; offset: number }>;
+	extensions?: BeatmapExtensionsSerializationOptions<T, { angle: number; isDot: boolean }, Pick<wrapper.IWrapColorNote, "direction" | "angleOffset">>;
 }
 export function createAngleSerializationFactory<TProvider extends BeatmapExtensionsProvider>({ extensions: withExtensions }: AngleSerializationOptions<TProvider>) {
-	return createPropertySerializationFactory<{ angle: number; isDot: boolean }, { direction: number; offset: number }, BeatmapEntitySerializationOptions<TProvider>, BeatmapEntitySerializationOptions<TProvider>>(() => {
+	return createPropertySerializationFactory<{ angle: number; isDot: boolean }, Pick<wrapper.IWrapColorNote, "direction" | "angleOffset">, BeatmapEntitySerializationOptions<TProvider>, BeatmapEntitySerializationOptions<TProvider>>(() => {
 		return {
 			container: {
 				serialize: (data, { extensionsProvider: provider }) => {
@@ -85,7 +91,7 @@ export function createAngleSerializationFactory<TProvider extends BeatmapExtensi
 					const direction = data.isDot ? 8 : Object.values(NoteDirectionAngle).indexOf(nearestAngle);
 					return {
 						direction: direction,
-						offset: Math.round(offset),
+						angleOffset: Math.round(offset),
 					};
 				},
 				deserialize: (data, { extensionsProvider: provider }) => {
@@ -93,7 +99,7 @@ export function createAngleSerializationFactory<TProvider extends BeatmapExtensi
 						if (withExtensions[provider].validate(data)) return withExtensions[provider].deserialize(data);
 					}
 					if (Object.keys(NoteDirectionAngle).includes(`${data.direction}`)) {
-						return { angle: (Object.values(NoteDirectionAngle)[data.direction] + data.offset) % 360, isDot: data.direction === 8 };
+						return { angle: (Object.values(NoteDirectionAngle)[data.direction] + data.angleOffset) % 360, isDot: data.direction === 8 };
 					}
 					throw new Error("Invalid angle properties.");
 				},

@@ -20,6 +20,10 @@ export function omit<T extends object, K extends keyof T>(obj: T, ...keys: reado
 	return result;
 }
 
+export function withKeys<T extends object, K extends keyof Required<T>>(obj: T, ...keys: K[]): boolean {
+	return keys.some((key) => key in obj && !!obj[key]);
+}
+
 export function extractTypeFromObject<T extends object, K extends keyof object>(obj: T, type: K) {
 	const entries = Object.entries(obj) as [keyof T, T][];
 	return entries.reduce(

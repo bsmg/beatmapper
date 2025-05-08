@@ -24,7 +24,7 @@ describe("info serialization", () => {
 		difficultiesById: {
 			Hard: {
 				beatmapId: "Hard",
-				lightshowId: null,
+				lightshowId: "Unnamed",
 				characteristic: "Standard",
 				difficulty: "Hard",
 				noteJumpSpeed: 12,
@@ -32,7 +32,7 @@ describe("info serialization", () => {
 			},
 			Expert: {
 				beatmapId: "Expert",
-				lightshowId: null,
+				lightshowId: "Unnamed",
 				characteristic: "Standard",
 				difficulty: "Expert",
 				noteJumpSpeed: 15,
@@ -171,7 +171,7 @@ describe("info serialization", () => {
 			difficultyBeatmaps: [
 				{
 					beatmapDataFilename: "Hard.beatmap.dat",
-					lightshowDataFilename: "Hard.lightshow.dat",
+					lightshowDataFilename: "Unnamed.lightshow.dat",
 					characteristic: "Standard",
 					difficulty: "Hard",
 					noteJumpMovementSpeed: 12,
@@ -182,7 +182,7 @@ describe("info serialization", () => {
 				},
 				{
 					beatmapDataFilename: "Expert.beatmap.dat",
-					lightshowDataFilename: "Expert.lightshow.dat",
+					lightshowDataFilename: "Unnamed.lightshow.dat",
 					characteristic: "Standard",
 					difficulty: "Expert",
 					noteJumpMovementSpeed: 15,
@@ -197,13 +197,7 @@ describe("info serialization", () => {
 			expect(serializeInfoContents(4, wrapper, { songDuration: 0 })).toMatchObject(v4);
 		});
 		it("converts from wrapper to serial", () => {
-			expect(deserializeInfoContents(4, v4, {})).toMatchObject({
-				...wrapper,
-				difficultiesById: {
-					Hard: { ...wrapper.difficultiesById.Hard, lightshowId: "Hard" },
-					Expert: { ...wrapper.difficultiesById.Expert, lightshowId: "Expert" },
-				},
-			});
+			expect(deserializeInfoContents(4, v4, {})).toMatchObject(wrapper);
 		});
 	});
 

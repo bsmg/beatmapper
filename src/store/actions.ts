@@ -73,7 +73,7 @@ export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY
 	return { payload: { ...args } };
 });
 
-export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; lightshowId: BeatmapId | null; data: { characteristic: CharacteristicName; difficulty: DifficultyName } }) => {
+export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; lightshowId: BeatmapId; data: { characteristic: CharacteristicName; difficulty: DifficultyName } }) => {
 	return { payload: { ...args } };
 });
 

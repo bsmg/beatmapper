@@ -1,8 +1,8 @@
-import type { container, v1 as v1t, v2 as v2t, v3 as v3t } from "bsmap/types";
+import type { container, v1 as v1t, v2 as v2t, v3 as v3t, wrapper } from "bsmap/types";
 
 import { EVENT_TRACKS } from "$/constants";
 import { App, type Member, TrackType } from "$/types";
-import { v1, v2, v3, v4 } from "bsmap";
+import { createBasicEvent, v1, v2, v3, v4 } from "bsmap";
 import { object } from "valibot";
 import type { LightshowEntitySerializationOptions } from "./object.helpers";
 import { createPropertySerializationFactory, createSerializationFactory } from "./serialization.helpers";
@@ -113,6 +113,32 @@ const { serialize: serializeEventValue, deserialize: deserializeEventValue } = c
 });
 
 type SharedOptions = [LightshowEntitySerializationOptions, {}, {}, {}, {}];
+
+export function serializeWrapBasicEvent(data: App.BasicEvent, options: LightshowEntitySerializationOptions) {
+	const allTracks = convertTracksToArray(options.tracks ?? EVENT_TRACKS);
+	const value = serializeEventValue({ effect: data.type, color: isLightEvent(data, options.tracks) ? data.colorType : undefined, value: isValueEvent(data, options.tracks) ? data.laserSpeed : undefined }, options);
+	return createBasicEvent({
+		time: data.beatNum,
+		type: allTracks.indexOf(data.trackId),
+		value: value,
+		floatValue: isLightEvent(data, options.tracks) ? 1 : 0,
+	});
+}
+export function deserializeWrapBasicEvent(data: wrapper.IWrapBasicEvent, options: LightshowEntitySerializationOptions) {
+	const allTracks = convertTracksToArray(options.tracks ?? EVENT_TRACKS);
+	const trackId = allTracks[data.type ?? 0];
+	const fromValue = deserializeEventValue(data.value ?? 0, { ...options, trackId: trackId ?? "unknown" });
+	if (!trackId) throw new Error(`Invalid track id: ${data.type}`);
+
+	return {
+		id: resolveEventId({ beatNum: data.time ?? 0, trackId }),
+		beatNum: data.time ?? 0,
+		trackId: trackId,
+		type: isLightTrack(trackId, options.tracks) ? fromValue.effect : isValueTrack(trackId, options.tracks) ? "change-speed" : "rotate",
+		colorType: isLightTrack(trackId, options.tracks) ? fromValue.color : undefined,
+		laserSpeed: isValueTrack(trackId, options.tracks) ? (data.value ?? 0) : undefined,
+	} as App.BasicEvent;
+}
 
 export const { serialize: serializeBasicEvent, deserialize: deserializeBasicEvent } = createSerializationFactory<App.BasicEvent, [v1t.IEvent, v2t.IEvent, v3t.IBasicEvent, container.v4.IBasicEventContainer], SharedOptions, SharedOptions>("BasicEvent", () => {
 	return {

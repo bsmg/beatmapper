@@ -20,7 +20,7 @@ async function saveEventsToAllDifficulties(state: RootState, songId: SongId, fil
 	for (const beatmapId of beatmapIds) {
 		const beatmap = selectBeatmapById(state, songId, beatmapId);
 
-		await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
+		await filestore.updateBeatmapContents(songId, beatmap.beatmapId, entities, {
 			serializationOptions: {
 				editorOffsetInBeats,
 				extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
@@ -42,7 +42,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: downloadMapFiles,
 		effect: async (action, api) => {
-			const { songId, version = 4 } = action.payload;
+			const { songId, version } = action.payload;
 			const state = api.getState();
 			const duration = selectDuration(state);
 			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
@@ -64,7 +64,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 
 				const entities = selectAllEntities(state);
 
-				await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
+				await filestore.updateBeatmapContents(songId, beatmap.beatmapId, entities, {
 					serializationOptions: {
 						editorOffsetInBeats,
 						extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
@@ -80,13 +80,17 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 			}
 
 			// Next, I need to fetch all relevant files from disk.
-			const [songFile, coverArtFile] = await Promise.all([await filestore.loadFile<Blob>(song.songFilename), await filestore.loadFile<Blob>(song.coverArtFilename)]);
+			const [songFile, coverArtFile] = await Promise.all([await filestore.loadSongFile(song.id), await filestore.loadCoverArtFile(song.id)]);
 
-			await zipFiles(version, filestore, {
-				song,
-				songDuration: duration ? duration / 1000 : undefined,
-				songFile,
-				coverArtFile,
+			await zipFiles(filestore, {
+				version: version ?? null,
+				contents: {
+					songId: songId,
+					beatmapsById: song.difficultiesById,
+					songDuration: duration ? duration / 1000 : undefined,
+					songFile,
+					coverArtFile,
+				},
 			});
 		},
 	});

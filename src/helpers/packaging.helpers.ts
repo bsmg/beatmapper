@@ -1,16 +1,17 @@
-import { DifficultyRanking, remapDedupe, sortV2NoteFn, v1, v2, v3, v4 } from "bsmap";
-import { type BeatmapFileType, CharacteristicName, DifficultyName, type DifficultyRank, type EnvironmentAllName, type EnvironmentName, type InferBeatmapSerial, type InferBeatmapVersion, type v1 as v1t, type v2 as v2t, type v4 as v4t } from "bsmap/types";
+import { ColorScheme, DifficultyRanking, EnvironmentSchemeName, createBeatmap, createInfo, remapDedupe, sortV2NoteFn, v1, v2, v3, v4 } from "bsmap";
+import { type BeatmapFileType, CharacteristicName, DifficultyName, type DifficultyRank, type EnvironmentAllName, type EnvironmentName, type InferBeatmapSerial, type InferBeatmapVersion, type v1 as v1t, type v2 as v2t, type v4 as v4t, type wrapper } from "bsmap/types";
 import { object, optional } from "valibot";
 
-import { DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
+import { DEFAULT_GRID, DEFAULT_NOTE_JUMP_SPEEDS, EVENT_TRACKS } from "$/constants";
 import { App, type BeatmapId, type Merge, type OrderedTuple } from "$/types";
-import { maybeObject } from "$/utils";
+import { withKeys as hasKeys, maybeObject } from "$/utils";
+import { colorToHex } from "bsmap/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
 import { formatColorForMods } from "./colors.helpers";
-import { deserializeBasicEvent, serializeBasicEvent } from "./events.helpers";
-import { deserializeBombNote, deserializeColorNote, serializeBombNote, serializeColorNote } from "./notes.helpers";
+import { deserializeBasicEvent, deserializeWrapBasicEvent, serializeBasicEvent, serializeWrapBasicEvent } from "./events.helpers";
+import { deserializeBombNote, deserializeColorNote, deserializeWrapBombNote, deserializeWrapColorNote, serializeBombNote, serializeColorNote, serializeWrapBombNote, serializeWrapColorNote } from "./notes.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
-import { deserializeObstacle, serializeObstacle } from "./obstacles.helpers";
+import { deserializeObstacle, deserializeWrapObstacle, serializeObstacle, serializeWrapObstacle } from "./obstacles.helpers";
 import { type ImplicitVersion, createSerializationFactory } from "./serialization.helpers";
 import { resolveBeatmapIdFromFilename, resolveSongId, sortBeatmaps } from "./song.helpers";
 
@@ -65,37 +66,154 @@ type InfoDeserializationOptions = OrderedTuple<
 export type InferInfoSerializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<InfoSerializationOptions[0], InfoSerializationOptions[T]>;
 export type InferInfoDeserializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<InfoDeserializationOptions[0], InfoDeserializationOptions[T]>;
 
-export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createSerializationFactory<App.Song, InferBeatmapSerials<"info">, InfoSerializationOptions, InfoDeserializationOptions>("Info", () => {
-	function coalesceBeatmapCollection(data: App.Song) {
-		const beatmaps = Object.values(data.difficultiesById).sort(sortBeatmaps);
+function coalesceBeatmapCollection(data: App.Song) {
+	const beatmaps = Object.values(data.difficultiesById).sort(sortBeatmaps);
 
-		// Has this song enabled any mod support?
-		const enabledCustomColors = !!data.modSettings?.customColors?.isEnabled;
-		const mappingExtensionsEnabled = !!data.modSettings?.mappingExtensions?.isEnabled;
+	// Has this song enabled any mod support?
+	const enabledCustomColors = !!data.modSettings?.customColors?.isEnabled;
+	const mappingExtensionsEnabled = !!data.modSettings?.mappingExtensions?.isEnabled;
 
-		const requirements: string[] = [];
-		if (mappingExtensionsEnabled) {
-			requirements.push("Mapping Extensions");
-		}
-
-		const colors = enabledCustomColors ? data.modSettings?.customColors : undefined;
-
-		const customColors = maybeObject({
-			_colorLeft: colors?.colorLeft ? formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
-			_colorRight: colors?.colorRight ? formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive) : undefined,
-			_envColorLeft: colors?.envColorLeft ? formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive) : undefined,
-			_envColorRight: colors?.envColorRight ? formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive) : undefined,
-			_obstacleColor: colors?.obstacleColor ? formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive) : undefined,
-		});
-
-		const editorSettings = {
-			enabledFastWalls: data.enabledFastWalls,
-			modSettings: maybeObject(data.modSettings ?? {}),
-		};
-
-		return { beatmaps, requirements, customColors, editorSettings };
+	const requirements: string[] = [];
+	if (mappingExtensionsEnabled) {
+		requirements.push("Mapping Extensions");
 	}
 
+	const colors = enabledCustomColors ? data.modSettings?.customColors : undefined;
+
+	const customColors = maybeObject({
+		_colorLeft: colors?.colorLeft ? formatColorForMods(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
+		_colorRight: colors?.colorRight ? formatColorForMods(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive) : undefined,
+		_envColorLeft: colors?.envColorLeft ? formatColorForMods(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive) : undefined,
+		_envColorRight: colors?.envColorRight ? formatColorForMods(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive) : undefined,
+		_obstacleColor: colors?.obstacleColor ? formatColorForMods(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive) : undefined,
+	});
+
+	const editorSettings = {
+		enabledFastWalls: data.enabledFastWalls,
+		modSettings: maybeObject(data.modSettings ?? {}),
+	};
+
+	return { beatmaps, requirements, customColors, editorSettings };
+}
+
+function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.ModSettings {
+	const environmentSchemeName = EnvironmentSchemeName[data.environmentNames[0] ?? data.environmentBase.normal];
+	const environmentScheme = ColorScheme[environmentSchemeName];
+	const defaultScheme = ColorScheme["Default Custom"] as Required<v2t.IColorScheme>;
+
+	function resolveColor(data: wrapper.IWrapInfo, keys: { wrapper: keyof wrapper.IWrapInfoColorScheme; custom: keyof v2t.IColorScheme }) {
+		if (data.difficulties.some((x) => hasKeys(x.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_obstacleColor"))) {
+			const customColorExists = data.difficulties.find((x) => x.customData[keys.custom]);
+			const customColor = customColorExists?.customData[keys.custom];
+			if (customColor) return colorToHex(customColor).slice(0, 7);
+		}
+		if (data.colorSchemes.length > 0) {
+			return colorToHex(data.colorSchemes[0][keys.wrapper as "saberLeftColor"]).slice(0, 7);
+		}
+		return colorToHex(environmentScheme[keys.custom] ?? defaultScheme[keys.custom]).slice(0, 7);
+	}
+
+	return {
+		customColors: {
+			isEnabled: data.colorSchemes.some((x) => x.overrideNotes || x.overrideLights) || data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_obstacleColor")),
+			colorLeft: resolveColor(data, { wrapper: "saberLeftColor", custom: "_colorLeft" }),
+			colorRight: resolveColor(data, { wrapper: "saberRightColor", custom: "_colorRight" }),
+			envColorLeft: resolveColor(data, { wrapper: "environment0Color", custom: "_envColorLeft" }),
+			envColorRight: resolveColor(data, { wrapper: "environment1Color", custom: "_envColorRight" }),
+			obstacleColor: resolveColor(data, { wrapper: "obstaclesColor", custom: "_obstacleColor" }),
+		},
+		mappingExtensions: {
+			isEnabled: data.difficulties.some((beatmap) => beatmap.customData._requirements?.includes("Mapping Extensions")),
+			...data.customData.editors?.Beatmapper?.editorSettings?.modSettings?.mappingExtensions,
+			...DEFAULT_GRID,
+		},
+	};
+}
+
+export function serializeWrapInfoContents(data: App.Song, options: { duration?: number }) {
+	const { beatmaps, customColors, editorSettings } = coalesceBeatmapCollection(data);
+
+	return createInfo({
+		song: {
+			title: data.name,
+			subTitle: data.subName,
+			author: data.artistName,
+		},
+		audio: {
+			filename: data.songFilename,
+			audioDataFilename: "AudioData.dat",
+			bpm: data.bpm,
+			duration: options.duration,
+			previewStartTime: data.previewStartTime,
+			previewDuration: data.previewDuration,
+		},
+		environmentBase: {
+			normal: data.environment,
+		},
+		environmentNames: [data.environment],
+		songPreviewFilename: data.songFilename,
+		coverImageFilename: data.coverArtFilename,
+		difficulties: beatmaps.map(
+			(beatmap): Partial<wrapper.IWrapInfoBeatmap> => ({
+				characteristic: beatmap.characteristic,
+				difficulty: beatmap.difficulty,
+				njs: beatmap.noteJumpSpeed,
+				njsOffset: beatmap.startBeatOffset,
+				customData: maybeObject({
+					_colorLeft: customColors?._colorLeft,
+					_colorRight: customColors?._colorRight,
+					_envColorLeft: customColors?._envColorLeft,
+					_envColorRight: customColors?._envColorRight,
+					_obstacleColor: customColors?._obstacleColor,
+				}),
+			}),
+		),
+		customData: {
+			_editors: {
+				_lastEditedBy: "Beatmapper",
+				Beatmapper: {
+					version: version,
+					editorSettings: maybeObject(editorSettings),
+				},
+			},
+		},
+	});
+}
+export function deserializeWrapInfoContents(data: wrapper.IWrapInfo, options: { readonly?: boolean }): App.Song {
+	const beatmapsById = data.difficulties.reduce((acc: App.Song["difficultiesById"], beatmap) => {
+		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
+		const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
+		acc[beatmapId] = {
+			beatmapId: beatmapId,
+			lightshowId: lightshowId,
+			characteristic: beatmap.characteristic,
+			difficulty: beatmap.difficulty,
+			noteJumpSpeed: beatmap.njs,
+			startBeatOffset: beatmap.njsOffset,
+			customLabel: beatmap.customData?._difficultyLabel,
+		};
+		return acc;
+	}, {});
+
+	return {
+		id: resolveSongId({ name: data.song.title }),
+		name: data.song.title,
+		subName: data.song.subTitle,
+		artistName: data.song.author,
+		bpm: data.audio.bpm,
+		offset: data.difficulties[0].customData._editorOffset ?? 0,
+		previewStartTime: data.audio.previewStartTime,
+		previewDuration: data.audio.previewDuration,
+		environment: data.environmentBase.normal ?? (data.environmentNames[0] as EnvironmentName),
+		songFilename: data.audio.filename,
+		coverArtFilename: data.coverImageFilename,
+		difficultiesById: beatmapsById,
+		demo: options.readonly,
+		modSettings: deriveModSettingsFromInfo(data),
+	};
+}
+
+export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createSerializationFactory<App.Song, InferBeatmapSerials<"info">, InfoSerializationOptions, InfoDeserializationOptions>("Info", () => {
 	return {
 		1: {
 			schema: v1.InfoSchema,
@@ -136,7 +254,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						const beatmapId = resolveBeatmapIdFromFilename(beatmap.jsonPath);
 						acc[beatmapId] = {
 							beatmapId: beatmapId,
-							lightshowId: null,
+							lightshowId: "Unnamed",
 							characteristic: beatmap.characteristic,
 							difficulty: beatmap.difficulty,
 							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmap.difficulty],
@@ -173,6 +291,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 
 					const sets: v2t.IInfoSet[] = CharacteristicName.reduce((acc, characteristic) => {
 						const forCharacteristic = beatmaps.filter((x) => x.characteristic === characteristic);
+						if (forCharacteristic.length === 0) return acc;
 						return acc.concat({
 							_beatmapCharacteristicName: characteristic,
 							_difficultyBeatmaps: forCharacteristic.map((beatmap) => ({
@@ -252,7 +371,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 							const beatmapId = resolveBeatmapIdFromFilename(beatmap._beatmapFilename);
 							acc[beatmapId] = {
 								beatmapId: beatmapId,
-								lightshowId: null,
+								lightshowId: "Unnamed",
 								characteristic: set._beatmapCharacteristicName,
 								difficulty: beatmap._difficulty,
 								noteJumpSpeed: beatmap._noteJumpMovementSpeed,
@@ -318,7 +437,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						difficultyBeatmaps: beatmaps.map((beatmap) => {
 							return {
 								beatmapDataFilename: resolveBeatmapFilenameForImplicitVersion(4, beatmap.beatmapId, "beatmap"),
-								lightshowDataFilename: resolveBeatmapFilenameForImplicitVersion(4, beatmap.lightshowId ?? beatmap.beatmapId, "lightshow"),
+								lightshowDataFilename: resolveBeatmapFilenameForImplicitVersion(4, beatmap.lightshowId, "lightshow"),
 								characteristic: beatmap.characteristic,
 								difficulty: beatmap.difficulty,
 								noteJumpMovementSpeed: beatmap.noteJumpSpeed,
@@ -424,16 +543,52 @@ type BeatmapDeserializationOptions = OrderedTuple<
 export type InferBeatmapSerializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<BeatmapSerializationOptions[0], BeatmapSerializationOptions[T]>;
 export type InferBeatmapDeserializationOptions<T extends ImplicitVersion = ImplicitVersion> = Merge<BeatmapDeserializationOptions[0], BeatmapDeserializationOptions[T]>;
 
-export const { serialize: serializeBeatmapContents, deserialize: deserializeBeatmapContents } = createSerializationFactory<Partial<App.BeatmapEntities>, PickInferBeatmapSerials<"difficulty" | "lightshow">, BeatmapSerializationOptions, BeatmapDeserializationOptions>("Beatmap", () => {
-	function shiftByOffset<T extends { beatNum: number }>(options: { editorOffsetInBeats: number }) {
-		return (item: T) => ({ ...item, beatNum: item.beatNum + options.editorOffsetInBeats }) as T;
-	}
+function shiftByOffset<T extends { beatNum: number }>(options: { editorOffsetInBeats: number }) {
+	return (item: T) => ({ ...item, beatNum: item.beatNum + options.editorOffsetInBeats }) as T;
+}
 
+export function serializeWrapBeatmapContents(data: Partial<App.BeatmapEntities>, { editorOffsetInBeats = 0, extensionsProvider, tracks = EVENT_TRACKS }: InferBeatmapSerializationOptions) {
+	const notes = data.notes?.map(shiftByOffset({ editorOffsetInBeats })).map((x) => serializeWrapColorNote(x, { extensionsProvider }));
+	const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats })).map((x) => serializeWrapBombNote(x, { extensionsProvider }));
+	const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats })).map((x) => serializeWrapObstacle(x, { extensionsProvider }));
+	const events = data.events?.map(shiftByOffset({ editorOffsetInBeats })).map((x) => serializeWrapBasicEvent(x, { tracks }));
+	const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
+
+	return createBeatmap({
+		difficulty: {
+			colorNotes: notes,
+			bombNotes: bombs,
+			obstacles: obstacles,
+			customData: {
+				bookmarks: bookmarks,
+			},
+		},
+		lightshow: {
+			basicEvents: events,
+		},
+	});
+}
+export function deserializeWrapBeatmapContents(data: wrapper.IWrapBeatmap, { editorOffsetInBeats = 0, extensionsProvider, tracks = EVENT_TRACKS }: InferBeatmapDeserializationOptions) {
+	const notes = data.difficulty.colorNotes.map((x) => deserializeWrapColorNote(x, { extensionsProvider }));
+	const bombs = data.difficulty.bombNotes.map((x) => deserializeWrapBombNote(x, { extensionsProvider }));
+	const obstacles = data.difficulty.obstacles.map((x) => deserializeWrapObstacle(x, { extensionsProvider }));
+	const events = data.lightshow.basicEvents.map((x) => deserializeWrapBasicEvent(x, { tracks }));
+	const bookmarks = data.difficulty.customData?.bookmarks?.map((x) => deserializeCustomBookmark(3, x, {}));
+
+	return {
+		notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+		bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+		obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+		events: events?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+		bookmarks: bookmarks?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+	};
+}
+
+export const { serialize: serializeBeatmapContents, deserialize: deserializeBeatmapContents } = createSerializationFactory<Partial<App.BeatmapEntities>, PickInferBeatmapSerials<"difficulty" | "lightshow">, BeatmapSerializationOptions, BeatmapDeserializationOptions>("Beatmap", () => {
 	function remapObjectContainers<T extends { object: v4t.IObject; data: unknown }>(objects: T[]) {
 		const [newData, remap] = remapDedupe(objects.map((x) => x.data));
 		return [objects.map((container, i) => ({ ...container.object, i: remap.get(i) ?? 0 })), newData] as [objects: T["object"][], data: T["data"][]];
 	}
-
 	return {
 		1: {
 			schema: object({ difficulty: v1.DifficultySchema, lightshow: optional(object({})) }),

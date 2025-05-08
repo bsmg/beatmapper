@@ -24,7 +24,7 @@ export async function save(state: RootState, songId: SongId, filestore: BeatmapF
 
 	const entities = selectAllEntities(state);
 
-	await filestore.updateBeatmapContents(songId, beatmap.beatmapId, beatmap.lightshowId, entities, {
+	await filestore.updateBeatmapContents(songId, beatmap.beatmapId, entities, {
 		serializationOptions: {
 			editorOffsetInBeats,
 			extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,

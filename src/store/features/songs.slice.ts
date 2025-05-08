@@ -47,15 +47,19 @@ const slice = createSlice({
 		selectIds: selectIds,
 		selectById: selectById,
 		selectByIdOrNull: selectByIdOrNull,
+		selectBeatmaps: createSelector(selectByIdOrNull, (song) => {
+			if (!song) return {};
+			return song.difficultiesById;
+		}),
+		selectAllBeatmaps: createSelector(selectByIdOrNull, (song) => {
+			if (!song) return [];
+			return Object.values(song.difficultiesById);
+		}),
 		selectBeatmapIds: createSelector(selectByIdOrNull, (song) => {
 			if (!song) return [];
 			return Object.values(song.difficultiesById)
 				.sort(sortBeatmaps)
 				.map((beatmap) => beatmap.beatmapId);
-		}),
-		selectAllBeatmaps: createSelector(selectByIdOrNull, (song) => {
-			if (!song) return [];
-			return Object.values(song.difficultiesById);
 		}),
 		selectBeatmapById: createSelector([selectByIdOrNull, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			if (!song) throw new Error(`No beatmap found for id: ${beatmapId}`);
@@ -134,7 +138,7 @@ const slice = createSlice({
 				difficultiesById: {
 					[beatmapId]: {
 						beatmapId: beatmapId,
-						lightshowId: "Common",
+						lightshowId: "Unnamed",
 						characteristic: selectedCharacteristic,
 						difficulty: selectedDifficulty,
 						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty],

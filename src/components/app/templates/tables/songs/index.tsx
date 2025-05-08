@@ -18,13 +18,13 @@ import SongsDataTableActions from "./actions";
 const helper = createColumnHelper<App.Song>();
 
 const SONG_TABLE = [
-	helper.accessor((data) => data.coverArtFilename, {
+	helper.accessor((data) => data.id, {
 		id: "cover",
 		size: 40,
 		header: () => null,
 		cell: (ctx) => {
-			const coverArtFilename = ctx.getValue();
-			return <CoverArtFilePreview filename={coverArtFilename} width={40} />;
+			const sid = ctx.getValue();
+			return <CoverArtFilePreview songId={sid} width={40} />;
 		},
 	}),
 	helper.accessor((data) => [data.name, data.artistName, data.demo] as const, {
@@ -52,7 +52,7 @@ const SONG_TABLE = [
 			const dispatch = useAppDispatch();
 			const [sid, collection] = ctx.getValue();
 			const song = useAppSelector((state) => selectSongById(state, sid));
-			const initialValue = useMemo(() => [song.selectedDifficulty?.toString() ?? Object.keys(song.difficultiesById)[0]], [song]);
+			const initialValue = useMemo(() => [song.selectedDifficulty?.toString() ?? Object.keys(song.difficultiesById)[0].toString()], [song]);
 			return <Select collection={collection} value={initialValue} onValueChange={(details) => dispatch(changeSelectedDifficulty({ songId: sid, beatmapId: details.value[0] }))} />;
 		},
 	}),
