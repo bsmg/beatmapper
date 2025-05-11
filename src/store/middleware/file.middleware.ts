@@ -3,11 +3,11 @@ import { createBeatmap } from "bsmap";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 import { getWaveformDataForFile } from "$/helpers/audio.helpers";
-import { deserializeWrapBeatmapContents, serializeWrapBeatmapContents, serializeWrapInfoContents } from "$/helpers/packaging.helpers";
+import { deserializeBeatmapContents, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { copyDifficulty, createDifficulty, createNewSong, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { selectActiveBeatmapId, selectAllBasicEvents, selectBeatmapById, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllBasicEvents, selectBeatmapById, selectDuration, selectEditorOffsetInBeats, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 
 interface Options {
@@ -20,20 +20,21 @@ export default function createFileMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: createNewSong.fulfilled,
 		effect: async (action, api) => {
-			const { songId: sid, selectedCharacteristic: characteristic, selectedDifficulty: difficulty } = action.payload;
+			const { songId, selectedCharacteristic: characteristic, selectedDifficulty: difficulty } = action.payload;
 			const state = api.getState();
 
-			const song = selectSongById(state, sid);
+			const song = selectSongById(state, songId);
+			const duration = selectDuration(state);
 
 			const beatmapId = resolveBeatmapId({ characteristic, difficulty });
 
-			const infoContents = serializeWrapInfoContents(song, {});
+			const infoContents = serializeInfoContents(song, { songDuration: duration ? duration / 1000 : undefined });
 			// song/cover files are already stored via the dispatched action, so we just need to populate the info/beatmap/lightshow contents
 
-			await filestore.saveInfo(sid, infoContents);
+			await filestore.saveInfo(songId, infoContents);
 
 			await filestore.saveBeatmap(
-				sid,
+				songId,
 				beatmapId,
 				createBeatmap({
 					filename: `${beatmapId}.beatmap.dat`,
@@ -50,14 +51,14 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 			const beatmap = selectBeatmapById(state, songId, beatmapId);
 
-			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+			const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 			// Fetch the metadata for this beatmap from our local store.
 			const wrapBeatmap = await filestore.loadBeatmap(songId, beatmap.beatmapId);
 
 			// all metadata items are serialized as wrapper forms in the filestore
-			const entities = deserializeWrapBeatmapContents(wrapBeatmap, {
+			const entities = deserializeBeatmapContents(wrapBeatmap, {
 				editorOffsetInBeats,
 				extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
 			});
@@ -67,7 +68,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const song = selectSongById(state, songId);
 			const file = await filestore.loadSongFile(songId);
 			const waveform = await getWaveformDataForFile(file);
-			api.dispatch(finishLoadingSong({ songId: song.id, songData: song, waveformData: waveform }));
+			api.dispatch(finishLoadingSong({ songId: songId, songData: song, waveformData: waveform }));
 		},
 	});
 	instance.startListening({
@@ -76,7 +77,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const { songId, beatmapId } = action.payload;
 			const state = api.getState();
 
-			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+			const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 			// we need to reference the currently selected song to supply the correct serial version for the filestore.
@@ -85,7 +86,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 			const entities = { events: selectAllBasicEvents(state) };
 
-			const serialized = serializeWrapBeatmapContents(entities, {
+			const serialized = serializeBeatmapContents(entities, {
 				editorOffsetInBeats,
 				extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
 			});
@@ -95,7 +96,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const song = selectSongById(state, songId);
 			const duration = selectDuration(state);
 			// Back up our latest data!
-			await filestore.updateInfoContents(song.id, song, {
+			await filestore.updateInfoContents(songId, song, {
 				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
 				deserializationOptions: {},
 			});
@@ -119,7 +120,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const song = selectSongById(state, songId);
 			const duration = selectDuration(state);
 			// Back up our latest data!
-			await filestore.updateInfoContents(song.id, song, {
+			await filestore.updateInfoContents(songId, song, {
 				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
 				deserializationOptions: {},
 			});
@@ -148,8 +149,8 @@ export default function createFileMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: deleteSong,
 		effect: async (action) => {
-			const { id, difficultiesById } = action.payload;
-			await filestore.removeAllFilesForSong(id, Object.keys(difficultiesById));
+			const { songId, beatmapIds } = action.payload;
+			await filestore.removeAllFilesForSong(songId, beatmapIds);
 		},
 	});
 

@@ -4,14 +4,17 @@ import { createSelector } from "@reduxjs/toolkit";
 import { copySelection, cutSelection, pasteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllSelectedObjects, selectClipboardHasObjects } from "$/store/selectors";
-import { View } from "$/types";
+import { type SongId, View } from "$/types";
 import { getMetaKeyLabel } from "$/utils";
 
 import { useViewFromLocation } from "$/components/app/hooks";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button, Tooltip } from "$/components/ui/compositions";
 
-function ClipboardActionPanelActionGroup() {
+interface Props {
+	sid: SongId;
+}
+function ClipboardActionPanelActionGroup({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();
 	const isAnythingSelected = useAppSelector(createSelector(selectAllSelectedObjects, (state) => [...(state.notes ?? []), ...(state.bombs ?? []), ...(state.obstacles ?? [])].length > 0));
@@ -34,7 +37,7 @@ function ClipboardActionPanelActionGroup() {
 				</ActionPanelGroup.ActionGroup>
 			</Presence>
 			<Tooltip render={() => `Paste copied notes and obstacles (${getMetaKeyLabel()} + V)`}>
-				<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} onClick={() => dispatch(pasteSelection({ view: view ?? View.BEATMAP }))}>
+				<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} onClick={() => dispatch(pasteSelection({ songId: sid, view: view ?? View.BEATMAP }))}>
 					Paste Selection
 				</Button>
 			</Tooltip>

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectEventEditorStartAndEndBeat } from "$/store/selectors";
 import type { IBackgroundBox, SongId } from "$/types";
@@ -22,7 +22,7 @@ function EventGridBackgroundBox({ sid, box }: Props) {
 		return {
 			left: `${startOffset}%`,
 			width: `${width}%`,
-			background: getColorForItem(box.colorType, customColors),
+			background: resolveColorForItem(box.colorType, customColors),
 		};
 	}, [box, startBeat, endBeat, customColors]);
 

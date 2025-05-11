@@ -1,12 +1,9 @@
 import type { Song } from "./info";
 
-export interface Bookmark {
-	beatNum: number;
+export interface IBookmark {
+	time: number;
 	name: string;
-	color: {
-		background: string;
-		text: string;
-	};
+	color: string;
 }
 
 export interface EditorInfoData {

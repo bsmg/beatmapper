@@ -1,14 +1,15 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
+import { getBeatmaps } from "$/helpers/song.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
 import { zipFiles } from "$/services/packaging.service";
 import { downloadMapFiles } from "$/store/actions";
-import { selectActiveBeatmapId, selectAllBasicEvents, selectAllEntities, selectBeatmapById, selectBeatmapIds, selectDuration, selectIsModuleEnabled, selectOffsetInBeats, selectSongById } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllBasicEvents, selectAllEntities, selectBeatmapById, selectBeatmapIds, selectDuration, selectEditorOffsetInBeats, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
 async function saveEventsToAllDifficulties(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
-	const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+	const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 	const entities = {
@@ -45,7 +46,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 			const { songId, version } = action.payload;
 			const state = api.getState();
 			const duration = selectDuration(state);
-			const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+			const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 			const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 			const song = selectSongById(state, songId);
@@ -80,13 +81,13 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 			}
 
 			// Next, I need to fetch all relevant files from disk.
-			const [songFile, coverArtFile] = await Promise.all([await filestore.loadSongFile(song.id), await filestore.loadCoverArtFile(song.id)]);
+			const [songFile, coverArtFile] = await Promise.all([await filestore.loadSongFile(songId), await filestore.loadCoverArtFile(songId)]);
 
 			await zipFiles(filestore, {
 				version: version ?? null,
 				contents: {
 					songId: songId,
-					beatmapsById: song.difficultiesById,
+					beatmapsById: getBeatmaps(song),
 					songDuration: duration ? duration / 1000 : undefined,
 					songFile,
 					coverArtFile,

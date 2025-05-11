@@ -40,19 +40,19 @@ function EditorNavigationControls({ sid }: Props) {
 				</Select>
 			</Column>
 			<Column>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToStart())}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToStart({ songId: sid }))}>
 					<SkipBackIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekBackwards({ view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekBackwards({ songId: sid, view }))}>
 					<RewindIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(playButtonAction())}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(playButtonAction({ songId: sid }))}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekForwards({ view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekForwards({ songId: sid, view }))}>
 					<FastForwardIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToEnd())}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToEnd({ songId: sid }))}>
 					<SkipForwardIcon />
 				</Button>
 			</Column>

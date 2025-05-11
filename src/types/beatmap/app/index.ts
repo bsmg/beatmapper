@@ -1,6 +1,6 @@
-import type { BombNote, ColorNote, Obstacle } from "./beatmap";
-import type { Bookmark } from "./editor";
-import type { BasicEvent } from "./lightshow";
+import type { IBombNote, IColorNote, IObstacle } from "./beatmap";
+import type { IBookmark } from "./editor";
+import type { IBasicEvent } from "./lightshow";
 
 export * from "./beatmap";
 export * from "./editor";
@@ -9,9 +9,9 @@ export * from "./lightshow";
 export * from "./shared";
 
 export interface BeatmapEntities {
-	notes: ColorNote[];
-	bombs: BombNote[];
-	obstacles: Obstacle[];
-	events: BasicEvent[];
-	bookmarks: Bookmark[];
+	notes: IColorNote[];
+	bombs: IBombNote[];
+	obstacles: IObstacle[];
+	events: IBasicEvent[];
+	bookmarks: IBookmark[];
 }

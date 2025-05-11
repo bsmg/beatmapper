@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { processImportedMap } from "$/services/packaging.service";
 import { cancelImportingSong, importExistingSong, startImportingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllSongs } from "$/store/selectors";
+import { selectSongIds } from "$/store/selectors";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { useLocalFileQuery } from "$/components/app/hooks";
@@ -24,9 +24,8 @@ export function LocalFileUpload({ filename, onFileAccept, children, ...rest }: C
 }
 
 export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<typeof FileUpload>) {
-	const songs = useAppSelector(selectAllSongs);
 	const dispatch = useAppDispatch();
-	const songIds = songs.map((song) => song.id);
+	const songIds = useAppSelector(selectSongIds);
 
 	const handleFileAccept = async (details: FileUploadFileAcceptDetails) => {
 		dispatch(startImportingSong());

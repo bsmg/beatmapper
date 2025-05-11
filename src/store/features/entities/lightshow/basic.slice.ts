@@ -1,7 +1,8 @@
 import { type EntityId, createDraftSafeSelector, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createBasicEvent, sortObjectFn } from "bsmap";
 
-import { getMirroredTrack, isLightEvent, isMirroredTrack, isValueEvent, resolveEventId } from "$/helpers/events.helpers";
-import { nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
+import { isLightEvent, isMirroredTrack, resolveEventDerivedProps, resolveEventId, resolveEventValue, resolveMirroredTrack } from "$/helpers/events.helpers";
+import { nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
 import {
 	bulkDeleteEvent,
 	bulkPlaceEvent,
@@ -28,16 +29,17 @@ import { createSelectedEntitiesSelector } from "$/store/helpers";
 import { App, View } from "$/types";
 import { cycle } from "$/utils";
 
-const adapter = createEntityAdapter<App.BasicEvent, EntityId>({
+const adapter = createEntityAdapter<App.IBasicEvent, EntityId>({
 	selectId: resolveEventId,
+	sortComparer: sortObjectFn,
 });
 const { selectAll, selectById } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
 const selectAllForTrack = createDraftSafeSelector([selectAll, (_, trackId: App.TrackId) => trackId], (state, trackId) => {
-	return state.filter((x) => x.trackId === trackId);
+	return state.filter((x) => x.type === trackId);
 });
 const selectAllForTrackBeforeBeat = createDraftSafeSelector([selectAll, (_, query: { trackId: App.TrackId; beforeBeat: number }) => query], (state, { trackId, beforeBeat }) => {
-	return state.filter((x) => x.trackId === trackId && x.beatNum < beforeBeat);
+	return state.filter((x) => x.type === trackId && x.time < beforeBeat);
 });
 
 const slice = createSlice({
@@ -52,9 +54,9 @@ const slice = createSlice({
 			return state[state.length - 1];
 		}),
 		selectTrackSpeedAtBeat: createDraftSafeSelector(selectAllForTrackBeforeBeat, (state) => {
-			const events = state as App.IBasicValueEvent[];
-			if (!events.length) return 0;
-			return events[0].laserSpeed;
+			const { value } = state[0];
+			if (!state.length) return 0;
+			return value;
 		}),
 	},
 	reducers: {},
@@ -65,25 +67,27 @@ const slice = createSlice({
 		});
 		builder.addCase(changeLaserSpeed, (state, action) => {
 			const { beatNum, trackId, speed, areLasersLocked } = action.payload;
-			const newEvent = { id: resolveEventId({ beatNum, trackId } as App.IBasicValueEvent), trackId, beatNum, laserSpeed: speed } as App.IBasicValueEvent;
+			const newEvent = createBasicEvent({ type: trackId, time: beatNum, value: speed });
 			adapter.upsertOne(state, newEvent);
 			// Repeat all the above stuff for the laserSpeedRight track, if we're modifying the left track and have locked the lasers together.
-			if (areLasersLocked && isMirroredTrack(newEvent.trackId)) {
-				const mirrorTrackId = getMirroredTrack(newEvent.trackId);
-				const symmetricalEvent = { ...newEvent, id: resolveEventId({ beatNum, trackId: mirrorTrackId }), trackId: mirrorTrackId };
-				adapter.upsertOne(state, symmetricalEvent as App.IBasicValueEvent);
+			if (areLasersLocked && isMirroredTrack(newEvent.type)) {
+				const mirrorTrackId = resolveMirroredTrack(newEvent.type);
+				const symmetricalEvent = createBasicEvent({ ...newEvent, type: mirrorTrackId });
+				adapter.upsertOne(state, symmetricalEvent);
 			}
 		});
 		builder.addCase(switchEventColor, (state, action) => {
 			const { beatNum, trackId, areLasersLocked } = action.payload;
-			const match = selectById(state, resolveEventId({ beatNum, trackId }));
+			const match = selectById(state, resolveEventId({ time: beatNum, type: trackId }));
 			if (!match) return state;
 			if (!isLightEvent(match)) return state;
-			const color = cycle(Object.values(App.EventColor).slice(0, -1), match.colorType);
-			adapter.updateOne(state, { id: adapter.selectId(match), changes: { colorType: color } });
-			if (areLasersLocked && isMirroredTrack(match.trackId)) {
-				const mirrorTrackId = getMirroredTrack(match.trackId);
-				adapter.updateOne(state, { id: resolveEventId({ beatNum, trackId: mirrorTrackId }), changes: { colorType: color } });
+			const { effect, color } = resolveEventDerivedProps(match.value, { trackId });
+			const newColor = cycle(Object.values(App.EventColor).slice(0, -1), color);
+			const newValue = resolveEventValue({ effect, color: newColor }, {});
+			adapter.updateOne(state, { id: adapter.selectId(match), changes: { value: newValue } });
+			if (areLasersLocked && isMirroredTrack(match.type)) {
+				const mirrorTrackId = resolveMirroredTrack(match.type);
+				adapter.updateOne(state, { id: resolveEventId({ time: beatNum, type: mirrorTrackId }), changes: { value: newValue } });
 			}
 		});
 		builder.addCase(deleteSelectedEvents, (state) => {
@@ -111,7 +115,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.events.map((x) => ({ ...x, selected: true, beatNum: resolveBeatForItem(x) + deltaBetweenPeriods }) as App.BasicEvent);
+			const timeShiftedEntities = data.events.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }) as App.IBasicEvent);
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -120,7 +124,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.beatNum >= metadata.startBeat && x.beatNum < metadata.endBeat } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= metadata.startBeat && x.time < metadata.endBeat } })),
 			);
 		});
 		builder.addCase(deselectAll, (state, action) => {
@@ -138,7 +142,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.beatNum >= start && x.beatNum < end } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start && x.time < end } })),
 			);
 		});
 		builder.addCase(commitSelection, (state) => {
@@ -155,9 +159,9 @@ const slice = createSlice({
 				const trackIndex = tracks.findIndex((track) => track.id === trackId);
 				const isTrackIdWithinBox = trackIndex >= selectionBoxInBeats.startTrackIndex && trackIndex <= selectionBoxInBeats.endTrackIndex;
 				for (const event of selectAll(state)) {
-					const isInWindow = event.beatNum >= metadata.window.startBeat && event.beatNum <= metadata.window.endBeat;
+					const isInWindow = event.time >= metadata.window.startBeat && event.time <= metadata.window.endBeat;
 					if (!isInWindow) return;
-					const isInSelectionBox = isTrackIdWithinBox && event.beatNum >= selectionBoxInBeats.startBeat && event.beatNum <= selectionBoxInBeats.endBeat;
+					const isInSelectionBox = isTrackIdWithinBox && event.time >= selectionBoxInBeats.startBeat && event.time <= selectionBoxInBeats.endBeat;
 					if (isInSelectionBox) {
 						adapter.updateOne(state, { id: adapter.selectId(event), changes: { tentative: true } });
 					} else {
@@ -180,36 +184,31 @@ const slice = createSlice({
 		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong), () => adapter.getInitialState());
 		builder.addMatcher(isAnyOf(placeEvent, bulkPlaceEvent), (state, action) => {
 			const { beatNum, trackId, eventType, eventColorType, eventLaserSpeed, areLasersLocked } = action.payload;
-			const newEvent = { id: resolveEventId({ beatNum, trackId }), beatNum, trackId, type: eventType } as App.BasicEvent;
-			if (isLightEvent(newEvent)) {
-				newEvent.colorType = eventColorType;
-			}
-			if (isValueEvent(newEvent)) {
-				newEvent.laserSpeed = eventLaserSpeed ?? 0;
-			}
+			const value = resolveEventValue({ effect: eventType, color: eventColorType, speed: eventLaserSpeed }, {});
+			const newEvent = createBasicEvent({ time: beatNum, type: trackId, value: value }) as App.IBasicEvent;
 			adapter.upsertOne(state, newEvent);
-			if (areLasersLocked && isMirroredTrack(newEvent.trackId)) {
+			if (areLasersLocked && isMirroredTrack(newEvent.type)) {
 				// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
-				const mirrorTrackId = getMirroredTrack(newEvent.trackId);
-				const symmetricalEvent = { ...newEvent, id: resolveEventId({ beatNum, trackId: mirrorTrackId }), trackId: mirrorTrackId } as App.BasicEvent;
+				const mirrorTrackId = resolveMirroredTrack(newEvent.type);
+				const symmetricalEvent = createBasicEvent({ ...newEvent, type: mirrorTrackId });
 				adapter.upsertOne(state, symmetricalEvent);
 			}
 		});
 		builder.addMatcher(isAnyOf(deleteEvent, bulkDeleteEvent), (state, action) => {
 			const { beatNum, trackId, areLasersLocked } = action.payload;
-			adapter.removeOne(state, resolveEventId({ beatNum, trackId }));
+			adapter.removeOne(state, resolveEventId({ time: beatNum, type: trackId }));
 			if (areLasersLocked && isMirroredTrack(trackId)) {
-				const mirrorTrackId = getMirroredTrack(trackId);
-				adapter.removeOne(state, resolveEventId({ beatNum, trackId: mirrorTrackId }));
+				const mirrorTrackId = resolveMirroredTrack(trackId);
+				adapter.removeOne(state, resolveEventId({ time: beatNum, type: mirrorTrackId }));
 			}
 		});
 		builder.addMatcher(isAnyOf(selectEvent, deselectEvent), (state, action) => {
 			const { beatNum, trackId, areLasersLocked } = action.payload;
 			const selected = selectEvent.match(action);
-			adapter.updateOne(state, { id: resolveEventId({ beatNum, trackId }), changes: { selected } });
+			adapter.updateOne(state, { id: resolveEventId({ time: beatNum, type: trackId }), changes: { selected } });
 			if (areLasersLocked && isMirroredTrack(trackId)) {
-				const mirrorTrackId = getMirroredTrack(trackId);
-				adapter.updateOne(state, { id: resolveEventId({ beatNum, trackId: mirrorTrackId }), changes: { selected } });
+				const mirrorTrackId = resolveMirroredTrack(trackId);
+				adapter.updateOne(state, { id: resolveEventId({ time: beatNum, type: mirrorTrackId }), changes: { selected } });
 			}
 		});
 		builder.addDefaultCase((state) => state);

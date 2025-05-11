@@ -3,9 +3,9 @@ import type { wrapper } from "bsmap/types";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
-import { deserializeWrapInfoContents } from "$/helpers/packaging.helpers";
+import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
-import { resolveBeatmapIdFromFilename } from "$/helpers/song.helpers";
+import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, SongId } from "$/types";
 import type { BeatmapFilestore } from "./file.service";
@@ -24,7 +24,7 @@ interface ZipOptions {
 	version: ImplicitVersion | null;
 	contents: {
 		songId: SongId;
-		beatmapsById: App.Song["difficultiesById"];
+		beatmapsById: App.Beatmaps;
 		songFile: Blob;
 		coverArtFile: Blob;
 		songDuration?: number;
@@ -101,9 +101,10 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	// parse the info into the wrapper form
 	const info = loadInfo(JSON.parse(rawSerialInfo));
 	// parse the wrapper into the editor form
-	const song = deserializeWrapInfoContents(info, { readonly: options.readonly });
+	const song = deserializeInfoContents(info, { readonly: options.readonly });
+	const sid = resolveSongId(song);
 
-	const songAlreadyExists = options.currentSongIds?.some((id) => id === song.id);
+	const songAlreadyExists = options.currentSongIds?.some((id) => id === sid);
 	if (songAlreadyExists) {
 		if (!window.confirm("This song appears to be a duplicate. Would you like to overwrite your existing song?")) {
 			throw new Error("Sorry, you already have a song by this name");
@@ -111,7 +112,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	}
 
 	// save the info data (Not 100% sure that this is necessary, but better to have and not need)
-	await filestore.saveInfo(song.id, info);
+	await filestore.saveInfo(sid, info);
 
 	// save the assets - cover art and song file - to our local store
 	const songFile = getFileFromArchive(archive, song.songFilename);
@@ -119,8 +120,8 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	if (!songFile || !coverArtFile) throw new Error("Missing required files");
 
 	await Promise.all([
-		await filestore.saveSongFile(song.id, await songFile.async("blob"), "audio/ogg", song.songFilename),
-		await filestore.saveCoverFile(song.id, await coverArtFile.async("blob"), "image/jpeg", song.coverArtFilename),
+		await filestore.saveSongFile(sid, await songFile.async("blob"), "audio/ogg", song.songFilename),
+		await filestore.saveCoverFile(sid, await coverArtFile.async("blob"), "image/jpeg", song.coverArtFilename),
 		//
 	]);
 
@@ -146,12 +147,12 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 			contents = { ...contents, lightshow: lightshow.lightshow };
 		}
 
-		await filestore.saveBeatmap(song.id, beatmapId, createBeatmap(contents));
+		await filestore.saveBeatmap(sid, beatmapId, createBeatmap(contents));
 	}
 
 	return {
 		...song,
-		selectedDifficulty: Object.keys(song.difficultiesById)[0],
+		selectedDifficulty: getSelectedBeatmap(song),
 		createdAt: Date.now(),
 	};
 }

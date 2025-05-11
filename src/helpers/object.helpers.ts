@@ -1,7 +1,6 @@
 import { NoteDirectionAngle } from "bsmap";
-import type { wrapper } from "bsmap/types";
 
-import type { EVENT_TRACKS } from "$/constants";
+import type { App, IEventTrack } from "$/types";
 import { clamp, roundToNearest } from "$/utils";
 import { createPropertySerializationFactory } from "./serialization.helpers";
 
@@ -12,7 +11,7 @@ export interface BeatmapEntitySerializationOptions<T extends BeatmapExtensionsPr
 	extensionsProvider?: T;
 }
 export interface LightshowEntitySerializationOptions {
-	tracks?: typeof EVENT_TRACKS;
+	tracks?: IEventTrack[];
 }
 
 type BeatmapExtensionsResolverMap<TWrapper, TSerial> = {
@@ -67,17 +66,17 @@ export const MAPPING_EXTENSIONS_DIMENSION_RESOLVERS: BeatmapExtensionsResolverMa
 	serialize: (index) => Math.round(index < 0 ? index * 1000 - 1000 : index * 1000 + 1000),
 	deserialize: (index) => roundToNearest(index < 0 ? index / 1000 + 1 : index / 1000 - 1, 1 / 1000),
 };
-export const MAPPING_EXTENSIONS_ANGLE_RESOLVERS: BeatmapExtensionsResolverMap<{ angle: number; isDot: boolean }, Pick<wrapper.IWrapColorNote, "direction" | "angleOffset">> = {
+export const MAPPING_EXTENSIONS_ANGLE_RESOLVERS: BeatmapExtensionsResolverMap<{ angle: number; isDot: boolean }, Pick<App.IColorNote, "direction" | "angleOffset">> = {
 	validate: ({ direction }) => (direction >= 1000 && direction <= 1360) || (direction >= 2000 && direction <= 2360),
 	serialize: ({ angle, isDot }) => ({ direction: (isDot ? 2000 : 1000) + ((360 - Math.round(angle)) % 360), angleOffset: 0 }),
 	deserialize: ({ direction }) => ({ angle: (-(direction % 1000) + 360) % 360, isDot: direction >= 2000 }),
 };
 
 interface AngleSerializationOptions<T extends BeatmapExtensionsProvider> {
-	extensions?: BeatmapExtensionsSerializationOptions<T, { angle: number; isDot: boolean }, Pick<wrapper.IWrapColorNote, "direction" | "angleOffset">>;
+	extensions?: BeatmapExtensionsSerializationOptions<T, { angle: number; isDot: boolean }, Pick<App.IColorNote, "direction" | "angleOffset">>;
 }
 export function createAngleSerializationFactory<TProvider extends BeatmapExtensionsProvider>({ extensions: withExtensions }: AngleSerializationOptions<TProvider>) {
-	return createPropertySerializationFactory<{ angle: number; isDot: boolean }, Pick<wrapper.IWrapColorNote, "direction" | "angleOffset">, BeatmapEntitySerializationOptions<TProvider>, BeatmapEntitySerializationOptions<TProvider>>(() => {
+	return createPropertySerializationFactory<{ angle: number; isDot: boolean }, Pick<App.IColorNote, "direction" | "angleOffset">, BeatmapEntitySerializationOptions<TProvider>, BeatmapEntitySerializationOptions<TProvider>>(() => {
 		return {
 			container: {
 				serialize: (data, { extensionsProvider: provider }) => {

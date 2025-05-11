@@ -2,10 +2,10 @@ import { useAppSelector } from "$/store/hooks";
 import { selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import type { App, SongId } from "$/types";
 
-function findMostRecentEventInTrack<T extends App.BasicEvent>(events: App.BasicEvent[], currentBeat: number, processingDelayInBeats: number) {
+function findMostRecentEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent[], currentBeat: number, processingDelayInBeats: number) {
 	for (let i = events.length - 1; i >= 0; i--) {
 		const event = events[i];
-		if (event.beatNum < currentBeat + processingDelayInBeats) {
+		if (event.time < currentBeat + processingDelayInBeats) {
 			return event as T;
 		}
 	}
@@ -17,7 +17,7 @@ export interface UseEventTrackOptions {
 	sid: SongId;
 	trackId: App.TrackId;
 }
-export function useEventTrack<T extends App.BasicEvent>({ sid, trackId }: UseEventTrackOptions) {
+export function useEventTrack<T extends App.IBasicEvent>({ sid, trackId }: UseEventTrackOptions) {
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, sid));
 

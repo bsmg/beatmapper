@@ -34,14 +34,13 @@ function TentativeObstacle({ sid, color, ...rest }: Props) {
 
 	const tentativeObstacle = useMemo(() => {
 		if (!mouseDownAt) return null;
-		return createObstacleFromMouseEvent(mappingMode, gridCols, gridRows, gridColWidth, gridRowHeight, mouseDownAt, mouseOverAt, defaultObstacleDuration);
+		return {
+			...createObstacleFromMouseEvent(mappingMode, gridCols, gridRows, gridColWidth, gridRowHeight, mouseDownAt, mouseOverAt, defaultObstacleDuration),
+			tentative: true,
+		};
 	}, [mappingMode, gridCols, gridRows, gridColWidth, gridRowHeight, mouseDownAt, mouseOverAt, defaultObstacleDuration]);
 
 	if (!tentativeObstacle) return;
-
-	tentativeObstacle.id = "tentative";
-	tentativeObstacle.tentative = true;
-	tentativeObstacle.beatNum = 0;
 
 	return <Obstacle {...rest} position-z={Z_POSITION} data={tentativeObstacle} beatDepth={beatDepth} color={color} gridRows={gridRows} gridCols={gridCols} />;
 }

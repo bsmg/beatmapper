@@ -1,9 +1,9 @@
-import { isLightTrack } from "$/helpers/events.helpers";
-import { App, type IBackgroundBox, type IEventTrack } from "$/types";
+import { isLightTrack, resolveEventColor, resolveEventEffect, resolveEventValue } from "$/helpers/events.helpers";
+import { App, type IBackgroundBox, type IEventTrack, type Member } from "$/types";
 
 const ON_EVENT_TYPES: App.BasicEventType[] = [App.BasicEventType.ON, App.BasicEventType.FLASH];
 
-export function createBackgroundBoxes(events: App.BasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number, tracks?: IEventTrack[]) {
+export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: App.TrackId, initialTrackLightingColorType: App.EventColor | null, startBeat: number, numOfBeatsToShow: number, tracks?: IEventTrack[]) {
 	// If this track isn't a lighting track, bail early.
 	if (!isLightTrack(trackId, tracks)) return [];
 
@@ -11,24 +11,23 @@ export function createBackgroundBoxes(events: App.BasicEvent[], trackId: App.Tra
 
 	// If the initial lighting value is true, we wanna convert it into a pseudo-event.
 	// It's simpler if we treat it as an 'on' event at the very first beat of the section.
-	const workableEvents = [...events.sort((a, b) => a.beatNum - b.beatNum)] as App.IBasicLightEvent[];
+	const workableEvents = [...events.sort((a, b) => a.time - b.time)] as App.IBasicEvent[];
 	if (initialTrackLightingColorType) {
 		const pseudoInitialEvent = {
-			id: `initial-${startBeat}-${numOfBeatsToShow}`,
-			type: App.BasicEventType.ON,
-			beatNum: startBeat,
-			colorType: initialTrackLightingColorType,
-		} as App.IBasicLightEvent;
+			time: startBeat,
+			type: trackId,
+			value: resolveEventValue({ effect: App.BasicEventType.ON, color: initialTrackLightingColorType }, { tracks }),
+		} as Member<typeof workableEvents>;
 
 		workableEvents.unshift(pseudoInitialEvent);
 
 		// SPECIAL CASE: initially lit but with no events in the window
 		if (events.length === 0) {
+			const initialColorType = resolveEventColor(pseudoInitialEvent);
 			backgroundBoxes.push({
-				id: pseudoInitialEvent.id,
-				beatNum: pseudoInitialEvent.beatNum,
+				beatNum: pseudoInitialEvent.time,
 				duration: numOfBeatsToShow,
-				colorType: pseudoInitialEvent.colorType,
+				colorType: initialColorType,
 			});
 
 			return backgroundBoxes;
@@ -38,7 +37,10 @@ export function createBackgroundBoxes(events: App.BasicEvent[], trackId: App.Tra
 	let tentativeBox = null;
 
 	for (const event of workableEvents) {
-		const isOn = ON_EVENT_TYPES.includes(event.type);
+		const eventEffect = resolveEventEffect(event);
+		const eventColor = resolveEventColor(event);
+
+		const isOn = ON_EVENT_TYPES.includes(eventEffect);
 
 		if (!tentativeBox && isOn) {
 			// relevant possibilities:
@@ -48,31 +50,29 @@ export function createBackgroundBoxes(events: App.BasicEvent[], trackId: App.Tra
 			// It hasn't changed (blue -> blue, red -> red, or off -> off)
 			// 1. It was off and now it's on
 			tentativeBox = {
-				id: event.id,
-				beatNum: event.beatNum,
+				beatNum: event.time,
 				duration: undefined,
-				colorType: event.colorType,
+				colorType: eventColor,
 			} as IBackgroundBox;
 		}
 
 		if (tentativeBox && !isOn) {
 			// 2. It was on, and now it's off
-			tentativeBox.duration = event.beatNum - tentativeBox.beatNum;
+			tentativeBox.duration = event.time - tentativeBox.beatNum;
 			backgroundBoxes.push(tentativeBox);
 
 			tentativeBox = null;
 		}
 
-		if (tentativeBox && isOn && tentativeBox.colorType !== event.colorType) {
+		if (tentativeBox && isOn && tentativeBox.colorType !== eventColor) {
 			// 3. Color changed
-			tentativeBox.duration = event.beatNum - tentativeBox.beatNum;
+			tentativeBox.duration = event.time - tentativeBox.beatNum;
 			backgroundBoxes.push(tentativeBox);
 
 			tentativeBox = {
-				id: event.id,
-				beatNum: event.beatNum,
+				beatNum: event.time,
 				duration: undefined,
-				colorType: event.colorType,
+				colorType: eventColor,
 			};
 		}
 	}

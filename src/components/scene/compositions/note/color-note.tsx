@@ -1,15 +1,13 @@
 import { memo, useMemo } from "react";
 import type { Vector3Tuple } from "three";
 
-import { App } from "$/types";
+import type { App } from "$/types";
 import BaseNote, { type BaseNoteProps } from "./base";
 import { resolvePathForNoteDirection, resolveRotationForNoteDirection } from "./helpers";
 
-function ColorNote({ position, data, size = 1, ...rest }: Omit<BaseNoteProps<Omit<App.ColorNote, "color">>, "path">) {
-	const index = useMemo(() => Object.values(App.CutDirection).indexOf(data.direction), [data.direction]);
-
-	const url = useMemo(() => resolvePathForNoteDirection(index), [index]);
-	const rotation = useMemo(() => resolveRotationForNoteDirection(index), [index]);
+function ColorNote({ position, data, size = 1, ...rest }: Omit<BaseNoteProps<App.IColorNote>, "path">) {
+	const url = useMemo(() => resolvePathForNoteDirection(data.direction), [data.direction]);
+	const rotation = useMemo(() => resolveRotationForNoteDirection(data.direction), [data.direction]);
 
 	const arrowPosition = useMemo(() => {
 		const newPos = position as Vector3Tuple;

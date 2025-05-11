@@ -6,14 +6,14 @@ import { Obj } from "$/components/scene/atoms";
 import type { App } from "$/types";
 
 export interface BaseNoteProps<T extends App.IBaseNote> extends ComponentProps<typeof Obj> {
-	data: Omit<T, "id">;
+	data: Pick<T, "time" | "posX" | "posY" | "direction" | "selected">;
 	color?: ColorRepresentation;
 	size?: number;
 	metalness?: number;
 	roughness?: number;
 	transparent?: boolean;
-	onNoteClick?: (event: PointerEvent, data: Omit<T, "id">) => void;
-	onNoteMouseOver?: (event: PointerEvent, data: Omit<T, "id">) => void;
+	onNoteClick?: (event: PointerEvent, data: Pick<T, "time" | "posX" | "posY" | "direction" | "selected">) => void;
+	onNoteMouseOver?: (event: PointerEvent, data: Pick<T, "time" | "posX" | "posY" | "direction" | "selected">) => void;
 }
 function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size = 1, metalness, roughness, transparent, onNoteClick: handleClick, onNoteMouseOver: handleMouseOver, ...rest }: BaseNoteProps<T>) {
 	const scaleFactor = useMemo(() => size * 0.5, [size]);
@@ -21,7 +21,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size =
 	const handlePointerDown = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
 			ev.stopPropagation();
-			if (handleClick && data.beatNum !== undefined && data.rowIndex !== undefined && data.colIndex !== undefined) handleClick(ev.nativeEvent, data);
+			if (handleClick && data.time !== undefined && data.posY !== undefined && data.posX !== undefined) handleClick(ev.nativeEvent, data);
 		},
 		[data, handleClick],
 	);
@@ -29,7 +29,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size =
 	const handlePointerOver = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
 			ev.stopPropagation();
-			if (handleMouseOver && data.beatNum !== undefined && data.rowIndex !== undefined && data.colIndex !== undefined) handleMouseOver(ev.nativeEvent, data);
+			if (handleMouseOver && data.time !== undefined && data.posY !== undefined && data.posX !== undefined) handleMouseOver(ev.nativeEvent, data);
 		},
 		[data, handleMouseOver],
 	);

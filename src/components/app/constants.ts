@@ -5,8 +5,7 @@ import { type CharacteristicName, EnvironmentName } from "bsmap/types";
 
 import { token } from "$:styled-system/tokens";
 import { CHARACTERISTICS, DIFFICULTIES } from "$/constants";
-import { sortBeatmaps } from "$/helpers/song.helpers";
-import type { App } from "$/types";
+import type { App, BeatmapId } from "$/types";
 
 export const APP_TOASTER = createToaster({
 	placement: "bottom-end",
@@ -34,13 +33,11 @@ export const VERSION_COLLECTION = createListCollection({
 });
 
 interface BeatmapListCollectionOptions {
-	song: App.Song;
+	beatmapIds: BeatmapId[];
 }
-export function createBeatmapListCollection({ song }: BeatmapListCollectionOptions) {
+export function createBeatmapListCollection({ beatmapIds }: BeatmapListCollectionOptions) {
 	return createListCollection({
-		items: Object.values(song.difficultiesById)
-			.sort(sortBeatmaps)
-			.map((beatmap) => beatmap.beatmapId),
+		items: beatmapIds,
 	});
 }
 

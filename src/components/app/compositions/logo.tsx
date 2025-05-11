@@ -1,12 +1,13 @@
 import { animated as a, useSpring } from "@react-spring/three";
 import { Canvas } from "@react-three/fiber";
 import { Link } from "@tanstack/react-router";
+import { NoteDirection } from "bsmap";
 import { useMemo, useState } from "react";
 
 import { HStack, styled } from "$:styled-system/jsx";
 import { ColorNote } from "$/components/scene/compositions";
 
-const MOCK_NOTE = { beatNum: 0, colIndex: 0, rowIndex: 0, direction: "down" } as const;
+const MOCK_NOTE = { time: 0, posX: 0, posY: 0, direction: NoteDirection.DOWN } as const;
 
 interface Props {
 	size?: "full" | "mini";

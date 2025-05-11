@@ -1,9 +1,10 @@
 import { animated } from "@react-spring/three";
+import type { EntityId } from "@reduxjs/toolkit";
+import { type ComponentProps, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
 import { LightMaterial } from "$/components/scene/compositions/materials";
 import type { App } from "$/types";
-import { type ComponentProps, useMemo } from "react";
 
 interface ModelProps {
 	size: number;
@@ -12,7 +13,7 @@ interface ModelProps {
 	zRotation: number;
 	lightStatus: App.LightEventType;
 	lightColor: ColorRepresentation;
-	lastLightingEventId: App.BasicEvent["id"] | null;
+	lastLightingEventId: EntityId | null;
 }
 function RingPeg({ size, thickness, color, zRotation, lightStatus, lightColor, lastLightingEventId }: ModelProps) {
 	const length = useMemo(() => size, [size]);
@@ -41,7 +42,7 @@ interface Props extends ComponentProps<typeof animated.group> {
 	color: ColorRepresentation;
 	lightStatus: App.LightEventType;
 	lightColor: ColorRepresentation;
-	lastLightingEventId: App.BasicEvent["id"] | null;
+	lastLightingEventId: EntityId | null;
 }
 function LitSquareRing({ size = 12, thickness, color, lightStatus, lightColor, lastLightingEventId, ...rest }: Props) {
 	return (

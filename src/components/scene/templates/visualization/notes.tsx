@@ -3,14 +3,15 @@ import { Fragment, useCallback, useMemo } from "react";
 import { useGlobalEventListener } from "$/components/hooks";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { HIGHEST_PRECISION } from "$/constants";
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { clickNote, finishManagingNoteSelection, mouseOverNote, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectCursorPositionInBeats, selectCustomColors, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
-import { App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
+import { type App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
 import { BombNote, ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
+import { resolveNoteId } from "$/helpers/notes.helpers";
 
 interface Props {
 	sid: SongId;
@@ -42,7 +43,7 @@ function EditorNotes({ sid }: Props) {
 	);
 
 	const handleClick = useCallback(
-		(ev: PointerEvent, data: { beatNum: number; colIndex: number; rowIndex: number; selected?: boolean }) => {
+		(ev: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
 			// We can rapidly select/deselect/delete notes by clicking, holding, and dragging the cursor across the field.
 			let newSelectionMode: ObjectSelectionMode | null = null;
 			if (ev.button === 0) {
@@ -61,17 +62,17 @@ function EditorNotes({ sid }: Props) {
 			const supportedClickType = ev.button === 0 ? "left" : ev.button === 1 ? "middle" : ev.button === 2 ? "right" : undefined;
 
 			if (supportedClickType) {
-				dispatch(clickNote({ clickType: supportedClickType, time: data.beatNum, lineLayer: data.rowIndex, lineIndex: data.colIndex }));
+				dispatch(clickNote({ clickType: supportedClickType, time: data.time, posY: data.posY, posX: data.posX }));
 			}
 		},
 		[dispatch],
 	);
 
 	const handlePointerOver = useCallback(
-		(_: PointerEvent, data: { beatNum: number; colIndex: number; rowIndex: number; selected?: boolean }) => {
+		(_: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
 			// While selecting/deselecting/deleting notes, pointer-over events are important and should trump others.
 			if (selectionMode) {
-				dispatch(mouseOverNote({ time: data.beatNum, lineLayer: data.rowIndex, lineIndex: data.colIndex }));
+				dispatch(mouseOverNote({ time: data.time, posY: data.posY, posX: data.posX }));
 			}
 		},
 		[dispatch, selectionMode],
@@ -87,9 +88,9 @@ function EditorNotes({ sid }: Props) {
 				const adjustment = beatDepth * HIGHEST_PRECISION;
 				const adjustedNoteZPosition = noteZPosition - adjustment;
 
-				const color = Object.values(ObjectTool)[Object.values(App.SaberColor).indexOf(note.color)];
+				const color = Object.values(ObjectTool)[note.color];
 
-				return <ColorNote key={note.id} data={note} position={[x, y, z]} color={getColorForItem(color, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
+				return <ColorNote key={resolveNoteId(note)} data={note} position={[x, y, z]} color={resolveColorForItem(color, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
 			})}
 			{bombs.map((note) => {
 				const { x, y, z } = resolvePositionForNote(note, beatDepth);
@@ -99,7 +100,7 @@ function EditorNotes({ sid }: Props) {
 				const adjustment = beatDepth * HIGHEST_PRECISION;
 				const adjustedNoteZPosition = noteZPosition - adjustment;
 
-				return <BombNote key={note.id} data={note} position={[x, y, z]} color={getColorForItem(ObjectTool.BOMB_NOTE, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
+				return <BombNote key={resolveNoteId(note)} data={note} position={[x, y, z]} color={resolveColorForItem(ObjectTool.BOMB_NOTE, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
 			})}
 		</Fragment>
 	);

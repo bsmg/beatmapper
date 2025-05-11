@@ -1,7 +1,7 @@
 import { type MouseEvent, memo, useCallback, useMemo } from "react";
 
-import { getColorForItem } from "$/helpers/colors.helpers";
-import { isLightEvent } from "$/helpers/events.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectEventEditorEditMode, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror } from "$/store/selectors";
@@ -13,12 +13,15 @@ import { Button } from "$/components/ui/compositions";
 
 const BLOCK_WIDTH = 8;
 
-function resolveBackgroundForEvent(event: App.BasicEvent, customColors: App.ModSettings["customColors"]) {
-	const color = getColorForItem(isLightEvent(event) ? (event.colorType ?? event.type) : event.type, customColors);
+function resolveBackgroundForEvent(event: App.IBasicEvent, customColors: App.ModSettings["customColors"]) {
+	const eventColor = resolveEventColor(event);
+	const eventEffect = resolveEventEffect(event);
+
+	const color = resolveColorForItem(isLightEvent(event) ? (eventColor ?? eventEffect) : eventEffect, customColors);
 	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
 	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
 
-	switch (event.type) {
+	switch (eventEffect) {
 		case App.BasicEventType.ON: {
 			return color;
 		}
@@ -39,7 +42,7 @@ function resolveBackgroundForEvent(event: App.BasicEvent, customColors: App.ModS
 
 interface Props {
 	sid: SongId;
-	event: App.BasicEvent;
+	event: App.IBasicEvent;
 	trackWidth: number;
 	deleteOnHover: boolean;
 }
@@ -51,7 +54,7 @@ function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
 
 	const styles = useMemo(() => {
-		const offset = normalize(event.beatNum, startBeat, endBeat, 0, trackWidth);
+		const offset = normalize(event.time, startBeat, endBeat, 0, trackWidth);
 		const centeredOffset = offset - BLOCK_WIDTH / 2;
 
 		const background = resolveBackgroundForEvent(event, customColors);
@@ -71,11 +74,11 @@ function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 
 			if (clickType === "left") {
 				const actionToSend = event.selected ? deselectEvent : selectEvent;
-				dispatch(actionToSend({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
+				dispatch(actionToSend({ beatNum: event.time, trackId: event.type, areLasersLocked }));
 			} else if (clickType === "middle") {
-				dispatch(switchEventColor({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
+				dispatch(switchEventColor({ beatNum: event.time, trackId: event.type, areLasersLocked }));
 			} else if (clickType === "right") {
-				dispatch(deleteEvent({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
+				dispatch(deleteEvent({ beatNum: event.time, trackId: event.type, areLasersLocked }));
 			}
 		},
 		[dispatch, event, selectedEditMode, areLasersLocked],
@@ -83,13 +86,13 @@ function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 
 	const handlePointerOver = useCallback(() => {
 		if (deleteOnHover) {
-			dispatch(bulkDeleteEvent({ beatNum: event.beatNum, trackId: event.trackId, areLasersLocked }));
+			dispatch(bulkDeleteEvent({ beatNum: event.time, trackId: event.type, areLasersLocked }));
 		}
 	}, [dispatch, event, deleteOnHover, areLasersLocked]);
 
 	return (
 		<Wrapper style={styles} onClick={(ev) => ev.stopPropagation()} onContextMenu={(ev) => ev.preventDefault()} onPointerOver={handlePointerOver} onPointerDown={handlePointerDown}>
-			{"laserSpeed" in event && !!event.laserSpeed && <Value style={styles}>{event.laserSpeed}</Value>}
+			{isValueEvent(event) && <Value style={styles}>{event.value}</Value>}
 			{event.selected && <SelectedGlow />}
 		</Wrapper>
 	);

@@ -65,7 +65,7 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 				</Field>
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" onClick={() => dispatch(promptSaveGridPreset(gridPresets, saveGridPreset))}>
+				<Button variant="subtle" size="sm" onClick={() => dispatch(promptSaveGridPreset(saveGridPreset, gridPresets, { songId: sid }))}>
 					Save Preset
 				</Button>
 				<Button variant="subtle" size="sm" onClick={finishTweakingGrid}>

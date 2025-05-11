@@ -1,12 +1,13 @@
 import { type ComponentProps, Fragment, type MouseEvent, useState } from "react";
 
 import type { App } from "$/types";
+import { isColorDark } from "$/utils";
 
 import { HStack, styled } from "$:styled-system/jsx";
 import { Button } from "$/components/ui/compositions";
 
 interface Props extends ComponentProps<typeof Button> {
-	bookmark: App.Bookmark;
+	bookmark: App.IBookmark;
 	offset: number;
 	onMarkerClick: (event: MouseEvent<HTMLButtonElement>, beatNum: number) => void;
 }
@@ -16,8 +17,8 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 	// - The flag above the waveform, which displays the beatNum/name, and is clickable to jump the user to that moment in time.
 	const sharedStyles = {
 		left: `${offset}%`,
-		color: bookmark.color.text,
-		backgroundColor: bookmark.color.background,
+		color: isColorDark(bookmark.color) ? "white" : "black",
+		backgroundColor: bookmark.color,
 	};
 
 	const [isHovering, setIsHovering] = useState(false);
@@ -31,18 +32,18 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 				style={sharedStyles}
 				onMouseEnter={() => setIsHovering(true)}
 				onMouseLeave={() => setIsHovering(false)}
-				onMouseUp={(ev) => onMarkerClick(ev, bookmark.beatNum)}
+				onMouseUp={(ev) => onMarkerClick(ev, bookmark.time)}
 				onContextMenu={(ev) => {
 					// Don't allow context menu to pop on right click.
 					ev.preventDefault();
 				}}
 			>
 				<HStack gap={1}>
-					<BeatNum>{bookmark.beatNum} </BeatNum>
+					<BeatNum>{bookmark.time} </BeatNum>
 					<Name data-hover={isHovering ? "true" : undefined}>{bookmark.name}</Name>
 				</HStack>
 				<FlagDecoration viewBox="0 0 5 10">
-					<polygon fill={bookmark.color.background} points="0,0 5,5 0,10" />
+					<polygon fill={bookmark.color} points="0,0 5,5 0,10" />
 				</FlagDecoration>
 			</Flag>
 		</Fragment>

@@ -75,7 +75,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 			if (ev.shiftKey) {
 				return;
 			}
-			dispatch(scrollThroughSong({ direction }));
+			dispatch(scrollThroughSong({ songId: sid, direction }));
 		},
 		{ wait: 50 },
 	);
@@ -115,7 +115,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 					keysDepressed.current.space = true;
 
-					return dispatch(togglePlaying());
+					return dispatch(togglePlaying({ songId: sid }));
 				}
 
 				case "Escape": {
@@ -137,17 +137,17 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				}
 
 				case "PageUp": {
-					return dispatch(seekForwards({ view }));
+					return dispatch(seekForwards({ songId: sid, view }));
 				}
 				case "PageDown": {
-					return dispatch(seekBackwards({ view }));
+					return dispatch(seekBackwards({ songId: sid, view }));
 				}
 
 				case "Home": {
-					return dispatch(skipToStart());
+					return dispatch(skipToStart({ songId: sid }));
 				}
 				case "End": {
-					return dispatch(skipToEnd());
+					return dispatch(skipToEnd({ songId: sid }));
 				}
 
 				case "Delete": {
@@ -178,11 +178,11 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					if (!metaKeyPressed) {
 						return;
 					}
-					return dispatch(pasteSelection({ view }));
+					return dispatch(pasteSelection({ songId: sid, view }));
 				}
 
 				case "KeyJ": {
-					return dispatch(promptJumpToBeat(jumpToBeat, { pauseTrack: true }));
+					return dispatch(promptJumpToBeat(jumpToBeat, { songId: sid, pauseTrack: true }));
 				}
 
 				case "KeyR": {
@@ -200,7 +200,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 							return;
 						}
 
-						return dispatch(createBookmark({ name, view }));
+						return dispatch(createBookmark({ songId: sid, name, view }));
 					}
 					// Otherwise, toggle the note color to Blue.
 					return dispatch(selectColor({ view, color: "blue" }));
@@ -212,10 +212,10 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					}
 
 					if (view === View.BEATMAP) {
-						return dispatch(ev.shiftKey ? redoNotes() : undoNotes());
+						return dispatch(ev.shiftKey ? redoNotes({ songId: sid }) : undoNotes({ songId: sid }));
 					}
 					if (view === View.LIGHTSHOW) {
-						return dispatch(ev.shiftKey ? redoEvents() : undoEvents());
+						return dispatch(ev.shiftKey ? redoEvents({ songId: sid }) : undoEvents({ songId: sid }));
 					}
 					return;
 				}
@@ -238,7 +238,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				}
 
 				case "KeyQ": {
-					return dispatch(promptQuickSelect(view, selectAllInRange));
+					return dispatch(promptQuickSelect(selectAllInRange, { songId: sid, view }));
 				}
 
 				default:

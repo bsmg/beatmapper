@@ -1,6 +1,7 @@
 import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createColorNote, mirrorNoteColor, sortObjectFn } from "bsmap";
 
-import { mirrorItem, nudgeItem, resolveBeatForItem } from "$/helpers/item.helpers";
+import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
 	bulkDeleteNote,
@@ -26,12 +27,11 @@ import {
 	toggleNoteColor,
 } from "$/store/actions";
 import { createByPositionSelector, createSelectedEntitiesSelector } from "$/store/helpers";
-import { App, ObjectTool, ObjectType, View } from "$/types";
-import { cycle } from "$/utils";
-import { NoteDirection } from "bsmap";
+import { type App, ObjectTool, ObjectType, View } from "$/types";
 
-const adapter = createEntityAdapter<App.ColorNote, EntityId>({
+const adapter = createEntityAdapter<App.IColorNote, EntityId>({
 	selectId: resolveNoteId,
+	sortComparer: sortObjectFn,
 });
 const { selectAll, selectTotal } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
@@ -52,34 +52,32 @@ const slice = createSlice({
 			return adapter.setAll(state, notes ?? []);
 		});
 		builder.addCase(clickPlacementGrid.fulfilled, (state, action) => {
-			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction: selectedDirection } = action.payload;
+			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
-			if (!selectedDirection) return state;
-			const color = Object.values(App.SaberColor)[Object.values(ObjectTool).indexOf(selectedTool)];
-			const direction = Object.values(App.CutDirection)[Object.values(NoteDirection).indexOf(selectedDirection)];
-			return adapter.addOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex, color: color, direction: direction });
+			if (!direction) return state;
+			const color = Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1;
+			return adapter.addOne(state, createColorNote({ time: beatNum, posX: colIndex, posY: rowIndex, color: color, direction: direction }));
 		});
 		builder.addCase(clearCellOfNotes.fulfilled, (state, action) => {
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
-			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
+			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
 			if (!match) return state;
 			return adapter.removeOne(state, adapter.selectId(match));
 		});
 		builder.addCase(setBlockByDragging.fulfilled, (state, action) => {
-			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction: selectedDirection } = action.payload;
+			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
-			const color = Object.values(App.SaberColor)[Object.values(ObjectTool).indexOf(selectedTool)];
-			const direction = Object.values(App.CutDirection)[Object.values(NoteDirection).indexOf(selectedDirection)];
-			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
-			if (!match) return adapter.upsertOne(state, { id: resolveNoteId({ beatNum, colIndex, rowIndex }), beatNum, colIndex, rowIndex, color: color, direction: direction });
+			const color = Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1;
+			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
+			if (!match) return adapter.upsertOne(state, createColorNote({ time: beatNum, posX: colIndex, posY: rowIndex, color: color, direction: direction }));
 			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { direction: direction } });
 		});
 		builder.addCase(toggleNoteColor, (state, action) => {
-			const { time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
-			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
+			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
+			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
 			if (!match) return state;
-			const color = cycle(Object.values(App.SaberColor), match.color);
+			const color = mirrorNoteColor(match.color);
 			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { color } });
 		});
 		builder.addCase(deleteSelectedNotes, (state) => {
@@ -107,7 +105,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.notes.map((note) => ({ ...note, selected: true, beatNum: resolveBeatForItem(note) + deltaBetweenPeriods }));
+			const timeShiftedEntities = data.notes.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }));
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -134,7 +132,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.beatNum >= start && x.beatNum < end } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start && x.time < end } })),
 			);
 		});
 		builder.addCase(swapSelectedNotes, (state, action) => {
@@ -165,14 +163,14 @@ const slice = createSlice({
 		});
 		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => adapter.getInitialState());
 		builder.addMatcher(isAnyOf(deleteNote, bulkDeleteNote), (state, action) => {
-			const { time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
-			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
+			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
+			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
 			if (!match) return state;
 			return adapter.removeOne(state, adapter.selectId(match));
 		});
 		builder.addMatcher(isAnyOf(selectNote, deselectNote), (state, action) => {
-			const { time: beatNum, lineIndex: colIndex, lineLayer: rowIndex } = action.payload;
-			const match = selectByPosition(state, { beatNum, colIndex, rowIndex });
+			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
+			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
 			if (!match) return state;
 			const selected = selectNote.match(action);
 			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { selected: selected } });

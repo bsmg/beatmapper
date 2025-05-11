@@ -1,4 +1,4 @@
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { selectTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectNoteEditorTool } from "$/store/selectors";
@@ -20,16 +20,16 @@ function NoteToolActionPanelGroup({ sid }: Props) {
 		<ActionPanelGroup.Root label="Items">
 			<ActionPanelGroup.ActionGroup>
 				<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.LEFT_NOTE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.LEFT_NOTE }))}>
-					<ColorNoteIcon size={20} color={getColorForItem(ObjectTool.LEFT_NOTE, customColors)} />
+					<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.LEFT_NOTE, customColors)} />
 				</Button>
 				<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.RIGHT_NOTE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.RIGHT_NOTE }))}>
-					<ColorNoteIcon size={20} color={getColorForItem(ObjectTool.RIGHT_NOTE, customColors)} />
+					<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.RIGHT_NOTE, customColors)} />
 				</Button>
 				<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.BOMB_NOTE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.BOMB_NOTE }))}>
 					<BombNoteIcon size={20} />
 				</Button>
 				<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.OBSTACLE} onClick={() => dispatch(selectTool({ view: View.BEATMAP, tool: ObjectTool.OBSTACLE }))}>
-					<ObstacleIcon size={20} color={getColorForItem(ObjectTool.OBSTACLE, customColors)} />
+					<ObstacleIcon size={20} color={resolveColorForItem(ObjectTool.OBSTACLE, customColors)} />
 				</Button>
 			</ActionPanelGroup.ActionGroup>
 		</ActionPanelGroup.Root>

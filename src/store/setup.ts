@@ -4,11 +4,10 @@ import { createStorage } from "unstorage";
 import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
 
+import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
 import { autosaveWorker, filestore } from "$/setup";
 import { type App, EventColor, EventEditMode, EventTool, type GridPresets, type Member, ObjectTool, Quality } from "$/types";
-
-import { resolveDifficulty } from "$/helpers/song.helpers";
 import { omit } from "$/utils";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
@@ -93,7 +92,7 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 				localStorage.setItem("beatmapper:user.announcements", selectSeenPrompts(snapshot).toString());
 				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
 				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(selectGraphicsQuality(snapshot)).toString());
-				for (const [id, song] of Object.entries(snapshot.songs.byId)) {
+				for (const [id, song] of Object.entries<any>(snapshot.songs.byId)) {
 					await idb.set(
 						"songs",
 						id.toString(),
@@ -101,14 +100,14 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 							...song,
 							songFilename: song.songFilename.replace("_", "."),
 							coverArtFilename: song.coverArtFilename.replace("_", "."),
-							difficultiesById: Object.entries(song.difficultiesById).reduce(
+							difficultiesById: Object.entries<any>(song.difficultiesById).reduce(
 								(acc, [id, beatmap]) => {
 									acc[id.toString()] = {
 										...omit(beatmap, "id"),
 										beatmapId: beatmap.id,
 										lightshowId: null,
 										characteristic: "Standard",
-										difficulty: resolveDifficulty(beatmap.id),
+										difficulty: resolveDifficultyFromBeatmapId(beatmap.id),
 									};
 									return acc;
 								},

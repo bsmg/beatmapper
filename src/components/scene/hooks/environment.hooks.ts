@@ -1,7 +1,9 @@
+import type { EntityId } from "@reduxjs/toolkit";
 import { useMemo, useState } from "react";
 
 import { useOnChange } from "$/components/hooks";
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import { App, Quality, type SongId } from "$/types";
@@ -13,10 +15,19 @@ interface UseLightPropsOptions {
 export function useLightProps({ sid, lastEvent }: UseLightPropsOptions) {
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 
-	const lightStatus = useMemo(() => (lastEvent ? lastEvent.type : App.BasicEventType.OFF), [lastEvent]);
-	const lightColor = useMemo(() => (lightStatus === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors)), [lastEvent, lightStatus, customColors]);
+	const lightStatus = useMemo(() => {
+		if (!lastEvent) return App.BasicEventType.OFF;
+		return resolveEventEffect(lastEvent) as App.LightEventType;
+	}, [lastEvent]);
 
-	return { lastEventId: lastEvent?.id ?? null, status: lightStatus, color: lightColor };
+	const lightColor = useMemo(() => {
+		if (!lastEvent) return "#000000";
+		if (lightStatus === App.BasicEventType.OFF) return "#000000";
+		const eventColor = resolveEventColor(lastEvent);
+		return resolveColorForItem(eventColor, customColors);
+	}, [lastEvent, lightStatus, customColors]);
+
+	return { lastEventId: lastEvent ? resolveEventId(lastEvent) : null, status: lightStatus, color: lightColor };
 }
 
 export interface UseRingCountOptions {
@@ -36,7 +47,7 @@ export function useRingCount({ count }: UseRingCountOptions) {
 }
 
 export interface UseRingRotationOptions {
-	lastEventId: App.BasicEvent["id"] | null | undefined;
+	lastEventId: EntityId | null | undefined;
 	incrementBy?: number;
 	ratio?: number;
 }
@@ -57,7 +68,7 @@ export function useRingRotation({ lastEventId, incrementBy = Math.PI * 0.5, rati
 }
 
 export interface UseRingZoomOptions {
-	lastEventId: App.BasicEvent["id"] | null | undefined;
+	lastEventId: EntityId | null | undefined;
 	minDistance?: number;
 	maxDistance?: number;
 }

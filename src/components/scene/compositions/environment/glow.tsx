@@ -1,12 +1,13 @@
 import { animated } from "@react-spring/three";
 import { useThree } from "@react-three/fiber";
+import type { EntityId } from "@reduxjs/toolkit";
+import { useMemo } from "react";
 import { AdditiveBlending, Color, type ColorRepresentation, FrontSide } from "three";
 
 import { glowFragmentShader, glowVertexShader } from "$/assets";
 import { useLightSpring } from "$/components/scene/compositions/materials/light";
 import type { App } from "$/types";
 import { normalize } from "$/utils";
-import { useMemo } from "react";
 
 interface Props {
 	x: number;
@@ -15,7 +16,7 @@ interface Props {
 	color: ColorRepresentation;
 	size: number;
 	status: App.LightEventType;
-	lastEventId: App.BasicEvent["id"] | null;
+	lastEventId: EntityId | null;
 	isBlooming?: boolean;
 }
 function Glow({ x, y, z, color, size, status, lastEventId, isBlooming }: Props) {

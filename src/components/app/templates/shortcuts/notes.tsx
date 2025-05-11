@@ -4,10 +4,13 @@ import { useCallback, useRef } from "react";
 import { useGlobalEventListener } from "$/components/hooks";
 import { selectNoteDirection, selectTool, swapSelectedNotes, toggleSelectAll } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
-import { ObjectTool, View } from "$/types";
+import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-function NotesEditorShortcuts() {
+interface Props {
+	sid: SongId;
+}
+function NotesEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 
 	const keysDepressed = useRef({
@@ -74,7 +77,7 @@ function NotesEditorShortcuts() {
 					}
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAll({ view: View.BEATMAP }));
+						return dispatch(toggleSelectAll({ songId: sid, view: View.BEATMAP }));
 					}
 
 					keysDepressed.current.a = true;
@@ -156,7 +159,7 @@ function NotesEditorShortcuts() {
 					return;
 			}
 		},
-		[dispatch],
+		[dispatch, sid],
 	);
 
 	const handleKeyUp = useCallback((ev: KeyboardEvent) => {

@@ -2,7 +2,7 @@ import type { ThreeElements } from "@react-three/fiber";
 import type { NoteDirection } from "bsmap";
 import { useCallback, useRef, useState } from "react";
 
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
@@ -54,24 +54,24 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
-					dispatch(setBlockByDragging({ tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: (tentativeBlock?.direction ?? selectedDirection) as NoteDirection }));
+					dispatch(setBlockByDragging({ songId: sid, tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: (tentativeBlock?.direction ?? selectedDirection) as NoteDirection }));
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
-					dispatch(clickPlacementGrid({ tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: (tentativeBlock?.direction ?? selectedDirection) as NoteDirection }));
+					dispatch(clickPlacementGrid({ songId: sid, tool: selectedTool, rowIndex: effectiveRowIndex, colIndex: effectiveColIndex, direction: (tentativeBlock?.direction ?? selectedDirection) as NoteDirection }));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
 					if (!mouseDownAt || !mouseOverAt) break;
 					const obstacle = createObstacleFromMouseEvent(mappingMode, numCols, numRows, colWidth, rowHeight, mouseDownAt, mouseOverAt, defaultObstacleDuration);
-					dispatch(createNewObstacle({ obstacle }));
+					dispatch(createNewObstacle({ songId: sid, obstacle }));
 					break;
 				}
 			}
 			setTentativeBlock(null);
 			cachedDirection.current = null;
 		},
-		[dispatch, numCols, numRows, colWidth, rowHeight, selectedTool, selectedDirection, tentativeBlock, mappingMode, defaultObstacleDuration],
+		[dispatch, sid, numCols, numRows, colWidth, rowHeight, selectedTool, selectedDirection, tentativeBlock, mappingMode, defaultObstacleDuration],
 	);
 
 	const handlePointerMove = useCallback(
@@ -112,8 +112,8 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 			<PlacementGrid.Layout numCols={numCols} numRows={numRows} colWidth={colWidth} rowHeight={rowHeight}>
 				{({ ...cell }) => <PlacementGrid.Cell {...cell} key={`${cell.colIndex}-${cell.rowIndex}`} numCols={numCols} numRows={numRows} colWidth={colWidth} rowHeight={rowHeight} />}
 			</PlacementGrid.Layout>
-			<PlacementGrid.Consumer>{() => tentativeBlock && <PlacementGrid.TentativeNote direction={tentativeBlock.direction} color={getColorForItem(tentativeBlock.selectedTool, customColors)} />}</PlacementGrid.Consumer>
-			<PlacementGrid.Consumer>{() => selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle sid={sid} color={getColorForItem(ObjectTool.OBSTACLE, customColors)} />}</PlacementGrid.Consumer>
+			<PlacementGrid.Consumer>{() => tentativeBlock && <PlacementGrid.TentativeNote direction={tentativeBlock.direction} color={resolveColorForItem(tentativeBlock.selectedTool, customColors)} />}</PlacementGrid.Consumer>
+			<PlacementGrid.Consumer>{() => selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle sid={sid} color={resolveColorForItem(ObjectTool.OBSTACLE, customColors)} />}</PlacementGrid.Consumer>
 		</PlacementGrid.Root>
 	);
 }

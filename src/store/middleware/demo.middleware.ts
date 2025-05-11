@@ -1,6 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
+import { getSelectedBeatmap, resolveSongId } from "$/helpers/song.helpers";
 import { processImportedMap } from "$/services/packaging.service";
 import { importExistingSong, loadDemoMap } from "$/store/actions";
 import { selectIsNew } from "$/store/selectors";
@@ -25,7 +26,9 @@ export default function createDemoMiddleware() {
 					api.dispatch(importExistingSong({ songData: data }));
 					return data;
 				});
-				window.location.href = `/edit/${songData.id}/${songData.selectedDifficulty}/notes`;
+				const sid = resolveSongId(songData);
+				const bid = getSelectedBeatmap(songData);
+				window.location.href = `/edit/${sid}/${bid}/notes`;
 			}
 		},
 	});

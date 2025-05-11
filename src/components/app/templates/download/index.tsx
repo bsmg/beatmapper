@@ -25,13 +25,13 @@ function Download({ sid }: Props) {
 	// When this component mounts, if the song is playing, pause it.
 	useMount(() => {
 		if (isPlaying) {
-			pausePlaying();
+			dispatch(pausePlaying({ songId: sid }));
 		}
 	});
 
 	const Form = useAppForm({
 		defaultValues: {
-			version: "4",
+			version: "",
 		},
 		onSubmit: ({ value }) => {
 			dispatch(downloadMapFiles({ songId: sid, version: Number.parseInt(value.version) as ImplicitVersion }));

@@ -1,12 +1,13 @@
 import { type PointerEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
-import { isTriggerTrack, isValueTrack } from "$/helpers/events.helpers";
+import { isTriggerTrack, isValueTrack, resolveEventId } from "$/helpers/events.helpers";
 import { bulkPlaceEvent, placeEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
 	selectAllBasicEventsForTrackInWindow,
 	selectDurationInBeats,
+	selectEditorOffsetInBeats,
 	selectEventEditorBeatsPerZoomLevel,
 	selectEventEditorColor,
 	selectEventEditorEditMode,
@@ -15,7 +16,6 @@ import {
 	selectEventEditorTool,
 	selectEventEditorZoomLevelStartBeat,
 	selectInitialColorForTrack,
-	selectOffsetInBeats,
 } from "$/store/selectors";
 import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
 import { clamp, normalize } from "$/utils";
@@ -39,7 +39,7 @@ function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props
 	const cursorAtBeat = useAppSelector(selectEventEditorSelectedBeat);
 	const startBeat = useAppSelector((state) => selectEventEditorZoomLevelStartBeat(state, sid));
 	const numOfBeatsToShow = useAppSelector((state) => selectEventEditorBeatsPerZoomLevel(state));
-	const offsetInBeats = useAppSelector((state) => -selectOffsetInBeats(state, sid));
+	const offsetInBeats = useAppSelector((state) => -selectEditorOffsetInBeats(state, sid));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedTool = useAppSelector(selectEventEditorTool);
@@ -108,12 +108,12 @@ function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props
 	const styles = useMemo(() => ({ height }), [height]);
 
 	return (
-		<Wrapper style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
+		<Wrapper key={trackId} style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			{backgroundBoxes.map((box) => (
-				<EventGridBackgroundBox key={box.id} sid={sid} box={box} />
+				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.beatNum })} sid={sid} box={box} />
 			))}
 			{events.map((event) => {
-				return <EventGridEventItem key={event.id} sid={sid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
+				return <EventGridEventItem key={resolveEventId(event)} sid={sid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
 			})}
 		</Wrapper>
 	);

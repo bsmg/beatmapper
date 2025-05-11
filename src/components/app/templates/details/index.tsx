@@ -1,20 +1,20 @@
 import { Link, useBlocker } from "@tanstack/react-router";
+import { EnvironmentNameSchema } from "bsmap";
 import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
+import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
 import { filestore } from "$/setup";
 import { stopPlaying, toggleModForSong, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectDuration, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIds, selectDuration, selectEditorOffset, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
 import { LocalFileUpload } from "$/components/app/compositions";
-import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
-import { EnvironmentNameSchema } from "bsmap";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -90,20 +90,20 @@ function SongDetails({ sid }: Props) {
 			const shouldSaveCoverArt = coverArtFile?.name;
 
 			if (shouldSaveCoverArt) {
-				const { filename: coverArtFilename } = await filestore.saveCoverFile(song.id, coverArtFile);
+				const { filename: coverArtFilename } = await filestore.saveCoverFile(sid, coverArtFile);
 				newSongObject.coverArtFilename = coverArtFilename;
 			}
 
 			if (songFile) {
-				const { filename: songFilename } = await filestore.saveSongFile(song.id, songFile);
+				const { filename: songFilename } = await filestore.saveSongFile(sid, songFile);
 				newSongObject.songFilename = songFilename;
 			}
 
 			// Update our redux state
-			dispatch(updateSongDetails({ songId: song.id, songData: newSongObject }));
+			dispatch(updateSongDetails({ songId: sid, songData: newSongObject }));
 
 			// Back up our latest data!
-			await filestore.updateInfoContents(song.id, newSongObject, {
+			await filestore.updateInfoContents(sid, newSongObject, {
 				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
 				deserializationOptions: {},
 			});
@@ -111,11 +111,12 @@ function SongDetails({ sid }: Props) {
 	});
 
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const offset = useAppSelector((state) => selectEditorOffset(state, sid));
 
 	useMount(() => {
 		// We want to stop & reset the song when the user goes to edit it.
 		// In addition to seeming like a reasonable idea, it helps prevent any weirdness around editing the audio file when it's in a non-zero position.
-		dispatch(stopPlaying({ offset: song.offset }));
+		dispatch(stopPlaying({ offset: offset }));
 	});
 
 	useBlocker({

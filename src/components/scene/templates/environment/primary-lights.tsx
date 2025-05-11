@@ -31,11 +31,11 @@ function PrimaryLights({ sid }: Props) {
 			<group position-y={Y_POSITION} position-z={Z_POSITION}>
 				<mesh position-x={CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={-CHEVRON_ANGLE}>
 					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial lastEventId={lastEvent?.id} status={status} color={color} />
+					<LightMaterial lastEventId={lastEventId} status={status} color={color} />
 				</mesh>
 				<mesh position-x={-CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={CHEVRON_ANGLE}>
 					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial lastEventId={lastEvent?.id} status={status} color={color} />
+					<LightMaterial lastEventId={lastEventId} status={status} color={color} />
 				</mesh>
 			</group>
 			{/* Side parallel-to-platform lasers */}

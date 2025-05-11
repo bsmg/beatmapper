@@ -3,7 +3,9 @@ import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { SURFACE_DEPTHS } from "$/constants";
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
+import { resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { calculateNoteDensity } from "$/helpers/notes.helpers";
+import { getEditorOffset } from "$/helpers/song.helpers";
 import { App, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import { createByPositionSelector, selectHistory } from "./helpers";
@@ -33,14 +35,18 @@ export const { selectActiveSongId, selectActiveBeatmapId } = selected.getSelecto
 });
 
 export const {
+	selectId: selectSongId,
 	selectEntities: selectSongs,
 	selectIds: selectSongIds,
 	selectAll: selectAllSongs,
 	selectById: selectSongById,
-	selectByIdOrNull: selectSongByIdOrNull,
+	selectSongMetadata,
+	selectBeatmaps,
 	selectBeatmapIds,
 	selectAllBeatmaps,
 	selectBeatmapById,
+	selectLightshowForBeatmap,
+	selectSelectedBeatmap,
 	selectIsDemo: selectIsDemoSong,
 	selectIsModuleEnabled,
 	selectIsFastWallsEnabled,
@@ -53,33 +59,32 @@ export const {
 });
 
 // for selectors that depend on an actively selected song, we should have a fallback value prepared in the off chance the song doesn't exist in state or the called value returns undefined.
-export function createActiveSongSelectorFactory<T>(selector: (song?: App.Song) => T | undefined, fallback: T) {
-	return createSelector(selectSongByIdOrNull, selectSongs, selectActiveSongId, (song, songs, sid) => {
-		if (song) return selector(song) ?? fallback;
-		if (sid) return selector(songs[sid]) ?? fallback;
-		return fallback;
+export function createActiveSongSelectorFactory<T>(selector: (song: App.Song) => T) {
+	return createSelector(selectSongById, selectSongs, selectActiveSongId, (song, songs, sid) => {
+		if (sid) return selector(songs[sid]);
+		return selector(song);
 	});
 }
-export const selectBpm = createActiveSongSelectorFactory((s) => s?.bpm, 120);
-export const selectOffset = createActiveSongSelectorFactory((s) => s?.offset, 0);
-export const selectOffsetInBeats = createSelector(selectBpm, selectOffset, (bpm, offset) => {
+export const selectBpm = createActiveSongSelectorFactory((s) => s.bpm);
+export const selectEditorOffset = createActiveSongSelectorFactory(getEditorOffset);
+export const selectEditorOffsetInBeats = createSelector(selectBpm, selectEditorOffset, (bpm, offset) => {
 	return convertMillisecondsToBeats(offset, bpm);
 });
 
-export const selectBeatForTime = createSelector([selectBpm, selectOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number, withOffset = true) => ({ time, withOffset })], (bpm, offset, { time, withOffset }) => {
+export const selectBeatForTime = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number, withOffset = true) => ({ time, withOffset })], (bpm, offset, { time, withOffset }) => {
 	return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
 });
-export const selectNearestBeatForTime = createSelector([selectBpm, selectOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number) => time], (bpm, offset, time: number) => {
+export const selectNearestBeatForTime = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number) => time], (bpm, offset, time: number) => {
 	return snapToNearestBeat(time, bpm, offset);
 });
-export const selectTimeForBeat = createSelector([selectBpm, selectOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, beat: number, withOffset = true) => ({ beat, withOffset })], (bpm, offset, { beat, withOffset }) => {
+export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, beat: number, withOffset = true) => ({ beat, withOffset })], (bpm, offset, { beat, withOffset }) => {
 	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
 });
 
 export const { selectAnimateBlockMotion, selectAnimateRingMotion, selectBeatDepth, selectCursorPosition, selectDuration, selectIsPlaying, selectPlayNoteTick, selectPlaybackRate, selectSnapTo, selectVolume } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
-export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectOffset, (cursorPosition, bpm, offset) => {
+export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
 	if (cursorPosition === null) return null;
 	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
 });
@@ -186,7 +191,7 @@ export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 export const selectVisibleNotes = createSelector(selectAllColorNotes, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (notes, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return notes.filter((note) => {
-		return note.beatNum > closeLimit && note.beatNum < farLimit;
+		return note.time > closeLimit && note.time < farLimit;
 	});
 });
 export const selectNoteDensity = createSelector(selectVisibleNotes, selectBeatDepth, selectBpm, selectGraphicsQuality, (notes, beatDepth, bpm, graphicsLevel) => {
@@ -217,7 +222,7 @@ export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
 export const selectVisibleBombs = createSelector(selectAllBombNotes, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (bombs, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return bombs.filter((note) => {
-		return note.beatNum > closeLimit && note.beatNum < farLimit;
+		return note.time > closeLimit && note.time < farLimit;
 	});
 });
 
@@ -246,8 +251,8 @@ export const { selectAll: selectFutureObstacles } = obstacles.getSelectors(
 export const selectAllVisibleObstacles = createSelector(selectAllObstacles, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
 	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
 	return obstacles.filter((obstacle) => {
-		const beatEnd = obstacle.beatNum + obstacle.beatDuration;
-		return beatEnd > closeLimit && obstacle.beatNum < farLimit;
+		const beatEnd = obstacle.time + obstacle.duration;
+		return beatEnd > closeLimit && obstacle.time < farLimit;
 	});
 });
 
@@ -281,14 +286,15 @@ export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 	),
 );
 export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat, endBeat }) => {
-	return events.filter((event) => event.beatNum >= startBeat && event.beatNum < endBeat);
+	return events.filter((event) => event.time >= startBeat && event.time < endBeat);
 });
 export const selectInitialColorForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat }) => {
-	const eventsInWindow = events.filter((event) => event.beatNum < startBeat);
+	const eventsInWindow = events.filter((event) => event.time < startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
 	if (!lastEvent) return null;
-	const isLastEventOn = lastEvent.type === App.BasicEventType.ON || lastEvent.type === App.BasicEventType.FLASH;
-	return isLastEventOn ? lastEvent.colorType : null;
+	const eventEffect = resolveEventEffect(lastEvent);
+	const isLastEventOn = eventEffect === App.BasicEventType.ON || eventEffect === App.BasicEventType.FLASH;
+	return isLastEventOn ? resolveEventColor(lastEvent) : null;
 });
 
 export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basic) => {

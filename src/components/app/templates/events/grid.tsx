@@ -4,7 +4,7 @@ import { useMousePositionOverElement } from "$/components/hooks";
 import { COMMON_EVENT_TRACKS } from "$/constants";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDurationInBeats, selectEventEditorEditMode, selectEventEditorRowHeight, selectEventEditorSelectedBeat, selectEventEditorSelectionBox, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror, selectIsLoading, selectOffsetInBeats, selectSnapTo } from "$/store/selectors";
+import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorEditMode, selectEventEditorRowHeight, selectEventEditorSelectedBeat, selectEventEditorSelectionBox, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror, selectIsLoading, selectSnapTo } from "$/store/selectors";
 import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
@@ -42,7 +42,7 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedBeat = useAppSelector((state) => {
 		const selectedBeat = selectEventEditorSelectedBeat(state);
-		const offsetInBeats = -selectOffsetInBeats(state, sid);
+		const offsetInBeats = -selectEditorOffsetInBeats(state, sid);
 		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
 	const isLoading = useAppSelector(selectIsLoading);
@@ -115,7 +115,7 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 					endBeat: end,
 				};
 
-				dispatch(drawSelectionBox({ tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
+				dispatch(drawSelectionBox({ songId: sid, tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
 			}
 
 			if (hoveringOverBeatNum !== selectedBeat) dispatch(moveMouseAcrossEventsGrid({ selectedBeat: hoveringOverBeatNum }));
@@ -159,7 +159,7 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 					</Button>
 				</ActionsWrapper>
 				<TimelineWrapper>
-					<EventGridTimeline beatNums={beatNums} />
+					<EventGridTimeline sid={sid} beatNums={beatNums} />
 				</TimelineWrapper>
 			</HeaderWrapper>
 			<MainWrapper>

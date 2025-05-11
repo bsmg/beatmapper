@@ -5,9 +5,9 @@ import { v2, v3 } from "bsmap/types";
 import { BOOKMARK_COLORS, deserializeCustomBookmark, getNewBookmarkColor, serializeCustomBookmark } from "./bookmarks.helpers";
 
 describe("bookmark serialization", () => {
-	const wrapper: App.Bookmark[] = [
-		{ beatNum: 32, name: "buildup", color: { background: "#ff0000", text: "white" } },
-		{ beatNum: 128, name: "drop", color: { background: "#ff0000", text: "white" } },
+	const wrapper: App.IBookmark[] = [
+		{ time: 32, name: "buildup", color: "#ff0000" },
+		{ time: 128, name: "drop", color: "#ff0000" },
 	];
 	describe("custom difficulty bookmarks", () => {
 		describe("v2", () => {
@@ -41,11 +41,11 @@ describe("bookmark serialization", () => {
 
 describe(getNewBookmarkColor.name, () => {
 	it("returns the first color for the first bookmark", () => {
-		const bookmarks: Pick<App.Bookmark, "color">[] = [] as App.Bookmark[];
+		const bookmarks: Pick<App.IBookmark, "color">[] = [] as App.IBookmark[];
 		expect(getNewBookmarkColor(bookmarks)).toBe(BOOKMARK_COLORS[0]);
 	});
 	it("returns the third color when the first two are used", () => {
-		const bookmarks: Pick<App.Bookmark, "color">[] = [
+		const bookmarks: Pick<App.IBookmark, "color">[] = [
 			{ color: BOOKMARK_COLORS[0] },
 			{ color: BOOKMARK_COLORS[1] },
 			//
@@ -53,7 +53,7 @@ describe(getNewBookmarkColor.name, () => {
 		expect(getNewBookmarkColor(bookmarks)).toBe(BOOKMARK_COLORS[2]);
 	});
 	it("fills in a hole if a value was deleted", () => {
-		const bookmarks: Pick<App.Bookmark, "color">[] = [
+		const bookmarks: Pick<App.IBookmark, "color">[] = [
 			{ color: BOOKMARK_COLORS[0] },
 			{ color: BOOKMARK_COLORS[1] },
 			{ color: BOOKMARK_COLORS[2] },
@@ -68,7 +68,7 @@ describe(getNewBookmarkColor.name, () => {
 	it("picks the first value at the 7th bookmark", () => {
 		// This test relies on randomness! This is a hard thing to test.
 		// Rather than be 100% definitive, I'm going to be 99.9999% definitive.
-		const bookmarks: Pick<App.Bookmark, "color">[] = [
+		const bookmarks: Pick<App.IBookmark, "color">[] = [
 			{ color: BOOKMARK_COLORS[0] },
 			{ color: BOOKMARK_COLORS[1] },
 			{ color: BOOKMARK_COLORS[2] },

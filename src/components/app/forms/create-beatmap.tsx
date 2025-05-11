@@ -1,18 +1,17 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
+import { useStore } from "@tanstack/react-form";
+import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { type ReactNode, useMemo } from "react";
 import { object } from "valibot";
-
-import { useAppSelector } from "$/store/hooks";
-import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
 
 import { APP_TOASTER, createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
 import { useAppForm } from "$/components/ui/compositions";
 import { DIFFICULTIES } from "$/constants";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
-import { useStore } from "@tanstack/react-form";
-import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
+import { useAppSelector } from "$/store/hooks";
+import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
+import type { BeatmapId, SongId } from "$/types";
 
 interface Props {
 	dialog?: UseDialogContext;

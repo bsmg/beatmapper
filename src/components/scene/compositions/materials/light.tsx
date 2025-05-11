@@ -1,4 +1,5 @@
 import { animated, useSpring } from "@react-spring/three";
+import type { EntityId } from "@reduxjs/toolkit";
 import { type ComponentProps, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
@@ -84,7 +85,7 @@ const BRIGHT_PROPS = { emissiveIntensity: 1.2 * MULT, opacity: 1 };
 // This feels hacky, but I don't know of a better way.
 
 interface UseLightSpringOptions {
-	lastEventId: App.BasicEvent["id"] | null | undefined;
+	lastEventId: EntityId | null | undefined;
 	status: App.LightEventType;
 	color: ColorRepresentation;
 	stateProps?: LightSpringStateProps;

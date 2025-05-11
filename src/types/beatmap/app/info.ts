@@ -37,8 +37,9 @@ export interface Beatmap {
 	customLabel?: string;
 }
 
+export type Beatmaps = { [key: BeatmapId | string]: Beatmap };
+
 export interface Song {
-	id: SongId;
 	name: string;
 	subName?: string;
 	artistName: string;
@@ -52,7 +53,7 @@ export interface Song {
 	environment: EnvironmentName | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
-	difficultiesById: { [key: BeatmapId | string]: Beatmap };
+	difficultiesById: Beatmaps;
 	selectedDifficulty?: BeatmapId;
 	createdAt?: number;
 	lastOpenedAt?: number;

@@ -1,11 +1,9 @@
-import type { EntityId } from "@reduxjs/toolkit";
 import type { App } from "../beatmap";
 import type { TrackType } from "./shared";
 
 export * from "./shared";
 
 export interface IBackgroundBox {
-	id: EntityId;
 	beatNum: number;
 	duration?: number | null;
 	colorType?: App.EventColor;

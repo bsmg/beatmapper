@@ -6,9 +6,9 @@
 import { APP_TOASTER } from "$/components/app/constants";
 import { GRID_PRESET_SLOTS } from "$/constants";
 import type { jumpToBeat, resizeSelectedObstacles, saveGridPreset, selectAllInRange } from "$/store/actions";
-import type { App, GridPresets, View } from "$/types";
+import type { App, GridPresets } from "$/types";
 
-export function promptQuickSelect(view: View, wrappedAction: typeof selectAllInRange) {
+export function promptQuickSelect(wrappedAction: typeof selectAllInRange, args: Omit<Parameters<typeof selectAllInRange>[0], "start" | "end">) {
 	let beatStr = window.prompt('Quick-select all entities in a given range of beats. Eg. "16-32" will select everything from beat 16 to 32.');
 
 	if (!beatStr) {
@@ -24,21 +24,21 @@ export function promptQuickSelect(view: View, wrappedAction: typeof selectAllInR
 		end = Number.POSITIVE_INFINITY;
 	}
 
-	return wrappedAction({ view, start, end });
+	return wrappedAction({ ...args, start, end });
 }
 
-export function promptJumpToBeat(wrappedAction: typeof jumpToBeat, additionalArgs: Omit<Parameters<typeof jumpToBeat>[0], "beatNum">) {
+export function promptJumpToBeat(wrappedAction: typeof jumpToBeat, args: Omit<Parameters<typeof jumpToBeat>[0], "beatNum">) {
 	const beatNum = window.prompt("Enter the beat number you wish to jump to (eg. 16)");
 
 	if (beatNum === null || beatNum === "") {
 		throw new Error("Invalid beat number.");
 	}
 
-	return wrappedAction({ beatNum: Number(beatNum), ...additionalArgs });
+	return wrappedAction({ ...args, beatNum: Number(beatNum) });
 }
 
-export function promptChangeObstacleDuration(obstacles: App.Obstacle[], wrappedAction: typeof resizeSelectedObstacles) {
-	const { beatDuration } = obstacles[0];
+export function promptChangeObstacleDuration(wrappedAction: typeof resizeSelectedObstacles, obstacles: App.IObstacle[], args: Omit<Parameters<typeof resizeSelectedObstacles>[0], "newBeatDuration">) {
+	const { duration: beatDuration } = obstacles[0];
 
 	const promptCopy = obstacles.length === 1 ? "Enter the new duration for this wall, in beats" : "Enter the new duration for all selected walls";
 
@@ -50,7 +50,7 @@ export function promptChangeObstacleDuration(obstacles: App.Obstacle[], wrappedA
 
 	const selectedObstacleDurations: Record<string, boolean> = {};
 	for (const obstacle of obstacles) {
-		selectedObstacleDurations[obstacle.beatDuration] = true;
+		selectedObstacleDurations[obstacle.duration] = true;
 	}
 	const numOfDifferentDurations = Object.keys(selectedObstacleDurations).length;
 
@@ -62,10 +62,10 @@ export function promptChangeObstacleDuration(obstacles: App.Obstacle[], wrappedA
 		}
 	}
 
-	return wrappedAction({ newBeatDuration: Number(newDuration) });
+	return wrappedAction({ ...args, newBeatDuration: Number(newDuration) });
 }
 
-export function promptSaveGridPreset(gridPresets: GridPresets, wrappedAction: typeof saveGridPreset) {
+export function promptSaveGridPreset(wrappedAction: typeof saveGridPreset, gridPresets: GridPresets, args: Omit<Parameters<typeof saveGridPreset>[0], "presetSlot">) {
 	const presetSlots = [...GRID_PRESET_SLOTS];
 	const suggestedPreset = GRID_PRESET_SLOTS.find((n) => !gridPresets[n]);
 
@@ -85,5 +85,5 @@ export function promptSaveGridPreset(gridPresets: GridPresets, wrappedAction: ty
 		});
 	}
 
-	return wrappedAction({ presetSlot: providedValue });
+	return wrappedAction({ ...args, presetSlot: providedValue });
 }

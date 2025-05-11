@@ -1,10 +1,10 @@
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { type MouseEventHandler, useCallback, useMemo } from "react";
+import { type MouseEventHandler, useCallback } from "react";
 import { number, object, pipe, string, transform } from "valibot";
 
 import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectSongById } from "$/store/selectors";
+import { selectBeatmapById, selectBeatmaps } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
 import { Stack, Wrap } from "$:styled-system/jsx";
@@ -17,11 +17,11 @@ interface Props {
 	bid: BeatmapId;
 }
 function UpdateBeatmapForm({ sid, bid }: Props) {
-	const song = useAppSelector((state) => selectSongById(state, sid));
+	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 
-	const savedVersion = useMemo(() => song.difficultiesById[bid], [song.difficultiesById, bid]);
+	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
 	const Form = useAppForm({
 		defaultValues: {
@@ -60,7 +60,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			}
 
 			// Delete our working state
-			const mutableDifficultiesCopy = { ...song.difficultiesById };
+			const mutableDifficultiesCopy = { ...beatmaps };
 			delete mutableDifficultiesCopy[bid];
 
 			// Don't let the user delete the last difficulty!
@@ -80,7 +80,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 
 			return navigate({ to: "/edit/$sid/$bid/details", params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
 		},
-		[navigate, dispatch, song.difficultiesById, sid, bid],
+		[navigate, dispatch, beatmaps, sid, bid],
 	);
 
 	useBlocker({

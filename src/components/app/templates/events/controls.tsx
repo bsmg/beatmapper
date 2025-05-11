@@ -3,7 +3,7 @@ import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, Zoo
 import { type CSSProperties, type ComponentProps, useMemo } from "react";
 
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { selectEventColor, selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorToggleLoop, selectEventEditorToggleMirror, selectEventEditorTool, selectEventEditorZoomLevel } from "$/store/selectors";
@@ -28,14 +28,14 @@ interface EventListCollection {
 function createEventColorListCollection({ customColors }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventColor).map((value) => {
-			return { value, label: <Box style={{ "--color": getColorForItem(value, customColors) } as CSSProperties} /> };
+			return { value, label: <Box style={{ "--color": resolveColorForItem(value, customColors) } as CSSProperties} /> };
 		}),
 	});
 }
 function createEventEffectListCollection({ customColors, selectedColor }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventTool).map((value) => {
-			return { value, label: <EventEffectIcon tool={value} color={getColorForItem(selectedColor, customColors)} /> };
+			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, customColors)} /> };
 		}),
 	});
 }

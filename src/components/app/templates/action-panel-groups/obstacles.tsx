@@ -18,7 +18,7 @@ function ObstaclesActionPanelGroup({ sid }: Props) {
 	return (
 		<ActionPanelGroup.Root label="Obstacles">
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" onClick={() => dispatch(promptChangeObstacleDuration(selectedObstacles, resizeSelectedObstacles))}>
+				<Button variant="subtle" size="sm" onClick={() => dispatch(promptChangeObstacleDuration(resizeSelectedObstacles, selectedObstacles, {}))}>
 					Change duration
 				</Button>
 				{enabledFastWalls && (

@@ -4,22 +4,23 @@ import { BoxGeometry, DoubleSide } from "three";
 
 import { token } from "$:styled-system/tokens";
 import { useGlobalEventListener } from "$/components/hooks";
+import { isFastObstacle } from "$/helpers/obstacles.helpers";
 import type { App } from "$/types";
 import { resolveDimensionsForObstacle, resolvePositionForObstacle } from "./helpers";
 
 type GroupProps = ThreeElements["group"];
 
 interface Props extends GroupProps {
-	data: App.Obstacle;
+	data: App.IObstacle;
 	color: string;
 	beatDepth: number;
 	gridRows?: number;
 	gridCols?: number;
-	onObstaclePointerDown?: (event: PointerEvent, obstacle: App.Obstacle) => void;
-	onObstaclePointerUp?: (event: PointerEvent, obstacle: App.Obstacle) => void;
-	onObstaclePointerOver?: (event: PointerEvent, obstacle: App.Obstacle) => void;
-	onObstaclePointerOut?: (event: PointerEvent, obstacle: App.Obstacle) => void;
-	onObstacleWheel?: (event: WheelEvent, obstacle: App.Obstacle) => void;
+	onObstaclePointerDown?: (event: PointerEvent, obstacle: App.IObstacle) => void;
+	onObstaclePointerUp?: (event: PointerEvent, obstacle: App.IObstacle) => void;
+	onObstaclePointerOver?: (event: PointerEvent, obstacle: App.IObstacle) => void;
+	onObstaclePointerOut?: (event: PointerEvent, obstacle: App.IObstacle) => void;
+	onObstacleWheel?: (event: WheelEvent, obstacle: App.IObstacle) => void;
 }
 
 function Obstacle({ data: obstacle, color, beatDepth, onObstaclePointerDown, onObstaclePointerUp, onObstaclePointerOver, onObstaclePointerOut, onObstacleWheel, ...rest }: Props) {
@@ -75,7 +76,7 @@ function Obstacle({ data: obstacle, color, beatDepth, onObstaclePointerDown, onO
 			</mesh>
 			<lineSegments position={actualPosition}>
 				<edgesGeometry attach="geometry" args={[boxGeometry]} />
-				<lineBasicMaterial attach="material" color={obstacle.fast ? token("colors.green.500") : obstacle.selected ? token("colors.yellow.500") : "white"} />
+				<lineBasicMaterial attach="material" color={isFastObstacle(obstacle) ? token("colors.green.500") : obstacle.selected ? token("colors.yellow.500") : "white"} />
 			</lineSegments>
 		</group>
 	);

@@ -10,6 +10,7 @@ export interface IEditorObject {
 	selected?: boolean;
 	tentative?: boolean;
 }
+export type IWrapEditorObject<T> = IEditorObject & Omit<T, "customData">;
 
 export const BeatmapColorKey = {
 	SABER_LEFT: "colorLeft",
@@ -47,34 +48,34 @@ export const ObstacleType = {
 export type ObstacleType = Member<typeof ObstacleType>;
 
 export const TrackId = {
-	0: "laserBack",
-	1: "trackNeons",
-	2: "laserLeft",
-	3: "laserRight",
-	4: "primaryLight",
-	5: "boost",
-	6: "laserLeft2",
-	7: "laserRight2",
-	8: "largeRing",
-	9: "smallRing",
-	10: "laserLeft3",
-	11: "laserRight3",
-	12: "laserSpeedLeft",
-	13: "laserSpeedRight",
-	14: "earlyRotation",
-	15: "lateRotation",
-	16: "utility1",
-	17: "utility2",
-	18: "utility3",
-	19: "utility4",
-	40: "special1",
-	41: "special2",
-	42: "special3",
-	43: "special4",
-	100: "bpmChange",
-	1000: "njsChange",
+	0: 0,
+	1: 1,
+	2: 2,
+	3: 3,
+	4: 4,
+	5: 5,
+	6: 6,
+	7: 7,
+	8: 8,
+	9: 9,
+	10: 10,
+	11: 11,
+	12: 12,
+	13: 13,
+	14: 14,
+	15: 15,
+	16: 16,
+	17: 17,
+	18: 18,
+	19: 19,
+	40: 40,
+	41: 41,
+	42: 42,
+	43: 43,
+	100: 100,
+	1000: 1000,
 } as const;
-export type TrackId = Member<typeof TrackId>;
+export type TrackId = Accept<Member<typeof TrackId>, number>;
 
 export const BasicEventType = {
 	OFF: "off",

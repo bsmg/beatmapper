@@ -1,5 +1,5 @@
 import type { BeatmapFilestore } from "$/services/file.service";
-import { selectActiveBeatmapId, selectAllEntities, selectBeatmapById, selectIsModuleEnabled, selectOffsetInBeats } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllEntities, selectBeatmapById, selectEditorOffsetInBeats, selectIsModuleEnabled } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
@@ -13,7 +13,7 @@ import type { SongId } from "$/types";
 // So I store non-loaded songs to disk, stored in indexeddb. It uses the same mechanism as Redux Storage, but it's treated separately.)
 
 export async function save(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
-	const editorOffsetInBeats = selectOffsetInBeats(state, songId);
+	const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
 
 	const beatmapId = selectActiveBeatmapId(state);

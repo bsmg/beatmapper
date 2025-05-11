@@ -59,7 +59,11 @@ function SideLasers({ sid, side, timescale = scaleToSeconds }: Props) {
 	const lastSpeedEvent = useEventTrack<App.IBasicValueEvent>({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
 
 	const { lastEventId: eventId, status, color } = useLightProps({ sid, lastEvent });
-	const laserSpeed = useMemo(() => (lastSpeedEvent ? lastSpeedEvent.laserSpeed : 0), [lastSpeedEvent]);
+
+	const laserSpeed = useMemo(() => {
+		if (!lastSpeedEvent) return 0;
+		return lastSpeedEvent.value;
+	}, [lastSpeedEvent]);
 
 	const secondsSinceSongStart = useMemo(() => timescale(cursorPosition), [timescale, cursorPosition]);
 	const factor = useMemo(() => (side === "left" ? -1 : 1), [side]);

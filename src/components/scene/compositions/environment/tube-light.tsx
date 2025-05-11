@@ -1,4 +1,5 @@
 import type { ThreeElements } from "@react-three/fiber";
+import type { EntityId } from "@reduxjs/toolkit";
 import type { ColorRepresentation } from "three";
 
 import { LightMaterial } from "$/components/scene/compositions/materials";
@@ -10,7 +11,7 @@ interface Props extends GroupProps {
 	color: ColorRepresentation;
 	brightness?: number;
 	status: App.LightEventType;
-	lastEventId: App.BasicEvent["id"] | null;
+	lastEventId: EntityId | null;
 	length?: number;
 	radius?: number;
 }

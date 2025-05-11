@@ -1,6 +1,5 @@
+import { createColorNote } from "bsmap";
 import { useContext, useMemo } from "react";
-
-import { App } from "$/types";
 
 import { ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
 import { Context } from "./context";
@@ -14,15 +13,14 @@ function TentativeNote({ direction, color }: Props) {
 	if (!mouseDownAt) return null;
 
 	const data = useMemo(() => {
-		return {
-			beatNum: 0,
-			colIndex: mouseDownAt.colIndex,
-			rowIndex: mouseDownAt.rowIndex,
-			direction: Object.values(App.CutDirection)[direction],
-		};
+		return createColorNote({
+			posX: mouseDownAt.colIndex,
+			posY: mouseDownAt.rowIndex,
+			direction: direction,
+		});
 	}, [mouseDownAt, direction]);
 
-	const { x, y } = resolvePositionForNote(mouseDownAt);
+	const { x, y } = resolvePositionForNote({ posX: mouseDownAt.colIndex, posY: mouseDownAt.rowIndex });
 
 	return <ColorNote position={[x, y, 0]} data={data} color={color} />;
 }

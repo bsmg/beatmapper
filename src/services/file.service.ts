@@ -3,10 +3,9 @@ import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
 import { resolveExtension } from "$/helpers/file.helpers";
-import { type InferBeatmapDeserializationOptions, type InferBeatmapSerializationOptions, type InferInfoDeserializationOptions, type InferInfoSerializationOptions, deserializeWrapBeatmapContents, deserializeWrapInfoContents, serializeWrapBeatmapContents, serializeWrapInfoContents } from "$/helpers/packaging.helpers";
+import { type BeatmapDeserializationOptions, type BeatmapSerializationOptions, type InfoDeserializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, deserializeInfoContents, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
 import { deepMerge, omit } from "$/utils";
-import { deepCopy } from "bsmap/utils";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -110,32 +109,32 @@ export class BeatmapFilestore extends Filestore {
 		return this.saveFile<T>(filename, contents);
 	}
 
-	async updateInfoContents(songId: SongId, song: App.Song, options: { serializationOptions: InferInfoSerializationOptions; deserializationOptions: InferInfoDeserializationOptions }) {
-		const contents = await this.loadInfo(songId);
-		const currentContents = deserializeWrapInfoContents(contents, options.deserializationOptions);
-		const newContents = serializeWrapInfoContents(deepCopy({ ...currentContents, ...song }), options.serializationOptions);
+	async updateInfoContents(songId: SongId, contents: App.Song, options: { serializationOptions: InfoSerializationOptions; deserializationOptions: InfoDeserializationOptions }) {
+		const savedContents = await this.loadInfo(songId);
+		const currentContents = deserializeInfoContents(savedContents, options.deserializationOptions);
+		const newContents = serializeInfoContents(deepMerge({ ...currentContents, ...contents }), options.serializationOptions);
 		await this.saveInfo(songId, {
 			...newContents,
-			version: contents.version,
-			filename: contents.filename,
+			version: savedContents.version,
+			filename: savedContents.filename,
 		});
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, entities: Partial<App.BeatmapEntities>, options: { serializationOptions: InferBeatmapSerializationOptions; deserializationOptions: InferBeatmapDeserializationOptions }) {
-		const contents = await this.loadBeatmap(songId, beatmapId);
-		const currentContents = deserializeWrapBeatmapContents(contents, options.deserializationOptions);
-		const newContents = serializeWrapBeatmapContents(deepMerge({ ...currentContents, ...entities }), options.serializationOptions);
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, contents: Partial<App.BeatmapEntities>, options: { serializationOptions: BeatmapSerializationOptions; deserializationOptions: BeatmapDeserializationOptions }) {
+		const savedContents = await this.loadBeatmap(songId, beatmapId);
+		const currentContents = deserializeBeatmapContents(savedContents, options.deserializationOptions);
+		const newContents = serializeBeatmapContents(deepMerge({ ...currentContents, ...contents }), options.serializationOptions);
 		await this.saveBeatmap(songId, beatmapId, {
-			version: contents.version,
-			filename: contents.filename,
-			lightshowFilename: contents.lightshowFilename,
+			version: savedContents.version,
+			filename: savedContents.filename,
+			lightshowFilename: savedContents.lightshowFilename,
 			// for difficulty, we'll replace all collections since we can't interact with unsupported objects anyway.
 			difficulty: newContents.difficulty,
 			// for lightshow, we'll merge the contents and only replace collections that are directly supported.
 			lightshow: {
 				...newContents.lightshow,
-				...omit(contents.lightshow, "basicEvents"),
+				...omit(savedContents.lightshow, "basicEvents"),
 			},
-			customData: contents.customData,
+			customData: savedContents.customData,
 		});
 	}
 
