@@ -6,7 +6,7 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deleteObstacle, deselectObstacle, resizeObstacle, selectObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleObstacles, selectBeatDepth, selectCustomColors, selectNoteEditorSelectionMode, selectSnapTo } from "$/store/selectors";
+import { selectAllVisibleObstacles, selectBeatDepth, selectCustomColors, selectEnvironment, selectNoteEditorSelectionMode, selectSnapTo } from "$/store/selectors";
 import { type App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
 
 import { Obstacle } from "$/components/scene/compositions";
@@ -15,6 +15,7 @@ interface Props {
 	sid: SongId;
 }
 function EditorObstacles({ sid }: Props) {
+	const environment = useAppSelector((state) => selectEnvironment(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid));
 	const beatDepth = useAppSelector(selectBeatDepth);
@@ -24,7 +25,7 @@ function EditorObstacles({ sid }: Props) {
 
 	const [hoveredId, setHoveredId] = useState<EntityId | null>(null);
 
-	const obstacleColor = useMemo(() => resolveColorForItem(ObjectTool.OBSTACLE, customColors), [customColors]);
+	const obstacleColor = useMemo(() => resolveColorForItem(ObjectTool.OBSTACLE, { environment, customColors }), [environment, customColors]);
 
 	const resolveClickAction = useCallback(
 		(obstacle: App.IObstacle) => {

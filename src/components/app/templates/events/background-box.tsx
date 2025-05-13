@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectEventEditorStartAndEndBeat } from "$/store/selectors";
+import { selectCustomColors, selectEnvironment, selectEventEditorStartAndEndBeat } from "$/store/selectors";
 import type { IBackgroundBox, SongId } from "$/types";
 import { normalize } from "$/utils";
 
@@ -14,6 +14,7 @@ interface Props {
 }
 function EventGridBackgroundBox({ sid, box }: Props) {
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const environment = useAppSelector((state) => selectEnvironment(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 
 	const styles = useMemo(() => {
@@ -22,9 +23,9 @@ function EventGridBackgroundBox({ sid, box }: Props) {
 		return {
 			left: `${startOffset}%`,
 			width: `${width}%`,
-			background: resolveColorForItem(box.colorType, customColors),
+			background: resolveColorForItem(box.colorType, { environment, customColors }),
 		};
-	}, [box, startBeat, endBeat, customColors]);
+	}, [box, startBeat, endBeat, environment, customColors]);
 
 	return <Wrapper style={styles} />;
 }

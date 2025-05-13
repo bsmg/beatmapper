@@ -1,44 +1,53 @@
-import { hexToRgba } from "bsmap/utils";
+import { ColorScheme, EnvironmentSchemeName } from "bsmap";
+import type { EnvironmentAllName } from "bsmap/types";
+import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import { token } from "$:styled-system/tokens";
-import { COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_COLOR_SCHEME } from "$/constants";
+import { COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_MOD_SETTINGS } from "$/constants";
 import { App, EventColor, ObjectTool } from "$/types";
 import { normalize } from "$/utils";
 
-export function resolveColorForItem<T extends string | number>(item: T | undefined, customColors?: App.ModSettings["customColors"]) {
-	const customColorsEnabled = !!customColors?.isEnabled;
+interface ColorResolverOptions {
+	environment: EnvironmentAllName;
+	customColors: App.ModSettings["customColors"];
+}
+export function resolveColorForItem<T extends string | number>(item: T | undefined, { environment, customColors }: ColorResolverOptions) {
+	const { isEnabled: isCustomColorsEnabled, ...customColorScheme } = customColors ?? DEFAULT_MOD_SETTINGS.customColors;
+
+	const envScheme = environment ? ColorScheme[EnvironmentSchemeName[environment]] : {};
+
 	switch (item) {
 		case ObjectTool.LEFT_NOTE: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.colorLeft;
+			const defaultColor = envScheme?._colorLeft ? colorToHex(envScheme._colorLeft) : customColorScheme.colorLeft;
 			const customColor = customColors?.colorLeft || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return isCustomColorsEnabled ? customColor : defaultColor;
 		}
 		case ObjectTool.RIGHT_NOTE: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.colorRight;
+			const defaultColor = envScheme?._colorRight ? colorToHex(envScheme._colorRight) : customColorScheme.colorRight;
 			const customColor = customColors?.colorRight || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return isCustomColorsEnabled ? customColor : defaultColor;
 		}
 		case ObjectTool.BOMB_NOTE: {
 			return "#687485";
 		}
 		case ObjectTool.OBSTACLE: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.obstacleColor;
+			const defaultColor = envScheme?._obstacleColor ? colorToHex(envScheme._obstacleColor) : customColorScheme.obstacleColor;
 			const customColor = customColors?.obstacleColor || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return isCustomColorsEnabled ? customColor : defaultColor;
 		}
 		case App.BeatmapColorKey.ENV_LEFT:
 		case App.EventColor.PRIMARY:
 		case EventColor.PRIMARY: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.envColorLeft;
+			const defaultColor = envScheme?._envColorLeft ? colorToHex(envScheme._envColorLeft) : customColorScheme.envColorLeft;
 			const customColor = customColors?.envColorLeft || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return isCustomColorsEnabled ? customColor : defaultColor;
 		}
 		case App.BeatmapColorKey.ENV_RIGHT:
 		case App.EventColor.SECONDARY:
 		case EventColor.SECONDARY: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.envColorRight;
+			const defaultColor = envScheme?._envColorRight ? colorToHex(envScheme._envColorRight) : customColorScheme.envColorRight;
 			const customColor = customColors?.envColorRight || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return isCustomColorsEnabled ? customColor : defaultColor;
 		}
 		case App.EventColor.WHITE:
 		case EventColor.WHITE: {

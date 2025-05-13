@@ -9,7 +9,7 @@ import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.
 import { resolveSchemeColorWithOverdrive } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
 import type { ImplicitVersion } from "./serialization.helpers";
-import { getAllBeatmaps, getColorScheme, getModSettings, isFastWallsEnabled, isModuleEnabled, resolveBeatmapIdFromFilename } from "./song.helpers";
+import { getAllBeatmaps, getCustomColorsModule, getModSettings, isFastWallsEnabled, isModuleEnabled, resolveBeatmapIdFromFilename } from "./song.helpers";
 
 export function resolveBeatmapFilenameForImplicitVersion(version: ImplicitVersion, beatmapId: BeatmapId, type: "beatmap" | "lightshow") {
 	switch (version) {
@@ -37,7 +37,7 @@ function coalesceBeatmapCollection(data: App.Song) {
 		requirements.push("Mapping Extensions");
 	}
 
-	const colors = enabledCustomColors ? getColorScheme(data) : undefined;
+	const colors = enabledCustomColors ? getCustomColorsModule(data) : undefined;
 
 	const customColors = maybeObject({
 		_colorLeft: colors?.colorLeft ? resolveSchemeColorWithOverdrive(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
@@ -121,6 +121,8 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 		coverImageFilename: data.coverArtFilename,
 		difficulties: beatmaps.map(
 			(beatmap): Partial<wrapper.IWrapInfoBeatmap> => ({
+				filename: `${beatmap.beatmapId}.beatmap.dat`,
+				lightshowFilename: `${beatmap.lightshowId}.lightshow.dat`,
 				characteristic: beatmap.characteristic,
 				difficulty: beatmap.difficulty,
 				njs: beatmap.noteJumpSpeed,

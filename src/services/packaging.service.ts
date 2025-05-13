@@ -44,7 +44,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 	const implicitInfoVersion = version ?? (wrapperInfo.version >= 0 ? wrapperInfo.version : 4);
 	console.log(implicitInfoVersion);
-	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 4 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>);
+	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>);
 
 	zip.file(wrapperInfo.filename, JSON.stringify(info, null, indent), { binary: false });
 

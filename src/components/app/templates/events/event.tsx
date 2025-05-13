@@ -4,7 +4,7 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectEventEditorEditMode, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror } from "$/store/selectors";
+import { selectCustomColors, selectEnvironment, selectEventEditorEditMode, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror } from "$/store/selectors";
 import { App, EventEditMode, type SongId } from "$/types";
 import { normalize } from "$/utils";
 
@@ -13,11 +13,11 @@ import { Button } from "$/components/ui/compositions";
 
 const BLOCK_WIDTH = 8;
 
-function resolveBackgroundForEvent(event: App.IBasicEvent, customColors: App.ModSettings["customColors"]) {
+function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<typeof resolveColorForItem>[1]) {
 	const eventColor = resolveEventColor(event);
 	const eventEffect = resolveEventEffect(event);
 
-	const color = resolveColorForItem(isLightEvent(event) ? (eventColor ?? eventEffect) : eventEffect, customColors);
+	const color = resolveColorForItem(isLightEvent(event) ? (eventColor ?? eventEffect) : eventEffect, options);
 	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
 	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
 
@@ -49,6 +49,7 @@ interface Props {
 function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 	const dispatch = useAppDispatch();
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const environment = useAppSelector((state) => selectEnvironment(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
@@ -57,10 +58,10 @@ function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 		const offset = normalize(event.time, startBeat, endBeat, 0, trackWidth);
 		const centeredOffset = offset - BLOCK_WIDTH / 2;
 
-		const background = resolveBackgroundForEvent(event, customColors);
+		const background = resolveBackgroundForEvent(event, { environment, customColors });
 
 		return { transform: `translateX(${centeredOffset}px)`, background };
-	}, [event, startBeat, endBeat, trackWidth, customColors]);
+	}, [event, startBeat, endBeat, trackWidth, environment, customColors]);
 
 	const handlePointerDown = useCallback(
 		(ev: MouseEvent<HTMLElement>) => {

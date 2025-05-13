@@ -7,7 +7,7 @@ import { convertGridColumn, convertGridRow } from "$/helpers/grid.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectDefaultObstacleDuration, selectGridSize, selectNoteEditorDirection, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
+import { selectCustomColors, selectDefaultObstacleDuration, selectEnvironment, selectGridSize, selectNoteEditorDirection, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
 import { ObjectTool, type SongId } from "$/types";
 
 import { PlacementGrid, resolveNoteDirectionForPlacementMode } from "$/components/scene/layouts";
@@ -27,6 +27,7 @@ interface Props extends GroupProps {
 function EditorPlacementGrid({ sid, ...rest }: Props) {
 	const dispatch = useAppDispatch();
 	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, sid));
+	const environment = useAppSelector((state) => selectEnvironment(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const selectedTool = useAppSelector(selectNoteEditorTool);
 	const selectedDirection = useAppSelector(selectNoteEditorDirection);
@@ -112,8 +113,8 @@ function EditorPlacementGrid({ sid, ...rest }: Props) {
 			<PlacementGrid.Layout numCols={numCols} numRows={numRows} colWidth={colWidth} rowHeight={rowHeight}>
 				{({ ...cell }) => <PlacementGrid.Cell {...cell} key={`${cell.colIndex}-${cell.rowIndex}`} numCols={numCols} numRows={numRows} colWidth={colWidth} rowHeight={rowHeight} />}
 			</PlacementGrid.Layout>
-			<PlacementGrid.Consumer>{() => tentativeBlock && <PlacementGrid.TentativeNote direction={tentativeBlock.direction} color={resolveColorForItem(tentativeBlock.selectedTool, customColors)} />}</PlacementGrid.Consumer>
-			<PlacementGrid.Consumer>{() => selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle sid={sid} color={resolveColorForItem(ObjectTool.OBSTACLE, customColors)} />}</PlacementGrid.Consumer>
+			<PlacementGrid.Consumer>{() => tentativeBlock && <PlacementGrid.TentativeNote direction={tentativeBlock.direction} color={resolveColorForItem(tentativeBlock.selectedTool, { environment, customColors })} />}</PlacementGrid.Consumer>
+			<PlacementGrid.Consumer>{() => selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle sid={sid} color={resolveColorForItem(ObjectTool.OBSTACLE, { environment, customColors })} />}</PlacementGrid.Consumer>
 		</PlacementGrid.Root>
 	);
 }

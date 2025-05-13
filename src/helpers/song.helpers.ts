@@ -1,4 +1,4 @@
-import { DEFAULT_COLOR_SCHEME, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DIFFICULTIES } from "$/constants";
+import { DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DIFFICULTIES } from "$/constants";
 import type { App, BeatmapId, Member } from "$/types";
 import { slugify } from "$/utils";
 import { CharacteristicName, DifficultyName } from "bsmap/types";
@@ -25,53 +25,56 @@ export function resolveDifficultyFromBeatmapId(id: BeatmapId): Member<typeof DIF
 	throw new Error(`Could not resolve difficulty from id: ${id}`);
 }
 
-export function isSongReadonly(song: App.Song) {
+export function isSongReadonly<T extends Pick<App.Song, "demo">>(song: T) {
 	return !!song.demo;
 }
-export function isModuleEnabled(song: App.Song, key: keyof App.ModSettings) {
+export function isModuleEnabled<T extends Pick<App.Song, "modSettings">>(song: T, key: keyof App.ModSettings) {
 	return !!song.modSettings[key]?.isEnabled;
 }
-export function isFastWallsEnabled(song: App.Song) {
+export function isFastWallsEnabled<T extends Pick<App.Song, "enabledFastWalls">>(song: T) {
 	return !!song.enabledFastWalls;
 }
-export function isLightshowEnabled(song: App.Song) {
+export function isLightshowEnabled<T extends Pick<App.Song, "enabledLightshow">>(song: T) {
 	return !!song.enabledLightshow;
 }
 
-export function getSongMetadata(song: App.Song) {
+export function getSongMetadata<T extends Pick<App.Song, "name" | "subName" | "artistName">>(song: T) {
 	return { title: song.name, subtitle: song.subName, artist: song.artistName };
 }
-export function getBeatmaps(song: App.Song) {
+export function getBeatmaps<T extends Pick<App.Song, "difficultiesById">>(song: T) {
 	return song.difficultiesById;
 }
-export function getAllBeatmaps(song: App.Song) {
+export function getAllBeatmaps<T extends Pick<App.Song, "difficultiesById">>(song: T) {
 	return Object.values(song.difficultiesById).sort(sortBeatmaps);
 }
-export function getBeatmapIds(song: App.Song) {
+export function getBeatmapIds<T extends Pick<App.Song, "difficultiesById">>(song: T) {
 	return getAllBeatmaps(song).map((beatmap) => beatmap.beatmapId);
 }
-export function getBeatmapById(song: App.Song, beatmapId: BeatmapId) {
+export function getBeatmapById<T extends Pick<App.Song, "difficultiesById">>(song: T, beatmapId: BeatmapId) {
 	return song.difficultiesById[beatmapId];
 }
-export function getSelectedBeatmap(song: App.Song) {
+export function getSelectedBeatmap<T extends Pick<App.Song, "selectedDifficulty" | "difficultiesById">>(song: T) {
 	return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
 }
-export function getEditorOffset(song: App.Song) {
+export function getEditorOffset<T extends Pick<App.Song, "offset">>(song: T) {
 	return song.offset;
 }
-export function getSongLastOpenedAt(song: App.Song) {
+export function getSongLastOpenedAt<T extends Pick<App.Song, "lastOpenedAt">>(song: T) {
 	return song.lastOpenedAt ?? 0;
 }
-export function getModSettings(song: App.Song) {
-	return song.modSettings;
+export function getModSettings<T extends Pick<App.Song, "modSettings">>(song: T) {
+	return song.modSettings ?? DEFAULT_MOD_SETTINGS;
 }
-export function getColorScheme(song: App.Song) {
-	const colors = song.modSettings.customColors;
-	if (!colors) return DEFAULT_MOD_SETTINGS.customColors;
-	return { ...DEFAULT_COLOR_SCHEME, ...colors };
+export function getCustomColorsModule<T extends Pick<App.Song, "modSettings">>(song: T) {
+	const colors = song.modSettings?.customColors;
+	return { ...DEFAULT_MOD_SETTINGS.customColors, ...colors };
 }
-export function getGridSize(song: App.Song) {
-	const mappingExtensions = song?.modSettings.mappingExtensions;
+export function getExtensionsModule<T extends Pick<App.Song, "modSettings">>(song: T) {
+	const extensions = song.modSettings?.mappingExtensions;
+	return { ...DEFAULT_MOD_SETTINGS.mappingExtensions, ...extensions };
+}
+export function getGridSize<T extends Pick<App.Song, "modSettings">>(song: T) {
+	const mappingExtensions = getExtensionsModule(song);
 	// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
 	const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
 	const isDisabled = mappingExtensions?.isEnabled === false;

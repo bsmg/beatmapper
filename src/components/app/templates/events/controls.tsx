@@ -22,20 +22,21 @@ const EDIT_MODE_LIST_COLLECTION = createListCollection({
 });
 
 interface EventListCollection {
+	environment?: App.Song["environment"];
 	customColors?: App.ModSettings["customColors"];
 	selectedColor?: EventColor;
 }
-function createEventColorListCollection({ customColors }: EventListCollection) {
+function createEventColorListCollection({ environment, customColors }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventColor).map((value) => {
-			return { value, label: <Box style={{ "--color": resolveColorForItem(value, customColors) } as CSSProperties} /> };
+			return { value, label: <Box style={{ "--color": resolveColorForItem(value, { environment, customColors }) } as CSSProperties} /> };
 		}),
 	});
 }
-function createEventEffectListCollection({ customColors, selectedColor }: EventListCollection) {
+function createEventEffectListCollection({ selectedColor, environment, customColors }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventTool).map((value) => {
-			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, customColors)} /> };
+			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, { environment, customColors })} /> };
 		}),
 	});
 }

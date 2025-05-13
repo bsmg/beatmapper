@@ -5,14 +5,15 @@ import { useOnChange } from "$/components/hooks";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
+import { selectCustomColors, selectEnvironment, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import { App, Quality, type SongId } from "$/types";
 
 interface UseLightPropsOptions {
 	sid: SongId;
-	lastEvent: App.IBasicLightEvent | null;
+	lastEvent: App.IBasicEvent | null;
 }
 export function useLightProps({ sid, lastEvent }: UseLightPropsOptions) {
+	const environment = useAppSelector((state) => selectEnvironment(state, sid));
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 
 	const lightStatus = useMemo(() => {
@@ -24,8 +25,8 @@ export function useLightProps({ sid, lastEvent }: UseLightPropsOptions) {
 		if (!lastEvent) return "#000000";
 		if (lightStatus === App.BasicEventType.OFF) return "#000000";
 		const eventColor = resolveEventColor(lastEvent);
-		return resolveColorForItem(eventColor, customColors);
-	}, [lastEvent, lightStatus, customColors]);
+		return resolveColorForItem(eventColor, { environment, customColors });
+	}, [lastEvent, lightStatus, environment, customColors]);
 
 	return { lastEventId: lastEvent ? resolveEventId(lastEvent) : null, status: lightStatus, color: lightColor };
 }

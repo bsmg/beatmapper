@@ -46,6 +46,7 @@ export const {
 	selectAllBeatmaps,
 	selectBeatmapById,
 	selectLightshowForBeatmap,
+	selectEnvironment,
 	selectSelectedBeatmap,
 	selectIsDemo: selectIsDemoSong,
 	selectIsModuleEnabled,
