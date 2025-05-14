@@ -7,6 +7,15 @@ export const Root = styled(ark.div, {
 	base: stack.raw({
 		gap: 4,
 	}),
+	variants: {
+		size: {
+			sm: { gap: 2 },
+			md: { gap: 4 },
+		},
+	},
+	defaultVariants: {
+		size: "md",
+	},
 });
 
 export const Row = styled(ark.div, {

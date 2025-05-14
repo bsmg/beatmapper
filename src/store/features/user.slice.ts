@@ -38,8 +38,8 @@ const slice = createSlice({
 			return { ...state, isNewUser: false };
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
-			const { mapAuthorName } = action.payload;
-			return { ...state, stickyMapAuthorName: mapAuthorName ?? null };
+			const { songData } = action.payload;
+			return { ...state, stickyMapAuthorName: songData.mapAuthorName ?? null };
 		});
 		builder.addCase(dismissPrompt, (state, action) => {
 			const { promptId } = action.payload;

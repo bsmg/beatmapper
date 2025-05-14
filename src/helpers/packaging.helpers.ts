@@ -3,27 +3,12 @@ import type { EnvironmentName, v2 as v2t, wrapper } from "bsmap/types";
 import { colorToHex } from "bsmap/utils";
 
 import { DEFAULT_GRID } from "$/constants";
-import { App, type BeatmapId } from "$/types";
+import { App } from "$/types";
 import { withKeys as hasKeys, maybeObject } from "$/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
 import { resolveSchemeColorWithOverdrive } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
-import type { ImplicitVersion } from "./serialization.helpers";
-import { getAllBeatmaps, getCustomColorsModule, getModSettings, isFastWallsEnabled, isModuleEnabled, resolveBeatmapIdFromFilename } from "./song.helpers";
-
-export function resolveBeatmapFilenameForImplicitVersion(version: ImplicitVersion, beatmapId: BeatmapId, type: "beatmap" | "lightshow") {
-	switch (version) {
-		case 1: {
-			return `${beatmapId}.json`;
-		}
-		case 4: {
-			return `${beatmapId}.${type}.dat`;
-		}
-		default: {
-			return `${beatmapId}.dat`;
-		}
-	}
-}
+import { getAllBeatmaps, getCustomColorsModule, getModSettings, isFastWallsEnabled, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
 function coalesceBeatmapCollection(data: App.Song) {
 	const beatmaps = getAllBeatmaps(data);
@@ -90,6 +75,7 @@ function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.ModSettings {
 }
 
 export interface InfoSerializationOptions {
+	version?: 1 | 2 | 4;
 	songDuration?: number;
 }
 export interface InfoDeserializationOptions {
@@ -100,6 +86,7 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 	const { beatmaps, customColors, editorSettings } = coalesceBeatmapCollection(data);
 
 	return createInfo({
+		version: options.version,
 		song: {
 			title: data.name,
 			subTitle: data.subName,
@@ -122,7 +109,7 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 		difficulties: beatmaps.map(
 			(beatmap): Partial<wrapper.IWrapInfoBeatmap> => ({
 				filename: `${beatmap.beatmapId}.beatmap.dat`,
-				lightshowFilename: `${beatmap.lightshowId}.lightshow.dat`,
+				lightshowFilename: `${beatmap.lightshowId && beatmap.lightshowId !== "Unnamed" ? beatmap.lightshowId : beatmap.beatmapId}.lightshow.dat`,
 				characteristic: beatmap.characteristic,
 				difficulty: beatmap.difficulty,
 				njs: beatmap.noteJumpSpeed,
@@ -150,7 +137,7 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.Song {
 	const beatmapsById = data.difficulties.reduce((acc: App.Beatmaps, beatmap) => {
 		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
-		const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
+		const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
 		acc[beatmapId] = {
 			beatmapId: beatmapId,
 			lightshowId: lightshowId,
@@ -212,7 +199,7 @@ export function serializeBeatmapContents(data: Partial<App.BeatmapEntities>, { e
 		},
 	});
 }
-export function deserializeBeatmapContents(data: wrapper.IWrapBeatmap, { editorOffsetInBeats = 0 }: BeatmapDeserializationOptions) {
+export function deserializeBeatmapContents(data: wrapper.IWrapBeatmap, { editorOffsetInBeats = 0 }: BeatmapDeserializationOptions): Partial<App.BeatmapEntities> {
 	const notes = data.difficulty.colorNotes;
 	const bombs = data.difficulty.bombNotes;
 	const obstacles = data.difficulty.obstacles;

@@ -8,13 +8,14 @@ import { useMount } from "$/components/hooks";
 import { filestore } from "$/setup";
 import { stopPlaying, toggleModForSong, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectDuration, selectEditorOffset, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIds, selectEditorOffset, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
 import { LocalFileUpload } from "$/components/app/compositions";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { BeatmapFilestore } from "$/services/file.service";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -24,7 +25,6 @@ interface Props {
 function SongDetails({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
-	const duration = useAppSelector(selectDuration);
 	const enabledCustomColors = useAppSelector((state) => selectIsModuleEnabled(state, sid, "customColors"));
 	const enabledMappingExtensions = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
 	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, sid));
@@ -71,25 +71,10 @@ function SongDetails({ sid }: Props) {
 				environment: pipe(EnvironmentNameSchema),
 			}),
 		},
-		onSubmit: async ({ value }) => {
-			// Alert the user if they need to choose a song before saving
-			// TODO: I should go back to the default cover art if they remove the art.
-			if (!songFile) {
-				return APP_TOASTER.create({
-					id: "missing-song-file",
-					type: "error",
-					description: "Please select a song file before saving",
-				});
-			}
-
+		onSubmit: async ({ value, formApi }) => {
 			const newSongObject = { ...song, ...value };
 
-			// When the user selects a file from their local machine, we store a File object type. BUT, when the user uploads a pre-existing map, the file is actually a Blob.
-			// They're similar in many ways, but they don't have a filename, and that breaks things.
-			// So, we should only try and save the cover art IF it's a proper file. If it's a blob, it can't have changed anyway.
-			const shouldSaveCoverArt = coverArtFile?.name;
-
-			if (shouldSaveCoverArt) {
+			if (coverArtFile) {
 				const { filename: coverArtFilename } = await filestore.saveCoverFile(sid, coverArtFile);
 				newSongObject.coverArtFilename = coverArtFilename;
 			}
@@ -102,10 +87,11 @@ function SongDetails({ sid }: Props) {
 			// Update our redux state
 			dispatch(updateSongDetails({ songId: sid, songData: newSongObject }));
 
-			// Back up our latest data!
-			await filestore.updateInfoContents(sid, newSongObject, {
-				serializationOptions: { songDuration: duration ? duration / 1000 : undefined },
-				deserializationOptions: {},
+			formApi.reset(value);
+
+			return APP_TOASTER.create({
+				type: "success",
+				description: "Successfully updated!",
 			});
 		},
 	});
@@ -131,12 +117,12 @@ function SongDetails({ sid }: Props) {
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">
-								<LocalFileUpload filename={song.songFilename} accept={"audio/ogg"} onFileAccept={(details) => setSongFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={"audio/ogg"} maxFiles={1} onFileAccept={(details) => setSongFile(details.files[0])}>
 									Audio File
 								</LocalFileUpload>
 							</Field>
 							<Field label="Cover Art File">
-								<LocalFileUpload filename={song.coverArtFilename} accept={"image/jpeg"} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={"image/jpeg"} maxFiles={1} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 									Image File
 								</LocalFileUpload>
 							</Field>

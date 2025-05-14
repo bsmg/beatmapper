@@ -75,9 +75,13 @@ const slice = createSlice({
 		selectBeatmapById: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return getBeatmapById(song, beatmapId);
 		}),
-		selectLightshowForBeatmap: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+		selectLightshowIdForBeatmap: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			const beatmap = getBeatmapById(song, beatmapId);
 			return beatmap.lightshowId;
+		}),
+		selectBeatmapIdsWithLightshowId: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, lightshowId) => {
+			const beatmaps = getAllBeatmaps(song).filter((x) => x.lightshowId === lightshowId);
+			return beatmaps.map((x) => x.beatmapId);
 		}),
 		selectEnvironment: createSelector(selectById, (song) => {
 			return song.environment;
@@ -125,30 +129,21 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
 		});
 		builder.addCase(createNewSong.fulfilled, (state, action) => {
-			const { coverArtFilename, songFilename, name, subName, artistName, bpm, offset, selectedCharacteristic, selectedDifficulty, mapAuthorName, createdAt, lastOpenedAt } = action.payload;
-			const beatmapId = resolveBeatmapId({ characteristic: selectedCharacteristic, difficulty: selectedDifficulty });
+			const { songData, beatmapData } = action.payload;
+			const beatmapId = resolveBeatmapId({ characteristic: beatmapData.characteristic, difficulty: beatmapData.difficulty });
 			return adapter.addOne(state, {
-				name,
-				subName,
-				artistName,
-				bpm,
-				offset,
+				...songData,
 				previewStartTime: 12,
 				previewDuration: 10,
-				songFilename,
-				coverArtFilename,
 				environment: EnvironmentName[0],
-				mapAuthorName: mapAuthorName ?? undefined,
-				createdAt,
-				lastOpenedAt,
-				selectedDifficulty,
+				mapAuthorName: songData.mapAuthorName ?? undefined,
 				difficultiesById: {
 					[beatmapId]: {
 						beatmapId: beatmapId,
-						lightshowId: "Unnamed",
-						characteristic: selectedCharacteristic,
-						difficulty: selectedDifficulty,
-						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty],
+						lightshowId: beatmapId,
+						characteristic: beatmapData.characteristic,
+						difficulty: beatmapData.difficulty,
+						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapData.difficulty],
 						startBeatOffset: 0,
 					},
 				},
@@ -160,11 +155,11 @@ const slice = createSlice({
 			return adapter.upsertOne(state, songData);
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
-			const { songId, ...fieldsToUpdate } = action.payload;
+			const { songId, songData: fieldsToUpdate } = action.payload;
 			return adapter.updateOne(state, { id: songId, changes: fieldsToUpdate });
 		});
 		builder.addCase(createDifficulty, (state, action) => {
-			const { songId, beatmapId, lightshowId, data } = action.payload;
+			const { songId, beatmapId, lightshowId, beatmapData: data } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
@@ -172,7 +167,7 @@ const slice = createSlice({
 					difficultiesById: deepMerge(getBeatmaps(song), {
 						[beatmapId]: {
 							beatmapId: beatmapId,
-							lightshowId: lightshowId,
+							lightshowId: lightshowId ?? beatmapId,
 							characteristic: data.characteristic,
 							difficulty: data.difficulty,
 							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[data.difficulty],
@@ -209,14 +204,15 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: { difficultiesById: difficultiesById } });
 		});
 		builder.addCase(updateBeatmapMetadata, (state, action) => {
-			const { songId, beatmapId, noteJumpSpeed, startBeatOffset, customLabel } = action.payload;
+			const { songId, beatmapId, beatmapData } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					difficultiesById: deepMerge(getBeatmaps(song), {
-						[beatmapId]: { ...getBeatmaps(song)[beatmapId], noteJumpSpeed, startBeatOffset, customLabel },
-					}),
+					difficultiesById: {
+						...getBeatmaps(song),
+						[beatmapId]: { ...getBeatmapById(song, beatmapId), ...beatmapData },
+					},
 				},
 			});
 		});

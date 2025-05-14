@@ -18,9 +18,10 @@ export function resolveIconForFileType(accept?: FileMimeType) {
 
 interface Props extends ComponentProps<typeof Builder.Root> {
 	colorPalette?: VirtualColorPalette;
+	deletable?: boolean;
 	files?: File[];
 }
-export function FileUpload({ colorPalette = "pink", files: initialFiles = [], onFileChange, children, ...rest }: Props) {
+export function FileUpload({ colorPalette = "pink", deletable = true, files: initialFiles = [], onFileChange, children, ...rest }: Props) {
 	const [files, setFiles] = useState<File[]>(initialFiles);
 
 	const handleChange = useCallback(
@@ -63,11 +64,13 @@ export function FileUpload({ colorPalette = "pink", files: initialFiles = [], on
 							</Builder.ItemPreview>
 							<Builder.ItemName />
 							<Builder.ItemSizeText />
-							<Builder.ItemDeleteTrigger asChild onClick={() => handleClear(file.name)}>
-								<Button variant="ghost" size="icon">
-									<Trash2Icon />
-								</Button>
-							</Builder.ItemDeleteTrigger>
+							{deletable && (
+								<Builder.ItemDeleteTrigger asChild onClick={() => handleClear(file.name)}>
+									<Button variant="ghost" size="icon">
+										<Trash2Icon />
+									</Button>
+								</Builder.ItemDeleteTrigger>
+							)}
 						</Builder.Item>
 					))}
 				</Builder.ItemGroup>

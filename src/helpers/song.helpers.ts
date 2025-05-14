@@ -17,6 +17,10 @@ export function resolveBeatmapIdFromFilename(filename: string): string {
 	}
 	return fn;
 }
+export function resolveLightshowIdFromFilename(filename: string, beatmapId: BeatmapId): string {
+	const rawId = resolveBeatmapIdFromFilename(filename);
+	return rawId !== "Unnamed" ? rawId : beatmapId.toString();
+}
 /** @deprecated this is really only used during migration flow, don't use this elsewhere */
 export function resolveDifficultyFromBeatmapId(id: BeatmapId): Member<typeof DIFFICULTIES> {
 	for (const id of [...DIFFICULTIES].reverse()) {

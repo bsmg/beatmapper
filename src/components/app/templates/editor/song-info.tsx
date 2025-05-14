@@ -7,7 +7,7 @@ import { Fragment, memo, useCallback, useMemo } from "react";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectLightshowForBeatmap, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
 import { HStack, Stack, styled } from "$:styled-system/jsx";
@@ -29,7 +29,6 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	const dispatch = useAppDispatch();
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
-	const lightshowId = useAppSelector((state) => selectLightshowForBeatmap(state, sid, bid));
 	const navigate = useNavigate();
 
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
@@ -44,9 +43,10 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleCreate = useCallback(
 		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(createDifficulty({ songId: sid, beatmapId: id, lightshowId: lightshowId, data }));
+			// todo: add dedicated setting for customizing lightshow behavior
+			dispatch(createDifficulty({ songId: sid, beatmapId: id, beatmapData: data }));
 		},
-		[dispatch, sid, lightshowId],
+		[dispatch, sid],
 	);
 
 	return (

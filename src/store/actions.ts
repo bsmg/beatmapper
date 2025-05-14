@@ -50,12 +50,13 @@ export const createNewSong = createAsyncThunk(
 
 		const mapAuthorName = selectUserName(state);
 
-		return api.fulfillWithValue({ ...args, mapAuthorName, createdAt: Date.now(), lastOpenedAt: Date.now() });
+		const { name, subName, artistName, bpm, offset, coverArtFilename, songFilename } = args;
+		return api.fulfillWithValue({ songId: args.songId, songData: { name, subName, artistName, mapAuthorName, bpm, offset, coverArtFilename, songFilename }, beatmapData: { characteristic: args.selectedCharacteristic, difficulty: args.selectedDifficulty } });
 	},
 );
 
 export const updateSongDetails = createAction("UPDATE_SONG_DETAILS", (args: { songId: SongId; songData: Partial<App.Song> }) => {
-	return { payload: { songId: args.songId, ...args.songData } };
+	return { payload: { ...args } };
 });
 
 export const loadDemoMap = createAction("LOAD_DEMO_MAP");
@@ -72,7 +73,7 @@ export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY
 	return { payload: { ...args } };
 });
 
-export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; lightshowId: BeatmapId; data: { characteristic: CharacteristicName; difficulty: DifficultyName } }) => {
+export const createDifficulty = createAction("CREATE_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId; lightshowId?: BeatmapId; beatmapData: { characteristic: CharacteristicName; difficulty: DifficultyName } }) => {
 	return { payload: { ...args } };
 });
 
@@ -347,7 +348,7 @@ export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { song
 	return { payload: { ...args } };
 });
 
-export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; beatmapId: BeatmapId; noteJumpSpeed: number; startBeatOffset: number; customLabel?: string }) => {
+export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; beatmapId: BeatmapId; beatmapData: { lightshowId: BeatmapId; noteJumpSpeed: number; startBeatOffset: number; customLabel?: string } }) => {
 	return { payload: { ...args } };
 });
 

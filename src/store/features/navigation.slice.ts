@@ -81,8 +81,8 @@ const slice = createSlice({
 			return { ...state, duration: durationInMs };
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
-			const { offset } = action.payload;
-			return { ...state, cursorPosition: offset ?? 0 };
+			const { songData } = action.payload;
+			return { ...state, cursorPosition: songData.offset ?? 0 };
 		});
 		builder.addCase(startPlaying, (state) => {
 			return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };

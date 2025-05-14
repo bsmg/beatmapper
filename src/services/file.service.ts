@@ -2,10 +2,9 @@ import type { wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
-import { resolveExtension } from "$/helpers/file.helpers";
-import { type BeatmapDeserializationOptions, type BeatmapSerializationOptions, type InfoDeserializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, deserializeInfoContents, serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
-import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
-import { deepMerge, omit } from "$/utils";
+import type { BeatmapId, MaybeDefined, SongId } from "$/types";
+import { omit, pick } from "$/utils";
+import { createBeatmap, createDifficulty, createInfo, createLightshow } from "bsmap";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -78,64 +77,68 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
 		return this.loadFile<Blob>(filename);
 	}
-	async loadInfo(songId: SongId) {
+	async loadInfoContents(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.loadFile<wrapper.IWrapInfo>(filename);
 	}
-	async loadBeatmap(songId: SongId, beatmapId: BeatmapId) {
+	async loadBeatmapContents(songId: SongId, beatmapId: BeatmapId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.loadFile<wrapper.IWrapBeatmap>(filename);
 	}
+	async loadImplicitVersion(songId: SongId, beatmapId: BeatmapId) {
+		const beatmap = await this.loadBeatmapContents(songId, beatmapId);
+		return beatmap.version as 1 | 2 | 3 | 4;
+	}
 
-	async saveSongFile<T extends File | Blob>(songId: SongId, contents: T, type?: string, overrideFilename?: string) {
-		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
-		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
-		const filename = BeatmapFilestore.resolveFilename(songId, "song", { extension });
-		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
+	async saveSongFile<T extends File>(songId: SongId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
+		return this.saveFile<T>(filename, contents);
 	}
-	async saveCoverFile<T extends File | Blob>(songId: SongId, contents?: T, type?: string, overrideFilename?: string) {
+	async saveCoverFile<T extends File>(songId: SongId, contents: T) {
 		if (!contents) return this.saveBackupCoverFile();
-		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
-		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
-		const filename = BeatmapFilestore.resolveFilename(songId, "cover", { extension });
-		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
+		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
+		return this.saveFile<T>(filename, contents);
 	}
-	async saveInfo<T extends wrapper.IWrapInfo>(songId: SongId, contents: T) {
+	async saveInfoContents<T extends wrapper.IWrapInfo>(songId: SongId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveBeatmap<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+	async saveBeatmapContents<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.saveFile<T>(filename, contents);
 	}
 
-	async updateInfoContents(songId: SongId, contents: App.Song, options: { serializationOptions: InfoSerializationOptions; deserializationOptions: InfoDeserializationOptions }) {
-		const savedContents = await this.loadInfo(songId);
-		const currentContents = deserializeInfoContents(savedContents, options.deserializationOptions);
-		const newContents = serializeInfoContents(deepMerge({ ...currentContents, ...contents }), options.serializationOptions);
-		await this.saveInfo(songId, {
-			...newContents,
-			version: savedContents.version,
-			filename: savedContents.filename,
-		});
+	async updateInfoContents(songId: SongId, newContents: Partial<wrapper.IWrapInfo>) {
+		const savedContents = await this.loadInfoContents(songId);
+		return await this.saveInfoContents(
+			songId,
+			createInfo({
+				...savedContents,
+				...omit(newContents, "version", "filename"),
+			}),
+		);
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, contents: Partial<App.BeatmapEntities>, options: { serializationOptions: BeatmapSerializationOptions; deserializationOptions: BeatmapDeserializationOptions }) {
-		const savedContents = await this.loadBeatmap(songId, beatmapId);
-		const currentContents = deserializeBeatmapContents(savedContents, options.deserializationOptions);
-		const newContents = serializeBeatmapContents(deepMerge({ ...currentContents, ...contents }), options.serializationOptions);
-		await this.saveBeatmap(songId, beatmapId, {
-			version: savedContents.version,
-			filename: savedContents.filename,
-			lightshowFilename: savedContents.lightshowFilename,
-			// for difficulty, we'll replace all collections since we can't interact with unsupported objects anyway.
-			difficulty: newContents.difficulty,
-			// for lightshow, we'll merge the contents and only replace collections that are directly supported.
-			lightshow: {
-				...newContents.lightshow,
-				...omit(savedContents.lightshow, "basicEvents"),
-			},
-			customData: savedContents.customData,
-		});
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: Partial<wrapper.IWrapBeatmap>) {
+		const savedContents = await this.loadBeatmapContents(songId, beatmapId);
+		return await this.saveBeatmapContents(
+			songId,
+			beatmapId,
+			createBeatmap({
+				...savedContents,
+				// we might have an updated lightshow filename if we update the lightshow id.
+				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
+				difficulty: createDifficulty({
+					// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
+					...pick(savedContents.difficulty, "colorNotes", "bombNotes", "obstacles"),
+					...newContents.difficulty,
+				}),
+				lightshow: createLightshow({
+					// for lightshow, we'll merge the contents and only replace collections that are directly supported.
+					...savedContents.lightshow,
+					...newContents.lightshow,
+				}),
+			}),
+		);
 	}
 
 	async removeAllFilesForSong(songId: SongId, beatmapIds: BeatmapId[]) {

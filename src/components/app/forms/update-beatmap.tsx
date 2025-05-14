@@ -1,5 +1,5 @@
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { type MouseEventHandler, useCallback } from "react";
+import { type MouseEventHandler, useCallback, useState } from "react";
 import { number, object, pipe, string, transform } from "valibot";
 
 import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
@@ -10,27 +10,30 @@ import type { BeatmapId, SongId } from "$/types";
 import { Stack, Wrap } from "$:styled-system/jsx";
 import { APP_TOASTER } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { Button, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
+import { Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;
 	bid: BeatmapId;
 }
 function UpdateBeatmapForm({ sid, bid }: Props) {
-	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-
+	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
+
+	const [showAdvancedControls, setShowAdvancedControls] = useState(false);
 
 	const Form = useAppForm({
 		defaultValues: {
+			lightshowId: savedVersion.lightshowId.toString(),
 			noteJumpSpeed: savedVersion.noteJumpSpeed,
 			startBeatOffset: savedVersion.startBeatOffset,
 			customLabel: savedVersion.customLabel ?? "",
 		},
 		validators: {
 			onChange: object({
+				lightshowId: string(),
 				noteJumpSpeed: number(),
 				startBeatOffset: number(),
 				customLabel: pipe(
@@ -39,8 +42,15 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 				),
 			}),
 		},
-		onSubmit: async ({ value }) => {
-			dispatch(updateBeatmapMetadata({ songId: sid, beatmapId: bid, noteJumpSpeed: value.noteJumpSpeed, startBeatOffset: value.startBeatOffset, customLabel: value.customLabel }));
+		onSubmit: async ({ value, formApi }) => {
+			dispatch(updateBeatmapMetadata({ songId: sid, beatmapId: bid, beatmapData: value }));
+
+			formApi.reset(value);
+
+			return APP_TOASTER.create({
+				type: "success",
+				description: "Successfully updated!",
+			});
 		},
 	});
 
@@ -89,12 +99,25 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 
 	return (
 		<Form.AppForm>
-			<Form.Root>
+			<Form.Root size="sm">
 				<Heading rank={3}>{bid}</Heading>
 				<Stack gap={2}>
-					<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Note jump speed" />}</Form.AppField>
-					<Form.AppField name="startBeatOffset">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Start beat offset" />}</Form.AppField>
+					<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Note jump speed" />}</Form.AppField>
+					<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Start beat offset" />}</Form.AppField>
 					<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+					<Collapsible
+						open={showAdvancedControls}
+						onOpenChange={(x) => setShowAdvancedControls(x.open)}
+						render={() => (
+							<Stack gap={2}>
+								<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow Id" />}</Form.AppField>
+							</Stack>
+						)}
+					>
+						<Button size="sm" variant="subtle" stretch>
+							Show Advanced Settings
+						</Button>
+					</Collapsible>
 				</Stack>
 				<Wrap gap={1}>
 					<Form.Submit variant="subtle" size="sm">

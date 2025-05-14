@@ -1,5 +1,7 @@
+import { serializeBeatmapContents } from "$/helpers/packaging.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
-import { selectActiveBeatmapId, selectAllEntities, selectBeatmapById, selectEditorOffsetInBeats, selectIsModuleEnabled } from "$/store/selectors";
+import { selectBeatmapSerializationOptionsFromState } from "$/store/middleware/file.middleware";
+import { selectActiveBeatmapId, selectAllEntities, selectBeatmapById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
@@ -13,9 +15,6 @@ import type { SongId } from "$/types";
 // So I store non-loaded songs to disk, stored in indexeddb. It uses the same mechanism as Redux Storage, but it's treated separately.)
 
 export async function save(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
-	const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
-	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
-
 	const beatmapId = selectActiveBeatmapId(state);
 	// We only want to autosave when a song is currently selected
 	if (!beatmapId) return;
@@ -23,17 +22,9 @@ export async function save(state: RootState, songId: SongId, filestore: BeatmapF
 	const beatmap = selectBeatmapById(state, songId, beatmapId);
 
 	const entities = selectAllEntities(state);
+	const { difficulty, lightshow } = serializeBeatmapContents(entities, selectBeatmapSerializationOptionsFromState(state, songId));
 
-	await filestore.updateBeatmapContents(songId, beatmap.beatmapId, entities, {
-		serializationOptions: {
-			editorOffsetInBeats,
-			extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
-		},
-		deserializationOptions: {
-			editorOffsetInBeats,
-			extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
-		},
-	});
+	await filestore.updateBeatmapContents(songId, beatmap.beatmapId, { difficulty, lightshow });
 }
 
 interface Options {

@@ -5,7 +5,7 @@ import JSZip from "jszip";
 
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
-import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
+import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, SongId } from "$/types";
 import type { BeatmapFilestore } from "./file.service";
@@ -27,7 +27,6 @@ interface ZipOptions {
 		beatmapsById: App.Beatmaps;
 		songFile: Blob;
 		coverArtFile: Blob;
-		songDuration?: number;
 	};
 	options?: {
 		minify?: boolean;
@@ -40,10 +39,10 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 	const zip = new JSZip();
 
-	const wrapperInfo = await filestore.loadInfo(songId);
+	const wrapperInfo = await filestore.loadInfoContents(songId);
 
 	const implicitInfoVersion = version ?? (wrapperInfo.version >= 0 ? wrapperInfo.version : 4);
-	console.log(implicitInfoVersion);
+
 	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>);
 
 	zip.file(wrapperInfo.filename, JSON.stringify(info, null, indent), { binary: false });
@@ -53,7 +52,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 	const beatmapContents = await Promise.all(
 		Object.values(beatmapsById).map(async (beatmap) => {
-			const difficulty = await filestore.loadBeatmap(songId, beatmap.beatmapId);
+			const difficulty = await filestore.loadBeatmapContents(songId, beatmap.beatmapId);
 			return { beatmap: difficulty };
 		}),
 	);
@@ -112,26 +111,37 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	}
 
 	// save the info data (Not 100% sure that this is necessary, but better to have and not need)
-	await filestore.saveInfo(sid, info);
+	await filestore.saveInfoContents(sid, info);
 
 	// save the assets - cover art and song file - to our local store
 	const songFile = getFileFromArchive(archive, song.songFilename);
 	const coverArtFile = getFileFromArchive(archive, song.coverArtFilename);
 	if (!songFile || !coverArtFile) throw new Error("Missing required files");
 
+	// we'll process the imported blobs as files when we save them to the filestore,
+	// that way, we can preserve extra data like the filename and mime type
+	const songContents = await songFile.async("blob").then((blob) => {
+		return new File([blob], song.songFilename, { type: blob.type !== "" ? blob.type : "audio/ogg" });
+	});
+	const coverArtContents = await coverArtFile.async("blob").then((blob) => {
+		return new File([blob], song.coverArtFilename, { type: blob.type !== "" ? blob.type : "image/jpeg" });
+	});
+
 	await Promise.all([
-		await filestore.saveSongFile(sid, await songFile.async("blob"), "audio/ogg", song.songFilename),
-		await filestore.saveCoverFile(sid, await coverArtFile.async("blob"), "image/jpeg", song.coverArtFilename),
+		await filestore.saveSongFile(sid, songContents),
+		await filestore.saveCoverFile(sid, coverArtContents),
 		//
 	]);
+
+	const beatmapsById = song.difficultiesById;
 
 	// tackle the beatmaps and their entities (notes, obstacles, events).
 	// we don't need to load the beatmaps into redux; we'll just write each of them to the filestore so that they can be loaded like any other song from the list.
 	for (const beatmap of info.difficulties) {
 		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
-		const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
+		const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
 
-		let contents = { filename: `${beatmapId}.beatmap.dat`, lightshowFilename: `${lightshowId ?? "Unnamed"}.lightshow.dat` } as wrapper.IWrapBeatmap;
+		let contents = { filename: `${beatmapId}.beatmap.dat`, lightshowFilename: `${lightshowId && lightshowId !== "Unnamed" ? lightshowId : beatmapId}.lightshow.dat` } as wrapper.IWrapBeatmap;
 
 		const difficultyFile = getFileFromArchive(archive, beatmap.filename);
 		if (difficultyFile) {
@@ -147,7 +157,13 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 			contents = { ...contents, lightshow: lightshow.lightshow };
 		}
 
-		await filestore.saveBeatmap(sid, beatmapId, createBeatmap(contents));
+		beatmapsById[beatmapId] = {
+			...beatmapsById[beatmapId],
+			beatmapId,
+			lightshowId,
+		};
+
+		await filestore.saveBeatmapContents(sid, beatmapId, createBeatmap(contents));
 	}
 
 	return {

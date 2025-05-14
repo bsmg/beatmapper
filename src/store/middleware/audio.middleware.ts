@@ -191,12 +191,12 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		actionCreator: updateSongDetails,
 		effect: async (action, api) => {
 			api.unsubscribe();
-			const { songId, songFilename, offset } = action.payload;
-			if (!songFilename) return;
+			const { songId, songData } = action.payload;
+			if (!songData.songFilename) return;
 			const file = await filestore.loadSongFile(songId);
 			const arrayBuffer = await convertFileToArrayBuffer(file);
 			await audioSample.load(arrayBuffer);
-			audioSample.setCurrentTime((offset ?? 0) / 1000);
+			audioSample.setCurrentTime((songData.offset ?? 0) / 1000);
 			api.subscribe();
 		},
 	});
