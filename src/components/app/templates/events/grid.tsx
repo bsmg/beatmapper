@@ -5,7 +5,7 @@ import { COMMON_EVENT_TRACKS } from "$/constants";
 import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorEditMode, selectEventEditorRowHeight, selectEventEditorSelectedBeat, selectEventEditorSelectionBox, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror, selectIsLoading, selectSnapTo } from "$/store/selectors";
-import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
+import { App, type BeatmapId, EventEditMode, type IEventTrack, type SongId } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
@@ -34,9 +34,10 @@ function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNu
 
 interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
+	bid: BeatmapId;
 	tracks?: IEventTrack[];
 }
-function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
+function EventGridEditor({ sid, bid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
@@ -177,7 +178,7 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown}>
 						{tracks.map(({ id }) => {
 							const isDisabled = isTrackDisabled(id);
-							return <EventGridTrack key={id} sid={sid} trackId={id} tracks={tracks} width={dimensions.width} height={rowHeight} disabled={isDisabled} />;
+							return <EventGridTrack key={id} sid={sid} bid={bid} trackId={id} tracks={tracks} width={dimensions.width} height={rowHeight} disabled={isDisabled} />;
 						})}
 					</TrackContentsWrapper>
 					{selectionBox && <EventGridSelectionBox box={selectionBox} />}

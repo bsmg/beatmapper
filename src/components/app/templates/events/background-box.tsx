@@ -2,20 +2,20 @@ import { useMemo } from "react";
 
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectEnvironment, selectEventEditorStartAndEndBeat } from "$/store/selectors";
-import type { IBackgroundBox, SongId } from "$/types";
+import { selectColorScheme, selectEventEditorStartAndEndBeat } from "$/store/selectors";
+import type { BeatmapId, IBackgroundBox, SongId } from "$/types";
 import { normalize } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 	box: IBackgroundBox;
 }
-function EventGridBackgroundBox({ sid, box }: Props) {
+function EventGridBackgroundBox({ sid, bid, box }: Props) {
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
-	const environment = useAppSelector((state) => selectEnvironment(state, sid));
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const styles = useMemo(() => {
 		const startOffset = normalize(box.beatNum, startBeat, endBeat, 0, 100);
@@ -23,9 +23,9 @@ function EventGridBackgroundBox({ sid, box }: Props) {
 		return {
 			left: `${startOffset}%`,
 			width: `${width}%`,
-			background: resolveColorForItem(box.colorType, { environment, customColors }),
+			background: resolveColorForItem(box.colorType, { customColors: colorScheme }),
 		};
-	}, [box, startBeat, endBeat, environment, customColors]);
+	}, [box, startBeat, endBeat, colorScheme]);
 
 	return <Wrapper style={styles} />;
 }

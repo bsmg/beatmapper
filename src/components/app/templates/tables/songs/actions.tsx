@@ -13,7 +13,7 @@ import type { App, SongId } from "$/types";
 import { Button, Menu } from "$/components/ui/compositions";
 
 interface SongActionListCollection {
-	song: App.Song;
+	song: App.ISong;
 }
 function createSongActionListCollection({ song }: SongActionListCollection) {
 	return createListCollection({

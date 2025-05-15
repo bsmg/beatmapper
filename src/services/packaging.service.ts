@@ -24,7 +24,7 @@ interface ZipOptions {
 	version: ImplicitVersion | null;
 	contents: {
 		songId: SongId;
-		beatmapsById: App.Beatmaps;
+		beatmapsById: App.IEntityMap<App.IBeatmap>;
 		songFile: Blob;
 		coverArtFile: Blob;
 	};
@@ -90,7 +90,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 	});
 }
 
-export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAsync>[0], options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.Song> {
+export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAsync>[0], options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.ISong> {
 	// start by unzipping it
 	const archive = await JSZip.loadAsync(zipFile);
 	// pull the info file from the archive

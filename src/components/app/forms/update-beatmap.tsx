@@ -1,16 +1,19 @@
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { type MouseEventHandler, useCallback, useState } from "react";
-import { number, object, pipe, string, transform } from "valibot";
+import { type MouseEventHandler, useCallback, useMemo, useState } from "react";
+import { array, number, object, pipe, string, transform } from "valibot";
 
 import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapById, selectBeatmaps } from "$/store/selectors";
+import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
-import { Stack, Wrap } from "$:styled-system/jsx";
-import { APP_TOASTER } from "$/components/app/constants";
+import { HStack, Stack, Wrap } from "$:styled-system/jsx";
+import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
+import { Interleave } from "$/components/ui/atoms";
 import { Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
+import { EnvironmentAllNameSchema } from "bsmap";
+import { DotIcon } from "lucide-react";
 
 interface Props {
 	sid: SongId;
@@ -29,6 +32,10 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			lightshowId: savedVersion.lightshowId.toString(),
 			noteJumpSpeed: savedVersion.noteJumpSpeed,
 			startBeatOffset: savedVersion.startBeatOffset,
+			environmentName: savedVersion.environmentName,
+			colorSchemeName: savedVersion.colorSchemeName ?? "",
+			mappers: savedVersion.mappers ?? [],
+			lighters: savedVersion.lighters ?? [],
 			customLabel: savedVersion.customLabel ?? "",
 		},
 		validators: {
@@ -36,6 +43,10 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 				lightshowId: string(),
 				noteJumpSpeed: number(),
 				startBeatOffset: number(),
+				environmentName: EnvironmentAllNameSchema,
+				colorSchemeName: string(),
+				mappers: array(string()),
+				lighters: array(string()),
 				customLabel: pipe(
 					string(),
 					transform((input) => (input === "" ? undefined : input)),
@@ -43,7 +54,17 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			}),
 		},
 		onSubmit: async ({ value, formApi }) => {
-			dispatch(updateBeatmapMetadata({ songId: sid, beatmapId: bid, beatmapData: value }));
+			dispatch(
+				updateBeatmapMetadata({
+					songId: sid,
+					beatmapId: bid,
+					beatmapData: {
+						...value,
+						colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
+						customLabel: value.customLabel === "" ? undefined : value.customLabel,
+					},
+				}),
+			);
 
 			formApi.reset(value);
 
@@ -97,20 +118,39 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		shouldBlockFn: () => (Form.state.isDirty ? !window.confirm(`You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`) : false),
 	});
 
+	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
+	const COLOR_SCHEME_COLLECTION = useMemo(() => createColorSchemeCollection({ colorSchemeIds }), [colorSchemeIds]);
+
 	return (
 		<Form.AppForm>
 			<Form.Root size="sm">
-				<Heading rank={3}>{bid}</Heading>
+				<Stack gap={1}>
+					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
+					<HStack gap={0}>
+						<Interleave separator={({ index }) => <DotIcon key={index} size={16} />}>
+							<Heading rank={4}>{savedVersion.characteristic}</Heading>
+							<Heading rank={4}>{savedVersion.difficulty}</Heading>
+						</Interleave>
+					</HStack>
+				</Stack>
 				<Stack gap={2}>
-					<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Note jump speed" />}</Form.AppField>
-					<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Start beat offset" />}</Form.AppField>
-					<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+					<Form.Row>
+						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
+						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
+					</Form.Row>
+					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
+					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
 					<Collapsible
 						open={showAdvancedControls}
 						onOpenChange={(x) => setShowAdvancedControls(x.open)}
 						render={() => (
 							<Stack gap={2}>
-								<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow Id" />}</Form.AppField>
+								<Form.Row>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow Id" />}</Form.AppField>
+									<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+								</Form.Row>
+								<Form.AppField name="environmentName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Color Scheme Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
 							</Stack>
 						)}
 					>
@@ -119,7 +159,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 						</Button>
 					</Collapsible>
 				</Stack>
-				<Wrap gap={1}>
+				<Wrap justify={"center"} gap={1}>
 					<Form.Submit variant="subtle" size="sm">
 						Save
 					</Form.Submit>

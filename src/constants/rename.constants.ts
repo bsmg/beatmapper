@@ -1,9 +1,11 @@
 import { App } from "$/types";
 
 export const BEATMAP_COLOR_KEY_RENAME = {
-	[App.BeatmapColorKey.SABER_LEFT]: "Left Saber",
-	[App.BeatmapColorKey.SABER_RIGHT]: "Right Saber",
-	[App.BeatmapColorKey.ENV_LEFT]: "Environment 1",
-	[App.BeatmapColorKey.ENV_RIGHT]: "Environment 2",
-	[App.BeatmapColorKey.OBSTACLE]: "Obstacles",
+	[App.ColorSchemeKey.SABER_LEFT]: "Left Saber",
+	[App.ColorSchemeKey.SABER_RIGHT]: "Right Saber",
+	[App.ColorSchemeKey.ENV_LEFT]: "Environment 1",
+	[App.ColorSchemeKey.ENV_RIGHT]: "Environment 2",
+	[App.ColorSchemeKey.BOOST_LEFT]: "Boost 1",
+	[App.ColorSchemeKey.BOOST_RIGHT]: "Boost 2",
+	[App.ColorSchemeKey.OBSTACLE]: "Obstacles",
 } as const;

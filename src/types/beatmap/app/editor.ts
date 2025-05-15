@@ -1,4 +1,4 @@
-import type { Song } from "./info";
+import type { ISong } from "./info";
 
 export interface IBookmark {
 	time: number;
@@ -7,5 +7,5 @@ export interface IBookmark {
 }
 
 export interface EditorInfoData {
-	editorSettings: Partial<Pick<Song, "enabledFastWalls" | "enabledLightshow" | "modSettings">>;
+	editorSettings: Partial<Pick<ISong, "enabledFastWalls" | "enabledLightshow" | "modSettings">>;
 }

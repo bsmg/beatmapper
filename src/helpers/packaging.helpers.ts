@@ -1,16 +1,16 @@
 import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo } from "bsmap";
-import type { EnvironmentName, v2 as v2t, wrapper } from "bsmap/types";
+import type { IColor, v2, v2 as v2t, wrapper } from "bsmap/types";
 import { colorToHex } from "bsmap/utils";
 
 import { DEFAULT_GRID } from "$/constants";
-import { App } from "$/types";
-import { withKeys as hasKeys, maybeObject } from "$/utils";
+import type { App } from "$/types";
+import { withKeys as hasKeys, maybeObject, uniq } from "$/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
-import { resolveSchemeColorWithOverdrive } from "./colors.helpers";
+import { serializeColorElement } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
 import { getAllBeatmaps, getCustomColorsModule, getModSettings, isFastWallsEnabled, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
-function coalesceBeatmapCollection(data: App.Song) {
+function coalesceBeatmapCollection(data: App.ISong) {
 	const beatmaps = getAllBeatmaps(data);
 
 	// Has this song enabled any mod support?
@@ -25,11 +25,11 @@ function coalesceBeatmapCollection(data: App.Song) {
 	const colors = enabledCustomColors ? getCustomColorsModule(data) : undefined;
 
 	const customColors = maybeObject({
-		_colorLeft: colors?.colorLeft ? resolveSchemeColorWithOverdrive(App.BeatmapColorKey.SABER_LEFT, colors.colorLeft, colors.colorLeftOverdrive) : undefined,
-		_colorRight: colors?.colorRight ? resolveSchemeColorWithOverdrive(App.BeatmapColorKey.SABER_RIGHT, colors.colorRight, colors.colorRightOverdrive) : undefined,
-		_envColorLeft: colors?.envColorLeft ? resolveSchemeColorWithOverdrive(App.BeatmapColorKey.ENV_LEFT, colors.envColorLeft, colors.envColorLeftOverdrive) : undefined,
-		_envColorRight: colors?.envColorRight ? resolveSchemeColorWithOverdrive(App.BeatmapColorKey.ENV_RIGHT, colors.envColorRight, colors.envColorRightOverdrive) : undefined,
-		_obstacleColor: colors?.obstacleColor ? resolveSchemeColorWithOverdrive(App.BeatmapColorKey.OBSTACLE, colors.obstacleColor, colors.obstacleColorOverdrive) : undefined,
+		_colorLeft: colors?.colorLeft ? serializeColorElement(colors.colorLeft) : undefined,
+		_colorRight: colors?.colorRight ? serializeColorElement(colors.colorRight) : undefined,
+		_envColorLeft: colors?.envColorLeft ? serializeColorElement(colors.envColorLeft) : undefined,
+		_envColorRight: colors?.envColorRight ? serializeColorElement(colors.envColorRight) : undefined,
+		_obstacleColor: colors?.obstacleColor ? serializeColorElement(colors.obstacleColor) : undefined,
 	});
 
 	const editorSettings: App.EditorInfoData["editorSettings"] = {
@@ -40,31 +40,29 @@ function coalesceBeatmapCollection(data: App.Song) {
 	return { beatmaps, requirements, customColors, editorSettings };
 }
 
-function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.ModSettings {
-	const environmentSchemeName = EnvironmentSchemeName[data.environmentNames[0] ?? data.environmentBase.normal];
-	const environmentScheme = ColorScheme[environmentSchemeName];
+function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.IModSettings {
+	const environmentScheme = ColorScheme[EnvironmentSchemeName[data.environmentNames[0] ?? data.environmentBase.normal]];
 	const defaultScheme = ColorScheme["Default Custom"] as Required<v2t.IColorScheme>;
 
-	function resolveColor(data: wrapper.IWrapInfo, keys: { wrapper: keyof wrapper.IWrapInfoColorScheme; custom: keyof v2t.IColorScheme }) {
-		if (data.difficulties.some((x) => hasKeys(x.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_obstacleColor"))) {
-			const customColorExists = data.difficulties.find((x) => x.customData[keys.custom]);
-			const customColor = customColorExists?.customData[keys.custom];
+	function resolveColor(data: wrapper.IWrapInfo, key: keyof v2t.IColorScheme, fallback?: keyof v2t.IColorScheme) {
+		if (data.difficulties.some((x) => hasKeys(x.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorLeftBoost", "_envColorRightBoost", "_obstacleColor"))) {
+			const customColorExists = data.difficulties.find((x) => x.customData[key]);
+			const customColor = customColorExists?.customData[key];
 			if (customColor) return colorToHex(customColor).slice(0, 7);
 		}
-		if (data.colorSchemes.length > 0) {
-			return colorToHex(data.colorSchemes[0][keys.wrapper as "saberLeftColor"]).slice(0, 7);
-		}
-		return colorToHex(environmentScheme[keys.custom] ?? defaultScheme[keys.custom]).slice(0, 7);
+		return colorToHex(environmentScheme[key] ?? defaultScheme[key] ?? (fallback ? (environmentScheme[fallback] ?? defaultScheme[fallback]) : { r: 0, g: 0, b: 0, a: 1 })).slice(0, 7);
 	}
 
 	return {
 		customColors: {
-			isEnabled: data.colorSchemes.some((x) => x.overrideNotes || x.overrideLights) || data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_obstacleColor")),
-			colorLeft: resolveColor(data, { wrapper: "saberLeftColor", custom: "_colorLeft" }),
-			colorRight: resolveColor(data, { wrapper: "saberRightColor", custom: "_colorRight" }),
-			envColorLeft: resolveColor(data, { wrapper: "environment0Color", custom: "_envColorLeft" }),
-			envColorRight: resolveColor(data, { wrapper: "environment1Color", custom: "_envColorRight" }),
-			obstacleColor: resolveColor(data, { wrapper: "obstaclesColor", custom: "_obstacleColor" }),
+			isEnabled: data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorLeftBoost", "_envColorRightBoost", "_obstacleColor")),
+			colorLeft: resolveColor(data, "_colorLeft"),
+			colorRight: resolveColor(data, "_colorRight"),
+			envColorLeft: resolveColor(data, "_envColorLeft"),
+			envColorRight: resolveColor(data, "_envColorRight"),
+			envColorLeftBoost: resolveColor(data, "_envColorLeftBoost", "_envColorLeft"),
+			envColorRightBoost: resolveColor(data, "_envColorRightBoost", "_envColorRight"),
+			obstacleColor: resolveColor(data, "_obstacleColor"),
 		},
 		mappingExtensions: {
 			isEnabled: data.difficulties.some((beatmap) => beatmap.customData._requirements?.includes("Mapping Extensions")),
@@ -82,8 +80,27 @@ export interface InfoDeserializationOptions {
 	readonly?: boolean;
 }
 
-export function serializeInfoContents(data: App.Song, options: InfoSerializationOptions) {
+export function serializeInfoContents(data: App.ISong, options: InfoSerializationOptions) {
 	const { beatmaps, customColors, editorSettings } = coalesceBeatmapCollection(data);
+
+	const allEnvironments = uniq(beatmaps.map((x) => x.environmentName));
+
+	const envColorScheme = ColorScheme[EnvironmentSchemeName[data.environment]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+
+	const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): wrapper.IWrapInfoColorScheme => {
+		return {
+			name: name,
+			overrideNotes: true,
+			overrideLights: true,
+			saberLeftColor: serializeColorElement(scheme.colorLeft) ?? envColorScheme._colorRight,
+			saberRightColor: serializeColorElement(scheme.colorRight) ?? envColorScheme._colorRight,
+			environment0Color: serializeColorElement(scheme.envColorLeft) ?? envColorScheme._envColorLeft,
+			environment1Color: serializeColorElement(scheme.envColorRight) ?? envColorScheme._envColorRight,
+			obstaclesColor: serializeColorElement(scheme.obstacleColor) ?? envColorScheme._obstacleColor,
+			environment0ColorBoost: serializeColorElement(scheme.envColorLeftBoost) ?? envColorScheme._envColorLeftBoost ?? envColorScheme._envColorLeft,
+			environment1ColorBoost: serializeColorElement(scheme.envColorRightBoost) ?? envColorScheme._envColorRightBoost ?? envColorScheme._envColorRight,
+		};
+	});
 
 	return createInfo({
 		version: options.version,
@@ -103,7 +120,8 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 		environmentBase: {
 			normal: data.environment,
 		},
-		environmentNames: [data.environment],
+		environmentNames: uniq(beatmaps.map((x) => x.environmentName)),
+		colorSchemes: allColorSchemes,
 		songPreviewFilename: data.songFilename,
 		coverImageFilename: data.coverArtFilename,
 		difficulties: beatmaps.map(
@@ -114,6 +132,12 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 				difficulty: beatmap.difficulty,
 				njs: beatmap.noteJumpSpeed,
 				njsOffset: beatmap.startBeatOffset,
+				environmentId: allEnvironments.indexOf(beatmap.environmentName),
+				colorSchemeId: beatmap.colorSchemeName ? allColorSchemes.map((x) => x.name).indexOf(beatmap.colorSchemeName) : -1,
+				authors: {
+					mappers: beatmap.mappers,
+					lighters: beatmap.lighters,
+				},
 				customData: maybeObject({
 					_colorLeft: customColors?._colorLeft,
 					_colorRight: customColors?._colorRight,
@@ -134,8 +158,21 @@ export function serializeInfoContents(data: App.Song, options: InfoSerialization
 		},
 	});
 }
-export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.Song {
-	const beatmapsById = data.difficulties.reduce((acc: App.Beatmaps, beatmap) => {
+export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.ISong {
+	const colorSchemesById = data.colorSchemes.reduce((acc: App.IEntityMap<App.IColorScheme>, scheme) => {
+		acc[scheme.name] = {
+			colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
+			colorRight: colorToHex(scheme.saberRightColor).slice(0, 7),
+			envColorLeft: colorToHex(scheme.environment0Color).slice(0, 7),
+			envColorRight: colorToHex(scheme.environment1Color).slice(0, 7),
+			envColorLeftBoost: colorToHex(scheme.environment0ColorBoost).slice(0, 7),
+			envColorRightBoost: colorToHex(scheme.environment1ColorBoost).slice(0, 7),
+			obstacleColor: colorToHex(scheme.obstaclesColor).slice(0, 7),
+		};
+		return acc;
+	}, {});
+
+	const beatmapsById = data.difficulties.reduce((acc: App.IEntityMap<App.IBeatmap>, beatmap) => {
 		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
 		const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
 		acc[beatmapId] = {
@@ -145,6 +182,10 @@ export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDe
 			difficulty: beatmap.difficulty,
 			noteJumpSpeed: beatmap.njs,
 			startBeatOffset: beatmap.njsOffset,
+			environmentName: data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal,
+			colorSchemeName: beatmap.colorSchemeId >= 0 ? data.colorSchemes.map((x) => x.name)[beatmap.colorSchemeId] : null,
+			mappers: beatmap.authors.mappers.filter((x) => x.length !== 0),
+			lighters: beatmap.authors.lighters.filter((x) => x.length !== 0),
 			customLabel: beatmap.customData?._difficultyLabel,
 		};
 		return acc;
@@ -158,10 +199,11 @@ export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDe
 		offset: data.difficulties[0].customData._editorOffset ?? 0,
 		previewStartTime: data.audio.previewStartTime,
 		previewDuration: data.audio.previewDuration,
-		environment: data.environmentBase.normal ?? (data.environmentNames[0] as EnvironmentName),
+		environment: data.environmentBase.normal ?? "DefaultEnvironment",
 		songFilename: data.audio.filename,
 		coverArtFilename: data.coverImageFilename,
 		difficultiesById: beatmapsById,
+		colorSchemesById: colorSchemesById,
 		demo: options.readonly,
 		modSettings: deriveModSettingsFromInfo(data),
 	};

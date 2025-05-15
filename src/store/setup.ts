@@ -69,7 +69,7 @@ export type SessionStorageObservers = {
 	"events.mirror": StorageObserver<RootState, boolean>;
 };
 
-const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.Song }; grids: { key: keyof GridPresets; value: Member<GridPresets> } }>({
+const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof GridPresets; value: Member<GridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 3,
 	async upgrade(idb, current, next, tx) {
@@ -168,7 +168,7 @@ export async function createAppStore() {
 			"events.mirror": { selector: selectEventEditorToggleMirror },
 		},
 	});
-	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.Song>({
+	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.ISong>({
 		namespace: "songs",
 		storage: createStorage({ driver: driver({ name: "songs" }) }),
 		observer: {

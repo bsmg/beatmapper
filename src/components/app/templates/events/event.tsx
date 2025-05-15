@@ -4,8 +4,8 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { bulkDeleteEvent, deleteEvent, deselectEvent, selectEvent, switchEventColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectEnvironment, selectEventEditorEditMode, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror } from "$/store/selectors";
-import { App, EventEditMode, type SongId } from "$/types";
+import { selectColorScheme, selectEventEditorEditMode, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror } from "$/store/selectors";
+import { App, type BeatmapId, EventEditMode, type SongId } from "$/types";
 import { normalize } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
@@ -42,15 +42,15 @@ function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<t
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 	event: App.IBasicEvent;
 	trackWidth: number;
 	deleteOnHover: boolean;
 }
-function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
+function EventGridEventItem({ sid, bid, event, trackWidth, deleteOnHover }: Props) {
 	const dispatch = useAppDispatch();
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
-	const environment = useAppSelector((state) => selectEnvironment(state, sid));
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
 
@@ -58,10 +58,10 @@ function EventGridEventItem({ sid, event, trackWidth, deleteOnHover }: Props) {
 		const offset = normalize(event.time, startBeat, endBeat, 0, trackWidth);
 		const centeredOffset = offset - BLOCK_WIDTH / 2;
 
-		const background = resolveBackgroundForEvent(event, { environment, customColors });
+		const background = resolveBackgroundForEvent(event, { customColors: colorScheme });
 
 		return { transform: `translateX(${centeredOffset}px)`, background };
-	}, [event, startBeat, endBeat, trackWidth, environment, customColors]);
+	}, [event, startBeat, endBeat, trackWidth, colorScheme]);
 
 	const handlePointerDown = useCallback(
 		(ev: MouseEvent<HTMLElement>) => {

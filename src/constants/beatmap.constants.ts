@@ -26,33 +26,11 @@ export const DEFAULT_NOTE_JUMP_SPEEDS = {
 } as const;
 
 export const DEFAULT_COLOR_SCHEME = {
-	[App.BeatmapColorKey.SABER_LEFT]: "#c03030",
-	[App.BeatmapColorKey.SABER_RIGHT]: "#2064a8",
-	[App.BeatmapColorKey.ENV_LEFT]: "#c03030",
-	[App.BeatmapColorKey.ENV_RIGHT]: "#3098ff",
-	[App.BeatmapColorKey.OBSTACLE]: "#ff3030",
-} as const;
-
-export const DEFAULT_MOD_SETTINGS = {
-	customColors: {
-		isEnabled: false,
-		...DEFAULT_COLOR_SCHEME,
-		colorLeftOverdrive: 0,
-		colorRightOverdrive: 0,
-		envColorLeftOverdrive: 0,
-		envColorRightOverdrive: 0,
-		obstacleColorOverdrive: 0,
-	},
-	mappingExtensions: {
-		isEnabled: false,
-		...DEFAULT_GRID,
-	},
-} as const;
-
-export const COLOR_OVERDRIVE_MULTIPLIER = {
-	[App.BeatmapColorKey.SABER_LEFT]: 5,
-	[App.BeatmapColorKey.SABER_RIGHT]: 5,
-	[App.BeatmapColorKey.ENV_LEFT]: 3,
-	[App.BeatmapColorKey.ENV_RIGHT]: 3,
-	[App.BeatmapColorKey.OBSTACLE]: 10,
+	[App.ColorSchemeKey.SABER_LEFT]: "#c03030",
+	[App.ColorSchemeKey.SABER_RIGHT]: "#2064a8",
+	[App.ColorSchemeKey.OBSTACLE]: "#ff3030",
+	[App.ColorSchemeKey.ENV_LEFT]: "#c03030",
+	[App.ColorSchemeKey.ENV_RIGHT]: "#3098ff",
+	[App.ColorSchemeKey.BOOST_LEFT]: "#c03030",
+	[App.ColorSchemeKey.BOOST_RIGHT]: "#3098ff",
 } as const;

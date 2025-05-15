@@ -1,10 +1,12 @@
 import type { EntityId } from "@reduxjs/toolkit";
-import type { CharacteristicName, DifficultyName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import type { CharacteristicName, DifficultyName, EnvironmentAllName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+
+import type { ColorSchemeKey, IEntityMap } from "./shared";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;
 
-export interface ModSettings {
+export interface IModSettings {
 	mappingExtensions: {
 		isEnabled: boolean;
 		numRows: number;
@@ -15,31 +17,32 @@ export interface ModSettings {
 	customColors: {
 		isEnabled: boolean;
 		colorLeft: string;
-		colorLeftOverdrive?: number;
 		colorRight: string;
-		colorRightOverdrive?: number;
 		envColorLeft: string;
-		envColorLeftOverdrive?: number;
 		envColorRight: string;
-		envColorRightOverdrive?: number;
+		envColorLeftBoost: string;
+		envColorRightBoost: string;
 		obstacleColor: string;
-		obstacleColorOverdrive?: number;
 	};
 }
 
-export interface Beatmap {
+export type IColorScheme = { [key in ColorSchemeKey]: string };
+
+export interface IBeatmap {
 	beatmapId: BeatmapId;
 	lightshowId: BeatmapId;
 	characteristic: CharacteristicName;
 	difficulty: DifficultyName;
 	noteJumpSpeed: number;
 	startBeatOffset: number;
+	environmentName: EnvironmentAllName;
+	colorSchemeName: string | null;
+	mappers: string[];
+	lighters: string[];
 	customLabel?: string;
 }
 
-export type Beatmaps = { [key: BeatmapId | string]: Beatmap };
-
-export interface Song {
+export interface ISong {
 	name: string;
 	subName?: string;
 	artistName: string;
@@ -53,12 +56,13 @@ export interface Song {
 	environment: EnvironmentName | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
-	difficultiesById: Beatmaps;
+	colorSchemesById: IEntityMap<IColorScheme>;
+	difficultiesById: IEntityMap<IBeatmap>;
 	selectedDifficulty?: BeatmapId;
 	createdAt?: number;
 	lastOpenedAt?: number;
 	demo?: boolean;
-	modSettings: Partial<ModSettings>;
+	modSettings: Partial<IModSettings>;
 	enabledFastWalls?: boolean;
 	enabledLightshow?: boolean;
 }

@@ -31,7 +31,7 @@ function SongDetailsModule({ label, render, checked: initialOpen, onCheckedChang
 					<HStack gap={1}>
 						{label}
 						{children && (
-							<Tooltip render={() => children}>
+							<Tooltip interactive render={() => children}>
 								<IconWrapper asChild>
 									<HelpCircleIcon size={16} />
 								</IconWrapper>

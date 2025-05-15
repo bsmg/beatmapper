@@ -55,12 +55,11 @@ function NativeSelectField({ label, helperText, collection, ...rest }: Assign<Da
 	const error = useFieldError(field);
 	return (
 		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
-			<NativeSelect id={rest.id ?? field.name} {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)}>
+			<NativeSelect id={rest.id ?? field.name} {...rest} value={field.state.value ?? ""} onValueChange={(details) => field.handleChange(details.value)}>
 				{collection.items.map((item) => {
 					const value = collection.getItemValue(item);
-					if (!value) return;
 					return (
-						<option key={value} value={value}>
+						<option key={value} value={value ?? ""}>
 							{collection.stringifyItem(item)}
 						</option>
 					);

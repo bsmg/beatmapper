@@ -1,7 +1,7 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import { createToaster } from "@ark-ui/react/toast";
 import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
-import { type CharacteristicName, EnvironmentName } from "bsmap/types";
+import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 
 import { token } from "$:styled-system/tokens";
 import { CHARACTERISTICS, DIFFICULTIES } from "$/constants";
@@ -23,7 +23,7 @@ export const DIFFICULTY_COLLECTION = createListCollection({
 });
 
 export const ENVIRONMENT_COLLECTION = createListCollection({
-	items: EnvironmentName,
+	items: [...EnvironmentName, ...EnvironmentV3Name],
 	itemToString: (item) => EnvironmentRename[item],
 });
 
@@ -31,6 +31,16 @@ export const VERSION_COLLECTION = createListCollection({
 	items: ["1", "2", "3", "4"],
 	itemToString: (item) => ["1.5.0", "2.6.0", "3.3.0", "4.1.0"][Number.parseInt(item) - 1],
 });
+
+interface ColorSchemeListCollectionOptions {
+	colorSchemeIds: string[];
+}
+export function createColorSchemeCollection({ colorSchemeIds }: ColorSchemeListCollectionOptions) {
+	return createListCollection({
+		items: ["", ...colorSchemeIds],
+		itemToString: (item) => (item === "" ? "Unset" : item),
+	});
+}
 
 interface BeatmapListCollectionOptions {
 	beatmapIds: BeatmapId[];
@@ -42,8 +52,8 @@ export function createBeatmapListCollection({ beatmapIds }: BeatmapListCollectio
 }
 
 interface BeatmapCharacteristicListCollection {
-	beatmaps: App.Beatmap[];
-	currentBeatmap?: App.Beatmap;
+	beatmaps: App.IBeatmap[];
+	currentBeatmap?: App.IBeatmap;
 }
 export function createBeatmapCharacteristicListCollection({ beatmaps, currentBeatmap }: BeatmapCharacteristicListCollection) {
 	return createListCollection({
@@ -58,8 +68,8 @@ export function createBeatmapCharacteristicListCollection({ beatmaps, currentBea
 }
 
 interface BeatmapDifficultyListCollection {
-	beatmaps: App.Beatmap[];
-	currentBeatmap?: App.Beatmap;
+	beatmaps: App.IBeatmap[];
+	currentBeatmap?: App.IBeatmap;
 	selectedCharacteristic: CharacteristicName;
 }
 export function createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic }: BeatmapDifficultyListCollection) {

@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useOnChange, useOnKeydown } from "$/components/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
-import { ObjectPlacementMode, type SongId } from "$/types";
+import { type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
 
 import { styled } from "$:styled-system/jsx";
 import { center, vstack } from "$:styled-system/patterns";
@@ -14,8 +14,9 @@ import SelectionActionPanel from "./selection";
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 }
-function EditorActionPanel({ sid }: Props) {
+function EditorActionPanel({ sid, bid }: Props) {
 	const mappingMode = useAppSelector((state) => selectPlacementMode(state, sid));
 	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);
 	const selectedMines = useAppSelector(selectAllSelectedBombNotes);
@@ -49,7 +50,7 @@ function EditorActionPanel({ sid }: Props) {
 		<OuterWrapper onWheel={(ev) => ev.stopPropagation()}>
 			<Presence asChild present={!showGridConfig && !isAnythingSelected} lazyMount unmountOnExit>
 				<Wrapper>
-					<DefaultActionPanel sid={sid} handleGridConfigClick={() => setShowGridConfig(true)} />
+					<DefaultActionPanel sid={sid} bid={bid} handleGridConfigClick={() => setShowGridConfig(true)} />
 				</Wrapper>
 			</Presence>
 			<Presence asChild present={isAnythingSelected} lazyMount unmountOnExit>

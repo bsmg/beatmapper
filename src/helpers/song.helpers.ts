@@ -1,12 +1,14 @@
-import { DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DIFFICULTIES } from "$/constants";
-import type { App, BeatmapId, Member } from "$/types";
-import { slugify } from "$/utils";
 import { CharacteristicName, DifficultyName } from "bsmap/types";
 
-export function resolveSongId(x: Pick<App.Song, "name">): string {
+import { DEFAULT_GRID, DIFFICULTIES } from "$/constants";
+import type { App, BeatmapId, Member } from "$/types";
+import { deepMerge, slugify } from "$/utils";
+import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
+
+export function resolveSongId(x: Pick<App.ISong, "name">): string {
 	return slugify(x.name);
 }
-export function resolveBeatmapId(x: Pick<App.Beatmap, "characteristic" | "difficulty">): string {
+export function resolveBeatmapId(x: Pick<App.IBeatmap, "characteristic" | "difficulty">): string {
 	if (x.characteristic !== "Standard") return `${x.difficulty}${x.characteristic}`;
 	return `${x.difficulty}`;
 }
@@ -29,55 +31,79 @@ export function resolveDifficultyFromBeatmapId(id: BeatmapId): Member<typeof DIF
 	throw new Error(`Could not resolve difficulty from id: ${id}`);
 }
 
-export function isSongReadonly<T extends Pick<App.Song, "demo">>(song: T) {
+export function isSongReadonly<T extends Pick<App.ISong, "demo">>(song: T) {
 	return !!song.demo;
 }
-export function isModuleEnabled<T extends Pick<App.Song, "modSettings">>(song: T, key: keyof App.ModSettings) {
+export function isModuleEnabled<T extends Pick<App.ISong, "modSettings">>(song: T, key: keyof App.IModSettings) {
 	return !!song.modSettings[key]?.isEnabled;
 }
-export function isFastWallsEnabled<T extends Pick<App.Song, "enabledFastWalls">>(song: T) {
+export function isFastWallsEnabled<T extends Pick<App.ISong, "enabledFastWalls">>(song: T) {
 	return !!song.enabledFastWalls;
 }
-export function isLightshowEnabled<T extends Pick<App.Song, "enabledLightshow">>(song: T) {
+export function isLightshowEnabled<T extends Pick<App.ISong, "enabledLightshow">>(song: T) {
 	return !!song.enabledLightshow;
 }
 
-export function getSongMetadata<T extends Pick<App.Song, "name" | "subName" | "artistName">>(song: T) {
+export function getSongMetadata<T extends Pick<App.ISong, "name" | "subName" | "artistName">>(song: T) {
 	return { title: song.name, subtitle: song.subName, artist: song.artistName };
 }
-export function getBeatmaps<T extends Pick<App.Song, "difficultiesById">>(song: T) {
+export function getBeatmaps<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
 	return song.difficultiesById;
 }
-export function getAllBeatmaps<T extends Pick<App.Song, "difficultiesById">>(song: T) {
+export function getAllBeatmaps<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
 	return Object.values(song.difficultiesById).sort(sortBeatmaps);
 }
-export function getBeatmapIds<T extends Pick<App.Song, "difficultiesById">>(song: T) {
+export function getBeatmapIds<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
 	return getAllBeatmaps(song).map((beatmap) => beatmap.beatmapId);
 }
-export function getBeatmapById<T extends Pick<App.Song, "difficultiesById">>(song: T, beatmapId: BeatmapId) {
+export function getBeatmapById<T extends Pick<App.ISong, "difficultiesById">>(song: T, beatmapId: BeatmapId) {
 	return song.difficultiesById[beatmapId];
 }
-export function getSelectedBeatmap<T extends Pick<App.Song, "selectedDifficulty" | "difficultiesById">>(song: T) {
+export function getEnvironment<T extends Pick<App.ISong, "difficultiesById" | "environment">>(song: T, beatmapId?: BeatmapId) {
+	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
+	if (beatmap) return beatmap.environmentName;
+	return song.environment;
+}
+export function getColorScheme<T extends Pick<App.ISong, "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IColorScheme {
+	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
+	if (beatmap?.colorSchemeName) return song.colorSchemesById[beatmap.colorSchemeName];
+	const environment = getEnvironment(song, beatmapId);
+	return deriveColorSchemeFromEnvironment(environment);
+}
+export function getSelectedBeatmap<T extends Pick<App.ISong, "selectedDifficulty" | "difficultiesById">>(song: T) {
 	return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
 }
-export function getEditorOffset<T extends Pick<App.Song, "offset">>(song: T) {
+export function getEditorOffset<T extends Pick<App.ISong, "offset">>(song: T) {
 	return song.offset;
 }
-export function getSongLastOpenedAt<T extends Pick<App.Song, "lastOpenedAt">>(song: T) {
+export function getSongLastOpenedAt<T extends Pick<App.ISong, "lastOpenedAt">>(song: T) {
 	return song.lastOpenedAt ?? 0;
 }
-export function getModSettings<T extends Pick<App.Song, "modSettings">>(song: T) {
-	return song.modSettings ?? DEFAULT_MOD_SETTINGS;
+
+export function getDefaultModSettings<T extends Pick<App.ISong, "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IModSettings {
+	const environment = getEnvironment(song, beatmapId);
+	return {
+		customColors: { isEnabled: false, ...deriveColorSchemeFromEnvironment(environment) },
+		mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
+	};
 }
-export function getCustomColorsModule<T extends Pick<App.Song, "modSettings">>(song: T) {
-	const colors = song.modSettings?.customColors;
-	return { ...DEFAULT_MOD_SETTINGS.customColors, ...colors };
+
+export function getModSettings<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IModSettings {
+	return deepMerge(getDefaultModSettings(song, beatmapId), { ...song.modSettings });
 }
-export function getExtensionsModule<T extends Pick<App.Song, "modSettings">>(song: T) {
-	const extensions = song.modSettings?.mappingExtensions;
-	return { ...DEFAULT_MOD_SETTINGS.mappingExtensions, ...extensions };
+export function getModuleData<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, key: keyof App.IModSettings, beatmapId?: BeatmapId) {
+	const modSettings = getModSettings(song, beatmapId);
+	return modSettings[key];
 }
-export function getGridSize<T extends Pick<App.Song, "modSettings">>(song: T) {
+export function getCustomColorsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId) {
+	const modSettings = getModSettings(song, beatmapId);
+	return modSettings.customColors;
+}
+export function getExtensionsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId) {
+	const modSettings = getModSettings(song, beatmapId);
+	return modSettings.mappingExtensions;
+}
+export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
 	const mappingExtensions = getExtensionsModule(song);
 	// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
 	const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
@@ -92,7 +118,7 @@ export function getGridSize<T extends Pick<App.Song, "modSettings">>(song: T) {
 	};
 }
 
-export function sortBeatmaps(a: App.Beatmap, b: App.Beatmap) {
+export function sortBeatmaps(a: App.IBeatmap, b: App.IBeatmap) {
 	const byCharacteristic = CharacteristicName.indexOf(a.characteristic) - CharacteristicName.indexOf(b.characteristic);
 	if (byCharacteristic !== 0) return byCharacteristic;
 	const byDifficulty = DifficultyName.indexOf(a.difficulty) - DifficultyName.indexOf(b.difficulty);

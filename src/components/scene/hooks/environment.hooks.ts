@@ -5,16 +5,16 @@ import { useOnChange } from "$/components/hooks";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectEnvironment, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
-import { App, Quality, type SongId } from "$/types";
+import { selectColorScheme, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
+import { App, type BeatmapId, Quality, type SongId } from "$/types";
 
 interface UseLightPropsOptions {
 	sid: SongId;
+	bid: BeatmapId;
 	lastEvent: App.IBasicEvent | null;
 }
-export function useLightProps({ sid, lastEvent }: UseLightPropsOptions) {
-	const environment = useAppSelector((state) => selectEnvironment(state, sid));
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+export function useLightProps({ sid, bid, lastEvent }: UseLightPropsOptions) {
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const lightStatus = useMemo(() => {
 		if (!lastEvent) return App.BasicEventType.OFF;
@@ -25,8 +25,8 @@ export function useLightProps({ sid, lastEvent }: UseLightPropsOptions) {
 		if (!lastEvent) return "#000000";
 		if (lightStatus === App.BasicEventType.OFF) return "#000000";
 		const eventColor = resolveEventColor(lastEvent);
-		return resolveColorForItem(eventColor, { environment, customColors });
-	}, [lastEvent, lightStatus, environment, customColors]);
+		return resolveColorForItem(eventColor, { customColors: colorScheme });
+	}, [lastEvent, lightStatus, colorScheme]);
 
 	return { lastEventId: lastEvent ? resolveEventId(lastEvent) : null, status: lightStatus, color: lightColor };
 }

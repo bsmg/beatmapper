@@ -12,17 +12,17 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/notes")({
 });
 
 function RouteComponent() {
-	const { sid } = Route.useParams();
+	const { sid, bid } = Route.useParams();
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<MapVisualization sid={sid} interactive />
+				<MapVisualization sid={sid} bid={bid} interactive />
 				<AmbientLight />
 				<Runway includeEdgeStrips />
 				<fogExp2 attach="fog" args={[0x000000, 0.02]} />
 			</ReduxForwardingCanvas>
-			<EditorActionPanel sid={sid} />
-			<NotesEditorShortcuts />
+			<EditorActionPanel sid={sid} bid={bid} />
+			<NotesEditorShortcuts sid={sid} />
 		</Fragment>
 	);
 }

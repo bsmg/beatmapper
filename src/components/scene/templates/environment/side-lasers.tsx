@@ -2,7 +2,7 @@ import { Fragment, useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
-import { App, type SongId } from "$/types";
+import { App, type BeatmapId, type SongId } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
@@ -50,15 +50,17 @@ function getSinRotationValue(side: "left" | "right", beamIndex: number, time: nu
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 	side: "left" | "right";
 	timescale?: (cursorPosition: number) => number;
 }
-function SideLasers({ sid, side, timescale = scaleToSeconds }: Props) {
+function SideLasers({ sid, bid, side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
-	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: side === "left" ? App.TrackId[2] : App.TrackId[3] });
-	const lastSpeedEvent = useEventTrack<App.IBasicValueEvent>({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
 
-	const { lastEventId: eventId, status, color } = useLightProps({ sid, lastEvent });
+	const lastEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: side === "left" ? App.TrackId[2] : App.TrackId[3] });
+	const lastSpeedEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
+
+	const { lastEventId: eventId, status, color } = useLightProps({ sid, bid, lastEvent });
 
 	const laserSpeed = useMemo(() => {
 		if (!lastSpeedEvent) return 0;

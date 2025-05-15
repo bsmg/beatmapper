@@ -17,7 +17,7 @@ import {
 	selectEventEditorZoomLevelStartBeat,
 	selectInitialColorForTrack,
 } from "$/store/selectors";
-import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
+import { App, type BeatmapId, EventEditMode, type IEventTrack, type SongId } from "$/types";
 import { clamp, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
@@ -27,13 +27,14 @@ import EventGridEventItem from "./event";
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 	trackId: App.TrackId;
 	tracks?: IEventTrack[];
 	width: number;
 	height: number;
 	disabled: boolean;
 }
-function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props) {
+function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled }: Props) {
 	const dispatch = useAppDispatch();
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const cursorAtBeat = useAppSelector(selectEventEditorSelectedBeat);
@@ -110,10 +111,10 @@ function EventGridTrack({ sid, trackId, tracks, width, height, disabled }: Props
 	return (
 		<Wrapper key={trackId} style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			{backgroundBoxes.map((box) => (
-				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.beatNum })} sid={sid} box={box} />
+				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.beatNum })} sid={sid} bid={bid} box={box} />
 			))}
 			{events.map((event) => {
-				return <EventGridEventItem key={resolveEventId(event)} sid={sid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
+				return <EventGridEventItem key={resolveEventId(event)} sid={sid} bid={bid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
 			})}
 		</Wrapper>
 	);

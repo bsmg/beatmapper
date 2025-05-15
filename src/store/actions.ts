@@ -36,7 +36,7 @@ export const init = createAction("@@APP/INIT");
 
 export const { load: loadUser, save: saveUser, hydrate: hydrateUser } = createStorageActions<RootState, UserStorageObservers>("user");
 export const { load: loadSession, save: saveSession, hydrate: hydrateSession } = createStorageActions<RootState, SessionStorageObservers>("session");
-export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = createEntityStorageActions<App.Song>("songs");
+export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = createEntityStorageActions<App.ISong>("songs");
 export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGridPresets } = createEntityStorageActions<Member<GridPresets>>("grids");
 
 export const rehydrate = createAction("@@STORAGE/REHYDRATE");
@@ -45,7 +45,7 @@ export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 
 export const createNewSong = createAsyncThunk(
 	"CREATE_NEW_SONG",
-	(args: Pick<App.Song, "coverArtFilename" | "songFilename" | "name" | "subName" | "artistName" | "bpm" | "offset"> & { coverArtFile: Blob; songFile: Blob; songId: SongId; selectedCharacteristic: CharacteristicName; selectedDifficulty: DifficultyName }, api) => {
+	(args: Pick<App.ISong, "coverArtFilename" | "songFilename" | "name" | "subName" | "artistName" | "bpm" | "offset"> & { coverArtFile: Blob; songFile: Blob; songId: SongId; selectedCharacteristic: CharacteristicName; selectedDifficulty: DifficultyName }, api) => {
 		const state = api.getState() as RootState;
 
 		const mapAuthorName = selectUserName(state);
@@ -55,7 +55,7 @@ export const createNewSong = createAsyncThunk(
 	},
 );
 
-export const updateSongDetails = createAction("UPDATE_SONG_DETAILS", (args: { songId: SongId; songData: Partial<App.Song> }) => {
+export const updateSongDetails = createAction("UPDATE_SONG_DETAILS", (args: { songId: SongId; songData: Partial<App.ISong> }) => {
 	return { payload: { ...args } };
 });
 
@@ -65,7 +65,7 @@ export const startImportingSong = createAction("START_IMPORTING_SONG");
 
 export const cancelImportingSong = createAction("CANCEL_IMPORTING_SONG");
 
-export const importExistingSong = createAction("IMPORT_EXISTING_SONG", (args: { songData: App.Song }) => {
+export const importExistingSong = createAction("IMPORT_EXISTING_SONG", (args: { songData: App.ISong }) => {
 	return { payload: { ...args } };
 });
 
@@ -89,7 +89,7 @@ export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: 
 	return { payload: { ...args } };
 });
 
-export const finishLoadingSong = createAction("FINISH_LOADING_SONG", (args: { songId: SongId; songData: App.Song; waveformData: WaveformData }) => {
+export const finishLoadingSong = createAction("FINISH_LOADING_SONG", (args: { songId: SongId; songData: App.ISong; waveformData: WaveformData }) => {
 	return { payload: { ...args, songData: { ...args.songData, lastOpenedAt: Date.now() } } };
 });
 
@@ -348,7 +348,7 @@ export const downloadMapFiles = createAction("DOWNLOAD_MAP_FILES", (args: { song
 	return { payload: { ...args } };
 });
 
-export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; beatmapId: BeatmapId; beatmapData: { lightshowId: BeatmapId; noteJumpSpeed: number; startBeatOffset: number; customLabel?: string } }) => {
+export const updateBeatmapMetadata = createAction("UPDATE_BEATMAP_METADATA", (args: { songId: SongId; beatmapId: BeatmapId; beatmapData: Omit<App.IBeatmap, "beatmapId" | "characteristic" | "difficulty"> }) => {
 	return { payload: { ...args } };
 });
 
@@ -522,15 +522,15 @@ export const toggleEventWindowLock = createAction("TOGGLE_EVENT_WINDOW_LOCK");
 
 export const toggleLaserLock = createAction("TOGGLE_LASER_LOCK");
 
-export const toggleModForSong = createAction("TOGGLE_MOD_FOR_SONG", (args: { songId: SongId; mod: keyof App.ModSettings }) => {
+export const toggleModForSong = createAction("TOGGLE_MOD_FOR_SONG", (args: { songId: SongId; mod: keyof App.IModSettings }) => {
 	return { payload: { ...args } };
 });
 
-export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { songId: SongId; element: App.BeatmapColorKey; color: string }) => {
+export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { songId: SongId; element: App.ColorSchemeKey; color: string }) => {
 	return { payload: { ...args } };
 });
 
-export const updateModColorOverdrive = createAction("UPDATE_MOD_COLOR_OVERDRIVE", (args: { songId: SongId; element: App.BeatmapColorKey; overdrive: number }) => {
+export const updateModColorOverdrive = createAction("UPDATE_MOD_COLOR_OVERDRIVE", (args: { songId: SongId; element: App.ColorSchemeKey; overdrive: number }) => {
 	return { payload: { ...args } };
 });
 
@@ -558,7 +558,7 @@ export const deleteGridPreset = createAction("DELETE_GRID_PRESET", (args: { song
 
 export const toggleFastWallsForSelectedObstacles = createAction("TOGGLE_FAST_WALLS_FOR_SELECTED_OBSTACLES");
 
-export const togglePropertyForSelectedSong = createAction("TOGGLE_PROPERTY_FOR_SELECTED_SONG", (args: { songId: SongId; property: keyof App.Song }) => {
+export const togglePropertyForSelectedSong = createAction("TOGGLE_PROPERTY_FOR_SELECTED_SONG", (args: { songId: SongId; property: keyof App.ISong }) => {
 	return { payload: { ...args } };
 });
 

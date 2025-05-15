@@ -1,7 +1,6 @@
 import { Link, useBlocker } from "@tanstack/react-router";
-import { EnvironmentNameSchema } from "bsmap";
 import { useState } from "react";
-import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
+import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
 import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
@@ -16,6 +15,7 @@ import { LocalFileUpload } from "$/components/app/compositions";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
+import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -38,21 +38,19 @@ function SongDetails({ sid }: Props) {
 			name: song.name ?? "",
 			subName: song.subName ?? "",
 			artistName: song.artistName ?? "",
-			mapAuthorName: song.mapAuthorName ?? "",
 			bpm: song.bpm ?? 120,
 			offset: song.offset ?? 0,
 			swingAmount: song.swingAmount ?? 0,
 			swingPeriod: song.swingPeriod ?? 0,
 			previewStartTime: song.previewStartTime ?? 12,
 			previewDuration: song.previewDuration ?? 10,
-			environment: song.environment ?? "DefaultEnvironment",
+			environment: song.environment,
 		},
 		validators: {
 			onChange: object({
 				name: pipe(string(), minLength(1)),
 				subName: pipe(string()),
 				artistName: pipe(string(), minLength(1)),
-				mapAuthorName: pipe(string(), minLength(1)),
 				bpm: pipe(number(), gtValue(0)),
 				offset: pipe(
 					number(),
@@ -68,7 +66,7 @@ function SongDetails({ sid }: Props) {
 				),
 				previewStartTime: pipe(number()),
 				previewDuration: pipe(number()),
-				environment: pipe(EnvironmentNameSchema),
+				environment: union([EnvironmentNameSchema, EnvironmentV3NameSchema]),
 			}),
 		},
 		onSubmit: async ({ value, formApi }) => {
@@ -140,7 +138,6 @@ function SongDetails({ sid }: Props) {
 							<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required placeholder="(in seconds)" />}</Form.AppField>
 						</Form.Row>
 						<Form.Row>
-							<Form.AppField name="mapAuthorName">{(ctx) => <ctx.Input label="Map author name" required />}</Form.AppField>
 							<Form.AppField name="environment">{(ctx) => <ctx.Select label="Environment" collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 						</Form.Row>
 						<Form.Submit>Update song details</Form.Submit>
@@ -163,7 +160,7 @@ function SongDetails({ sid }: Props) {
 				<Heading rank={1}>Advanced Settings</Heading>
 				<Stack gap={3}>
 					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings sid={sid} />} checked={enabledCustomColors} onCheckedChange={() => dispatch(toggleModForSong({ songId: sid, mod: "customColors" }))}>
-						Override the default red/blue color scheme. Use "overdrive" to produce some neat effects.{" "}
+						Override individual elements of a beatmap's color scheme.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
 							<Link to="/docs/$" params={{ _splat: "mods#custom-colors" }}>
 								Learn more
@@ -206,6 +203,8 @@ const BeatmapWrapper = styled("div", {
 		colorPalette: "slate",
 		layerStyle: "fill.surface",
 		padding: 3,
+		width: "250px",
+		height: "fit-content",
 	},
 });
 

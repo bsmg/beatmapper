@@ -9,11 +9,11 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 });
 
 function RouteComponent() {
-	const { sid } = Route.useParams();
+	const { sid, bid } = Route.useParams();
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<DefaultEnvironment sid={sid} />
+				<DefaultEnvironment sid={sid} bid={bid} />
 			</ReduxForwardingCanvas>
 		</Fragment>
 	);

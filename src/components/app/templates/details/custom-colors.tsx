@@ -1,36 +1,31 @@
 import { parseColor } from "@ark-ui/react/color-picker";
 
 import { BEATMAP_COLOR_KEY_RENAME } from "$/constants";
-import { updateModColor, updateModColorOverdrive } from "$/store/actions";
+import { updateModColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCustomColors } from "$/store/selectors";
-import { App, type SongId } from "$/types";
+import { selectColorScheme } from "$/store/selectors";
+import { App, type BeatmapId, type SongId } from "$/types";
 
 import { VStack, styled } from "$:styled-system/jsx";
 import { vstack, wrap } from "$:styled-system/patterns";
-import { ColorPicker, Heading, Slider } from "$/components/ui/compositions";
+import { ColorPicker, Heading } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;
+	bid?: BeatmapId;
 }
-function CustomColorSettings({ sid }: Props) {
+function CustomColorSettings({ sid, bid }: Props) {
 	const dispatch = useAppDispatch();
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	return (
 		<Row>
-			{Object.values(App.BeatmapColorKey).map((elementId) => {
-				const color = customColors[elementId];
-				const overdrive = customColors[`${elementId}Overdrive`];
+			{Object.values(App.ColorSchemeKey).map((key) => {
 				return (
-					<Cell key={elementId}>
+					<Cell key={key}>
 						<VStack gap={2}>
-							<ColorPicker size="lg" value={parseColor(color)} onValueChange={(details) => sid && dispatch(updateModColor({ songId: sid, element: elementId, color: details.valueAsString }))} />
-							<Heading rank={3}>{BEATMAP_COLOR_KEY_RENAME[elementId]}</Heading>
-						</VStack>
-						<VStack gap={1}>
-							<Heading rank={4}>Overdrive</Heading>
-							<Slider size="sm" min={0} max={1} step={0.01} value={[overdrive]} onValueChange={(details) => sid && dispatch(updateModColorOverdrive({ songId: sid, element: elementId, overdrive: details.value[0] }))} />
+							<ColorPicker size="lg" value={parseColor(colorScheme[key])} onValueChange={(details) => sid && dispatch(updateModColor({ songId: sid, element: key, color: details.valueAsString }))} />
+							<Heading rank={3}>{BEATMAP_COLOR_KEY_RENAME[key]}</Heading>
 						</VStack>
 					</Cell>
 				);

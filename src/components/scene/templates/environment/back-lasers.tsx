@@ -1,10 +1,10 @@
 import type { Vector3Tuple } from "three";
 
-import { App, type SongId } from "$/types";
+import { useEventTrack, useLightProps } from "$/components/scene/hooks";
+import { App, type BeatmapId, type SongId } from "$/types";
 import { range } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 
 const sides = ["left", "right"];
 
@@ -15,12 +15,13 @@ const INDICES = range(0, NUM_OF_BEAMS_PER_SIDE);
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 	secondsSinceSongStart?: number;
 }
-function BackLasers({ sid }: Props) {
-	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: App.TrackId[0] });
+function BackLasers({ sid, bid }: Props) {
+	const lastEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: App.TrackId[0] });
 
-	const { lastEventId: eventId, status, color } = useLightProps({ sid, lastEvent });
+	const { lastEventId: eventId, status, color } = useLightProps({ sid, bid, lastEvent });
 
 	return sides.map((side) => {
 		const xOffset = 0;

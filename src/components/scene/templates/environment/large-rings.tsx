@@ -1,7 +1,7 @@
-import { App, type SongId } from "$/types";
+import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
+import { App, type BeatmapId, type SongId } from "$/types";
 
 import { LitSquareRing } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
 import { Environment } from "$/components/scene/layouts";
 
 const INITIAL_ROTATION = Math.PI * 0.25;
@@ -10,12 +10,13 @@ const FIRST_RING_OFFSET = -60;
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 }
-function LargeRings({ sid }: Props) {
-	const lastLightingEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: App.TrackId[1] });
-	const lastRotationEvent = useEventTrack<App.IBasicTriggerEvent>({ sid, trackId: App.TrackId[8] });
+function LargeRings({ sid, bid }: Props) {
+	const lastLightingEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: App.TrackId[1] });
+	const lastRotationEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: App.TrackId[8] });
 
-	const { lastEventId: lastLightingEventId, status: lightStatus, color: lightColor } = useLightProps({ sid, lastEvent: lastLightingEvent });
+	const { lastEventId: lastLightingEventId, status: lightStatus, color: lightColor } = useLightProps({ sid, bid, lastEvent: lastLightingEvent });
 
 	const numOfRings = useRingCount({ count: 16 });
 

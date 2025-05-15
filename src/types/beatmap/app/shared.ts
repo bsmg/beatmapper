@@ -6,20 +6,24 @@ export interface IEntity {
 	id: EntityId;
 }
 
+export type IEntityMap<T> = { [key in EntityId]: T };
+
 export interface IEditorObject {
 	selected?: boolean;
 	tentative?: boolean;
 }
 export type IWrapEditorObject<T> = IEditorObject & Omit<T, "customData">;
 
-export const BeatmapColorKey = {
+export const ColorSchemeKey = {
 	SABER_LEFT: "colorLeft",
 	SABER_RIGHT: "colorRight",
+	OBSTACLE: "obstacleColor",
 	ENV_LEFT: "envColorLeft",
 	ENV_RIGHT: "envColorRight",
-	OBSTACLE: "obstacleColor",
+	BOOST_LEFT: "envColorLeftBoost",
+	BOOST_RIGHT: "envColorRightBoost",
 } as const;
-export type BeatmapColorKey = Member<typeof BeatmapColorKey>;
+export type ColorSchemeKey = Member<typeof ColorSchemeKey>;
 
 export const SaberColor = {
 	LEFT: "red",

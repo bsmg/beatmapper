@@ -1,16 +1,19 @@
 import { createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import { EnvironmentName } from "bsmap/types";
 
-import { DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
+import { DEFAULT_GRID, DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
+import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 import {
 	getAllBeatmaps,
 	getBeatmapById,
 	getBeatmapIds,
 	getBeatmaps,
+	getColorScheme,
 	getCustomColorsModule,
 	getExtensionsModule,
 	getGridSize,
 	getModSettings,
+	getModuleData,
 	getSelectedBeatmap,
 	getSongLastOpenedAt,
 	getSongMetadata,
@@ -45,7 +48,7 @@ import {
 import { type App, type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
 import { deepMerge } from "$/utils";
 
-const adapter = createEntityAdapter<App.Song, SongId>({
+const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
 	sortComparer: (a, b) => getSongLastOpenedAt(b) - getSongLastOpenedAt(a),
 });
@@ -55,7 +58,7 @@ const slice = createSlice({
 	name: "songs",
 	initialState: adapter.getInitialState(),
 	selectors: {
-		selectId: (_, model: App.Song) => adapter.selectId(model),
+		selectId: (_, model: App.ISong) => adapter.selectId(model),
 		selectEntities: selectEntities,
 		selectAll: selectAll,
 		selectIds: selectIds,
@@ -83,8 +86,11 @@ const slice = createSlice({
 			const beatmaps = getAllBeatmaps(song).filter((x) => x.lightshowId === lightshowId);
 			return beatmaps.map((x) => x.beatmapId);
 		}),
-		selectEnvironment: createSelector(selectById, (song) => {
-			return song.environment;
+		selectColorSchemeIds: createSelector(selectById, (song) => {
+			return Object.keys(song.colorSchemesById);
+		}),
+		selectColorScheme: createSelector([selectById, (_1, _2, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return getColorScheme(song, beatmapId);
 		}),
 		selectSelectedBeatmap: createSelector(selectById, (song) => {
 			return getSelectedBeatmap(song);
@@ -92,7 +98,7 @@ const slice = createSlice({
 		selectIsDemo: createSelector(selectById, (song) => {
 			return isSongReadonly(song);
 		}),
-		selectIsModuleEnabled: createSelector([selectById, (_1, _2, key: keyof App.ModSettings) => key], (song, key) => {
+		selectIsModuleEnabled: createSelector([selectById, (_1, _2, key: keyof App.IModSettings) => key], (song, key) => {
 			return isModuleEnabled(song, key);
 		}),
 		selectIsFastWallsEnabled: createSelector(selectById, (song) => {
@@ -130,12 +136,14 @@ const slice = createSlice({
 		});
 		builder.addCase(createNewSong.fulfilled, (state, action) => {
 			const { songData, beatmapData } = action.payload;
+			const environment = EnvironmentName[0];
 			const beatmapId = resolveBeatmapId({ characteristic: beatmapData.characteristic, difficulty: beatmapData.difficulty });
 			return adapter.addOne(state, {
 				...songData,
 				previewStartTime: 12,
 				previewDuration: 10,
-				environment: EnvironmentName[0],
+				environment: environment,
+				colorSchemesById: {},
 				mapAuthorName: songData.mapAuthorName ?? undefined,
 				difficultiesById: {
 					[beatmapId]: {
@@ -145,9 +153,16 @@ const slice = createSlice({
 						difficulty: beatmapData.difficulty,
 						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapData.difficulty],
 						startBeatOffset: 0,
+						environmentName: environment,
+						colorSchemeName: null,
+						mappers: [],
+						lighters: [],
 					},
 				},
-				modSettings: DEFAULT_MOD_SETTINGS,
+				modSettings: {
+					customColors: { isEnabled: false, ...deriveColorSchemeFromEnvironment(environment) },
+					mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
+				},
 			});
 		});
 		builder.addCase(importExistingSong, (state, action) => {
@@ -172,6 +187,10 @@ const slice = createSlice({
 							difficulty: data.difficulty,
 							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[data.difficulty],
 							startBeatOffset: 0,
+							environmentName: song.environment,
+							colorSchemeName: null,
+							mappers: [],
+							lighters: [],
 						},
 					}),
 				},
@@ -196,7 +215,7 @@ const slice = createSlice({
 		builder.addCase(deleteBeatmap, (state, action) => {
 			const { songId, beatmapId } = action.payload;
 			const song = selectById(state, songId);
-			const difficultiesById = Object.entries(getBeatmaps(song)).reduce((acc: App.Song["difficultiesById"], [bid, beatmap]) => {
+			const difficultiesById = Object.entries(getBeatmaps(song)).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
 				if (bid === beatmapId) return acc;
 				acc[bid] = beatmap;
 				return acc;
@@ -221,11 +240,16 @@ const slice = createSlice({
 			return adapter.removeOne(state, songId);
 		});
 		builder.addCase(toggleModForSong, (state, action) => {
-			const { songId, mod } = action.payload;
+			const { songId, mod: key } = action.payload;
 			const song = selectById(state, songId);
-			const original = getModSettings(song);
-			const isModEnabled = !original[mod]?.isEnabled;
-			return adapter.updateOne(state, { id: songId, changes: { modSettings: deepMerge(original, { [mod]: { isEnabled: isModEnabled } }) } });
+			const original = getModuleData(song, key);
+			const isModEnabled = !!song.modSettings[key]?.isEnabled;
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					modSettings: deepMerge(getModSettings(song), { [key]: deepMerge(original, { isEnabled: !isModEnabled }) }),
+				},
+			});
 		});
 		builder.addCase(updateModColor, (state, action) => {
 			const { songId, element, color } = action.payload;

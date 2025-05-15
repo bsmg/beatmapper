@@ -47,7 +47,8 @@ export const {
 	selectBeatmapById,
 	selectLightshowIdForBeatmap,
 	selectBeatmapIdsWithLightshowId,
-	selectEnvironment,
+	selectColorScheme,
+	selectColorSchemeIds,
 	selectSelectedBeatmap,
 	selectIsDemo: selectIsDemoSong,
 	selectIsModuleEnabled,
@@ -61,7 +62,7 @@ export const {
 });
 
 // for selectors that depend on an actively selected song, we should have a fallback value prepared in the off chance the song doesn't exist in state or the called value returns undefined.
-export function createActiveSongSelectorFactory<T>(selector: (song: App.Song) => T) {
+export function createActiveSongSelectorFactory<T>(selector: (song: App.ISong) => T) {
 	return createSelector(selectSongById, selectSongs, selectActiveSongId, (song, songs, sid) => {
 		if (sid) return selector(songs[sid]);
 		return selector(song);

@@ -1,12 +1,12 @@
 import { Fragment } from "react";
 
 import { SURFACE_WIDTH } from "$/components/scene/constants";
-import { App, type SongId } from "$/types";
+import { useEventTrack, useLightProps } from "$/components/scene/hooks";
+import { App, type BeatmapId, type SongId } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
 import { LightMaterial } from "$/components/scene/compositions/materials";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 
 const Y_POSITION = 5;
 const Z_POSITION = -85;
@@ -20,11 +20,12 @@ const SIDE_BEAM_LENGTH = 250;
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 }
-function PrimaryLights({ sid }: Props) {
-	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: App.TrackId[4] });
+function PrimaryLights({ sid, bid }: Props) {
+	const lastEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: App.TrackId[4] });
 
-	const { lastEventId, status, color } = useLightProps({ sid, lastEvent });
+	const { lastEventId, status, color } = useLightProps({ sid, bid, lastEvent });
 
 	return (
 		<Fragment>

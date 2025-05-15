@@ -6,8 +6,8 @@ import { HIGHEST_PRECISION } from "$/constants";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { clickNote, finishManagingNoteSelection, mouseOverNote, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectCursorPositionInBeats, selectCustomColors, selectEnvironment, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
-import { type App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
+import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
+import { type App, type BeatmapId, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
 import { BombNote, ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
@@ -15,10 +15,10 @@ import { resolveNoteId } from "$/helpers/notes.helpers";
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 }
-function EditorNotes({ sid }: Props) {
-	const environment = useAppSelector((state) => selectEnvironment(state, sid));
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+function EditorNotes({ sid, bid }: Props) {
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const notes = useAppSelector((state) => selectVisibleNotes(state, sid));
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
@@ -91,7 +91,7 @@ function EditorNotes({ sid }: Props) {
 
 				const color = Object.values(ObjectTool)[note.color];
 
-				return <ColorNote key={resolveNoteId(note)} data={note} position={[x, y, z]} color={resolveColorForItem(color, { environment, customColors })} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
+				return <ColorNote key={resolveNoteId(note)} data={note} position={[x, y, z]} color={resolveColorForItem(color, { customColors: colorScheme })} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
 			})}
 			{bombs.map((note) => {
 				const { x, y, z } = resolvePositionForNote(note, beatDepth);
@@ -101,7 +101,7 @@ function EditorNotes({ sid }: Props) {
 				const adjustment = beatDepth * HIGHEST_PRECISION;
 				const adjustedNoteZPosition = noteZPosition - adjustment;
 
-				return <BombNote key={resolveNoteId(note)} data={note} position={[x, y, z]} color={resolveColorForItem(ObjectTool.BOMB_NOTE, { environment, customColors })} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
+				return <BombNote key={resolveNoteId(note)} data={note} position={[x, y, z]} color={resolveColorForItem(ObjectTool.BOMB_NOTE, { customColors: colorScheme })} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
 			})}
 		</Fragment>
 	);

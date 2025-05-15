@@ -16,7 +16,7 @@ import { CoverArtFilePreview } from "$/components/app/compositions";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
 import SongsDataTableActions from "./actions";
 
-const helper = createColumnHelper<App.Song>();
+const helper = createColumnHelper<App.ISong>();
 
 const SONG_TABLE = [
 	helper.accessor((data) => [resolveSongId(data)], {
