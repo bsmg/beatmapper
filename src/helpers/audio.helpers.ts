@@ -1,6 +1,7 @@
-import { default as WaveformData } from "waveform-data";
+import { type JsonWaveformData, default as WaveformData } from "waveform-data";
 
 import { roundToNearest } from "$/utils";
+import { convertFileToArrayBuffer } from "./file.helpers";
 
 export function createHtmlAudioElement(url: string) {
 	const elem = document.createElement("audio");
@@ -23,23 +24,32 @@ export function convertBeatsToMilliseconds(beats: number, bpm: number) {
 	return (beats / bps) * 1000;
 }
 
-export function getWaveformDataForFile(file: Blob | MediaSource) {
-	const fileBlobUrl = URL.createObjectURL(file);
-	const audioContext = new AudioContext();
+const audioContext = new AudioContext();
 
-	return new Promise<WaveformData>((resolve, reject) => {
-		fetch(fileBlobUrl)
-			.then((response) => response.arrayBuffer())
-			.then((buffer) => {
-				WaveformData.createFromAudio({ audio_context: audioContext, array_buffer: buffer }, (err, waveform) => {
-					if (err) {
-						reject(err);
-					}
+export async function deriveAudioDataFromFile(file: Blob | MediaSource) {
+	const arrayBuffer = await convertFileToArrayBuffer(file);
 
-					resolve(waveform);
-				});
-			});
+	return await audioContext.decodeAudioData(arrayBuffer).then((audioBuffer) => {
+		return { duration: audioBuffer.duration, frequency: audioBuffer.sampleRate, sampleCount: audioBuffer.length };
 	});
+}
+export async function deriveWaveformDataFromFile(file: Blob | MediaSource) {
+	const arrayBuffer = await convertFileToArrayBuffer(file);
+
+	return new Promise<WaveformData>((resolve, reject) =>
+		WaveformData.createFromAudio({ audio_context: audioContext, array_buffer: arrayBuffer, scale: 128 }, (err, waveform) => {
+			if (err) reject(err);
+			resolve(waveform);
+		}),
+	);
+}
+
+export function deriveDurationFromWaveformData<T extends Pick<JsonWaveformData, "length" | "samples_per_pixel" | "sample_rate">>(waveform: T) {
+	return (waveform.length * waveform.samples_per_pixel) / waveform.sample_rate;
+}
+export function deriveSampleCountFromWaveformData<T extends Pick<JsonWaveformData, "length" | "samples_per_pixel" | "sample_rate">>(waveform: T) {
+	const duration = deriveDurationFromWaveformData(waveform);
+	return waveform.sample_rate * duration;
 }
 
 export function snapToNearestBeat(cursorPosition: number, bpm: number, offset: number) {

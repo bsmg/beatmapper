@@ -359,8 +359,8 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const duration = selectDurationInBeats(state, songId);
 			if (duration === null) return;
 			const lastBeatInSong = Math.floor(duration);
-			// Rather than go to the literal last millisecond in the song, we'll jump 2 bars away from the very end. That seems most likely to be useful.
-			const newCursorPosition = selectTimeForBeat(state, songId, lastBeatInSong - 8);
+			// Rather than go to the literal last millisecond in the song, we'll jump 1 beat away from the very end. That seems most likely to be useful.
+			const newCursorPosition = selectTimeForBeat(state, songId, lastBeatInSong);
 			api.dispatch(adjustCursorPosition({ newCursorPosition }));
 			audioSample.setCurrentTime(newCursorPosition / 1000);
 			api.subscribe();

@@ -1,4 +1,4 @@
-import { createAudioData, createBeatmap, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
+import { createBeatmap, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
@@ -76,10 +76,10 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		}
 	}
 
-	if (version === 4) {
-		// HACK: since v4 requires audio data for serialization, we'll just shove this into the exported zip until we can add proper support for it :)
-		const audioData = createAudioData({});
-		const serialAudioData = saveAudioData(audioData, version, {});
+	if (version && version >= 2) {
+		const wrapperAudioData = await filestore.loadAudioDataContents(songId);
+		const implicitAudioData = version ?? (wrapperAudioData.version >= 0 ? wrapperAudioData.version : 4);
+		const serialAudioData = saveAudioData(wrapperAudioData, (implicitAudioData === 3 ? 2 : implicitAudioData) as Extract<ImplicitVersion, 2 | 4>);
 		zip.file("AudioData.dat", JSON.stringify(serialAudioData, null, indent));
 	}
 
@@ -93,6 +93,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAsync>[0], options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.ISong> {
 	// start by unzipping it
 	const archive = await JSZip.loadAsync(zipFile);
+
 	// pull the info file from the archive
 	const infoFile = getFileFromArchive(archive, "Info.dat", "info.json");
 	if (!infoFile) throw new Error("No info file.");
@@ -132,6 +133,14 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		await filestore.saveCoverFile(sid, coverArtContents),
 		//
 	]);
+
+	// save the audio data file (currently not supported, but better to store it now for future reference)
+	const audioDataFile = getFileFromArchive(archive, info.audio.audioDataFilename);
+	if (audioDataFile) {
+		const rawSerialAudioData = await audioDataFile.async("string");
+		const audioData = loadAudioData(JSON.parse(rawSerialAudioData));
+		await filestore.saveAudioDataContents(sid, audioData);
+	}
 
 	const beatmapsById = song.difficultiesById;
 

@@ -2,7 +2,7 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { createBeatmap } from "bsmap";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
-import { getWaveformDataForFile } from "$/helpers/audio.helpers";
+import { deriveAudioDataFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
 import { type BeatmapSerializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
@@ -32,6 +32,17 @@ interface Options {
 /** This middleware manages file storage concerns. */
 export default function createFileMiddleware({ filestore }: Options) {
 	const instance = createListenerMiddleware<RootState>();
+
+	async function updateAudioContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File) {
+		const [{ duration, frequency, sampleCount }, { version }] = await Promise.all([deriveAudioDataFromFile(songFile), filestore.loadInfoContents(songId)]);
+
+		const { filename, contents } = await filestore.updateAudioContents(songId, {
+			version: version,
+			frequency,
+			sampleCount,
+		});
+		return { duration, filename, contents };
+	}
 
 	instance.startListening({
 		actionCreator: createNewSong.fulfilled,
@@ -77,10 +88,16 @@ export default function createFileMiddleware({ filestore }: Options) {
 			api.dispatch(loadBeatmapEntities({ ...entities }));
 
 			api.dispatch(ReduxUndoActionCreators.clearHistory());
-			const song = selectSongById(state, songId);
-			const file = await filestore.loadSongFile(songId);
-			const waveform = await getWaveformDataForFile(file);
-			api.dispatch(finishLoadingSong({ songId: songId, songData: song, waveformData: waveform }));
+
+			const [songFile, currentAudioData] = await Promise.all([filestore.loadSongFile(songId), filestore.loadAudioDataContents(songId)]);
+			// only update audio data if it's not already present (typically applies for imported maps).
+			if (!currentAudioData) {
+				await updateAudioContentsFromFile(songId, filestore, songFile);
+			}
+
+			const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile), deriveWaveformDataFromFile(songFile)]);
+
+			api.dispatch(finishLoadingSong({ songId: songId, songData: selectSongById(state, songId), duration, waveformData: waveformData.toJSON() }));
 		},
 	});
 	instance.startListening({
@@ -96,9 +113,12 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 			// It's possible we updated the song file. We should reload it, so that the waveform is properly updated.
 			if (songData.songFilename) {
-				const file = await filestore.loadSongFile(songId);
-				const waveform = await getWaveformDataForFile(file);
-				api.dispatch(reloadWaveform({ waveformData: waveform }));
+				// always update audio contents when the song file is updated, since sample count and frequency could potentially change.
+				const songFile = await filestore.loadSongFile(songId);
+				const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile), deriveWaveformDataFromFile(songFile)]);
+				await updateAudioContentsFromFile(songId, filestore, songFile);
+
+				api.dispatch(reloadWaveform({ duration, waveformData: waveformData.toJSON() }));
 			}
 		},
 	});

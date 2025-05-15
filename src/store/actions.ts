@@ -1,7 +1,6 @@
 import { type EntityId, createAction, createAsyncThunk } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
-import type WaveformData from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
@@ -9,6 +8,7 @@ import { resolveTimeForItem } from "$/helpers/item.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { type App, type BeatmapId, type EventColor, type EventEditMode, type EventTool, type GridPresets, type IEventTrack, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
+import type { JsonWaveformData } from "waveform-data";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
 	selectAllBasicEvents,
@@ -89,11 +89,11 @@ export const loadBeatmapEntities = createAction("LOAD_BEATMAP_ENTITIES", (args: 
 	return { payload: { ...args } };
 });
 
-export const finishLoadingSong = createAction("FINISH_LOADING_SONG", (args: { songId: SongId; songData: App.ISong; waveformData: WaveformData }) => {
+export const finishLoadingSong = createAction("FINISH_LOADING_SONG", (args: { songId: SongId; songData: App.ISong; duration: number; waveformData: JsonWaveformData }) => {
 	return { payload: { ...args, songData: { ...args.songData, lastOpenedAt: Date.now() } } };
 });
 
-export const reloadWaveform = createAction("RELOAD_WAVEFORM", (args: { waveformData: WaveformData }) => {
+export const reloadWaveform = createAction("RELOAD_WAVEFORM", (args: { duration: number; waveformData: JsonWaveformData }) => {
 	return { payload: { ...args } };
 });
 

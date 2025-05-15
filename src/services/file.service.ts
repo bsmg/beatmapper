@@ -4,7 +4,7 @@ import type { Storage, StorageValue } from "unstorage";
 import { defaultCoverArtPath } from "$/assets";
 import type { BeatmapId, MaybeDefined, SongId } from "$/types";
 import { omit, pick } from "$/utils";
-import { createBeatmap, createDifficulty, createInfo, createLightshow } from "bsmap";
+import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow } from "bsmap";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -31,7 +31,7 @@ export class Filestore {
 	}
 }
 
-type BeatmapFileType = "info" | "song" | "cover" | "beatmap";
+type BeatmapFileType = "info" | "song" | "cover" | "beatmap" | "audio";
 type BeatmapFileOptions<T extends BeatmapFileType> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
 
 export class BeatmapFilestore extends Filestore {
@@ -39,6 +39,7 @@ export class BeatmapFilestore extends Filestore {
 		switch (type) {
 			case "song":
 			case "cover":
+			case "audio":
 			case "info": {
 				return `${songId}.${type}`;
 			}
@@ -71,15 +72,19 @@ export class BeatmapFilestore extends Filestore {
 
 	async loadSongFile(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
-		return this.loadFile<Blob>(filename);
+		return this.loadFile<File>(filename);
 	}
 	async loadCoverArtFile(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
-		return this.loadFile<Blob>(filename);
+		return this.loadFile<File>(filename);
 	}
 	async loadInfoContents(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.loadFile<wrapper.IWrapInfo>(filename);
+	}
+	async loadAudioDataContents(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
+		return this.loadFile<wrapper.IWrapAudioData>(filename);
 	}
 	async loadBeatmapContents(songId: SongId, beatmapId: BeatmapId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
@@ -103,28 +108,42 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.saveFile<T>(filename, contents);
 	}
+	async saveAudioDataContents<T extends wrapper.IWrapAudioData>(songId: SongId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
+		return this.saveFile<T>(filename, contents);
+	}
 	async saveBeatmapContents<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.saveFile<T>(filename, contents);
 	}
 
 	async updateInfoContents(songId: SongId, newContents: Partial<wrapper.IWrapInfo>) {
-		const savedContents = await this.loadInfoContents(songId);
+		const savedContents = await this.loadInfoContents(songId).catch(() => createInfo({ ...newContents }));
 		return await this.saveInfoContents(
 			songId,
 			createInfo({
-				...savedContents,
+				...(savedContents ?? newContents),
+				...omit(newContents, "version", "filename"),
+			}),
+		);
+	}
+	async updateAudioContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
+		const savedContents = await this.loadAudioDataContents(songId);
+		return await this.saveAudioDataContents(
+			songId,
+			createAudioData({
+				...(savedContents ?? newContents),
 				...omit(newContents, "version", "filename"),
 			}),
 		);
 	}
 	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: Partial<wrapper.IWrapBeatmap>) {
-		const savedContents = await this.loadBeatmapContents(songId, beatmapId);
+		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
 		return await this.saveBeatmapContents(
 			songId,
 			beatmapId,
 			createBeatmap({
-				...savedContents,
+				...(savedContents ?? newContents),
 				// we might have an updated lightshow filename if we update the lightshow id.
 				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
 				difficulty: createDifficulty({
@@ -143,9 +162,10 @@ export class BeatmapFilestore extends Filestore {
 
 	async removeAllFilesForSong(songId: SongId, beatmapIds: BeatmapId[]) {
 		return Promise.all([
-			this.removeFile(BeatmapFilestore.resolveFilename(songId, "info", {})),
 			this.removeFile(BeatmapFilestore.resolveFilename(songId, "song", {})),
 			this.removeFile(BeatmapFilestore.resolveFilename(songId, "cover", {})),
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "info", {})),
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "audio", {})),
 			...beatmapIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: id }))),
 			//
 		]);

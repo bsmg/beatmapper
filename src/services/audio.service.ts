@@ -114,10 +114,10 @@ export class AudioSample {
 		// This method updates `startOffset` so that when we unpause it, we pick up from the right place.
 		if (this.isPlaying) {
 			this.pause();
-			this.startOffset = time;
+			this.startOffset = Math.max(time, 0);
 			this.play();
 		} else {
-			this.startOffset = time;
+			this.startOffset = Math.max(time, 0);
 		}
 	}
 }

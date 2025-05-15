@@ -1,5 +1,6 @@
 import { type ComponentProps, forwardRef, useCallback } from "react";
-import type WaveformData from "waveform-data";
+import type { JsonWaveformData } from "waveform-data";
+import WaveformData from "waveform-data";
 
 import { Canvas } from "$/components/ui/atoms";
 
@@ -11,7 +12,7 @@ function getY(totalHeight: number, val: number) {
 interface Props extends Omit<ComponentProps<typeof Canvas>, "dimensions" | "draw"> {
 	width: number;
 	height: number;
-	waveformData: WaveformData | null;
+	waveformData: JsonWaveformData | null;
 	duration: number | null;
 }
 export const Waveform = forwardRef<HTMLCanvasElement, Props>(({ width, height, waveformData, duration, ...rest }: Props, ref) => {
@@ -24,7 +25,8 @@ export const Waveform = forwardRef<HTMLCanvasElement, Props>(({ width, height, w
 
 			ctx.beginPath();
 
-			const resampledData = waveformData.resample({ width }).toJSON();
+			const newWaveformData = WaveformData.create(waveformData);
+			const resampledData = newWaveformData.resample({ width }).toJSON();
 
 			resampledData.data.forEach((min, i) => {
 				ctx.lineTo(i / 2, getY(height, min));
