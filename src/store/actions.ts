@@ -526,7 +526,7 @@ export const toggleModForSong = createAction("TOGGLE_MOD_FOR_SONG", (args: { son
 	return { payload: { ...args } };
 });
 
-export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { songId: SongId; element: App.ColorSchemeKey; color: string }) => {
+export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { songId: SongId; element: App.ColorSchemeKey; color: string | undefined }) => {
 	return { payload: { ...args } };
 });
 

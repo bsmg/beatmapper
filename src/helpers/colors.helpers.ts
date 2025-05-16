@@ -3,7 +3,9 @@ import type { EnvironmentAllName, IColor, v2 } from "bsmap/types";
 import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import { token } from "$:styled-system/tokens";
+import { DEFAULT_COLOR_SCHEME } from "$/constants";
 import { App, EventColor, ObjectTool } from "$/types";
+import { patchEnvironmentName } from "./packaging.helpers";
 
 export interface ColorResolverOptions {
 	customColors: App.IColorScheme;
@@ -11,32 +13,32 @@ export interface ColorResolverOptions {
 export function resolveColorForItem<T extends string | number>(item: T | undefined, { customColors: colorScheme }: ColorResolverOptions) {
 	switch (item) {
 		case ObjectTool.LEFT_NOTE: {
-			return colorScheme.colorLeft;
+			return colorScheme.colorLeft ?? DEFAULT_COLOR_SCHEME.colorLeft;
 		}
 		case ObjectTool.RIGHT_NOTE: {
-			return colorScheme.colorRight;
+			return colorScheme.colorRight ?? DEFAULT_COLOR_SCHEME.colorRight;
 		}
 		case ObjectTool.BOMB_NOTE: {
 			return "#687485";
 		}
 		case ObjectTool.OBSTACLE: {
-			return colorScheme.obstacleColor;
+			return colorScheme.obstacleColor ?? DEFAULT_COLOR_SCHEME.obstacleColor;
 		}
 		case App.EventColor.PRIMARY:
 		case EventColor.PRIMARY:
 		case App.ColorSchemeKey.ENV_LEFT: {
-			return colorScheme.envColorLeft;
+			return colorScheme.envColorLeft ?? DEFAULT_COLOR_SCHEME.envColorLeft;
 		}
 		case App.EventColor.SECONDARY:
 		case EventColor.SECONDARY:
 		case App.ColorSchemeKey.ENV_RIGHT: {
-			return colorScheme.envColorRight;
+			return colorScheme.envColorRight ?? DEFAULT_COLOR_SCHEME.envColorRight;
 		}
 		case App.ColorSchemeKey.BOOST_LEFT: {
-			return colorScheme.envColorLeftBoost;
+			return colorScheme.envColorLeftBoost ?? DEFAULT_COLOR_SCHEME.envColorLeftBoost;
 		}
 		case App.ColorSchemeKey.BOOST_RIGHT: {
-			return colorScheme.envColorRightBoost;
+			return colorScheme.envColorRightBoost ?? DEFAULT_COLOR_SCHEME.envColorRightBoost;
 		}
 		case App.EventColor.WHITE:
 		case EventColor.WHITE: {
@@ -63,7 +65,7 @@ export function serializeColorElement(hex: string) {
 }
 
 export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
-	const envScheme = ColorScheme[EnvironmentSchemeName[environment]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+	const envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
 	return {
 		[App.ColorSchemeKey.SABER_LEFT]: colorToHex(envScheme._colorLeft).slice(0, 7),
 		[App.ColorSchemeKey.SABER_RIGHT]: colorToHex(envScheme._colorRight).slice(0, 7),

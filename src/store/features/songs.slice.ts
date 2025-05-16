@@ -258,7 +258,10 @@ const slice = createSlice({
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(getModSettings(song), { customColors: deepMerge(original, { [element]: color }) }),
+					modSettings: {
+						...getModSettings(song),
+						customColors: { ...original, [element]: color },
+					},
 				},
 			});
 		});

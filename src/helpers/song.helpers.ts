@@ -2,8 +2,9 @@ import { CharacteristicName, DifficultyName } from "bsmap/types";
 
 import { DEFAULT_GRID, DIFFICULTIES } from "$/constants";
 import type { App, BeatmapId, Member } from "$/types";
-import { deepMerge, slugify } from "$/utils";
+import { slugify } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
+import { patchEnvironmentName } from "./packaging.helpers";
 
 export function resolveSongId(x: Pick<App.ISong, "name">): string {
 	return slugify(x.name);
@@ -61,14 +62,8 @@ export function getBeatmapById<T extends Pick<App.ISong, "difficultiesById">>(so
 }
 export function getEnvironment<T extends Pick<App.ISong, "difficultiesById" | "environment">>(song: T, beatmapId?: BeatmapId) {
 	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
-	if (beatmap) return beatmap.environmentName;
-	return song.environment;
-}
-export function getColorScheme<T extends Pick<App.ISong, "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IColorScheme {
-	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
-	if (beatmap?.colorSchemeName) return song.colorSchemesById[beatmap.colorSchemeName];
-	const environment = getEnvironment(song, beatmapId);
-	return deriveColorSchemeFromEnvironment(environment);
+	if (beatmap) return patchEnvironmentName(beatmap.environmentName);
+	return patchEnvironmentName(song.environment);
 }
 export function getSelectedBeatmap<T extends Pick<App.ISong, "selectedDifficulty" | "difficultiesById">>(song: T) {
 	return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
@@ -80,27 +75,50 @@ export function getSongLastOpenedAt<T extends Pick<App.ISong, "lastOpenedAt">>(s
 	return song.lastOpenedAt ?? 0;
 }
 
-export function getDefaultModSettings<T extends Pick<App.ISong, "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IModSettings {
-	const environment = getEnvironment(song, beatmapId);
+function getDefaultModSettings(): App.IModSettings {
 	return {
-		customColors: { isEnabled: false, ...deriveColorSchemeFromEnvironment(environment) },
+		customColors: { isEnabled: false },
 		mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
 	};
 }
 
-export function getModSettings<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IModSettings {
-	return deepMerge(getDefaultModSettings(song, beatmapId), { ...song.modSettings });
+export function getModSettings<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T): App.IModSettings {
+	return { ...getDefaultModSettings(), ...song.modSettings };
 }
-export function getModuleData<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, key: keyof App.IModSettings, beatmapId?: BeatmapId) {
-	const modSettings = getModSettings(song, beatmapId);
+export function getModuleData<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, key: keyof App.IModSettings) {
+	const modSettings = getModSettings(song);
 	return modSettings[key];
 }
-export function getCustomColorsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId) {
-	const modSettings = getModSettings(song, beatmapId);
+export function getCustomColorsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
+	const modSettings = getModSettings(song);
 	return modSettings.customColors;
 }
-export function getExtensionsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId) {
-	const modSettings = getModSettings(song, beatmapId);
+export function getColorScheme<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IColorScheme {
+	const customOverrideScheme = getCustomColorsModule(song);
+	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
+	const vanillaOverrideScheme = beatmap?.colorSchemeName ? song.colorSchemesById[beatmap.colorSchemeName] : undefined;
+	const environment = getEnvironment(song, beatmapId);
+	const envScheme = deriveColorSchemeFromEnvironment(patchEnvironmentName(environment));
+
+	function resolveColor<T extends string | undefined>(key: App.ColorSchemeKey): T {
+		if (customOverrideScheme.isEnabled && customOverrideScheme[key]) return customOverrideScheme[key] as T;
+		if (vanillaOverrideScheme) return vanillaOverrideScheme[key] as T;
+		return envScheme[key] as T;
+	}
+
+	return {
+		colorLeft: resolveColor("colorLeft"),
+		colorRight: resolveColor("colorRight"),
+		obstacleColor: resolveColor("obstacleColor"),
+		envColorLeft: resolveColor("envColorLeft"),
+		envColorRight: resolveColor("envColorRight"),
+		envColorLeftBoost: resolveColor("envColorLeftBoost"),
+		envColorRightBoost: resolveColor("envColorRightBoost"),
+	};
+}
+
+export function getExtensionsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
+	const modSettings = getModSettings(song);
 	return modSettings.mappingExtensions;
 }
 export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {

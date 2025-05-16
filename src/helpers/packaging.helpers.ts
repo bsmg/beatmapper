@@ -1,10 +1,10 @@
 import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo } from "bsmap";
-import type { IColor, v2, v2 as v2t, wrapper } from "bsmap/types";
+import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
 import { colorToHex } from "bsmap/utils";
 
 import { DEFAULT_GRID } from "$/constants";
-import type { App } from "$/types";
-import { withKeys as hasKeys, maybeObject, uniq } from "$/utils";
+import type { Accept, App } from "$/types";
+import { deepMerge, withKeys as hasKeys, maybeObject, uniq } from "$/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
 import { serializeColorElement } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
@@ -27,9 +27,11 @@ function coalesceBeatmapCollection(data: App.ISong) {
 	const customColors = maybeObject({
 		_colorLeft: colors?.colorLeft ? serializeColorElement(colors.colorLeft) : undefined,
 		_colorRight: colors?.colorRight ? serializeColorElement(colors.colorRight) : undefined,
+		_obstacleColor: colors?.obstacleColor ? serializeColorElement(colors.obstacleColor) : undefined,
 		_envColorLeft: colors?.envColorLeft ? serializeColorElement(colors.envColorLeft) : undefined,
 		_envColorRight: colors?.envColorRight ? serializeColorElement(colors.envColorRight) : undefined,
-		_obstacleColor: colors?.obstacleColor ? serializeColorElement(colors.obstacleColor) : undefined,
+		_envColorLeftBoost: colors?.envColorLeftBoost ? serializeColorElement(colors.envColorLeftBoost) : undefined,
+		_envColorRightBoost: colors?.envColorRightBoost ? serializeColorElement(colors.envColorRightBoost) : undefined,
 	});
 
 	const editorSettings: App.EditorInfoData["editorSettings"] = {
@@ -40,29 +42,30 @@ function coalesceBeatmapCollection(data: App.ISong) {
 	return { beatmaps, requirements, customColors, editorSettings };
 }
 
-function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.IModSettings {
-	const environmentScheme = ColorScheme[EnvironmentSchemeName[data.environmentNames[0] ?? data.environmentBase.normal]];
-	const defaultScheme = ColorScheme["Default Custom"] as Required<v2t.IColorScheme>;
+export function patchEnvironmentName(environment: Accept<EnvironmentAllName, string>): EnvironmentAllName {
+	if (environment === "Origins") return "OriginsEnvironment";
+	return environment as EnvironmentAllName;
+}
 
-	function resolveColor(data: wrapper.IWrapInfo, key: keyof v2t.IColorScheme, fallback?: keyof v2t.IColorScheme) {
-		if (data.difficulties.some((x) => hasKeys(x.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorLeftBoost", "_envColorRightBoost", "_obstacleColor"))) {
-			const customColorExists = data.difficulties.find((x) => x.customData[key]);
-			const customColor = customColorExists?.customData[key];
+export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.IModSettings {
+	function resolveColor(data: wrapper.IWrapInfo, key: App.ColorSchemeKey) {
+		if (data.difficulties.some((x) => hasKeys(x.customData, `_${key}`))) {
+			const customColorExists = data.difficulties.find((x) => x.customData[`_${key}`]);
+			const customColor = customColorExists?.customData[`_${key}`];
 			if (customColor) return colorToHex(customColor).slice(0, 7);
 		}
-		return colorToHex(environmentScheme[key] ?? defaultScheme[key] ?? (fallback ? (environmentScheme[fallback] ?? defaultScheme[fallback]) : { r: 0, g: 0, b: 0, a: 1 })).slice(0, 7);
 	}
 
-	return {
+	const baseModSettings = {
 		customColors: {
 			isEnabled: data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorLeftBoost", "_envColorRightBoost", "_obstacleColor")),
-			colorLeft: resolveColor(data, "_colorLeft"),
-			colorRight: resolveColor(data, "_colorRight"),
-			envColorLeft: resolveColor(data, "_envColorLeft"),
-			envColorRight: resolveColor(data, "_envColorRight"),
-			envColorLeftBoost: resolveColor(data, "_envColorLeftBoost", "_envColorLeft"),
-			envColorRightBoost: resolveColor(data, "_envColorRightBoost", "_envColorRight"),
-			obstacleColor: resolveColor(data, "_obstacleColor"),
+			colorLeft: resolveColor(data, "colorLeft"),
+			colorRight: resolveColor(data, "colorRight"),
+			envColorLeft: resolveColor(data, "envColorLeft"),
+			envColorRight: resolveColor(data, "envColorRight"),
+			envColorLeftBoost: resolveColor(data, "envColorLeftBoost"),
+			envColorRightBoost: resolveColor(data, "envColorRightBoost"),
+			obstacleColor: resolveColor(data, "obstacleColor"),
 		},
 		mappingExtensions: {
 			isEnabled: data.difficulties.some((beatmap) => beatmap.customData._requirements?.includes("Mapping Extensions")),
@@ -70,6 +73,8 @@ function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.IModSettings {
 			...DEFAULT_GRID,
 		},
 	};
+
+	return deepMerge(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings });
 }
 
 export interface InfoSerializationOptions {
@@ -85,7 +90,7 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 
 	const allEnvironments = uniq(beatmaps.map((x) => x.environmentName));
 
-	const envColorScheme = ColorScheme[EnvironmentSchemeName[data.environment]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+	const envColorScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(data.environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
 
 	const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): wrapper.IWrapInfoColorScheme => {
 		return {
@@ -159,15 +164,15 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 	});
 }
 export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.ISong {
-	const colorSchemesById = data.colorSchemes.reduce((acc: App.IEntityMap<App.IColorScheme>, scheme) => {
+	const colorSchemesById = data.colorSchemes.reduce((acc: App.IEntityMap<Required<App.IColorScheme>>, scheme) => {
 		acc[scheme.name] = {
 			colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
 			colorRight: colorToHex(scheme.saberRightColor).slice(0, 7),
+			obstacleColor: colorToHex(scheme.obstaclesColor).slice(0, 7),
 			envColorLeft: colorToHex(scheme.environment0Color).slice(0, 7),
 			envColorRight: colorToHex(scheme.environment1Color).slice(0, 7),
 			envColorLeftBoost: colorToHex(scheme.environment0ColorBoost).slice(0, 7),
 			envColorRightBoost: colorToHex(scheme.environment1ColorBoost).slice(0, 7),
-			obstacleColor: colorToHex(scheme.obstaclesColor).slice(0, 7),
 		};
 		return acc;
 	}, {});

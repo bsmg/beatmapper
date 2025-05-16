@@ -4,6 +4,7 @@ import { createStorage } from "unstorage";
 import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
 
+import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
 import { autosaveWorker, filestore } from "$/setup";
@@ -98,19 +99,20 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 						id.toString(),
 						{
 							...song,
+							environment: patchEnvironmentName(song.environment),
 							songFilename: song.songFilename.replace("_", "."),
 							coverArtFilename: song.coverArtFilename.replace("_", "."),
 							colorSchemesById: {},
 							difficultiesById: Object.entries<any>(song.difficultiesById).reduce(
 								(acc, [id, beatmap]) => {
 									const bid = id.toString() ?? beatmap.id.toString();
-									acc[id.toString() ?? id] = {
+									acc[bid] = {
 										...omit(beatmap, "id"),
 										beatmapId: bid,
 										lightshowId: "Common",
 										characteristic: "Standard",
 										difficulty: resolveDifficultyFromBeatmapId(bid),
-										environmentName: song.environment,
+										environmentName: patchEnvironmentName(song.environment),
 										colorSchemeName: null,
 										mappers: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
 										lighters: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],

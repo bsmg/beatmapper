@@ -1,32 +1,24 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import type { CharacteristicName, DifficultyName, EnvironmentAllName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 
+import type { IGrid } from "../../editor";
 import type { ColorSchemeKey, IEntityMap } from "./shared";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;
 
-export interface IModSettings {
-	mappingExtensions: {
-		isEnabled: boolean;
-		numRows: number;
-		numCols: number;
-		colWidth: number;
-		rowHeight: number;
-	};
-	customColors: {
-		isEnabled: boolean;
-		colorLeft: string;
-		colorRight: string;
-		envColorLeft: string;
-		envColorRight: string;
-		envColorLeftBoost: string;
-		envColorRightBoost: string;
-		obstacleColor: string;
-	};
+export type IColorScheme = { [key in ColorSchemeKey]: string };
+
+export interface IModule {
+	isEnabled: boolean;
 }
 
-export type IColorScheme = { [key in ColorSchemeKey]: string };
+type IWrapModule<T> = IModule & T;
+
+export interface IModSettings {
+	mappingExtensions: IWrapModule<IGrid>;
+	customColors: IWrapModule<{ [key in ColorSchemeKey]?: string }>;
+}
 
 export interface IBeatmap {
 	beatmapId: BeatmapId;
@@ -56,7 +48,7 @@ export interface ISong {
 	environment: EnvironmentName | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
-	colorSchemesById: IEntityMap<IColorScheme>;
+	colorSchemesById: IEntityMap<Required<IColorScheme>>;
 	difficultiesById: IEntityMap<IBeatmap>;
 	selectedDifficulty?: BeatmapId;
 	createdAt?: number;
