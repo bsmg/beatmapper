@@ -5,7 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { Fragment, memo, useCallback, useMemo } from "react";
 
 import { createBeatmapListCollection } from "$/components/app/constants";
-import { createDifficulty } from "$/store/actions";
+import { changeSelectedDifficulty, createDifficulty } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
@@ -36,9 +36,10 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleBeatmapSelect = useCallback(
 		(details: SelectValueChangeDetails) => {
+			dispatch(changeSelectedDifficulty({ songId: sid, beatmapId: details.value[0] }));
 			return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: details.value[0] } });
 		},
-		[navigate, sid],
+		[dispatch, navigate, sid],
 	);
 
 	const handleCreate = useCallback(

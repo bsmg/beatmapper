@@ -100,14 +100,21 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 							...song,
 							songFilename: song.songFilename.replace("_", "."),
 							coverArtFilename: song.coverArtFilename.replace("_", "."),
+							colorSchemesById: {},
 							difficultiesById: Object.entries<any>(song.difficultiesById).reduce(
 								(acc, [id, beatmap]) => {
-									acc[id.toString()] = {
+									const bid = id.toString() ?? beatmap.id.toString();
+									acc[id.toString() ?? id] = {
 										...omit(beatmap, "id"),
-										beatmapId: beatmap.id,
-										lightshowId: null,
+										beatmapId: bid,
+										lightshowId: "Common",
 										characteristic: "Standard",
-										difficulty: resolveDifficultyFromBeatmapId(beatmap.id),
+										difficulty: resolveDifficultyFromBeatmapId(bid),
+										environmentName: song.environment,
+										colorSchemeName: null,
+										mappers: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
+										lighters: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
+										customLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
 									};
 									return acc;
 								},

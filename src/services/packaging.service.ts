@@ -135,7 +135,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	]);
 
 	// save the audio data file (currently not supported, but better to store it now for future reference)
-	const audioDataFile = getFileFromArchive(archive, info.audio.audioDataFilename);
+	const audioDataFile = getFileFromArchive(archive, info.audio.audioDataFilename, "BPMInfo.dat");
 	if (audioDataFile) {
 		const rawSerialAudioData = await audioDataFile.async("string");
 		const audioData = loadAudioData(JSON.parse(rawSerialAudioData));

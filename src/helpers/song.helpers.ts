@@ -24,11 +24,11 @@ export function resolveLightshowIdFromFilename(filename: string, beatmapId: Beat
 	return rawId !== "Unnamed" ? rawId : beatmapId.toString();
 }
 /** @deprecated this is really only used during migration flow, don't use this elsewhere */
-export function resolveDifficultyFromBeatmapId(id: BeatmapId): Member<typeof DIFFICULTIES> {
-	for (const id of [...DIFFICULTIES].reverse()) {
-		if (id.toString().includes(id)) return id.substring(0, id.length) as Member<typeof DIFFICULTIES>;
+export function resolveDifficultyFromBeatmapId(bid: BeatmapId): Member<typeof DIFFICULTIES> {
+	for (const difficulty of [...DIFFICULTIES].reverse()) {
+		if (difficulty === bid.toString()) return difficulty.substring(0, difficulty.length) as Member<typeof DIFFICULTIES>;
 	}
-	throw new Error(`Could not resolve difficulty from id: ${id}`);
+	throw new Error(`Could not resolve difficulty from id: ${bid}`);
 }
 
 export function isSongReadonly<T extends Pick<App.ISong, "demo">>(song: T) {

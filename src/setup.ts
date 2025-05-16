@@ -22,7 +22,7 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 			function rewriteKey(key: string) {
 				const [sid, filename] = key.split("_");
 				if (filename.endsWith(".ogg")) return `${sid}.song`;
-				if (filename.endsWith(".jpg")) return `${sid}.cover`;
+				if (filename.endsWith(".jpg") || filename.endsWith(".jpeg") || filename.endsWith(".png")) return `${sid}.cover`;
 				if (filename === "Info.dat") return `${sid}.info`;
 				const bid = filename.split(".").slice(0, -1).join(".");
 				return `${sid}.${bid}.beatmap`;
@@ -35,11 +35,17 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 				if (filename.endsWith(".dat")) {
 					const [bid] = filename.split(".");
 					return loadDifficulty(JSON.parse(value as string), {
-						postprocess: [(data) => createBeatmap({ ...data, filename: `${bid}.beatmap.dat` })],
+						postprocess: [(data) => createBeatmap({ ...data, filename: `${bid}.beatmap.dat`, lightshowFilename: "Common.lightshow.dat" })],
 					});
 				}
 				if (typeof value === "string") return JSON.parse(value);
-				if (value instanceof Blob) return new Blob([value], { type: "application/octet-stream" });
+				if (value instanceof Blob) {
+					let type = "application/octet-stream";
+					if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) type = "image/jpeg";
+					if (filename.endsWith(".png")) type = "image/png";
+					if (filename.endsWith(".ogg")) type = "audio/ogg";
+					return new File([value], filename, { type });
+				}
 				return value;
 			}
 			const keys = await idb.keys("keyvaluepairs", tx);
