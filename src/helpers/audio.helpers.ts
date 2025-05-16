@@ -24,16 +24,14 @@ export function convertBeatsToMilliseconds(beats: number, bpm: number) {
 	return (beats / bps) * 1000;
 }
 
-const audioContext = new AudioContext();
-
-export async function deriveAudioDataFromFile(file: Blob | MediaSource) {
+export async function deriveAudioDataFromFile(file: Blob | MediaSource, audioContext: AudioContext) {
 	const arrayBuffer = await convertFileToArrayBuffer(file);
 
 	return await audioContext.decodeAudioData(arrayBuffer).then((audioBuffer) => {
 		return { duration: audioBuffer.duration, frequency: audioBuffer.sampleRate, sampleCount: audioBuffer.length };
 	});
 }
-export async function deriveWaveformDataFromFile(file: Blob | MediaSource) {
+export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audioContext: AudioContext) {
 	const arrayBuffer = await convertFileToArrayBuffer(file);
 
 	return new Promise<WaveformData>((resolve, reject) =>

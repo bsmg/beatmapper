@@ -32,9 +32,10 @@ interface Options {
 /** This middleware manages file storage concerns. */
 export default function createFileMiddleware({ filestore }: Options) {
 	const instance = createListenerMiddleware<RootState>();
+	const audioContext = new AudioContext();
 
 	async function updateAudioContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File) {
-		const [{ duration, frequency, sampleCount }, { version }] = await Promise.all([deriveAudioDataFromFile(songFile), filestore.loadInfoContents(songId)]);
+		const [{ duration, frequency, sampleCount }, { version }] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), filestore.loadInfoContents(songId)]);
 
 		const { filename, contents } = await filestore.updateAudioContents(songId, {
 			version: version,
@@ -95,7 +96,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 				await updateAudioContentsFromFile(songId, filestore, songFile);
 			}
 
-			const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile), deriveWaveformDataFromFile(songFile)]);
+			const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
 
 			api.dispatch(finishLoadingSong({ songId: songId, songData: selectSongById(state, songId), duration, waveformData: waveformData.toJSON() }));
 		},
@@ -115,7 +116,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			if (songData.songFilename) {
 				// always update audio contents when the song file is updated, since sample count and frequency could potentially change.
 				const songFile = await filestore.loadSongFile(songId);
-				const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile), deriveWaveformDataFromFile(songFile)]);
+				const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
 				await updateAudioContentsFromFile(songId, filestore, songFile);
 
 				api.dispatch(reloadWaveform({ duration, waveformData: waveformData.toJSON() }));
