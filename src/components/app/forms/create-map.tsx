@@ -4,7 +4,7 @@ import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, CHARACTERISTIC_COLLECTION, DIFFICULTY_COLLECTION } from "$/components/app/constants";
+import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
@@ -95,12 +95,12 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Row>
 				<Field label="Song File">
-					<FileUpload files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
+					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
 						Audio File
 					</FileUpload>
 				</Field>
 				<Field label="Cover Art File">
-					<FileUpload files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 						Image File
 					</FileUpload>
 				</Field>

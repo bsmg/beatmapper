@@ -17,8 +17,6 @@ import {
 	getSelectedBeatmap,
 	getSongLastOpenedAt,
 	getSongMetadata,
-	isFastWallsEnabled,
-	isLightshowEnabled,
 	isModuleEnabled,
 	isSongReadonly,
 	resolveBeatmapId,
@@ -38,11 +36,9 @@ import {
 	resetGrid,
 	startLoadingSong,
 	toggleModForSong,
-	togglePropertyForSelectedSong,
 	updateBeatmapMetadata,
 	updateGrid,
 	updateModColor,
-	updateModColorOverdrive,
 	updateSongDetails,
 } from "$/store/actions";
 import { type App, type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
@@ -100,12 +96,6 @@ const slice = createSlice({
 		}),
 		selectIsModuleEnabled: createSelector([selectById, (_1, _2, key: keyof App.IModSettings) => key], (song, key) => {
 			return isModuleEnabled(song, key);
-		}),
-		selectIsFastWallsEnabled: createSelector(selectById, (song) => {
-			return isFastWallsEnabled(song);
-		}),
-		selectIsLightshowEnabled: createSelector(selectById, (song) => {
-			return isLightshowEnabled(song);
 		}),
 		selectCustomColors: createSelector(selectById, (song) => {
 			return getCustomColorsModule(song);
@@ -165,7 +155,7 @@ const slice = createSlice({
 				},
 			});
 		});
-		builder.addCase(importExistingSong, (state, action) => {
+		builder.addCase(importExistingSong.fulfilled, (state, action) => {
 			const { songData } = action.payload;
 			return adapter.upsertOne(state, songData);
 		});
@@ -247,7 +237,10 @@ const slice = createSlice({
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(getModSettings(song), { [key]: deepMerge(original, { isEnabled: !isModEnabled }) }),
+					modSettings: {
+						...getModSettings(song),
+						[key]: { ...original, isEnabled: !isModEnabled },
+					},
 				},
 			});
 		});
@@ -265,18 +258,6 @@ const slice = createSlice({
 				},
 			});
 		});
-		builder.addCase(updateModColorOverdrive, (state, action) => {
-			const { songId, element, overdrive } = action.payload;
-			const elementOverdriveKey = `${element}Overdrive` as const;
-			const song = selectById(state, songId);
-			const original = getCustomColorsModule(song);
-			return adapter.updateOne(state, {
-				id: songId,
-				changes: {
-					modSettings: deepMerge(getModSettings(song), { customColors: deepMerge(original, { [elementOverdriveKey]: overdrive }) }),
-				},
-			});
-		});
 		builder.addCase(resetGrid, (state, action) => {
 			const { songId } = action.payload;
 			const song = selectById(state, songId);
@@ -284,14 +265,12 @@ const slice = createSlice({
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(getModSettings(song), { mappingExtensions: deepMerge(original, { ...DEFAULT_GRID }) }),
+					modSettings: {
+						...getModSettings(song),
+						mappingExtensions: { ...original, ...DEFAULT_GRID },
+					},
 				},
 			});
-		});
-		builder.addCase(togglePropertyForSelectedSong, (state, action) => {
-			const { songId, property } = action.payload;
-			const song = selectById(state, songId);
-			return adapter.updateOne(state, { id: songId, changes: { [property]: !song[property] } });
 		});
 		builder.addMatcher(isAnyOf(updateGrid, loadGridPreset), (state, action) => {
 			const { songId, grid } = action.payload;
@@ -300,7 +279,10 @@ const slice = createSlice({
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(getModSettings(song), { mappingExtensions: deepMerge(original, { ...grid }) }),
+					modSettings: {
+						...getModSettings(song),
+						mappingExtensions: { ...original, ...grid },
+					},
 				},
 			});
 		});

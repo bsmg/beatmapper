@@ -62,10 +62,10 @@ function EventGridControls({ sid, bid, ...rest }: Props) {
 				<Field cosmetic size="sm" label="Edit Mode">
 					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(selectEventEditMode({ editMode: details.value[0] as EventEditMode }))} />
 				</Field>
-				<Field cosmetic size="sm" label="Color">
+				<Field cosmetic size="sm" label="Light Color">
 					<ToggleGroup collection={COLOR_LIST_COLLECTION} value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(selectEventColor({ color: details.value[0] as EventColor }))} />
 				</Field>
-				<Field cosmetic size="sm" label="Effect">
+				<Field cosmetic size="sm" label="Light Effect">
 					<ToggleGroup collection={EFFECT_LIST_COLLECTION} value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(selectTool({ view: View.LIGHTSHOW, tool: details.value[0] as EventTool }))} />
 				</Field>
 				<Field cosmetic size="sm" label="Locks">

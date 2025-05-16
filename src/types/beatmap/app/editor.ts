@@ -7,5 +7,5 @@ export interface IBookmark {
 }
 
 export interface EditorInfoData {
-	editorSettings: Partial<Pick<ISong, "enabledFastWalls" | "enabledLightshow" | "modSettings">>;
+	editorSettings: Partial<Pick<ISong, "modSettings">>;
 }

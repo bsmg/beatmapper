@@ -1,32 +1,11 @@
-import { type EntityId, createDraftSafeSelector, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { type EntityId, type PayloadAction, createDraftSafeSelector, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import { createBasicEvent, sortObjectFn } from "bsmap";
 
 import { isLightEvent, isMirroredTrack, resolveEventDerivedProps, resolveEventId, resolveEventValue, resolveMirroredTrack } from "$/helpers/events.helpers";
 import { nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
-import {
-	bulkDeleteEvent,
-	bulkPlaceEvent,
-	changeLaserSpeed,
-	commitSelection,
-	createNewSong,
-	cutSelection,
-	deleteEvent,
-	deleteSelectedEvents,
-	deselectAll,
-	deselectEvent,
-	drawSelectionBox,
-	loadBeatmapEntities,
-	nudgeSelection,
-	pasteSelection,
-	placeEvent,
-	selectAll as selectAllEntities,
-	selectAllInRange,
-	selectEvent,
-	startLoadingSong,
-	switchEventColor,
-} from "$/store/actions";
+import { commitSelection, createNewSong, cutSelection, deleteSelectedEvents, deselectAll, deselectEvent, drawSelectionBox, loadBeatmapEntities, nudgeSelection, pasteSelection, selectAll as selectAllEntities, selectAllInRange, selectEvent, startLoadingSong, switchEventColor } from "$/store/actions";
 import { createSelectedEntitiesSelector } from "$/store/helpers";
-import { App, View } from "$/types";
+import { App, type IEventTrack, View } from "$/types";
 import { cycle } from "$/utils";
 
 const adapter = createEntityAdapter<App.IBasicEvent, EntityId>({
@@ -43,7 +22,7 @@ const selectAllForTrackBeforeBeat = createDraftSafeSelector([selectAll, (_, quer
 });
 
 const slice = createSlice({
-	name: "tracks",
+	name: "basicEvents",
 	initialState: adapter.getInitialState(),
 	selectors: {
 		selectAll: selectAll,
@@ -59,34 +38,54 @@ const slice = createSlice({
 			return value;
 		}),
 	},
-	reducers: {},
+	reducers: {
+		addOne: (state, action: PayloadAction<{ tracks?: IEventTrack[]; areLasersLocked?: boolean; data: App.IBasicEvent }>) => {
+			const { tracks, areLasersLocked, data } = action.payload;
+			const newEvent = createBasicEvent({ ...data }) as App.IBasicEvent;
+			adapter.upsertOne(state, newEvent);
+			if (areLasersLocked && isMirroredTrack(newEvent.type, tracks)) {
+				// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
+				const mirrorTrackId = resolveMirroredTrack(newEvent.type, tracks);
+				const symmetricalEvent = createBasicEvent({ ...newEvent, type: mirrorTrackId });
+				adapter.upsertOne(state, symmetricalEvent);
+			}
+		},
+		updateOne: (state, action: PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTrack[]; areLasersLocked?: boolean; changes: Partial<App.IBasicEvent> }>) => {
+			const { query, tracks, areLasersLocked, changes } = action.payload;
+			const match = selectById(state, resolveEventId(query));
+			if (!match) return state;
+			adapter.updateOne(state, { id: adapter.selectId(match), changes });
+			if (areLasersLocked && isMirroredTrack(match.type, tracks)) {
+				const mirrorTrackId = resolveMirroredTrack(match.type, tracks);
+				adapter.updateOne(state, { id: resolveEventId({ time: query.time, type: mirrorTrackId }), changes });
+			}
+		},
+		removeOne: (state, action: PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTrack[]; areLasersLocked?: boolean }>) => {
+			const { query, tracks, areLasersLocked } = action.payload;
+			adapter.removeOne(state, resolveEventId(query));
+			if (areLasersLocked && isMirroredTrack(query.type, tracks)) {
+				const mirrorTrackId = resolveMirroredTrack(query.type, tracks);
+				adapter.removeOne(state, resolveEventId({ time: query.time, type: mirrorTrackId }));
+			}
+		},
+	},
 	extraReducers: (builder) => {
 		builder.addCase(loadBeatmapEntities, (state, action) => {
 			const { events } = action.payload;
 			return adapter.setAll(state, events ?? []);
 		});
-		builder.addCase(changeLaserSpeed, (state, action) => {
-			const { beatNum, trackId, speed, areLasersLocked } = action.payload;
-			const newEvent = createBasicEvent({ type: trackId, time: beatNum, value: speed });
-			adapter.upsertOne(state, newEvent);
-			// Repeat all the above stuff for the laserSpeedRight track, if we're modifying the left track and have locked the lasers together.
-			if (areLasersLocked && isMirroredTrack(newEvent.type)) {
-				const mirrorTrackId = resolveMirroredTrack(newEvent.type);
-				const symmetricalEvent = createBasicEvent({ ...newEvent, type: mirrorTrackId });
-				adapter.upsertOne(state, symmetricalEvent);
-			}
-		});
 		builder.addCase(switchEventColor, (state, action) => {
-			const { beatNum, trackId, areLasersLocked } = action.payload;
+			const { beatNum, trackId, tracks, areLasersLocked } = action.payload;
 			const match = selectById(state, resolveEventId({ time: beatNum, type: trackId }));
 			if (!match) return state;
-			if (!isLightEvent(match)) return state;
-			const { effect, color } = resolveEventDerivedProps(match.value, { trackId });
-			const newColor = cycle(Object.values(App.EventColor).slice(0, -1), color);
-			const newValue = resolveEventValue({ effect, color: newColor }, {});
+			if (!isLightEvent(match, tracks)) return state;
+			const { effect, color } = resolveEventDerivedProps(match.value, { tracks, trackId });
+			const mirrorableColors = Object.values(App.EventColor).slice(0, -1);
+			const newColor = color && mirrorableColors.includes(color) ? cycle(mirrorableColors, color) : color;
+			const newValue = resolveEventValue({ effect, color: newColor }, { tracks });
 			adapter.updateOne(state, { id: adapter.selectId(match), changes: { value: newValue } });
-			if (areLasersLocked && isMirroredTrack(match.type)) {
-				const mirrorTrackId = resolveMirroredTrack(match.type);
+			if (areLasersLocked && isMirroredTrack(match.type, tracks)) {
+				const mirrorTrackId = resolveMirroredTrack(match.type, tracks);
 				adapter.updateOne(state, { id: resolveEventId({ time: beatNum, type: mirrorTrackId }), changes: { value: newValue } });
 			}
 		});
@@ -145,32 +144,29 @@ const slice = createSlice({
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start && x.time < end } })),
 			);
 		});
+		builder.addCase(drawSelectionBox.fulfilled, (state, action) => {
+			const { tracks, selectionBoxInBeats, metadata, join } = action.payload;
+			const entities = selectAll(state);
+			if (!join) {
+				adapter.updateMany(
+					state,
+					entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+				);
+			}
+			for (const event of entities) {
+				const eventTrackIndex = tracks.findIndex((track) => track.id === event.type);
+				const isInWindow = event.time >= metadata.window.startBeat && event.time <= metadata.window.endBeat;
+				if (!isInWindow) return;
+				const isInSelectionBox = event.time >= selectionBoxInBeats.startBeat && event.time <= selectionBoxInBeats.endBeat && eventTrackIndex >= selectionBoxInBeats.startTrackIndex && eventTrackIndex <= selectionBoxInBeats.endTrackIndex;
+				adapter.updateOne(state, { id: adapter.selectId(event), changes: { tentative: isInSelectionBox } });
+			}
+		});
 		builder.addCase(commitSelection, (state) => {
 			const entities = selectAll(state).filter((x) => x.tentative === true);
 			return adapter.updateMany(
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { tentative: undefined, selected: true } })),
 			);
-		});
-		builder.addCase(drawSelectionBox.fulfilled, (state, action) => {
-			const { tracks, selectionBoxInBeats, metadata } = action.payload;
-			const trackIds = tracks.map((x) => x.id) as App.TrackId[];
-			for (const trackId of trackIds) {
-				const trackIndex = tracks.findIndex((track) => track.id === trackId);
-				const isTrackIdWithinBox = trackIndex >= selectionBoxInBeats.startTrackIndex && trackIndex <= selectionBoxInBeats.endTrackIndex;
-				for (const event of selectAll(state)) {
-					const isInWindow = event.time >= metadata.window.startBeat && event.time <= metadata.window.endBeat;
-					if (!isInWindow) return;
-					const isInSelectionBox = isTrackIdWithinBox && event.time >= selectionBoxInBeats.startBeat && event.time <= selectionBoxInBeats.endBeat;
-					if (isInSelectionBox) {
-						adapter.updateOne(state, { id: adapter.selectId(event), changes: { tentative: true } });
-					} else {
-						if (event.tentative) {
-							adapter.updateOne(state, { id: adapter.selectId(event), changes: { tentative: false, selected: true } });
-						}
-					}
-				}
-			}
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
 			const { view, direction, amount } = action.payload;
@@ -182,32 +178,12 @@ const slice = createSlice({
 			);
 		});
 		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong), () => adapter.getInitialState());
-		builder.addMatcher(isAnyOf(placeEvent, bulkPlaceEvent), (state, action) => {
-			const { beatNum, trackId, eventType, eventColorType, eventLaserSpeed, areLasersLocked } = action.payload;
-			const value = resolveEventValue({ effect: eventType, color: eventColorType, speed: eventLaserSpeed }, {});
-			const newEvent = createBasicEvent({ time: beatNum, type: trackId, value: value }) as App.IBasicEvent;
-			adapter.upsertOne(state, newEvent);
-			if (areLasersLocked && isMirroredTrack(newEvent.type)) {
-				// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
-				const mirrorTrackId = resolveMirroredTrack(newEvent.type);
-				const symmetricalEvent = createBasicEvent({ ...newEvent, type: mirrorTrackId });
-				adapter.upsertOne(state, symmetricalEvent);
-			}
-		});
-		builder.addMatcher(isAnyOf(deleteEvent, bulkDeleteEvent), (state, action) => {
-			const { beatNum, trackId, areLasersLocked } = action.payload;
-			adapter.removeOne(state, resolveEventId({ time: beatNum, type: trackId }));
-			if (areLasersLocked && isMirroredTrack(trackId)) {
-				const mirrorTrackId = resolveMirroredTrack(trackId);
-				adapter.removeOne(state, resolveEventId({ time: beatNum, type: mirrorTrackId }));
-			}
-		});
 		builder.addMatcher(isAnyOf(selectEvent, deselectEvent), (state, action) => {
-			const { beatNum, trackId, areLasersLocked } = action.payload;
+			const { beatNum, trackId, tracks, areLasersLocked } = action.payload;
 			const selected = selectEvent.match(action);
 			adapter.updateOne(state, { id: resolveEventId({ time: beatNum, type: trackId }), changes: { selected } });
-			if (areLasersLocked && isMirroredTrack(trackId)) {
-				const mirrorTrackId = resolveMirroredTrack(trackId);
+			if (areLasersLocked && isMirroredTrack(trackId, tracks)) {
+				const mirrorTrackId = resolveMirroredTrack(trackId, tracks);
 				adapter.updateOne(state, { id: resolveEventId({ time: beatNum, type: mirrorTrackId }), changes: { selected } });
 			}
 		});

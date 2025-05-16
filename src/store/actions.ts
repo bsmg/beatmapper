@@ -6,6 +6,7 @@ import { HIGHEST_PRECISION } from "$/constants";
 import { getNewBookmarkColor } from "$/helpers/bookmarks.helpers";
 import { resolveTimeForItem } from "$/helpers/item.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
+import { processImportedMap } from "$/services/packaging.service";
 import { type App, type BeatmapId, type EventColor, type EventEditMode, type EventTool, type GridPresets, type IEventTrack, type IGrid, type ISelectionBox, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type Quality, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense, roundToNearest } from "$/utils";
 import type { JsonWaveformData } from "waveform-data";
@@ -32,6 +33,9 @@ import {
 } from "./selectors";
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
+import notes from "./features/entities/beatmap/notes.slice";
+import basicEvents from "./features/entities/lightshow/basic.slice";
+
 export const init = createAction("@@APP/INIT");
 
 export const { load: loadUser, save: saveUser, hydrate: hydrateUser } = createStorageActions<RootState, UserStorageObservers>("user");
@@ -40,8 +44,6 @@ export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = creat
 export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGridPresets } = createEntityStorageActions<Member<GridPresets>>("grids");
 
 export const rehydrate = createAction("@@STORAGE/REHYDRATE");
-
-export const loadDemoSong = createAction("LOAD_DEMO_SONG");
 
 export const createNewSong = createAsyncThunk(
 	"CREATE_NEW_SONG",
@@ -61,12 +63,14 @@ export const updateSongDetails = createAction("UPDATE_SONG_DETAILS", (args: { so
 
 export const loadDemoMap = createAction("LOAD_DEMO_MAP");
 
-export const startImportingSong = createAction("START_IMPORTING_SONG");
-
-export const cancelImportingSong = createAction("CANCEL_IMPORTING_SONG");
-
-export const importExistingSong = createAction("IMPORT_EXISTING_SONG", (args: { songData: App.ISong }) => {
-	return { payload: { ...args } };
+export const importExistingSong = createAsyncThunk("IMPORT_EXISTING_SONG", async (args: { file: File | Blob; options: Partial<{ currentSongIds: SongId[]; readonly: boolean }> }, api) => {
+	try {
+		const { readonly } = args.options;
+		const songData = await processImportedMap(args.file, args.options);
+		return api.fulfillWithValue({ songData: { ...songData, demo: readonly } });
+	} catch (e) {
+		return api.rejectWithValue(e);
+	}
 });
 
 export const changeSelectedDifficulty = createAction("CHANGE_SELECTED_DIFFICULTY", (args: { songId: SongId; beatmapId: BeatmapId }) => {
@@ -165,6 +169,8 @@ export const deleteBookmark = createAction("DELETE_BOOKMARK", (args: { beatNum: 
 	return { payload: { ...args } };
 });
 
+export const { updateOne: updateOneColorNote } = notes.actions;
+
 export const clickPlacementGrid = createAsyncThunk("CLICK_PLACEMENT_GRID", (args: { songId: SongId; rowIndex: number; colIndex: number; direction?: NoteDirection; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const { songId } = args;
@@ -188,7 +194,7 @@ export const clearCellOfNotes = createAsyncThunk("CLEAR_CELL_OF_NOTES", (args: {
 	return api.fulfillWithValue({ ...args, cursorPositionInBeats });
 });
 
-export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { songId: SongId; rowIndex: number; colIndex: number; direction: NoteDirection; tool: ObjectTool }, api) => {
+export const setBlockByDragging = createAsyncThunk("SET_BLOCK_BY_DRAGGING", (args: { songId: SongId; rowIndex: number; colIndex: number; direction: number; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const { songId } = args;
 	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
@@ -244,14 +250,6 @@ export const selectNextTool = createAction("SELECT_NEXT_TOOL", (args: { view: Vi
 });
 
 export const selectPreviousTool = createAction("SELECT_PREVIOUS_TOOL", (args: { view: View }) => {
-	return { payload: { ...args } };
-});
-
-export const clickNote = createAction("CLICK_NOTE", (args: { clickType: "left" | "middle" | "right"; time: number; posX: number; posY: number }) => {
-	return { payload: { ...args } };
-});
-
-export const mouseOverNote = createAction("MOUSE_OVER_NOTE", (args: { time: number; posX: number; posY: number }) => {
 	return { payload: { ...args } };
 });
 
@@ -442,17 +440,7 @@ export const seekBackwards = createAction("SEEK_BACKWARDS", (args: { songId: Son
 	return { payload: { ...args } };
 });
 
-export const placeEvent = createAction("PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.BasicEventType; eventColorType?: App.EventColor; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args } };
-});
-
-export const bulkPlaceEvent = createAction("BULK_PLACE_EVENT", (args: { trackId: App.TrackId; beatNum: number; eventType: App.BasicEventType; eventColorType?: App.EventColor; eventLaserSpeed?: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args } };
-});
-
-export const changeLaserSpeed = createAction("CHANGE_LASER_SPEED", (args: { trackId: App.TrackId; beatNum: number; speed: number; areLasersLocked: boolean }) => {
-	return { payload: { ...args } };
-});
+export const { addOne: addOneBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateOneBasicEvent, removeOne: removeOneBasicEvent, removeOne: bulkRemoveBasicEvent } = basicEvents.actions;
 
 export const deleteEvent = createAction("DELETE_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
@@ -464,11 +452,11 @@ export const bulkDeleteEvent = createAction("BULK_DELETE_EVENT", (args: { beatNu
 
 export const deleteSelectedEvents = createAction("DELETE_SELECTED_EVENTS");
 
-export const selectEvent = createAction("SELECT_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
+export const selectEvent = createAction("SELECT_EVENT", (args: { beatNum: number; trackId: App.TrackId; tracks?: IEventTrack[]; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const deselectEvent = createAction("DESELECT_EVENT", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
+export const deselectEvent = createAction("DESELECT_EVENT", (args: { beatNum: number; trackId: App.TrackId; tracks?: IEventTrack[]; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
@@ -476,7 +464,7 @@ export const selectColor = createAction("SELECT_COLOR", (args: { view: View; col
 	return { payload: { ...args } };
 });
 
-export const switchEventColor = createAction("SWITCH_EVENT_COLOR", (args: { beatNum: number; trackId: App.TrackId; areLasersLocked: boolean }) => {
+export const switchEventColor = createAction("SWITCH_EVENT_COLOR", (args: { beatNum: number; trackId: App.TrackId; tracks?: IEventTrack[]; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
@@ -492,7 +480,7 @@ export const zoomIn = createAction("ZOOM_IN");
 
 export const zoomOut = createAction("ZOOM_OUT");
 
-export const drawSelectionBox = createAsyncThunk("DRAW_SELECTION_BOX", (args: { songId: SongId; tracks: IEventTrack[]; selectionBox: ISelectionBox; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
+export const drawSelectionBox = createAsyncThunk("DRAW_SELECTION_BOX", (args: { songId: SongId; tracks: IEventTrack[]; selectionBox: ISelectionBox; selectionBoxInBeats: ISelectionBoxInBeats; join?: boolean }, api) => {
 	const state = api.getState() as RootState;
 	const { songId } = args;
 	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, songId);
@@ -530,10 +518,6 @@ export const updateModColor = createAction("UPDATE_MOD_COLOR", (args: { songId: 
 	return { payload: { ...args } };
 });
 
-export const updateModColorOverdrive = createAction("UPDATE_MOD_COLOR_OVERDRIVE", (args: { songId: SongId; element: App.ColorSchemeKey; overdrive: number }) => {
-	return { payload: { ...args } };
-});
-
 export const updateGrid = createAction("UPDATE_GRID", (args: { songId: SongId; grid: Partial<IGrid> }) => {
 	return { payload: { ...args } };
 });
@@ -553,12 +537,6 @@ export const saveGridPreset = createAsyncThunk("SAVE_GRID_PRESET", (args: { song
 });
 
 export const deleteGridPreset = createAction("DELETE_GRID_PRESET", (args: { songId: SongId; presetSlot: string }) => {
-	return { payload: { ...args } };
-});
-
-export const toggleFastWallsForSelectedObstacles = createAction("TOGGLE_FAST_WALLS_FOR_SELECTED_OBSTACLES");
-
-export const togglePropertyForSelectedSong = createAction("TOGGLE_PROPERTY_FOR_SELECTED_SONG", (args: { songId: SongId; property: keyof App.ISong }) => {
 	return { payload: { ...args } };
 });
 

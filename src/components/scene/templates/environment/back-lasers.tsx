@@ -19,9 +19,9 @@ interface Props {
 	secondsSinceSongStart?: number;
 }
 function BackLasers({ sid, bid }: Props) {
-	const lastEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: App.TrackId[0] });
+	const [lastEvent] = useEventTrack({ sid, trackId: App.TrackId[0] });
 
-	const { lastEventId: eventId, status, color } = useLightProps({ sid, bid, lastEvent });
+	const light = useLightProps({ sid, bid, lastEvent });
 
 	return sides.map((side) => {
 		const xOffset = 0;
@@ -29,7 +29,7 @@ function BackLasers({ sid, bid }: Props) {
 		return INDICES.map((index) => {
 			const position: Vector3Tuple = [xOffset, -40, zOffset + index * -DISTANCE_BETWEEN_BEAMS];
 			const rotation: Vector3Tuple = [0, 0, side === "right" ? -0.45 : 0.45];
-			return <TubeLight key={`${side}-${index}`} radius={0.25} color={color} position={position} rotation={rotation} lastEventId={eventId} status={status} />;
+			return <TubeLight key={`${side}-${index}`} light={light} radius={0.25} position={position} rotation={rotation} />;
 		});
 	});
 }

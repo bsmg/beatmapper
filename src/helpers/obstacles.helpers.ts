@@ -1,6 +1,6 @@
 import { createObstacle } from "bsmap";
 
-import { type App, ObjectPlacementMode } from "$/types";
+import { type App, type IGrid, ObjectPlacementMode } from "$/types";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
 
 export function resolveObstacleId<T extends Pick<App.IObstacle, "time" | "posX" | "posY" | "width" | "height">>(x: T) {
@@ -24,71 +24,74 @@ export function isExtendedObstacle<T extends Pick<App.IObstacle, "posY" | "heigh
 	return !isVanillaObstacle(data);
 }
 
-export function toggleFastObstacle<T extends Pick<App.IObstacle, "duration">>({ duration, ...data }: T) {
-	return { ...data, duration: duration * -1 } as T;
-}
-
-export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, numCols: number, numRows: number, colWidth: number, rowHeight: number, mouseDownAt: { colIndex: number; rowIndex: number } | null, mouseOverAt: { colIndex: number; rowIndex: number } | null, beatDuration = 4) {
-	if (!mouseDownAt || !mouseOverAt) throw new Error("Unable to create valid obstacle.");
-
-	const colIndex = Math.min(mouseDownAt.colIndex, mouseOverAt.colIndex);
-	const rowIndex = mode === ObjectPlacementMode.EXTENSIONS ? undefined : mouseOverAt.rowIndex === 2 ? 2 : 0;
+export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, mouseOverAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid) {
+	const rawColIndex = Math.min(mouseDownAt.colIndex, mouseOverAt.colIndex);
+	const rawRowIndex = Math.min(mouseDownAt.rowIndex, mouseOverAt.rowIndex);
 
 	// Our colIndex will be a value from 0 to N-1, where N is the num of columns. Eg in an 8-column grid, the number is 0-7.
 	// The thing is, I want to store lanes as relative to a 4-column "natural" grid,
 	// so column 0 of an 8-column grid should actually be -2 (with a full range of -2 to 5, with 2 before and 2 after the standard 0-3 range).
-	const colspan = Math.abs(mouseDownAt.colIndex - mouseOverAt.colIndex) + 1;
-	const rowspan = mode === ObjectPlacementMode.EXTENSIONS ? undefined : mouseOverAt.rowIndex === 2 ? 3 : 5;
+	const rawWidth = Math.abs(mouseDownAt.colIndex - mouseOverAt.colIndex) + 1;
+	const rawHeight = Math.abs(mouseDownAt.rowIndex - mouseOverAt.rowIndex) + 1;
+
+	let colIndex = convertGridColumn(rawColIndex, numCols, colWidth);
+	let rowIndex = convertGridRow(rawRowIndex, numRows, rowHeight);
+
+	// lane 0 always spans two cells from the exact center, so we'll calculate the correct serial cell if we're using an extended grid.
+	const offset = (numCols - 4) / 2;
 
 	const obstacle = createObstacle({
-		duration: beatDuration,
-		posX: convertGridColumn(colIndex, numCols, colWidth),
-		posY: rowIndex,
-		height: rowspan,
-		width: colspan,
+		posX: colIndex - offset,
+		posY: mouseOverAt.rowIndex === 2 ? 2 : 0,
+		width: rawWidth,
+		height: mouseOverAt.rowIndex === 2 ? 3 : 5,
 	});
 
-	// 'original' walls need to be clamped, to not cause hazards
-	if (mode === ObjectPlacementMode.NORMAL) {
-		if (isFullHeightObstacle(obstacle) && obstacle.width > 2) {
-			const overBy = obstacle.width - 2;
-			obstacle.width = 2;
+	switch (mode) {
+		case ObjectPlacementMode.NORMAL: {
+			// 'original' walls need to be clamped to not cause hazards
+			if (isFullHeightObstacle(obstacle)) {
+				const downAt = mouseDownAt.colIndex - offset;
+				const overAt = mouseOverAt.colIndex - offset;
+				// these values will be known since the center of the grid will always be located between lanes 1 and 2.
+				if (!((downAt < 2 && overAt > 1) || (downAt > 1 && overAt < 2))) return obstacle;
 
-			const colspanDelta = mouseOverAt.colIndex - mouseDownAt.colIndex;
+				const half = Math.round(numCols / 2);
 
-			if (colspanDelta > 0) {
-				obstacle.posX += overBy;
-			} else {
-				obstacle.posX = mouseOverAt.colIndex;
+				obstacle.width = rawWidth - half;
+
+				// use the delta to determine whether we're moving from left-to-right or right-to-left
+				if (mouseOverAt.colIndex - mouseDownAt.colIndex > 0) {
+					obstacle.posX = half - offset;
+				} else {
+					obstacle.posX = mouseOverAt.colIndex - offset;
+				}
 			}
+			return obstacle;
 		}
-	} else if (mode === ObjectPlacementMode.EXTENSIONS) {
-		// For mapping extensions, things work a little bit differently.
-		// We need a rowIndex, which works like `lane`, and rowspan, which works like `colspan`
-		const rawRowIndex = Math.min(mouseDownAt.rowIndex, mouseOverAt.rowIndex);
+		case ObjectPlacementMode.EXTENSIONS: {
+			// For completely mystifying reasons, the lanes for obstacles don't scale well with non-standard size cells.
+			// I graphed the amount it was off by so that I could use it. No friggin clue why this works but it does.
+			const shiftLaneBy = 0.5 * colWidth - 0.5;
+			colIndex -= shiftLaneBy;
 
-		let lane = convertGridColumn(colIndex, numCols, colWidth);
-		let rowIndex = convertGridRow(rawRowIndex, numRows, rowHeight);
+			const shiftRowBy = 0.5 * rowHeight - 0.5;
+			rowIndex -= shiftRowBy;
 
-		// For completely mystifying reasons, the lanes for obstacles don't scale well with non-standard size cells.
-		// I graphed the amount it was off by so that I could use it. No friggin clue why this works but it does.
-		const shiftLaneBy = 0.5 * colWidth - 0.5;
-		lane -= shiftLaneBy;
+			// while `rowspan` should technically be the number of rows the thing spans, this data is insufficient with Mapping Extensions,
+			// where the user can change the height of rows so that an obstacle takes up 1 row but 2 "normal" rows.
+			const newHeight = rawHeight * rowHeight;
+			// Same thing for columns
+			const newWidth = rawWidth * colWidth;
 
-		const shiftRowBy = 0.5 * rowHeight - 0.5;
-		rowIndex -= shiftRowBy;
+			// we need to convert the values to their mapping extensions equivalents
+			obstacle.width = (newWidth + 1) * 1000;
+			obstacle.height = (newHeight + 1) * 1000;
 
-		const rowspan = Math.abs(mouseDownAt.rowIndex - mouseOverAt.rowIndex) + 1;
+			obstacle.posX = colIndex >= 0 ? (colIndex + 1) * 1000 : (colIndex - 1) * 1000;
+			obstacle.posY = rowIndex >= 0 ? (rowIndex + 1) * 1000 : (rowIndex - 1) * 1000;
 
-		// while `rowspan` should technically be the number of rows the thing spans, this data is insufficient with Mapping Extensions,
-		// where the user can change the height of rows so that an obstacle takes up 1 row but 2 "normal" rows.
-		obstacle.height = rowspan * rowHeight;
-		// Same thing for columns
-		obstacle.width = colspan * colWidth;
-
-		obstacle.posX = lane;
-		obstacle.posY = rowIndex;
+			return obstacle;
+		}
 	}
-
-	return obstacle;
 }

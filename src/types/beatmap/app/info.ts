@@ -38,10 +38,13 @@ export interface ISong {
 	name: string;
 	subName?: string;
 	artistName: string;
+	/** @deprecated */
 	mapAuthorName?: string;
 	bpm: number;
 	offset: number;
+	/** @deprecated */
 	swingAmount?: number;
+	/** @deprecated */
 	swingPeriod?: number;
 	previewStartTime: number;
 	previewDuration: number;
@@ -55,6 +58,8 @@ export interface ISong {
 	lastOpenedAt?: number;
 	demo?: boolean;
 	modSettings: Partial<IModSettings>;
+	/** @deprecated */
 	enabledFastWalls?: boolean;
+	/** @deprecated */
 	enabledLightshow?: boolean;
 }

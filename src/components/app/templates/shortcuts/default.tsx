@@ -70,7 +70,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				return dispatch(direction === "forwards" ? decrementSnapping() : incrementSnapping());
 			}
 			if (ev.altKey) {
-				return dispatch(nudgeSelection({ direction, view }));
+				return dispatch(nudgeSelection({ view, direction }));
 			}
 			if (ev.shiftKey) {
 				return;
@@ -263,12 +263,18 @@ function DefaultEditorShortcuts({ sid }: Props) {
 		[view],
 	);
 
+	const handleWheel = useCallback(
+		(ev: WheelEvent) => {
+			if (ev.altKey) return;
+			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
+			handleScroll(direction, ev);
+		},
+		[handleScroll],
+	);
+
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);
-	useGlobalEventListener("wheel", (ev) => {
-		const direction = ev.deltaY > 0 ? "backwards" : "forwards";
-		handleScroll(direction, ev);
-	});
+	useGlobalEventListener("wheel", handleWheel, { options: { passive: true } });
 
 	return null;
 }

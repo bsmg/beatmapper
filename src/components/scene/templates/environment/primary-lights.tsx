@@ -23,25 +23,25 @@ interface Props {
 	bid: BeatmapId;
 }
 function PrimaryLights({ sid, bid }: Props) {
-	const lastEvent = useEventTrack<App.IBasicEvent>({ sid, trackId: App.TrackId[4] });
+	const [lastEvent] = useEventTrack({ sid, trackId: App.TrackId[4] });
 
-	const { lastEventId, status, color } = useLightProps({ sid, bid, lastEvent });
+	const light = useLightProps({ sid, bid, lastEvent });
 
 	return (
 		<Fragment>
 			<group position-y={Y_POSITION} position-z={Z_POSITION}>
 				<mesh position-x={CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={-CHEVRON_ANGLE}>
 					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial lastEventId={lastEventId} status={status} color={color} />
+					<LightMaterial light={light} />
 				</mesh>
 				<mesh position-x={-CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={CHEVRON_ANGLE}>
 					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial lastEventId={lastEventId} status={status} color={color} />
+					<LightMaterial light={light} />
 				</mesh>
 			</group>
 			{/* Side parallel-to-platform lasers */}
-			<TubeLight radius={0.05} color={color} position={[SURFACE_WIDTH - 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation={[convertDegreesToRadians(90), 0, 0]} lastEventId={lastEventId} status={status} length={SIDE_BEAM_LENGTH} />
-			<TubeLight radius={0.05} color={color} position={[-SURFACE_WIDTH + 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation={[convertDegreesToRadians(90), 0, 0]} lastEventId={lastEventId} status={status} length={SIDE_BEAM_LENGTH} />
+			<TubeLight radius={0.05} light={light} position={[SURFACE_WIDTH - 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation={[convertDegreesToRadians(90), 0, 0]} length={SIDE_BEAM_LENGTH} />
+			<TubeLight radius={0.05} light={light} position={[-SURFACE_WIDTH + 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation={[convertDegreesToRadians(90), 0, 0]} length={SIDE_BEAM_LENGTH} />
 			{/* TODO: laser beams for along the side and maybe along the bottom too? */}
 		</Fragment>
 	);

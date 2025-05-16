@@ -1,48 +1,46 @@
-import type { ThreeElements } from "@react-three/fiber";
+import type { GroupProps } from "@react-three/fiber";
 import { useContext, useMemo } from "react";
 
-import { SONG_OFFSET } from "$/components/scene/constants";
+import { FUDGE_FACTOR, SONG_OFFSET } from "$/components/scene/constants";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectDefaultObstacleDuration, selectGridSize, selectPlacementMode } from "$/store/selectors";
-import type { SongId } from "$/types";
+import { selectBeatDepth, selectDefaultObstacleDuration } from "$/store/selectors";
+import type { IGrid, ObjectPlacementMode } from "$/types";
 
-import { Obstacle } from "$/components/scene/compositions";
+import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
 import { Context } from "./context";
 
 // hack: a tiny bit of fudge factor is added to the z position, so that the grid cells are still interactable while resizing the obstacle.
 // that way, you're still able to update the mouseOverAt property without the hitbox of the obstacle interfering.
-const Z_POSITION = SONG_OFFSET - 0.05;
-
-type GroupProps = ThreeElements["group"];
+const Z_POSITION = SONG_OFFSET - FUDGE_FACTOR;
 
 interface Props extends GroupProps {
-	sid: SongId;
+	grid: IGrid;
+	mode: ObjectPlacementMode;
 	color: string;
 }
-function TentativeObstacle({ sid, color, ...rest }: Props) {
-	const { mouseDownAt, mouseOverAt: initialMouseOverAt } = useContext(Context);
-
-	const { numRows: gridRows, numCols: gridCols, colWidth: gridColWidth, rowHeight: gridRowHeight } = useAppSelector((state) => selectGridSize(state, sid));
-	const beatDepth = useAppSelector(selectBeatDepth);
+function TentativeObstacle({ mode, grid, color, ...rest }: Props) {
+	const { cellDownAt, cellOverAt } = useContext(Context);
 	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
-	const mappingMode = useAppSelector((state) => selectPlacementMode(state, sid));
+	const beatDepth = useAppSelector(selectBeatDepth);
 
-	// If no mouseOverAt is provided, it ought to be the same as the mouseDownAt.
-	// They've clicked but haven't moved yet, ergo only one row/col is at play.
-	const mouseOverAt = useMemo(() => initialMouseOverAt ?? mouseDownAt, [initialMouseOverAt, mouseDownAt]);
-
-	const tentativeObstacle = useMemo(() => {
-		if (!mouseDownAt) return null;
+	const data = useMemo(() => {
+		if (!cellDownAt || !cellOverAt) return null;
+		// If no mouseOverAt is provided, it ought to be the same as the mouseDownAt.
+		// They've clicked but haven't moved yet, ergo only one row/col is at play.
 		return {
-			...createObstacleFromMouseEvent(mappingMode, gridCols, gridRows, gridColWidth, gridRowHeight, mouseDownAt, mouseOverAt, defaultObstacleDuration),
+			...createObstacleFromMouseEvent(mode, cellDownAt, cellOverAt ?? cellDownAt, grid),
+			duration: defaultObstacleDuration,
 			tentative: true,
 		};
-	}, [mappingMode, gridCols, gridRows, gridColWidth, gridRowHeight, mouseDownAt, mouseOverAt, defaultObstacleDuration]);
+	}, [mode, grid, cellDownAt, cellOverAt, defaultObstacleDuration]);
 
-	if (!tentativeObstacle) return;
+	if (!data) return;
 
-	return <Obstacle {...rest} position-z={Z_POSITION} data={tentativeObstacle} beatDepth={beatDepth} color={color} gridRows={gridRows} gridCols={gridCols} />;
+	const position = resolvePositionForObstacle(data, { beatDepth });
+	const dimensions = resolveDimensionsForObstacle(data, { beatDepth });
+
+	return <Obstacle {...rest} data={data} position-x={position[0]} position-y={position[1]} position-z={position[2] + Z_POSITION} dimensions={dimensions} color={color} />;
 }
 
 export default TentativeObstacle;

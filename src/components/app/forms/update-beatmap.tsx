@@ -12,7 +12,7 @@ import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Interleave } from "$/components/ui/atoms";
 import { Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
-import { EnvironmentAllNameSchema } from "bsmap";
+import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
 import { DotIcon } from "lucide-react";
 
 interface Props {
@@ -128,8 +128,8 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
 					<HStack gap={0}>
 						<Interleave separator={({ index }) => <DotIcon key={index} size={16} />}>
-							<Heading rank={4}>{savedVersion.characteristic}</Heading>
-							<Heading rank={4}>{savedVersion.difficulty}</Heading>
+							<Heading rank={4}>{CharacteristicRename[savedVersion.characteristic]}</Heading>
+							<Heading rank={4}>{DifficultyRename[savedVersion.difficulty]}</Heading>
 						</Interleave>
 					</HStack>
 				</Stack>

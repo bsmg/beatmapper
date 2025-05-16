@@ -5,13 +5,14 @@ import { range } from "$/utils";
 
 import type { CellProps } from "./cell";
 
-interface Props extends IGrid {
+interface Props {
+	grid: IGrid;
 	children: (cell: CellProps) => ReactNode;
 }
-function PlacementGridLayout({ numRows, numCols, colWidth, rowHeight, children, ...rest }: Props) {
-	return range(numRows).map((rowIndex) => {
-		return range(numCols).map((colIndex) => {
-			return children({ ...rest, colIndex, rowIndex, numCols, numRows, colWidth, rowHeight });
+function PlacementGridLayout({ grid, children, ...rest }: Props) {
+	return range(grid.numRows).map((rowIndex) => {
+		return range(grid.numCols).map((colIndex) => {
+			return children({ ...rest, colIndex, rowIndex, grid });
 		});
 	});
 }

@@ -2,7 +2,7 @@ import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@redux
 import { createObstacle, sortObjectFn } from "bsmap";
 
 import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
-import { resolveObstacleId, toggleFastObstacle } from "$/helpers/obstacles.helpers";
+import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import {
 	createNewObstacle,
 	createNewSong,
@@ -23,7 +23,6 @@ import {
 	selectObstacle,
 	startLoadingSong,
 	swapSelectedNotes,
-	toggleFastWallsForSelectedObstacles,
 } from "$/store/actions";
 import { createSelectedEntitiesSelector } from "$/store/helpers";
 import { type App, ObjectType, View } from "$/types";
@@ -63,13 +62,6 @@ const slice = createSlice({
 			return adapter.updateMany(
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { duration: newBeatDuration } })),
-			);
-		});
-		builder.addCase(toggleFastWallsForSelectedObstacles, (state) => {
-			const entities = selectAllSelected(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: toggleFastObstacle(x) })),
 			);
 		});
 		builder.addCase(deleteObstacle, (state, action) => {

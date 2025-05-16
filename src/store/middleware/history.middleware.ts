@@ -14,11 +14,11 @@ import {
 	selectFutureBombNotes,
 	selectFutureColorNotes,
 	selectFutureObstacles,
-	selectGraphicsQuality,
 	selectPastBasicEvents,
 	selectPastBombNotes,
 	selectPastColorNotes,
 	selectPastObstacles,
+	selectSurfaceDepth,
 } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
@@ -44,9 +44,9 @@ function jumpToEarliestNote(api: MiddlewareAPI, songId: SongId, args: { [K in "n
 	const state = api.getState();
 	const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 	const beatDepth = selectBeatDepth(state);
-	const graphicsLevel = selectGraphicsQuality(state);
+	const surfaceDepth = selectSurfaceDepth(state);
 
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel);
+	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, surfaceDepth / beatDepth);
 
 	const entityTime = resolveTimeForItem(earliestEntity);
 

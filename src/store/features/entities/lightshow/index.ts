@@ -1,7 +1,7 @@
 import { type UnknownAction, combineReducers } from "@reduxjs/toolkit";
 import undoable, { type FilterFunction, groupByActionTypes, type GroupByFunction, includeAction } from "redux-undo";
 
-import { bulkDeleteEvent, bulkPlaceEvent, changeLaserSpeed, cutSelection, deleteEvent, deleteSelectedEvents, nudgeSelection, pasteSelection, placeEvent, redoEvents, switchEventColor, undoEvents } from "$/store/actions";
+import { addOneBasicEvent, bulkAddBasicEvent, bulkDeleteEvent, bulkRemoveBasicEvent, cutSelection, deleteSelectedEvents, nudgeSelection, pasteSelection, redoEvents, removeOneBasicEvent, switchEventColor, undoEvents } from "$/store/actions";
 
 import basic from "./basic.slice";
 
@@ -10,19 +10,18 @@ const reducer = combineReducers({
 });
 
 const filter: FilterFunction<ReturnType<typeof reducer>, UnknownAction> = includeAction([
-	placeEvent.type,
-	bulkPlaceEvent.type,
-	changeLaserSpeed.type,
-	deleteEvent.type,
+	addOneBasicEvent.type,
+	bulkAddBasicEvent.type,
+	removeOneBasicEvent.type,
 	deleteSelectedEvents.type,
-	bulkDeleteEvent.type,
+	bulkRemoveBasicEvent.type,
 	cutSelection.fulfilled.type,
 	pasteSelection.fulfilled.type,
 	switchEventColor.type,
 	nudgeSelection.fulfilled.type,
 	//
 ]);
-const groupBy: GroupByFunction<ReturnType<typeof reducer>, UnknownAction> = groupByActionTypes([bulkPlaceEvent.type, bulkDeleteEvent.type]);
+const groupBy: GroupByFunction<ReturnType<typeof reducer>, UnknownAction> = groupByActionTypes([bulkAddBasicEvent.type, bulkDeleteEvent.type]);
 
 export default {
 	reducer: undoable(reducer, {

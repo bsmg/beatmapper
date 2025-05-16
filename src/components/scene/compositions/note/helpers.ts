@@ -1,16 +1,17 @@
 import { NoteDirection } from "bsmap";
+import type { Vector3Tuple } from "three";
 
 import { blockCenterUrl, blockDirectionalUrl } from "$/assets";
-import { BLOCK_COLUMN_WIDTH, SONG_OFFSET } from "$/components/scene/constants";
+import { BLOCK_CELL_SIZE, SONG_OFFSET } from "$/components/scene/constants";
 import type { App } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
 export function resolvePathForNoteDirection(direction: number) {
-	// If the direction is >=1000, that means it's a MappingExtensions thing.
-	// Must be directional.
-	if (direction >= 1000) {
-		return blockDirectionalUrl;
-	}
+	// If the direction is >=1000, we'll want to use mapping extensions.
+	// - for 2000-2360 range, it should be a dot note
+	if (direction >= 2000) return blockCenterUrl;
+	// - for 1000-1360 range, it should be directional
+	if (direction >= 1000) return blockDirectionalUrl;
 
 	switch (direction) {
 		case NoteDirection.UP:
@@ -32,69 +33,32 @@ export function resolvePathForNoteDirection(direction: number) {
 	}
 }
 
-export function resolveRotationForNoteDirection(direction: number) {
-	// If the rotation is >=1000, we're in MappingExtensions land :D
-	// It uses a 1000-1360 system, from down clockwise.
-	// We have some conversions to do, to get an angle in radians.
-	if (direction >= 1000) {
-		// (this formula is a little bonkers, there's probably a simpler way.)
-		// (but it works.)
-		const reorientedAngle = 180 - ((direction + 270) % 360);
-		const angleInRads = convertDegreesToRadians(reorientedAngle);
-
-		return angleInRads;
-	}
-
-	// The numbering system used is completely nonsensical:
-	//
-	//   4  0  5
-	//   2  8  3
-	//   6  1  7
-	//
-	// Our block by default points downwards, so we'll do x-axis rotations depending on the number
-	switch (direction) {
-		case NoteDirection.UP: {
-			return Math.PI;
-		}
-		case NoteDirection.DOWN: {
-			return 0;
-		}
-		case NoteDirection.LEFT: {
-			return Math.PI * -0.5;
-		}
-		case NoteDirection.RIGHT: {
-			return Math.PI * 0.5;
-		}
-		case NoteDirection.UP_LEFT: {
-			return Math.PI * -0.75;
-		}
-		case NoteDirection.UP_RIGHT: {
-			return Math.PI * 0.75;
-		}
-		case NoteDirection.DOWN_LEFT: {
-			return Math.PI * -0.25;
-		}
-		case NoteDirection.DOWN_RIGHT: {
-			return Math.PI * 0.25;
-		}
-
-		case NoteDirection.ANY: {
-			return 0;
-		}
-
-		default: {
-			throw new Error(`Unrecognized direction: ${direction}`);
-		}
-	}
+interface Options {
+	beatDepth?: number;
 }
+export function resolvePositionForNote<T extends Pick<App.IBaseNote, "posX" | "posY"> & Partial<Pick<App.IBaseNote, "time">>>(note: T, { beatDepth }: Options): Vector3Tuple {
+	const position = { x: 0, y: 0, z: 0 };
 
-export function resolvePositionForNote<T extends Pick<App.IBaseNote, "posX" | "posY"> & Partial<Pick<App.IBaseNote, "time">>>(note: T, beatDepth?: number) {
-	const x = note.posX * BLOCK_COLUMN_WIDTH - BLOCK_COLUMN_WIDTH * 1.5;
-	const y = note.posY * BLOCK_COLUMN_WIDTH - BLOCK_COLUMN_WIDTH;
+	if (note.posX >= 1000 || note.posX <= -1000) {
+		const OFFSET_X = BLOCK_CELL_SIZE * -1.5;
+		position.x = (note.posX / 1000) * BLOCK_CELL_SIZE + OFFSET_X;
+		position.x += (note.posX > 0 ? -1 : 1) * BLOCK_CELL_SIZE;
+	} else {
+		const OFFSET_X = BLOCK_CELL_SIZE * -1.5;
+		position.x = note.posX * BLOCK_CELL_SIZE + OFFSET_X;
+	}
 
-	let z = -SONG_OFFSET;
+	if (note.posY >= 1000 || note.posY <= -1000) {
+		const OFFSET_Y = BLOCK_CELL_SIZE * -1;
+		position.y = (note.posY / 1000) * BLOCK_CELL_SIZE + OFFSET_Y;
+		position.y += (note.posY > 0 ? -1 : 1) * BLOCK_CELL_SIZE;
+	} else {
+		const OFFSET_Y = BLOCK_CELL_SIZE * -1;
+		position.y = note.posY * BLOCK_CELL_SIZE + OFFSET_Y;
+	}
 
-	if (note.time && beatDepth) {
+	if (note.time !== undefined && beatDepth) {
+		position.z = -SONG_OFFSET;
 		// We want to first lay the notes out with proper spacing between them.
 		// beatDepth controls the distance between two 1/4 notes.
 		// We want this to all be BPM-independent; two quarter notes should be equally distant regardless of BPM. To do this, we have to convert the note time into notes.
@@ -102,8 +66,20 @@ export function resolvePositionForNote<T extends Pick<App.IBaseNote, "posX" | "p
 		const startingPosition = note.time * beatDepth * -1;
 
 		// Next, take into account that the song is playing. `cursorPosition` will continue to grow, and we need to cursorPosition it by the right number of beats.
-		z += startingPosition;
+		position.z += startingPosition;
 	}
 
-	return { x, y, z };
+	return [position.x, position.y, position.z];
+}
+
+export function resolveRotationForNoteDirection(direction: number) {
+	// If the rotation is >=1000, we're in MappingExtensions land :D
+	// It uses a 1000-1360 system, from down clockwise.
+	// We have some conversions to do, to get an angle in radians.
+
+	// (this formula is a little bonkers, there's probably a simpler way, but it works.)
+	const reorientedAngle = 180 - ((direction + 270) % 360);
+	// hack: visual rotation is slightly off from the correct rotation value, not sure where this is happening but we can fix it here
+	const patchedAngle = reorientedAngle + Math.PI * 3;
+	return convertDegreesToRadians(patchedAngle);
 }

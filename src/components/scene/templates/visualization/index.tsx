@@ -13,6 +13,8 @@ import EditorPlacementGrid from "./placement-grid";
 interface Props {
 	sid: SongId;
 	bid: BeatmapId;
+	beatDepth: number;
+	surfaceDepth: number;
 	interactive?: boolean;
 }
 /**
@@ -20,15 +22,15 @@ interface Props {
  *
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
-function MapVisualization({ sid, bid, interactive }: Props) {
+function MapVisualization({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
 	useControls();
 
 	return (
 		<Fragment>
-			<TrackMover sid={sid}>
+			<TrackMover sid={sid} beatDepth={beatDepth}>
 				{interactive && <EditorBeatMarkers sid={sid} />}
-				<EditorNotes sid={sid} bid={bid} />
-				<EditorObstacles sid={sid} bid={bid} />
+				<EditorNotes sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} />
+				<EditorObstacles sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} />
 			</TrackMover>
 			{interactive && <EditorPlacementGrid sid={sid} bid={bid} position-z={-SONG_OFFSET} />}
 		</Fragment>

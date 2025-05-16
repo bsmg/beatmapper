@@ -1,6 +1,5 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { isSongReadonly } from "$/helpers/song.helpers";
 import { createNewSong, dismissPrompt, finishLoadingSong, hydrateUser, importExistingSong, updateGraphicsLevel, updateProcessingDelay, updateSongDetails } from "$/store/actions";
 import { Quality } from "$/types";
 
@@ -32,9 +31,7 @@ const slice = createSlice({
 			if (processingDelay !== undefined) state.processingDelay = processingDelay;
 			if (graphicsLevel !== undefined) state.graphicsLevel = Object.values(Quality)[graphicsLevel];
 		});
-		builder.addCase(importExistingSong, (state, action) => {
-			const { songData } = action.payload;
-			if (isSongReadonly(songData)) return state;
+		builder.addCase(importExistingSong.fulfilled, (state, action) => {
 			return { ...state, isNewUser: false };
 		});
 		builder.addCase(updateSongDetails, (state, action) => {

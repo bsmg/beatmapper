@@ -38,12 +38,6 @@ export function isSongReadonly<T extends Pick<App.ISong, "demo">>(song: T) {
 export function isModuleEnabled<T extends Pick<App.ISong, "modSettings">>(song: T, key: keyof App.IModSettings) {
 	return !!song.modSettings[key]?.isEnabled;
 }
-export function isFastWallsEnabled<T extends Pick<App.ISong, "enabledFastWalls">>(song: T) {
-	return !!song.enabledFastWalls;
-}
-export function isLightshowEnabled<T extends Pick<App.ISong, "enabledLightshow">>(song: T) {
-	return !!song.enabledLightshow;
-}
 
 export function getSongMetadata<T extends Pick<App.ISong, "name" | "subName" | "artistName">>(song: T) {
 	return { title: song.name, subtitle: song.subName, artist: song.artistName };

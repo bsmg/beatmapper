@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { cancelImportingSong, finishLoadingSong, importExistingSong, init, reloadWaveform, startImportingSong, startLoadingSong } from "$/store/actions";
+import { finishLoadingSong, importExistingSong, init, reloadWaveform, startLoadingSong } from "$/store/actions";
 
 const initialState = {
 	initialized: false,
@@ -27,10 +27,10 @@ const slice = createSlice({
 		builder.addMatcher(isAnyOf(finishLoadingSong, reloadWaveform), (state) => {
 			return { ...state, isLoading: false };
 		});
-		builder.addMatcher(isAnyOf(startImportingSong), (state) => {
+		builder.addMatcher(isAnyOf(importExistingSong.pending), (state) => {
 			return { ...state, isProcessingImport: true };
 		});
-		builder.addMatcher(isAnyOf(importExistingSong, cancelImportingSong), (state) => {
+		builder.addMatcher(isAnyOf(importExistingSong.fulfilled, importExistingSong.rejected), (state) => {
 			return { ...state, isProcessingImport: false };
 		});
 		builder.addDefaultCase((state) => state);

@@ -1,45 +1,64 @@
 import type { ThreeEvent } from "@react-three/fiber";
-import { type ComponentProps, useCallback, useMemo } from "react";
+import { type ComponentProps, type ReactNode, useCallback, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
+import { useGlobalEventListener } from "$/components/hooks";
 import { Obj } from "$/components/scene/atoms";
 import type { App } from "$/types";
 
-export interface BaseNoteProps<T extends App.IBaseNote> extends ComponentProps<typeof Obj> {
-	data: Pick<T, "time" | "posX" | "posY" | "direction" | "selected">;
+export interface BaseNoteProps<T extends App.IBaseNote> extends Omit<ComponentProps<typeof Obj>, "children"> {
+	data: T;
 	color?: ColorRepresentation;
 	size?: number;
 	metalness?: number;
 	roughness?: number;
 	transparent?: boolean;
-	onNoteClick?: (event: PointerEvent, data: Pick<T, "time" | "posX" | "posY" | "direction" | "selected">) => void;
-	onNoteMouseOver?: (event: PointerEvent, data: Pick<T, "time" | "posX" | "posY" | "direction" | "selected">) => void;
+	onNotePointerDown?: (event: PointerEvent, data: T) => void;
+	onNotePointerOver?: (event: PointerEvent, data: T) => void;
+	onNotePointerOut?: (event: PointerEvent, data: T) => void;
+	onNoteWheel?: (event: WheelEvent, data: T) => void;
+	children: (forwarded: { scale: number }) => ReactNode;
 }
-function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size = 1, metalness, roughness, transparent, onNoteClick: handleClick, onNoteMouseOver: handleMouseOver, ...rest }: BaseNoteProps<T>) {
+function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size = 1, metalness, roughness, transparent, onNotePointerDown, onNotePointerOver, onNotePointerOut, onNoteWheel, ...rest }: BaseNoteProps<T>) {
 	const scaleFactor = useMemo(() => size * 0.5, [size]);
 
 	const handlePointerDown = useCallback(
-		(ev: ThreeEvent<PointerEvent>) => {
-			ev.stopPropagation();
-			if (handleClick && data.time !== undefined && data.posY !== undefined && data.posX !== undefined) handleClick(ev.nativeEvent, data);
+		(event: ThreeEvent<PointerEvent>) => {
+			event.stopPropagation();
+			if (onNotePointerDown) onNotePointerDown(event.nativeEvent, data);
 		},
-		[data, handleClick],
+		[data, onNotePointerDown],
+	);
+	const handlePointerOver = useCallback(
+		(event: ThreeEvent<PointerEvent>) => {
+			event.stopPropagation();
+			if (onNotePointerOver) onNotePointerOver(event.nativeEvent, data);
+		},
+		[data, onNotePointerOver],
+	);
+	const handlePointerOut = useCallback(
+		(event: ThreeEvent<PointerEvent>) => {
+			event.stopPropagation();
+			if (onNotePointerOut) onNotePointerOut(event.nativeEvent, data);
+		},
+		[data, onNotePointerOut],
+	);
+	const handleWheel = useCallback(
+		(event: WheelEvent) => {
+			event.preventDefault();
+			if (onNoteWheel) onNoteWheel(event, data);
+		},
+		[data, onNoteWheel],
 	);
 
-	const handlePointerOver = useCallback(
-		(ev: ThreeEvent<PointerEvent>) => {
-			ev.stopPropagation();
-			if (handleMouseOver && data.time !== undefined && data.posY !== undefined && data.posX !== undefined) handleMouseOver(ev.nativeEvent, data);
-		},
-		[data, handleMouseOver],
-	);
+	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
 
 	return (
-		<group onPointerDown={handlePointerDown} onPointerOver={handlePointerOver}>
+		<group onPointerDown={handlePointerDown} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
 			<Obj {...rest} path={path} castShadow scale={[scaleFactor, scaleFactor, scaleFactor]}>
-				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={transparent ? 0.25 : 1} />
+				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : transparent ? 0.25 : 1} />
 			</Obj>
-			{children}
+			{children({ scale: size })}
 		</group>
 	);
 }

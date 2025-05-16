@@ -1,28 +1,27 @@
 import { animated } from "@react-spring/three";
 import { useThree } from "@react-three/fiber";
-import type { EntityId } from "@reduxjs/toolkit";
 import { useMemo } from "react";
-import { AdditiveBlending, Color, type ColorRepresentation, FrontSide } from "three";
+import { AdditiveBlending, Color, FrontSide } from "three";
 
 import { glowFragmentShader, glowVertexShader } from "$/assets";
 import { useLightSpring } from "$/components/scene/compositions/materials/light";
-import type { App } from "$/types";
+import type { UseLightPropsReturn } from "$/components/scene/hooks";
+import type { SongId } from "$/types";
 import { normalize } from "$/utils";
 
 interface Props {
+	sid: SongId;
 	x: number;
 	y: number;
 	z: number;
-	color: ColorRepresentation;
 	size: number;
-	status: App.LightEventType;
-	lastEventId: EntityId | null;
+	light: UseLightPropsReturn;
 	isBlooming?: boolean;
 }
-function Glow({ x, y, z, color, size, status, lastEventId, isBlooming }: Props) {
+function Glow({ sid, x, y, z, size, light, isBlooming }: Props) {
 	const { camera } = useThree();
 
-	const [spring] = useLightSpring({ lastEventId, status, color });
+	const [spring] = useLightSpring({ sid, light });
 
 	// When blooming, the `c` uniform makes it white and obnoxious, so tune the effect down in this case.
 	const maxCValue = useMemo(() => (isBlooming ? 0.2 : 0.001), [isBlooming]);
@@ -39,7 +38,7 @@ function Glow({ x, y, z, color, size, status, lastEventId, isBlooming }: Props) 
 						uniforms: {
 							c: { value: maxCValue },
 							p: { value: undefined },
-							glowColor: { value: new Color(color) },
+							glowColor: { value: new Color(light.color) },
 							viewVector: { value: camera.position },
 						},
 						vertexShader: glowVertexShader,
@@ -49,7 +48,7 @@ function Glow({ x, y, z, color, size, status, lastEventId, isBlooming }: Props) 
 						transparent: true,
 					},
 				]}
-				uniforms-glowColor-value={new Color(color)}
+				uniforms-glowColor-value={new Color(light.color)}
 				uniforms-p-value={spring.opacity.to((o) => normalize(o, 0, 1, ...PValueRange))}
 				uniforms-c-value={spring.opacity.to((o) => normalize(o, 0, 1, 0.1, maxCValue))}
 			/>

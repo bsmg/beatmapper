@@ -1,4 +1,4 @@
-import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { type EntityId, type PayloadAction, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import { createColorNote, mirrorNoteColor, sortObjectFn } from "bsmap";
 
 import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
@@ -45,7 +45,14 @@ const slice = createSlice({
 		selectAllSelected: selectAllSelected,
 		selectTotal: selectTotal,
 	},
-	reducers: {},
+	reducers: {
+		updateOne: (state, action: PayloadAction<{ query: Parameters<typeof resolveNoteId>[0]; changes: Partial<App.IColorNote> }>) => {
+			const { query, changes } = action.payload;
+			const match = selectByPosition(state, query);
+			if (!match) return state;
+			return adapter.updateOne(state, { id: adapter.selectId(match), changes });
+		},
+	},
 	extraReducers: (builder) => {
 		builder.addCase(loadBeatmapEntities, (state, action) => {
 			const { notes } = action.payload;
@@ -54,7 +61,6 @@ const slice = createSlice({
 		builder.addCase(clickPlacementGrid.fulfilled, (state, action) => {
 			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex, direction } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
-			if (!direction) return state;
 			const color = Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1;
 			return adapter.addOne(state, createColorNote({ time: beatNum, posX: colIndex, posY: rowIndex, color: color, direction: direction }));
 		});

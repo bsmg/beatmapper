@@ -2,11 +2,11 @@ import { Text3D } from "@react-three/drei";
 import { Fragment, memo, useMemo } from "react";
 
 import { oswaldGlyphsUrl } from "$/assets";
-import { BLOCK_COLUMN_WIDTH, SURFACE_WIDTH } from "$/components/scene/constants";
+import { BLOCK_CELL_SIZE, SURFACE_WIDTH } from "$/components/scene/constants";
 import { DEFAULT_NUM_ROWS } from "$/constants";
 
 const Y_PADDING = 0.0075;
-const Y_OFFSET = BLOCK_COLUMN_WIDTH * (DEFAULT_NUM_ROWS * -0.5) + Y_PADDING;
+const Y_OFFSET = BLOCK_CELL_SIZE * (DEFAULT_NUM_ROWS * -0.5) + Y_PADDING;
 
 const TEXT_PADDING = 0.5;
 

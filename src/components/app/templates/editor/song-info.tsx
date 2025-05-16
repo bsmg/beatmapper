@@ -44,7 +44,6 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleCreate = useCallback(
 		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			// todo: add dedicated setting for customizing lightshow behavior
 			dispatch(createDifficulty({ songId: sid, beatmapId: id, beatmapData: data }));
 		},
 		[dispatch, sid],

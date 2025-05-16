@@ -1,43 +1,39 @@
-import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
+import type { MeshProps, ThreeEvent } from "@react-three/fiber";
 import { memo, useCallback, useContext, useMemo } from "react";
 import { DoubleSide } from "three";
 
-import { BLOCK_PLACEMENT_SQUARE_SIZE } from "$/components/scene/constants";
+import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
+import type { IGrid } from "$/types";
 import { Context } from "./context";
 
 const CELL_PADDING = 0.05;
-const VERTICAL_OFFSET = -BLOCK_PLACEMENT_SQUARE_SIZE;
-
-type MeshProps = ThreeElements["mesh"];
+const VERTICAL_OFFSET = -BLOCK_CELL_SIZE;
 
 export interface CellProps extends MeshProps {
+	grid: IGrid;
 	rowIndex: number;
 	colIndex: number;
-	numRows: number;
-	numCols: number;
-	rowHeight: number;
-	colWidth: number;
 }
-function PlacementGridCell({ rowIndex, colIndex, numCols, rowHeight, colWidth, ...rest }: CellProps) {
+function PlacementGridCell({ rowIndex, colIndex, grid, ...rest }: CellProps) {
 	const { hoveredCell, onCellPointerDown, onCellPointerOut, onCellPointerOver, ...context } = useContext(Context);
 	const isHovered = useMemo(() => !!(hoveredCell && hoveredCell.rowIndex === rowIndex && hoveredCell.colIndex === colIndex), [hoveredCell, colIndex, rowIndex]);
 
 	// Our `rowHeight` is in units compared to the default, so a non-map-extension grid would have a height and width of 1. A rowHeight of 2 means it's 2x as big as that default.
 	// `renderRowHeight` is how tall our grid cell should be in terms of rendering height.
-	const renderRowHeight = useMemo(() => rowHeight * BLOCK_PLACEMENT_SQUARE_SIZE, [rowHeight]);
-	const renderColWidth = useMemo(() => colWidth * BLOCK_PLACEMENT_SQUARE_SIZE, [colWidth]);
+	const renderRowHeight = useMemo(() => grid.rowHeight * BLOCK_CELL_SIZE, [grid.rowHeight]);
+	const renderColWidth = useMemo(() => grid.colWidth * BLOCK_CELL_SIZE, [grid.colWidth]);
 
 	// Because we want grids to be centered, the wider the grid, the more each position is pushed further from this position.
 	// After sketching out the math, the formula looks like:
 	// x = -0.5T + 0.5 + I       // T = Total Columns
 	//                           // I = Column Index
-	const x = useMemo(() => (numCols * -0.5 + 0.5 + colIndex) * renderColWidth, [numCols, colIndex, renderColWidth]);
+	const x = useMemo(() => (grid.numCols * -0.5 + 0.5 + colIndex) * renderColWidth, [grid.numCols, colIndex, renderColWidth]);
 	const y = useMemo(() => rowIndex * renderRowHeight + VERTICAL_OFFSET, [rowIndex, renderRowHeight]);
 
 	const handlePointerDown = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
 			ev.stopPropagation();
-			if (onCellPointerDown) onCellPointerDown(ev.nativeEvent, { mouseDownAt: { rowIndex, colIndex, x: ev.pageX, y: ev.pageY } });
+			if (onCellPointerDown) onCellPointerDown(ev.nativeEvent, { cellDownAt: { rowIndex, colIndex } });
 		},
 		[colIndex, rowIndex, onCellPointerDown],
 	);
@@ -45,15 +41,15 @@ function PlacementGridCell({ rowIndex, colIndex, numCols, rowHeight, colWidth, .
 	const handlePointerOver = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
 			ev.stopPropagation();
-			if (onCellPointerOver) onCellPointerOver(ev.nativeEvent, { mouseDownAt: context.mouseDownAt, mouseOverAt: { rowIndex, colIndex } });
+			if (onCellPointerOver) onCellPointerOver(ev.nativeEvent, { cellDownAt: context.cellDownAt, cellOverAt: { rowIndex, colIndex } });
 		},
-		[context.mouseDownAt, colIndex, rowIndex, onCellPointerOver],
+		[context.cellDownAt, colIndex, rowIndex, onCellPointerOver],
 	);
 
 	const handlePointerOut = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
 			ev.stopPropagation();
-			if (onCellPointerOut) onCellPointerOut(ev.nativeEvent, { mouseOverAt: { rowIndex, colIndex } });
+			if (onCellPointerOut) onCellPointerOut(ev.nativeEvent, { cellOverAt: { rowIndex, colIndex } });
 		},
 		[colIndex, rowIndex, onCellPointerOut],
 	);

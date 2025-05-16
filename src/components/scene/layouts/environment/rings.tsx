@@ -1,5 +1,5 @@
 import { type Interpolation, useSprings, useTrail } from "@react-spring/three";
-import type { ThreeElements } from "@react-three/fiber";
+import type { GroupProps } from "@react-three/fiber";
 import type { ReactNode } from "react";
 
 import { useRingRotation, useRingZoom } from "$/components/scene/hooks";
@@ -8,10 +8,10 @@ import { useAppSelector } from "$/store/hooks";
 import { selectAnimateRingMotion } from "$/store/selectors";
 import type { App } from "$/types";
 
-interface Props extends Omit<ThreeElements["group"], "children"> {
+interface Props extends Omit<GroupProps, "children"> {
 	count: number;
-	lastRotationEvent: App.IBasicTriggerEvent | null | undefined;
-	lastZoomEvent: App.IBasicTriggerEvent | null | undefined;
+	lastRotationEvent: App.IBasicEvent | null | undefined;
+	lastZoomEvent: App.IBasicEvent | null | undefined;
 	ratio?: number;
 	minDistance?: number;
 	maxDistance?: number;

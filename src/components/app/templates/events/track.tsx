@@ -1,31 +1,31 @@
-import { type PointerEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
+import { type ComponentProps, type PointerEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
-import { isTriggerTrack, isValueTrack, resolveEventId } from "$/helpers/events.helpers";
-import { bulkPlaceEvent, placeEvent } from "$/store/actions";
+import { resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
+import { bulkAddBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
 	selectAllBasicEventsForTrackInWindow,
 	selectDurationInBeats,
 	selectEditorOffsetInBeats,
-	selectEventEditorBeatsPerZoomLevel,
 	selectEventEditorColor,
 	selectEventEditorEditMode,
 	selectEventEditorSelectedBeat,
+	selectEventEditorStartAndEndBeat,
 	selectEventEditorToggleMirror,
 	selectEventEditorTool,
-	selectEventEditorZoomLevelStartBeat,
-	selectInitialColorForTrack,
+	selectInitialStateForTrack,
 } from "$/store/selectors";
-import { App, type BeatmapId, EventEditMode, type IEventTrack, type SongId } from "$/types";
+import { App, type BeatmapId, EventEditMode, type IEventTrack, type SongId, TrackType } from "$/types";
 import { clamp, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
 import { styled } from "$:styled-system/jsx";
+import { createBasicEvent } from "bsmap";
 import EventGridBackgroundBox from "./background-box";
 import EventGridEventItem from "./event";
 
-interface Props {
+interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
 	bid: BeatmapId;
 	trackId: App.TrackId;
@@ -33,25 +33,37 @@ interface Props {
 	width: number;
 	height: number;
 	disabled: boolean;
+	onEventPointerDown?: (event: PointerEvent, data: App.IBasicEvent) => void;
+	onEventPointerOut?: (event: PointerEvent, data: App.IBasicEvent) => void;
+	onEventPointerOver?: (event: PointerEvent, data: App.IBasicEvent) => void;
+	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled }: Props) {
+function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Props) {
 	const dispatch = useAppDispatch();
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const cursorAtBeat = useAppSelector(selectEventEditorSelectedBeat);
-	const startBeat = useAppSelector((state) => selectEventEditorZoomLevelStartBeat(state, sid));
-	const numOfBeatsToShow = useAppSelector((state) => selectEventEditorBeatsPerZoomLevel(state));
+	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const offsetInBeats = useAppSelector((state) => -selectEditorOffsetInBeats(state, sid));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedTool = useAppSelector(selectEventEditorTool);
 	const selectedColorType = useAppSelector(selectEventEditorColor);
-	const initialTrackLightingColorType = useAppSelector((state) => selectInitialColorForTrack(state, trackId));
+	const initialTrackLightingState = useAppSelector((state) => selectInitialStateForTrack(state, trackId));
 	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
 
 	const [mouseButtonDepressed, setMouseButtonDepressed] = useState<"left" | "right" | null>(null);
+	const [norm, setNorm] = useState<number | null>(null);
+
+	const backgroundBoxes = useMemo(() => {
+		const { color, brightness } = initialTrackLightingState;
+		return createBackgroundBoxes(events, trackId, { initialColor: color ?? null, initialBrightness: brightness ?? null, startBeat, numOfBeatsToShow, tracks });
+	}, [events, trackId, initialTrackLightingState, startBeat, numOfBeatsToShow, tracks]);
+
+	const styles = useMemo(() => ({ height }), [height]);
 
 	const handlePointerUp = useCallback(() => {
 		setMouseButtonDepressed(null);
+		setNorm(null);
 	}, []);
 
 	useGlobalEventListener("pointerup", handlePointerUp, {
@@ -59,62 +71,68 @@ function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled }: 
 	});
 
 	const resolveEventData = useCallback(
-		(beat: number, eventValue?: number) => {
-			if (isTriggerTrack(trackId)) {
-				return { beatNum: beat, trackId, eventType: App.BasicEventType.TRIGGER, areLasersLocked };
+		(time: number, norm: number) => {
+			const type = resolveTrackType(trackId, tracks);
+
+			switch (type) {
+				case TrackType.LIGHT: {
+					const value = resolveEventValue({ effect: selectedTool, color: selectedColorType }, { tracks });
+					const floatValue = Math.round(normalize(1 - (norm ?? 0), 0, 1, 0, 2)) / 2;
+					return { data: createBasicEvent({ time, type: trackId, value: value, floatValue: floatValue }), tracks, areLasersLocked };
+				}
+				case TrackType.TRIGGER: {
+					const value = resolveEventValue({ effect: App.BasicEventType.TRIGGER }, { tracks });
+					return { data: createBasicEvent({ time, type: trackId, value: value }), tracks, areLasersLocked };
+				}
+				case TrackType.VALUE: {
+					const value = Math.round(normalize(norm ?? 0, 0, 1, 8, 0));
+					return { data: createBasicEvent({ time, type: trackId, value: value }), tracks, areLasersLocked };
+				}
+				default: {
+					throw new Error(`Unsupported track: ${trackId}`);
+				}
 			}
-			if (isValueTrack(trackId)) {
-				const value = isValueTrack(trackId) ? (eventValue ?? 0) : undefined;
-				return { beatNum: beat, trackId, eventType: App.BasicEventType.VALUE, eventLaserSpeed: value, areLasersLocked };
-			}
-			return { beatNum: beat, trackId, eventType: selectedTool, eventColorType: selectedColorType, areLasersLocked };
 		},
-		[areLasersLocked, selectedColorType, selectedTool, trackId],
+		[tracks, areLasersLocked, selectedColorType, selectedTool, trackId],
 	);
 
 	const handleClickTrack = useCallback(
 		(ev: PointerEvent<HTMLElement>) => {
-			if (disabled || selectedEditMode === EventEditMode.SELECT) {
-				return;
-			}
+			if (cursorAtBeat === null) return;
+			if (disabled || selectedEditMode === EventEditMode.SELECT) return;
 
-			if (ev.buttons === 1) {
-				setMouseButtonDepressed("left");
-				if (cursorAtBeat === null) return;
-				const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
-				const normY = ev.nativeEvent.offsetY / ev.currentTarget.clientHeight;
-				const value = Math.round(normalize(normY, 0, 1, 8, 0));
-				return dispatch(placeEvent(resolveEventData(beatNum, value)));
-			}
-			if (ev.buttons === 2) {
-				setMouseButtonDepressed("right");
+			setNorm(ev.nativeEvent.offsetY / ev.currentTarget.clientHeight);
+
+			switch (ev.button) {
+				case 0: {
+					setMouseButtonDepressed("left");
+					break;
+				}
+				case 2: {
+					setMouseButtonDepressed("right");
+					break;
+				}
 			}
 		},
-		[dispatch, resolveEventData, disabled, selectedEditMode, cursorAtBeat, offsetInBeats, duration],
+		[disabled, selectedEditMode, cursorAtBeat],
 	);
 
 	useEffect(() => {
-		if (selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "left" && !isValueTrack(trackId)) {
-			if (cursorAtBeat !== null) {
-				const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
-				dispatch(bulkPlaceEvent(resolveEventData(beatNum)));
-			}
+		if (selectedEditMode !== EventEditMode.PLACE || cursorAtBeat === null) return;
+
+		if (mouseButtonDepressed === "left") {
+			const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
+			dispatch(bulkAddBasicEvent(resolveEventData(beatNum, norm ?? 0)));
 		}
-	}, [dispatch, resolveEventData, trackId, cursorAtBeat, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
-
-	const backgroundBoxes = useMemo(() => {
-		return createBackgroundBoxes(events, trackId, initialTrackLightingColorType ?? null, startBeat, numOfBeatsToShow, tracks);
-	}, [events, trackId, initialTrackLightingColorType, startBeat, numOfBeatsToShow, tracks]);
-
-	const styles = useMemo(() => ({ height }), [height]);
+	}, [dispatch, resolveEventData, cursorAtBeat, norm, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
 	return (
-		<Wrapper key={trackId} style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
+		<Wrapper key={trackId} {...rest} style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			{backgroundBoxes.map((box) => (
-				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.beatNum })} sid={sid} bid={bid} box={box} />
+				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} sid={sid} bid={bid} box={box} />
 			))}
 			{events.map((event) => {
-				return <EventGridEventItem key={resolveEventId(event)} sid={sid} bid={bid} event={event} trackWidth={width} deleteOnHover={selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed === "right"} />;
+				return <EventGridEventItem key={resolveEventId(event)} sid={sid} bid={bid} event={event} tracks={tracks} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />;
 			})}
 		</Wrapper>
 	);

@@ -115,7 +115,7 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 										environmentName: patchEnvironmentName(song.environment),
 										colorSchemeName: null,
 										mappers: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
-										lighters: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
+										lighters: [],
 										customLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
 									};
 									return acc;

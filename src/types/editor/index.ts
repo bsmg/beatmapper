@@ -4,9 +4,12 @@ import type { TrackType } from "./shared";
 export * from "./shared";
 
 export interface IBackgroundBox {
-	beatNum: number;
+	time: number;
 	duration?: number | null;
-	colorType?: App.EventColor;
+	startColor?: App.EventColor;
+	endColor?: App.EventColor;
+	startBrightness?: number;
+	endBrightness?: number;
 }
 
 export interface IEventTrack {

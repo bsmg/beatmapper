@@ -1,10 +1,13 @@
-import { ALL_EVENT_TRACKS } from "$/constants";
+import { renamer } from "bsmap/extensions";
+import type { EnvironmentAllName } from "bsmap/types";
+
+import { ALL_EVENT_TRACKS, COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
 import { App, type IEventTrack, TrackType } from "$/types";
 import type { LightshowEntitySerializationOptions } from "./object.helpers";
 import { createPropertySerializationFactory } from "./serialization.helpers";
 
-function resolveTrackType(trackId: number, tracks: IEventTrack[] = ALL_EVENT_TRACKS) {
-	const match = tracks.find((track) => track.id === trackId);
+export function resolveTrackType(type: number, tracks: IEventTrack[] = ALL_EVENT_TRACKS) {
+	const match = tracks.find((track) => track.id === type);
 	if (!match) return TrackType.UNSUPPORTED;
 	return match.type;
 }
@@ -40,6 +43,10 @@ export function resolveEventEffect<T extends Pick<App.IBasicEvent, "type" | "val
 		}
 	}
 }
+export function resolveEventType<T extends Pick<App.IBasicEvent, "type" | "value">>(data: T, tracks = ALL_EVENT_TRACKS) {
+	const type = resolveTrackType(data.type, tracks);
+	return type;
+}
 
 export function isLightTrack(trackId: App.TrackId, tracks: IEventTrack[] = ALL_EVENT_TRACKS) {
 	const LIGHT_TRACKS = tracks.filter(({ type }) => type === TrackType.LIGHT).map<number>(({ id }) => id);
@@ -55,6 +62,10 @@ export function isValueTrack(trackId: App.TrackId, tracks: IEventTrack[] = ALL_E
 }
 export function isMirroredTrack(trackId: App.TrackId, tracks: IEventTrack[] = ALL_EVENT_TRACKS) {
 	const mirrorTracks = tracks.filter((track) => "side" in track && !!track.side).map<number>((x) => x.id);
+	return mirrorTracks.includes(trackId);
+}
+export function isSideTrack(trackId: App.TrackId, side: "left" | "right", tracks: IEventTrack[] = ALL_EVENT_TRACKS) {
+	const mirrorTracks = tracks.filter((track) => "side" in track && track.side === side).map<number>((x) => x.id);
 	return mirrorTracks.includes(trackId);
 }
 export function resolveMirroredTrack(trackId: App.TrackId, tracks: IEventTrack[] = ALL_EVENT_TRACKS) {
@@ -110,3 +121,27 @@ export const { serialize: resolveEventValue, deserialize: resolveEventDerivedPro
 		},
 	};
 });
+
+export function deriveEventTracksForEnvironment(environment: EnvironmentAllName) {
+	const commonEventTracks = COMMON_EVENT_TRACKS.map((x) => x.id);
+
+	const environmentTypeMap = renamer.environmentTypeMap[environment];
+	const environmentTrackIds = environmentTypeMap ? Object.keys(environmentTypeMap) : [];
+
+	const filtered = SUPPORTED_EVENT_TRACKS.filter((x) => {
+		if (environmentTypeMap) {
+			return environmentTrackIds.includes(`${x.id}`) || commonEventTracks.includes(x.id);
+		}
+		if (commonEventTracks.includes(x.id)) return true;
+	});
+
+	const processed = filtered.map((x) => {
+		const label = renamer.eventTypeRename(x.id, environment);
+		let type = x.type;
+		if (environment === "InterscopeEnvironment" && x.id === 8) type = TrackType.VALUE;
+		if (environment === "BillieEnvironment" && x.id === 8) type = TrackType.VALUE;
+		return { ...x, type, label: label };
+	});
+
+	return processed;
+}

@@ -2,12 +2,12 @@ import { Link, useBlocker } from "@tanstack/react-router";
 import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
-import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
 import { filestore } from "$/setup";
-import { stopPlaying, toggleModForSong, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
+import { stopPlaying, toggleModForSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectEditorOffset, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIds, selectEditorOffset, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
@@ -27,8 +27,6 @@ function SongDetails({ sid }: Props) {
 	const song = useAppSelector((state) => selectSongById(state, sid));
 	const enabledCustomColors = useAppSelector((state) => selectIsModuleEnabled(state, sid, "customColors"));
 	const enabledMappingExtensions = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
-	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, sid));
-	const enabledLightshow = useAppSelector((state) => selectIsLightshowEnabled(state, sid));
 
 	const [songFile, setSongFile] = useState<File | null>(null);
 	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
@@ -115,12 +113,12 @@ function SongDetails({ sid }: Props) {
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">
-								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={"audio/ogg"} maxFiles={1} onFileAccept={(details) => setSongFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => setSongFile(details.files[0])}>
 									Audio File
 								</LocalFileUpload>
 							</Field>
 							<Field label="Cover Art File">
-								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={"image/jpeg"} maxFiles={1} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 									Image File
 								</LocalFileUpload>
 							</Field>
@@ -172,21 +170,6 @@ function SongDetails({ sid }: Props) {
 						Allows you to customize size and shape of the grid, to place notes outside of the typical 4×3 grid.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
 							<Link to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
-								Learn more
-							</Link>
-						</Text>
-						.
-					</SongDetailsModule>
-					<SongDetailsModule label="Lightshow File" render={() => null} checked={!!enabledLightshow} onCheckedChange={() => dispatch(togglePropertyForSelectedSong({ songId: sid, property: "enabledLightshow" }))}>
-						If enabled, adds a non-standard difficulty with all blocks removed. Nice to include if your lighting is spectacular{" "}
-						<span role="img" aria-label="sparkles">
-							✨
-						</span>
-					</SongDetailsModule>
-					<SongDetailsModule label="Fast Walls" render={() => null} checked={!!enabledFastWalls} onCheckedChange={() => dispatch(togglePropertyForSelectedSong({ songId: sid, property: "enabledFastWalls" }))}>
-						Fast walls exploit a loophole in the game to allow walls to blur by at high speed{" "}
-						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
-							<Link to="/docs/$" params={{ _splat: "fast-walls" }}>
 								Learn more
 							</Link>
 						</Text>

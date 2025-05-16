@@ -12,4 +12,6 @@ declare module "@react-three/fiber" {
 		/** requires `{@link extend}` */
 		textGeometry: BufferGeometryNode<TextGeometry, typeof TextGeometry>;
 	}
+	export type GroupProps = ThreeElements["group"];
+	export type MeshProps = ThreeElements["mesh"];
 }

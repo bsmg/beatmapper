@@ -1,5 +1,5 @@
 import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo } from "bsmap";
-import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
+import type { EnvironmentAllName, IColor, ModRequirements, v2, wrapper } from "bsmap/types";
 import { colorToHex } from "bsmap/utils";
 
 import { DEFAULT_GRID } from "$/constants";
@@ -8,7 +8,7 @@ import { deepMerge, withKeys as hasKeys, maybeObject, uniq } from "$/utils";
 import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
 import { serializeColorElement } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
-import { getAllBeatmaps, getCustomColorsModule, getModSettings, isFastWallsEnabled, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
+import { getAllBeatmaps, getCustomColorsModule, getModSettings, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
 function coalesceBeatmapCollection(data: App.ISong) {
 	const beatmaps = getAllBeatmaps(data);
@@ -35,7 +35,6 @@ function coalesceBeatmapCollection(data: App.ISong) {
 	});
 
 	const editorSettings: App.EditorInfoData["editorSettings"] = {
-		enabledFastWalls: isFastWallsEnabled(data) ?? undefined,
 		modSettings: maybeObject(getModSettings(data)),
 	};
 
@@ -107,6 +106,10 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 		};
 	});
 
+	const requirements: ModRequirements[] = [];
+
+	if (data.modSettings.mappingExtensions?.isEnabled) requirements.push("Mapping Extensions");
+
 	return createInfo({
 		version: options.version,
 		song: {
@@ -149,6 +152,7 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 					_envColorLeft: customColors?._envColorLeft,
 					_envColorRight: customColors?._envColorRight,
 					_obstacleColor: customColors?._obstacleColor,
+					_requirements: requirements.length > 0 ? requirements : undefined,
 				}),
 			}),
 		),

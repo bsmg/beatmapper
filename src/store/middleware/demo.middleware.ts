@@ -1,8 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { getSelectedBeatmap, resolveSongId } from "$/helpers/song.helpers";
-import { processImportedMap } from "$/services/packaging.service";
 import { importExistingSong, loadDemoMap } from "$/store/actions";
 import { selectIsNew } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -22,13 +20,7 @@ export default function createDemoMiddleware() {
 			if (isNewUser) {
 				const res = await fetch(demoFileUrl);
 				const blob = await res.blob();
-				const songData = await processImportedMap(blob, { readonly: true }).then((data) => {
-					api.dispatch(importExistingSong({ songData: data }));
-					return data;
-				});
-				const sid = resolveSongId(songData);
-				const bid = getSelectedBeatmap(songData);
-				window.location.href = `/edit/${sid}/${bid}/notes`;
+				await api.dispatch(importExistingSong({ file: blob, options: { readonly: true } }));
 			}
 		},
 	});

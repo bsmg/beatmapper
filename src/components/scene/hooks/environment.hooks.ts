@@ -1,12 +1,29 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import { useMemo, useState } from "react";
+import type { ColorRepresentation } from "three";
 
 import { useOnChange } from "$/components/hooks";
-import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import { App, type BeatmapId, Quality, type SongId } from "$/types";
+
+function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
+	if (!lastEvent) return App.BasicEventType.OFF;
+	return resolveEventEffect(lastEvent) as App.LightEventType;
+}
+function deriveColorForEvent(lastEvent: App.IBasicEvent | null, options: ColorResolverOptions): ColorRepresentation {
+	const status = deriveEffectForEvent(lastEvent);
+	if (!lastEvent) return "#000000";
+	if (status === App.BasicEventType.OFF) return "#000000";
+	const eventColor = resolveEventColor(lastEvent);
+	return resolveColorForItem(eventColor, options);
+}
+function deriveBrightnessForEvent(lastEvent: App.IBasicEvent | null) {
+	if (!lastEvent) return 0;
+	return lastEvent.floatValue;
+}
 
 interface UseLightPropsOptions {
 	sid: SongId;
@@ -16,20 +33,19 @@ interface UseLightPropsOptions {
 export function useLightProps({ sid, bid, lastEvent }: UseLightPropsOptions) {
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
-	const lightStatus = useMemo(() => {
-		if (!lastEvent) return App.BasicEventType.OFF;
-		return resolveEventEffect(lastEvent) as App.LightEventType;
-	}, [lastEvent]);
+	const derived = useMemo(() => {
+		return {
+			lastEventId: lastEvent ? resolveEventId(lastEvent) : null,
+			effect: deriveEffectForEvent(lastEvent),
+			color: deriveColorForEvent(lastEvent, { customColors: colorScheme }),
+			brightness: deriveBrightnessForEvent(lastEvent),
+		};
+	}, [lastEvent, colorScheme]);
 
-	const lightColor = useMemo(() => {
-		if (!lastEvent) return "#000000";
-		if (lightStatus === App.BasicEventType.OFF) return "#000000";
-		const eventColor = resolveEventColor(lastEvent);
-		return resolveColorForItem(eventColor, { customColors: colorScheme });
-	}, [lastEvent, lightStatus, colorScheme]);
-
-	return { lastEventId: lastEvent ? resolveEventId(lastEvent) : null, status: lightStatus, color: lightColor };
+	return { ...derived };
 }
+
+export type UseLightPropsReturn = ReturnType<typeof useLightProps>;
 
 export interface UseRingCountOptions {
 	count: number;
@@ -48,7 +64,7 @@ export function useRingCount({ count }: UseRingCountOptions) {
 }
 
 export interface UseRingRotationOptions {
-	lastEventId: EntityId | null | undefined;
+	lastEventId: EntityId | null;
 	incrementBy?: number;
 	ratio?: number;
 }
@@ -69,7 +85,7 @@ export function useRingRotation({ lastEventId, incrementBy = Math.PI * 0.5, rati
 }
 
 export interface UseRingZoomOptions {
-	lastEventId: EntityId | null | undefined;
+	lastEventId: EntityId | null;
 	minDistance?: number;
 	maxDistance?: number;
 }

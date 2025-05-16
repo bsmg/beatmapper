@@ -1,26 +1,19 @@
-import type { ThreeElements } from "@react-three/fiber";
-import type { EntityId } from "@reduxjs/toolkit";
-import type { ColorRepresentation } from "three";
+import type { GroupProps } from "@react-three/fiber";
 
 import { LightMaterial } from "$/components/scene/compositions/materials";
-import type { App } from "$/types";
-
-type GroupProps = ThreeElements["group"];
+import type { UseLightPropsReturn } from "$/components/scene/hooks";
 
 interface Props extends GroupProps {
-	color: ColorRepresentation;
-	brightness?: number;
-	status: App.LightEventType;
-	lastEventId: EntityId | null;
+	light: UseLightPropsReturn;
 	length?: number;
 	radius?: number;
 }
-function TubeLight({ color, status, lastEventId, length = 500, radius = 0.35, ...rest }: Props) {
+function TubeLight({ length = 500, radius = 0.35, light, ...rest }: Props) {
 	return (
 		<group {...rest}>
 			<mesh>
 				<cylinderGeometry attach="geometry" args={[radius, radius, length]} />
-				<LightMaterial lastEventId={lastEventId} status={status} color={color} />
+				<LightMaterial light={light} />
 			</mesh>
 		</group>
 	);

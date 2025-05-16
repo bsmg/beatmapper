@@ -1,15 +1,16 @@
+import { useMemo } from "react";
+
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
 import type { App, SongId } from "$/types";
 
-function findMostRecentEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent[], currentBeat: number, processingDelayInBeats: number) {
+function findLastEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent[], currentBeat: number, processingDelayInBeats: number) {
 	for (let i = events.length - 1; i >= 0; i--) {
 		const event = events[i];
-		if (event.time < currentBeat + processingDelayInBeats) {
+		if (event.time <= currentBeat + processingDelayInBeats) {
 			return event as T;
 		}
 	}
-
 	return null;
 }
 
@@ -17,16 +18,15 @@ export interface UseEventTrackOptions {
 	sid: SongId;
 	trackId: App.TrackId;
 }
-export function useEventTrack<T extends App.IBasicEvent>({ sid, trackId }: UseEventTrackOptions) {
+export function useEventTrack({ sid, trackId }: UseEventTrackOptions) {
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, sid));
+	const events = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));
 
-	const lastEvent = useAppSelector((state) => {
-		if (!sid || !currentBeat) return null;
-		const events = selectAllBasicEventsForTrack(state, trackId);
-		const lastEvent = findMostRecentEventInTrack<T>(events, currentBeat, processingDelayInBeats);
-		return lastEvent;
-	});
+	const lastEvent = useMemo(() => {
+		if (!sid || currentBeat === null) return null;
+		return findLastEventInTrack(events, currentBeat, processingDelayInBeats);
+	}, [sid, events, currentBeat, processingDelayInBeats]);
 
-	return lastEvent;
+	return [lastEvent];
 }

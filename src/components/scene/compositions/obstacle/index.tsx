@@ -1,4 +1,4 @@
-import type { ThreeElements, ThreeEvent } from "@react-three/fiber";
+import type { GroupProps, ThreeEvent } from "@react-three/fiber";
 import { memo, useCallback, useMemo } from "react";
 import { BoxGeometry, DoubleSide } from "three";
 
@@ -6,29 +6,19 @@ import { token } from "$:styled-system/tokens";
 import { useGlobalEventListener } from "$/components/hooks";
 import { isFastObstacle } from "$/helpers/obstacles.helpers";
 import type { App } from "$/types";
-import { resolveDimensionsForObstacle, resolvePositionForObstacle } from "./helpers";
-
-type GroupProps = ThreeElements["group"];
 
 interface Props extends GroupProps {
 	data: App.IObstacle;
+	dimensions: { width: number; height: number; depth: number };
 	color: string;
-	beatDepth: number;
-	gridRows?: number;
-	gridCols?: number;
 	onObstaclePointerDown?: (event: PointerEvent, obstacle: App.IObstacle) => void;
 	onObstaclePointerUp?: (event: PointerEvent, obstacle: App.IObstacle) => void;
 	onObstaclePointerOver?: (event: PointerEvent, obstacle: App.IObstacle) => void;
 	onObstaclePointerOut?: (event: PointerEvent, obstacle: App.IObstacle) => void;
 	onObstacleWheel?: (event: WheelEvent, obstacle: App.IObstacle) => void;
 }
-
-function Obstacle({ data: obstacle, color, beatDepth, onObstaclePointerDown, onObstaclePointerUp, onObstaclePointerOver, onObstaclePointerOut, onObstacleWheel, ...rest }: Props) {
-	const obstacleDimensions = useMemo(() => resolveDimensionsForObstacle(obstacle, beatDepth), [obstacle, beatDepth]);
-
-	const boxGeometry = useMemo(() => new BoxGeometry(obstacleDimensions.width, obstacleDimensions.height, obstacleDimensions.depth), [obstacleDimensions]);
-
-	const actualPosition = useMemo(() => resolvePositionForObstacle(obstacle, obstacleDimensions, beatDepth), [obstacle, obstacleDimensions, beatDepth]);
+function Obstacle({ data: obstacle, dimensions, color, onObstaclePointerDown, onObstaclePointerUp, onObstaclePointerOver, onObstaclePointerOut, onObstacleWheel, ...rest }: Props) {
+	const boxGeometry = useMemo(() => new BoxGeometry(dimensions.width, dimensions.height, dimensions.depth), [dimensions]);
 
 	const handlePointerDown = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
@@ -70,11 +60,11 @@ function Obstacle({ data: obstacle, color, beatDepth, onObstaclePointerDown, onO
 
 	return (
 		<group {...rest}>
-			<mesh position={actualPosition} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
-				<boxGeometry attach="geometry" args={[obstacleDimensions.width, obstacleDimensions.height, obstacleDimensions.depth]} />
+			<mesh onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
+				<boxGeometry attach="geometry" args={[dimensions.width, dimensions.height, dimensions.depth]} />
 				<meshPhongMaterial attach="material" color={color} transparent opacity={obstacle.tentative ? 0.15 : 0.4} polygonOffset polygonOffsetFactor={1} polygonOffsetUnits={1} side={DoubleSide} emissive={"yellow"} emissiveIntensity={obstacle.selected ? 0.125 : 0} />
 			</mesh>
-			<lineSegments position={actualPosition}>
+			<lineSegments>
 				<edgesGeometry attach="geometry" args={[boxGeometry]} />
 				<lineBasicMaterial attach="material" color={isFastObstacle(obstacle) ? token("colors.green.500") : obstacle.selected ? token("colors.yellow.500") : "white"} />
 			</lineSegments>

@@ -1,4 +1,4 @@
-import { createBeatmap, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
+import { createBeatmap, hasMappingExtensionsNote, hasMappingExtensionsObstacleV3, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
@@ -43,10 +43,6 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 	const implicitInfoVersion = version ?? (wrapperInfo.version >= 0 ? wrapperInfo.version : 4);
 
-	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>);
-
-	zip.file(wrapperInfo.filename, JSON.stringify(info, null, indent), { binary: false });
-
 	zip.file(wrapperInfo.audio.filename, songFile, { binary: true });
 	zip.file(wrapperInfo.coverImageFilename, coverArtFile, { binary: true });
 
@@ -61,6 +57,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		const implicitBeatmapVersion = version ?? (wrapper.version >= 0 ? wrapper.version : 4);
 		const serialDifficulty = saveDifficulty(wrapper.difficulty, implicitBeatmapVersion as ImplicitVersion, {
 			preprocess: [(data) => createBeatmap({ difficulty: data })],
+			validate: { enabled: false }, // todo: mapping extensions values for obstacles currently breaks validation, needs upstream fix
 		});
 		zip.file(wrapper.filename, JSON.stringify(serialDifficulty, null, indent), {
 			binary: false,
@@ -75,6 +72,28 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 			});
 		}
 	}
+
+	const hasMappingExtensions = beatmapContents.some(({ beatmap }) => {
+		if (beatmap.difficulty.colorNotes.some((x) => hasMappingExtensionsNote(x))) return true;
+		if (beatmap.difficulty.bombNotes.some((x) => hasMappingExtensionsNote(x))) return true;
+		if (beatmap.difficulty.obstacles.some((x) => hasMappingExtensionsObstacleV3(x))) return true;
+		return false;
+	});
+
+	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>, {
+		preprocess: [
+			(data) => {
+				const beatmaps = data.difficulties.map((x) => {
+					const requirements = x.customData._requirements ?? [];
+					if (hasMappingExtensions && !requirements.includes("Mapping Extensions")) requirements.push("Mapping Extensions");
+					return { ...x, customData: { ...x.customData, _requirements: requirements } };
+				});
+				return { ...data, difficulties: beatmaps };
+			},
+		],
+	});
+
+	zip.file(wrapperInfo.filename, JSON.stringify(info, null, indent), { binary: false });
 
 	if (version && version >= 2) {
 		const wrapperAudioData = await filestore.loadAudioDataContents(songId);
@@ -155,14 +174,18 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		const difficultyFile = getFileFromArchive(archive, beatmap.filename);
 		if (difficultyFile) {
 			const rawSerialDifficulty = await difficultyFile.async("string");
-			const difficulty = loadDifficulty(JSON.parse(rawSerialDifficulty), {});
+			const difficulty = loadDifficulty(JSON.parse(rawSerialDifficulty), {
+				schemaCheck: { enabled: false },
+			});
 			contents = { ...contents, version: difficulty.version, difficulty: difficulty.difficulty, lightshow: difficulty.lightshow };
 		}
 
 		const lightshowFile = getFileFromArchive(archive, beatmap.lightshowFilename);
 		if (lightshowFile) {
 			const rawSerialLightshow = await lightshowFile.async("string");
-			const lightshow = loadLightshow(JSON.parse(rawSerialLightshow), {});
+			const lightshow = loadLightshow(JSON.parse(rawSerialLightshow), {
+				schemaCheck: { enabled: false },
+			});
 			contents = { ...contents, lightshow: lightshow.lightshow };
 		}
 

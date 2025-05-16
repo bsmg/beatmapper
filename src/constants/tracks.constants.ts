@@ -1,13 +1,6 @@
 import { renamer } from "bsmap/extensions";
 
-import { App, TrackType } from "$/types";
-
-export interface IEventTrack {
-	id: App.TrackId;
-	label: string;
-	type: TrackType;
-	side?: "left" | "right";
-}
+import { App, type IEventTrack, TrackType } from "$/types";
 
 export const EVENT_TRACKS = {
 	0: { id: App.TrackId[0], label: renamer.genericTypeMap[0], type: TrackType.LIGHT },
@@ -40,7 +33,10 @@ export const EVENT_TRACKS = {
 
 export const ALL_EVENT_TRACKS = Object.values(EVENT_TRACKS) as IEventTrack[];
 
-export const COMMON_EVENT_TRACKS = ALL_EVENT_TRACKS.filter(({ id }) => {
-	const index = Object.keys(App.TrackId)[Object.values(App.TrackId).indexOf(id)];
-	return [0, 1, 2, 3, 4, 8, 9, 12, 13].includes(Number(index));
+export const SUPPORTED_EVENT_TRACKS = ALL_EVENT_TRACKS.filter(({ id }) => {
+	return [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19].includes(id);
+});
+
+export const COMMON_EVENT_TRACKS = SUPPORTED_EVENT_TRACKS.filter(({ id }) => {
+	return [0, 1, 2, 3, 4, 8, 9, 12, 13].includes(id);
 });

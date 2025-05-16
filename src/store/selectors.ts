@@ -3,7 +3,7 @@ import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { SURFACE_DEPTHS } from "$/constants";
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
-import { resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
+import { deriveEventTracksForEnvironment, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { calculateNoteDensity } from "$/helpers/notes.helpers";
 import { getEditorOffset } from "$/helpers/song.helpers";
 import { App, type SongId, View } from "$/types";
@@ -52,8 +52,6 @@ export const {
 	selectSelectedBeatmap,
 	selectIsDemo: selectIsDemoSong,
 	selectIsModuleEnabled,
-	selectIsFastWallsEnabled,
-	selectIsLightshowEnabled,
 	selectCustomColors,
 	selectGridSize,
 	selectPlacementMode,
@@ -82,6 +80,11 @@ export const selectNearestBeatForTime = createSelector([selectBpm, selectEditorO
 });
 export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, beat: number, withOffset = true) => ({ beat, withOffset })], (bpm, offset, { beat, withOffset }) => {
 	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
+});
+
+export const selectEventTracksForEnvironment = createSelector([selectBeatmapById], (beatmap) => {
+	const environment = beatmap.environmentName;
+	return deriveEventTracksForEnvironment(environment);
 });
 
 export const { selectAnimateBlockMotion, selectAnimateRingMotion, selectBeatDepth, selectCursorPosition, selectDuration, selectIsPlaying, selectPlayNoteTick, selectPlaybackRate, selectSnapTo, selectVolume } = navigation.getSelectors((state: RootState) => {
@@ -114,6 +117,9 @@ export const selectAudioProcessingDelayInBeats = createSelector(selectAudioProce
 });
 export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelayInBeats, selectIsPlaying, (processingDelay, isPlaying) => {
 	return isPlaying ? processingDelay : 0;
+});
+export const selectSurfaceDepth = createSelector(selectGraphicsQuality, (quality) => {
+	return SURFACE_DEPTHS[quality];
 });
 
 export const { selectWaveformData } = waveform.getSelectors((state: RootState) => {
@@ -151,12 +157,9 @@ export const {
 export const selectEventEditorZoomLevelStartBeat = createSelector(selectCursorPositionInBeats, selectEventEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
 	return floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
 });
-export const selectEventEditorZoomLevelEndBeat = createSelector(selectEventEditorZoomLevelStartBeat, selectEventEditorBeatsPerZoomLevel, (startBeat, beatsPerZoomLevel) => {
-	return startBeat + beatsPerZoomLevel;
-});
-// TODO: Get rid of this silly selector!
-export const selectEventEditorStartAndEndBeat = createSelector(selectEventEditorZoomLevelStartBeat, selectEventEditorZoomLevelEndBeat, (startBeat, endBeat) => {
-	return { startBeat, endBeat };
+export const selectEventEditorStartAndEndBeat = createSelector(selectCursorPositionInBeats, selectEventEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
+	const startBeat = floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
+	return { startBeat: startBeat, numOfBeatsToShow: beatsPerZoomLevel, endBeat: startBeat + beatsPerZoomLevel };
 });
 
 export const selectObjectsCanUndo = createSelector(
@@ -182,23 +185,23 @@ export const {
 export const { selectAll: selectPastColorNotes } = notes.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.beatmap.past,
-		(state) => state.notes,
+		(state) => state?.notes ?? notes.getInitialState(),
 	),
 );
 export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.beatmap.future,
-		(state) => state.notes,
+		(state) => state?.notes ?? notes.getInitialState(),
 	),
 );
-export const selectVisibleNotes = createSelector(selectAllColorNotes, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (notes, cursorPositionInBeats, beatDepth, graphicsLevel) => {
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
+export const selectVisibleNotes = createSelector([selectAllColorNotes, selectCursorPositionInBeats, (_1, _2, x: number) => x, (_1, _2, _3, x: number) => x], (notes, cursorPositionInBeats, beatDepth, surfaceDepth) => {
+	const numOfBeatsInRange = surfaceDepth / beatDepth;
+	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, numOfBeatsInRange, { includeSpaceBeforeGrid: true });
 	return notes.filter((note) => {
 		return note.time > closeLimit && note.time < farLimit;
 	});
 });
-export const selectNoteDensity = createSelector(selectVisibleNotes, selectBeatDepth, selectBpm, selectGraphicsQuality, (notes, beatDepth, bpm, graphicsLevel) => {
-	const surfaceDepth = SURFACE_DEPTHS[graphicsLevel];
+export const selectNoteDensity = createSelector(selectVisibleNotes, selectBeatDepth, selectBpm, selectSurfaceDepth, (notes, beatDepth, bpm, surfaceDepth) => {
 	const segmentLengthInBeats = (surfaceDepth / beatDepth) * 1.2;
 	return calculateNoteDensity(notes.length, segmentLengthInBeats, bpm);
 });
@@ -213,17 +216,18 @@ export const {
 export const { selectAll: selectPastBombNotes } = bombs.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.beatmap.past,
-		(state) => state.bombs,
+		(state) => state?.bombs ?? bombs.getInitialState(),
 	),
 );
 export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.beatmap.future,
-		(state) => state.bombs,
+		(state) => state?.bombs ?? bombs.getInitialState(),
 	),
 );
-export const selectVisibleBombs = createSelector(selectAllBombNotes, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (bombs, cursorPositionInBeats, beatDepth, graphicsLevel) => {
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
+export const selectVisibleBombs = createSelector([selectAllBombNotes, selectCursorPositionInBeats, (_1, _2, x: number) => x, (_1, _2, _3, x: number) => x], (bombs, cursorPositionInBeats, beatDepth, surfaceDepth) => {
+	const numOfBeatsInRange = surfaceDepth / beatDepth;
+	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, numOfBeatsInRange, { includeSpaceBeforeGrid: true });
 	return bombs.filter((note) => {
 		return note.time > closeLimit && note.time < farLimit;
 	});
@@ -242,17 +246,18 @@ export const {
 export const { selectAll: selectPastObstacles } = obstacles.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.beatmap.past,
-		(state) => state.obstacles,
+		(state) => state?.obstacles ?? obstacles.getInitialState(),
 	),
 );
 export const { selectAll: selectFutureObstacles } = obstacles.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.beatmap.future,
-		(state) => state.obstacles,
+		(state) => state?.obstacles ?? obstacles.getInitialState(),
 	),
 );
-export const selectAllVisibleObstacles = createSelector(selectAllObstacles, selectCursorPositionInBeats, selectBeatDepth, selectGraphicsQuality, (obstacles, cursorPositionInBeats, beatDepth, graphicsLevel) => {
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, beatDepth, graphicsLevel, { includeSpaceBeforeGrid: true });
+export const selectAllVisibleObstacles = createSelector([selectAllObstacles, selectCursorPositionInBeats, (_1, _2, x: number) => x, (_1, _2, _3, x: number) => x], (obstacles, cursorPositionInBeats, beatDepth, surfaceDepth) => {
+	const numOfBeatsInRange = surfaceDepth / beatDepth;
+	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, numOfBeatsInRange, { includeSpaceBeforeGrid: true });
 	return obstacles.filter((obstacle) => {
 		const beatEnd = obstacle.time + obstacle.duration;
 		return beatEnd > closeLimit && obstacle.time < farLimit;
@@ -279,25 +284,27 @@ export const {
 export const { selectAll: selectPastBasicEvents } = basic.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.lightshow.past,
-		(state) => state.basic,
+		(state) => state?.basic ?? basic.getInitialState(),
 	),
 );
 export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 	selectHistory(
 		(state: Pick<RootState, "entities">) => state.entities.lightshow.future,
-		(state) => state.basic,
+		(state) => state?.basic ?? basic.getInitialState(),
 	),
 );
 export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat, endBeat }) => {
 	return events.filter((event) => event.time >= startBeat && event.time < endBeat);
 });
-export const selectInitialColorForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat }) => {
-	const eventsInWindow = events.filter((event) => event.time < startBeat);
+export const selectInitialStateForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat }) => {
+	const eventsInWindow = events.filter((event) => event.time <= startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
-	if (!lastEvent) return null;
-	const eventEffect = resolveEventEffect(lastEvent);
-	const isLastEventOn = eventEffect === App.BasicEventType.ON || eventEffect === App.BasicEventType.FLASH;
-	return isLastEventOn ? resolveEventColor(lastEvent) : null;
+	const eventEffect = lastEvent ? resolveEventEffect(lastEvent) : null;
+	const isLastEventOn = eventEffect === App.BasicEventType.ON || eventEffect === App.BasicEventType.FLASH || eventEffect === App.BasicEventType.TRANSITION;
+	return {
+		color: isLastEventOn ? resolveEventColor(lastEvent) : null,
+		brightness: isLastEventOn ? (lastEvent?.floatValue ?? 0) : null,
+	};
 });
 
 export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basic) => {
@@ -309,6 +316,7 @@ export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEven
 export const selectAllSelectedEntities = createSelector([selectAllSelectedObjects, selectAllSelectedEvents, (_, view: View) => view], (objects, events, view) => {
 	return {
 		notes: view === View.BEATMAP ? objects.notes : undefined,
+		bombs: view === View.BEATMAP ? objects.bombs : undefined,
 		obstacles: view === View.BEATMAP ? objects.obstacles : undefined,
 		events: view === View.LIGHTSHOW ? events.basic : undefined,
 	};
