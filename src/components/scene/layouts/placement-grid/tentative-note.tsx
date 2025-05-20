@@ -1,30 +1,32 @@
 import { useContext, useMemo } from "react";
 
-import { App, type CutDirection } from "$/types";
-
 import { ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
+import { createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
+import type { IGrid, ObjectPlacementMode } from "$/types";
 import { Context } from "./context";
 
 interface Props {
-	direction: CutDirection;
+	grid: IGrid;
+	mode: ObjectPlacementMode;
 	color: string;
 }
-function TentativeNote({ direction, color }: Props) {
-	const { mouseDownAt } = useContext(Context);
-	if (!mouseDownAt) return null;
+function TentativeNote({ mode, grid: gridSize, color, ...rest }: Props) {
+	const { cellDownAt, direction } = useContext(Context);
 
 	const data = useMemo(() => {
+		if (!cellDownAt || direction === null) return null;
 		return {
-			beatNum: 0,
-			colIndex: mouseDownAt.colIndex,
-			rowIndex: mouseDownAt.rowIndex,
-			direction: Object.values(App.CutDirection)[direction],
+			...createColorNoteFromMouseEvent(mode, cellDownAt, gridSize, direction),
+			time: 0,
+			tentative: true,
 		};
-	}, [mouseDownAt, direction]);
+	}, [mode, cellDownAt, gridSize, direction]);
 
-	const { x, y } = resolvePositionForNote(mouseDownAt);
+	if (!data) return null;
 
-	return <ColorNote position={[x, y, 0]} data={data} color={color} />;
+	const position = resolvePositionForNote(data, {});
+
+	return <ColorNote {...rest} position={position} data={data} color={color} />;
 }
 
 export default TentativeNote;

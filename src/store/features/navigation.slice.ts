@@ -69,20 +69,20 @@ const slice = createSlice({
 		});
 		builder.addCase(finishLoadingSong, (state, action) => {
 			const {
-				waveformData,
 				songData: { offset },
+				duration,
 			} = action.payload;
-			const durationInMs = waveformData.duration * 1000;
-			return { ...state, cursorPosition: offset, duration: durationInMs };
+			const durationInMs = duration * 1000;
+			return { ...state, cursorPosition: Math.max(offset, 0), duration: durationInMs };
 		});
 		builder.addCase(reloadWaveform, (state, action) => {
-			const { waveformData } = action.payload;
-			const durationInMs = waveformData.duration * 1000;
+			const { duration } = action.payload;
+			const durationInMs = duration * 1000;
 			return { ...state, duration: durationInMs };
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
-			const { offset } = action.payload;
-			return { ...state, cursorPosition: offset ?? 0 };
+			const { songData } = action.payload;
+			return { ...state, cursorPosition: Math.max(songData.offset ?? 0, 0) };
 		});
 		builder.addCase(startPlaying, (state) => {
 			return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
@@ -92,7 +92,7 @@ const slice = createSlice({
 		});
 		builder.addCase(stopPlaying, (state, action) => {
 			const { offset } = action.payload;
-			return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false, cursorPosition: offset };
+			return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false, cursorPosition: Math.max(offset, 0) };
 		});
 		builder.addCase(adjustCursorPosition, (state, action) => {
 			const { newCursorPosition } = action.payload;
@@ -121,7 +121,7 @@ const slice = createSlice({
 		});
 		builder.addCase(skipToStart.fulfilled, (state, action) => {
 			const { offset } = action.payload;
-			return { ...state, animateBlockMotion: false, animateRingMotion: false, cursorPosition: offset };
+			return { ...state, animateBlockMotion: false, animateRingMotion: false, cursorPosition: Math.max(offset, 0) };
 		});
 		builder.addCase(skipToEnd, (state) => {
 			return { ...state, animateBlockMotion: false, animateRingMotion: false, cursorPosition: state.duration ?? 0 };

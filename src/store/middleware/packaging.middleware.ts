@@ -1,29 +1,27 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
-import { convertEventsToExportableJson } from "$/helpers/events.helpers";
+import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { getBeatmaps } from "$/helpers/song.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
-import { createBeatmapContentsFromState, createInfoContent, zipFiles } from "$/services/packaging.service";
-import { shiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
+import { zipFiles } from "$/services/packaging.service";
 import { downloadMapFiles } from "$/store/actions";
-import { selectActiveBeatmapId, selectAllBasicEvents, selectBeatmapIds, selectSongById } from "$/store/selectors";
+import { selectActiveBeatmapId, selectAllBasicEvents, selectAllEntities, selectBeatmapIdsWithLightshowId, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { SongId } from "$/types";
+import type { BeatmapId, SongId } from "$/types";
+import { selectBeatmapSerializationOptionsFromState, selectInfoSerializationOptionsFromState } from "./file.middleware";
 
-function saveEventsToAllDifficulties(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
-	const song = selectSongById(state, songId);
-	const difficulties = selectBeatmapIds(state, songId);
+async function saveLightshowDataToAllDifficulties(state: RootState, filestore: BeatmapFilestore, songId: SongId, lightshowId: BeatmapId) {
+	// we only want to copy lightshow data across beatmaps that share the same lightshow id
+	const beatmapIds = selectBeatmapIdsWithLightshowId(state, songId, lightshowId);
 
-	const events = convertEventsToExportableJson(selectAllBasicEvents(state));
-	const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
+	const entities = {
+		events: selectAllBasicEvents(state),
+	};
 
-	return Promise.all(
-		difficulties.map(async (difficulty) => {
-			const fileContents = await filestore.loadBeatmapFile(song.id, difficulty);
-			if (!fileContents) throw new Error(`No beatmap file for ${song.id}/${difficulty}.`);
-			fileContents._events = shiftedEvents;
-			return filestore.saveBeatmapFile(song.id, difficulty, fileContents);
-		}),
-	);
+	for (const beatmapId of beatmapIds) {
+		const { lightshow } = serializeBeatmapContents(entities, selectBeatmapSerializationOptionsFromState(state, songId));
+		await filestore.updateBeatmapContents(songId, beatmapId, { lightshow });
+	}
 }
 
 interface Options {
@@ -36,33 +34,42 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 		actionCreator: downloadMapFiles,
 		effect: async (action, api) => {
 			const { songId, version } = action.payload;
-			if (!songId) throw new Error("No selected song.");
 			const state = api.getState();
-			const selectedSong = selectSongById(state, songId);
-			let song = selectedSong;
-			if (!selectedSong) {
-				if (!songId) throw new Error("Tried to download a song with no supplied songId, and no currently-selected song.");
-				song = selectSongById(state, songId);
-			}
-			const infoContent = createInfoContent(song, { version: 2 });
-			const beatmapContent = createBeatmapContentsFromState(state, song);
+
+			// Pull that updated redux state and save it to our Info.dat
+			const song = selectSongById(state, songId);
+			const info = serializeInfoContents(song, selectInfoSerializationOptionsFromState(state, songId));
+			// Back up our latest data!
+			await filestore.updateInfoContents(songId, info);
+
 			// If we have an actively-loaded song, we want to first persist that song so that we download the very latest stuff.
 			// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
-			if (selectedSong) {
-				const difficulty = selectActiveBeatmapId(state);
-				// Persist the Info.dat and the currently-edited difficulty.
-				await filestore.saveInfoFile(song.id, infoContent);
-				if (difficulty) await filestore.saveBeatmapFile(song.id, difficulty, beatmapContent);
-				// We also want to share events between all difficulties.
-				// Copy the events currently in state to the non-loaded beatmaps.
-				await saveEventsToAllDifficulties(state, songId, filestore);
+			const beatmapId = selectActiveBeatmapId(state);
+			if (beatmapId) {
+				const lightshowId = selectLightshowIdForBeatmap(state, songId, beatmapId);
+
+				const entities = selectAllEntities(state);
+
+				const { difficulty, lightshow } = serializeBeatmapContents(entities, selectBeatmapSerializationOptionsFromState(state, songId));
+				await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow });
+
+				// We also want to share events between all difficulties that share the same lightshow id.
+				// Copy the events currently in state to the matching non-loaded beatmaps.
+				await saveLightshowDataToAllDifficulties(state, filestore, songId, lightshowId);
 			}
+
 			// Next, I need to fetch all relevant files from disk.
-			// TODO: Parallelize this if it takes too long
-			const songFile = await filestore.loadFile<Blob>(song.songFilename);
-			const coverArtFile = await filestore.loadFile<Blob>(song.coverArtFilename);
-			if (!songFile || !coverArtFile) return;
-			await zipFiles(song, songFile, coverArtFile, version);
+			const [songFile, coverArtFile] = await Promise.all([await filestore.loadSongFile(songId), await filestore.loadCoverArtFile(songId)]);
+
+			await zipFiles(filestore, {
+				version: version ?? null,
+				contents: {
+					songId: songId,
+					beatmapsById: getBeatmaps(song),
+					songFile,
+					coverArtFile,
+				},
+			});
 		},
 	});
 

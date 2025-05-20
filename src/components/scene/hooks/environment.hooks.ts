@@ -1,23 +1,51 @@
+import type { EntityId } from "@reduxjs/toolkit";
 import { useMemo, useState } from "react";
+import type { ColorRepresentation } from "three";
 
 import { useOnChange } from "$/components/hooks";
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
+import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
-import { App, Quality, type SongId } from "$/types";
+import { selectColorScheme, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
+import { App, type BeatmapId, Quality, type SongId } from "$/types";
+
+function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
+	if (!lastEvent) return App.BasicEventType.OFF;
+	return resolveEventEffect(lastEvent) as App.LightEventType;
+}
+function deriveColorForEvent(lastEvent: App.IBasicEvent | null, options: ColorResolverOptions): ColorRepresentation {
+	const status = deriveEffectForEvent(lastEvent);
+	if (!lastEvent) return "#000000";
+	if (status === App.BasicEventType.OFF) return "#000000";
+	const eventColor = resolveEventColor(lastEvent);
+	return resolveColorForItem(eventColor, options);
+}
+function deriveBrightnessForEvent(lastEvent: App.IBasicEvent | null) {
+	if (!lastEvent) return 0;
+	return lastEvent.floatValue;
+}
 
 interface UseLightPropsOptions {
 	sid: SongId;
-	lastEvent: App.IBasicLightEvent | null;
+	bid: BeatmapId;
+	lastEvent: App.IBasicEvent | null;
 }
-export function useLightProps({ sid, lastEvent }: UseLightPropsOptions) {
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+export function useLightProps({ sid, bid, lastEvent }: UseLightPropsOptions) {
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
-	const lightStatus = useMemo(() => (lastEvent ? lastEvent.type : App.BasicEventType.OFF), [lastEvent]);
-	const lightColor = useMemo(() => (lightStatus === App.BasicEventType.OFF ? "#000000" : getColorForItem(lastEvent?.colorType, customColors)), [lastEvent, lightStatus, customColors]);
+	const derived = useMemo(() => {
+		return {
+			lastEventId: lastEvent ? resolveEventId(lastEvent) : null,
+			effect: deriveEffectForEvent(lastEvent),
+			color: deriveColorForEvent(lastEvent, { customColors: colorScheme }),
+			brightness: deriveBrightnessForEvent(lastEvent),
+		};
+	}, [lastEvent, colorScheme]);
 
-	return { lastEventId: lastEvent?.id ?? null, status: lightStatus, color: lightColor };
+	return { ...derived };
 }
+
+export type UseLightPropsReturn = ReturnType<typeof useLightProps>;
 
 export interface UseRingCountOptions {
 	count: number;
@@ -36,7 +64,7 @@ export function useRingCount({ count }: UseRingCountOptions) {
 }
 
 export interface UseRingRotationOptions {
-	lastEventId: App.BasicEvent["id"] | null | undefined;
+	lastEventId: EntityId | null;
 	incrementBy?: number;
 	ratio?: number;
 }
@@ -57,7 +85,7 @@ export function useRingRotation({ lastEventId, incrementBy = Math.PI * 0.5, rati
 }
 
 export interface UseRingZoomOptions {
-	lastEventId: App.BasicEvent["id"] | null | undefined;
+	lastEventId: EntityId | null;
 	minDistance?: number;
 	maxDistance?: number;
 }

@@ -1,4 +1,8 @@
-import { App, Difficulty } from "$/types/beatmap";
+import { App } from "$/types/beatmap";
+import { CharacteristicName, DifficultyName } from "bsmap/types";
+
+export const CHARACTERISTICS = [CharacteristicName[0], CharacteristicName[1], CharacteristicName[2], CharacteristicName[3]];
+export const DIFFICULTIES = [DifficultyName[0], DifficultyName[1], DifficultyName[2], DifficultyName[3], DifficultyName[4]] as const;
 
 export const DEFAULT_NUM_COLS = 4;
 export const DEFAULT_NUM_ROWS = 3;
@@ -13,41 +17,20 @@ export const DEFAULT_GRID = {
 } as const;
 
 export const DEFAULT_NOTE_JUMP_SPEEDS = {
-	[Difficulty.EASY]: 10,
-	[Difficulty.NORMAL]: 10,
-	[Difficulty.HARD]: 12,
-	[Difficulty.EXPERT]: 15,
-	[Difficulty.EXPERT_PLUS]: 18,
+	[DifficultyName[0]]: 10,
+	[DifficultyName[1]]: 10,
+	[DifficultyName[2]]: 12,
+	[DifficultyName[3]]: 15,
+	[DifficultyName[4]]: 18,
+	[DifficultyName[5]]: 18,
 } as const;
 
 export const DEFAULT_COLOR_SCHEME = {
-	[App.BeatmapColorKey.SABER_LEFT]: "#c03030",
-	[App.BeatmapColorKey.SABER_RIGHT]: "#2064a8",
-	[App.BeatmapColorKey.ENV_LEFT]: "#c03030",
-	[App.BeatmapColorKey.ENV_RIGHT]: "#3098ff",
-	[App.BeatmapColorKey.OBSTACLE]: "#ff3030",
-} as const;
-
-export const DEFAULT_MOD_SETTINGS = {
-	customColors: {
-		isEnabled: false,
-		...DEFAULT_COLOR_SCHEME,
-		colorLeftOverdrive: 0,
-		colorRightOverdrive: 0,
-		envColorLeftOverdrive: 0,
-		envColorRightOverdrive: 0,
-		obstacleColorOverdrive: 0,
-	},
-	mappingExtensions: {
-		isEnabled: false,
-		...DEFAULT_GRID,
-	},
-} as const;
-
-export const COLOR_OVERDRIVE_MULTIPLIER = {
-	[App.BeatmapColorKey.SABER_LEFT]: 5,
-	[App.BeatmapColorKey.SABER_RIGHT]: 5,
-	[App.BeatmapColorKey.ENV_LEFT]: 3,
-	[App.BeatmapColorKey.ENV_RIGHT]: 3,
-	[App.BeatmapColorKey.OBSTACLE]: 10,
+	[App.ColorSchemeKey.SABER_LEFT]: "#c03030",
+	[App.ColorSchemeKey.SABER_RIGHT]: "#2064a8",
+	[App.ColorSchemeKey.OBSTACLE]: "#ff3030",
+	[App.ColorSchemeKey.ENV_LEFT]: "#c03030",
+	[App.ColorSchemeKey.ENV_RIGHT]: "#3098ff",
+	[App.ColorSchemeKey.BOOST_LEFT]: "#c03030",
+	[App.ColorSchemeKey.BOOST_RIGHT]: "#3098ff",
 } as const;

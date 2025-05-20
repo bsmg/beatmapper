@@ -1,4 +1,5 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import type { NoteDirection } from "bsmap";
 
 import { deleteGridPreset, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
 import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
@@ -7,7 +8,7 @@ const NOTE_TOOLS = Object.values(ObjectTool);
 
 const initialState = {
 	selectedTool: NOTE_TOOLS[0],
-	selectedDirection: 8,
+	selectedDirection: 8 as NoteDirection,
 	selectionMode: null as ObjectSelectionMode | null, // null | 'select' | 'deselect' | 'delete'.
 	defaultObstacleDuration: 4,
 	gridPresets: {} as GridPresets,

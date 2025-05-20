@@ -2,7 +2,7 @@ import { Fragment, useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
-import { App, type SongId } from "$/types";
+import { App, type BeatmapId, type SongId } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
@@ -50,16 +50,22 @@ function getSinRotationValue(side: "left" | "right", beamIndex: number, time: nu
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
 	side: "left" | "right";
 	timescale?: (cursorPosition: number) => number;
 }
-function SideLasers({ sid, side, timescale = scaleToSeconds }: Props) {
+function SideLasers({ sid, bid, side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
-	const lastEvent = useEventTrack<App.IBasicLightEvent>({ sid, trackId: side === "left" ? App.TrackId[2] : App.TrackId[3] });
-	const lastSpeedEvent = useEventTrack<App.IBasicValueEvent>({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
 
-	const { lastEventId: eventId, status, color } = useLightProps({ sid, lastEvent });
-	const laserSpeed = useMemo(() => (lastSpeedEvent ? lastSpeedEvent.laserSpeed : 0), [lastSpeedEvent]);
+	const [lastLightEvent] = useEventTrack({ sid, trackId: side === "left" ? App.TrackId[2] : App.TrackId[3] });
+	const [lastSpeedEvent] = useEventTrack({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
+
+	const light = useLightProps({ sid, bid, lastEvent: lastLightEvent });
+
+	const laserSpeed = useMemo(() => {
+		if (!lastSpeedEvent) return 0;
+		return lastSpeedEvent.value;
+	}, [lastSpeedEvent]);
 
 	const secondsSinceSongStart = useMemo(() => timescale(cursorPosition), [timescale, cursorPosition]);
 	const factor = useMemo(() => (side === "left" ? -1 : 1), [side]);
@@ -71,10 +77,10 @@ function SideLasers({ sid, side, timescale = scaleToSeconds }: Props) {
 		const xPosition = xOffset + index * xDistanceBetweenBeams;
 		const zPosition = Z_OFFSET + index * -Z_DISTANCE_BETWEEN_BEAMS;
 		const zRotation = convertDegreesToRadians(getSinRotationValue(side, index, secondsSinceSongStart, laserSpeed));
-		return <TubeLight key={index} radius={0.2} color={color} position-x={xPosition} position-y={Y_OFFSET} position-z={zPosition} rotation-z={zRotation} lastEventId={eventId} status={status} />;
+		return <TubeLight key={index} light={light} radius={0.2} position-x={xPosition} position-y={Y_OFFSET} position-z={zPosition} rotation-z={zRotation} />;
 	});
 	// Side lasers also feature a single "perspective" beam, shooting into the distance.
-	const perspectiveBeam = <TubeLight radius={0.15} color={color} position={[xOffset * 1.5, Y_OFFSET, -45]} rotation={[convertDegreesToRadians(90), 0, 0]} lastEventId={eventId} status={status} />;
+	const perspectiveBeam = <TubeLight light={light} radius={0.15} position={[xOffset * 1.5, Y_OFFSET, -45]} rotation={[convertDegreesToRadians(90), 0, 0]} />;
 
 	return (
 		<Fragment>

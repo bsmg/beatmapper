@@ -3,11 +3,11 @@ import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, Zoo
 import { type CSSProperties, type ComponentProps, useMemo } from "react";
 
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
-import { getColorForItem } from "$/helpers/colors.helpers";
+import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { selectEventColor, selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCustomColors, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorToggleLoop, selectEventEditorToggleMirror, selectEventEditorTool, selectEventEditorZoomLevel } from "$/store/selectors";
-import { type App, EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
+import { selectColorScheme, selectEventEditorColor, selectEventEditorEditMode, selectEventEditorToggleLoop, selectEventEditorToggleMirror, selectEventEditorTool, selectEventEditorZoomLevel } from "$/store/selectors";
+import { type BeatmapId, EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
 
 import { HStack, styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
@@ -21,31 +21,31 @@ const EDIT_MODE_LIST_COLLECTION = createListCollection({
 	}),
 });
 
-interface EventListCollection {
-	customColors?: App.ModSettings["customColors"];
+interface EventListCollection extends ColorResolverOptions {
 	selectedColor?: EventColor;
 }
 function createEventColorListCollection({ customColors }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventColor).map((value) => {
-			return { value, label: <Box style={{ "--color": getColorForItem(value, customColors) } as CSSProperties} /> };
+			return { value, label: <Box style={{ "--color": resolveColorForItem(value, { customColors }) } as CSSProperties} /> };
 		}),
 	});
 }
-function createEventEffectListCollection({ customColors, selectedColor }: EventListCollection) {
+function createEventEffectListCollection({ selectedColor, customColors }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventTool).map((value) => {
-			return { value, label: <EventEffectIcon tool={value} color={getColorForItem(selectedColor, customColors)} /> };
+			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, { customColors })} /> };
 		}),
 	});
 }
 
 interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
+	bid: BeatmapId;
 }
-function EventGridControls({ sid, ...rest }: Props) {
+function EventGridControls({ sid, bid, ...rest }: Props) {
 	const dispatch = useAppDispatch();
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedTool = useAppSelector(selectEventEditorTool);
 	const selectedColor = useAppSelector(selectEventEditorColor);
@@ -53,8 +53,8 @@ function EventGridControls({ sid, ...rest }: Props) {
 	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
 	const zoomLevel = useAppSelector(selectEventEditorZoomLevel);
 
-	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ customColors }), [customColors]);
-	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ customColors, selectedColor }), [customColors, selectedColor]);
+	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ customColors: colorScheme }), [colorScheme]);
+	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ customColors: colorScheme, selectedColor }), [colorScheme, selectedColor]);
 
 	return (
 		<Wrapper {...rest}>
@@ -62,10 +62,10 @@ function EventGridControls({ sid, ...rest }: Props) {
 				<Field cosmetic size="sm" label="Edit Mode">
 					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(selectEventEditMode({ editMode: details.value[0] as EventEditMode }))} />
 				</Field>
-				<Field cosmetic size="sm" label="Color">
+				<Field cosmetic size="sm" label="Light Color">
 					<ToggleGroup collection={COLOR_LIST_COLLECTION} value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(selectEventColor({ color: details.value[0] as EventColor }))} />
 				</Field>
-				<Field cosmetic size="sm" label="Effect">
+				<Field cosmetic size="sm" label="Light Effect">
 					<ToggleGroup collection={EFFECT_LIST_COLLECTION} value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(selectTool({ view: View.LIGHTSHOW, tool: details.value[0] as EventTool }))} />
 				</Field>
 				<Field cosmetic size="sm" label="Locks">

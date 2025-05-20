@@ -9,7 +9,7 @@ export function useLocalFileQuery<T = File>(filename: string, { queryKeySuffix: 
 		queryFn: async () => {
 			const blob = await filestore.loadFile<Blob>(filename);
 			let file = blob as unknown as File;
-			if (blob instanceof Blob) file = new File([blob], filename, { type: blob.type });
+			if (!(blob instanceof File)) file = new File([blob], "name" in blob && typeof blob.name === "string" ? blob.name : filename, { type: blob.type });
 			return (await rest.transform?.(file)) ?? (file as T);
 		},
 	});

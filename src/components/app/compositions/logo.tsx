@@ -1,18 +1,38 @@
 import { animated as a, useSpring } from "@react-spring/three";
 import { Canvas } from "@react-three/fiber";
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { NoteDirection, createColorNote } from "bsmap";
+import type { EnvironmentAllName } from "bsmap/types";
+import { type DateArg, endOfMonth, endOfWeek, isWithinInterval, startOfMonth, startOfWeek } from "date-fns";
+import { useMemo, useRef, useState } from "react";
+
+import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 
 import { HStack, styled } from "$:styled-system/jsx";
 import { ColorNote } from "$/components/scene/compositions";
 
-const MOCK_NOTE = { beatNum: 0, colIndex: 0, rowIndex: 0, direction: "down" } as const;
+const MOCK_NOTE = createColorNote({ direction: NoteDirection.DOWN });
+
+function checkDate(date: `${number}/${number}`, start: (date: DateArg<Date>) => Date, end: (date: DateArg<Date>) => Date) {
+	const today = new Date();
+	return isWithinInterval(today, { start: start(`${date}/${today.getFullYear()}`), end: end(`${date}/${today.getFullYear()}`) });
+}
+
+function deriveNoteColor() {
+	let environment: EnvironmentAllName = "DefaultEnvironment" as const;
+	if (checkDate("06/01", startOfMonth, endOfMonth)) environment = "GagaEnvironment";
+	if (checkDate("10/31", startOfWeek, endOfWeek)) environment = "HalloweenEnvironment";
+	const { colorLeft, colorRight } = deriveColorSchemeFromEnvironment(environment);
+	if (import.meta.env.DEV) return colorRight;
+	return colorLeft;
+}
 
 interface Props {
 	size?: "full" | "mini";
 }
 function Logo({ size = "full" }: Props) {
 	const [isHovering, setIsHovering] = useState(false);
+	const color = useRef(deriveNoteColor());
 
 	const [spring] = useSpring(() => ({ rotation: isHovering ? 0 : -0.35 }), [isHovering]);
 
@@ -28,12 +48,12 @@ function Logo({ size = "full" }: Props) {
 			<HStack gap={1}>
 				<Canvas style={styles}>
 					<a.group rotation-y={spring.rotation}>
-						<ColorNote position={[0, 0, 2]} data={MOCK_NOTE} color={"red"} size={3} />
+						<ColorNote position={[0, 0, 2]} data={MOCK_NOTE} color={color.current} size={3} />
 					</a.group>
-					<ambientLight intensity={0.85} />
+					<ambientLight intensity={1.5} />
 					<directionalLight intensity={0.5} position={[0, 30, 8]} />
-					<directionalLight intensity={0.1} position={[5, 0, 20]} />
-					<directionalLight intensity={0.1} position={[-20, -10, 4]} />
+					<directionalLight intensity={0.125} position={[5, 0, 20]} />
+					<directionalLight intensity={0.125} position={[-20, -10, 4]} />
 				</Canvas>
 				<Title size={size}>Beatmapper</Title>
 			</HStack>

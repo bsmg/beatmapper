@@ -1,10 +1,10 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
-import type WaveformData from "waveform-data";
+import type { JsonWaveformData } from "waveform-data";
 
 import { finishLoadingSong, leaveEditor, reloadWaveform, zoomWaveform } from "$/store/actions";
 
 const initialState = {
-	data: null as WaveformData | null,
+	data: null as JsonWaveformData | null,
 	zoomAmount: 0,
 	zoomCursorPosition: null as number | null,
 };

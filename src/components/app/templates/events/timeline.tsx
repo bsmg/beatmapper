@@ -3,14 +3,16 @@ import { useCallback, useRef, useState } from "react";
 import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectEventEditorSelectedBeat } from "$/store/selectors";
+import type { SongId } from "$/types";
 
 import { styled } from "$:styled-system/jsx";
 import { flex } from "$:styled-system/patterns";
 
 interface Props {
+	sid: SongId;
 	beatNums: number[];
 }
-function EventGridTimeline({ beatNums }: Props) {
+function EventGridTimeline({ sid, beatNums }: Props) {
 	const dispatch = useAppDispatch();
 	const selectedBeat = useAppSelector(selectEventEditorSelectedBeat);
 
@@ -19,9 +21,9 @@ function EventGridTimeline({ beatNums }: Props) {
 
 	const handlePointerDown = useCallback(() => {
 		setIsScrubbing(true);
-		if (selectedBeat !== null) dispatch(scrubEventsHeader({ selectedBeat }));
+		if (selectedBeat !== null) dispatch(scrubEventsHeader({ songId: sid, selectedBeat }));
 		lastActionDispatchedFor.current = selectedBeat;
-	}, [dispatch, selectedBeat]);
+	}, [dispatch, sid, selectedBeat]);
 
 	const handlePointerUp = useCallback(() => {
 		setIsScrubbing(false);
@@ -35,10 +37,10 @@ function EventGridTimeline({ beatNums }: Props) {
 		const shouldDispatchAction = lastActionDispatchedFor.current !== selectedBeat;
 
 		if (shouldDispatchAction) {
-			if (selectedBeat !== null) dispatch(scrubEventsHeader({ selectedBeat }));
+			if (selectedBeat !== null) dispatch(scrubEventsHeader({ songId: sid, selectedBeat }));
 			lastActionDispatchedFor.current = selectedBeat;
 		}
-	}, [dispatch, selectedBeat, isScrubbing]);
+	}, [dispatch, sid, selectedBeat, isScrubbing]);
 
 	return (
 		<Header onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove}>

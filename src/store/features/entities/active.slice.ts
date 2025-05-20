@@ -22,7 +22,7 @@ const slice = createSlice({
 			return { song: songId, beatmap: selectedDifficulty };
 		});
 		builder.addCase(startLoadingSong, (_, action) => {
-			const { songId, difficulty } = action.payload;
+			const { songId, beatmapId: difficulty } = action.payload;
 			return { song: songId, beatmap: difficulty };
 		});
 		builder.addCase(leaveEditor, () => {

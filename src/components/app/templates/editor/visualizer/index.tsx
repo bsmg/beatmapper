@@ -2,13 +2,14 @@ import { type MouseEvent, useCallback } from "react";
 
 import { deleteBookmark, jumpToBeat, scrubWaveform } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectGraphicsQuality, selectIsLoading, selectOffsetInBeats, selectWaveformData } from "$/store/selectors";
+import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectGraphicsQuality, selectIsLoading, selectWaveformData } from "$/store/selectors";
 import { Quality, type SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 
 import { AudioVisualizer } from "$/components/app/layouts";
 import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
 import { Waveform } from "$/components/ui/compositions";
+import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import EditorBookmark from "./bookmark";
 
 interface Props {
@@ -23,7 +24,7 @@ function EditorAudioVisualizer({ sid }: Props) {
 	const graphicsLevel = useAppSelector(selectGraphicsQuality);
 	const bookmarks = useAppSelector(selectAllBookmarks);
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
-	const offsetInBeats = useAppSelector((state) => selectOffsetInBeats(state, sid));
+	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
 	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
 
 	// Updating this waveform is surprisingly expensive! We'll throttle its rendering by rounding the cursor position for lower graphics settings.
@@ -39,9 +40,9 @@ function EditorAudioVisualizer({ sid }: Props) {
 
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {
-			dispatch(scrubWaveform({ newOffset: offset }));
+			dispatch(scrubWaveform({ songId: sid, newOffset: offset }));
 		},
-		[dispatch],
+		[dispatch, sid],
 	);
 
 	const handleMarkerClick = useCallback(
@@ -52,11 +53,11 @@ function EditorAudioVisualizer({ sid }: Props) {
 					return dispatch(deleteBookmark({ beatNum: time }));
 				}
 				default: {
-					return dispatch(jumpToBeat({ beatNum: time }));
+					return dispatch(jumpToBeat({ songId: sid, beatNum: time }));
 				}
 			}
 		},
-		[dispatch],
+		[dispatch, sid],
 	);
 
 	return (
@@ -66,7 +67,7 @@ function EditorAudioVisualizer({ sid }: Props) {
 			</AudioVisualizer.Content>
 			{!isLoadingSong && durationInBeats && (
 				<AudioVisualizer.Markers duration={durationInBeats} offset={offsetInBeats} markers={bookmarks} onMarkerClick={handleMarkerClick}>
-					{(bookmark, rest) => <EditorBookmark key={bookmark.beatNum} bookmark={bookmark} {...rest} />}
+					{(bookmark, rest) => <EditorBookmark key={resolveBookmarkId(bookmark)} bookmark={bookmark} {...rest} />}
 				</AudioVisualizer.Markers>
 			)}
 		</AudioVisualizer.Root>

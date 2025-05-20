@@ -11,7 +11,6 @@ import createDemoMiddleware from "./demo.middleware";
 import createFileMiddleware from "./file.middleware";
 import createHistoryMiddleware from "./history.middleware";
 import createPackagingMiddleware from "./packaging.middleware";
-import createSelectionMiddleware from "./selection.middleware";
 
 export { createStorageMiddleware, type StorageObserver } from "./storage.middleware";
 
@@ -28,9 +27,8 @@ export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options
 
 	const audioMiddleware = createAudioMiddleware({ filestore });
 	const fileMiddleware = createFileMiddleware({ filestore });
-	const selectionMiddleware = createSelectionMiddleware();
 	const downloadMiddleware = createPackagingMiddleware({ filestore });
-	const backupMiddleware = createBackupMiddleware({ filestore, worker: autosaveWorker });
+	const backupMiddleware = createBackupMiddleware({ worker: autosaveWorker });
 	const demoMiddleware = createDemoMiddleware();
 	const historyMiddleware = createHistoryMiddleware();
 
@@ -39,7 +37,6 @@ export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options
 		stateSyncMiddleware,
 		audioMiddleware,
 		fileMiddleware,
-		selectionMiddleware,
 		downloadMiddleware,
 		demoMiddleware,
 		historyMiddleware,

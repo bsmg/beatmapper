@@ -31,14 +31,12 @@ const slice = createSlice({
 			if (processingDelay !== undefined) state.processingDelay = processingDelay;
 			if (graphicsLevel !== undefined) state.graphicsLevel = Object.values(Quality)[graphicsLevel];
 		});
-		builder.addCase(importExistingSong, (state, action) => {
-			const { songData } = action.payload;
-			if (songData.demo) return state;
+		builder.addCase(importExistingSong.fulfilled, (state, action) => {
 			return { ...state, isNewUser: false };
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
-			const { mapAuthorName } = action.payload;
-			return { ...state, stickyMapAuthorName: mapAuthorName ?? null };
+			const { songData } = action.payload;
+			return { ...state, stickyMapAuthorName: songData.mapAuthorName ?? null };
 		});
 		builder.addCase(dismissPrompt, (state, action) => {
 			const { promptId } = action.payload;

@@ -1,8 +1,10 @@
+import type { wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
-import { resolveExtension } from "$/helpers/file.helpers";
-import type { BeatmapId, Json, MaybeDefined, SongId } from "$/types";
+import type { BeatmapId, MaybeDefined, SongId } from "$/types";
+import { omit, pick } from "$/utils";
+import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow } from "bsmap";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -16,7 +18,9 @@ export class Filestore {
 	}
 
 	async loadFile<T>(filename: string) {
-		return this.storage.getItemRaw<T>(filename);
+		const file = this.storage.getItemRaw<T>(filename);
+		if (!file) throw new Error(`No file found for filename: ${filename}`);
+		return file as T;
 	}
 	async saveFile<T extends Saveable>(filename: string, contents: T) {
 		await this.storage.setItemRaw<T>(filename, contents as MaybeDefined<T>);
@@ -27,26 +31,22 @@ export class Filestore {
 	}
 }
 
-type BeatmapFileType = "info" | "song" | "cover" | "beatmap";
-type BeatmapFileOptions<T extends BeatmapFileType> = T extends "song" | "cover" ? { extension: string } : T extends "beatmap" ? { id: BeatmapId } : Record<string, never>;
-type BeatmapFileImplicitReturn<T extends BeatmapFileType> = T extends "song" | "cover" ? File | Blob : T extends "beatmap" ? Json.Beatmap : Saveable;
+type BeatmapFileType = "info" | "song" | "cover" | "beatmap" | "audio";
+type BeatmapFileOptions<T extends BeatmapFileType> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
 
 export class BeatmapFilestore extends Filestore {
 	static resolveFilename<T extends BeatmapFileType>(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
 		switch (type) {
-			case "info": {
-				return `${songId}.Info.dat`;
-			}
 			case "song":
-			case "cover": {
-				const { extension } = options as BeatmapFileOptions<"song" | "cover">;
-				if (!extension) throw new Error(`Must supply a file extension for ${type}.`);
-				return `${songId}.${type}.${extension}`;
+			case "cover":
+			case "audio":
+			case "info": {
+				return `${songId}.${type}`;
 			}
 			case "beatmap": {
-				const { id } = options as BeatmapFileOptions<"beatmap">;
+				const { id } = options as BeatmapFileOptions<"info" | "beatmap">;
 				if (!id) throw new Error(`Must supply an id for ${type}.`);
-				return `${songId}.${id}.${type}.dat`;
+				return `${songId}.${id}.${type}`;
 			}
 			default: {
 				throw new Error(`Unrecognized type: ${type}`);
@@ -62,7 +62,6 @@ export class BeatmapFilestore extends Filestore {
 		// I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
 		if (await this.storage.hasItem(coverArtFilename)) {
 			const file = this.loadFile<File>(coverArtFilename);
-			if (!file) throw new Error("An unexpected error occured.");
 			return { filename: coverArtFilename, contents: file };
 		}
 		// I need to convert the file URL I have into a Blob, and then save that to indexedDB.
@@ -71,38 +70,102 @@ export class BeatmapFilestore extends Filestore {
 		return await this.saveFile(coverArtFilename, blob);
 	}
 
-	async loadBeatmapFile(songId: SongId, beatmapId: BeatmapId) {
+	async loadSongFile(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
+		return this.loadFile<File>(filename);
+	}
+	async loadCoverArtFile(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
+		return this.loadFile<File>(filename);
+	}
+	async loadInfoContents(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
+		return this.loadFile<wrapper.IWrapInfo>(filename);
+	}
+	async loadAudioDataContents(songId: SongId) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
+		return this.loadFile<wrapper.IWrapAudioData>(filename);
+	}
+	async loadBeatmapContents(songId: SongId, beatmapId: BeatmapId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
-		return this.loadFile<BeatmapFileImplicitReturn<"beatmap">>(filename);
+		return this.loadFile<wrapper.IWrapBeatmap>(filename);
+	}
+	async loadImplicitVersion(songId: SongId, beatmapId: BeatmapId) {
+		const beatmap = await this.loadBeatmapContents(songId, beatmapId);
+		return beatmap.version as 1 | 2 | 3 | 4;
 	}
 
-	async saveInfoFile<T extends BeatmapFileImplicitReturn<"info">>(songId: SongId, contents: T) {
+	async saveSongFile<T extends File>(songId: SongId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
+		return this.saveFile<T>(filename, contents);
+	}
+	async saveCoverFile<T extends File>(songId: SongId, contents: T) {
+		if (!contents) return this.saveBackupCoverFile();
+		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
+		return this.saveFile<T>(filename, contents);
+	}
+	async saveInfoContents<T extends wrapper.IWrapInfo>(songId: SongId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveSongFile<T extends BeatmapFileImplicitReturn<"song">>(songId: SongId, contents: T, type?: string, overrideFilename?: string) {
-		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
-		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
-		const filename = BeatmapFilestore.resolveFilename(songId, "song", { extension });
-		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
+	async saveAudioDataContents<T extends wrapper.IWrapAudioData>(songId: SongId, contents: T) {
+		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
+		return this.saveFile<T>(filename, contents);
 	}
-	async saveCoverFile<T extends BeatmapFileImplicitReturn<"cover">>(songId: SongId, contents?: T, type?: string, overrideFilename?: string) {
-		if (!contents) return this.saveBackupCoverFile();
-		const implicitType = contents.type.length >= 1 ? contents.type : (type ?? "application/octet-stream");
-		const extension = resolveExtension(implicitType, contents instanceof File ? contents.name : overrideFilename);
-		const filename = BeatmapFilestore.resolveFilename(songId, "cover", { extension });
-		return this.saveFile<T>(filename, new Blob([contents], { type: implicitType }) as T);
-	}
-	async saveBeatmapFile<T extends BeatmapFileImplicitReturn<"beatmap">>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+	async saveBeatmapContents<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.saveFile<T>(filename, contents);
 	}
 
-	async removeAllFilesForSong(songId: SongId, songFilename: string, coverFilename: string, beatmapIds: BeatmapId[]) {
+	async updateInfoContents(songId: SongId, newContents: Partial<wrapper.IWrapInfo>) {
+		const savedContents = await this.loadInfoContents(songId).catch(() => createInfo({ ...newContents }));
+		return await this.saveInfoContents(
+			songId,
+			createInfo({
+				...(savedContents ?? newContents),
+				...omit(newContents, "version", "filename"),
+			}),
+		);
+	}
+	async updateAudioContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
+		const savedContents = await this.loadAudioDataContents(songId);
+		return await this.saveAudioDataContents(
+			songId,
+			createAudioData({
+				...(savedContents ?? newContents),
+				...omit(newContents, "version", "filename"),
+			}),
+		);
+	}
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: Partial<wrapper.IWrapBeatmap>) {
+		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
+		return await this.saveBeatmapContents(
+			songId,
+			beatmapId,
+			createBeatmap({
+				...(savedContents ?? newContents),
+				// we might have an updated lightshow filename if we update the lightshow id.
+				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
+				difficulty: createDifficulty({
+					// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
+					...pick(savedContents.difficulty, "colorNotes", "bombNotes", "obstacles"),
+					...newContents.difficulty,
+				}),
+				lightshow: createLightshow({
+					// for lightshow, we'll merge the contents and only replace collections that are directly supported.
+					...savedContents.lightshow,
+					...newContents.lightshow,
+				}),
+			}),
+		);
+	}
+
+	async removeAllFilesForSong(songId: SongId, beatmapIds: BeatmapId[]) {
 		return Promise.all([
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "song", {})),
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "cover", {})),
 			this.removeFile(BeatmapFilestore.resolveFilename(songId, "info", {})),
-			this.removeFile(songFilename),
-			this.removeFile(coverFilename),
+			this.removeFile(BeatmapFilestore.resolveFilename(songId, "audio", {})),
 			...beatmapIds.map((id) => this.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: id }))),
 			//
 		]);

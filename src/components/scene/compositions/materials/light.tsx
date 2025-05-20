@@ -1,41 +1,41 @@
-import { animated, useSpring } from "@react-spring/three";
+import { type SpringConfig, animated, useSpring } from "@react-spring/three";
 import { type ComponentProps, useMemo } from "react";
-import type { ColorRepresentation } from "three";
 
 import { useOnChange } from "$/components/hooks";
+import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
 import { App, Quality } from "$/types";
 
-const lightSpringConfig = {
+// todo: spring animations are always pre-computed, so there's no means of deterministically calculating the lighting state at a particular time (or when paused)
+// we'll probably need to refactor this on a different api/framework at some point
+
+const lightSpringConfig: SpringConfig = {
 	tension: 270,
 	friction: 120,
 };
 
-type LightSpringProps = { emissiveIntensity: number; opacity: number };
-type LightSpringStateProps = [on: LightSpringProps, off: LightSpringProps, bright: LightSpringProps];
-
-interface UseSpringConfigForLightOptions {
-	state: LightSpringStateProps;
-	status: App.LightEventType;
-	color: ColorRepresentation;
+interface UseSpringConfigForLightOptions extends Omit<UseLightPropsReturn, "lastEventId"> {
+	mult?: number;
 }
-function useSpringConfigForLight({ state: [onProps, offProps, brightProps], status }: UseSpringConfigForLightOptions) {
-	const quality = useAppSelector(selectGraphicsQuality);
-	const color = useMemo(() => (quality === Quality.HIGH ? "#ccc" : "#444"), [quality]);
+function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpringConfigForLightOptions) {
+	const opacity = brightness > 0 ? 1 : 0;
+	const onEmissiveIntensity = brightness * mult;
+	const brightEmissiveIntensity = brightness * 1.25 * mult;
 
-	switch (status) {
+	switch (effect) {
 		case App.BasicEventType.OFF: {
 			return {
-				to: { ...offProps, color: "#444" },
+				to: { opacity: 0, emissiveIntensity: 0 },
 				immediate: true,
 				reset: false,
 				config: lightSpringConfig,
 			};
 		}
+		case App.BasicEventType.TRANSITION: // todo: this will be a problem for future me to figure out
 		case App.BasicEventType.ON: {
 			return {
-				to: { ...onProps, color: color },
+				to: { emissive: color, opacity: opacity, emissiveIntensity: onEmissiveIntensity },
 				immediate: true,
 				reset: false,
 				config: lightSpringConfig,
@@ -43,8 +43,8 @@ function useSpringConfigForLight({ state: [onProps, offProps, brightProps], stat
 		}
 		case App.BasicEventType.FLASH: {
 			return {
-				from: brightProps,
-				to: onProps,
+				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
+				to: { emissive: color, opacity: opacity, emissiveIntensity: onEmissiveIntensity },
 				immediate: false,
 				reset: false,
 				config: lightSpringConfig,
@@ -52,24 +52,18 @@ function useSpringConfigForLight({ state: [onProps, offProps, brightProps], stat
 		}
 		case App.BasicEventType.FADE: {
 			return {
-				from: brightProps,
-				to: offProps,
+				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
+				to: { opacity: 0, emissiveIntensity: 0 },
 				immediate: false,
 				reset: false,
 				config: lightSpringConfig,
 			};
 		}
 		default: {
-			throw new Error(`Unrecognized status: ${status}`);
+			throw new Error(`Unrecognized status: ${effect}`);
 		}
 	}
 }
-
-const MULT = 1.5;
-
-const ON_PROPS = { emissiveIntensity: 1 * MULT, opacity: 1 };
-const OFF_PROPS = { emissiveIntensity: 0, opacity: 0 };
-const BRIGHT_PROPS = { emissiveIntensity: 1.2 * MULT, opacity: 1 };
 
 // ~~Complicated Business~~
 // When certain statuses occur - flash, fade - we want to reset the spring, so that it does the "from" and "to" again.
@@ -84,30 +78,27 @@ const BRIGHT_PROPS = { emissiveIntensity: 1.2 * MULT, opacity: 1 };
 // This feels hacky, but I don't know of a better way.
 
 interface UseLightSpringOptions {
-	lastEventId: App.BasicEvent["id"] | null | undefined;
-	status: App.LightEventType;
-	color: ColorRepresentation;
-	stateProps?: LightSpringStateProps;
+	light: UseLightPropsReturn;
 }
-export function useLightSpring({ lastEventId, status, color, stateProps = [ON_PROPS, OFF_PROPS, BRIGHT_PROPS] }: UseLightSpringOptions) {
+export function useLightSpring({ light }: UseLightSpringOptions) {
 	const isPlaying = useAppSelector(selectIsPlaying);
-	const lightSpringConfig = useSpringConfigForLight({ state: stateProps, status, color });
+	const lightSpringConfig = useSpringConfigForLight({ ...light });
 
 	useOnChange(() => {
 		if (!isPlaying) return;
 
-		const statusShouldReset = status === App.BasicEventType.FLASH || status === App.BasicEventType.FADE;
+		const statusShouldReset = light.effect === App.BasicEventType.FLASH || light.effect === App.BasicEventType.FADE;
 		lightSpringConfig.reset = statusShouldReset;
-	}, lastEventId ?? null);
+	}, light.lastEventId ?? null);
 
-	return useSpring(() => lightSpringConfig, [status]);
+	return useSpring<{ emissive: string; emissiveIntensity: number; opacity: number }>(() => lightSpringConfig, [light]);
 }
 
-interface Props extends UseLightSpringOptions, ComponentProps<typeof animated.meshLambertMaterial> {
-	color: ColorRepresentation;
-}
-export function LightMaterial({ lastEventId, status, color, ...rest }: Props) {
-	const [spring] = useLightSpring({ lastEventId, status, color });
+export function LightMaterial({ light, ...rest }: ComponentProps<typeof animated.meshLambertMaterial> & UseLightSpringOptions) {
+	const quality = useAppSelector(selectGraphicsQuality);
+	const materialColor = useMemo(() => (quality === Quality.HIGH ? "#ccc" : "#444"), [quality]);
 
-	return <animated.meshLambertMaterial {...rest} {...spring} attach="material" emissive={color} transparent={true} />;
+	const [spring] = useLightSpring({ light });
+
+	return <animated.meshLambertMaterial {...rest} emissive={spring.emissive} emissiveIntensity={spring.emissiveIntensity} opacity={spring.opacity} color={materialColor} attach="material" transparent={true} />;
 }

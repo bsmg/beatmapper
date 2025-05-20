@@ -32,6 +32,7 @@
 		"@tanstack/react-router": "^1.117.0",
 		"@tanstack/react-router-devtools": "^1.117.0",
 		"@tanstack/react-table": "^8.21.3",
+		"bsmap": "^2.2.2",
 		"color": "^4.2.3",
 		"date-fns": "^4.1.0",
 		"file-saver": "^2.0.5",

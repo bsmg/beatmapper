@@ -1,6 +1,7 @@
+import { NoteDirection } from "bsmap";
 import type { Vector2Like } from "three";
 
-import { CutDirection, ObjectPlacementMode } from "$/types";
+import { ObjectPlacementMode } from "$/types";
 import { convertCartesianToPolar } from "$/utils";
 
 function resolveNoteDirectionForStandardPlacementMode(angle: number) {
@@ -21,7 +22,7 @@ function resolveNoteDirectionForStandardPlacementMode(angle: number) {
 	const chunkOffset = chunkSize / 2;
 
 	let chunkIndex: number;
-	if (angle >= 337.5 || angle < 22.5) {
+	if (angle >= 360 - chunkSize / 2 || angle < chunkSize / 2) {
 		chunkIndex = 0;
 	} else {
 		chunkIndex = Math.floor((angle + chunkOffset) / chunkSize);
@@ -29,28 +30,28 @@ function resolveNoteDirectionForStandardPlacementMode(angle: number) {
 
 	switch (chunkIndex) {
 		case 0: {
-			return CutDirection.RIGHT;
+			return NoteDirection.RIGHT;
 		}
 		case 1: {
-			return CutDirection.DOWN_RIGHT;
+			return NoteDirection.DOWN_RIGHT;
 		}
 		case 2: {
-			return CutDirection.DOWN;
+			return NoteDirection.DOWN;
 		}
 		case 3: {
-			return CutDirection.DOWN_LEFT;
+			return NoteDirection.DOWN_LEFT;
 		}
 		case 4: {
-			return CutDirection.LEFT;
+			return NoteDirection.LEFT;
 		}
 		case 5: {
-			return CutDirection.UP_LEFT;
+			return NoteDirection.UP_LEFT;
 		}
 		case 6: {
-			return CutDirection.UP;
+			return NoteDirection.UP;
 		}
 		case 7: {
-			return CutDirection.UP_RIGHT;
+			return NoteDirection.UP_RIGHT;
 		}
 		default: {
 			throw new Error(`Unrecognized chunk index: ${chunkIndex}`);
@@ -58,17 +59,12 @@ function resolveNoteDirectionForStandardPlacementMode(angle: number) {
 	}
 }
 
-function resolveNoteDirectionForExtendedPlacementMode(angle: number) {
-	// Angles in JS start at the 3 o'clock position (to the right), and count clockwise from 0 to 360.
-	// For mapping extensions, we need to start at 6 o'clock (down), and count clockwise from 1000 to 1360.
-	// First, let's reorient the JS angle to start down and go from 0 to 360.
-	const reorientedAngle = (angle + 270) % 360;
-
-	// Then we just need to add 1000, to push it up into the right range.
-	return reorientedAngle + 1000;
+interface Options {
+	mappingMode: ObjectPlacementMode;
+	precisionPlacement: boolean;
+	selectedDirection?: NoteDirection;
 }
-
-export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, mappingMode: ObjectPlacementMode, precisionPlacement: boolean): CutDirection | null {
+export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, { mappingMode, precisionPlacement, selectedDirection }: Options): number | null {
 	const deltaX = currentPosition.x - initialPosition.x;
 	const deltaY = currentPosition.y - initialPosition.y;
 
@@ -84,7 +80,17 @@ export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Lik
 
 	// We need to convert this index to the batty set of directions the app uses.
 	if (mappingMode === ObjectPlacementMode.EXTENSIONS && precisionPlacement) {
-		return resolveNoteDirectionForExtendedPlacementMode(angle);
+		const isDot = selectedDirection === NoteDirection.ANY;
+		return reorientNoteDirection(angle, isDot);
 	}
 	return resolveNoteDirectionForStandardPlacementMode(angle);
+}
+
+export function reorientNoteDirection(angle: number, isDot?: boolean) {
+	// Angles in JS start at the 3 o'clock position (to the right), and count clockwise from 0 to 360.
+	// For mapping extensions, we need to start at 6 o'clock (down), and count clockwise from 1000 to 1360.
+	// First, let's reorient the JS angle to start down and go from 0 to 360.
+	const reorientedAngle = (angle + 270) % 360;
+	// Then we just need to add 1000, to push it up into the right range.
+	return reorientedAngle + 1000 + (isDot ? 1000 : 0);
 }

@@ -1,44 +1,44 @@
-import { default as Color } from "color";
+import { ColorScheme, EnvironmentSchemeName } from "bsmap";
+import type { EnvironmentAllName, IColor, v2 } from "bsmap/types";
+import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import { token } from "$:styled-system/tokens";
-import { COLOR_OVERDRIVE_MULTIPLIER, DEFAULT_COLOR_SCHEME } from "$/constants";
+import { DEFAULT_COLOR_SCHEME } from "$/constants";
 import { App, EventColor, ObjectTool } from "$/types";
-import { clamp, normalize } from "$/utils";
+import { patchEnvironmentName } from "./packaging.helpers";
 
-export function getColorForItem<T extends string | number>(item: T | undefined, customColors?: App.ModSettings["customColors"]) {
-	const customColorsEnabled = !!customColors?.isEnabled;
+export interface ColorResolverOptions {
+	customColors: App.IColorScheme;
+}
+export function resolveColorForItem<T extends string | number>(item: T | undefined, { customColors: colorScheme }: ColorResolverOptions) {
 	switch (item) {
 		case ObjectTool.LEFT_NOTE: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.colorLeft;
-			const customColor = customColors?.colorLeft || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return colorScheme.colorLeft ?? DEFAULT_COLOR_SCHEME.colorLeft;
 		}
 		case ObjectTool.RIGHT_NOTE: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.colorRight;
-			const customColor = customColors?.colorRight || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return colorScheme.colorRight ?? DEFAULT_COLOR_SCHEME.colorRight;
 		}
 		case ObjectTool.BOMB_NOTE: {
 			return "#687485";
 		}
 		case ObjectTool.OBSTACLE: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.obstacleColor;
-			const customColor = customColors?.obstacleColor || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+			return colorScheme.obstacleColor ?? DEFAULT_COLOR_SCHEME.obstacleColor;
 		}
-		case App.BeatmapColorKey.ENV_LEFT:
 		case App.EventColor.PRIMARY:
-		case EventColor.PRIMARY: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.envColorLeft;
-			const customColor = customColors?.envColorLeft || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+		case EventColor.PRIMARY:
+		case App.ColorSchemeKey.ENV_LEFT: {
+			return colorScheme.envColorLeft ?? DEFAULT_COLOR_SCHEME.envColorLeft;
 		}
-		case App.BeatmapColorKey.ENV_RIGHT:
 		case App.EventColor.SECONDARY:
-		case EventColor.SECONDARY: {
-			const defaultColor = DEFAULT_COLOR_SCHEME.envColorRight;
-			const customColor = customColors?.envColorRight || defaultColor;
-			return customColorsEnabled ? customColor : defaultColor;
+		case EventColor.SECONDARY:
+		case App.ColorSchemeKey.ENV_RIGHT: {
+			return colorScheme.envColorRight ?? DEFAULT_COLOR_SCHEME.envColorRight;
+		}
+		case App.ColorSchemeKey.BOOST_LEFT: {
+			return colorScheme.envColorLeftBoost ?? DEFAULT_COLOR_SCHEME.envColorLeftBoost;
+		}
+		case App.ColorSchemeKey.BOOST_RIGHT: {
+			return colorScheme.envColorRightBoost ?? DEFAULT_COLOR_SCHEME.envColorRightBoost;
 		}
 		case App.EventColor.WHITE:
 		case EventColor.WHITE: {
@@ -59,25 +59,20 @@ export function getColorForItem<T extends string | number>(item: T | undefined, 
 	}
 }
 
-export function formatColorForMods(element: App.BeatmapColorKey, hex: string, overdrive = 0) {
-	// For overdrive: every element ranges from 0 (no overdrive) to 1 (full).
-	// Different elements are affected by different amounts, though: left/right environment colors range from 1 to 3, whereas obstacles range from 1 to 10.
-	const overdriveMultiple = normalize(overdrive, 0, 1, 1, COLOR_OVERDRIVE_MULTIPLIER[element]);
-
-	const rgb = Color(hex).rgb().unitArray();
-
-	return {
-		r: rgb[0] * overdriveMultiple,
-		g: rgb[1] * overdriveMultiple,
-		b: rgb[2] * overdriveMultiple,
-	};
+export function serializeColorElement(hex: string) {
+	const [r, g, b] = hexToRgba(hex);
+	return { r, g, b, a: 1 };
 }
 
-// Turn the imported color into a hex string
-// This is NOT used for maps re-imported; we use _editorSettings to store the hex values directly. This is done since we lose "overdrive" information when we do it this way :(
-// This is only used when importing maps from other editors.
-export function formatColorFromImport(rgb: { r: number; g: number; b: number }) {
-	const normalizedRgb = [clamp(Math.round(rgb.r * 255), 0, 255), clamp(Math.round(rgb.g * 255), 0, 255), clamp(Math.round(rgb.b * 255), 0, 255)];
-
-	return Color(normalizedRgb).hex();
+export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
+	const envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+	return {
+		[App.ColorSchemeKey.SABER_LEFT]: colorToHex(envScheme._colorLeft).slice(0, 7),
+		[App.ColorSchemeKey.SABER_RIGHT]: colorToHex(envScheme._colorRight).slice(0, 7),
+		[App.ColorSchemeKey.OBSTACLE]: colorToHex(envScheme._obstacleColor).slice(0, 7),
+		[App.ColorSchemeKey.ENV_LEFT]: colorToHex(envScheme._envColorLeft).slice(0, 7),
+		[App.ColorSchemeKey.ENV_RIGHT]: colorToHex(envScheme._envColorRight).slice(0, 7),
+		[App.ColorSchemeKey.BOOST_LEFT]: colorToHex(envScheme._envColorLeftBoost ?? envScheme._envColorLeft).slice(0, 7),
+		[App.ColorSchemeKey.BOOST_RIGHT]: colorToHex(envScheme._envColorRightBoost ?? envScheme._envColorRight).slice(0, 7),
+	};
 }

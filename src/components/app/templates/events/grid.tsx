@@ -1,17 +1,27 @@
-import { type ComponentProps, type PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useMousePositionOverElement } from "$/components/hooks";
-import { COMMON_EVENT_TRACKS } from "$/constants";
-import { clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid } from "$/store/actions";
+import { useGlobalEventListener, useMousePositionOverElement, useParentDimensions } from "$/components/hooks";
+import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
+import { bulkRemoveBasicEvent, clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid, removeOneBasicEvent, switchEventColor, updateOneBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDurationInBeats, selectEventEditorEditMode, selectEventEditorRowHeight, selectEventEditorSelectedBeat, selectEventEditorSelectionBox, selectEventEditorStartAndEndBeat, selectEventEditorToggleMirror, selectIsLoading, selectOffsetInBeats, selectSnapTo } from "$/store/selectors";
-import { App, EventEditMode, type IEventTrack, type SongId } from "$/types";
+import {
+	selectDurationInBeats,
+	selectEditorOffsetInBeats,
+	selectEventEditorEditMode,
+	selectEventEditorRowHeight,
+	selectEventEditorSelectedBeat,
+	selectEventEditorSelectionBox,
+	selectEventEditorStartAndEndBeat,
+	selectEventEditorToggleMirror,
+	selectEventTracksForEnvironment,
+	selectIsLoading,
+	selectSnapTo,
+} from "$/store/selectors";
+import { type App, type BeatmapId, EventEditMode, type SongId, TrackType } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
 import { center, hstack, stack } from "$:styled-system/patterns";
-import { useGlobalEventListener, useParentDimensions } from "$/components/hooks";
-import { Button } from "$/components/ui/compositions";
 import EventGridCursor from "./cursor";
 import EventGridMarkers from "./markers";
 import EventGridSelectionBox from "./selection-box";
@@ -34,15 +44,17 @@ function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNu
 
 interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
-	tracks?: IEventTrack[];
+	bid: BeatmapId;
 }
-function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) {
+function EventGridEditor({ sid, bid, ...rest }: Props) {
+	const dispatch = useAppDispatch();
+	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
 	const selectedBeat = useAppSelector((state) => {
 		const selectedBeat = selectEventEditorSelectedBeat(state);
-		const offsetInBeats = -selectOffsetInBeats(state, sid);
+		const offsetInBeats = -selectEditorOffsetInBeats(state, sid);
 		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
 	const isLoading = useAppSelector(selectIsLoading);
@@ -50,14 +62,14 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 	const snapTo = useAppSelector(selectSnapTo);
 	const selectionBox = useAppSelector(selectEventEditorSelectionBox);
 	const rowHeight = useAppSelector(selectEventEditorRowHeight);
-	const dispatch = useAppDispatch();
-	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
 
 	const beatNums = useMemo(() => range(Math.floor(startBeat), Math.ceil(endBeat)), [startBeat, endBeat]);
 
+	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
 	const [mouseDownAt, setMouseDownAt] = useState<{ x: number; y: number } | null>(null);
-	const mouseButtonDepressed = useRef<"left" | "middle" | "right" | null>(null);
+	const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
 
+	const mouseButtonDepressed = useRef<"left" | "middle" | "right" | null>(null);
 	const mousePositionRef = useRef<{ x: number; y: number } | null>(null);
 
 	useEffect(() => {
@@ -74,14 +86,14 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 	}, [dispatch]);
 
 	useGlobalEventListener("pointerup", handleCompleteSelection, {
-		shouldFire: selectedEditMode === EventEditMode.SELECT && !!mouseDownAt,
+		shouldFire: selectedEditMode === EventEditMode.SELECT,
 	});
 
 	const tracksScrollContainer = useRef<HTMLDivElement>(null);
 
 	const tracksSelectionBoxRef = useMousePositionOverElement<HTMLDivElement>(
 		tracksScrollContainer,
-		(ref, x, y) => {
+		(ref, x, y, event) => {
 			const currentMousePosition = { x, y };
 			mousePositionRef.current = currentMousePosition;
 
@@ -115,7 +127,7 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 					endBeat: end,
 				};
 
-				dispatch(drawSelectionBox({ tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats }));
+				dispatch(drawSelectionBox({ songId: sid, tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats, join: event.ctrlKey || event.metaKey }));
 			}
 
 			if (hoveringOverBeatNum !== selectedBeat) dispatch(moveMouseAcrossEventsGrid({ selectedBeat: hoveringOverBeatNum }));
@@ -142,30 +154,100 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 		setMouseDownAt(mousePositionRef.current);
 	}, []);
 
+	const handlePointerUp = useCallback<PointerEventHandler>((_) => {
+		mouseButtonDepressed.current = null;
+		setMouseDownAt(null);
+	}, []);
+
+	const handlePointerOver = useCallback((_: PointerEvent, trackId: number) => {
+		setHoveredTrack(trackId);
+	}, []);
+	const handlePointerOut = useCallback((_: PointerEvent) => {
+		setHoveredTrack(null);
+	}, []);
+
 	const isTrackDisabled = useCallback(
 		(trackId: App.TrackId) => {
 			if (!areLasersLocked) return false;
-			return trackId === App.TrackId[3] || trackId === App.TrackId[13];
+			return isSideTrack(trackId, "right", tracks);
 		},
-		[areLasersLocked],
+		[tracks, areLasersLocked],
+	);
+
+	const handleEventPointerDown = useCallback(
+		(event: PointerEvent, data: App.IBasicEvent) => {
+			// When in "select" mode, clicking the grid creates a selection box. We don't want to do that when the user clicks directly on a block.
+			// In "place" mode, we need the event to propagate to enable bulk delete.
+			if (selectedEditMode === EventEditMode.SELECT) {
+				event.stopPropagation();
+			}
+			switch (event.button) {
+				case 1: {
+					return dispatch(switchEventColor({ beatNum: data.time, trackId: data.type, tracks, areLasersLocked }));
+				}
+				case 2: {
+					return dispatch(removeOneBasicEvent({ query: data, tracks, areLasersLocked }));
+				}
+			}
+		},
+		[dispatch, tracks, areLasersLocked, selectedEditMode],
+	);
+
+	const handleEventPointerOver = useCallback(
+		(_: PointerEvent, data: App.IBasicEvent) => {
+			if (selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed.current === "right") {
+				dispatch(bulkRemoveBasicEvent({ query: data, tracks, areLasersLocked }));
+			}
+		},
+		[dispatch, tracks, areLasersLocked, selectedEditMode],
+	);
+
+	const resolveWheelAction = useCallback(
+		(event: WheelEvent, data: App.IBasicEvent) => {
+			if (selectedBeat === data.time && hoveredTrack === data.type) {
+				const delta = event.deltaY > 0 ? -1 : 1;
+				switch (resolveEventType(data, tracks)) {
+					case TrackType.LIGHT: {
+						const step = data.floatValue + 0.125 / delta;
+						const newFloatValue = clamp(step, 0, Number.POSITIVE_INFINITY);
+						return dispatch(updateOneBasicEvent({ query: data, tracks, areLasersLocked, changes: { floatValue: newFloatValue } }));
+					}
+					case TrackType.VALUE: {
+						const step = data.value + 1 / delta;
+						const newValue = clamp(step, 0, Number.POSITIVE_INFINITY);
+						return dispatch(updateOneBasicEvent({ query: data, tracks, areLasersLocked, changes: { value: newValue } }));
+					}
+					default: {
+						return;
+					}
+				}
+			}
+		},
+		[dispatch, tracks, areLasersLocked, selectedBeat, hoveredTrack],
+	);
+
+	const handleEventWheel = useCallback(
+		(event: WheelEvent, data: App.IBasicEvent) => {
+			event.preventDefault();
+			if (event.altKey) {
+				resolveWheelAction(event, data);
+			}
+		},
+		[resolveWheelAction],
 	);
 
 	return (
 		<Wrapper {...rest} ref={tracksScrollContainer} data-loading={isLoading}>
 			<HeaderWrapper onContextMenu={(ev) => ev.preventDefault()}>
-				<ActionsWrapper>
-					<Button variant="subtle" size="sm" disabled>
-						Track Visibility
-					</Button>
-				</ActionsWrapper>
+				<ActionsWrapper />
 				<TimelineWrapper>
-					<EventGridTimeline beatNums={beatNums} />
+					<EventGridTimeline sid={sid} beatNums={beatNums} />
 				</TimelineWrapper>
 			</HeaderWrapper>
 			<MainWrapper>
 				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
 					{tracks.map(({ id, label }) => (
-						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(id)}>
+						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(id)} onContextMenu={(ev) => ev.preventDefault()}>
 							{label}
 						</Prefix>
 					))}
@@ -174,10 +256,26 @@ function EventGridEditor({ sid, tracks = COMMON_EVENT_TRACKS, ...rest }: Props) 
 					<TrackMarkersWrapper ref={container}>
 						<EventGridMarkers width={dimensions.width} height={dimensions.height} primaryDivisions={4} />
 					</TrackMarkersWrapper>
-					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown}>
+					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
 						{tracks.map(({ id }) => {
 							const isDisabled = isTrackDisabled(id);
-							return <EventGridTrack key={id} sid={sid} trackId={id} tracks={tracks} width={dimensions.width} height={rowHeight} disabled={isDisabled} />;
+							return (
+								<EventGridTrack
+									key={id}
+									sid={sid}
+									bid={bid}
+									trackId={id}
+									tracks={tracks}
+									width={dimensions.width}
+									height={rowHeight}
+									disabled={isDisabled}
+									onPointerOver={(ev) => handlePointerOver(ev, id)}
+									onPointerOut={handlePointerOut}
+									onEventPointerDown={handleEventPointerDown}
+									onEventPointerOver={handleEventPointerOver}
+									onEventWheel={handleEventWheel}
+								/>
+							);
 						})}
 					</TrackContentsWrapper>
 					{selectionBox && <EventGridSelectionBox box={selectionBox} />}
@@ -246,6 +344,7 @@ const Prefix = styled("div", {
 	base: hstack.raw({
 		width: "170px",
 		justify: "flex-end",
+		textAlign: "end",
 		paddingInline: 1,
 		position: "relative",
 		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
@@ -254,6 +353,10 @@ const Prefix = styled("div", {
 		borderColor: "border.muted",
 		opacity: { base: 1, _disabled: "disabled" },
 		cursor: { base: undefined, _disabled: "not-allowed" },
+		overflowX: "auto",
+		whiteSpace: "nowrap",
+		textOverflow: "ellipsis",
+		_scrollbar: { display: "none" },
 	}),
 });
 

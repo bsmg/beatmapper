@@ -21,16 +21,16 @@ function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
 
 	return (
 		<ActionPanelGroup.Root label="Actions">
-			<HistoryActionPanelActionGroup />
-			<ClipboardActionPanelActionGroup />
+			<HistoryActionPanelActionGroup sid={sid} />
+			<ClipboardActionPanelActionGroup sid={sid} />
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Select everything over a time period (Q)"}>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(promptQuickSelect(View.BEATMAP, selectAllInRange))}>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(promptQuickSelect(selectAllInRange, { songId: sid, view: View.BEATMAP }))}>
 						Quick-select
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Jump to a specific beat number (J)"}>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(promptJumpToBeat(jumpToBeat, { pauseTrack: true }))}>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(promptJumpToBeat(jumpToBeat, { songId: sid, pauseTrack: true }))}>
 						Jump to Beat
 					</Button>
 				</Tooltip>

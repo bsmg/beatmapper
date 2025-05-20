@@ -1,5 +1,5 @@
 import { type AnimatedProps, animated } from "@react-spring/three";
-import type { Euler, ThreeElements } from "@react-three/fiber";
+import type { Euler, GroupProps } from "@react-three/fiber";
 import { useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
@@ -36,7 +36,7 @@ function RingHalf({ side, size, thickness, color }: ModelProps) {
 	);
 }
 
-interface Props extends AnimatedProps<ThreeElements["group"]> {
+interface Props extends AnimatedProps<GroupProps> {
 	size?: number;
 	thickness: number;
 	color: ColorRepresentation;

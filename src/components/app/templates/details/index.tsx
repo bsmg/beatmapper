@@ -1,20 +1,21 @@
 import { Link, useBlocker } from "@tanstack/react-router";
 import { useState } from "react";
-import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
+import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
+import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
-import { createInfoContent } from "$/services/packaging.service";
 import { filestore } from "$/setup";
-import { stopPlaying, toggleModForSong, togglePropertyForSelectedSong, updateSongDetails } from "$/store/actions";
+import { stopPlaying, toggleModForSong, updateSongDetails } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectIsFastWallsEnabled, selectIsLightshowEnabled, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIds, selectEditorOffset, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
 import { LocalFileUpload } from "$/components/app/compositions";
-import { APP_TOASTER, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { BeatmapFilestore } from "$/services/file.service";
+import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -26,8 +27,6 @@ function SongDetails({ sid }: Props) {
 	const song = useAppSelector((state) => selectSongById(state, sid));
 	const enabledCustomColors = useAppSelector((state) => selectIsModuleEnabled(state, sid, "customColors"));
 	const enabledMappingExtensions = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
-	const enabledFastWalls = useAppSelector((state) => selectIsFastWallsEnabled(state, sid));
-	const enabledLightshow = useAppSelector((state) => selectIsLightshowEnabled(state, sid));
 
 	const [songFile, setSongFile] = useState<File | null>(null);
 	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
@@ -37,21 +36,19 @@ function SongDetails({ sid }: Props) {
 			name: song.name ?? "",
 			subName: song.subName ?? "",
 			artistName: song.artistName ?? "",
-			mapAuthorName: song.mapAuthorName ?? "",
 			bpm: song.bpm ?? 120,
 			offset: song.offset ?? 0,
 			swingAmount: song.swingAmount ?? 0,
 			swingPeriod: song.swingPeriod ?? 0,
 			previewStartTime: song.previewStartTime ?? 12,
 			previewDuration: song.previewDuration ?? 10,
-			environment: song.environment ?? "DefaultEnvironment",
+			environment: song.environment,
 		},
 		validators: {
 			onChange: object({
 				name: pipe(string(), minLength(1)),
 				subName: pipe(string()),
 				artistName: pipe(string(), minLength(1)),
-				mapAuthorName: pipe(string(), minLength(1)),
 				bpm: pipe(number(), gtValue(0)),
 				offset: pipe(
 					number(),
@@ -67,51 +64,41 @@ function SongDetails({ sid }: Props) {
 				),
 				previewStartTime: pipe(number()),
 				previewDuration: pipe(number()),
-				environment: pipe(string()),
+				environment: union([EnvironmentNameSchema, EnvironmentV3NameSchema]),
 			}),
 		},
-		onSubmit: async ({ value }) => {
-			// Alert the user if they need to choose a song before saving
-			// TODO: I should go back to the default cover art if they remove the art.
-			if (!songFile) {
-				return APP_TOASTER.create({
-					id: "missing-song-file",
-					type: "error",
-					description: "Please select a song file before saving",
-				});
-			}
-
+		onSubmit: async ({ value, formApi }) => {
 			const newSongObject = { ...song, ...value };
 
-			// When the user selects a file from their local machine, we store a File object type. BUT, when the user uploads a pre-existing map, the file is actually a Blob.
-			// They're similar in many ways, but they don't have a filename, and that breaks things.
-			// So, we should only try and save the cover art IF it's a proper file. If it's a blob, it can't have changed anyway.
-			const shouldSaveCoverArt = coverArtFile?.name;
-
-			if (shouldSaveCoverArt) {
-				const { filename: coverArtFilename } = await filestore.saveCoverFile(song.id, coverArtFile);
+			if (coverArtFile) {
+				const { filename: coverArtFilename } = await filestore.saveCoverFile(sid, coverArtFile);
 				newSongObject.coverArtFilename = coverArtFilename;
 			}
 
 			if (songFile) {
-				const { filename: songFilename } = await filestore.saveSongFile(song.id, songFile);
+				const { filename: songFilename } = await filestore.saveSongFile(sid, songFile);
 				newSongObject.songFilename = songFilename;
 			}
 
 			// Update our redux state
-			dispatch(updateSongDetails({ songId: song.id, songData: newSongObject }));
+			dispatch(updateSongDetails({ songId: sid, songData: newSongObject }));
 
-			// Back up our latest data!
-			await filestore.saveInfoFile(song.id, createInfoContent(newSongObject, { version: 2 }));
+			formApi.reset(value);
+
+			return APP_TOASTER.create({
+				type: "success",
+				description: "Successfully updated!",
+			});
 		},
 	});
 
-	const difficultyIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const offset = useAppSelector((state) => selectEditorOffset(state, sid));
 
 	useMount(() => {
 		// We want to stop & reset the song when the user goes to edit it.
 		// In addition to seeming like a reasonable idea, it helps prevent any weirdness around editing the audio file when it's in a non-zero position.
-		dispatch(stopPlaying({ offset: song.offset }));
+		dispatch(stopPlaying({ offset: offset }));
 	});
 
 	useBlocker({
@@ -126,12 +113,12 @@ function SongDetails({ sid }: Props) {
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">
-								<LocalFileUpload filename={song.songFilename} accept={"audio/ogg"} onFileAccept={(details) => setSongFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => setSongFile(details.files[0])}>
 									Audio File
 								</LocalFileUpload>
 							</Field>
 							<Field label="Cover Art File">
-								<LocalFileUpload filename={song.coverArtFilename} accept={"image/jpeg"} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 									Image File
 								</LocalFileUpload>
 							</Field>
@@ -149,7 +136,6 @@ function SongDetails({ sid }: Props) {
 							<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required placeholder="(in seconds)" />}</Form.AppField>
 						</Form.Row>
 						<Form.Row>
-							<Form.AppField name="mapAuthorName">{(ctx) => <ctx.Input label="Map author name" required />}</Form.AppField>
 							<Form.AppField name="environment">{(ctx) => <ctx.Select label="Environment" collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 						</Form.Row>
 						<Form.Submit>Update song details</Form.Submit>
@@ -159,10 +145,10 @@ function SongDetails({ sid }: Props) {
 			<Stack gap={6}>
 				<Heading rank={1}>Edit Difficulties</Heading>
 				<Wrap gap={2} justify={"center"}>
-					{difficultyIds.map((difficultyId) => {
+					{beatmapIds.map((beatmapId) => {
 						return (
-							<BeatmapWrapper key={difficultyId}>
-								<UpdateBeatmapForm sid={sid} bid={difficultyId} />
+							<BeatmapWrapper key={beatmapId}>
+								<UpdateBeatmapForm sid={sid} bid={beatmapId} />
 							</BeatmapWrapper>
 						);
 					})}
@@ -172,7 +158,7 @@ function SongDetails({ sid }: Props) {
 				<Heading rank={1}>Advanced Settings</Heading>
 				<Stack gap={3}>
 					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings sid={sid} />} checked={enabledCustomColors} onCheckedChange={() => dispatch(toggleModForSong({ songId: sid, mod: "customColors" }))}>
-						Override the default red/blue color scheme. Use "overdrive" to produce some neat effects.{" "}
+						Override individual elements of a beatmap's color scheme.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
 							<Link to="/docs/$" params={{ _splat: "mods#custom-colors" }}>
 								Learn more
@@ -189,21 +175,6 @@ function SongDetails({ sid }: Props) {
 						</Text>
 						.
 					</SongDetailsModule>
-					<SongDetailsModule label="Lightshow File" render={() => null} checked={!!enabledLightshow} onCheckedChange={() => dispatch(togglePropertyForSelectedSong({ songId: sid, property: "enabledLightshow" }))}>
-						If enabled, adds a non-standard difficulty with all blocks removed. Nice to include if your lighting is spectacular{" "}
-						<span role="img" aria-label="sparkles">
-							✨
-						</span>
-					</SongDetailsModule>
-					<SongDetailsModule label="Fast Walls" render={() => null} checked={!!enabledFastWalls} onCheckedChange={() => dispatch(togglePropertyForSelectedSong({ songId: sid, property: "enabledFastWalls" }))}>
-						Fast walls exploit a loophole in the game to allow walls to blur by at high speed{" "}
-						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
-							<Link to="/docs/$" params={{ _splat: "fast-walls" }}>
-								Learn more
-							</Link>
-						</Text>
-						.
-					</SongDetailsModule>
 				</Stack>
 			</Stack>
 		</Stack>
@@ -215,6 +186,8 @@ const BeatmapWrapper = styled("div", {
 		colorPalette: "slate",
 		layerStyle: "fill.surface",
 		padding: 3,
+		width: "250px",
+		height: "fit-content",
 	},
 });
 

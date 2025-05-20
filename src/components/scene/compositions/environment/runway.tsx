@@ -1,11 +1,11 @@
 import { Fragment, useMemo } from "react";
 
-import { BLOCK_COLUMN_WIDTH, SONG_OFFSET, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/components/scene/constants";
+import { BLOCK_CELL_SIZE, SONG_OFFSET, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/components/scene/constants";
 import { DEFAULT_NUM_ROWS, SURFACE_DEPTHS } from "$/constants";
 import { useAppSelector } from "$/store/hooks";
 import { selectGraphicsQuality } from "$/store/selectors";
 
-const GRID_Y_BASE = BLOCK_COLUMN_WIDTH * (DEFAULT_NUM_ROWS * -0.5);
+const GRID_Y_BASE = BLOCK_CELL_SIZE * (DEFAULT_NUM_ROWS * -0.5);
 
 const PEG_WIDTH = 0.5;
 const PEG_HEIGHT = 20;

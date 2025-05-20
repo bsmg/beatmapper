@@ -1,15 +1,17 @@
 import { type DevToolsEnhancerOptions, configureStore } from "@reduxjs/toolkit";
+import type { NoteDirection } from "bsmap";
 import { createStorage } from "unstorage";
 import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
 
+import { patchEnvironmentName } from "$/helpers/packaging.helpers";
+import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
 import { autosaveWorker, filestore } from "$/setup";
 import { type App, EventColor, EventEditMode, EventTool, type GridPresets, type Member, ObjectTool, Quality } from "$/types";
-
+import { omit } from "$/utils";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, moveMouseAcrossEventsGrid, tick } from "./actions";
 import { default as root } from "./features";
-import type { Snapshot } from "./helpers";
 import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
 import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
 import {
@@ -55,7 +57,7 @@ export type SessionStorageObservers = {
 	"playback.volume": StorageObserver<RootState, number>;
 	"playback.tick": StorageObserver<RootState, boolean>;
 	"notes.tool": StorageObserver<RootState, number>;
-	"notes.direction": StorageObserver<RootState, number>;
+	"notes.direction": StorageObserver<RootState, NoteDirection>;
 	"notes.duration": StorageObserver<RootState, number>;
 	"events.mode": StorageObserver<RootState, number>;
 	"events.tool": StorageObserver<RootState, number>;
@@ -68,10 +70,14 @@ export type SessionStorageObservers = {
 	"events.mirror": StorageObserver<RootState, boolean>;
 };
 
-const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.Song }; grids: { key: keyof GridPresets; value: Member<GridPresets> } }>({
+const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof GridPresets; value: Member<GridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 3,
 	async upgrade(idb, current, next, tx) {
+		if (current !== 0) {
+			window.alert(`The local database has been updated to version ${next}. Please refresh the page to ensure these migrations can be properly applied.`);
+		}
+
 		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
 		await idb.removeStore("local-forage-detect-blob-support", tx);
 
@@ -80,18 +86,48 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 			await idb.createStore("grids", tx);
 			const value = (await idb.get("keyvaluepairs", import.meta.env.DEV ? "redux-state-dev" : "redux-state", tx)) as string;
 			if (value) {
-				const snapshot = (typeof value === "string" ? JSON.parse(value) : value) as Snapshot;
+				const snapshot = typeof value === "string" ? JSON.parse(value) : value;
 				const username = selectUserName(snapshot);
 				localStorage.setItem("beatmapper:user.new", String(selectIsNew(snapshot)));
 				if (username) localStorage.setItem("beatmapper:user.username", username);
 				localStorage.setItem("beatmapper:user.announcements", selectSeenPrompts(snapshot).toString());
 				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
 				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(selectGraphicsQuality(snapshot)).toString());
-				for (const [id, song] of Object.entries(snapshot.songs.byId)) {
-					await idb.set("songs", id, { ...song, songFilename: song.songFilename.replace("_", "."), coverArtFilename: song.coverArtFilename.replace("_", ".") }, tx);
+				for (const [id, song] of Object.entries<any>(snapshot.songs.byId)) {
+					await idb.set(
+						"songs",
+						id.toString(),
+						{
+							...song,
+							environment: patchEnvironmentName(song.environment),
+							songFilename: song.songFilename.replace("_", "."),
+							coverArtFilename: song.coverArtFilename.replace("_", "."),
+							colorSchemesById: {},
+							difficultiesById: Object.entries<any>(song.difficultiesById).reduce(
+								(acc, [id, beatmap]) => {
+									const bid = id.toString() ?? beatmap.id.toString();
+									acc[bid] = {
+										...omit(beatmap, "id"),
+										beatmapId: bid,
+										lightshowId: "Common",
+										characteristic: "Standard",
+										difficulty: resolveDifficultyFromBeatmapId(bid),
+										environmentName: patchEnvironmentName(song.environment),
+										colorSchemeName: null,
+										mappers: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
+										lighters: [],
+										customLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
+									};
+									return acc;
+								},
+								{} as Record<string, unknown>,
+							),
+						},
+						tx,
+					);
 				}
 				for (const [id, grid] of Object.entries(snapshot.editor.notes.gridPresets)) {
-					await idb.set("grids", id, grid, tx);
+					await idb.set("grids", id.toString(), grid, tx);
 				}
 			}
 			await idb.removeStore("keyvaluepairs", tx);
@@ -141,7 +177,7 @@ export async function createAppStore() {
 			"events.mirror": { selector: selectEventEditorToggleMirror },
 		},
 	});
-	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.Song>({
+	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.ISong>({
 		namespace: "songs",
 		storage: createStorage({ driver: driver({ name: "songs" }) }),
 		observer: {

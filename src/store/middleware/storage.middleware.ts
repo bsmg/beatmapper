@@ -3,7 +3,7 @@ import type { Storage, StorageValue } from "unstorage";
 
 import { rehydrate } from "$/store/actions";
 import type { MaybeDefined } from "$/types";
-import { isStrictlyEqual, uniq } from "$/utils";
+import { uniq } from "$/utils";
 
 // the common architecture other packages use for persisting redux state is to clone the entire state object into storage and then hydrate the redux store all at once.
 // this is a really bad means of persistence for many reasons:
@@ -88,7 +88,7 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 							}
 						}
 						// if the value in storage matches the selected state, we can skip hydration since the value will remain the same anyways
-						if (isStrictlyEqual(value, selector(state))) return;
+						if (value === selector(state)) return;
 						// dispatch a hydrate action with the injected value
 						return dispatch(hydrate({ [key]: value }));
 					}),
@@ -110,7 +110,7 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 			next(action);
 			const nextState = getState();
 			// if the two states aren't equal, time to figure out what changed
-			if (!isStrictlyEqual(nextState, state)) {
+			if (nextState !== state) {
 				return Promise.resolve(
 					Object.keys(observers).reduce(
 						(acc: { key: string | undefined; value: StorageValue | undefined }, key) => {
@@ -119,7 +119,7 @@ export function createStorageMiddleware<State, T extends StorageObserverMap<Stat
 							if (enabled === false) return acc;
 							const value = selector(nextState);
 							// only save if the observed state changes
-							if (isStrictlyEqual<StorageValue>(value, selector(state))) return acc;
+							if (value === selector(state)) return acc;
 							// if the value is undefined, clear the value
 							if (value === undefined || value === "") {
 								storage.removeItem(key);
@@ -199,7 +199,7 @@ export function createEntityStorageMiddleware<State, T extends StorageValue = St
 						// if the value doesn't exist, it was probably already removed, so we can clear it now
 						if (value === undefined) await storage.removeItem(key);
 						// if the value in storage matches the selected state, we can skip hydration since the value will remain the same anyways
-						if (isStrictlyEqual(value, selector(state, key))) return;
+						if (value === selector(state, key)) return;
 						// dispatch a hydrate action with the injected value
 						return dispatch(hydrate({ [key]: value }));
 					}),
@@ -221,7 +221,7 @@ export function createEntityStorageMiddleware<State, T extends StorageValue = St
 			next(action);
 			const nextState = getState();
 			// if the two states aren't equal, time to figure out what changed
-			if (!isStrictlyEqual(nextState, state)) {
+			if (nextState !== state) {
 				// we need to reference old keys in order to remove storage entries for removed entities
 				const allKeys = uniq([...observer.keys(nextState), ...observer.keys(state)]);
 				return Promise.resolve(
@@ -232,7 +232,7 @@ export function createEntityStorageMiddleware<State, T extends StorageValue = St
 							if (enabled === false) return acc;
 							const value = selector(nextState, key);
 							// only save if the observed state changes
-							if (isStrictlyEqual(value, selector(state, key))) return acc;
+							if (value === selector(state, key)) return acc;
 							// if the value doesn't exist, clear it from storage
 							if (value === undefined) {
 								storage.removeItem(key.toString());

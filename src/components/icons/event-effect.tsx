@@ -21,13 +21,13 @@ interface Props {
 	color?: string;
 }
 
-const EventToolIcon = ({ tool, color }: Props) => {
+function EventToolIcon({ tool, color }: Props) {
 	return (
 		<svg width={16} height={16} viewBox="0 0 32 32" fill="none">
 			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke={token.var("colors.border.default")} />
 			<path d={getPathForTool(tool)} fill={color} stroke="none" />
 		</svg>
 	);
-};
+}
 
 export default EventToolIcon;

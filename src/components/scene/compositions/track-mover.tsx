@@ -2,15 +2,15 @@ import { animated, useSpring } from "@react-spring/three";
 import { type PropsWithChildren, useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { selectAnimateBlockMotion, selectBeatDepth, selectCursorPositionInBeats } from "$/store/selectors";
+import { selectAnimateBlockMotion, selectCursorPositionInBeats } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 interface Props extends PropsWithChildren {
 	sid: SongId;
+	beatDepth: number;
 }
-function TrackMover({ sid, children }: Props) {
+function TrackMover({ sid, beatDepth, children }: Props) {
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const beatDepth = useAppSelector(selectBeatDepth);
 	const animateBlockMotion = useAppSelector(selectAnimateBlockMotion);
 
 	const zPosition = useMemo(() => (cursorPositionInBeats ?? 0) * beatDepth, [cursorPositionInBeats, beatDepth]);

@@ -1,12 +1,11 @@
 import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
 import type { ComponentProps } from "react";
 
-import { processImportedMap } from "$/services/packaging.service";
-import { cancelImportingSong, importExistingSong, startImportingSong } from "$/store/actions";
+import { importExistingSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllSongs } from "$/store/selectors";
+import { selectSongIds } from "$/store/selectors";
 
-import { APP_TOASTER } from "$/components/app/constants";
+import { APP_TOASTER, MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileQuery } from "$/components/app/hooks";
 import { FileUpload } from "$/components/ui/compositions";
 
@@ -24,18 +23,14 @@ export function LocalFileUpload({ filename, onFileAccept, children, ...rest }: C
 }
 
 export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<typeof FileUpload>) {
-	const songs = useAppSelector(selectAllSongs);
 	const dispatch = useAppDispatch();
-	const songIds = songs.map((song) => song.id);
+	const songIds = useAppSelector(selectSongIds);
 
 	const handleFileAccept = async (details: FileUploadFileAcceptDetails) => {
-		dispatch(startImportingSong());
 		for (const file of details.files) {
 			try {
-				const songData = await processImportedMap(file, songIds);
-				dispatch(importExistingSong({ songData: { ...songData, createdAt: Date.now(), lastOpenedAt: Date.now() } }));
+				await dispatch(importExistingSong({ file, options: { currentSongIds: songIds } }));
 			} catch (err) {
-				dispatch(cancelImportingSong());
 				console.error("Could not import map:", err);
 				if (onFileAccept) onFileAccept({ files: [] });
 				return APP_TOASTER.create({
@@ -49,7 +44,7 @@ export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<t
 	};
 
 	return (
-		<FileUpload {...rest} accept={"application/x-zip-compressed"} onFileAccept={handleFileAccept}>
+		<FileUpload {...rest} accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept}>
 			Map Archive File
 		</FileUpload>
 	);

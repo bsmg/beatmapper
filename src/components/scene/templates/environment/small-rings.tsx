@@ -11,8 +11,8 @@ interface Props {
 	sid: SongId;
 }
 function SmallRings({ sid }: Props) {
-	const lastRotationEvent = useEventTrack<App.IBasicTriggerEvent>({ sid, trackId: App.TrackId[8] });
-	const lastZoomEvent = useEventTrack<App.IBasicTriggerEvent>({ sid, trackId: App.TrackId[9] });
+	const [lastRotationEvent] = useEventTrack({ sid, trackId: App.TrackId[8] });
+	const [lastZoomEvent] = useEventTrack({ sid, trackId: App.TrackId[9] });
 
 	const numOfRings = useRingCount({ count: 12 });
 

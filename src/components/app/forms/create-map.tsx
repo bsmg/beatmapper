@@ -1,9 +1,10 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import { useNavigate } from "@tanstack/react-router";
+import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
+import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, DIFFICULTY_COLLECTION } from "$/components/app/constants";
+import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
@@ -17,7 +18,6 @@ interface Props {
 function CreateMapForm({ dialog }: Props) {
 	const currentSongIds = useAppSelector(selectSongIds);
 	const dispatch = useAppDispatch();
-	const navigate = useNavigate();
 
 	// These files are sent to the redux middleware.
 	// We'll store them on disk (currently in indexeddb, but that may change), and capture a reference to them by a filename, which we'll store in redux.
@@ -31,7 +31,8 @@ function CreateMapForm({ dialog }: Props) {
 			artistName: "",
 			bpm: 120,
 			offset: 0,
-			selectedDifficulty: "",
+			characteristic: "Standard" as CharacteristicName,
+			difficulty: "Easy" as DifficultyName,
 		},
 		validators: {
 			onChange: object({
@@ -43,7 +44,8 @@ function CreateMapForm({ dialog }: Props) {
 					number(),
 					transform((input) => (Number.isNaN(input) ? undefined : input)),
 				),
-				selectedDifficulty: pipe(string()),
+				characteristic: CharacteristicNameSchema,
+				difficulty: DifficultyNameSchema,
 			}),
 		},
 		onSubmit: async ({ value }) => {
@@ -76,11 +78,9 @@ function CreateMapForm({ dialog }: Props) {
 				const { filename: coverArtFilename } = await filestore.saveCoverFile(songId, coverArtFile);
 				const { filename: songFilename } = await filestore.saveSongFile(songId, songFile);
 
-				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedDifficulty: value.selectedDifficulty }));
+				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
 
 				if (dialog) dialog.setOpen(false);
-
-				navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId, bid: value.selectedDifficulty } });
 			} catch (err) {
 				console.error("Could not save files to local storage", err);
 				return APP_TOASTER.create({
@@ -95,12 +95,12 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Row>
 				<Field label="Song File">
-					<FileUpload files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
+					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
 						Audio File
 					</FileUpload>
 				</Field>
 				<Field label="Cover Art File">
-					<FileUpload files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 						Image File
 					</FileUpload>
 				</Field>
@@ -115,7 +115,8 @@ function CreateMapForm({ dialog }: Props) {
 					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
 					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
 				</Form.Row>
-				<Form.AppField name="selectedDifficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
 				<Form.Submit>Create new song</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>

@@ -1,20 +1,30 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { createBeatmap } from "bsmap";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
-import { HIGHEST_PRECISION } from "$/constants";
-import { getWaveformDataForFile } from "$/helpers/audio.helpers";
-import { convertBookmarksToRedux } from "$/helpers/bookmarks.helpers";
-import { convertEventsToExportableJson, convertEventsToRedux } from "$/helpers/events.helpers";
-import { convertBlocksToRedux, convertMinesToRedux, convertNotesFromMappingExtensions } from "$/helpers/notes.helpers";
-import { convertObstaclesToRedux } from "$/helpers/obstacles.helpers";
+import { deriveAudioDataFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
+import { type BeatmapSerializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { createBeatmapContents, createInfoContent } from "$/services/packaging.service";
-import { shiftEntitiesByOffset, unshiftEntitiesByOffset } from "$/services/packaging.service.nitty-gritty";
-import { copyDifficulty, createDifficulty, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateSongDetails } from "$/store/actions";
-import { selectAllBasicEvents, selectSongById } from "$/store/selectors";
+import { copyDifficulty, createDifficulty, createNewSong, deleteBeatmap, deleteSong, finishLoadingSong, loadBeatmapEntities, reloadWaveform, startLoadingSong, updateBeatmapMetadata, updateSongDetails } from "$/store/actions";
+import { selectActiveBeatmapId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectIsModuleEnabled, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { Json } from "$/types";
-import { roundToNearest } from "$/utils";
+import type { SongId } from "$/types";
+
+export function selectInfoSerializationOptionsFromState(state: RootState, _songId: SongId): InfoSerializationOptions {
+	const duration = selectDuration(state);
+	return {
+		songDuration: duration ? duration / 1000 : undefined,
+	};
+}
+export function selectBeatmapSerializationOptionsFromState(state: RootState, songId: SongId): BeatmapSerializationOptions {
+	const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
+	const isExtensionsEnabled = selectIsModuleEnabled(state, songId, "mappingExtensions");
+	return {
+		editorOffsetInBeats,
+		extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
+	};
+}
 
 interface Options {
 	filestore: BeatmapFilestore;
@@ -22,122 +32,200 @@ interface Options {
 /** This middleware manages file storage concerns. */
 export default function createFileMiddleware({ filestore }: Options) {
 	const instance = createListenerMiddleware<RootState>();
+	const audioContext = new AudioContext();
 
+	async function updateAudioContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File) {
+		const [{ duration, frequency, sampleCount }, { version }] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), filestore.loadInfoContents(songId)]);
+
+		const { filename, contents } = await filestore.updateAudioContents(songId, {
+			version: version,
+			frequency,
+			sampleCount,
+		});
+		return { duration, filename, contents };
+	}
+
+	instance.startListening({
+		actionCreator: createNewSong.fulfilled,
+		effect: async (action, api) => {
+			const { songId, beatmapData } = action.payload;
+			const state = api.getState();
+
+			// pull the updated state from the redux layer
+			const song = selectSongById(state, songId);
+			// convert it to the serial wrapper data
+			const infoContents = serializeInfoContents(song, selectInfoSerializationOptionsFromState(state, songId));
+			// store the song data in the filestore
+			await filestore.saveInfoContents(songId, {
+				...infoContents,
+				version: 4, // we'll fallback to v4 by default, since this is the latest supported beatmap version
+			});
+
+			// derive the beatmap id from the provided beatmap data within the payload
+			const beatmapId = resolveBeatmapId({ characteristic: beatmapData.characteristic, difficulty: beatmapData.difficulty });
+			// create initialized beatmap data for the filestore
+			await filestore.saveBeatmapContents(
+				songId,
+				beatmapId,
+				createBeatmap({
+					version: 4, // we'll fallback to v4 by default, since this is the latest supported beatmap version
+					filename: `${beatmapId}.beatmap.dat`,
+					lightshowFilename: `${beatmapId}.lightshow.dat`,
+				}),
+			);
+		},
+	});
 	instance.startListening({
 		actionCreator: startLoadingSong,
 		effect: async (action, api) => {
-			const { songId, difficulty } = action.payload;
+			const { songId, beatmapId } = action.payload;
 			const state = api.getState();
-			const song = selectSongById(state, songId);
-			if (!song) {
-				console.error(`Song "${songId}" not found. Current state:`, state);
-				return;
-			}
-			// Fetch the json for this beatmap from our local store.
 
-			let beatmapJson: Json.Beatmap | null = null;
-			try {
-				beatmapJson = await filestore.loadBeatmapFile(songId, difficulty);
-			} catch (err) {
-				console.error(err);
-			}
-			if (beatmapJson) {
-				let notes = beatmapJson._notes;
-				if (song.modSettings.mappingExtensions?.isEnabled) {
-					// If this song uses mapping extensions, the note values will be in the thousands. We need to pull them down to the normal range.
-					notes = convertNotesFromMappingExtensions(notes);
-				}
-				// If we do, we need to manage a little dance related to offsets.
-				// See offsets.md for more context, but essentially we need to transform our timing to match the beat, by undoing a transformation previously applied.
-				let unshiftedNotes = unshiftEntitiesByOffset(notes.filter((x) => [0, 1].includes(x._type)) || [], song.offset, song.bpm);
-				let unshiftedBombs = unshiftEntitiesByOffset(notes.filter((x) => [3].includes(x._type)) || [], song.offset, song.bpm);
-				const unshiftedEvents = unshiftEntitiesByOffset(beatmapJson._events || [], song.offset, song.bpm);
-				const unshiftedObstacles = unshiftEntitiesByOffset(beatmapJson._obstacles || [], song.offset, song.bpm);
-				// Round all notes, so that no floating-point imprecision drift happens
-				unshiftedNotes = unshiftedNotes.map((note) => {
-					return { ...note, _time: roundToNearest(note._time, HIGHEST_PRECISION) };
-				});
-				unshiftedBombs = unshiftedBombs.map((note) => {
-					return { ...note, _time: roundToNearest(note._time, HIGHEST_PRECISION) };
-				});
+			// fetch the metadata for this beatmap from our local store
+			const beatmapContents = await filestore.loadBeatmapContents(songId, beatmapId);
+			// deserialize the metadata into editor-compatible wrappers
+			const entities = deserializeBeatmapContents(beatmapContents, selectBeatmapSerializationOptionsFromState(state, songId));
 
-				// Our beatmap comes in a "raw" form, using proprietary fields.
-				// I need to convert the JSON format to something manageable.
-				const convertedNotes = convertBlocksToRedux(unshiftedNotes);
-				const convertedBombs = convertMinesToRedux(unshiftedBombs);
-				const convertedObstacles = convertObstaclesToRedux(unshiftedObstacles);
-				const convertedEvents = convertEventsToRedux(unshiftedEvents);
-				const convertedBookmarks = beatmapJson._customData?._bookmarks ? convertBookmarksToRedux(beatmapJson._customData._bookmarks) : [];
-				api.dispatch(loadBeatmapEntities({ notes: convertedNotes, bombs: convertedBombs, events: convertedEvents, obstacles: convertedObstacles, bookmarks: convertedBookmarks }));
-			}
+			api.dispatch(loadBeatmapEntities({ ...entities }));
+
 			api.dispatch(ReduxUndoActionCreators.clearHistory());
-			const file = await filestore.loadFile<Blob>(song.songFilename);
-			if (!file) return;
-			const waveform = await getWaveformDataForFile(file);
-			api.dispatch(finishLoadingSong({ songId: song.id, songData: song, waveformData: waveform }));
-		},
-	});
-	instance.startListening({
-		actionCreator: createDifficulty,
-		effect: async (action, api) => {
-			const { songId, difficulty, afterCreate } = action.payload;
-			const state = api.getState();
-			const song = selectSongById(state, songId);
-			const events = convertEventsToExportableJson(selectAllBasicEvents(state));
-			const shiftedEvents = shiftEntitiesByOffset(events, song.offset, song.bpm);
-			// No notes/obstacles/bookmarks by default, but copy the lighting
-			const beatmapContents = createBeatmapContents({ notes: [], obstacles: [], events: shiftedEvents, bookmarks: [] }, { version: 2 });
-			await filestore.saveBeatmapFile(song.id, difficulty, beatmapContents);
-			if (typeof afterCreate === "function") {
-				afterCreate(difficulty);
+
+			const [songFile, currentAudioData] = await Promise.all([filestore.loadSongFile(songId), filestore.loadAudioDataContents(songId)]);
+			// only update audio data if it's not already present (typically applies for imported maps).
+			if (!currentAudioData) {
+				await updateAudioContentsFromFile(songId, filestore, songFile);
 			}
-		},
-	});
-	instance.startListening({
-		actionCreator: copyDifficulty,
-		effect: async (action, api) => {
-			const state = api.getState();
-			const { songId, fromDifficultyId, toDifficultyId, afterCopy } = action.payload;
-			// First, we need to load the file which contains the notes, events, etc for the difficulty we want to copy.
-			const sourceDifficultyFileContents = await filestore.loadBeatmapFile(songId, fromDifficultyId);
-			if (!sourceDifficultyFileContents) throw new Error(`No beatmap found for ${songId}/${fromDifficultyId}`);
-			// Save it to our destination difficulty.
-			await filestore.saveBeatmapFile(songId, toDifficultyId, sourceDifficultyFileContents);
-			// Pull that updated redux state and save it to our Info.dat
-			const song = selectSongById(state, songId);
-			// Back up our latest data!
-			await filestore.saveInfoFile(song.id, createInfoContent(song, { version: 2 }));
-			if (typeof afterCopy === "function") {
-				afterCopy(toDifficultyId);
-			}
+
+			const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
+
+			api.dispatch(finishLoadingSong({ songId: songId, songData: selectSongById(state, songId), duration, waveformData: waveformData.toJSON() }));
 		},
 	});
 	instance.startListening({
 		actionCreator: updateSongDetails,
 		effect: async (action, api) => {
-			const { songFilename } = action.payload;
+			const { songId, songData } = action.payload;
+			const state = api.getState();
+
+			// Pull that updated redux state and save it to our Info.dat
+			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			// Back up our latest data!
+			await filestore.updateInfoContents(songId, info);
+
 			// It's possible we updated the song file. We should reload it, so that the waveform is properly updated.
-			if (songFilename) {
-				const file = await filestore.loadFile<Blob>(songFilename);
-				if (!file) return;
-				const waveform = await getWaveformDataForFile(file);
-				api.dispatch(reloadWaveform({ waveformData: waveform }));
+			if (songData.songFilename) {
+				// always update audio contents when the song file is updated, since sample count and frequency could potentially change.
+				const songFile = await filestore.loadSongFile(songId);
+				const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
+				await updateAudioContentsFromFile(songId, filestore, songFile);
+
+				api.dispatch(reloadWaveform({ duration, waveformData: waveformData.toJSON() }));
 			}
-		},
-	});
-	instance.startListening({
-		actionCreator: deleteBeatmap,
-		effect: async (action) => {
-			const { songId, difficulty } = action.payload;
-			// Our reducer will handle the redux state part, but we also need to delete the corresponding beatmap from the filesystem.
-			await filestore.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: difficulty }));
 		},
 	});
 	instance.startListening({
 		actionCreator: deleteSong,
 		effect: async (action) => {
-			const { id, songFilename, coverArtFilename, difficultiesById } = action.payload;
-			await filestore.removeAllFilesForSong(id, songFilename, coverArtFilename, Object.keys(difficultiesById));
+			const { songId, beatmapIds } = action.payload;
+			await filestore.removeAllFilesForSong(songId, beatmapIds);
+		},
+	});
+	instance.startListening({
+		actionCreator: createDifficulty,
+		effect: async (action, api) => {
+			const { songId, beatmapId, lightshowId } = action.payload;
+			const state = api.getState();
+
+			// we need to reference the currently selected beatmap to supply the correct serial version for the filestore
+			const activeBeatmapId = selectActiveBeatmapId(state);
+			if (!activeBeatmapId) throw new Error("Could not reference active beatmap.");
+			// grab the implicit version from the source data, so we can keep all related files on the same version
+			const version = await filestore.loadImplicitVersion(songId, activeBeatmapId);
+			// save it to our destination file
+			await filestore.saveBeatmapContents(
+				songId,
+				beatmapId,
+				createBeatmap({
+					version: version,
+					filename: `${beatmapId}.beatmap.dat`,
+					lightshowFilename: `${lightshowId && lightshowId !== "Unnamed" ? lightshowId : beatmapId}.lightshow.dat`,
+				}),
+			);
+
+			// Pull that updated redux state and save it to our Info.dat
+			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			// Back up our latest data!
+			await filestore.updateInfoContents(songId, info);
+		},
+	});
+	instance.startListening({
+		actionCreator: copyDifficulty,
+		effect: async (action, api) => {
+			const { songId, fromBeatmapId: sourceBeatmapId, toBeatmapId: targetBeatmapId } = action.payload;
+			const state = api.getState();
+
+			// grab the implicit version from the source data, so we can keep all related files on the same version
+			const version = await filestore.loadImplicitVersion(songId, sourceBeatmapId);
+			// grab all related collections from the source
+			const { difficulty, lightshow, customData } = await filestore.loadBeatmapContents(songId, sourceBeatmapId);
+			// pull the lightshow id from the source (since we're deriving that data anyway)
+			const lightshowId = selectLightshowIdForBeatmap(state, songId, sourceBeatmapId);
+			// save it to our destination
+			await filestore.saveBeatmapContents(
+				songId,
+				targetBeatmapId,
+				createBeatmap({
+					version: version,
+					filename: `${targetBeatmapId}.beatmap.dat`,
+					lightshowFilename: `${lightshowId && lightshowId !== "Unnamed" ? lightshowId : targetBeatmapId}.lightshow.dat`,
+					difficulty,
+					lightshow,
+					customData,
+				}),
+			);
+
+			// Pull that updated redux state and save it to our Info.dat
+			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			// Back up our latest data!
+			await filestore.updateInfoContents(songId, info);
+		},
+	});
+	instance.startListening({
+		actionCreator: updateBeatmapMetadata,
+		effect: async (action, api) => {
+			const { songId, beatmapId, beatmapData } = action.payload;
+			const state = api.getState();
+
+			// reference a beatmap that has the same lightshow id as the one provided via form data
+			const beatmapIdWithLightshow = selectBeatmapIdsWithLightshowId(state, songId, beatmapData.lightshowId)[0];
+			// extract the lightshow data from the derived beatmap file
+			const { lightshow } = await filestore.loadBeatmapContents(songId, beatmapIdWithLightshow);
+			// update the beatmap with the new lightshow data
+			await filestore.updateBeatmapContents(songId, beatmapId, {
+				lightshow,
+				// override the lightshow filename with the new id
+				lightshowFilename: `${beatmapData.lightshowId}.lightshow.dat`,
+			});
+
+			// Pull that updated redux state and save it to our Info.dat
+			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			// Back up our latest data!
+			await filestore.updateInfoContents(songId, info);
+		},
+	});
+	instance.startListening({
+		actionCreator: deleteBeatmap,
+		effect: async (action, api) => {
+			const { songId, beatmapId } = action.payload;
+			const state = api.getState();
+
+			// Our reducer will handle the redux state part, but we also need to delete the corresponding beatmap from the filesystem.
+			await filestore.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId }));
+
+			// Pull that updated redux state and save it to our Info.dat
+			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			// Back up our latest data!
+			await filestore.updateInfoContents(songId, info);
 		},
 	});
 

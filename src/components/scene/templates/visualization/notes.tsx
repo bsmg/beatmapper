@@ -1,105 +1,176 @@
-import { Fragment, useCallback, useMemo } from "react";
+import type { EntityId } from "@reduxjs/toolkit";
+import { Fragment, useCallback, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { HIGHEST_PRECISION } from "$/constants";
-import { getColorForItem } from "$/helpers/colors.helpers";
-import { clickNote, finishManagingNoteSelection, mouseOverNote, startManagingNoteSelection } from "$/store/actions";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { resolveNoteId } from "$/helpers/notes.helpers";
+import { deleteNote, deselectNote, finishManagingNoteSelection, selectNote, startManagingNoteSelection, toggleNoteColor, updateOneColorNote } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectCursorPositionInBeats, selectCustomColors, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
-import { App, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
-import { roundAwayFloatingPointNonsense } from "$/utils";
+import { selectColorScheme, selectCursorPositionInBeats, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
+import { type App, type BeatmapId, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
 
 import { BombNote, ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
+import { NoteDirection } from "bsmap";
 
 interface Props {
 	sid: SongId;
+	bid: BeatmapId;
+	beatDepth: number;
+	surfaceDepth: number;
 }
-function EditorNotes({ sid }: Props) {
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
-	const notes = useAppSelector((state) => selectVisibleNotes(state, sid));
-	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid));
+function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
+	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, beatDepth, surfaceDepth));
+	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, beatDepth, surfaceDepth));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const beatDepth = useAppSelector(selectBeatDepth);
 	const selectionMode = useAppSelector(selectNoteEditorSelectionMode);
 	const dispatch = useAppDispatch();
 
 	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPositionInBeats ?? 0) * beatDepth, [cursorPositionInBeats, beatDepth]);
+	const adjustment = useMemo(() => beatDepth * HIGHEST_PRECISION, [beatDepth]);
+
+	const [hoveredId, setHoveredId] = useState<EntityId | null>(null);
 
 	// I can click on a block to start selecting it.
 	// If I hold the mouse down, I can drag to select (or deselect) many notes at a time.
 	// For this to work, I need to know when they start clicking and stop clicking.
 	// For starting clicking, I can use the `SELECT_NOTE` action, triggered when clicking a block... but they might not be over a block when they release the mouse.
 	// So instead I need to use a mouseUp handler up here.
-	useGlobalEventListener(
-		"pointerup",
-		() => {
+	const handlePointerUp = useCallback(
+		(_: PointerEvent) => {
 			// Wait 1 frame before wrapping up. This is to prevent the selection mode from changing before all event-handlers have been processed.
 			// Without the delay, the user might accidentally add notes to the placement grid - further up in the React tree - if they release the mouse while over a grid tile.
 			window.requestAnimationFrame(() => dispatch(finishManagingNoteSelection()));
 		},
-		{ shouldFire: !!selectionMode },
+		[dispatch],
 	);
 
-	const handleClick = useCallback(
-		(ev: PointerEvent, data: { beatNum: number; colIndex: number; rowIndex: number; selected?: boolean }) => {
+	useGlobalEventListener("pointerup", handlePointerUp, { shouldFire: !!selectionMode });
+
+	const handleNotePointerDown = useCallback(
+		(ev: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
 			// We can rapidly select/deselect/delete notes by clicking, holding, and dragging the cursor across the field.
 			let newSelectionMode: ObjectSelectionMode | null = null;
-			if (ev.button === 0) {
-				newSelectionMode = data.selected ? ObjectSelectionMode.DESELECT : ObjectSelectionMode.SELECT;
-			} else if (ev.button === 1) {
-				// Middle clicks shouldnt affect selections
-				newSelectionMode = null;
-			} else if (ev.button === 2) {
-				newSelectionMode = ObjectSelectionMode.DELETE;
+
+			switch (ev.button) {
+				case 0: {
+					newSelectionMode = data.selected ? ObjectSelectionMode.DESELECT : ObjectSelectionMode.SELECT;
+					const action = !data.selected ? selectNote : deselectNote;
+					dispatch(action(data));
+					break;
+				}
+				case 1: {
+					// Middle clicks shouldnt affect selections
+					newSelectionMode = null;
+					dispatch(toggleNoteColor(data));
+					break;
+				}
+				case 2: {
+					newSelectionMode = ObjectSelectionMode.DELETE;
+					dispatch(deleteNote(data));
+					break;
+				}
 			}
 
 			if (newSelectionMode) {
 				dispatch(startManagingNoteSelection({ selectionMode: newSelectionMode }));
 			}
-
-			const supportedClickType = ev.button === 0 ? "left" : ev.button === 1 ? "middle" : ev.button === 2 ? "right" : undefined;
-
-			if (supportedClickType) {
-				dispatch(clickNote({ clickType: supportedClickType, time: data.beatNum, lineLayer: data.rowIndex, lineIndex: data.colIndex }));
-			}
 		},
 		[dispatch],
 	);
 
-	const handlePointerOver = useCallback(
-		(_: PointerEvent, data: { beatNum: number; colIndex: number; rowIndex: number; selected?: boolean }) => {
+	const handleNotePointerOver = useCallback(
+		(_: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
+			setHoveredId(resolveNoteId(data));
 			// While selecting/deselecting/deleting notes, pointer-over events are important and should trump others.
-			if (selectionMode) {
-				dispatch(mouseOverNote({ time: data.beatNum, lineLayer: data.rowIndex, lineIndex: data.colIndex }));
+			if (!selectionMode) return;
+			switch (selectionMode) {
+				case ObjectSelectionMode.SELECT:
+				case ObjectSelectionMode.DESELECT: {
+					const alreadySelected = data.selected && selectionMode === ObjectSelectionMode.SELECT;
+					const alreadyDeselected = !data.selected && selectionMode === ObjectSelectionMode.DESELECT;
+					if (alreadySelected || alreadyDeselected) return;
+					const action = !data.selected ? selectNote : deselectNote;
+					return dispatch(action(data));
+				}
+				case ObjectSelectionMode.DELETE: {
+					return dispatch(deleteNote(data));
+				}
+				default: {
+					return;
+				}
 			}
 		},
 		[dispatch, selectionMode],
 	);
 
+	const handleNotePointerOut = useCallback((_: PointerEvent) => {
+		setHoveredId(null);
+	}, []);
+
+	const resolveWheelAction = useCallback(
+		(event: WheelEvent, data: App.IBaseNote & { angleOffset: number }) => {
+			const id = resolveNoteId(data);
+			// if we're not hovering over an object, no need to fire the event.
+			if (!hoveredId || hoveredId !== id) return;
+			const delta = event.deltaY > 0 ? -1 : 1;
+			const step = 15 / delta;
+			if (Object.values<number>(NoteDirection).includes(data.direction)) {
+				return dispatch(updateOneColorNote({ query: data, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
+			}
+		},
+		[dispatch, hoveredId],
+	);
+
+	const handleWheel = useCallback(
+		(event: WheelEvent, data: App.IBaseNote & { angleOffset: number }) => {
+			event.preventDefault();
+			if (event.altKey) {
+				resolveWheelAction(event, data);
+			}
+		},
+		[resolveWheelAction],
+	);
+
 	return (
 		<Fragment>
 			{notes.map((note) => {
-				const { x, y, z } = resolvePositionForNote(note, beatDepth);
-				const noteZPosition = roundAwayFloatingPointNonsense(zPosition + z);
-				// HACK: So I'm winding up with zPositions of like 11.999994, and it's making the notes transparent because they're 0.000006 before the placement grid.
-				// I imagine there's a better place to manage this than here, but I'm sick of this problem.
-				const adjustment = beatDepth * HIGHEST_PRECISION;
+				const position = resolvePositionForNote(note, { beatDepth });
+				const noteZPosition = zPosition + position[2];
 				const adjustedNoteZPosition = noteZPosition - adjustment;
-
-				const color = Object.values(ObjectTool)[Object.values(App.SaberColor).indexOf(note.color)];
-
-				return <ColorNote key={note.id} data={note} position={[x, y, z]} color={getColorForItem(color, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
+				const color = Object.values(ObjectTool)[note.color];
+				return (
+					<ColorNote
+						key={resolveNoteId(note)}
+						data={note}
+						position={position}
+						color={resolveColorForItem(color, { customColors: colorScheme })}
+						transparent={adjustedNoteZPosition > -SONG_OFFSET * 2}
+						onNotePointerDown={handleNotePointerDown}
+						onNotePointerOver={handleNotePointerOver}
+						onNotePointerOut={handleNotePointerOut}
+						onNoteWheel={handleWheel}
+					/>
+				);
 			})}
 			{bombs.map((note) => {
-				const { x, y, z } = resolvePositionForNote(note, beatDepth);
-				const noteZPosition = roundAwayFloatingPointNonsense(zPosition + z);
-				// HACK: So I'm winding up with zPositions of like 11.999994, and it's making the notes transparent because they're 0.000006 before the placement grid.
-				// I imagine there's a better place to manage this than here, but I'm sick of this problem.
-				const adjustment = beatDepth * HIGHEST_PRECISION;
+				const position = resolvePositionForNote(note, { beatDepth });
+				const noteZPosition = zPosition + position[2];
 				const adjustedNoteZPosition = noteZPosition - adjustment;
-
-				return <BombNote key={note.id} data={note} position={[x, y, z]} color={getColorForItem(ObjectTool.BOMB_NOTE, customColors)} transparent={adjustedNoteZPosition > -SONG_OFFSET * 2} onNoteClick={handleClick} onNoteMouseOver={handlePointerOver} />;
+				return (
+					<BombNote
+						key={resolveNoteId(note)}
+						data={note}
+						position={position}
+						color={resolveColorForItem(ObjectTool.BOMB_NOTE, { customColors: colorScheme })}
+						transparent={adjustedNoteZPosition > -SONG_OFFSET * 2}
+						onNotePointerDown={handleNotePointerDown}
+						onNotePointerOver={handleNotePointerOver}
+						onNotePointerOut={handleNotePointerOut}
+					/>
+				);
 			})}
 		</Fragment>
 	);

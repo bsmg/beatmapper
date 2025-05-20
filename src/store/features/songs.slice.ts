@@ -1,7 +1,27 @@
 import { createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { EnvironmentName } from "bsmap/types";
 
-import { DEFAULT_COL_WIDTH, DEFAULT_GRID, DEFAULT_MOD_SETTINGS, DEFAULT_NOTE_JUMP_SPEEDS, DEFAULT_ROW_HEIGHT } from "$/constants";
-import { resolveSongId, sortBeatmapIds } from "$/helpers/song.helpers";
+import { DEFAULT_GRID, DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
+import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
+import {
+	getAllBeatmaps,
+	getBeatmapById,
+	getBeatmapIds,
+	getBeatmaps,
+	getColorScheme,
+	getCustomColorsModule,
+	getExtensionsModule,
+	getGridSize,
+	getModSettings,
+	getModuleData,
+	getSelectedBeatmap,
+	getSongLastOpenedAt,
+	getSongMetadata,
+	isModuleEnabled,
+	isSongReadonly,
+	resolveBeatmapId,
+	resolveSongId,
+} from "$/helpers/song.helpers";
 import {
 	changeSelectedDifficulty,
 	copyDifficulty,
@@ -16,72 +36,75 @@ import {
 	resetGrid,
 	startLoadingSong,
 	toggleModForSong,
-	togglePropertyForSelectedSong,
 	updateBeatmapMetadata,
 	updateGrid,
 	updateModColor,
-	updateModColorOverdrive,
 	updateSongDetails,
 } from "$/store/actions";
-import { type App, type Difficulty, Environment, ObjectPlacementMode, type SongId } from "$/types";
+import { type App, type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
 import { deepMerge } from "$/utils";
 
-const adapter = createEntityAdapter<App.Song, SongId>({
+const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
-	sortComparer: (a, b) => b.lastOpenedAt - a.lastOpenedAt,
+	sortComparer: (a, b) => getSongLastOpenedAt(b) - getSongLastOpenedAt(a),
 });
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
-
-function selectByIdOrNull(state: ReturnType<typeof adapter.getInitialState>, songId: SongId | null) {
-	if (!songId) return undefined;
-	return selectById(state, songId);
-}
 
 const slice = createSlice({
 	name: "songs",
 	initialState: adapter.getInitialState(),
 	selectors: {
+		selectId: (_, model: App.ISong) => adapter.selectId(model),
 		selectEntities: selectEntities,
 		selectAll: selectAll,
 		selectIds: selectIds,
 		selectById: selectById,
-		selectByIdOrNull: selectByIdOrNull,
-		selectBeatmapIds: createSelector(selectByIdOrNull, (song) => {
-			if (!song) return [];
-			return sortBeatmapIds(Object.keys(song.difficultiesById));
+		selectSongMetadata: createSelector(selectById, (song) => {
+			return getSongMetadata(song);
 		}),
-		selectIsDemo: createSelector(selectByIdOrNull, (song) => {
-			return !!song?.demo;
+		selectBeatmaps: createSelector(selectById, (song) => {
+			return getBeatmaps(song);
 		}),
-		selectIsModuleEnabled: createSelector([selectByIdOrNull, (_1, _2, key: keyof App.ModSettings) => key], (song, key) => {
-			return !!song?.modSettings[key]?.isEnabled;
+		selectAllBeatmaps: createSelector(selectById, (song) => {
+			return getAllBeatmaps(song);
 		}),
-		selectIsFastWallsEnabled: createSelector(selectByIdOrNull, (song) => {
-			return !!song?.enabledFastWalls;
+		selectBeatmapIds: createSelector(selectById, (song) => {
+			return getBeatmapIds(song);
 		}),
-		selectIsLightshowEnabled: createSelector(selectByIdOrNull, (song) => {
-			return !!song?.enabledLightshow;
+		selectBeatmapById: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return getBeatmapById(song, beatmapId);
 		}),
-		selectCustomColors: createSelector(selectByIdOrNull, (song) => {
-			const colors = song?.modSettings.customColors;
-			if (!colors) return DEFAULT_MOD_SETTINGS.customColors;
-			return { ...DEFAULT_MOD_SETTINGS.customColors, ...colors };
+		selectLightshowIdForBeatmap: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			const beatmap = getBeatmapById(song, beatmapId);
+			return beatmap.lightshowId;
 		}),
-		selectGridSize: createSelector(selectByIdOrNull, (song) => {
-			const mappingExtensions = song?.modSettings.mappingExtensions;
-			// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
-			const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
-			const isDisabled = mappingExtensions?.isEnabled === false;
-			if (isLegacy || isDisabled) return DEFAULT_GRID;
-			return {
-				numRows: mappingExtensions.numRows,
-				numCols: mappingExtensions.numCols,
-				colWidth: mappingExtensions.colWidth || DEFAULT_COL_WIDTH,
-				rowHeight: mappingExtensions.rowHeight || DEFAULT_ROW_HEIGHT,
-			};
+		selectBeatmapIdsWithLightshowId: createSelector([selectById, (_1, _2, beatmapId: BeatmapId) => beatmapId], (song, lightshowId) => {
+			const beatmaps = getAllBeatmaps(song).filter((x) => x.lightshowId === lightshowId);
+			return beatmaps.map((x) => x.beatmapId);
 		}),
-		selectPlacementMode: createSelector(selectByIdOrNull, (song) => {
-			return song?.modSettings.mappingExtensions?.isEnabled ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
+		selectColorSchemeIds: createSelector(selectById, (song) => {
+			return Object.keys(song.colorSchemesById);
+		}),
+		selectColorScheme: createSelector([selectById, (_1, _2, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return getColorScheme(song, beatmapId);
+		}),
+		selectSelectedBeatmap: createSelector(selectById, (song) => {
+			return getSelectedBeatmap(song);
+		}),
+		selectIsDemo: createSelector(selectById, (song) => {
+			return isSongReadonly(song);
+		}),
+		selectIsModuleEnabled: createSelector([selectById, (_1, _2, key: keyof App.IModSettings) => key], (song, key) => {
+			return isModuleEnabled(song, key);
+		}),
+		selectCustomColors: createSelector(selectById, (song) => {
+			return getCustomColorsModule(song);
+		}),
+		selectGridSize: createSelector(selectById, (song) => {
+			return getGridSize(song);
+		}),
+		selectPlacementMode: createSelector(selectById, (song) => {
+			return isModuleEnabled(song, "mappingExtensions") ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
 		}),
 	},
 	reducers: {},
@@ -91,8 +114,8 @@ const slice = createSlice({
 			return adapter.upsertMany(state, Object.values(byId));
 		});
 		builder.addCase(startLoadingSong, (state, action) => {
-			const { songId, difficulty } = action.payload;
-			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: difficulty } });
+			const { songId, beatmapId } = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(finishLoadingSong, (state, action) => {
 			const {
@@ -102,183 +125,164 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
 		});
 		builder.addCase(createNewSong.fulfilled, (state, action) => {
-			const { coverArtFilename, songFilename, songId, name, subName, artistName, bpm, offset, selectedDifficulty, mapAuthorName, createdAt, lastOpenedAt } = action.payload;
+			const { songData, beatmapData } = action.payload;
+			const environment = EnvironmentName[0];
+			const beatmapId = resolveBeatmapId({ characteristic: beatmapData.characteristic, difficulty: beatmapData.difficulty });
 			return adapter.addOne(state, {
-				id: songId,
-				name,
-				subName,
-				artistName,
-				bpm,
-				offset,
+				...songData,
 				previewStartTime: 12,
 				previewDuration: 10,
-				songFilename,
-				coverArtFilename,
-				environment: Environment.THE_FIRST,
-				mapAuthorName: mapAuthorName ?? undefined,
-				createdAt,
-				lastOpenedAt,
-				selectedDifficulty,
+				environment: environment,
+				colorSchemesById: {},
+				mapAuthorName: songData.mapAuthorName ?? undefined,
 				difficultiesById: {
-					[selectedDifficulty]: {
-						id: selectedDifficulty,
-						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[selectedDifficulty as Difficulty],
+					[beatmapId]: {
+						beatmapId: beatmapId,
+						lightshowId: beatmapId,
+						characteristic: beatmapData.characteristic,
+						difficulty: beatmapData.difficulty,
+						noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapData.difficulty],
 						startBeatOffset: 0,
-						customLabel: "",
+						environmentName: environment,
+						colorSchemeName: null,
+						mappers: [],
+						lighters: [],
 					},
 				},
-				modSettings: DEFAULT_MOD_SETTINGS,
+				modSettings: {
+					customColors: { isEnabled: false, ...deriveColorSchemeFromEnvironment(environment) },
+					mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
+				},
 			});
 		});
-		builder.addCase(importExistingSong, (state, action) => {
-			const {
-				createdAt,
-				lastOpenedAt,
-				songData: { songId, songFilename, coverArtFilename, name, subName, artistName, mapAuthorName, bpm, offset, swingAmount, swingPeriod, previewStartTime, previewDuration, environment, difficultiesById, demo, modSettings = {}, enabledFastWalls = false, enabledLightshow = false },
-			} = action.payload;
-			const selectedDifficulty = Object.keys(difficultiesById)[0];
-			return adapter.upsertOne(state, {
-				id: songId,
-				name,
-				subName,
-				artistName,
-				mapAuthorName,
-				bpm,
-				offset,
-				swingAmount,
-				swingPeriod,
-				previewStartTime,
-				previewDuration,
-				songFilename,
-				coverArtFilename,
-				environment,
-				selectedDifficulty,
-				difficultiesById,
-				createdAt,
-				lastOpenedAt,
-				demo,
-				modSettings,
-				enabledFastWalls,
-				enabledLightshow,
-			});
+		builder.addCase(importExistingSong.fulfilled, (state, action) => {
+			const { songData } = action.payload;
+			return adapter.upsertOne(state, songData);
 		});
 		builder.addCase(updateSongDetails, (state, action) => {
-			const { songId, ...fieldsToUpdate } = action.payload;
+			const { songId, songData: fieldsToUpdate } = action.payload;
 			return adapter.updateOne(state, { id: songId, changes: fieldsToUpdate });
 		});
 		builder.addCase(createDifficulty, (state, action) => {
-			const { songId, difficulty } = action.payload;
+			const { songId, beatmapId, lightshowId, beatmapData: data } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					selectedDifficulty: difficulty,
-					difficultiesById: deepMerge(song.difficultiesById, {
-						[difficulty]: { id: difficulty, noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[difficulty as Difficulty], startBeatOffset: 0, customLabel: "" },
+					difficultiesById: deepMerge(getBeatmaps(song), {
+						[beatmapId]: {
+							beatmapId: beatmapId,
+							lightshowId: lightshowId ?? beatmapId,
+							characteristic: data.characteristic,
+							difficulty: data.difficulty,
+							noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[data.difficulty],
+							startBeatOffset: 0,
+							environmentName: song.environment,
+							colorSchemeName: null,
+							mappers: [],
+							lighters: [],
+						},
 					}),
 				},
 			});
 		});
 		builder.addCase(copyDifficulty, (state, action) => {
-			const { songId, fromDifficultyId, toDifficultyId } = action.payload;
+			const { songId, fromBeatmapId, toBeatmapId } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					selectedDifficulty: toDifficultyId,
-					difficultiesById: deepMerge(song.difficultiesById, {
-						[toDifficultyId]: { ...song.difficultiesById[fromDifficultyId], id: toDifficultyId },
+					difficultiesById: deepMerge(getBeatmaps(song), {
+						[toBeatmapId]: { ...getBeatmapById(song, fromBeatmapId), beatmapId: toBeatmapId },
 					}),
 				},
 			});
 		});
 		builder.addCase(changeSelectedDifficulty, (state, action) => {
-			const { songId, difficulty } = action.payload;
-			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: difficulty } });
+			const { songId, beatmapId } = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(deleteBeatmap, (state, action) => {
-			const { songId, difficulty } = action.payload;
+			const { songId, beatmapId } = action.payload;
 			const song = selectById(state, songId);
-			const difficultiesById = Object.entries(song.difficultiesById).reduce(
-				(acc, [bid, beatmap]) => {
-					if (bid === difficulty) return acc;
-					acc[bid] = beatmap;
-					return acc;
-				},
-				{} as typeof song.difficultiesById,
-			);
+			const difficultiesById = Object.entries(getBeatmaps(song)).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
+				if (bid === beatmapId) return acc;
+				acc[bid] = beatmap;
+				return acc;
+			}, {});
 			return adapter.updateOne(state, { id: songId, changes: { difficultiesById: difficultiesById } });
 		});
 		builder.addCase(updateBeatmapMetadata, (state, action) => {
-			const { songId, difficulty, noteJumpSpeed, startBeatOffset, customLabel } = action.payload;
+			const { songId, beatmapId, beatmapData } = action.payload;
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					difficultiesById: deepMerge(song.difficultiesById, {
-						[difficulty]: { id: difficulty, noteJumpSpeed, startBeatOffset, customLabel },
-					}),
+					difficultiesById: {
+						...getBeatmaps(song),
+						[beatmapId]: { ...getBeatmapById(song, beatmapId), ...beatmapData },
+					},
 				},
 			});
 		});
 		builder.addCase(deleteSong, (state, action) => {
-			const { id: songId } = action.payload;
+			const { songId } = action.payload;
 			return adapter.removeOne(state, songId);
 		});
 		builder.addCase(toggleModForSong, (state, action) => {
-			const { songId, mod } = action.payload;
+			const { songId, mod: key } = action.payload;
 			const song = selectById(state, songId);
-			const original = song.modSettings ?? DEFAULT_MOD_SETTINGS;
-			const isModEnabled = !song.modSettings[mod]?.isEnabled;
-			return adapter.updateOne(state, { id: songId, changes: { modSettings: deepMerge(original, { [mod]: { isEnabled: isModEnabled } }) } });
+			const original = getModuleData(song, key);
+			const isModEnabled = !!song.modSettings[key]?.isEnabled;
+			return adapter.updateOne(state, {
+				id: songId,
+				changes: {
+					modSettings: {
+						...getModSettings(song),
+						[key]: { ...original, isEnabled: !isModEnabled },
+					},
+				},
+			});
 		});
 		builder.addCase(updateModColor, (state, action) => {
 			const { songId, element, color } = action.payload;
 			const song = selectById(state, songId);
-			const original = song.modSettings.customColors ?? DEFAULT_MOD_SETTINGS.customColors;
+			const original = getCustomColorsModule(song);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(song.modSettings, { customColors: deepMerge(original, { [element]: color }) }),
-				},
-			});
-		});
-		builder.addCase(updateModColorOverdrive, (state, action) => {
-			const { songId, element, overdrive } = action.payload;
-			const elementOverdriveKey = `${element}Overdrive` as const;
-			const song = selectById(state, songId);
-			const original = song.modSettings.customColors ?? DEFAULT_MOD_SETTINGS.customColors;
-			return adapter.updateOne(state, {
-				id: songId,
-				changes: {
-					modSettings: deepMerge(song.modSettings, { customColors: deepMerge(original, { [elementOverdriveKey]: overdrive }) }),
+					modSettings: {
+						...getModSettings(song),
+						customColors: { ...original, [element]: color },
+					},
 				},
 			});
 		});
 		builder.addCase(resetGrid, (state, action) => {
 			const { songId } = action.payload;
 			const song = selectById(state, songId);
-			const original = song.modSettings.mappingExtensions ?? DEFAULT_MOD_SETTINGS.mappingExtensions;
+			const original = getExtensionsModule(song);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(song.modSettings, { mappingExtensions: deepMerge(original, { ...DEFAULT_GRID }) }),
+					modSettings: {
+						...getModSettings(song),
+						mappingExtensions: { ...original, ...DEFAULT_GRID },
+					},
 				},
 			});
-		});
-		builder.addCase(togglePropertyForSelectedSong, (state, action) => {
-			const { songId, property } = action.payload;
-			const song = selectById(state, songId);
-			return adapter.updateOne(state, { id: songId, changes: { [property]: !song[property] } });
 		});
 		builder.addMatcher(isAnyOf(updateGrid, loadGridPreset), (state, action) => {
 			const { songId, grid } = action.payload;
 			const song = selectById(state, songId);
-			const original = song.modSettings.mappingExtensions ?? DEFAULT_MOD_SETTINGS.mappingExtensions;
+			const original = getExtensionsModule(song);
 			return adapter.updateOne(state, {
 				id: songId,
 				changes: {
-					modSettings: deepMerge(song.modSettings, { mappingExtensions: deepMerge(original, { ...DEFAULT_GRID }, { ...grid }) }),
+					modSettings: {
+						...getModSettings(song),
+						mappingExtensions: { ...original, ...grid },
+					},
 				},
 			});
 		});

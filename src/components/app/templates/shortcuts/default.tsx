@@ -70,12 +70,12 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				return dispatch(direction === "forwards" ? decrementSnapping() : incrementSnapping());
 			}
 			if (ev.altKey) {
-				return dispatch(nudgeSelection({ direction, view }));
+				return dispatch(nudgeSelection({ view, direction }));
 			}
 			if (ev.shiftKey) {
 				return;
 			}
-			dispatch(scrollThroughSong({ direction }));
+			dispatch(scrollThroughSong({ songId: sid, direction }));
 		},
 		{ wait: 50 },
 	);
@@ -115,7 +115,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 					keysDepressed.current.space = true;
 
-					return dispatch(togglePlaying());
+					return dispatch(togglePlaying({ songId: sid }));
 				}
 
 				case "Escape": {
@@ -137,17 +137,17 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				}
 
 				case "PageUp": {
-					return dispatch(seekForwards({ view }));
+					return dispatch(seekForwards({ songId: sid, view }));
 				}
 				case "PageDown": {
-					return dispatch(seekBackwards({ view }));
+					return dispatch(seekBackwards({ songId: sid, view }));
 				}
 
 				case "Home": {
-					return dispatch(skipToStart());
+					return dispatch(skipToStart({ songId: sid }));
 				}
 				case "End": {
-					return dispatch(skipToEnd());
+					return dispatch(skipToEnd({ songId: sid }));
 				}
 
 				case "Delete": {
@@ -178,11 +178,11 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					if (!metaKeyPressed) {
 						return;
 					}
-					return dispatch(pasteSelection({ view }));
+					return dispatch(pasteSelection({ songId: sid, view }));
 				}
 
 				case "KeyJ": {
-					return dispatch(promptJumpToBeat(jumpToBeat, { pauseTrack: true }));
+					return dispatch(promptJumpToBeat(jumpToBeat, { songId: sid, pauseTrack: true }));
 				}
 
 				case "KeyR": {
@@ -200,7 +200,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 							return;
 						}
 
-						return dispatch(createBookmark({ name, view }));
+						return dispatch(createBookmark({ songId: sid, name, view }));
 					}
 					// Otherwise, toggle the note color to Blue.
 					return dispatch(selectColor({ view, color: "blue" }));
@@ -212,10 +212,10 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					}
 
 					if (view === View.BEATMAP) {
-						return dispatch(ev.shiftKey ? redoNotes() : undoNotes());
+						return dispatch(ev.shiftKey ? redoNotes({ songId: sid }) : undoNotes({ songId: sid }));
 					}
 					if (view === View.LIGHTSHOW) {
-						return dispatch(ev.shiftKey ? redoEvents() : undoEvents());
+						return dispatch(ev.shiftKey ? redoEvents({ songId: sid }) : undoEvents({ songId: sid }));
 					}
 					return;
 				}
@@ -233,12 +233,12 @@ function DefaultEditorShortcuts({ sid }: Props) {
 							description: "Unfortunately, the demo map is not available for download.",
 						});
 					}
-					if (sid) return dispatch(downloadMapFiles({ songId: sid, version: 2 }));
+					if (sid) return dispatch(downloadMapFiles({ songId: sid }));
 					return;
 				}
 
 				case "KeyQ": {
-					return dispatch(promptQuickSelect(view, selectAllInRange));
+					return dispatch(promptQuickSelect(selectAllInRange, { songId: sid, view }));
 				}
 
 				default:
@@ -263,12 +263,18 @@ function DefaultEditorShortcuts({ sid }: Props) {
 		[view],
 	);
 
+	const handleWheel = useCallback(
+		(ev: WheelEvent) => {
+			if (ev.altKey) return;
+			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
+			handleScroll(direction, ev);
+		},
+		[handleScroll],
+	);
+
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);
-	useGlobalEventListener("wheel", (ev) => {
-		const direction = ev.deltaY > 0 ? "backwards" : "forwards";
-		handleScroll(direction, ev);
-	});
+	useGlobalEventListener("wheel", handleWheel, { options: { passive: true } });
 
 	return null;
 }

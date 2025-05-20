@@ -14,7 +14,7 @@ function RouteComponent() {
 
 	return (
 		<EditorView.Root>
-			<EditorView.Scene sid={sid} bid={bid} showBeatmapPicker={view === View.BEATMAP}>
+			<EditorView.Scene sid={sid} bid={bid} showBeatmapPicker={view !== View.LIGHTSHOW}>
 				<Outlet />
 			</EditorView.Scene>
 		</EditorView.Root>

@@ -1,33 +1,139 @@
-import { DIFFICULTY_RENAME } from "$/constants";
-import { type App, type BeatmapId, Difficulty } from "$/types";
-import { slugify } from "$/utils";
+import { CharacteristicName, DifficultyName } from "bsmap/types";
 
-export function resolveSongId(x: Pick<App.Song, "name">): string {
+import { DEFAULT_GRID, DIFFICULTIES } from "$/constants";
+import type { App, BeatmapId, Member } from "$/types";
+import { slugify } from "$/utils";
+import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
+import { patchEnvironmentName } from "./packaging.helpers";
+
+export function resolveSongId(x: Pick<App.ISong, "name">): string {
 	return slugify(x.name);
 }
-
-export function resolveDifficulty(id: BeatmapId): Difficulty {
-	for (const difficulty of Object.values(Difficulty).reverse()) {
-		if (id.toString().includes(difficulty)) return difficulty;
+export function resolveBeatmapId(x: Pick<App.IBeatmap, "characteristic" | "difficulty">): string {
+	if (x.characteristic !== "Standard") return `${x.difficulty}${x.characteristic}`;
+	return `${x.difficulty}`;
+}
+export function resolveBeatmapIdFromFilename(filename: string): string {
+	let fn = filename;
+	for (const ext of [".json", ".dat", ".beatmap", ".lightshow"]) {
+		fn = fn.replace(ext, "");
 	}
-	throw new Error(`Could not resolve difficulty from id: ${id}`);
+	return fn;
 }
-export function resolveRankForDifficulty(difficulty: Difficulty) {
-	const rank = Object.values(Difficulty).indexOf(difficulty);
-	if (rank === -1) throw new Error(`Unrecognized difficulty: ${difficulty}`);
-	return ((rank + 1) * 2 - 1) as 1 | 3 | 5 | 7 | 9;
+export function resolveLightshowIdFromFilename(filename: string, beatmapId: BeatmapId): string {
+	const rawId = resolveBeatmapIdFromFilename(filename);
+	return rawId !== "Unnamed" ? rawId : beatmapId.toString();
+}
+/** @deprecated this is really only used during migration flow, don't use this elsewhere */
+export function resolveDifficultyFromBeatmapId(bid: BeatmapId): Member<typeof DIFFICULTIES> {
+	for (const difficulty of [...DIFFICULTIES].reverse()) {
+		if (difficulty === bid.toString()) return difficulty.substring(0, difficulty.length) as Member<typeof DIFFICULTIES>;
+	}
+	throw new Error(`Could not resolve difficulty from id: ${bid}`);
 }
 
-export function getLabelForDifficulty(beatmapId: BeatmapId) {
-	const difficulty = resolveDifficulty(beatmapId);
-	return DIFFICULTY_RENAME[difficulty];
+export function isSongReadonly<T extends Pick<App.ISong, "demo">>(song: T) {
+	return !!song.demo;
+}
+export function isModuleEnabled<T extends Pick<App.ISong, "modSettings">>(song: T, key: keyof App.IModSettings) {
+	return !!song.modSettings[key]?.isEnabled;
 }
 
-export function sortBeatmapIds(ids: BeatmapId[]) {
-	const DIFFICULTIES = Object.values(Difficulty);
-	return ids.sort((a, b) => {
-		const aIndex = DIFFICULTIES.indexOf(resolveDifficulty(a));
-		const bIndex = DIFFICULTIES.indexOf(resolveDifficulty(b));
-		return aIndex > bIndex ? 1 : -1;
-	});
+export function getSongMetadata<T extends Pick<App.ISong, "name" | "subName" | "artistName">>(song: T) {
+	return { title: song.name, subtitle: song.subName, artist: song.artistName };
+}
+export function getBeatmaps<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
+	return song.difficultiesById;
+}
+export function getAllBeatmaps<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
+	return Object.values(song.difficultiesById).sort(sortBeatmaps);
+}
+export function getBeatmapIds<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
+	return getAllBeatmaps(song).map((beatmap) => beatmap.beatmapId);
+}
+export function getBeatmapById<T extends Pick<App.ISong, "difficultiesById">>(song: T, beatmapId: BeatmapId) {
+	return song.difficultiesById[beatmapId];
+}
+export function getEnvironment<T extends Pick<App.ISong, "difficultiesById" | "environment">>(song: T, beatmapId?: BeatmapId) {
+	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
+	if (beatmap) return patchEnvironmentName(beatmap.environmentName);
+	return patchEnvironmentName(song.environment);
+}
+export function getSelectedBeatmap<T extends Pick<App.ISong, "selectedDifficulty" | "difficultiesById">>(song: T) {
+	return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
+}
+export function getEditorOffset<T extends Pick<App.ISong, "offset">>(song: T) {
+	return song.offset;
+}
+export function getSongLastOpenedAt<T extends Pick<App.ISong, "lastOpenedAt">>(song: T) {
+	return song.lastOpenedAt ?? 0;
+}
+
+function getDefaultModSettings(): App.IModSettings {
+	return {
+		customColors: { isEnabled: false },
+		mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
+	};
+}
+
+export function getModSettings<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T): App.IModSettings {
+	return { ...getDefaultModSettings(), ...song.modSettings };
+}
+export function getModuleData<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, key: keyof App.IModSettings) {
+	const modSettings = getModSettings(song);
+	return modSettings[key];
+}
+export function getCustomColorsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
+	const modSettings = getModSettings(song);
+	return modSettings.customColors;
+}
+export function getColorScheme<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IColorScheme {
+	const customOverrideScheme = getCustomColorsModule(song);
+	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
+	const vanillaOverrideScheme = beatmap?.colorSchemeName ? song.colorSchemesById[beatmap.colorSchemeName] : undefined;
+	const environment = getEnvironment(song, beatmapId);
+	const envScheme = deriveColorSchemeFromEnvironment(patchEnvironmentName(environment));
+
+	function resolveColor<T extends string | undefined>(key: App.ColorSchemeKey): T {
+		if (customOverrideScheme.isEnabled && customOverrideScheme[key]) return customOverrideScheme[key] as T;
+		if (vanillaOverrideScheme) return vanillaOverrideScheme[key] as T;
+		return envScheme[key] as T;
+	}
+
+	return {
+		colorLeft: resolveColor("colorLeft"),
+		colorRight: resolveColor("colorRight"),
+		obstacleColor: resolveColor("obstacleColor"),
+		envColorLeft: resolveColor("envColorLeft"),
+		envColorRight: resolveColor("envColorRight"),
+		envColorLeftBoost: resolveColor("envColorLeftBoost"),
+		envColorRightBoost: resolveColor("envColorRightBoost"),
+	};
+}
+
+export function getExtensionsModule<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
+	const modSettings = getModSettings(song);
+	return modSettings.mappingExtensions;
+}
+export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
+	const mappingExtensions = getExtensionsModule(song);
+	// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
+	const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
+	const isDisabled = mappingExtensions?.isEnabled === false;
+	if (isLegacy || isDisabled) return DEFAULT_GRID;
+	return {
+		...DEFAULT_GRID,
+		numRows: mappingExtensions.numRows,
+		numCols: mappingExtensions.numCols,
+		colWidth: mappingExtensions.colWidth,
+		rowHeight: mappingExtensions.rowHeight,
+	};
+}
+
+export function sortBeatmaps(a: App.IBeatmap, b: App.IBeatmap) {
+	const byCharacteristic = CharacteristicName.indexOf(a.characteristic) - CharacteristicName.indexOf(b.characteristic);
+	if (byCharacteristic !== 0) return byCharacteristic;
+	const byDifficulty = DifficultyName.indexOf(a.difficulty) - DifficultyName.indexOf(b.difficulty);
+	if (byDifficulty !== 0) return byDifficulty;
+	return 0;
 }

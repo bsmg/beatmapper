@@ -1,7 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { processImportedMap } from "$/services/packaging.service";
 import { importExistingSong, loadDemoMap } from "$/store/actions";
 import { selectIsNew } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -21,11 +20,7 @@ export default function createDemoMiddleware() {
 			if (isNewUser) {
 				const res = await fetch(demoFileUrl);
 				const blob = await res.blob();
-				const songData = await processImportedMap(blob, []);
-				songData.demo = true;
-				await api.dispatch(importExistingSong({ songData }));
-				// TODO: Should pull data from demoSong
-				window.location.href = "/edit/only-now/Normal/notes";
+				await api.dispatch(importExistingSong({ file: blob, options: { readonly: true } }));
 			}
 		},
 	});

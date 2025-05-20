@@ -1,12 +1,16 @@
+import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
 import { selectNoteDirection, selectTool, swapSelectedNotes, toggleSelectAll } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
-import { CutDirection, ObjectTool, View } from "$/types";
+import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-function NotesEditorShortcuts() {
+interface Props {
+	sid: SongId;
+}
+function NotesEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 
 	const keysDepressed = useRef({
@@ -60,12 +64,12 @@ function NotesEditorShortcuts() {
 					keysDepressed.current.w = true;
 
 					if (keysDepressed.current.a) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.UP_LEFT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.UP_LEFT }));
 					}
 					if (keysDepressed.current.d) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.UP_RIGHT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.UP_RIGHT }));
 					}
-					return dispatch(selectNoteDirection({ direction: CutDirection.UP }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.UP }));
 				}
 				case "KeyA": {
 					if (ev.shiftKey) {
@@ -73,18 +77,18 @@ function NotesEditorShortcuts() {
 					}
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAll({ view: View.BEATMAP }));
+						return dispatch(toggleSelectAll({ songId: sid, view: View.BEATMAP }));
 					}
 
 					keysDepressed.current.a = true;
 
 					if (keysDepressed.current.w) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.UP_LEFT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.UP_LEFT }));
 					}
 					if (keysDepressed.current.s) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.DOWN_LEFT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN_LEFT }));
 					}
-					return dispatch(selectNoteDirection({ direction: CutDirection.LEFT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.LEFT }));
 				}
 				case "KeyS": {
 					if (ev.shiftKey) {
@@ -93,12 +97,12 @@ function NotesEditorShortcuts() {
 					keysDepressed.current.s = true;
 
 					if (keysDepressed.current.a) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.DOWN_LEFT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN_LEFT }));
 					}
 					if (keysDepressed.current.d) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.DOWN_RIGHT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN_RIGHT }));
 					}
-					return dispatch(selectNoteDirection({ direction: CutDirection.DOWN }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN }));
 				}
 				case "KeyD": {
 					if (ev.shiftKey) {
@@ -107,12 +111,12 @@ function NotesEditorShortcuts() {
 					keysDepressed.current.d = true;
 
 					if (keysDepressed.current.w) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.UP_RIGHT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.UP_RIGHT }));
 					}
 					if (keysDepressed.current.s) {
-						return dispatch(selectNoteDirection({ direction: CutDirection.DOWN_RIGHT }));
+						return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN_RIGHT }));
 					}
-					return dispatch(selectNoteDirection({ direction: CutDirection.RIGHT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.RIGHT }));
 				}
 
 				case "KeyF": {
@@ -120,42 +124,42 @@ function NotesEditorShortcuts() {
 						return;
 					}
 
-					return dispatch(selectNoteDirection({ direction: CutDirection.ANY }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.ANY }));
 				}
 
 				case "Numpad1": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.DOWN_LEFT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN_LEFT }));
 				}
 				case "Numpad2": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.DOWN }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN }));
 				}
 				case "Numpad3": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.DOWN_RIGHT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.DOWN_RIGHT }));
 				}
 				case "Numpad4": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.LEFT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.LEFT }));
 				}
 				case "Numpad5": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.ANY }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.ANY }));
 				}
 				case "Numpad6": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.RIGHT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.RIGHT }));
 				}
 				case "Numpad7": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.UP_LEFT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.UP_LEFT }));
 				}
 				case "Numpad8": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.UP }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.UP }));
 				}
 				case "Numpad9": {
-					return dispatch(selectNoteDirection({ direction: CutDirection.UP_RIGHT }));
+					return dispatch(selectNoteDirection({ direction: NoteDirection.UP_RIGHT }));
 				}
 
 				default:
 					return;
 			}
 		},
-		[dispatch],
+		[dispatch, sid],
 	);
 
 	const handleKeyUp = useCallback((ev: KeyboardEvent) => {

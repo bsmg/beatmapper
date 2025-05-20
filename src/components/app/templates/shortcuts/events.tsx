@@ -3,10 +3,13 @@ import { useCallback } from "react";
 import { useGlobalEventListener } from "$/components/hooks";
 import { selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, toggleSelectAll, zoomIn, zoomOut } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
-import { EventEditMode, EventTool, View } from "$/types";
+import { EventEditMode, EventTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-function EventsEditorShortcuts() {
+interface Props {
+	sid: SongId;
+}
+function EventsEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 
 	const handleKeyDown = useCallback(
@@ -32,7 +35,7 @@ function EventsEditorShortcuts() {
 				case "KeyA": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAll({ view: View.LIGHTSHOW }));
+						return dispatch(toggleSelectAll({ songId: sid, view: View.LIGHTSHOW }));
 					}
 
 					return dispatch(selectEventEditMode({ editMode: EventEditMode.PLACE }));
@@ -77,7 +80,7 @@ function EventsEditorShortcuts() {
 					return;
 			}
 		},
-		[dispatch],
+		[dispatch, sid],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

@@ -14,10 +14,10 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	// This way is overall much nicer, but it has this one big issue: syncing the state initially.
 	// Our locally-persisted state might be out of date. We need to fix that before we do anything else.
 	onEnter: async ({ params }) => {
-		await Promise.resolve(store.dispatch(startLoadingSong({ songId: params.sid, difficulty: params.bid })));
+		await Promise.resolve(store.dispatch(startLoadingSong({ songId: params.sid, beatmapId: params.bid })));
 	},
 	onLeave: async ({ params }) => {
-		await Promise.resolve(store.dispatch(leaveEditor({ songId: params.sid, difficulty: params.bid })));
+		await Promise.resolve(store.dispatch(leaveEditor({ songId: params.sid, beatmapId: params.bid })));
 	},
 });
 

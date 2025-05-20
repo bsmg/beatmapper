@@ -70,6 +70,9 @@ export const recipe = cva({
 				},
 			},
 		},
+		stretch: {
+			true: { width: "100%" },
+		},
 	},
 	defaultVariants: {},
 });

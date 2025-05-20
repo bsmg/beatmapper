@@ -1,6 +1,7 @@
+import { serializeBeatmapContents } from "$/helpers/packaging.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
-import { createBeatmapContentsFromState } from "$/services/packaging.service";
-import { selectActiveBeatmapId, selectSongById } from "$/store/selectors";
+import { selectBeatmapSerializationOptionsFromState } from "$/store/middleware/file.middleware";
+import { selectActiveBeatmapId, selectAllEntities, selectBeatmapById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 
@@ -13,20 +14,17 @@ import type { SongId } from "$/types";
 // it's because the user can have dozens or hundreds of songs, and each song can have thousands of notes. It's too much to keep in RAM.
 // So I store non-loaded songs to disk, stored in indexeddb. It uses the same mechanism as Redux Storage, but it's treated separately.)
 
-export function save(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
-	const song = selectSongById(state, songId);
-	const difficulty = selectActiveBeatmapId(state);
-
+export async function save(state: RootState, songId: SongId, filestore: BeatmapFilestore) {
+	const beatmapId = selectActiveBeatmapId(state);
 	// We only want to autosave when a song is currently selected
-	if (!song || !difficulty) {
-		return;
-	}
+	if (!beatmapId) return;
 
-	const beatmapContents = createBeatmapContentsFromState(state, song);
+	const beatmap = selectBeatmapById(state, songId, beatmapId);
 
-	filestore.saveBeatmapFile(song.id, difficulty, beatmapContents).catch((err) => {
-		console.error("Could not run backup for beatmap file", err);
-	});
+	const entities = selectAllEntities(state);
+	const { difficulty, lightshow } = serializeBeatmapContents(entities, selectBeatmapSerializationOptionsFromState(state, songId));
+
+	await filestore.updateBeatmapContents(songId, beatmap.beatmapId, { difficulty, lightshow });
 }
 
 interface Options {
@@ -34,6 +32,6 @@ interface Options {
 }
 export function createAutosaveWorker({ filestore }: Options) {
 	return {
-		save: (state: RootState, songId: SongId) => save(state, songId, filestore),
+		save: async (state: RootState, songId: SongId) => await save(state, songId, filestore),
 	};
 }

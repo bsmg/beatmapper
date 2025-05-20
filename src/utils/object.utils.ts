@@ -1,3 +1,5 @@
+import { isEmpty } from "./guards";
+
 export function pick<T extends object, K extends keyof T>(obj: T, ...keys: readonly K[]): Pick<T, K> {
 	const result = {} as T;
 	for (const key of keys) {
@@ -16,6 +18,10 @@ export function omit<T extends object, K extends keyof T>(obj: T, ...keys: reado
 		}
 	}
 	return result;
+}
+
+export function withKeys<T extends object, K extends keyof Required<T>>(obj: T, ...keys: K[]): boolean {
+	return keys.some((key) => key in obj && !!obj[key]);
 }
 
 export function extractTypeFromObject<T extends object, K extends keyof object>(obj: T, type: K) {
@@ -76,4 +82,8 @@ export function deepMerge<T extends Record<string, any>>(target: T, ...sources: 
 		}
 	}
 	return deepMerge(output, ...sources);
+}
+
+export function maybeObject<T extends object>(object: T) {
+	return !isEmpty(object) ? object : undefined;
 }

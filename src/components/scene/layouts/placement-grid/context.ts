@@ -1,15 +1,16 @@
 import { createContext } from "react";
 
 export interface IPlacementGridContext {
-	mouseDownAt: { rowIndex: number; colIndex: number; x: number; y: number } | null;
-	mouseOverAt: { rowIndex: number; colIndex: number } | null;
+	cellDownAt: { rowIndex: number; colIndex: number } | null;
+	cellOverAt: { rowIndex: number; colIndex: number } | null;
 	hoveredCell: { rowIndex: number; colIndex: number } | null;
-	onCellPointerDown?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "mouseDownAt">) => void;
-	onCellPointerOver?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "mouseDownAt" | "mouseOverAt">) => void;
-	onCellPointerOut?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "mouseOverAt">) => void;
+	direction: number | null;
+	onCellPointerDown?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "cellDownAt">) => void;
+	onCellPointerOver?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "cellDownAt" | "cellOverAt">) => void;
+	onCellPointerOut?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "cellOverAt">) => void;
 }
 
-export const Context = createContext<IPlacementGridContext>({ mouseDownAt: null, mouseOverAt: null, hoveredCell: null });
+export const Context = createContext<IPlacementGridContext>({ cellDownAt: null, cellOverAt: null, hoveredCell: null, direction: null });
 
 export const Provider = Context.Provider;
 export const Consumer = Context.Consumer;
