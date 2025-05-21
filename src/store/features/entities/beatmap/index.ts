@@ -1,25 +1,7 @@
 import { type UnknownAction, combineReducers } from "@reduxjs/toolkit";
 import undoable, { type FilterFunction, groupByActionTypes, type GroupByFunction, includeAction } from "redux-undo";
 
-import {
-	bulkDeleteNote,
-	clickPlacementGrid,
-	createNewObstacle,
-	cutSelection,
-	deleteNote,
-	deleteObstacle,
-	deleteSelectedNotes,
-	finishLoadingSong,
-	nudgeSelection,
-	pasteSelection,
-	redoNotes,
-	resizeObstacle,
-	resizeSelectedObstacles,
-	setBlockByDragging,
-	swapSelectedNotes,
-	toggleNoteColor,
-	undoNotes,
-} from "$/store/actions";
+import { addObstacle, addToCell, bulkRemoveNote, cutSelection, finishLoadingMap, mirrorColorNote, mirrorSelection, nudgeSelection, pasteSelection, redoObjects, removeAllSelectedObjects, removeNote, removeObstacle, undoObjects, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
 
 import bombs from "./bombs.slice";
 import notes from "./notes.slice";
@@ -32,30 +14,29 @@ const reducer = combineReducers({
 });
 
 const filter: FilterFunction<ReturnType<typeof reducer>, UnknownAction> = includeAction([
-	finishLoadingSong.type,
-	clickPlacementGrid.fulfilled.type,
-	setBlockByDragging.fulfilled.type,
-	deleteNote.type,
-	bulkDeleteNote.type,
-	deleteSelectedNotes.type,
+	finishLoadingMap.type,
+	addToCell.fulfilled.type,
+	removeNote.type,
+	bulkRemoveNote.type,
+	removeAllSelectedObjects.type,
 	cutSelection.fulfilled.type,
 	pasteSelection.fulfilled.type,
-	createNewObstacle.fulfilled.type,
-	resizeObstacle.type,
-	resizeSelectedObstacles.type,
-	deleteObstacle.type,
-	swapSelectedNotes.type,
-	toggleNoteColor.type,
+	addObstacle.fulfilled.type,
+	updateObstacle.type,
+	updateAllSelectedObstacles.type,
+	removeObstacle.type,
+	mirrorSelection.type,
+	mirrorColorNote.type,
 	nudgeSelection.fulfilled.type,
 	//
 ]);
-const groupBy: GroupByFunction<ReturnType<typeof reducer>, UnknownAction> = groupByActionTypes([bulkDeleteNote.type]);
+const groupBy: GroupByFunction<ReturnType<typeof reducer>, UnknownAction> = groupByActionTypes([bulkRemoveNote.type]);
 
 export default {
 	reducer: undoable(reducer, {
 		limit: 100,
-		undoType: undoNotes.type,
-		redoType: redoNotes.type,
+		undoType: undoObjects.type,
+		redoType: redoObjects.type,
 		filter: filter,
 		groupBy: groupBy,
 	}),

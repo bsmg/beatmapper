@@ -45,7 +45,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, color, size =
 	);
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
-			event.preventDefault();
+			event.stopPropagation();
 			if (onNoteWheel) onNoteWheel(event, data);
 		},
 		[data, onNoteWheel],

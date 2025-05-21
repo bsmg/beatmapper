@@ -1,6 +1,6 @@
 import { NoteDirectionAngle } from "bsmap";
 
-import type { App, IEventTrack } from "$/types";
+import type { App, IEventTracks } from "$/types";
 import { clamp, roundToNearest } from "$/utils";
 import { createPropertySerializationFactory } from "./serialization.helpers";
 
@@ -11,7 +11,7 @@ export interface BeatmapEntitySerializationOptions<T extends BeatmapExtensionsPr
 	extensionsProvider?: T;
 }
 export interface LightshowEntitySerializationOptions {
-	tracks?: IEventTrack[];
+	tracks?: IEventTracks;
 }
 
 type BeatmapExtensionsResolverMap<TWrapper, TSerial> = {

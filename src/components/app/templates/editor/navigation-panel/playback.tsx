@@ -2,9 +2,9 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { changeSnapping, pausePlaying, seekBackwards, seekForwards, skipToEnd, skipToStart, startPlaying } from "$/store/actions";
+import { jumpToEnd, jumpToStart, pausePlayback, seekBackwards, seekForwards, startPlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectIsLoading, selectIsPlaying, selectSnapTo } from "$/store/selectors";
+import { selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { styled } from "$:styled-system/jsx";
@@ -26,21 +26,21 @@ interface Props {
 function EditorNavigationControls({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();
-	const isPlaying = useAppSelector(selectIsPlaying);
-	const isLoadingSong = useAppSelector(selectIsLoading);
-	const snapTo = useAppSelector(selectSnapTo);
+	const isPlaying = useAppSelector(selectPlaying);
+	const isLoadingSong = useAppSelector(selectLoading);
+	const snapTo = useAppSelector(selectSnap);
 
-	const playButtonAction = isPlaying ? pausePlaying : startPlaying;
+	const playButtonAction = isPlaying ? pausePlayback : startPlayback;
 
 	return (
 		<Wrapper>
 			<Column>
-				<Select collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(changeSnapping({ newSnapTo: Number(ev.value[0]) }))}>
+				<Select collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap({ value: Number(ev.value[0]) }))}>
 					Snap To
 				</Select>
 			</Column>
 			<Column>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToStart({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(jumpToStart({ songId: sid }))}>
 					<SkipBackIcon />
 				</Button>
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekBackwards({ songId: sid, view }))}>
@@ -52,7 +52,7 @@ function EditorNavigationControls({ sid }: Props) {
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekForwards({ songId: sid, view }))}>
 					<FastForwardIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(skipToEnd({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(jumpToEnd({ songId: sid }))}>
 					<SkipForwardIcon />
 				</Button>
 			</Column>

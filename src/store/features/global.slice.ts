@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { finishLoadingSong, importExistingSong, init, reloadWaveform, startLoadingSong } from "$/store/actions";
+import { addSongFromFile, finishLoadingMap, reloadVisualizer, startLoadingMap } from "$/store/actions";
 
 const initialState = {
 	initialized: false,
@@ -13,24 +13,25 @@ const slice = createSlice({
 	initialState: initialState,
 	selectors: {
 		selectInitialized: (state) => state.initialized,
-		selectIsLoading: (state) => state.isLoading,
-		selectIsProcessingImport: (state) => state.isProcessingImport,
+		selectLoading: (state) => state.isLoading,
+		selectProcessingImport: (state) => state.isProcessingImport,
 	},
-	reducers: {},
-	extraReducers: (builder) => {
-		builder.addCase(init, (state) => {
+	reducers: {
+		init: (state) => {
 			return { ...state, initialized: true };
-		});
-		builder.addMatcher(isAnyOf(startLoadingSong), (state) => {
+		},
+	},
+	extraReducers: (builder) => {
+		builder.addMatcher(isAnyOf(startLoadingMap), (state) => {
 			return { ...state, isLoading: true };
 		});
-		builder.addMatcher(isAnyOf(finishLoadingSong, reloadWaveform), (state) => {
+		builder.addMatcher(isAnyOf(finishLoadingMap, reloadVisualizer), (state) => {
 			return { ...state, isLoading: false };
 		});
-		builder.addMatcher(isAnyOf(importExistingSong.pending), (state) => {
+		builder.addMatcher(isAnyOf(addSongFromFile.pending), (state) => {
 			return { ...state, isProcessingImport: true };
 		});
-		builder.addMatcher(isAnyOf(importExistingSong.fulfilled, importExistingSong.rejected), (state) => {
+		builder.addMatcher(isAnyOf(addSongFromFile.fulfilled, addSongFromFile.rejected), (state) => {
 			return { ...state, isProcessingImport: false };
 		});
 		builder.addDefaultCase((state) => state);

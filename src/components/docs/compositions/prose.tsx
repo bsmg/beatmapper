@@ -62,8 +62,9 @@ const DocumentStyles = styled("div", {
 		color: "fg.muted",
 		maxWidth: { base: "calc(100vw - 120px)!", md: "calc(100vw - 420px)!" },
 
-		"& p:not(:first-of-type)": {
-			marginBlock: "24px",
+		"& p": {
+			marginBlockStart: { base: "18px", _first: 0 },
+			marginBlockEnd: { base: "18px", _last: 0 },
 		},
 		"& a": {
 			textStyle: "link",

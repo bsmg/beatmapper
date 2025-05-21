@@ -1,7 +1,7 @@
 import { createStateSyncMiddleware } from "redux-state-sync";
 
 import type { BeatmapFilestore } from "$/services/file.service";
-import { downloadMapFiles, pausePlaying, startPlaying, stopPlaying, togglePlaying } from "$/store/actions";
+import { downloadMapFiles, pausePlayback, startPlayback, stopPlayback, togglePlaying } from "$/store/actions";
 import type { createAutosaveWorker } from "$/workers";
 
 import { isAction } from "@reduxjs/toolkit";
@@ -22,7 +22,7 @@ export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options
 	const stateSyncMiddleware = createStateSyncMiddleware({
 		// We don't need to save in other tabs
 		predicate: (action) => isAction(action) && !action.type.startsWith("@@STORAGE"),
-		blacklist: [startPlaying.type, pausePlaying.type, stopPlaying.type, togglePlaying.type, downloadMapFiles.type],
+		blacklist: [startPlayback.type, pausePlayback.type, stopPlayback.type, togglePlaying.type, downloadMapFiles.type],
 	});
 
 	const audioMiddleware = createAudioMiddleware({ filestore });

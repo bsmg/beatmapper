@@ -7,7 +7,7 @@ import global from "./global.slice";
 import navigation from "./navigation.slice";
 import songs from "./songs.slice";
 import user from "./user.slice";
-import waveform from "./waveform.slice";
+import waveform from "./visualizer.slice";
 
 const reducer = combineReducers({
 	songs: songs.reducer,

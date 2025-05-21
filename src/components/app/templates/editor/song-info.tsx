@@ -5,7 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { Fragment, memo, useCallback, useMemo } from "react";
 
 import { createBeatmapListCollection } from "$/components/app/constants";
-import { changeSelectedDifficulty, createDifficulty } from "$/store/actions";
+import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
@@ -14,6 +14,7 @@ import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { CoverArtFilePreview } from "$/components/app/compositions";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Button, Dialog, Select, Text } from "$/components/ui/compositions";
+import { useViewFromLocation } from "../../hooks";
 
 const COVER_ART_SIZES = {
 	medium: 75,
@@ -29,6 +30,7 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	const dispatch = useAppDispatch();
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
+	const view = useViewFromLocation();
 	const navigate = useNavigate();
 
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
@@ -36,15 +38,15 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleBeatmapSelect = useCallback(
 		(details: SelectValueChangeDetails) => {
-			dispatch(changeSelectedDifficulty({ songId: sid, beatmapId: details.value[0] }));
-			return navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: details.value[0] } });
+			dispatch(updateSelectedBeatmap({ songId: sid, beatmapId: details.value[0] }));
+			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: details.value[0] } });
 		},
-		[dispatch, navigate, sid],
+		[dispatch, navigate, sid, view],
 	);
 
 	const handleCreate = useCallback(
 		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(createDifficulty({ songId: sid, beatmapId: id, beatmapData: data }));
+			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: data }));
 		},
 		[dispatch, sid],
 	);

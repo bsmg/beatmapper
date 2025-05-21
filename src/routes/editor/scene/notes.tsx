@@ -23,7 +23,7 @@ function RouteComponent() {
 			<ReduxForwardingCanvas>
 				<MapVisualization sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive />
 				<AmbientLight />
-				<Runway includeEdgeStrips />
+				<Runway surfaceDepth={surfaceDepth} includeEdgeStrips />
 				<fogExp2 attach="fog" args={[0x000000, 0.02]} />
 			</ReduxForwardingCanvas>
 			<EditorActionPanel sid={sid} bid={bid} />

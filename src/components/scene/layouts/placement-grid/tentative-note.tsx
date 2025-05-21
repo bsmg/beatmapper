@@ -1,8 +1,9 @@
 import { useContext, useMemo } from "react";
 
-import { ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
+import { ColorNote } from "$/components/scene/compositions";
 import { createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import type { IGrid, ObjectPlacementMode } from "$/types";
+import { resolvePositionForGridObject } from "../../helpers";
 import { Context } from "./context";
 
 interface Props {
@@ -24,7 +25,7 @@ function TentativeNote({ mode, grid: gridSize, color, ...rest }: Props) {
 
 	if (!data) return null;
 
-	const position = resolvePositionForNote(data, {});
+	const position = resolvePositionForGridObject(data, {});
 
 	return <ColorNote {...rest} position={position} data={data} color={color} />;
 }

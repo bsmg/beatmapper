@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
-import { selectEventEditorBeatsPerZoomLevel } from "$/store/selectors";
+import { selectEventsEditorBeatsPerZoomLevel } from "$/store/selectors";
 import { range } from "$/utils";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 	primaryDivisions: number;
 }
 function EventGridMarkers({ width, height, primaryDivisions }: Props) {
-	const numOfBeatsToShow = useAppSelector(selectEventEditorBeatsPerZoomLevel);
+	const numOfBeatsToShow = useAppSelector(selectEventsEditorBeatsPerZoomLevel);
 
 	const segmentWidth = useMemo(() => width / numOfBeatsToShow, [width, numOfBeatsToShow]);
 

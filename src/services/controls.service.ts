@@ -44,41 +44,49 @@ export class Controls {
 				return;
 			}
 			case "W":
-			case "ArrowUp":
+			case "ArrowUp": {
 				if (this.enabled) {
 					this.moveDirections.forwards = true;
 				}
 				return;
+			}
 			case "A":
-			case "ArrowLeft":
+			case "ArrowLeft": {
 				if (this.enabled) {
 					this.moveDirections.left = true;
 				}
 				return;
+			}
 			case "S":
-			case "ArrowDown":
+			case "ArrowDown": {
 				if (this.enabled) {
 					this.moveDirections.backwards = true;
 				}
 				return;
+			}
 			case "D":
-			case "ArrowRight":
+			case "ArrowRight": {
 				if (this.enabled) {
 					this.moveDirections.right = true;
 				}
 				return;
-			case "R":
+			}
+			case "R": {
 				if (this.enabled) {
 					this.moveDirections.up = true;
 				}
 				return;
-			case "F":
+			}
+			case "F": {
 				if (this.enabled) {
 					this.moveDirections.down = true;
 				}
 				return;
+			}
 
-			case "Backspace":
+			case "Backspace": {
+				event.preventDefault();
+
 				this.moveDirections.forwards = false;
 				this.moveDirections.backwards = false;
 				this.moveDirections.left = false;
@@ -95,9 +103,10 @@ export class Controls {
 				this.pitchObject.rotation.x = 0;
 
 				return;
-
-			default:
+			}
+			default: {
 				return;
+			}
 		}
 	};
 

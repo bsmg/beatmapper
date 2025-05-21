@@ -5,9 +5,9 @@ import { gtValue, minLength, number, object, pipe, string, transform, union } fr
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
 import { filestore } from "$/setup";
-import { stopPlaying, toggleModForSong, updateSongDetails } from "$/store/actions";
+import { stopPlayback, updateModuleEnabled, updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectEditorOffset, selectIsModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIds, selectEditorOffset, selectModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
@@ -25,8 +25,8 @@ interface Props {
 function SongDetails({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
-	const enabledCustomColors = useAppSelector((state) => selectIsModuleEnabled(state, sid, "customColors"));
-	const enabledMappingExtensions = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
+	const enabledCustomColors = useAppSelector((state) => selectModuleEnabled(state, sid, "customColors"));
+	const enabledMappingExtensions = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
 	const [songFile, setSongFile] = useState<File | null>(null);
 	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
@@ -81,7 +81,7 @@ function SongDetails({ sid }: Props) {
 			}
 
 			// Update our redux state
-			dispatch(updateSongDetails({ songId: sid, songData: newSongObject }));
+			dispatch(updateSong({ songId: sid, changes: newSongObject }));
 
 			formApi.reset(value);
 
@@ -98,7 +98,7 @@ function SongDetails({ sid }: Props) {
 	useMount(() => {
 		// We want to stop & reset the song when the user goes to edit it.
 		// In addition to seeming like a reasonable idea, it helps prevent any weirdness around editing the audio file when it's in a non-zero position.
-		dispatch(stopPlaying({ offset: offset }));
+		dispatch(stopPlayback({ offset: offset }));
 	});
 
 	useBlocker({
@@ -108,7 +108,7 @@ function SongDetails({ sid }: Props) {
 	return (
 		<Stack gap={8}>
 			<Stack gap={6}>
-				<Heading rank={1}>Edit Song Details</Heading>
+				<Heading rank={1}>Song Details</Heading>
 				<Form.AppForm>
 					<Form.Root>
 						<Form.Row>
@@ -143,7 +143,7 @@ function SongDetails({ sid }: Props) {
 				</Form.AppForm>
 			</Stack>
 			<Stack gap={6}>
-				<Heading rank={1}>Edit Difficulties</Heading>
+				<Heading rank={1}>Beatmaps</Heading>
 				<Wrap gap={2} justify={"center"}>
 					{beatmapIds.map((beatmapId) => {
 						return (
@@ -157,7 +157,7 @@ function SongDetails({ sid }: Props) {
 			<Stack gap={6}>
 				<Heading rank={1}>Advanced Settings</Heading>
 				<Stack gap={3}>
-					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings sid={sid} />} checked={enabledCustomColors} onCheckedChange={() => dispatch(toggleModForSong({ songId: sid, mod: "customColors" }))}>
+					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings sid={sid} />} checked={enabledCustomColors} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}>
 						Override individual elements of a beatmap's color scheme.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
 							<Link to="/docs/$" params={{ _splat: "mods#custom-colors" }}>
@@ -166,7 +166,7 @@ function SongDetails({ sid }: Props) {
 						</Text>
 						.
 					</SongDetailsModule>
-					<SongDetailsModule label="Mapping Extensions" render={() => null} checked={enabledMappingExtensions} onCheckedChange={() => dispatch(toggleModForSong({ songId: sid, mod: "mappingExtensions" }))}>
+					<SongDetailsModule label="Mapping Extensions" render={() => null} checked={enabledMappingExtensions} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "mappingExtensions" }))}>
 						Allows you to customize size and shape of the grid, to place notes outside of the typical 4×3 grid.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
 							<Link to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>

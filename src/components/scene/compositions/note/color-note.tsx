@@ -1,19 +1,15 @@
-import { resolveNoteAngle } from "bsmap";
-import { degToRad } from "bsmap/utils";
 import { memo, useMemo } from "react";
 import type { Vector3Tuple } from "three";
 
 import type { App } from "$/types";
+import { resolveRotationForNote } from "../../helpers";
 import BaseNote, { type BaseNoteProps } from "./base";
-import { resolvePathForNoteDirection, resolveRotationForNoteDirection } from "./helpers";
+import { resolvePathForNoteDirection } from "./helpers";
 
 function ColorNote({ position, data, size = 1, ...rest }: Omit<BaseNoteProps<App.IColorNote>, "path" | "children">) {
 	const url = useMemo(() => resolvePathForNoteDirection(data.direction), [data.direction]);
 
-	const rotation = useMemo(() => {
-		if (data.direction >= 1000) return resolveRotationForNoteDirection(data.direction);
-		return degToRad(resolveNoteAngle(data.direction) + data.angleOffset);
-	}, [data.direction, data.angleOffset]);
+	const rotation = useMemo(() => resolveRotationForNote(data), [data]);
 
 	const arrowPosition = useMemo(() => {
 		const newPos = position as Vector3Tuple;

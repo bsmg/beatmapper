@@ -1,11 +1,9 @@
 import { useMemo } from "react";
 
-import type { ISelectionBox } from "$/types";
-
 import { styled } from "$:styled-system/jsx";
 
 interface Props {
-	box: ISelectionBox;
+	box: DOMRect;
 }
 function EventGridSelectionBox({ box }: Props) {
 	const styles = useMemo(() => {

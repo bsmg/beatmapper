@@ -1,5 +1,5 @@
 import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
-import { App, type BeatmapId, type SongId } from "$/types";
+import type { BeatmapId, SongId } from "$/types";
 
 import { LitSquareRing } from "$/components/scene/compositions/environment";
 import { Environment } from "$/components/scene/layouts";
@@ -13,8 +13,8 @@ interface Props {
 	bid: BeatmapId;
 }
 function LargeRings({ sid, bid }: Props) {
-	const [lastLightEvent] = useEventTrack({ sid, trackId: App.TrackId[1] });
-	const [lastRotationEvent] = useEventTrack({ sid, trackId: App.TrackId[8] });
+	const [lastLightEvent] = useEventTrack({ sid, trackId: 1 });
+	const [lastRotationEvent] = useEventTrack({ sid, trackId: 8 });
 
 	const light = useLightProps({ sid, bid, lastEvent: lastLightEvent });
 

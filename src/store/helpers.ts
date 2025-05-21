@@ -1,9 +1,12 @@
-import { createDraftSafeSelector } from "@reduxjs/toolkit";
+import { type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type ReducerCreators, asyncThunkCreator, buildCreateSlice, createDraftSafeSelector } from "@reduxjs/toolkit";
 import type { StateWithHistory } from "redux-undo";
 
+import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { App } from "$/types";
 import { pick } from "$/utils";
 import type { RootState } from "./setup";
+
+export const createSlice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } });
 
 export type Snapshot = ReturnType<typeof selectSnapshot>;
 
@@ -33,4 +36,18 @@ export function createByPositionSelector<State, T extends Pick<App.IBaseNote, "t
 	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "posX" | "posY">) => query], (state, { time, posX, posY }) => {
 		return state.find((x) => x.time === time && x.posX === posX && x.posY === posY);
 	});
+}
+
+export function createActionsForNoteEntityAdapter<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(api: ReducerCreators<EntityState<T, EntityId>>, adapter: EntityAdapter<T, EntityId>) {
+	const { selectAll } = adapter.getSelectors();
+	const selectByPosition = createByPositionSelector(selectAll);
+	type NotePayloadAction<T extends {}> = PayloadAction<{ query: Parameters<typeof resolveNoteId>[0] } & T>;
+	return {
+		updateOne: api.reducer((state, action: NotePayloadAction<{ changes: Partial<T> }>) => {
+			const { query, changes } = action.payload;
+			const match = selectByPosition(state, query);
+			if (!match) return state;
+			return adapter.updateOne(state, { id: adapter.selectId(match), changes });
+		}),
+	};
 }

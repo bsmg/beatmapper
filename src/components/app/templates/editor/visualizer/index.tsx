@@ -1,8 +1,8 @@
 import { type MouseEvent, useCallback } from "react";
 
-import { deleteBookmark, jumpToBeat, scrubWaveform } from "$/store/actions";
+import { jumpToBeat, removeBookmark, scrubVisualizer } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectGraphicsQuality, selectIsLoading, selectWaveformData } from "$/store/selectors";
+import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectGraphicsQuality, selectLoading, selectWaveformData } from "$/store/selectors";
 import { Quality, type SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 
@@ -18,7 +18,7 @@ interface Props {
 function EditorAudioVisualizer({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const waveformData = useAppSelector(selectWaveformData);
-	const isLoadingSong = useAppSelector(selectIsLoading);
+	const isLoadingSong = useAppSelector(selectLoading);
 	const duration = useAppSelector(selectDuration);
 	const cursorPosition = useAppSelector(selectCursorPosition);
 	const graphicsLevel = useAppSelector(selectGraphicsQuality);
@@ -40,7 +40,7 @@ function EditorAudioVisualizer({ sid }: Props) {
 
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {
-			dispatch(scrubWaveform({ songId: sid, newOffset: offset }));
+			dispatch(scrubVisualizer({ songId: sid, newOffset: offset }));
 		},
 		[dispatch, sid],
 	);
@@ -50,7 +50,7 @@ function EditorAudioVisualizer({ sid }: Props) {
 			event.preventDefault();
 			switch (event.button) {
 				case 2: {
-					return dispatch(deleteBookmark({ beatNum: time }));
+					return dispatch(removeBookmark({ beatNum: time }));
 				}
 				default: {
 					return dispatch(jumpToBeat({ songId: sid, beatNum: time }));

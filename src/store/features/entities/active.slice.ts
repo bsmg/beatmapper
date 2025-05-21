@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-import { createNewSong, leaveEditor, startLoadingSong } from "$/store/actions";
+import { leaveEditor, startLoadingMap } from "$/store/actions";
 import type { BeatmapId, SongId } from "$/types";
 
 const initialState = {
@@ -17,13 +17,9 @@ const slice = createSlice({
 	},
 	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(createNewSong.fulfilled, (_, action) => {
-			const { songId, selectedDifficulty } = action.payload;
-			return { song: songId, beatmap: selectedDifficulty };
-		});
-		builder.addCase(startLoadingSong, (_, action) => {
-			const { songId, beatmapId: difficulty } = action.payload;
-			return { song: songId, beatmap: difficulty };
+		builder.addCase(startLoadingMap, (_, action) => {
+			const { songId, beatmapId } = action.payload;
+			return { song: songId, beatmap: beatmapId };
 		});
 		builder.addCase(leaveEditor, () => {
 			return { song: null, beatmap: null };

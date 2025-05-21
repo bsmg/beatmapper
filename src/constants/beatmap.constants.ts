@@ -1,5 +1,6 @@
-import { App } from "$/types/beatmap";
 import { CharacteristicName, DifficultyName } from "bsmap/types";
+
+import { ColorSchemeKey } from "$/types";
 
 export const CHARACTERISTICS = [CharacteristicName[0], CharacteristicName[1], CharacteristicName[2], CharacteristicName[3]];
 export const DIFFICULTIES = [DifficultyName[0], DifficultyName[1], DifficultyName[2], DifficultyName[3], DifficultyName[4]] as const;
@@ -26,11 +27,11 @@ export const DEFAULT_NOTE_JUMP_SPEEDS = {
 } as const;
 
 export const DEFAULT_COLOR_SCHEME = {
-	[App.ColorSchemeKey.SABER_LEFT]: "#c03030",
-	[App.ColorSchemeKey.SABER_RIGHT]: "#2064a8",
-	[App.ColorSchemeKey.OBSTACLE]: "#ff3030",
-	[App.ColorSchemeKey.ENV_LEFT]: "#c03030",
-	[App.ColorSchemeKey.ENV_RIGHT]: "#3098ff",
-	[App.ColorSchemeKey.BOOST_LEFT]: "#c03030",
-	[App.ColorSchemeKey.BOOST_RIGHT]: "#3098ff",
+	[ColorSchemeKey.SABER_LEFT]: "#c03030",
+	[ColorSchemeKey.SABER_RIGHT]: "#2064a8",
+	[ColorSchemeKey.OBSTACLE]: "#ff3030",
+	[ColorSchemeKey.ENV_LEFT]: "#c03030",
+	[ColorSchemeKey.ENV_RIGHT]: "#3098ff",
+	[ColorSchemeKey.BOOST_LEFT]: "#c03030",
+	[ColorSchemeKey.BOOST_RIGHT]: "#3098ff",
 } as const;

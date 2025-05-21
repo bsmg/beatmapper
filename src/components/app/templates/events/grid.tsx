@@ -1,23 +1,12 @@
-import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { EventType } from "bsmap";
+import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
 import { useGlobalEventListener, useMousePositionOverElement, useParentDimensions } from "$/components/hooks";
 import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
-import { bulkRemoveBasicEvent, clearSelectionBox, commitSelection, drawSelectionBox, moveMouseAcrossEventsGrid, removeOneBasicEvent, switchEventColor, updateOneBasicEvent } from "$/store/actions";
+import { bulkRemoveEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import {
-	selectDurationInBeats,
-	selectEditorOffsetInBeats,
-	selectEventEditorEditMode,
-	selectEventEditorRowHeight,
-	selectEventEditorSelectedBeat,
-	selectEventEditorSelectionBox,
-	selectEventEditorStartAndEndBeat,
-	selectEventEditorToggleMirror,
-	selectEventTracksForEnvironment,
-	selectIsLoading,
-	selectSnapTo,
-} from "$/store/selectors";
-import { type App, type BeatmapId, EventEditMode, type SongId, TrackType } from "$/types";
+import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectLoading, selectSnap } from "$/store/selectors";
+import { type Accept, type App, type BeatmapId, EventEditMode, type ISelectionBoxInBeats, type SongId, TrackType } from "$/types";
 import { clamp, normalize, range, roundToNearest } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
@@ -49,19 +38,19 @@ interface Props extends ComponentProps<typeof Wrapper> {
 function EventGridEditor({ sid, bid, ...rest }: Props) {
 	const dispatch = useAppDispatch();
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
+	const allTracks = useMemo(() => Object.entries(tracks), [tracks]);
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
-	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
+	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);
 	const selectedBeat = useAppSelector((state) => {
-		const selectedBeat = selectEventEditorSelectedBeat(state);
+		const selectedBeat = selectEventsEditorCursor(state);
 		const offsetInBeats = -selectEditorOffsetInBeats(state, sid);
 		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
-	const isLoading = useAppSelector(selectIsLoading);
-	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
-	const snapTo = useAppSelector(selectSnapTo);
-	const selectionBox = useAppSelector(selectEventEditorSelectionBox);
-	const rowHeight = useAppSelector(selectEventEditorRowHeight);
+	const isLoading = useAppSelector(selectLoading);
+	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
+	const snapTo = useAppSelector(selectSnap);
+	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 
 	const beatNums = useMemo(() => range(Math.floor(startBeat), Math.ceil(endBeat)), [startBeat, endBeat]);
 
@@ -69,21 +58,20 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 	const [mouseDownAt, setMouseDownAt] = useState<{ x: number; y: number } | null>(null);
 	const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
 
-	const mouseButtonDepressed = useRef<"left" | "middle" | "right" | null>(null);
+	const mouseButtonDepressed = useRef<number | null>(null);
 	const mousePositionRef = useRef<{ x: number; y: number } | null>(null);
 
-	useEffect(() => {
-		setMouseDownAt(null);
-		mousePositionRef.current = null;
-		dispatch(clearSelectionBox());
-	}, [dispatch]);
+	const [selectionBox, setSelectionBox] = useState<DOMRect | null>(null);
+	const [selectionBoxInBeats, setSelectionBoxInBeats] = useState<ISelectionBoxInBeats | null>(null);
 
 	const handleCompleteSelection = useCallback(() => {
 		mouseButtonDepressed.current = null;
 		setMouseDownAt(null);
-
-		dispatch(commitSelection());
-	}, [dispatch]);
+		if (!selectionBoxInBeats) return;
+		dispatch(drawEventSelectionBox({ songId: sid, tracks, selectionBoxInBeats: selectionBoxInBeats }));
+		setSelectionBox(null);
+		setSelectionBoxInBeats(null);
+	}, [dispatch, sid, selectionBoxInBeats, tracks]);
 
 	useGlobalEventListener("pointerup", handleCompleteSelection, {
 		shouldFire: selectedEditMode === EventEditMode.SELECT,
@@ -104,33 +92,28 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 
 			const hoveringOverBeatNum = convertMousePositionToBeatNum(x + offset.x, dimensions.width, beatNums, startBeat, snapTo);
 
-			if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === "left") {
+			if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === 0) {
 				const newSelectionBox = {
 					top: Math.min(mouseDownAt.y, currentMousePosition.y) + offset.y,
 					left: Math.min(mouseDownAt.x, currentMousePosition.x) + offset.x,
 					right: Math.max(mouseDownAt.x, currentMousePosition.x) + offset.x,
 					bottom: Math.max(mouseDownAt.y, currentMousePosition.y) + offset.y,
-				};
+				} as DOMRect;
+
+				setSelectionBox(newSelectionBox);
 
 				// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
-				const startTrackIndex = Math.floor(newSelectionBox.top / rowHeight);
-				const endTrackIndex = Math.floor(newSelectionBox.bottom / rowHeight);
-
-				const start = convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat);
-
-				const end = convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat);
-
-				const newSelectionBoxInBeats = {
-					startTrackIndex,
-					endTrackIndex,
-					startBeat: start,
-					endBeat: end,
-				};
-
-				dispatch(drawSelectionBox({ songId: sid, tracks, selectionBox: newSelectionBox, selectionBoxInBeats: newSelectionBoxInBeats, join: event.ctrlKey || event.metaKey }));
+				setSelectionBoxInBeats({
+					startTrackIndex: Math.floor(newSelectionBox.top / rowHeight),
+					endTrackIndex: Math.floor(newSelectionBox.bottom / rowHeight),
+					startBeat: convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat),
+					endBeat: convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat),
+					// we should also track whether we want the selection box to preserve the existing selection
+					withPrevious: event.ctrlKey || event.metaKey,
+				});
 			}
 
-			if (hoveringOverBeatNum !== selectedBeat) dispatch(moveMouseAcrossEventsGrid({ selectedBeat: hoveringOverBeatNum }));
+			if (hoveringOverBeatNum !== selectedBeat) dispatch(updateEventsEditorCursor({ selectedBeat: hoveringOverBeatNum }));
 		},
 		{
 			boxDependencies: [rowHeight],
@@ -142,15 +125,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 	}, [selectedBeat, startBeat, beatNums, dimensions.width]);
 
 	const handlePointerDown = useCallback<PointerEventHandler>((ev) => {
-		if (ev.button === 0) {
-			mouseButtonDepressed.current = "left";
-		} else if (ev.button === 2) {
-			mouseButtonDepressed.current = "right";
-		} else {
-			// TODO: Middle button support?
-			mouseButtonDepressed.current = "left";
-		}
-
+		mouseButtonDepressed.current = ev.button;
 		setMouseDownAt(mousePositionRef.current);
 	}, []);
 
@@ -159,7 +134,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 		setMouseDownAt(null);
 	}, []);
 
-	const handlePointerOver = useCallback((_: PointerEvent, trackId: number) => {
+	const handlePointerOver = useCallback((_: PointerEvent, trackId: Accept<EventType, number>) => {
 		setHoveredTrack(trackId);
 	}, []);
 	const handlePointerOut = useCallback((_: PointerEvent) => {
@@ -167,7 +142,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 	}, []);
 
 	const isTrackDisabled = useCallback(
-		(trackId: App.TrackId) => {
+		(trackId: Accept<EventType, number>) => {
 			if (!areLasersLocked) return false;
 			return isSideTrack(trackId, "right", tracks);
 		},
@@ -183,10 +158,10 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 			}
 			switch (event.button) {
 				case 1: {
-					return dispatch(switchEventColor({ beatNum: data.time, trackId: data.type, tracks, areLasersLocked }));
+					return dispatch(mirrorBasicEvent({ query: data, tracks, areLasersLocked }));
 				}
 				case 2: {
-					return dispatch(removeOneBasicEvent({ query: data, tracks, areLasersLocked }));
+					return dispatch(removeEvent({ query: data, tracks, areLasersLocked }));
 				}
 			}
 		},
@@ -195,8 +170,8 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 
 	const handleEventPointerOver = useCallback(
 		(_: PointerEvent, data: App.IBasicEvent) => {
-			if (selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed.current === "right") {
-				dispatch(bulkRemoveBasicEvent({ query: data, tracks, areLasersLocked }));
+			if (selectedEditMode === EventEditMode.PLACE && mouseButtonDepressed.current === 2) {
+				dispatch(bulkRemoveEvent({ query: data, tracks, areLasersLocked }));
 			}
 		},
 		[dispatch, tracks, areLasersLocked, selectedEditMode],
@@ -210,12 +185,12 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 					case TrackType.LIGHT: {
 						const step = data.floatValue + 0.125 / delta;
 						const newFloatValue = clamp(step, 0, Number.POSITIVE_INFINITY);
-						return dispatch(updateOneBasicEvent({ query: data, tracks, areLasersLocked, changes: { floatValue: newFloatValue } }));
+						return dispatch(updateBasicEvent({ query: data, tracks, areLasersLocked, changes: { floatValue: newFloatValue } }));
 					}
 					case TrackType.VALUE: {
 						const step = data.value + 1 / delta;
 						const newValue = clamp(step, 0, Number.POSITIVE_INFINITY);
-						return dispatch(updateOneBasicEvent({ query: data, tracks, areLasersLocked, changes: { value: newValue } }));
+						return dispatch(updateBasicEvent({ query: data, tracks, areLasersLocked, changes: { value: newValue } }));
 					}
 					default: {
 						return;
@@ -246,8 +221,8 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 			</HeaderWrapper>
 			<MainWrapper>
 				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
-					{tracks.map(({ id, label }) => (
-						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(id)} onContextMenu={(ev) => ev.preventDefault()}>
+					{allTracks.map(([id, { label }]) => (
+						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(Number.parseInt(id))} onContextMenu={(ev) => ev.preventDefault()}>
 							{label}
 						</Prefix>
 					))}
@@ -257,19 +232,18 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 						<EventGridMarkers width={dimensions.width} height={dimensions.height} primaryDivisions={4} />
 					</TrackMarkersWrapper>
 					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
-						{tracks.map(({ id }) => {
-							const isDisabled = isTrackDisabled(id);
+						{allTracks.map(([id]) => {
+							const isDisabled = isTrackDisabled(Number.parseInt(id));
 							return (
 								<EventGridTrack
 									key={id}
 									sid={sid}
 									bid={bid}
-									trackId={id}
-									tracks={tracks}
+									trackId={Number.parseInt(id)}
 									width={dimensions.width}
 									height={rowHeight}
 									disabled={isDisabled}
-									onPointerOver={(ev) => handlePointerOver(ev, id)}
+									onPointerOver={(ev) => handlePointerOver(ev, Number.parseInt(id))}
 									onPointerOut={handlePointerOut}
 									onEventPointerDown={handleEventPointerDown}
 									onEventPointerOver={handleEventPointerOver}

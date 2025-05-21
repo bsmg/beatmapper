@@ -77,7 +77,7 @@ function DocsTableOfContents({ toc }: Props) {
 				Introduction
 			</HeadingLink>
 			{toc.map((entry) => (
-				<HeadingLink key={entry.url.replace("#", "")} href={entry.url}>
+				<HeadingLink key={entry.url.replace("#", "#introduction")} href={entry.url}>
 					{entry.title}
 				</HeadingLink>
 			))}

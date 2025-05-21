@@ -1,19 +1,19 @@
 import { type PointerEvent, memo, useCallback, useMemo } from "react";
 
+import { useGlobalEventListener } from "$/components/hooks";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectEventEditorStartAndEndBeat } from "$/store/selectors";
-import { App, type BeatmapId, type IEventTrack, type SongId } from "$/types";
+import { selectColorScheme, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment } from "$/store/selectors";
+import { App, type BeatmapId, type IEventTracks, type SongId } from "$/types";
 import { isColorDark, normalize } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
-import { useGlobalEventListener } from "$/components/hooks";
 import { Button } from "$/components/ui/compositions";
 
 const BLOCK_WIDTH = 8;
 
-function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { tracks?: IEventTrack[] }) {
+function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { tracks?: IEventTracks }) {
 	const eventColor = resolveEventColor(event);
 	const eventEffect = resolveEventEffect(event, options.tracks);
 
@@ -22,16 +22,16 @@ function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<t
 	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
 
 	switch (eventEffect) {
-		case App.BasicEventType.ON: {
+		case App.BasicEventEffect.ON: {
 			return color;
 		}
-		case App.BasicEventType.FLASH: {
+		case App.BasicEventEffect.FLASH: {
 			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
-		case App.BasicEventType.FADE: {
+		case App.BasicEventEffect.FADE: {
 			return `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})`;
 		}
-		case App.BasicEventType.TRANSITION: {
+		case App.BasicEventEffect.TRANSITION: {
 			return `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})`;
 		}
 		default: {
@@ -44,7 +44,6 @@ interface Props {
 	sid: SongId;
 	bid: BeatmapId;
 	event: App.IBasicEvent;
-	tracks?: IEventTrack[];
 	trackWidth: number;
 	onEventPointerDown?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventPointerUp?: (event: PointerEvent, data: App.IBasicEvent) => void;
@@ -52,8 +51,9 @@ interface Props {
 	onEventPointerOut?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridEventItem({ sid, bid, event: data, tracks, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Props) {
+function EventGridEventItem({ sid, bid, event: data, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Props) {
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const styles = useMemo(() => {

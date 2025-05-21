@@ -1,7 +1,7 @@
 import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
 import type { ComponentProps } from "react";
 
-import { importExistingSong } from "$/store/actions";
+import { addSongFromFile } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
 
@@ -29,7 +29,7 @@ export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<t
 	const handleFileAccept = async (details: FileUploadFileAcceptDetails) => {
 		for (const file of details.files) {
 			try {
-				await dispatch(importExistingSong({ file, options: { currentSongIds: songIds } }));
+				await dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } }));
 			} catch (err) {
 				console.error("Could not import map:", err);
 				if (onFileAccept) onFileAccept({ files: [] });

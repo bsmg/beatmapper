@@ -3,7 +3,7 @@ import { Fragment, useMemo } from "react";
 
 import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
-import { selectEventBackgroundOpacity, selectEventEditorTogglePreview } from "$/store/selectors";
+import { selectEventsEditorPreview, selectEventsEditorTrackOpacity } from "$/store/selectors";
 
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
@@ -18,8 +18,8 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 
 function RouteComponent() {
 	const { sid, bid } = Route.useParams();
-	const showLightingPreview = useAppSelector(selectEventEditorTogglePreview);
-	const backgroundOpacity = useAppSelector(selectEventBackgroundOpacity);
+	const showLightingPreview = useAppSelector(selectEventsEditorPreview);
+	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
 
 	const bgStyle = useMemo(() => ({ background: `color-mix(in srgb, ${token.var("colors.bg.canvas")}, transparent ${(1 - backgroundOpacity) * 100}%)` }), [backgroundOpacity]);
 

@@ -21,7 +21,7 @@ interface Props {
 function Glow({ sid, x, y, z, size, light, isBlooming }: Props) {
 	const { camera } = useThree();
 
-	const [spring] = useLightSpring({ sid, light });
+	const [spring] = useLightSpring({ light });
 
 	// When blooming, the `c` uniform makes it white and obnoxious, so tune the effect down in this case.
 	const maxCValue = useMemo(() => (isBlooming ? 0.2 : 0.001), [isBlooming]);

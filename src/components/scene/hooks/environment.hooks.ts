@@ -6,17 +6,17 @@ import { useOnChange } from "$/components/hooks";
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
+import { selectColorScheme, selectGraphicsQuality, selectPlaying } from "$/store/selectors";
 import { App, type BeatmapId, Quality, type SongId } from "$/types";
 
 function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
-	if (!lastEvent) return App.BasicEventType.OFF;
-	return resolveEventEffect(lastEvent) as App.LightEventType;
+	if (!lastEvent) return App.BasicEventEffect.OFF;
+	return resolveEventEffect(lastEvent) as App.LightEventEffect;
 }
 function deriveColorForEvent(lastEvent: App.IBasicEvent | null, options: ColorResolverOptions): ColorRepresentation {
 	const status = deriveEffectForEvent(lastEvent);
 	if (!lastEvent) return "#000000";
-	if (status === App.BasicEventType.OFF) return "#000000";
+	if (status === App.BasicEventEffect.OFF) return "#000000";
 	const eventColor = resolveEventColor(lastEvent);
 	return resolveColorForItem(eventColor, options);
 }
@@ -71,7 +71,7 @@ export interface UseRingRotationOptions {
 export function useRingRotation({ lastEventId, incrementBy = Math.PI * 0.5, ratio = 0 }: UseRingRotationOptions): [rotationRatio: number] {
 	const [rotationRatio, setRotationRatio] = useState(ratio);
 
-	const isPlaying = useAppSelector(selectIsPlaying);
+	const isPlaying = useAppSelector(selectPlaying);
 
 	useOnChange(() => {
 		if (!isPlaying || !lastEventId) return;
@@ -92,7 +92,7 @@ export interface UseRingZoomOptions {
 export function useRingZoom({ lastEventId, minDistance = 3, maxDistance = 12 }: UseRingZoomOptions): [distance: number] {
 	const [distanceBetweenRings, setDistanceBetweenRings] = useState(minDistance);
 
-	const isPlaying = useAppSelector(selectIsPlaying);
+	const isPlaying = useAppSelector(selectPlaying);
 
 	useOnChange(() => {
 		if (!isPlaying) {

@@ -1,9 +1,8 @@
 import type { MouseEventHandler } from "react";
 
 import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
-import { jumpToBeat, selectAllInRange } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectIsModuleEnabled } from "$/store/selectors";
+import { selectModuleEnabled } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
@@ -17,20 +16,20 @@ interface Props {
 }
 function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
 	const dispatch = useAppDispatch();
-	const mappingExtensionsEnabled = useAppSelector((state) => selectIsModuleEnabled(state, sid, "mappingExtensions"));
+	const mappingExtensionsEnabled = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
 	return (
 		<ActionPanelGroup.Root label="Actions">
 			<HistoryActionPanelActionGroup sid={sid} />
 			<ClipboardActionPanelActionGroup sid={sid} />
 			<ActionPanelGroup.ActionGroup>
-				<Tooltip render={() => "Select everything over a time period (Q)"}>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(promptQuickSelect(selectAllInRange, { songId: sid, view: View.BEATMAP }))}>
+				<Tooltip render={() => "Select everything over a time period"}>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(promptQuickSelect({ songId: sid, view: View.BEATMAP }))}>
 						Quick-select
 					</Button>
 				</Tooltip>
-				<Tooltip render={() => "Jump to a specific beat number (J)"}>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(promptJumpToBeat(jumpToBeat, { songId: sid, pauseTrack: true }))}>
+				<Tooltip render={() => "Jump to a specific beat number"}>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(promptJumpToBeat({ songId: sid, pauseTrack: true }))}>
 						Jump to Beat
 					</Button>
 				</Tooltip>

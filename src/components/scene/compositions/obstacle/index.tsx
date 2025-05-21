@@ -50,7 +50,7 @@ function Obstacle({ data: obstacle, dimensions, color, onObstaclePointerDown, on
 	);
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
-			ev.preventDefault();
+			ev.stopPropagation();
 			if (onObstacleWheel) onObstacleWheel(ev, obstacle);
 		},
 		[obstacle, onObstacleWheel],

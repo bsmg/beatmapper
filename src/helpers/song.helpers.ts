@@ -1,8 +1,8 @@
 import { CharacteristicName, DifficultyName } from "bsmap/types";
 
 import { DEFAULT_GRID, DIFFICULTIES } from "$/constants";
-import type { App, BeatmapId, Member } from "$/types";
-import { slugify } from "$/utils";
+import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, Member } from "$/types";
+import { deepMerge, slugify } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 import { patchEnvironmentName } from "./packaging.helpers";
 
@@ -49,7 +49,7 @@ export function getAllBeatmaps<T extends Pick<App.ISong, "difficultiesById">>(so
 	return Object.values(song.difficultiesById).sort(sortBeatmaps);
 }
 export function getBeatmapIds<T extends Pick<App.ISong, "difficultiesById">>(song: T) {
-	return getAllBeatmaps(song).map((beatmap) => beatmap.beatmapId);
+	return Object.keys(song.difficultiesById);
 }
 export function getBeatmapById<T extends Pick<App.ISong, "difficultiesById">>(song: T, beatmapId: BeatmapId) {
 	return song.difficultiesById[beatmapId];
@@ -72,7 +72,7 @@ export function getSongLastOpenedAt<T extends Pick<App.ISong, "lastOpenedAt">>(s
 function getDefaultModSettings(): App.IModSettings {
 	return {
 		customColors: { isEnabled: false },
-		mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
+		mappingExtensions: { isEnabled: false },
 	};
 }
 
@@ -87,15 +87,15 @@ export function getCustomColorsModule<T extends Pick<App.ISong, "modSettings" | 
 	const modSettings = getModSettings(song);
 	return modSettings.customColors;
 }
-export function getColorScheme<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): App.IColorScheme {
+export function getColorScheme<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, beatmapId?: BeatmapId): IColorScheme {
 	const customOverrideScheme = getCustomColorsModule(song);
 	const beatmap = beatmapId ? getBeatmapById(song, beatmapId) : undefined;
 	const vanillaOverrideScheme = beatmap?.colorSchemeName ? song.colorSchemesById[beatmap.colorSchemeName] : undefined;
 	const environment = getEnvironment(song, beatmapId);
 	const envScheme = deriveColorSchemeFromEnvironment(patchEnvironmentName(environment));
 
-	function resolveColor<T extends string | undefined>(key: App.ColorSchemeKey): T {
-		if (customOverrideScheme.isEnabled && customOverrideScheme[key]) return customOverrideScheme[key] as T;
+	function resolveColor<T extends string | undefined>(key: ColorSchemeKey): T {
+		if (customOverrideScheme?.isEnabled && customOverrideScheme[key]) return customOverrideScheme[key] as T;
 		if (vanillaOverrideScheme) return vanillaOverrideScheme[key] as T;
 		return envScheme[key] as T;
 	}
@@ -115,19 +115,18 @@ export function getExtensionsModule<T extends Pick<App.ISong, "modSettings" | "d
 	const modSettings = getModSettings(song);
 	return modSettings.mappingExtensions;
 }
-export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T) {
+export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T): IGrid {
 	const mappingExtensions = getExtensionsModule(song);
 	// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
 	const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
 	const isDisabled = mappingExtensions?.isEnabled === false;
 	if (isLegacy || isDisabled) return DEFAULT_GRID;
-	return {
-		...DEFAULT_GRID,
+	return deepMerge(DEFAULT_GRID as IGrid, {
 		numRows: mappingExtensions.numRows,
 		numCols: mappingExtensions.numCols,
 		colWidth: mappingExtensions.colWidth,
 		rowHeight: mappingExtensions.rowHeight,
-	};
+	});
 }
 
 export function sortBeatmaps(a: App.IBeatmap, b: App.IBeatmap) {

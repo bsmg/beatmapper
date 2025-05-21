@@ -20,7 +20,7 @@ function AppGraphicsSettings() {
 	return (
 		<Fragment>
 			<Field cosmetic label="Graphics quality">
-				<RadioGroup name="graphics-level" collection={QUALITY_LIST_COLLECTION} value={graphicsLevel} onValueChange={(details) => dispatch(updateGraphicsLevel({ newGraphicsLevel: details.value as Quality }))} />
+				<RadioGroup name="graphics-level" collection={QUALITY_LIST_COLLECTION} value={graphicsLevel} onValueChange={(details) => dispatch(updateGraphicsLevel({ value: details.value as Quality }))} />
 			</Field>
 		</Fragment>
 	);

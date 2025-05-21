@@ -2,19 +2,39 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Fragment } from "react";
 
 import { store } from "$/setup";
-import { leaveEditor, startLoadingSong } from "$/store/actions";
+import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 
 import { styled } from "$:styled-system/jsx";
+import { prompts } from "velite:content";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
+import { EDITOR_PROMPT_COMPONENTS, EDITOR_TOASTER } from "$/components/app/templates/editor/prompts";
+import { MDXContent } from "$/components/ui/atoms";
+import { selectAnnouncements } from "$/store/selectors";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	component: RouteComponent,
-	// HACK: We're duplicating the state between the URL (/edit/:songId) and Redux (state.active.song).
-	// This is because having the URL as the sole source of truth was a HUGE pain in the butt.
-	// This way is overall much nicer, but it has this one big issue: syncing the state initially.
-	// Our locally-persisted state might be out of date. We need to fix that before we do anything else.
-	onEnter: async ({ params }) => {
-		await Promise.resolve(store.dispatch(startLoadingSong({ songId: params.sid, beatmapId: params.bid })));
+	loader: () => {
+		const state = store.getState();
+		const seenPrompts = selectAnnouncements(state);
+		const unseenPrompts = prompts.filter((prompt) => !seenPrompts.includes(prompt.id));
+		const prompt = unseenPrompts[0];
+		return { prompt };
+	},
+	onEnter: async ({ params, loaderData }) => {
+		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
+		if (loaderData) {
+			const { prompt } = loaderData;
+
+			EDITOR_TOASTER.create({
+				id: prompt.id,
+				type: "loading",
+				title: prompt.title,
+				description: <MDXContent code={prompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
+				onStatusChange: (details) => {
+					if (details.status === "dismissing") store.dispatch(dismissPrompt({ id: prompt.id }));
+				},
+			});
+		}
 	},
 	onLeave: async ({ params }) => {
 		await Promise.resolve(store.dispatch(leaveEditor({ songId: params.sid, beatmapId: params.bid })));

@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
-import { selectEventEditMode, selectTool, toggleEventWindowLock, toggleLaserLock, toggleSelectAll, zoomIn, zoomOut } from "$/store/actions";
+import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
-import { EventEditMode, EventTool, type SongId, View } from "$/types";
+import { EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 interface Props {
@@ -18,66 +18,57 @@ function EventsEditorShortcuts({ sid }: Props) {
 			switch (ev.code) {
 				case "NumpadSubtract":
 				case "Minus": {
-					return zoomOut();
+					return dispatch(decrementEventsEditorZoom());
 				}
+				case "NumpadAdd":
+				// Shift+Equal is "Plus"
 				case "Equal": {
-					if (ev.shiftKey) {
-						// Shift+Equal is "Plus"
-						return dispatch(zoomIn());
-					}
-
-					break;
+					return dispatch(incrementEventsEditorZoom());
 				}
-				case "NumpadAdd": {
-					return dispatch(zoomIn());
-				}
-
 				case "KeyA": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAll({ songId: sid, view: View.LIGHTSHOW }));
+						return dispatch(toggleSelectAllEntities({ songId: sid, view: View.LIGHTSHOW }));
 					}
-
-					return dispatch(selectEventEditMode({ editMode: EventEditMode.PLACE }));
+					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.PLACE }));
 				}
-
 				case "KeyS": {
-					return dispatch(selectEventEditMode({ editMode: EventEditMode.SELECT }));
+					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.SELECT }));
 				}
-
 				case "KeyZ": {
-					if (metaKeyPressed) {
-						return;
-					}
-
+					if (metaKeyPressed) return;
 					ev.stopPropagation();
-					return dispatch(toggleEventWindowLock());
+					return dispatch(updateEventsEditorWindowLock());
 				}
-
 				case "KeyX": {
-					if (metaKeyPressed) {
-						return;
-					}
-
+					if (metaKeyPressed) return;
 					ev.stopPropagation();
-					return dispatch(toggleLaserLock());
+					return dispatch(updateEventsEditorMirrorLock());
 				}
-
 				case "Digit1": {
-					return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
+					return dispatch(updateEventsEditorTool({ tool: EventTool.ON }));
 				}
 				case "Digit2": {
-					return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.OFF }));
+					return dispatch(updateEventsEditorTool({ tool: EventTool.OFF }));
 				}
 				case "Digit3": {
-					return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FLASH }));
+					return dispatch(updateEventsEditorTool({ tool: EventTool.FLASH }));
 				}
 				case "Digit4": {
-					return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FADE }));
+					return dispatch(updateEventsEditorTool({ tool: EventTool.FADE }));
 				}
-
-				default:
+				case "KeyR": {
+					if (ev.shiftKey) return;
+					return dispatch(updateEventsEditorColor({ color: EventColor.PRIMARY }));
+				}
+				case "KeyB": {
+					if (isMetaKeyPressed(ev)) return;
+					if (ev.shiftKey) return;
+					return dispatch(updateEventsEditorColor({ color: EventColor.SECONDARY }));
+				}
+				default: {
 					return;
+				}
 			}
 		},
 		[dispatch, sid],

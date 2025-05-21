@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectEventEditorSelectedBeat } from "$/store/selectors";
+import { selectEventsEditorCursor } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { styled } from "$:styled-system/jsx";
@@ -14,7 +14,7 @@ interface Props {
 }
 function EventGridTimeline({ sid, beatNums }: Props) {
 	const dispatch = useAppDispatch();
-	const selectedBeat = useAppSelector(selectEventEditorSelectedBeat);
+	const selectedBeat = useAppSelector(selectEventsEditorCursor);
 
 	const [isScrubbing, setIsScrubbing] = useState(false);
 	const lastActionDispatchedFor = useRef<number | null>(null);

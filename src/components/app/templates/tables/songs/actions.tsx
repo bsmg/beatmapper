@@ -5,7 +5,7 @@ import { useCallback, useMemo } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { isSongReadonly } from "$/helpers/song.helpers";
-import { deleteSong, downloadMapFiles } from "$/store/actions";
+import { downloadMapFiles, removeSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSongById } from "$/store/selectors";
 import type { App, SongId } from "$/types";
@@ -39,7 +39,7 @@ function SongsDataTableActions({ sid }: Props) {
 			switch (details.value) {
 				case "delete": {
 					if (!window.confirm("Are you sure? This action cannot be undone 😱")) return;
-					return dispatch(deleteSong({ songId: sid, beatmapIds: beatmapIds }));
+					return dispatch(removeSong({ id: sid, beatmapIds: beatmapIds }));
 				}
 				case "download": {
 					return dispatch(downloadMapFiles({ songId: sid }));

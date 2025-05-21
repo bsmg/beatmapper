@@ -1,12 +1,13 @@
 import { Presence } from "@ark-ui/react/presence";
 import { useMemo } from "react";
+import { boolean, object, picklist } from "valibot";
 
 import { VERSION_COLLECTION } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
-import { downloadMapFiles, pausePlaying } from "$/store/actions";
+import { downloadMapFiles, pausePlayback } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectIsDemoSong, selectIsPlaying } from "$/store/selectors";
+import { selectDemo, selectPlaying } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { Stack, VStack, styled } from "$:styled-system/jsx";
@@ -19,22 +20,42 @@ interface Props {
 }
 function Download({ sid }: Props) {
 	const dispatch = useAppDispatch();
-	const isDemo = useAppSelector((state) => selectIsDemoSong(state, sid));
-	const isPlaying = useAppSelector(selectIsPlaying);
+	const isDemo = useAppSelector((state) => selectDemo(state, sid));
+	const isPlaying = useAppSelector(selectPlaying);
 
 	// When this component mounts, if the song is playing, pause it.
 	useMount(() => {
 		if (isPlaying) {
-			dispatch(pausePlaying({ songId: sid }));
+			dispatch(pausePlayback({ songId: sid }));
 		}
 	});
 
 	const Form = useAppForm({
 		defaultValues: {
 			version: "",
+			minify: false,
+			purgeZeros: false,
+		},
+		validators: {
+			onChange: object({
+				version: picklist(["1", "2", "3", "4"]),
+				minify: boolean(),
+				purgeZeros: boolean(),
+			}),
 		},
 		onSubmit: ({ value }) => {
-			dispatch(downloadMapFiles({ songId: sid, version: Number.parseInt(value.version) as ImplicitVersion }));
+			dispatch(
+				downloadMapFiles({
+					songId: sid,
+					version: Number.parseInt(value.version) as ImplicitVersion,
+					options: {
+						format: value.minify ? 0 : 2,
+						optimize: {
+							purgeZeros: value.purgeZeros,
+						},
+					},
+				}),
+			);
 		},
 	});
 
@@ -63,7 +84,13 @@ function Download({ sid }: Props) {
 						</Presence>
 					</Content>
 					<Heading rank={2}>Options</Heading>
-					<Form.AppField name="version">{(ctx) => <ctx.RadioGroup label="Serial Version" required collection={VERSION_COLLECTION} />}</Form.AppField>
+					<Form.Row>
+						<Form.AppField name="version">{(ctx) => <ctx.RadioGroup label="Serial Version" required collection={VERSION_COLLECTION} />}</Form.AppField>
+					</Form.Row>
+					<Form.Row>
+						<Form.AppField name="minify">{(ctx) => <ctx.Switch label="Minify JSON Data" />}</Form.AppField>
+						<Form.AppField name="purgeZeros">{(ctx) => <ctx.Switch label="Prune Default Values" />}</Form.AppField>
+					</Form.Row>
 				</Form.Root>
 			</Stack>
 		</Form.AppForm>

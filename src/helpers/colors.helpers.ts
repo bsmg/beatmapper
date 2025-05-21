@@ -4,11 +4,11 @@ import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import { token } from "$:styled-system/tokens";
 import { DEFAULT_COLOR_SCHEME } from "$/constants";
-import { App, EventColor, ObjectTool } from "$/types";
+import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "$/types";
 import { patchEnvironmentName } from "./packaging.helpers";
 
 export interface ColorResolverOptions {
-	customColors: App.IColorScheme;
+	customColors: IColorScheme;
 }
 export function resolveColorForItem<T extends string | number>(item: T | undefined, { customColors: colorScheme }: ColorResolverOptions) {
 	switch (item) {
@@ -26,31 +26,31 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 		}
 		case App.EventColor.PRIMARY:
 		case EventColor.PRIMARY:
-		case App.ColorSchemeKey.ENV_LEFT: {
+		case ColorSchemeKey.ENV_LEFT: {
 			return colorScheme.envColorLeft ?? DEFAULT_COLOR_SCHEME.envColorLeft;
 		}
 		case App.EventColor.SECONDARY:
 		case EventColor.SECONDARY:
-		case App.ColorSchemeKey.ENV_RIGHT: {
+		case ColorSchemeKey.ENV_RIGHT: {
 			return colorScheme.envColorRight ?? DEFAULT_COLOR_SCHEME.envColorRight;
 		}
-		case App.ColorSchemeKey.BOOST_LEFT: {
+		case ColorSchemeKey.BOOST_LEFT: {
 			return colorScheme.envColorLeftBoost ?? DEFAULT_COLOR_SCHEME.envColorLeftBoost;
 		}
-		case App.ColorSchemeKey.BOOST_RIGHT: {
+		case ColorSchemeKey.BOOST_RIGHT: {
 			return colorScheme.envColorRightBoost ?? DEFAULT_COLOR_SCHEME.envColorRightBoost;
 		}
 		case App.EventColor.WHITE:
 		case EventColor.WHITE: {
 			return "white";
 		}
-		case App.BasicEventType.TRIGGER: {
+		case App.BasicEventEffect.TRIGGER: {
 			return token.var("colors.green.500");
 		}
-		case App.BasicEventType.VALUE: {
+		case App.BasicEventEffect.VALUE: {
 			return token.var("colors.blue.500");
 		}
-		case App.BasicEventType.OFF: {
+		case App.BasicEventEffect.OFF: {
 			return token.var("colors.slate.400");
 		}
 		default: {
@@ -67,12 +67,12 @@ export function serializeColorElement(hex: string) {
 export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
 	const envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
 	return {
-		[App.ColorSchemeKey.SABER_LEFT]: colorToHex(envScheme._colorLeft).slice(0, 7),
-		[App.ColorSchemeKey.SABER_RIGHT]: colorToHex(envScheme._colorRight).slice(0, 7),
-		[App.ColorSchemeKey.OBSTACLE]: colorToHex(envScheme._obstacleColor).slice(0, 7),
-		[App.ColorSchemeKey.ENV_LEFT]: colorToHex(envScheme._envColorLeft).slice(0, 7),
-		[App.ColorSchemeKey.ENV_RIGHT]: colorToHex(envScheme._envColorRight).slice(0, 7),
-		[App.ColorSchemeKey.BOOST_LEFT]: colorToHex(envScheme._envColorLeftBoost ?? envScheme._envColorLeft).slice(0, 7),
-		[App.ColorSchemeKey.BOOST_RIGHT]: colorToHex(envScheme._envColorRightBoost ?? envScheme._envColorRight).slice(0, 7),
+		[ColorSchemeKey.SABER_LEFT]: colorToHex(envScheme._colorLeft).slice(0, 7),
+		[ColorSchemeKey.SABER_RIGHT]: colorToHex(envScheme._colorRight).slice(0, 7),
+		[ColorSchemeKey.OBSTACLE]: colorToHex(envScheme._obstacleColor).slice(0, 7),
+		[ColorSchemeKey.ENV_LEFT]: colorToHex(envScheme._envColorLeft).slice(0, 7),
+		[ColorSchemeKey.ENV_RIGHT]: colorToHex(envScheme._envColorRight).slice(0, 7),
+		[ColorSchemeKey.BOOST_LEFT]: colorToHex(envScheme._envColorLeftBoost ?? envScheme._envColorLeft).slice(0, 7),
+		[ColorSchemeKey.BOOST_RIGHT]: colorToHex(envScheme._envColorRightBoost ?? envScheme._envColorRight).slice(0, 7),
 	};
 }

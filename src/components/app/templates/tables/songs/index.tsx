@@ -5,9 +5,9 @@ import { useMemo } from "react";
 
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { getBeatmapIds, getSongMetadata, isSongReadonly, resolveSongId } from "$/helpers/song.helpers";
-import { changeSelectedDifficulty } from "$/store/actions";
+import { updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllSongs, selectIsProcessingImport, selectSelectedBeatmap } from "$/store/selectors";
+import { selectAllSongs, selectProcessingImport, selectSelectedBeatmap } from "$/store/selectors";
 import type { App } from "$/types";
 
 import { HStack, Stack, styled } from "$:styled-system/jsx";
@@ -54,7 +54,7 @@ const SONG_TABLE = [
 			const [sid, collection] = ctx.getValue();
 			const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
 			const initialValue = useMemo(() => [selectedBeatmap.toString()], [selectedBeatmap]);
-			return <Select collection={collection} value={initialValue} onValueChange={(details) => dispatch(changeSelectedDifficulty({ songId: sid, beatmapId: details.value[0] }))} />;
+			return <Select collection={collection} value={initialValue} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId: sid, beatmapId: details.value[0] }))} />;
 		},
 	}),
 	helper.accessor((data) => [resolveSongId(data)] as const, {
@@ -80,7 +80,7 @@ const SONG_TABLE = [
 
 function SongsDataTable() {
 	const songs = useAppSelector(selectAllSongs);
-	const isProcessingImport = useAppSelector(selectIsProcessingImport);
+	const isProcessingImport = useAppSelector(selectProcessingImport);
 
 	const table = useReactTable({
 		columns: SONG_TABLE,
@@ -116,7 +116,6 @@ const LoadingBlocker = styled("div", {
 	base: center.raw({
 		position: "absolute",
 		inset: 0,
-		zIndex: 2,
 		backgroundColor: "color-mix(in srgb, {colors.bg.canvas}, transparent)",
 	}),
 });

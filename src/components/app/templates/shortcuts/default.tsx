@@ -5,45 +5,42 @@ import { APP_TOASTER } from "$/components/app/constants";
 import { useViewFromLocation } from "$/components/app/hooks";
 import { useGlobalEventListener } from "$/components/hooks";
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
+import { promptAddBookmark, promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import {
-	changeSnapping,
 	copySelection,
-	createBookmark,
 	cutSelection,
-	decrementSnapping,
-	deleteSelectedEvents,
-	deleteSelectedNotes,
-	deselectAll,
+	cycleToNextTool,
+	cycleToPrevTool,
+	decrementSnap,
+	deselectAllEntities,
 	downloadMapFiles,
-	incrementSnapping,
-	jumpToBeat,
+	incrementSnap,
+	jumpToEnd,
+	jumpToStart,
 	nudgeSelection,
 	pasteSelection,
 	redoEvents,
-	redoNotes,
+	redoObjects,
 	rehydrate,
+	removeAllSelectedEvents,
+	removeAllSelectedObjects,
 	scrollThroughSong,
 	seekBackwards,
 	seekForwards,
-	selectAllInRange,
-	selectColor,
-	selectNextTool,
-	selectPreviousTool,
-	skipToEnd,
-	skipToStart,
 	togglePlaying,
 	undoEvents,
-	undoNotes,
+	undoObjects,
+	updateSnap,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectIsDemoSong } from "$/store/selectors";
+import { selectDemo } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 interface Props {
 	sid: SongId;
 }
+
 /**
  * These are shortcuts that are shared among 3 views:
  * - Notes
@@ -53,7 +50,7 @@ interface Props {
 function DefaultEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();
-	const isDemo = useAppSelector((state) => selectIsDemoSong(state, sid));
+	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 
 	const keysDepressed = useRef({
 		space: false,
@@ -63,18 +60,18 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	const handleScroll = useThrottledCallback(
 		(direction: "forwards" | "backwards", ev: KeyboardEvent | WheelEvent) => {
 			if (!view) return;
+
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 
 			// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
 			if (metaKeyPressed) {
-				return dispatch(direction === "forwards" ? decrementSnapping() : incrementSnapping());
+				return dispatch(direction === "forwards" ? decrementSnap() : incrementSnap());
 			}
 			if (ev.altKey) {
 				return dispatch(nudgeSelection({ view, direction }));
 			}
-			if (ev.shiftKey) {
-				return;
-			}
+			if (ev.shiftKey) return;
+
 			dispatch(scrollThroughSong({ songId: sid, direction }));
 		},
 		{ wait: 50 },
@@ -87,46 +84,33 @@ function DefaultEditorShortcuts({ sid }: Props) {
 			// If the control key and a number is pressed, we want to update snapping.
 			if (metaKeyPressed && !Number.isNaN(Number(ev.key))) {
 				ev.preventDefault();
-
 				const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === Number(ev.key));
-
 				// ctrl+0 doesn't do anything atm
-				if (!newSnappingIncrement) {
-					return;
-				}
-
-				dispatch(changeSnapping({ newSnapTo: newSnappingIncrement.value }));
+				if (!newSnappingIncrement) return;
+				dispatch(updateSnap({ value: newSnappingIncrement.value }));
 			}
 
 			switch (ev.code) {
 				case "F5": {
-					if (!ev.shiftKey) {
+					if (ev.shiftKey) {
 						ev.preventDefault();
-						return;
+						return dispatch(rehydrate());
 					}
-					return dispatch(rehydrate());
+					return;
 				}
-
 				case "Space": {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
-					if (keysDepressed.current.space) {
-						return;
-					}
-
+					if (keysDepressed.current.space) return;
 					keysDepressed.current.space = true;
-
 					return dispatch(togglePlaying({ songId: sid }));
 				}
-
 				case "Escape": {
-					return dispatch(deselectAll({ view }));
+					return dispatch(deselectAllEntities({ view }));
 				}
-
 				case "Tab": {
 					ev.preventDefault();
-					return dispatch(ev.shiftKey ? selectPreviousTool({ view }) : selectNextTool({ view }));
+					return dispatch(ev.shiftKey ? cycleToPrevTool({ view }) : cycleToNextTool({ view }));
 				}
-
 				case "ArrowUp":
 				case "ArrowRight": {
 					return handleScroll("forwards", ev);
@@ -135,96 +119,62 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				case "ArrowLeft": {
 					return handleScroll("backwards", ev);
 				}
-
 				case "PageUp": {
 					return dispatch(seekForwards({ songId: sid, view }));
 				}
 				case "PageDown": {
 					return dispatch(seekBackwards({ songId: sid, view }));
 				}
-
 				case "Home": {
-					return dispatch(skipToStart({ songId: sid }));
+					return dispatch(jumpToStart({ songId: sid }));
 				}
 				case "End": {
-					return dispatch(skipToEnd({ songId: sid }));
+					return dispatch(jumpToEnd({ songId: sid }));
 				}
-
 				case "Delete": {
 					if (view === View.LIGHTSHOW) {
-						return dispatch(deleteSelectedEvents());
+						return dispatch(removeAllSelectedEvents());
 					}
 					if (view === View.BEATMAP) {
-						return dispatch(deleteSelectedNotes());
+						return dispatch(removeAllSelectedObjects());
 					}
-
 					return;
 				}
-
 				case "KeyX": {
-					if (!metaKeyPressed) {
-						return;
-					}
-
+					if (!metaKeyPressed) return;
 					return dispatch(cutSelection({ view }));
 				}
 				case "KeyC": {
-					if (!metaKeyPressed) {
-						return;
-					}
+					if (!metaKeyPressed) return;
 					return dispatch(copySelection({ view }));
 				}
 				case "KeyV": {
-					if (!metaKeyPressed) {
-						return;
-					}
+					if (!metaKeyPressed) return;
 					return dispatch(pasteSelection({ songId: sid, view }));
 				}
-
 				case "KeyJ": {
-					return dispatch(promptJumpToBeat(jumpToBeat, { songId: sid, pauseTrack: true }));
-				}
-
-				case "KeyR": {
-					if (ev.shiftKey) {
-						return;
-					}
-					return dispatch(selectColor({ view, color: "red" }));
+					return dispatch(promptJumpToBeat({ songId: sid, pauseTrack: true }));
 				}
 				case "KeyB": {
 					if (metaKeyPressed) {
+						ev.preventDefault();
 						// If they're holding cmd, create a bookmark
-						const name = window.prompt("Enter a name for this bookmark");
-
-						if (!name) {
-							return;
-						}
-
-						return dispatch(createBookmark({ songId: sid, name, view }));
+						return dispatch(promptAddBookmark({ songId: sid, view }));
 					}
-					// Otherwise, toggle the note color to Blue.
-					return dispatch(selectColor({ view, color: "blue" }));
+					return;
 				}
-
 				case "KeyZ": {
-					if (!metaKeyPressed) {
-						return;
-					}
-
+					if (!metaKeyPressed) return;
 					if (view === View.BEATMAP) {
-						return dispatch(ev.shiftKey ? redoNotes({ songId: sid }) : undoNotes({ songId: sid }));
+						return dispatch(ev.shiftKey ? redoObjects({ songId: sid }) : undoObjects({ songId: sid }));
 					}
 					if (view === View.LIGHTSHOW) {
 						return dispatch(ev.shiftKey ? redoEvents({ songId: sid }) : undoEvents({ songId: sid }));
 					}
 					return;
 				}
-
 				case "KeyS": {
-					if (!metaKeyPressed) {
-						return;
-					}
-
+					if (!metaKeyPressed) return;
 					ev.preventDefault();
 					if (import.meta.env.PROD && isDemo) {
 						return APP_TOASTER.create({
@@ -236,13 +186,12 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					if (sid) return dispatch(downloadMapFiles({ songId: sid }));
 					return;
 				}
-
 				case "KeyQ": {
-					return dispatch(promptQuickSelect(selectAllInRange, { songId: sid, view }));
+					return dispatch(promptQuickSelect({ songId: sid, view }));
 				}
-
-				default:
+				default: {
 					return;
+				}
 			}
 		},
 		[dispatch, sid, view, handleScroll, isDemo],

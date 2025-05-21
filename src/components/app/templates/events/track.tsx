@@ -1,3 +1,4 @@
+import { type EventType, createBasicEvent } from "bsmap";
 import { type ComponentProps, type PointerEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
@@ -8,28 +9,27 @@ import {
 	selectAllBasicEventsForTrackInWindow,
 	selectDurationInBeats,
 	selectEditorOffsetInBeats,
-	selectEventEditorColor,
-	selectEventEditorEditMode,
-	selectEventEditorSelectedBeat,
 	selectEventEditorStartAndEndBeat,
-	selectEventEditorToggleMirror,
-	selectEventEditorTool,
+	selectEventTracksForEnvironment,
+	selectEventsEditorColor,
+	selectEventsEditorCursor,
+	selectEventsEditorEditMode,
+	selectEventsEditorMirrorLock,
+	selectEventsEditorTool,
 	selectInitialStateForTrack,
 } from "$/store/selectors";
-import { App, type BeatmapId, EventEditMode, type IEventTrack, type SongId, TrackType } from "$/types";
+import { type Accept, App, type BeatmapId, EventEditMode, type SongId, TrackType } from "$/types";
 import { clamp, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
 import { styled } from "$:styled-system/jsx";
-import { createBasicEvent } from "bsmap";
 import EventGridBackgroundBox from "./background-box";
 import EventGridEventItem from "./event";
 
 interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;
 	bid: BeatmapId;
-	trackId: App.TrackId;
-	tracks?: IEventTrack[];
+	trackId: Accept<EventType, number>;
 	width: number;
 	height: number;
 	disabled: boolean;
@@ -38,18 +38,19 @@ interface Props extends ComponentProps<typeof Wrapper> {
 	onEventPointerOver?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Props) {
+function EventGridTrack({ sid, bid, trackId, width, height, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Props) {
 	const dispatch = useAppDispatch();
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
-	const cursorAtBeat = useAppSelector(selectEventEditorSelectedBeat);
+	const cursorAtBeat = useAppSelector(selectEventsEditorCursor);
 	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const offsetInBeats = useAppSelector((state) => -selectEditorOffsetInBeats(state, sid));
+	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
-	const selectedEditMode = useAppSelector(selectEventEditorEditMode);
-	const selectedTool = useAppSelector(selectEventEditorTool);
-	const selectedColorType = useAppSelector(selectEventEditorColor);
+	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);
+	const selectedTool = useAppSelector(selectEventsEditorTool);
+	const selectedColorType = useAppSelector(selectEventsEditorColor);
 	const initialTrackLightingState = useAppSelector((state) => selectInitialStateForTrack(state, trackId));
-	const areLasersLocked = useAppSelector(selectEventEditorToggleMirror);
+	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
 	const [mouseButtonDepressed, setMouseButtonDepressed] = useState<"left" | "right" | null>(null);
 	const [norm, setNorm] = useState<number | null>(null);
@@ -81,7 +82,7 @@ function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled, on
 					return { data: createBasicEvent({ time, type: trackId, value: value, floatValue: floatValue }), tracks, areLasersLocked };
 				}
 				case TrackType.TRIGGER: {
-					const value = resolveEventValue({ effect: App.BasicEventType.TRIGGER }, { tracks });
+					const value = resolveEventValue({ effect: App.BasicEventEffect.TRIGGER }, { tracks });
 					return { data: createBasicEvent({ time, type: trackId, value: value }), tracks, areLasersLocked };
 				}
 				case TrackType.VALUE: {
@@ -132,7 +133,7 @@ function EventGridTrack({ sid, bid, trackId, tracks, width, height, disabled, on
 				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} sid={sid} bid={bid} box={box} />
 			))}
 			{events.map((event) => {
-				return <EventGridEventItem key={resolveEventId(event)} sid={sid} bid={bid} event={event} tracks={tracks} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />;
+				return <EventGridEventItem key={resolveEventId(event)} sid={sid} bid={bid} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />;
 			})}
 		</Wrapper>
 	);

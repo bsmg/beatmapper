@@ -8,38 +8,38 @@ import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
 import { autosaveWorker, filestore } from "$/setup";
-import { type App, EventColor, EventEditMode, EventTool, type GridPresets, type Member, ObjectTool, Quality } from "$/types";
+import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, Quality } from "$/types";
 import { omit } from "$/utils";
-import { init, loadGridPresets, loadSession, loadSongs, loadUser, moveMouseAcrossEventsGrid, tick } from "./actions";
+import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
 import { default as root } from "./features";
 import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
 import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
 import {
 	selectAllGridPresetIds,
+	selectAnnouncements,
 	selectAudioProcessingDelay,
 	selectBeatDepth,
 	selectDefaultObstacleDuration,
-	selectEventBackgroundOpacity,
-	selectEventEditorColor,
-	selectEventEditorEditMode,
-	selectEventEditorRowHeight,
-	selectEventEditorToggleLoop,
-	selectEventEditorToggleMirror,
-	selectEventEditorTogglePreview,
-	selectEventEditorTool,
-	selectEventEditorZoomLevel,
+	selectEventsEditorColor,
+	selectEventsEditorEditMode,
+	selectEventsEditorMirrorLock,
+	selectEventsEditorPreview,
+	selectEventsEditorTool,
+	selectEventsEditorTrackHeight,
+	selectEventsEditorTrackOpacity,
+	selectEventsEditorWindowLock,
+	selectEventsEditorZoomLevel,
 	selectGraphicsQuality,
 	selectGridPresetById,
-	selectIsNew,
-	selectNoteEditorDirection,
-	selectNoteEditorTool,
-	selectPlayNoteTick,
+	selectNew,
+	selectNoteTick,
+	selectNotesEditorDirection,
+	selectNotesEditorTool,
 	selectPlaybackRate,
-	selectSeenPrompts,
-	selectSnapTo,
+	selectSnap,
 	selectSongById,
 	selectSongIds,
-	selectUserName,
+	selectUsername,
 	selectVolume,
 } from "./selectors";
 
@@ -70,7 +70,7 @@ export type SessionStorageObservers = {
 	"events.mirror": StorageObserver<RootState, boolean>;
 };
 
-const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof GridPresets; value: Member<GridPresets> } }>({
+const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 3,
 	async upgrade(idb, current, next, tx) {
@@ -87,10 +87,10 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 			const value = (await idb.get("keyvaluepairs", import.meta.env.DEV ? "redux-state-dev" : "redux-state", tx)) as string;
 			if (value) {
 				const snapshot = typeof value === "string" ? JSON.parse(value) : value;
-				const username = selectUserName(snapshot);
-				localStorage.setItem("beatmapper:user.new", String(selectIsNew(snapshot)));
+				const username = selectUsername(snapshot);
+				localStorage.setItem("beatmapper:user.new", String(selectNew(snapshot)));
 				if (username) localStorage.setItem("beatmapper:user.username", username);
-				localStorage.setItem("beatmapper:user.announcements", selectSeenPrompts(snapshot).toString());
+				localStorage.setItem("beatmapper:user.announcements", selectAnnouncements(snapshot).toString());
 				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
 				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(selectGraphicsQuality(snapshot)).toString());
 				for (const [id, song] of Object.entries<any>(snapshot.songs.byId)) {
@@ -108,7 +108,6 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 									const bid = id.toString() ?? beatmap.id.toString();
 									acc[bid] = {
 										...omit(beatmap, "id"),
-										beatmapId: bid,
 										lightshowId: "Common",
 										characteristic: "Standard",
 										difficulty: resolveDifficultyFromBeatmapId(bid),
@@ -147,9 +146,9 @@ export async function createAppStore() {
 		namespace: "user",
 		storage: createStorage({ driver: ls({ base: storagePrefix }) }),
 		observers: {
-			"user.new": { selector: selectIsNew },
-			"user.username": { selector: (state) => selectUserName(state) ?? "" },
-			"user.announcements": { selector: selectSeenPrompts },
+			"user.new": { selector: selectNew },
+			"user.username": { selector: (state) => selectUsername(state) ?? "" },
+			"user.announcements": { selector: selectAnnouncements },
 			"audio.offset": { selector: selectAudioProcessingDelay },
 			"graphics.quality": { selector: (state) => Object.values(Quality).indexOf(selectGraphicsQuality(state)) },
 		},
@@ -158,23 +157,23 @@ export async function createAppStore() {
 		namespace: "session",
 		storage: createStorage({ driver: ss({ base: storagePrefix }) }),
 		observers: {
-			"track.snap": { selector: selectSnapTo },
+			"track.snap": { selector: selectSnap },
 			"track.spacing": { selector: selectBeatDepth },
 			"playback.rate": { selector: selectPlaybackRate },
 			"playback.volume": { selector: selectVolume },
-			"playback.tick": { selector: selectPlayNoteTick },
-			"notes.tool": { selector: (state) => Object.values(ObjectTool).indexOf(selectNoteEditorTool(state)) },
-			"notes.direction": { selector: selectNoteEditorDirection },
+			"playback.tick": { selector: selectNoteTick },
+			"notes.tool": { selector: (state) => Object.values(ObjectTool).indexOf(selectNotesEditorTool(state)) },
+			"notes.direction": { selector: selectNotesEditorDirection },
 			"notes.duration": { selector: selectDefaultObstacleDuration },
-			"events.mode": { selector: (state) => Object.values(EventEditMode).indexOf(selectEventEditorEditMode(state)) },
-			"events.tool": { selector: (state) => Object.values(EventTool).indexOf(selectEventEditorTool(state)) },
-			"events.color": { selector: (state) => Object.values(EventColor).indexOf(selectEventEditorColor(state)) },
-			"events.zoom": { selector: selectEventEditorZoomLevel },
-			"events.opacity": { selector: selectEventBackgroundOpacity },
-			"events.height": { selector: selectEventEditorRowHeight },
-			"events.preview": { selector: selectEventEditorTogglePreview },
-			"events.loop": { selector: selectEventEditorToggleLoop },
-			"events.mirror": { selector: selectEventEditorToggleMirror },
+			"events.mode": { selector: (state) => Object.values(EventEditMode).indexOf(selectEventsEditorEditMode(state)) },
+			"events.tool": { selector: (state) => Object.values(EventTool).indexOf(selectEventsEditorTool(state)) },
+			"events.color": { selector: (state) => Object.values(EventColor).indexOf(selectEventsEditorColor(state)) },
+			"events.zoom": { selector: selectEventsEditorZoomLevel },
+			"events.opacity": { selector: selectEventsEditorTrackOpacity },
+			"events.height": { selector: selectEventsEditorTrackHeight },
+			"events.preview": { selector: selectEventsEditorPreview },
+			"events.loop": { selector: selectEventsEditorWindowLock },
+			"events.mirror": { selector: selectEventsEditorMirrorLock },
 		},
 	});
 	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.ISong>({
@@ -186,7 +185,7 @@ export async function createAppStore() {
 			asRaw: true,
 		},
 	});
-	const gridStorageMiddleware = createEntityStorageMiddleware<RootState, Member<GridPresets>>({
+	const gridStorageMiddleware = createEntityStorageMiddleware<RootState, Member<IGridPresets>>({
 		namespace: "grids",
 		storage: createStorage({ driver: driver({ name: "grids" }) }),
 		observer: {
@@ -197,7 +196,7 @@ export async function createAppStore() {
 	});
 
 	const devTools: DevToolsEnhancerOptions = {
-		actionsDenylist: [tick.type, moveMouseAcrossEventsGrid.type],
+		actionsDenylist: [tick.type, updateEventsEditorCursor.type],
 	};
 
 	const store = configureStore({

@@ -5,7 +5,7 @@ import { resolveEventValue } from "$/helpers/events.helpers";
 import { App, type IBackgroundBox } from "$/types";
 import { createBackgroundBoxes } from "./track.helpers";
 
-const LIGHTING_TRACK_ID = App.TrackId[4];
+const LIGHTING_TRACK_ID = 4;
 
 // These tests have comments to quickly explain the situation they're testing:
 //   R [__0_B___]
@@ -17,19 +17,19 @@ const LIGHTING_TRACK_ID = App.TrackId[4];
 describe("BlockTrack helpers", () => {
 	describe(createBackgroundBoxes.name, () => {
 		it("exits early if it is not a lighting track", () => {
-			const trackId = App.TrackId[12];
+			const trackId = 12;
 			const events: App.IBasicEvent[] = [
 				// Technically these events are illegal; this is just testing that it doesn't even look at events when the trackId isn't lighting
 				createBasicEvent({
 					type: trackId,
 					time: 3,
-					value: resolveEventValue({ effect: App.BasicEventType.ON, color: App.EventColor.PRIMARY }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
 					type: trackId,
 					time: 4,
-					value: resolveEventValue({ effect: App.BasicEventType.OFF }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.OFF }, {}),
 				}),
 			];
 			const initialTrackLightingColorType = null;
@@ -37,7 +37,7 @@ describe("BlockTrack helpers", () => {
 			const numOfBeatsToShow = 8;
 
 			const expectedResult: IBackgroundBox[] = [];
-			const actualResult = createBackgroundBoxes(events, trackId, { initialColor: initialTrackLightingColorType, startBeat, numOfBeatsToShow });
+			const actualResult = createBackgroundBoxes(events, trackId, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -50,7 +50,7 @@ describe("BlockTrack helpers", () => {
 			const numOfBeatsToShow = 8;
 
 			const expectedResult: IBackgroundBox[] = [];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, startBeat, numOfBeatsToShow });
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -72,7 +72,7 @@ describe("BlockTrack helpers", () => {
 					endBrightness: 1,
 				},
 			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, startBeat, numOfBeatsToShow });
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: 1, startBeat, numOfBeatsToShow });
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -81,15 +81,15 @@ describe("BlockTrack helpers", () => {
 			//  0  [R___0___]
 			const events: App.IBasicEvent[] = [
 				createBasicEvent({
-					type: App.TrackId[2],
+					type: 2,
 					time: 8,
-					value: resolveEventValue({ effect: App.BasicEventType.ON, color: App.EventColor.PRIMARY }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
-					type: App.TrackId[2],
+					type: 2,
 					time: 12,
-					value: resolveEventValue({ effect: App.BasicEventType.OFF }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.OFF }, {}),
 				}),
 			];
 			const initialTrackLightingColorType = null;
@@ -106,7 +106,7 @@ describe("BlockTrack helpers", () => {
 					endBrightness: 1,
 				},
 			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, startBeat, numOfBeatsToShow });
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -115,9 +115,9 @@ describe("BlockTrack helpers", () => {
 			//  R  [____R___]
 			const events: App.IBasicEvent[] = [
 				createBasicEvent({
-					type: App.TrackId[2],
+					type: 2,
 					time: 12,
-					value: resolveEventValue({ effect: App.BasicEventType.ON, color: App.EventColor.PRIMARY }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 			];
@@ -143,7 +143,7 @@ describe("BlockTrack helpers", () => {
 					endBrightness: 1,
 				},
 			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, startBeat, numOfBeatsToShow });
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: 1, startBeat, numOfBeatsToShow });
 
 			expect(actualResult).toEqual(expectedResult);
 		});
@@ -152,21 +152,21 @@ describe("BlockTrack helpers", () => {
 			//  0  [R___B_0_]
 			const events: App.IBasicEvent[] = [
 				createBasicEvent({
-					type: App.TrackId[2],
+					type: 2,
 					time: 8,
-					value: resolveEventValue({ effect: App.BasicEventType.ON, color: App.EventColor.PRIMARY }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
-					type: App.TrackId[2],
+					type: 2,
 					time: 12,
-					value: resolveEventValue({ effect: App.BasicEventType.ON, color: App.EventColor.SECONDARY }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.SECONDARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
-					type: App.TrackId[2],
+					type: 2,
 					time: 14,
-					value: resolveEventValue({ effect: App.BasicEventType.OFF }, {}),
+					value: resolveEventValue({ effect: App.BasicEventEffect.OFF }, {}),
 				}),
 			];
 			const initialTrackLightingColorType = null;
@@ -191,7 +191,7 @@ describe("BlockTrack helpers", () => {
 					endBrightness: 1,
 				},
 			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, startBeat, numOfBeatsToShow });
+			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
 
 			expect(actualResult).toEqual(expectedResult);
 		});

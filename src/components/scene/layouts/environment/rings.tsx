@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useRingRotation, useRingZoom } from "$/components/scene/hooks";
 import { resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectAnimateRingMotion } from "$/store/selectors";
+import { selectAnimateEnvironment } from "$/store/selectors";
 import type { App } from "$/types";
 
 interface Props extends Omit<GroupProps, "children"> {
@@ -18,7 +18,7 @@ interface Props extends Omit<GroupProps, "children"> {
 	children: (index: number, props: { zPosition: Interpolation<number, number>; zRotation: Interpolation<number, number> }) => ReactNode;
 }
 function Rings({ count, lastRotationEvent, lastZoomEvent, minDistance, maxDistance, children, ...rest }: Props) {
-	const animateRingMotion = useAppSelector(selectAnimateRingMotion);
+	const animateRingMotion = useAppSelector(selectAnimateEnvironment);
 
 	const [ratio] = useRingRotation({ lastEventId: lastRotationEvent ? resolveEventId(lastRotationEvent) : null });
 	const [distance] = useRingZoom({ lastEventId: lastZoomEvent ? resolveEventId(lastZoomEvent) : null, minDistance });

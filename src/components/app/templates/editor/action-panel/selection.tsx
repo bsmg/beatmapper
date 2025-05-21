@@ -1,10 +1,9 @@
 import { ArrowDownToLineIcon, ArrowUpToLineIcon, DotIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
 import { Fragment, type MouseEventHandler, useMemo } from "react";
 
-import { deselectAll, deselectAllOfType, nudgeSelection, swapSelectedNotes } from "$/store/actions";
+import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import { ObjectType, type SongId, View } from "$/types";
-import { getMetaKeyLabel } from "$/utils";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { ClipboardActionPanelActionGroup, HistoryActionPanelActionGroup, ObstaclesActionPanelGroup } from "$/components/app/templates/action-panel-groups";
@@ -44,16 +43,14 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 
 	const numbers = [];
 	if (numOfSelectedBlocks) {
-		numbers.push(<SelectionCount key="blocks" num={numOfSelectedBlocks} label="block" onClick={() => dispatch(deselectAllOfType({ itemType: ObjectType.NOTE }))} />);
+		numbers.push(<SelectionCount key="blocks" num={numOfSelectedBlocks} label="block" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.NOTE }))} />);
 	}
 	if (numOfSelectedMines) {
-		numbers.push(<SelectionCount key="mines" num={numOfSelectedMines} label="mine" onClick={() => dispatch(deselectAllOfType({ itemType: ObjectType.BOMB }))} />);
+		numbers.push(<SelectionCount key="mines" num={numOfSelectedMines} label="mine" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.BOMB }))} />);
 	}
 	if (numOfSelectedObstacles) {
-		numbers.push(<SelectionCount key="obstacles" num={numOfSelectedObstacles} label="wall" onClick={() => dispatch(deselectAllOfType({ itemType: ObjectType.OBSTACLE }))} />);
+		numbers.push(<SelectionCount key="obstacles" num={numOfSelectedObstacles} label="wall" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.OBSTACLE }))} />);
 	}
-
-	const metaKeyLabel = useMemo(() => getMetaKeyLabel(navigator), []);
 
 	return (
 		<Fragment>
@@ -65,38 +62,36 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 			{hasSelectedObstacles && <ObstaclesActionPanelGroup sid={sid} />}
 			<ActionPanelGroup.Root label="Actions">
 				<ActionPanelGroup.ActionGroup>
-					<Tooltip render={() => "Swap horizontally (H)"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(swapSelectedNotes({ axis: "horizontal" }))}>
+					<Tooltip render={() => "Mirror selection horizontally"}>
+						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "horizontal" }))}>
 							<FlipHorizontal2Icon />
 						</Button>
 					</Tooltip>
-					<Tooltip render={() => "Swap vertically (V)"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(swapSelectedNotes({ axis: "vertical" }))}>
+					<Tooltip render={() => "Mirror selection vertically"}>
+						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "vertical" }))}>
 							<FlipVertical2Icon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Tooltip render={() => `Nudge forwards (${metaKeyLabel} + ↑)`}>
+					<Tooltip render={() => "Nudge selection forwards"}>
 						<Button variant="ghost" size="icon" onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))}>
 							<ArrowUpToLineIcon />
 						</Button>
 					</Tooltip>
-					<Tooltip render={() => `Nudge backwards (${metaKeyLabel} + ↓)`}>
+					<Tooltip render={() => "Nudge selection backwards"}>
 						<Button variant="ghost" size="icon" onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))}>
 							<ArrowDownToLineIcon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Tooltip render={() => "Clear selection (Escape)"}>
-						<Button variant="subtle" size="sm" onClick={() => dispatch(deselectAll({ view: View.BEATMAP }))}>
-							Deselect
-						</Button>
-					</Tooltip>
+					<Button variant="subtle" size="sm" onClick={() => dispatch(deselectAllEntities({ view: View.BEATMAP }))}>
+						Clear selection
+					</Button>
 				</ActionPanelGroup.ActionGroup>
-				<HistoryActionPanelActionGroup />
-				<ClipboardActionPanelActionGroup />
+				<HistoryActionPanelActionGroup sid={sid} />
+				<ClipboardActionPanelActionGroup sid={sid} />
 			</ActionPanelGroup.Root>
 		</Fragment>
 	);

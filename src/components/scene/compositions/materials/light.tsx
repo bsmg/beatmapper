@@ -4,7 +4,7 @@ import { type ComponentProps, useMemo } from "react";
 import { useOnChange } from "$/components/hooks";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { selectGraphicsQuality, selectIsPlaying } from "$/store/selectors";
+import { selectGraphicsQuality, selectPlaying } from "$/store/selectors";
 import { App, Quality } from "$/types";
 
 // todo: spring animations are always pre-computed, so there's no means of deterministically calculating the lighting state at a particular time (or when paused)
@@ -24,7 +24,7 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 	const brightEmissiveIntensity = brightness * 1.25 * mult;
 
 	switch (effect) {
-		case App.BasicEventType.OFF: {
+		case App.BasicEventEffect.OFF: {
 			return {
 				to: { opacity: 0, emissiveIntensity: 0 },
 				immediate: true,
@@ -32,8 +32,8 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 				config: lightSpringConfig,
 			};
 		}
-		case App.BasicEventType.TRANSITION: // todo: this will be a problem for future me to figure out
-		case App.BasicEventType.ON: {
+		case App.BasicEventEffect.TRANSITION: // todo: this will be a problem for future me to figure out
+		case App.BasicEventEffect.ON: {
 			return {
 				to: { emissive: color, opacity: opacity, emissiveIntensity: onEmissiveIntensity },
 				immediate: true,
@@ -41,7 +41,7 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 				config: lightSpringConfig,
 			};
 		}
-		case App.BasicEventType.FLASH: {
+		case App.BasicEventEffect.FLASH: {
 			return {
 				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
 				to: { emissive: color, opacity: opacity, emissiveIntensity: onEmissiveIntensity },
@@ -50,7 +50,7 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 				config: lightSpringConfig,
 			};
 		}
-		case App.BasicEventType.FADE: {
+		case App.BasicEventEffect.FADE: {
 			return {
 				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
 				to: { opacity: 0, emissiveIntensity: 0 },
@@ -81,13 +81,13 @@ interface UseLightSpringOptions {
 	light: UseLightPropsReturn;
 }
 export function useLightSpring({ light }: UseLightSpringOptions) {
-	const isPlaying = useAppSelector(selectIsPlaying);
+	const isPlaying = useAppSelector(selectPlaying);
 	const lightSpringConfig = useSpringConfigForLight({ ...light });
 
 	useOnChange(() => {
 		if (!isPlaying) return;
 
-		const statusShouldReset = light.effect === App.BasicEventType.FLASH || light.effect === App.BasicEventType.FADE;
+		const statusShouldReset = light.effect === App.BasicEventEffect.FLASH || light.effect === App.BasicEventEffect.FADE;
 		lightSpringConfig.reset = statusShouldReset;
 	}, light.lastEventId ?? null);
 

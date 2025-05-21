@@ -24,7 +24,7 @@ function SongDetailsModule({ label, render, checked: initialOpen, onCheckedChang
 	);
 
 	return (
-		<Collapsible open={open} render={render}>
+		<Collapsible open={open} lazyMount unmountOnExit render={render}>
 			<Heading rank={3}>
 				<HStack gap={2}>
 					<Switch checked={open} onCheckedChange={handleOpenChange} />

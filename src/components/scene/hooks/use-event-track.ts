@@ -1,8 +1,9 @@
+import type { EventType } from "bsmap";
 import { useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
-import type { App, SongId } from "$/types";
+import type { Accept, App, SongId } from "$/types";
 
 function findLastEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent[], currentBeat: number, processingDelayInBeats: number) {
 	for (let i = events.length - 1; i >= 0; i--) {
@@ -16,7 +17,7 @@ function findLastEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent
 
 export interface UseEventTrackOptions {
 	sid: SongId;
-	trackId: App.TrackId;
+	trackId: Accept<EventType, number>;
 }
 export function useEventTrack({ sid, trackId }: UseEventTrackOptions) {
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));

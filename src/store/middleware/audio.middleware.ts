@@ -5,27 +5,27 @@ import { AudioSample } from "$/services/audio.service";
 import type { BeatmapFilestore } from "$/services/file.service";
 import { Sfx } from "$/services/sfx.service";
 import {
-	adjustCursorPosition,
 	hydrateSession,
 	jumpToBeat,
+	jumpToEnd,
+	jumpToStart,
 	leaveEditor,
-	pausePlaying,
+	pausePlayback,
 	scrollThroughSong,
 	scrubEventsHeader,
-	scrubWaveform,
+	scrubVisualizer,
 	seekBackwards,
 	seekForwards,
-	selectAllInRange,
-	skipToEnd,
-	skipToStart,
-	startLoadingSong,
-	startPlaying,
-	stopPlaying,
+	selectAllEntitiesInRange,
+	startLoadingMap,
+	startPlayback,
+	stopPlayback,
 	tick,
 	togglePlaying,
-	updatePlaybackSpeed,
-	updateSongDetails,
-	updateVolume,
+	updateCursorPosition,
+	updatePlaybackRate,
+	updateSong,
+	updateSongVolume,
 } from "$/store/actions";
 import {
 	selectAllColorNotes,
@@ -36,12 +36,12 @@ import {
 	selectDuration,
 	selectDurationInBeats,
 	selectEditorOffset,
-	selectEventEditorBeatsPerZoomLevel,
-	selectEventEditorToggleLoop,
+	selectEventsEditorBeatsPerZoomLevel,
+	selectEventsEditorWindowLock,
 	selectNearestBeatForTime,
-	selectPlayNoteTick,
+	selectNoteTick,
 	selectPlaybackRate,
-	selectSnapTo,
+	selectSnap,
 	selectTimeForBeat,
 	selectVolume,
 } from "$/store/selectors";
@@ -54,7 +54,7 @@ function stopAndRewindAudio(audioSample: AudioSample, offset: number) {
 }
 
 function triggerTickerIfNecessary(state: RootState, songId: SongId, currentBeat: number, lastBeat: number, ticker: Sfx) {
-	const playNoteTick = selectPlayNoteTick(state);
+	const playNoteTick = selectNoteTick(state);
 	if (playNoteTick) {
 		const delayInBeats = selectAudioProcessingDelayInBeats(state, songId);
 		const anyNotesWithinTimespan = selectAllColorNotes(state).some((note) => note.time - delayInBeats >= lastBeat && note.time - delayInBeats < currentBeat);
@@ -66,11 +66,11 @@ function triggerTickerIfNecessary(state: RootState, songId: SongId, currentBeat:
 
 function calculateIfPlaybackShouldBeCommandeered(state: RootState, songId: SongId, currentBeat: number, lastBeat: number, view: View | null) {
 	if (view !== View.LIGHTSHOW) return;
-	const isLockedToCurrentWindow = selectEventEditorToggleLoop(state);
-	const beatsPerZoomLevel = selectEventEditorBeatsPerZoomLevel(state);
+	const isLockedToCurrentWindow = selectEventsEditorWindowLock(state);
+	const beatsPerZoomLevel = selectEventsEditorBeatsPerZoomLevel(state);
 	// Figure out how much time lasts between frames, on average.
-	const currentTime = selectTimeForBeat(state, songId, currentBeat, false);
-	const lastBeatTime = selectTimeForBeat(state, songId, lastBeat, false);
+	const currentTime = selectTimeForBeat(state, songId, currentBeat, { withOffset: false });
+	const lastBeatTime = selectTimeForBeat(state, songId, lastBeat, { withOffset: false });
 	const deltaInMillisecondsBetweenFrames = currentTime - lastBeatTime;
 	const processingDelayInBeats = selectAudioProcessingDelayInBeats(state, songId);
 	const windowForCurrentBeat = floorToNearest(currentBeat + processingDelayInBeats, beatsPerZoomLevel);
@@ -105,7 +105,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: startLoadingSong,
+		actionCreator: startLoadingMap,
 		effect: async (action, api) => {
 			api.unsubscribe();
 			const { songId } = action.payload;
@@ -128,14 +128,14 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const state = api.getState();
 			const { songId } = action.payload;
 			if (state.navigation.isPlaying) {
-				api.dispatch(pausePlaying({ songId }));
+				api.dispatch(pausePlayback({ songId }));
 			} else {
-				api.dispatch(startPlaying({ songId }));
+				api.dispatch(startPlayback({ songId }));
 			}
 		},
 	});
 	instance.startListening({
-		actionCreator: startPlaying,
+		actionCreator: startPlayback,
 		effect: (action, api) => {
 			api.unsubscribe();
 			audioSample.play();
@@ -149,7 +149,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			function onTick() {
 				const currentTime = audioSample.getCurrentTime() * 1000;
 				if (audioSample.isPlaying && duration && currentTime > duration) {
-					return api.dispatch(pausePlaying({ songId }));
+					return api.dispatch(pausePlayback({ songId }));
 				}
 				const currentBeat = selectBeatForTime(state, songId, currentTime);
 				triggerTickerIfNecessary(state, songId, currentBeat, lastBeat, ticker);
@@ -158,7 +158,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 				// When the time reaches the end of the current window, it's commandeered and reset to the start of that window.
 				const commandeeredCursorPosition = calculateIfPlaybackShouldBeCommandeered(state, songId, currentBeat, lastBeat, view);
 				if (typeof commandeeredCursorPosition === "number") {
-					api.dispatch(adjustCursorPosition({ newCursorPosition: commandeeredCursorPosition }));
+					api.dispatch(updateCursorPosition({ value: commandeeredCursorPosition }));
 					audioSample.setCurrentTime(commandeeredCursorPosition / 1000);
 				} else {
 					api.dispatch(tick({ timeElapsed: currentTime }));
@@ -171,7 +171,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: scrubWaveform,
+		actionCreator: scrubVisualizer,
 		effect: (action, api) => {
 			api.unsubscribe();
 			// When the song is playing, `cursorPosition` is fluid, moving every 16 milliseconds to a new fractional value.
@@ -182,16 +182,16 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			let roundedCursorPosition = selectNearestBeatForTime(state, songId, newOffset);
 			roundedCursorPosition = clamp(roundedCursorPosition, 0, duration ?? roundedCursorPosition);
 			// Dispatch this new cursor position, but also seek to this place in the audio, so that it is in sync.
-			api.dispatch(adjustCursorPosition({ newCursorPosition: roundedCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: roundedCursorPosition }));
 			audioSample.setCurrentTime(roundedCursorPosition / 1000);
 			api.subscribe();
 		},
 	});
 	instance.startListening({
-		actionCreator: updateSongDetails,
+		actionCreator: updateSong,
 		effect: async (action, api) => {
 			api.unsubscribe();
-			const { songId, songData } = action.payload;
+			const { songId, changes: songData } = action.payload;
 			if (!songData.songFilename) return;
 			const file = await filestore.loadSongFile(songId);
 			const arrayBuffer = await convertFileToArrayBuffer(file);
@@ -209,19 +209,19 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const duration = selectDuration(state);
 			let newCursorPosition = selectTimeForBeat(state, songId, selectedBeat);
 			newCursorPosition = clamp(newCursorPosition, 0, duration ?? newCursorPosition);
-			api.dispatch(adjustCursorPosition({ newCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: newCursorPosition }));
 			audioSample.setCurrentTime(newCursorPosition / 1000);
 			api.subscribe();
 		},
 	});
 	instance.startListening({
-		actionCreator: selectAllInRange,
+		actionCreator: selectAllEntitiesInRange,
 		effect: (action, api) => {
 			api.unsubscribe();
 			const state = api.getState();
 			const { songId, start } = action.payload;
 			const newCursorPosition = selectTimeForBeat(state, songId, start);
-			api.dispatch(adjustCursorPosition({ newCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: newCursorPosition }));
 			audioSample.setCurrentTime(newCursorPosition / 1000);
 			audioSample.pause();
 			api.subscribe();
@@ -236,7 +236,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const duration = selectDuration(state);
 			let newCursorPosition = selectTimeForBeat(state, songId, beatNum);
 			newCursorPosition = clamp(newCursorPosition, 0, duration ?? newCursorPosition);
-			api.dispatch(adjustCursorPosition({ newCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: newCursorPosition }));
 			audioSample.setCurrentTime(newCursorPosition / 1000);
 			if (pauseTrack) {
 				audioSample.pause();
@@ -254,7 +254,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const duration = selectDuration(state);
 			if (cursorPositionInBeats === null || duration === null) return;
 			// In events view, we always want to jump ahead to the next window. This is a bit tricky since it's not a fixed # of cells to jump.
-			const beatsPerZoomLevel = selectEventEditorBeatsPerZoomLevel(state);
+			const beatsPerZoomLevel = selectEventsEditorBeatsPerZoomLevel(state);
 			const windowSize = view === View.LIGHTSHOW ? beatsPerZoomLevel : 32;
 			const currentWindowIndex = Math.floor(cursorPositionInBeats / windowSize);
 			let newStartBeat: number;
@@ -272,7 +272,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			}
 			let newCursorPosition = selectTimeForBeat(state, songId, newStartBeat);
 			newCursorPosition = clamp(newCursorPosition, 0, duration);
-			api.dispatch(adjustCursorPosition({ newCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: newCursorPosition }));
 			audioSample.setCurrentTime(newCursorPosition / 1000);
 			api.subscribe();
 		},
@@ -284,17 +284,17 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			// If the song isn't loaded yet, ignore this action. This can happen if the user starts scrolling before the song has loaded.
 			if (!audioSample) return;
 			const state = api.getState();
-			const snapTo = selectSnapTo(state);
+			const snapTo = selectSnap(state);
 			const cursorPosition = selectCursorPosition(state);
 			const duration = selectDuration(state);
 			if (duration === null) return;
 			const { songId, direction } = action.payload;
 			// We want to jump by the amount that we're snapping to.
-			const incrementInMs = selectTimeForBeat(state, songId, snapTo, false);
+			const incrementInMs = selectTimeForBeat(state, songId, snapTo, { withOffset: false });
 			let newCursorPosition = direction === "forwards" ? cursorPosition + incrementInMs : cursorPosition - incrementInMs;
 			newCursorPosition = clamp(newCursorPosition, 0, duration);
 			audioSample.setCurrentTime(newCursorPosition / 1000);
-			api.dispatch(adjustCursorPosition({ newCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: newCursorPosition }));
 			api.subscribe();
 		},
 	});
@@ -309,7 +309,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: pausePlaying,
+		actionCreator: pausePlayback,
 		effect: (action, api) => {
 			api.unsubscribe();
 			// When the song is playing, `cursorPosition` is fluid, moving every 16 milliseconds to a new fractional value.
@@ -323,13 +323,13 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			let roundedCursorPosition = selectNearestBeatForTime(state, songId, cursorPosition);
 			roundedCursorPosition = clamp(roundedCursorPosition, 0, duration ?? roundedCursorPosition);
 			// Dispatch this new cursor position, but also seek to this place in the audio, so that it is in sync.
-			api.dispatch(adjustCursorPosition({ newCursorPosition: roundedCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: roundedCursorPosition }));
 			audioSample.setCurrentTime(roundedCursorPosition / 1000);
 			api.subscribe();
 		},
 	});
 	instance.startListening({
-		actionCreator: stopPlaying,
+		actionCreator: stopPlayback,
 		effect: (action, api) => {
 			api.unsubscribe();
 			const { offset } = action.payload;
@@ -342,7 +342,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: skipToStart.fulfilled,
+		actionCreator: jumpToStart.fulfilled,
 		effect: (action, api) => {
 			api.unsubscribe();
 			const { offset } = action.payload;
@@ -351,7 +351,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: skipToEnd,
+		actionCreator: jumpToEnd,
 		effect: (action, api) => {
 			api.unsubscribe();
 			const state = api.getState();
@@ -361,25 +361,25 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const lastBeatInSong = Math.floor(duration);
 			// Rather than go to the literal last millisecond in the song, we'll jump 1 beat away from the very end. That seems most likely to be useful.
 			const newCursorPosition = selectTimeForBeat(state, songId, lastBeatInSong);
-			api.dispatch(adjustCursorPosition({ newCursorPosition }));
+			api.dispatch(updateCursorPosition({ value: newCursorPosition }));
 			audioSample.setCurrentTime(newCursorPosition / 1000);
 			api.subscribe();
 		},
 	});
 	instance.startListening({
-		actionCreator: updateVolume,
+		actionCreator: updateSongVolume,
 		effect: (action, api) => {
 			api.unsubscribe();
-			const { volume } = action.payload;
+			const { value: volume } = action.payload;
 			audioSample.changeVolume(volume);
 			api.subscribe();
 		},
 	});
 	instance.startListening({
-		actionCreator: updatePlaybackSpeed,
+		actionCreator: updatePlaybackRate,
 		effect: (action, api) => {
 			api.unsubscribe();
-			const { playbackRate } = action.payload;
+			const { value: playbackRate } = action.payload;
 			audioSample.changePlaybackRate(playbackRate);
 			api.subscribe();
 		},

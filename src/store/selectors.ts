@@ -24,9 +24,9 @@ import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
 import user from "./features/user.slice";
-import waveform from "./features/waveform.slice";
+import visualizer from "./features/visualizer.slice";
 
-export const { selectInitialized, selectIsLoading, selectIsProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
+export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
 	return state.global;
 });
 
@@ -50,8 +50,8 @@ export const {
 	selectColorScheme,
 	selectColorSchemeIds,
 	selectSelectedBeatmap,
-	selectIsDemo: selectIsDemoSong,
-	selectIsModuleEnabled,
+	selectDemo,
+	selectModuleEnabled,
 	selectCustomColors,
 	selectGridSize,
 	selectPlacementMode,
@@ -72,22 +72,47 @@ export const selectEditorOffsetInBeats = createSelector(selectBpm, selectEditorO
 	return convertMillisecondsToBeats(offset, bpm);
 });
 
-export const selectBeatForTime = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number, withOffset = true) => ({ time, withOffset })], (bpm, offset, { time, withOffset }) => {
-	return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
-});
-export const selectNearestBeatForTime = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, time: number) => time], (bpm, offset, time: number) => {
-	return snapToNearestBeat(time, bpm, offset);
-});
-export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, (state: Pick<RootState, "songs" | "entities">, songId: SongId | null, beat: number, withOffset = true) => ({ beat, withOffset })], (bpm, offset, { beat, withOffset }) => {
-	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
-});
+export const selectBeatForTime = createSelector(
+	[
+		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectBpm(state, songId),
+		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectEditorOffset(state, songId),
+		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time,
+		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options,
+	],
+	(bpm, offset, time, { withOffset }) => {
+		return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
+	},
+);
+export const selectNearestBeatForTime = createSelector(
+	[
+		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectBpm(state, songId),
+		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectEditorOffset(state, songId),
+		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time,
+		//
+	],
+	(bpm, offset, time: number) => {
+		return snapToNearestBeat(time, bpm, offset);
+	},
+);
+
+export const selectTimeForBeat = createSelector(
+	[
+		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectBpm(state, songId),
+		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectEditorOffset(state, songId),
+		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat,
+		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options,
+	],
+	(bpm, offset, beat, { withOffset }) => {
+		return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
+	},
+);
 
 export const selectEventTracksForEnvironment = createSelector([selectBeatmapById], (beatmap) => {
 	const environment = beatmap.environmentName;
 	return deriveEventTracksForEnvironment(environment);
 });
 
-export const { selectAnimateBlockMotion, selectAnimateRingMotion, selectBeatDepth, selectCursorPosition, selectDuration, selectIsPlaying, selectPlayNoteTick, selectPlaybackRate, selectSnapTo, selectVolume } = navigation.getSelectors((state: RootState) => {
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectVolume, selectPlaybackRate, selectNoteTick } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
 export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
@@ -100,64 +125,63 @@ export const selectDurationInBeats = createSelector(selectDuration, selectBpm, (
 });
 
 export const {
-	selectGraphicsLevel: selectGraphicsQuality,
-	selectIsNewUser: selectIsNew,
+	selectNew,
+	selectAnnouncements,
+	selectUsername,
 	selectProcessingDelay: selectAudioProcessingDelay,
-	selectSeenPrompts,
-	selectStickyMapAuthorName: selectUserName,
+	selectQuality: selectGraphicsQuality,
 } = user.getSelectors((state: Pick<RootState, "user">) => {
 	return state.user;
-});
-export const selectUsableAudioProcessingDelay = createSelector(selectAudioProcessingDelay, selectIsPlaying, (processingDelay, isPlaying) => {
-	// If we're not playing the track, we shouldn't have any processing delay. This is to prevent stuff from firing prematurely when scrubbing.
-	return isPlaying ? processingDelay : 0;
 });
 export const selectAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelay, selectBpm, (processingDelay, bpm) => {
 	return convertMillisecondsToBeats(processingDelay, bpm);
 });
-export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelayInBeats, selectIsPlaying, (processingDelay, isPlaying) => {
+export const selectUsableAudioProcessingDelay = createSelector(selectAudioProcessingDelay, selectPlaying, (processingDelay, isPlaying) => {
+	// If we're not playing the track, we shouldn't have any processing delay. This is to prevent stuff from firing prematurely when scrubbing.
+	return isPlaying ? processingDelay : 0;
+});
+export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelayInBeats, selectPlaying, (processingDelay, isPlaying) => {
 	return isPlaying ? processingDelay : 0;
 });
 export const selectSurfaceDepth = createSelector(selectGraphicsQuality, (quality) => {
 	return SURFACE_DEPTHS[quality];
 });
 
-export const { selectWaveformData } = waveform.getSelectors((state: RootState) => {
+export const { selectWaveformData } = visualizer.getSelectors((state: RootState) => {
 	return state.waveform;
 });
 
 export const {
+	selectTool: selectNotesEditorTool,
+	selectDirection: selectNotesEditorDirection,
+	selectSelectionMode: selectNotesEditorSelectionMode,
 	selectDefaultObstacleDuration,
 	selectGridPresets,
 	selectAllGridPresetIds,
 	selectGridPresetById,
-	selectNoteSelectionMode: selectNoteEditorSelectionMode,
-	selectSelectedCutDirection: selectNoteEditorDirection,
-	selectSelectedNoteTool: selectNoteEditorTool,
 } = beatmap.getSelectors((state: RootState) => {
 	return state.editor.notes;
 });
 
 export const {
-	selectAreLasersLocked: selectEventEditorToggleMirror,
-	selectBackgroundOpacity: selectEventBackgroundOpacity,
-	selectBeatsPerZoomLevel: selectEventEditorBeatsPerZoomLevel,
-	selectIsLockedToCurrentWindow: selectEventEditorToggleLoop,
-	selectRowHeight: selectEventEditorRowHeight,
-	selectSelectedEventBeat: selectEventEditorSelectedBeat,
-	selectSelectedEventColor: selectEventEditorColor,
-	selectSelectedEventEditMode: selectEventEditorEditMode,
-	selectSelectedEventTool: selectEventEditorTool,
-	selectSelectionBox: selectEventEditorSelectionBox,
-	selectShowLightingPreview: selectEventEditorTogglePreview,
-	selectZoomLevel: selectEventEditorZoomLevel,
+	selectTool: selectEventsEditorTool,
+	selectColor: selectEventsEditorColor,
+	selectEditMode: selectEventsEditorEditMode,
+	selectCursor: selectEventsEditorCursor,
+	selectTrackHeight: selectEventsEditorTrackHeight,
+	selectTrackOpacity: selectEventsEditorTrackOpacity,
+	selectPreview: selectEventsEditorPreview,
+	selectWindowLock: selectEventsEditorWindowLock,
+	selectMirrorLock: selectEventsEditorMirrorLock,
+	selectZoomLevel: selectEventsEditorZoomLevel,
+	selectBeatsPerZoomLevel: selectEventsEditorBeatsPerZoomLevel,
 } = lightshow.getSelectors((state: RootState) => {
 	return state.editor.events;
 });
-export const selectEventEditorZoomLevelStartBeat = createSelector(selectCursorPositionInBeats, selectEventEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
+export const selectEventEditorZoomLevelStartBeat = createSelector(selectCursorPositionInBeats, selectEventsEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
 	return floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
 });
-export const selectEventEditorStartAndEndBeat = createSelector(selectCursorPositionInBeats, selectEventEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
+export const selectEventEditorStartAndEndBeat = createSelector(selectCursorPositionInBeats, selectEventsEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
 	const startBeat = floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
 	return { startBeat: startBeat, numOfBeatsToShow: beatsPerZoomLevel, endBeat: startBeat + beatsPerZoomLevel };
 });
@@ -201,9 +225,8 @@ export const selectVisibleNotes = createSelector([selectAllColorNotes, selectCur
 		return note.time > closeLimit && note.time < farLimit;
 	});
 });
-export const selectNoteDensity = createSelector(selectVisibleNotes, selectBeatDepth, selectBpm, selectSurfaceDepth, (notes, beatDepth, bpm, surfaceDepth) => {
-	const segmentLengthInBeats = (surfaceDepth / beatDepth) * 1.2;
-	return calculateNoteDensity(notes.length, segmentLengthInBeats, bpm);
+export const selectNoteDensity = createSelector(selectAllColorNotes, selectDuration, (notes, duration) => {
+	return calculateNps({ difficulty: { colorNotes: notes } }, duration ? duration / 1000 : 0);
 });
 
 export const {
@@ -277,7 +300,7 @@ export const {
 	selectAllSelected: selectAllSelectedBasicEvents,
 	selectAllForTrack: selectAllBasicEventsForTrack,
 	selectForTrackAtBeat: selectBasicEventForTrackAtBeat,
-	selectTrackSpeedAtBeat: selectValueForTrackAtBeat,
+	selectValueForTrackAtBeat,
 } = basic.getSelectors((state: Pick<RootState, "entities">) => {
 	return state.entities.lightshow.present.basic;
 });
@@ -300,7 +323,7 @@ export const selectInitialStateForTrack = createDraftSafeSelector([selectAllBasi
 	const eventsInWindow = events.filter((event) => event.time <= startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
 	const eventEffect = lastEvent ? resolveEventEffect(lastEvent) : null;
-	const isLastEventOn = eventEffect === App.BasicEventType.ON || eventEffect === App.BasicEventType.FLASH || eventEffect === App.BasicEventType.TRANSITION;
+	const isLastEventOn = eventEffect === App.BasicEventEffect.ON || eventEffect === App.BasicEventEffect.FLASH || eventEffect === App.BasicEventEffect.TRANSITION;
 	return {
 		color: isLastEventOn ? resolveEventColor(lastEvent) : null,
 		brightness: isLastEventOn ? (lastEvent?.floatValue ?? 0) : null,

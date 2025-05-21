@@ -3,9 +3,9 @@ import { useCallback } from "react";
 
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
-import { clickPlacementGrid, createNewObstacle, setBlockByDragging } from "$/store/actions";
+import { addObstacle, addToCell } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNoteEditorDirection, selectNoteEditorTool, selectPlacementMode } from "$/store/selectors";
+import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
 import { type BeatmapId, ObjectTool, type SongId } from "$/types";
 
 import { PlacementGrid } from "$/components/scene/layouts";
@@ -20,8 +20,8 @@ function EditorPlacementGrid({ sid, bid, ...rest }: Props) {
 	const mode = useAppSelector((state) => selectPlacementMode(state, sid));
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
-	const selectedTool = useAppSelector(selectNoteEditorTool);
-	const selectedDirection = useAppSelector(selectNoteEditorDirection);
+	const selectedTool = useAppSelector(selectNotesEditorTool);
+	const selectedDirection = useAppSelector(selectNotesEditorDirection);
 	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
 
 	const handlePointerUp = useCallback(
@@ -32,18 +32,18 @@ function EditorPlacementGrid({ sid, bid, ...rest }: Props) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
 					const note = createColorNoteFromMouseEvent(mode, cellDownAt, grid, Math.round(direction ?? selectedDirection));
-					dispatch(setBlockByDragging({ songId: sid, tool: selectedTool, colIndex: note.posX, rowIndex: note.posY, direction: note.direction }));
+					dispatch(addToCell({ songId: sid, tool: selectedTool, posX: note.posX, posY: note.posY, direction: note.direction }));
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
 					const note = createBombNoteFromMouseEvent(mode, cellDownAt, grid);
-					dispatch(clickPlacementGrid({ songId: sid, tool: selectedTool, colIndex: note.posX, rowIndex: note.posY }));
+					dispatch(addToCell({ songId: sid, tool: selectedTool, posX: note.posX, posY: note.posY }));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
 					if (!cellOverAt) break;
 					const obstacle = createObstacleFromMouseEvent(mode, cellDownAt, cellOverAt, grid);
-					dispatch(createNewObstacle({ songId: sid, obstacle: { ...obstacle, duration: defaultObstacleDuration } }));
+					dispatch(addObstacle({ songId: sid, obstacle: { ...obstacle, duration: defaultObstacleDuration } }));
 					break;
 				}
 			}

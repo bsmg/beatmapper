@@ -1,17 +1,18 @@
-import { isLightTrack, resolveEventColor, resolveEventEffect, resolveEventValue } from "$/helpers/events.helpers";
-import { App, type IBackgroundBox, type IEventTrack, type Member } from "$/types";
-import { sortObjectFn } from "bsmap";
+import { type EventType, sortObjectFn } from "bsmap";
 
-const ON_EVENT_TYPES: App.BasicEventType[] = [App.BasicEventType.ON, App.BasicEventType.FLASH, App.BasicEventType.TRANSITION];
+import { isLightTrack, resolveEventColor, resolveEventEffect, resolveEventValue } from "$/helpers/events.helpers";
+import { type Accept, App, type IBackgroundBox, type IEventTracks, type Member } from "$/types";
+
+const ON_EVENT_TYPES: App.BasicEventEffect[] = [App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.TRANSITION];
 
 interface Options {
 	initialColor: App.EventColor | null;
 	initialBrightness: number | null;
 	startBeat: number;
 	numOfBeatsToShow: number;
-	tracks?: IEventTrack[];
+	tracks?: IEventTracks;
 }
-export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: App.TrackId, { initialColor: initialTrackLightingColorType, initialBrightness, startBeat, numOfBeatsToShow, tracks }: Options) {
+export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept<EventType, number>, { initialColor: initialTrackLightingColorType, initialBrightness, startBeat, numOfBeatsToShow, tracks }: Options) {
 	// If this track isn't a lighting track, bail early.
 	if (!isLightTrack(trackId, tracks)) return [];
 
@@ -24,7 +25,7 @@ export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: App.Tr
 		const pseudoInitialEvent = {
 			time: startBeat,
 			type: trackId,
-			value: resolveEventValue({ effect: App.BasicEventType.ON, color: initialTrackLightingColorType }, { tracks }),
+			value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: initialTrackLightingColorType }, { tracks }),
 			floatValue: initialBrightness ?? 1,
 		} as Member<typeof workableEvents>;
 

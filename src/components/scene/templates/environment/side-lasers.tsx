@@ -2,7 +2,7 @@ import { Fragment, useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
-import { App, type BeatmapId, type SongId } from "$/types";
+import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
@@ -57,8 +57,8 @@ interface Props {
 function SideLasers({ sid, bid, side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 
-	const [lastLightEvent] = useEventTrack({ sid, trackId: side === "left" ? App.TrackId[2] : App.TrackId[3] });
-	const [lastSpeedEvent] = useEventTrack({ sid, trackId: side === "left" ? App.TrackId[12] : App.TrackId[13] });
+	const [lastLightEvent] = useEventTrack({ sid, trackId: side === "left" ? 2 : 3 });
+	const [lastSpeedEvent] = useEventTrack({ sid, trackId: side === "left" ? 12 : 13 });
 
 	const light = useLightProps({ sid, bid, lastEvent: lastLightEvent });
 

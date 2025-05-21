@@ -1,4 +1,5 @@
 import type { EntityId } from "@reduxjs/toolkit";
+import { NoteDirection } from "bsmap";
 import { Fragment, useCallback, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
@@ -6,26 +7,27 @@ import { SONG_OFFSET } from "$/components/scene/constants";
 import { HIGHEST_PRECISION } from "$/constants";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
-import { deleteNote, deselectNote, finishManagingNoteSelection, selectNote, startManagingNoteSelection, toggleNoteColor, updateOneColorNote } from "$/store/actions";
+import { deselectNote, finishManagingNoteSelection, mirrorColorNote, removeNote, selectNote, startManagingNoteSelection, updateColorNote } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectCursorPositionInBeats, selectNoteEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
+import { selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
 import { type App, type BeatmapId, ObjectSelectionMode, ObjectTool, type SongId } from "$/types";
+import { resolvePositionForGridObject } from "../../helpers";
 
-import { BombNote, ColorNote, resolvePositionForNote } from "$/components/scene/compositions";
-import { NoteDirection } from "bsmap";
+import { BombNote, ColorNote } from "$/components/scene/compositions";
 
 interface Props {
 	sid: SongId;
 	bid: BeatmapId;
 	beatDepth: number;
 	surfaceDepth: number;
+	interactive?: boolean;
 }
-function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
+function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, beatDepth, surfaceDepth));
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, beatDepth, surfaceDepth));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const selectionMode = useAppSelector(selectNoteEditorSelectionMode);
+	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const dispatch = useAppDispatch();
 
 	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPositionInBeats ?? 0) * beatDepth, [cursorPositionInBeats, beatDepth]);
@@ -40,17 +42,19 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
 	// So instead I need to use a mouseUp handler up here.
 	const handlePointerUp = useCallback(
 		(_: PointerEvent) => {
+			if (!interactive) return;
 			// Wait 1 frame before wrapping up. This is to prevent the selection mode from changing before all event-handlers have been processed.
 			// Without the delay, the user might accidentally add notes to the placement grid - further up in the React tree - if they release the mouse while over a grid tile.
 			window.requestAnimationFrame(() => dispatch(finishManagingNoteSelection()));
 		},
-		[dispatch],
+		[dispatch, interactive],
 	);
 
 	useGlobalEventListener("pointerup", handlePointerUp, { shouldFire: !!selectionMode });
 
 	const handleNotePointerDown = useCallback(
 		(ev: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
+			if (!interactive) return;
 			// We can rapidly select/deselect/delete notes by clicking, holding, and dragging the cursor across the field.
 			let newSelectionMode: ObjectSelectionMode | null = null;
 
@@ -58,18 +62,18 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
 				case 0: {
 					newSelectionMode = data.selected ? ObjectSelectionMode.DESELECT : ObjectSelectionMode.SELECT;
 					const action = !data.selected ? selectNote : deselectNote;
-					dispatch(action(data));
+					dispatch(action({ query: data }));
 					break;
 				}
 				case 1: {
 					// Middle clicks shouldnt affect selections
 					newSelectionMode = null;
-					dispatch(toggleNoteColor(data));
+					dispatch(mirrorColorNote({ query: data }));
 					break;
 				}
 				case 2: {
 					newSelectionMode = ObjectSelectionMode.DELETE;
-					dispatch(deleteNote(data));
+					dispatch(removeNote({ query: data }));
 					break;
 				}
 			}
@@ -78,11 +82,12 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
 				dispatch(startManagingNoteSelection({ selectionMode: newSelectionMode }));
 			}
 		},
-		[dispatch],
+		[dispatch, interactive],
 	);
 
 	const handleNotePointerOver = useCallback(
 		(_: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
+			if (!interactive) return;
 			setHoveredId(resolveNoteId(data));
 			// While selecting/deselecting/deleting notes, pointer-over events are important and should trump others.
 			if (!selectionMode) return;
@@ -93,51 +98,57 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
 					const alreadyDeselected = !data.selected && selectionMode === ObjectSelectionMode.DESELECT;
 					if (alreadySelected || alreadyDeselected) return;
 					const action = !data.selected ? selectNote : deselectNote;
-					return dispatch(action(data));
+					return dispatch(action({ query: data }));
 				}
 				case ObjectSelectionMode.DELETE: {
-					return dispatch(deleteNote(data));
+					return dispatch(removeNote({ query: data }));
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[dispatch, selectionMode],
+		[dispatch, interactive, selectionMode],
 	);
 
-	const handleNotePointerOut = useCallback((_: PointerEvent) => {
-		setHoveredId(null);
-	}, []);
+	const handleNotePointerOut = useCallback(
+		(_: PointerEvent) => {
+			if (!interactive) return;
+			setHoveredId(null);
+		},
+		[interactive],
+	);
 
 	const resolveWheelAction = useCallback(
 		(event: WheelEvent, data: App.IBaseNote & { angleOffset: number }) => {
+			if (!interactive) return;
 			const id = resolveNoteId(data);
 			// if we're not hovering over an object, no need to fire the event.
 			if (!hoveredId || hoveredId !== id) return;
 			const delta = event.deltaY > 0 ? -1 : 1;
 			const step = 15 / delta;
 			if (Object.values<number>(NoteDirection).includes(data.direction)) {
-				return dispatch(updateOneColorNote({ query: data, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
+				return dispatch(updateColorNote({ query: data, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
 			}
 		},
-		[dispatch, hoveredId],
+		[dispatch, interactive, hoveredId],
 	);
 
 	const handleWheel = useCallback(
 		(event: WheelEvent, data: App.IBaseNote & { angleOffset: number }) => {
+			if (!interactive) return;
 			event.preventDefault();
 			if (event.altKey) {
 				resolveWheelAction(event, data);
 			}
 		},
-		[resolveWheelAction],
+		[interactive, resolveWheelAction],
 	);
 
 	return (
 		<Fragment>
 			{notes.map((note) => {
-				const position = resolvePositionForNote(note, { beatDepth });
+				const position = resolvePositionForGridObject(note, { beatDepth });
 				const noteZPosition = zPosition + position[2];
 				const adjustedNoteZPosition = noteZPosition - adjustment;
 				const color = Object.values(ObjectTool)[note.color];
@@ -156,7 +167,7 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth }: Props) {
 				);
 			})}
 			{bombs.map((note) => {
-				const position = resolvePositionForNote(note, { beatDepth });
+				const position = resolvePositionForGridObject(note, { beatDepth });
 				const noteZPosition = zPosition + position[2];
 				const adjustedNoteZPosition = noteZPosition - adjustment;
 				return (

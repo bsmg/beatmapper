@@ -1,5 +1,4 @@
 import { promptChangeObstacleDuration } from "$/helpers/prompts.helpers";
-import { resizeSelectedObstacles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllSelectedObstacles } from "$/store/selectors";
 import type { SongId } from "$/types";
@@ -17,7 +16,7 @@ function ObstaclesActionPanelGroup({ sid }: Props) {
 	return (
 		<ActionPanelGroup.Root label="Obstacles">
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" onClick={() => dispatch(promptChangeObstacleDuration(resizeSelectedObstacles, selectedObstacles, {}))}>
+				<Button variant="subtle" size="sm" onClick={() => dispatch(promptChangeObstacleDuration(selectedObstacles))}>
 					Change duration
 				</Button>
 			</ActionPanelGroup.ActionGroup>

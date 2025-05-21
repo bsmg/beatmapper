@@ -1,7 +1,7 @@
 import type { Vector3Tuple } from "three";
 
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
-import { App, type BeatmapId, type SongId } from "$/types";
+import type { BeatmapId, SongId } from "$/types";
 import { range } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
@@ -19,7 +19,7 @@ interface Props {
 	secondsSinceSongStart?: number;
 }
 function BackLasers({ sid, bid }: Props) {
-	const [lastEvent] = useEventTrack({ sid, trackId: App.TrackId[0] });
+	const [lastEvent] = useEventTrack({ sid, trackId: 0 });
 
 	const light = useLightProps({ sid, bid, lastEvent });
 

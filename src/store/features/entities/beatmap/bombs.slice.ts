@@ -4,27 +4,27 @@ import { createBombNote, sortObjectFn } from "bsmap";
 import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
-	bulkDeleteNote,
-	clearCellOfNotes,
-	clickPlacementGrid,
-	createNewSong,
+	addSong,
+	addToCell,
+	bulkRemoveNote,
 	cutSelection,
-	deleteNote,
-	deleteSelectedNotes,
-	deselectAll,
-	deselectAllOfType,
+	deselectAllEntities,
+	deselectAllEntitiesOfType,
 	deselectNote,
 	leaveEditor,
 	loadBeatmapEntities,
+	mirrorSelection,
 	nudgeSelection,
 	pasteSelection,
-	selectAll as selectAllEntities,
-	selectAllInRange,
+	removeAllSelectedObjects,
+	removeFromCell,
+	removeNote,
+	selectAllEntities,
+	selectAllEntitiesInRange,
 	selectNote,
-	startLoadingSong,
-	swapSelectedNotes,
+	startLoadingMap,
 } from "$/store/actions";
-import { createByPositionSelector, createSelectedEntitiesSelector } from "$/store/helpers";
+import { createActionsForNoteEntityAdapter, createByPositionSelector, createSelectedEntitiesSelector } from "$/store/helpers";
 import { type App, ObjectTool, ObjectType, View } from "$/types";
 
 const adapter = createEntityAdapter<App.IBombNote, EntityId>({
@@ -43,25 +43,29 @@ const slice = createSlice({
 		selectAllSelected: selectAllSelected,
 		selectTotal: selectTotal,
 	},
-	reducers: {},
+	reducers: (api) => {
+		const { updateOne } = createActionsForNoteEntityAdapter(api, adapter);
+		return {
+			updateOne: updateOne,
+		};
+	},
 	extraReducers: (builder) => {
 		builder.addCase(loadBeatmapEntities, (state, action) => {
 			const { bombs } = action.payload;
 			return adapter.setAll(state, bombs ?? []);
 		});
-		builder.addCase(clickPlacementGrid.fulfilled, (state, action) => {
-			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex } = action.payload;
+		builder.addCase(addToCell.fulfilled, (state, action) => {
+			const { tool: selectedTool, time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
 			if (!selectedTool || selectedTool !== ObjectTool.BOMB_NOTE) return state;
 			return adapter.addOne(state, createBombNote({ time: beatNum, posX: colIndex, posY: rowIndex }));
 		});
-		builder.addCase(clearCellOfNotes.fulfilled, (state, action) => {
-			const { tool: selectedTool, cursorPositionInBeats: beatNum, colIndex, rowIndex } = action.payload;
-			if (!selectedTool || selectedTool !== ObjectTool.BOMB_NOTE) return state;
+		builder.addCase(removeFromCell.fulfilled, (state, action) => {
+			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
 			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
 			if (!match) return state;
 			return adapter.removeOne(state, adapter.selectId(match));
 		});
-		builder.addCase(deleteSelectedNotes, (state) => {
+		builder.addCase(removeAllSelectedObjects, (state) => {
 			const entities = selectAllSelected(state);
 			return adapter.removeMany(
 				state,
@@ -98,7 +102,7 @@ const slice = createSlice({
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: true } })),
 			);
 		});
-		builder.addCase(deselectAll, (state, action) => {
+		builder.addCase(deselectAllEntities, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
 			const entities = selectAll(state);
@@ -107,7 +111,7 @@ const slice = createSlice({
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
 		});
-		builder.addCase(selectAllInRange, (state, action) => {
+		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			const { start, end, view } = action.payload;
 			if (view !== View.BEATMAP) return state;
 			const entities = selectAll(state);
@@ -116,7 +120,7 @@ const slice = createSlice({
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start && x.time < end } })),
 			);
 		});
-		builder.addCase(swapSelectedNotes, (state, action) => {
+		builder.addCase(mirrorSelection, (state, action) => {
 			const { axis } = action.payload;
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
@@ -133,7 +137,7 @@ const slice = createSlice({
 				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
 			);
 		});
-		builder.addCase(deselectAllOfType, (state, action) => {
+		builder.addCase(deselectAllEntitiesOfType, (state, action) => {
 			const { itemType } = action.payload;
 			if (itemType !== ObjectType.BOMB) return state;
 			const entities = selectAllSelected(state);
@@ -142,16 +146,16 @@ const slice = createSlice({
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
 		});
-		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => adapter.getInitialState());
-		builder.addMatcher(isAnyOf(deleteNote, bulkDeleteNote), (state, action) => {
-			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
-			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
+		builder.addMatcher(isAnyOf(addSong, startLoadingMap, leaveEditor), () => adapter.getInitialState());
+		builder.addMatcher(isAnyOf(removeNote, bulkRemoveNote), (state, action) => {
+			const { query } = action.payload;
+			const match = selectByPosition(state, query);
 			if (!match) return state;
 			return adapter.removeOne(state, adapter.selectId(match));
 		});
 		builder.addMatcher(isAnyOf(selectNote, deselectNote), (state, action) => {
-			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
-			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
+			const { query } = action.payload;
+			const match = selectByPosition(state, query);
 			if (!match) return state;
 			const selected = selectNote.match(action);
 			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { selected: selected } });

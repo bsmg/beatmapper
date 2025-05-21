@@ -1,8 +1,8 @@
 import { Fragment, type MouseEventHandler } from "react";
 
-import { GRID_PRESET_SLOTS } from "$/constants";
+import { DEFAULT_GRID, GRID_PRESET_SLOTS } from "$/constants";
 import { promptSaveGridPreset } from "$/helpers/prompts.helpers";
-import { deleteGridPreset, loadGridPreset, resetGrid, saveGridPreset, updateGrid } from "$/store/actions";
+import { loadGridPreset, removeGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridPresets, selectGridSize } from "$/store/selectors";
 import type { SongId } from "$/types";
@@ -22,7 +22,7 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 
 	return (
 		<Fragment>
-			<Button variant="subtle" size="sm" onClick={() => sid && dispatch(resetGrid({ songId: sid }))}>
+			<Button variant="subtle" size="sm" onClick={() => sid && dispatch(updateGridSize({ songId: sid, changes: DEFAULT_GRID }))}>
 				Reset
 			</Button>
 			{showPresets && (
@@ -41,7 +41,7 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 								}}
 								onContextMenu={(ev) => {
 									ev.preventDefault();
-									sid && dispatch(deleteGridPreset({ songId: sid, presetSlot: slot }));
+									sid && dispatch(removeGridPreset({ songId: sid, presetSlot: slot }));
 								}}
 							>
 								{slot}
@@ -52,20 +52,20 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 			)}
 			<ActionPanelGroup.ActionGroup gap={"lg"}>
 				<Field label="Columns">
-					<FieldInput type="number" min={1} max={40} value={numCols} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGrid({ songId: sid, grid: { numCols: details.valueAsNumber } }))} />
+					<FieldInput type="number" min={1} value={numCols} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { numCols: details.valueAsNumber } }))} />
 				</Field>
 				<Field label="Rows">
-					<FieldInput type="number" min={1} max={11} value={numRows} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGrid({ songId: sid, grid: { numRows: details.valueAsNumber } }))} />
+					<FieldInput type="number" min={1} value={numRows} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { numRows: details.valueAsNumber } }))} />
 				</Field>
 				<Field label="Cell Width">
-					<FieldInput type="number" min={0.1} max={4} step={0.1} value={colWidth} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGrid({ songId: sid, grid: { colWidth: details.valueAsNumber } }))} />
+					<FieldInput type="number" min={0.1} step={0.1} value={colWidth} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { colWidth: details.valueAsNumber } }))} />
 				</Field>
 				<Field label="Cell Height">
-					<FieldInput type="number" min={0.1} max={4} step={0.1} value={rowHeight} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGrid({ songId: sid, grid: { rowHeight: details.valueAsNumber } }))} />
+					<FieldInput type="number" min={0.1} step={0.1} value={rowHeight} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { rowHeight: details.valueAsNumber } }))} />
 				</Field>
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" onClick={() => dispatch(promptSaveGridPreset(saveGridPreset, gridPresets, { songId: sid }))}>
+				<Button variant="subtle" size="sm" onClick={() => dispatch(promptSaveGridPreset(gridPresets, { songId: sid }))}>
 					Save Preset
 				</Button>
 				<Button variant="subtle" size="sm" onClick={finishTweakingGrid}>

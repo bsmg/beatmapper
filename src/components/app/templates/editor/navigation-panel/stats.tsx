@@ -1,6 +1,6 @@
 import { getFormattedBeatNum, getFormattedTimestamp } from "$/helpers/audio.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectCursorPosition, selectCursorPositionInBeats, selectIsPlaying } from "$/store/selectors";
+import { selectCursorPosition, selectCursorPositionInBeats, selectPlaying } from "$/store/selectors";
 import type { SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 
@@ -19,7 +19,7 @@ interface Props {
 }
 export function EditorBeatStat({ sid }: Props) {
 	const displayString = useAppSelector((state) => {
-		const isPlaying = selectIsPlaying(state);
+		const isPlaying = selectPlaying(state);
 
 		let displayString = "--";
 		const cursorPositionInBeats = selectCursorPositionInBeats(state, sid);

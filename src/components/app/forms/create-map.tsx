@@ -5,19 +5,20 @@ import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
-import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
-import { resolveSongId } from "$/helpers/song.helpers";
-import { filestore } from "$/setup";
-import { createNewSong } from "$/store/actions";
+import { resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
+import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectSongIds } from "$/store/selectors";
+import { selectSongIds, selectUsername } from "$/store/selectors";
+
+import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 
 interface Props {
 	dialog?: UseDialogContext;
 }
 function CreateMapForm({ dialog }: Props) {
-	const currentSongIds = useAppSelector(selectSongIds);
 	const dispatch = useAppDispatch();
+	const currentSongIds = useAppSelector(selectSongIds);
+	const username = useAppSelector(selectUsername);
 
 	// These files are sent to the redux middleware.
 	// We'll store them on disk (currently in indexeddb, but that may change), and capture a reference to them by a filename, which we'll store in redux.
@@ -63,6 +64,7 @@ function CreateMapForm({ dialog }: Props) {
 			}
 
 			const songId = resolveSongId({ name: value.name });
+			const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
 
 			// Song IDs must be unique, and song IDs are generated from the name.
 			// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
@@ -75,10 +77,7 @@ function CreateMapForm({ dialog }: Props) {
 			}
 
 			try {
-				const { filename: coverArtFilename } = await filestore.saveCoverFile(songId, coverArtFile);
-				const { filename: songFilename } = await filestore.saveSongFile(songId, songFile);
-
-				await dispatch(createNewSong({ coverArtFilename, coverArtFile, songFilename, songFile, songId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
+				dispatch(addSong({ songId, beatmapId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, songFile, coverArtFile, username: username, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
 
 				if (dialog) dialog.setOpen(false);
 			} catch (err) {

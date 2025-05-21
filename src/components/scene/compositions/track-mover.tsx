@@ -1,8 +1,8 @@
 import { animated, useSpring } from "@react-spring/three";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { selectAnimateBlockMotion, selectCursorPositionInBeats } from "$/store/selectors";
+import { selectAnimateTrack, selectCursorPositionInBeats } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 interface Props extends PropsWithChildren {
@@ -11,19 +11,17 @@ interface Props extends PropsWithChildren {
 }
 function TrackMover({ sid, beatDepth, children }: Props) {
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const animateBlockMotion = useAppSelector(selectAnimateBlockMotion);
-
-	const zPosition = useMemo(() => (cursorPositionInBeats ?? 0) * beatDepth, [cursorPositionInBeats, beatDepth]);
+	const animateBlockMotion = useAppSelector(selectAnimateTrack);
 
 	const [spring] = useSpring(() => {
 		return {
-			zPosition,
+			zPosition: (cursorPositionInBeats ?? 0) * beatDepth,
 			immediate: !animateBlockMotion,
 			config: { tension: 360, friction: 22, mass: 0.4 },
 		};
-	}, [zPosition]);
+	}, [cursorPositionInBeats, beatDepth]);
 
-	return <animated.group position={spring.zPosition.to((interpolated) => [0, 0, interpolated])}>{children}</animated.group>;
+	return <animated.group position-z={spring.zPosition}>{children}</animated.group>;
 }
 
 export default TrackMover;

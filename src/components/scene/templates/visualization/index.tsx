@@ -29,8 +29,8 @@ function MapVisualization({ sid, bid, beatDepth, surfaceDepth, interactive }: Pr
 		<Fragment>
 			<TrackMover sid={sid} beatDepth={beatDepth}>
 				{interactive && <EditorBeatMarkers sid={sid} />}
-				<EditorNotes sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} />
-				<EditorObstacles sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} />
+				<EditorNotes sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} />
+				<EditorObstacles sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} />
 			</TrackMover>
 			{interactive && <EditorPlacementGrid sid={sid} bid={bid} position-z={-SONG_OFFSET} />}
 		</Fragment>

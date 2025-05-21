@@ -1,4 +1,4 @@
-import { App, type SongId } from "$/types";
+import type { SongId } from "$/types";
 
 import { BracketRing } from "$/components/scene/compositions/environment";
 import { useEventTrack, useRingCount } from "$/components/scene/hooks";
@@ -11,8 +11,8 @@ interface Props {
 	sid: SongId;
 }
 function SmallRings({ sid }: Props) {
-	const [lastRotationEvent] = useEventTrack({ sid, trackId: App.TrackId[8] });
-	const [lastZoomEvent] = useEventTrack({ sid, trackId: App.TrackId[9] });
+	const [lastRotationEvent] = useEventTrack({ sid, trackId: 8 });
+	const [lastZoomEvent] = useEventTrack({ sid, trackId: 9 });
 
 	const numOfRings = useRingCount({ count: 12 });
 

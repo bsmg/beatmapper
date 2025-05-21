@@ -1,13 +1,10 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import type { CharacteristicName, DifficultyName, EnvironmentAllName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 
-import type { IGrid } from "../../editor";
-import type { ColorSchemeKey, IEntityMap } from "./shared";
+import type { IColorScheme, IEntityMap, IGrid } from "../../editor";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;
-
-export type IColorScheme = { [key in ColorSchemeKey]: string };
 
 export interface IModule {
 	isEnabled: boolean;
@@ -16,12 +13,11 @@ export interface IModule {
 type IWrapModule<T> = IModule & T;
 
 export interface IModSettings {
-	mappingExtensions: IWrapModule<IGrid>;
-	customColors: IWrapModule<{ [key in ColorSchemeKey]?: string }>;
+	mappingExtensions: IWrapModule<Partial<IGrid>>;
+	customColors: IWrapModule<Partial<IColorScheme>>;
 }
 
 export interface IBeatmap {
-	beatmapId: BeatmapId;
 	lightshowId: BeatmapId;
 	characteristic: CharacteristicName;
 	difficulty: DifficultyName;
@@ -36,7 +32,7 @@ export interface IBeatmap {
 
 export interface ISong {
 	name: string;
-	subName?: string;
+	subName: string;
 	artistName: string;
 	/** @deprecated */
 	mapAuthorName?: string;

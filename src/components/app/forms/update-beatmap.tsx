@@ -1,19 +1,21 @@
 import { useBlocker, useNavigate } from "@tanstack/react-router";
+import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
+import type { CharacteristicName, DifficultyName } from "bsmap/types";
+import { DotIcon } from "lucide-react";
 import { type MouseEventHandler, useCallback, useMemo, useState } from "react";
 import { array, number, object, pipe, string, transform } from "valibot";
 
-import { copyDifficulty, deleteBeatmap, updateBeatmapMetadata } from "$/store/actions";
+import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from "$/components/app/constants";
+import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
 import { HStack, Stack, Wrap } from "$:styled-system/jsx";
-import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Interleave } from "$/components/ui/atoms";
 import { Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
-import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
-import { DotIcon } from "lucide-react";
+import { useViewFromLocation } from "../hooks";
 
 interface Props {
 	sid: SongId;
@@ -22,6 +24,7 @@ interface Props {
 function UpdateBeatmapForm({ sid, bid }: Props) {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
+	const view = useViewFromLocation();
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
@@ -55,10 +58,10 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		},
 		onSubmit: async ({ value, formApi }) => {
 			dispatch(
-				updateBeatmapMetadata({
+				updateBeatmap({
 					songId: sid,
 					beatmapId: bid,
-					beatmapData: {
+					changes: {
 						...value,
 						colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
 						customLabel: value.customLabel === "" ? undefined : value.customLabel,
@@ -76,10 +79,11 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 	});
 
 	const handleCopyBeatmap = useCallback(
-		(id: BeatmapId) => {
-			dispatch(copyDifficulty({ songId: sid, fromBeatmapId: bid, toBeatmapId: id }));
+		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
+			dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }));
+			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: id.toString() } });
 		},
-		[dispatch, sid, bid],
+		[dispatch, navigate, sid, bid, view],
 	);
 
 	const handleDeleteBeatmap = useCallback<MouseEventHandler>(
@@ -107,11 +111,10 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
 			const nextDifficultyId = remainingDifficultyIds[0];
 
-			dispatch(deleteBeatmap({ songId: sid, beatmapId: bid }));
-
-			return navigate({ to: "/edit/$sid/$bid/details", params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
+			dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
+			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
 		},
-		[navigate, dispatch, beatmaps, sid, bid],
+		[dispatch, navigate, sid, bid, view, beatmaps],
 	);
 
 	useBlocker({

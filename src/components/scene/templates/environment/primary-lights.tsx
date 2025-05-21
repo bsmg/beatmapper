@@ -2,7 +2,7 @@ import { Fragment } from "react";
 
 import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
-import { App, type BeatmapId, type SongId } from "$/types";
+import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
@@ -23,7 +23,7 @@ interface Props {
 	bid: BeatmapId;
 }
 function PrimaryLights({ sid, bid }: Props) {
-	const [lastEvent] = useEventTrack({ sid, trackId: App.TrackId[4] });
+	const [lastEvent] = useEventTrack({ sid, trackId: 4 });
 
 	const light = useLightProps({ sid, bid, lastEvent });
 

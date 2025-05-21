@@ -71,3 +71,14 @@ export const TrackType = {
 	UNSUPPORTED: "unknown",
 } as const;
 export type TrackType = Member<typeof TrackType>;
+
+export const ColorSchemeKey = {
+	SABER_LEFT: "colorLeft",
+	SABER_RIGHT: "colorRight",
+	OBSTACLE: "obstacleColor",
+	ENV_LEFT: "envColorLeft",
+	ENV_RIGHT: "envColorRight",
+	BOOST_LEFT: "envColorLeftBoost",
+	BOOST_RIGHT: "envColorRightBoost",
+} as const;
+export type ColorSchemeKey = Member<typeof ColorSchemeKey>;
