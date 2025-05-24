@@ -33,7 +33,7 @@ import {
 	updateSnap,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDemo } from "$/store/selectors";
+import { selectDemo, selectPacerWait } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -51,6 +51,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
+	const wait = useAppSelector(selectPacerWait);
 
 	const keysDepressed = useRef({
 		space: false,
@@ -74,7 +75,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 			dispatch(scrollThroughSong({ songId: sid, direction }));
 		},
-		{ wait: 50 },
+		{ wait: wait },
 	);
 
 	const handleKeyDown = useCallback(

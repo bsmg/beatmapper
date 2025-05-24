@@ -1,15 +1,15 @@
-import { type MouseEvent, useCallback } from "react";
+import { type MouseEvent, useCallback, useDeferredValue } from "react";
 
+import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
+import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import { jumpToBeat, removeBookmark, scrubVisualizer } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectGraphicsQuality, selectLoading, selectWaveformData } from "$/store/selectors";
-import { Quality, type SongId } from "$/types";
+import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectLoading, selectRenderScale, selectWaveformData } from "$/store/selectors";
+import type { SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 
 import { AudioVisualizer } from "$/components/app/layouts";
-import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
 import { Waveform } from "$/components/ui/compositions";
-import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import EditorBookmark from "./bookmark";
 
 interface Props {
@@ -21,22 +21,14 @@ function EditorAudioVisualizer({ sid }: Props) {
 	const isLoadingSong = useAppSelector(selectLoading);
 	const duration = useAppSelector(selectDuration);
 	const cursorPosition = useAppSelector(selectCursorPosition);
-	const graphicsLevel = useAppSelector(selectGraphicsQuality);
+	const renderScale = useAppSelector(selectRenderScale);
 	const bookmarks = useAppSelector(selectAllBookmarks);
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
 	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
 
-	// Updating this waveform is surprisingly expensive! We'll throttle its rendering by rounding the cursor position for lower graphics settings.
-	// Because it's a pure component, providing the same cursorPosition means that the rendering will be skipped for equal values.
-	let roundedCursorPosition: number;
-	if (graphicsLevel === Quality.LOW) {
-		roundedCursorPosition = roundToNearest(cursorPosition, 150);
-	} else if (graphicsLevel === Quality.MEDIUM) {
-		roundedCursorPosition = roundToNearest(cursorPosition, 75);
-	} else {
-		roundedCursorPosition = cursorPosition;
-	}
+	// Updating this waveform is surprisingly expensive! We'll defer its rendered value and round the cursor position based on the render scale.
+	const roundedCursorPosition = useDeferredValue(roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15));
 
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {

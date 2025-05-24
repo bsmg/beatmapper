@@ -1,4 +1,5 @@
-export { default as defaultSfxPath } from "./audio/tick.mp3";
+export { default as tickSwitchSfxPath } from "./audio/switch.mp3";
+export { default as tickWoodblockSfxPath } from "./audio/woodblock.mp3";
 
 export { default as oswaldGlyphsUrl } from "./fonts/oswald.json?url";
 

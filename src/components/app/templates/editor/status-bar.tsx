@@ -2,9 +2,9 @@ import { Presence } from "@ark-ui/react/presence";
 import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 
 import { useViewFromLocation } from "$/components/app/hooks";
-import { toggleNoteTick, updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume } from "$/store/actions";
+import { updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectNoteTick, selectPlaybackRate, selectTotalColorNotes, selectTotalObstacles, selectVolume, selectedTotalBombNotes } from "$/store/selectors";
+import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles, selectedTotalBombNotes } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { pluralize } from "$/utils";
 
@@ -19,8 +19,8 @@ function EditorStatusBar({ sid }: Props) {
 	const isLoading = useAppSelector(selectLoading);
 	const playbackRate = useAppSelector(selectPlaybackRate);
 	const beatDepth = useAppSelector(selectBeatDepth);
-	const volume = useAppSelector(selectVolume);
-	const playNoteTick = useAppSelector(selectNoteTick);
+	const songVolume = useAppSelector(selectSongVolume);
+	const tickVolume = useAppSelector(selectTickVolume);
 	const numOfBlocks = useAppSelector(selectTotalColorNotes);
 	const numOfMines = useAppSelector(selectedTotalBombNotes);
 	const numOfObstacles = useAppSelector(selectTotalObstacles);
@@ -50,6 +50,7 @@ function EditorStatusBar({ sid }: Props) {
 						{noteDensity.toFixed(2)}
 					</StatusBar.Indicator>
 					<StatusBar.Range label={"Beat depth"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={5} max={25} value={[beatDepth]} onValueChange={(details) => dispatch(updateBeatDepth({ value: details.value[0] }))} />
+					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume({ value: details.value[0] }))} />
 				</StatusBar.Section>
 			</Presence>
 			<Presence asChild present={view === View.LIGHTSHOW}>
@@ -59,10 +60,14 @@ function EditorStatusBar({ sid }: Props) {
 					<StatusBar.Range label={"Track opacity"} disabled={isLoading} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={[backgroundOpacity]} onValueChange={(details) => dispatch(updateEventsEditorTrackOpacity({ newOpacity: details.value[0] }))} />
 				</StatusBar.Section>
 			</Presence>
+			<Presence asChild present={view === View.PREVIEW}>
+				<StatusBar.Section>
+					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume({ value: details.value[0] }))} />
+				</StatusBar.Section>
+			</Presence>
 			<StatusBar.Section>
-				<StatusBar.Toggle label={"Enable note tick"} disabled={isLoading} checked={playNoteTick} onIcon={BellIcon} offIcon={BellOffIcon} onCheckedChange={() => dispatch(toggleNoteTick())} />
 				<StatusBar.Range label={"Playback rate"} marks={[1]} disabled={isLoading} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0} max={2} step={0.1} value={[playbackRate]} onValueChange={(details) => dispatch(updatePlaybackRate({ value: details.value[0] }))} />
-				<StatusBar.Range label={"Song volume"} disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[volume]} onValueChange={(details) => dispatch(updateSongVolume({ value: details.value[0] }))} />
+				<StatusBar.Range label={"Song volume"} disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[songVolume]} onValueChange={(details) => dispatch(updateSongVolume({ value: details.value[0] }))} />
 			</StatusBar.Section>
 		</Wrapper>
 	);

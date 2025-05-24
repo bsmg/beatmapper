@@ -59,6 +59,7 @@ const recipe = sva({
 	variants: {
 		size: {
 			sm: {
+				root: { height: "16px" },
 				label: { fontSize: "0.75rem" },
 				control: { height: "12px", marginInline: "6px" },
 				range: { height: "2px" },
@@ -68,6 +69,7 @@ const recipe = sva({
 				marker: { _before: { height: "8px" } },
 			},
 			md: {
+				root: { height: "20px" },
 				control: { height: "16px", marginInline: "8px" },
 				range: { height: "4px" },
 				track: { height: "4px", marginBlockStart: "6px" },
@@ -82,6 +84,12 @@ const recipe = sva({
 			},
 			vertical: {
 				root: { flexDirection: "column-reverse" },
+			},
+		},
+		stretch: {
+			true: {
+				root: { width: "100%" },
+				control: { width: "100%" },
 			},
 		},
 	},

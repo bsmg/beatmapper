@@ -1,7 +1,11 @@
 import { debounce } from "@tanstack/react-pacer";
 import { type DependencyList, type RefObject, useEffect, useState } from "react";
 
+import { useAppSelector } from "$/store/hooks";
+import { selectPacerWait } from "$/store/selectors";
+
 export function useBoundingBox<T extends HTMLElement>(ref: RefObject<T | null>, dependencies: DependencyList = []) {
+	const wait = useAppSelector(selectPacerWait);
 	// We're using `useRef` for our boundingBox just as an instance variable.
 	// Some bit of mutable state that doesn't require re-renders.
 	const [boundingBox, setBoundingBox] = useState<DOMRect | null>(null);
@@ -26,7 +30,7 @@ export function useBoundingBox<T extends HTMLElement>(ref: RefObject<T | null>, 
 					setBoundingBox(ref.current.getBoundingClientRect());
 				}
 			},
-			{ wait: 250 },
+			{ wait: wait },
 		);
 
 		window.addEventListener("scroll", recalculate);

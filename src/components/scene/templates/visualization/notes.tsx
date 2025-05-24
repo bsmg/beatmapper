@@ -24,8 +24,8 @@ interface Props {
 }
 function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
-	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, beatDepth, surfaceDepth));
-	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, beatDepth, surfaceDepth));
+	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
+	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const dispatch = useAppDispatch();

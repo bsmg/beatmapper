@@ -7,7 +7,7 @@ import { Fragment, memo, useCallback, useMemo } from "react";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata, selectUsername } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
 import { HStack, Stack, styled } from "$:styled-system/jsx";
@@ -28,12 +28,13 @@ interface Props {
 }
 function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	const dispatch = useAppDispatch();
-	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
-	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
 	const view = useViewFromLocation();
 	const navigate = useNavigate();
-
+	const username = useAppSelector(selectUsername);
+	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
+	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+
 	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ beatmapIds }), [beatmapIds]);
 
 	const handleBeatmapSelect = useCallback(
@@ -46,9 +47,9 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	const handleCreate = useCallback(
 		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: data }));
+			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: data, username }));
 		},
-		[dispatch, sid],
+		[dispatch, sid, username],
 	);
 
 	return (

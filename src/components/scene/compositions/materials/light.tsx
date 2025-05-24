@@ -4,8 +4,8 @@ import { type ComponentProps, useMemo } from "react";
 import { useOnChange } from "$/components/hooks";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
-import { selectGraphicsQuality, selectPlaying } from "$/store/selectors";
-import { App, Quality } from "$/types";
+import { selectBloomEnabled, selectPlaying } from "$/store/selectors";
+import { App } from "$/types";
 
 // todo: spring animations are always pre-computed, so there's no means of deterministically calculating the lighting state at a particular time (or when paused)
 // we'll probably need to refactor this on a different api/framework at some point
@@ -95,8 +95,8 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 }
 
 export function LightMaterial({ light, ...rest }: ComponentProps<typeof animated.meshLambertMaterial> & UseLightSpringOptions) {
-	const quality = useAppSelector(selectGraphicsQuality);
-	const materialColor = useMemo(() => (quality === Quality.HIGH ? "#ccc" : "#444"), [quality]);
+	const isBloomEnabled = useAppSelector(selectBloomEnabled);
+	const materialColor = useMemo(() => (isBloomEnabled ? "#ccc" : "#444"), [isBloomEnabled]);
 
 	const [spring] = useLightSpring({ light });
 

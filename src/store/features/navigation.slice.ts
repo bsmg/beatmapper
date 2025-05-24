@@ -1,7 +1,7 @@
 import { type AsyncThunkPayloadCreator, type ReducerCreators, isAnyOf } from "@reduxjs/toolkit";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { finishLoadingMap, hydrateSession, jumpToBeat, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
+import { finishLoadingMap, hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
 import type { SongId, View } from "$/types";
 import { createSlice } from "../helpers";
 import { selectEditorOffset } from "../selectors";
@@ -15,9 +15,10 @@ const initialState = {
 	beatDepth: 9,
 	animateBlockMotion: true,
 	animateRingMotion: true,
-	volume: 0.75,
+	songVolume: 0.75,
+	tickVolume: 0.75,
+	tickType: 0,
 	playbackRate: 1,
-	playNoteTick: false,
 };
 
 const fetchOffset: AsyncThunkPayloadCreator<{ offset: number }, { songId: SongId }> = (args, api) => {
@@ -50,9 +51,10 @@ const slice = createSlice({
 		selectBeatDepth: (state) => state.beatDepth,
 		selectAnimateTrack: (state) => state.animateBlockMotion,
 		selectAnimateEnvironment: (state) => state.animateRingMotion,
-		selectVolume: (state) => state.volume,
 		selectPlaybackRate: (state) => state.playbackRate,
-		selectNoteTick: (state) => state.playNoteTick,
+		selectSongVolume: (state) => state.songVolume,
+		selectTickVolume: (state) => state.tickVolume,
+		selectTickType: (state) => state.tickType,
 	},
 	reducers: (api) => {
 		return {
@@ -102,29 +104,33 @@ const slice = createSlice({
 				const { value: beatDepth } = action.payload;
 				return { ...state, beatDepth: beatDepth, animateBlockMotion: false };
 			}),
-			updateSongVolume: api.reducer<{ value: number }>((state, action) => {
-				const { value: volume } = action.payload;
-				return { ...state, volume: volume };
-			}),
 			updatePlaybackRate: api.reducer<{ value: number }>((state, action) => {
 				const { value: playbackRate } = action.payload;
 				return { ...state, playbackRate: playbackRate };
 			}),
-			updateNoteTick: api.reducer<{ checked?: boolean } | undefined>((state, action) => {
-				const { checked } = action.payload ?? {};
-				if (checked) return { ...state, playNoteTick: checked };
-				return { ...state, playNoteTick: !state.playNoteTick };
+			updateSongVolume: api.reducer<{ value: number }>((state, action) => {
+				const { value: volume } = action.payload;
+				return { ...state, songVolume: volume };
+			}),
+			updateTickVolume: api.reducer<{ value: number }>((state, action) => {
+				const { value: volume } = action.payload;
+				return { ...state, tickVolume: volume };
+			}),
+			updateTickType: api.reducer<{ value: number }>((state, action) => {
+				const { value: type } = action.payload;
+				return { ...state, tickType: type };
 			}),
 		};
 	},
 	extraReducers: (builder) => {
 		builder.addCase(hydrateSession, (state, action) => {
-			const { "track.snap": snapTo, "track.spacing": beatDepth, "playback.rate": playbackRate, "playback.volume": volume, "playback.tick": playNoteTick } = action.payload;
+			const { "track.snap": snapTo, "track.spacing": beatDepth, "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
 			if (snapTo !== undefined) state.snapTo = snapTo;
 			if (beatDepth !== undefined) state.beatDepth = beatDepth;
 			if (playbackRate !== undefined) state.playbackRate = playbackRate;
-			if (volume !== undefined) state.volume = volume;
-			if (playNoteTick !== undefined) state.playNoteTick = playNoteTick;
+			if (songVolume !== undefined) state.songVolume = songVolume;
+			if (tickVolume !== undefined) state.tickVolume = tickVolume;
+			if (tickType !== undefined) state.tickType = tickType;
 		});
 		builder.addCase(finishLoadingMap, (state, action) => {
 			const {

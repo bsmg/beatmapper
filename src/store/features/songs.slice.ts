@@ -147,9 +147,10 @@ const slice = createSlice({
 				const { id } = action.payload;
 				return adapter.removeOne(state, id);
 			}),
-			addBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; data: RequiredKeys<Partial<App.IBeatmap>, "characteristic" | "difficulty"> }>((state, action) => {
-				const { songId, beatmapId, data } = action.payload;
+			addBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; data: RequiredKeys<Partial<App.IBeatmap>, "characteristic" | "difficulty">; username: string }>((state, action) => {
+				const { songId, beatmapId, data, username } = action.payload;
 				const song = selectById(state, songId);
+				const mappers = username !== "" ? [username] : [];
 				return adapter.updateOne(state, {
 					id: songId,
 					changes: deepMerge(song, {
@@ -162,8 +163,8 @@ const slice = createSlice({
 								startBeatOffset: 0,
 								environmentName: song.environment,
 								colorSchemeName: null,
-								mappers: [],
-								lighters: [],
+								mappers: mappers,
+								lighters: mappers,
 							},
 						},
 					}),

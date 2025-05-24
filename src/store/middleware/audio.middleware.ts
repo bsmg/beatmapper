@@ -1,5 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
+import { tickWoodblockSfxPath } from "$/assets";
+import { NOTE_TICK_TYPES } from "$/constants";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import { AudioSample } from "$/services/audio.service";
 import type { BeatmapFilestore } from "$/services/file.service";
@@ -26,6 +28,8 @@ import {
 	updatePlaybackRate,
 	updateSong,
 	updateSongVolume,
+	updateTickType,
+	updateTickVolume,
 } from "$/store/actions";
 import {
 	selectAllColorNotes,
@@ -39,11 +43,9 @@ import {
 	selectEventsEditorBeatsPerZoomLevel,
 	selectEventsEditorWindowLock,
 	selectNearestBeatForTime,
-	selectNoteTick,
-	selectPlaybackRate,
 	selectSnap,
+	selectTickVolume,
 	selectTimeForBeat,
-	selectVolume,
 } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
@@ -54,7 +56,7 @@ function stopAndRewindAudio(audioSample: AudioSample, offset: number) {
 }
 
 function triggerTickerIfNecessary(state: RootState, songId: SongId, currentBeat: number, lastBeat: number, ticker: Sfx) {
-	const playNoteTick = selectNoteTick(state);
+	const playNoteTick = selectTickVolume(state);
 	if (playNoteTick) {
 		const delayInBeats = selectAudioProcessingDelayInBeats(state, songId);
 		const anyNotesWithinTimespan = selectAllColorNotes(state).some((note) => note.time - delayInBeats >= lastBeat && note.time - delayInBeats < currentBeat);
@@ -89,8 +91,8 @@ interface Options {
 export default function createAudioMiddleware({ filestore }: Options) {
 	let animationFrameId: number;
 
-	const ticker = new Sfx();
-	const audioSample = new AudioSample(1, 1);
+	const ticker = new Sfx(tickWoodblockSfxPath, { volume: 1, playbackRate: 1 });
+	const audioSample = new AudioSample({ volume: 1, playbackRate: 1 });
 
 	const instance = createListenerMiddleware<RootState>();
 
@@ -98,9 +100,11 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		actionCreator: hydrateSession,
 		effect: async (action, api) => {
 			api.unsubscribe();
-			const { "playback.rate": playbackRate, "playback.volume": volume } = action.payload;
-			if (volume !== undefined) audioSample.changeVolume(volume);
+			const { "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
 			if (playbackRate !== undefined) audioSample.changePlaybackRate(playbackRate);
+			if (songVolume !== undefined) audioSample.changeVolume(songVolume);
+			if (tickVolume !== undefined) ticker.audioSample.changeVolume(tickVolume);
+			if (tickType !== undefined) ticker.audioSample.load(NOTE_TICK_TYPES[tickType]);
 			api.subscribe();
 		},
 	});
@@ -111,13 +115,9 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			const { songId } = action.payload;
 			const state = api.getState();
 			const offset = selectEditorOffset(state, songId);
-			const volume = selectVolume(state);
-			const playbackRate = selectPlaybackRate(state);
 			const file = await filestore.loadSongFile(songId);
 			const arrayBuffer = await convertFileToArrayBuffer(file);
-			await audioSample.load(arrayBuffer);
-			audioSample.changeVolume(volume);
-			audioSample.changePlaybackRate(playbackRate);
+			await audioSample.loadFromArrayBuffer(arrayBuffer);
 			audioSample.setCurrentTime(offset / 1000);
 			api.subscribe();
 		},
@@ -195,7 +195,7 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			if (!songData.songFilename) return;
 			const file = await filestore.loadSongFile(songId);
 			const arrayBuffer = await convertFileToArrayBuffer(file);
-			await audioSample.load(arrayBuffer);
+			await audioSample.loadFromArrayBuffer(arrayBuffer);
 			audioSample.setCurrentTime((songData.offset ?? 0) / 1000);
 			api.subscribe();
 		},
@@ -367,6 +367,15 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
+		actionCreator: updatePlaybackRate,
+		effect: (action, api) => {
+			api.unsubscribe();
+			const { value: playbackRate } = action.payload;
+			audioSample.changePlaybackRate(playbackRate);
+			api.subscribe();
+		},
+	});
+	instance.startListening({
 		actionCreator: updateSongVolume,
 		effect: (action, api) => {
 			api.unsubscribe();
@@ -376,11 +385,20 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: updatePlaybackRate,
+		actionCreator: updateTickVolume,
 		effect: (action, api) => {
 			api.unsubscribe();
-			const { value: playbackRate } = action.payload;
-			audioSample.changePlaybackRate(playbackRate);
+			const { value: volume } = action.payload;
+			ticker.audioSample.changeVolume(volume);
+			api.subscribe();
+		},
+	});
+	instance.startListening({
+		actionCreator: updateTickType,
+		effect: (action, api) => {
+			api.unsubscribe();
+			const { value: type } = action.payload;
+			ticker.audioSample.load(NOTE_TICK_TYPES[type]);
 			api.subscribe();
 		},
 	});

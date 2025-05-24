@@ -6,8 +6,8 @@ import { useOnChange } from "$/components/hooks";
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectGraphicsQuality, selectPlaying } from "$/store/selectors";
-import { App, type BeatmapId, Quality, type SongId } from "$/types";
+import { selectColorScheme, selectPlaying, selectRenderScale } from "$/store/selectors";
+import { App, type BeatmapId, type SongId } from "$/types";
 
 function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
 	if (!lastEvent) return App.BasicEventEffect.OFF;
@@ -51,14 +51,11 @@ export interface UseRingCountOptions {
 	count: number;
 }
 export function useRingCount({ count }: UseRingCountOptions) {
-	const quality = useAppSelector(selectGraphicsQuality);
+	const renderScale = useAppSelector(selectRenderScale);
 
 	const numOfRings = useMemo(() => {
-		const length = Object.keys(Quality).length;
-		const index = Object.values(Quality).indexOf(quality);
-
-		return Math.round(count * ((index + 1) / length));
-	}, [count, quality]);
+		return Math.ceil(count * renderScale);
+	}, [count, renderScale]);
 
 	return numOfRings;
 }

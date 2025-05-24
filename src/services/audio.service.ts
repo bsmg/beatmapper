@@ -1,3 +1,8 @@
+export interface AudioSampleOptions {
+	volume: 1;
+	playbackRate: 1;
+}
+
 /**
  * This service abstracts the Web Audio API to allow easy, precise playback of audio files.
  */
@@ -12,9 +17,9 @@ export class AudioSample {
 	gainNode: GainNode;
 	source!: AudioBufferSourceNode;
 	buffer!: AudioBuffer;
-	constructor(volume = 1, playbackRate = 1) {
-		this.gain = volume;
-		this.playbackRate = playbackRate;
+	constructor(options: AudioSampleOptions = { volume: 1, playbackRate: 1 }) {
+		this.gain = options.volume;
+		this.playbackRate = options.playbackRate;
 
 		this.context = new AudioContext();
 
@@ -33,7 +38,7 @@ export class AudioSample {
 
 		this.gainNode = this.context.createGain();
 		this.gainNode.connect(this.context.destination);
-		this.gainNode.gain.value = volume;
+		this.gainNode.gain.value = options.volume;
 	}
 
 	changeVolume(volume: number) {
@@ -58,14 +63,17 @@ export class AudioSample {
 		}
 	}
 
-	load(arrayBuffer: ArrayBuffer) {
-		// TODO: Also handle a path, if we don't conveniently already have an array buffer?
+	async load(path: string) {
+		const buffer = await fetch(path).then((response) => response.arrayBuffer());
+		return this.loadFromArrayBuffer(buffer);
+	}
+
+	loadFromArrayBuffer(arrayBuffer: ArrayBuffer) {
 		return new Promise((resolve, reject) => {
 			this.context.decodeAudioData(
 				arrayBuffer,
 				(buffer) => {
 					this.buffer = buffer;
-
 					resolve(buffer);
 				},
 				reject,

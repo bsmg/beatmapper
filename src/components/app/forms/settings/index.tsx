@@ -1,8 +1,10 @@
 import { createListCollection } from "@ark-ui/react/collection";
+import { Fragment } from "react/jsx-runtime";
 
 import { Tabs } from "$/components/ui/compositions";
-import { Fragment } from "react/jsx-runtime";
+import AppAdvancedSettings from "./advanced";
 import AppAudioSettings from "./audio";
+import AppControlsSettings from "./controls";
 import AppGraphicsSettings from "./graphics";
 import AppUserSettings from "./user";
 
@@ -11,11 +13,11 @@ const collection = createListCollection({
 		{ value: "user", label: "User", render: () => <AppUserSettings /> },
 		{ value: "audio", label: "Audio", render: () => <AppAudioSettings /> },
 		{ value: "graphics", label: "Graphics", render: () => <AppGraphicsSettings /> },
-		{ value: "controls", label: "Controls", render: () => "Coming soon™" },
-		{ value: "advanced", label: "Advanced", render: () => "Coming soon™" },
+		{ value: "controls", label: "Controls", render: () => <AppControlsSettings /> },
+		{ value: "advanced", label: "Advanced", render: () => <AppAdvancedSettings /> },
 		//
 	],
-	isItemDisabled: (item) => !["user", "graphics", "audio"].includes(item.value),
+	isItemDisabled: (item) => !["user", "graphics", "audio", "advanced"].includes(item.value),
 });
 
 function AppSettings() {

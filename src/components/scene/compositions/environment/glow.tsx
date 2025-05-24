@@ -1,5 +1,5 @@
 import { animated } from "@react-spring/three";
-import { useThree } from "@react-three/fiber";
+import { type MeshProps, useThree } from "@react-three/fiber";
 import { useMemo } from "react";
 import { AdditiveBlending, Color, FrontSide } from "three";
 
@@ -9,16 +9,13 @@ import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import type { SongId } from "$/types";
 import { normalize } from "$/utils";
 
-interface Props {
+interface Props extends MeshProps {
 	sid: SongId;
-	x: number;
-	y: number;
-	z: number;
 	size: number;
 	light: UseLightPropsReturn;
-	isBlooming?: boolean;
+	bloom?: boolean;
 }
-function Glow({ sid, x, y, z, size, light, isBlooming }: Props) {
+function Glow({ sid, size, light, bloom: isBlooming, ...rest }: Props) {
 	const { camera } = useThree();
 
 	const [spring] = useLightSpring({ light });
@@ -29,7 +26,7 @@ function Glow({ sid, x, y, z, size, light, isBlooming }: Props) {
 	const PValueRange = useMemo(() => (isBlooming ? [40, 1] : [28, 7]), [isBlooming]);
 
 	return (
-		<mesh position={[x, y, z]}>
+		<mesh {...rest}>
 			<sphereGeometry attach="geometry" args={[size, 32, 16]} />
 			<animated.shaderMaterial
 				attach="material"

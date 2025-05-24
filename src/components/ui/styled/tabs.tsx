@@ -12,6 +12,7 @@ const recipe = sva({
 			width: "100%",
 		},
 		list: hstack.raw({
+			paddingInline: 0.25,
 			paddingBlock: 0.5,
 			overflowX: "auto",
 		}),

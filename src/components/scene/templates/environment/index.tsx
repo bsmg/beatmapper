@@ -12,12 +12,13 @@ import SmallRings from "./small-rings";
 interface Props {
 	sid: SongId;
 	bid: BeatmapId;
+	surfaceDepth: number;
 }
-function DefaultEnvironment({ sid, bid }: Props) {
+function DefaultEnvironment({ sid, bid, surfaceDepth }: Props) {
 	useControls();
 
 	return (
-		<Environment.Root>
+		<Environment.Root surfaceDepth={surfaceDepth}>
 			<SideLasers sid={sid} bid={bid} side="left" />
 			<SideLasers sid={sid} bid={bid} side="right" />
 			<BackLasers sid={sid} bid={bid} />

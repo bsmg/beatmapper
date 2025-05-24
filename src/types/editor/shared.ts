@@ -8,13 +8,6 @@ export const View = {
 } as const;
 export type View = Member<typeof View>;
 
-export const Quality = {
-	LOW: "low",
-	MEDIUM: "medium",
-	HIGH: "high",
-} as const;
-export type Quality = Member<typeof Quality>;
-
 export const ObjectType = {
 	NOTE: "block",
 	BOMB: "mine",

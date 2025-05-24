@@ -1,10 +1,12 @@
+import type { ICustomDataBase } from "bsmap/types";
+
 import type { Accept, Member } from "../../utils";
 
 export interface IEditorObject {
 	selected?: boolean;
 	tentative?: boolean;
 }
-export type IWrapEditorObject<T> = IEditorObject & Omit<T, "customData">;
+export type IWrapEditorObject<T> = IEditorObject & Omit<T, "customData"> & { customData: ICustomDataBase };
 
 export const BasicEventEffect = {
 	OFF: "off",

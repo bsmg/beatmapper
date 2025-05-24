@@ -14,7 +14,7 @@ export function useControlledValue<T extends { value: string | number } = { valu
 
 	const setValue = useCallback(
 		(details: T) => {
-			if (!controlled) setInternalValue(details.value);
+			if (controlled !== null || controlled !== undefined) setInternalValue(details.value);
 			if (onValueChange) onValueChange(details);
 		},
 		[controlled, onValueChange],

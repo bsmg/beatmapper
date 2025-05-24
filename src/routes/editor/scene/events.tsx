@@ -3,7 +3,7 @@ import { Fragment, useMemo } from "react";
 
 import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
-import { selectEventsEditorPreview, selectEventsEditorTrackOpacity } from "$/store/selectors";
+import { selectEventsEditorPreview, selectEventsEditorTrackOpacity, selectSurfaceDepth } from "$/store/selectors";
 
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 
 function RouteComponent() {
 	const { sid, bid } = Route.useParams();
+	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 	const showLightingPreview = useAppSelector(selectEventsEditorPreview);
 	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
 
@@ -28,7 +29,7 @@ function RouteComponent() {
 			<Background>
 				{showLightingPreview && (
 					<ReduxForwardingCanvas>
-						<DefaultEnvironment sid={sid} bid={bid} />
+						<DefaultEnvironment sid={sid} bid={bid} surfaceDepth={surfaceDepth} />
 					</ReduxForwardingCanvas>
 				)}
 			</Background>

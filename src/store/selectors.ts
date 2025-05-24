@@ -1,16 +1,17 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
+import { calculateNps } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
-import { SURFACE_DEPTHS } from "$/constants";
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { deriveEventTracksForEnvironment, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
-import { calculateNoteDensity } from "$/helpers/notes.helpers";
 import { getEditorOffset } from "$/helpers/song.helpers";
 import { App, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import { createByPositionSelector, selectHistory } from "./helpers";
 import type { RootState } from "./setup";
 
+import { shallowEqual } from "react-redux";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
@@ -72,47 +73,22 @@ export const selectEditorOffsetInBeats = createSelector(selectBpm, selectEditorO
 	return convertMillisecondsToBeats(offset, bpm);
 });
 
-export const selectBeatForTime = createSelector(
-	[
-		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectBpm(state, songId),
-		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectEditorOffset(state, songId),
-		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time,
-		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options,
-	],
-	(bpm, offset, time, { withOffset }) => {
-		return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
-	},
-);
-export const selectNearestBeatForTime = createSelector(
-	[
-		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectBpm(state, songId),
-		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectEditorOffset(state, songId),
-		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time,
-		//
-	],
-	(bpm, offset, time: number) => {
-		return snapToNearestBeat(time, bpm, offset);
-	},
-);
-
-export const selectTimeForBeat = createSelector(
-	[
-		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectBpm(state, songId),
-		(state: Pick<RootState, "songs" | "entities">, songId: SongId) => selectEditorOffset(state, songId),
-		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat,
-		(_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options,
-	],
-	(bpm, offset, beat, { withOffset }) => {
-		return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
-	},
-);
+export const selectBeatForTime = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options], (bpm, offset, time, { withOffset }) => {
+	return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
+});
+export const selectNearestBeatForTime = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (bpm, offset, time) => {
+	return snapToNearestBeat(time, bpm, offset);
+});
+export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options], (bpm, offset, beat, { withOffset }) => {
+	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
+});
 
 export const selectEventTracksForEnvironment = createSelector([selectBeatmapById], (beatmap) => {
 	const environment = beatmap.environmentName;
 	return deriveEventTracksForEnvironment(environment);
 });
 
-export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectVolume, selectPlaybackRate, selectNoteTick } = navigation.getSelectors((state: RootState) => {
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
 export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
@@ -129,7 +105,9 @@ export const {
 	selectAnnouncements,
 	selectUsername,
 	selectProcessingDelay: selectAudioProcessingDelay,
-	selectQuality: selectGraphicsQuality,
+	selectRenderScale,
+	selectBloomEnabled,
+	selectPacerWait,
 } = user.getSelectors((state: Pick<RootState, "user">) => {
 	return state.user;
 });
@@ -143,8 +121,8 @@ export const selectUsableAudioProcessingDelay = createSelector(selectAudioProces
 export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelayInBeats, selectPlaying, (processingDelay, isPlaying) => {
 	return isPlaying ? processingDelay : 0;
 });
-export const selectSurfaceDepth = createSelector(selectGraphicsQuality, (quality) => {
-	return SURFACE_DEPTHS[quality];
+export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
+	return Math.max(renderScale * 75, 25);
 });
 
 export const { selectWaveformData } = visualizer.getSelectors((state: RootState) => {
@@ -199,6 +177,22 @@ export const selectObjectsCanRedo = createSelector(
 	},
 );
 
+export function createVisibleObjectsSelector<T extends wrapper.IWrapBaseObject>(selector: (state: RootState) => T[]) {
+	return createSelector(
+		[selector, (_1, _2, options: { beatDepth: number; surfaceDepth: number; includeSpaceBeforeGrid?: boolean }) => options, selectCursorPositionInBeats],
+		(objects, { beatDepth, surfaceDepth, includeSpaceBeforeGrid }, cursorPositionInBeats) => {
+			const numOfBeatsInRange = surfaceDepth / beatDepth;
+			const cursor = cursorPositionInBeats ?? 0;
+			return objects.filter((x) => {
+				const numOfBeatsBeforeGrid = ("duration" in x && typeof x.duration === "number" ? x.duration : 0) + 0.01;
+				const [closeLimit, farLimit] = calculateVisibleRange(cursor, numOfBeatsInRange, includeSpaceBeforeGrid ? numOfBeatsBeforeGrid + numOfBeatsInRange : numOfBeatsBeforeGrid);
+				return x.time > closeLimit && x.time < farLimit;
+			});
+		},
+		{ memoizeOptions: { resultEqualityCheck: shallowEqual } },
+	);
+}
+
 export const {
 	selectAll: selectAllColorNotes,
 	selectAllSelected: selectAllSelectedColorNotes,
@@ -218,13 +212,8 @@ export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 		(state) => state?.notes ?? notes.getInitialState(),
 	),
 );
-export const selectVisibleNotes = createSelector([selectAllColorNotes, selectCursorPositionInBeats, (_1, _2, x: number) => x, (_1, _2, _3, x: number) => x], (notes, cursorPositionInBeats, beatDepth, surfaceDepth) => {
-	const numOfBeatsInRange = surfaceDepth / beatDepth;
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, numOfBeatsInRange, { includeSpaceBeforeGrid: true });
-	return notes.filter((note) => {
-		return note.time > closeLimit && note.time < farLimit;
-	});
-});
+export const selectVisibleNotes = createVisibleObjectsSelector<App.IColorNote>(selectAllColorNotes);
+
 export const selectNoteDensity = createSelector(selectAllColorNotes, selectDuration, (notes, duration) => {
 	return calculateNps({ difficulty: { colorNotes: notes } }, duration ? duration / 1000 : 0);
 });
@@ -248,13 +237,7 @@ export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
 		(state) => state?.bombs ?? bombs.getInitialState(),
 	),
 );
-export const selectVisibleBombs = createSelector([selectAllBombNotes, selectCursorPositionInBeats, (_1, _2, x: number) => x, (_1, _2, _3, x: number) => x], (bombs, cursorPositionInBeats, beatDepth, surfaceDepth) => {
-	const numOfBeatsInRange = surfaceDepth / beatDepth;
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, numOfBeatsInRange, { includeSpaceBeforeGrid: true });
-	return bombs.filter((note) => {
-		return note.time > closeLimit && note.time < farLimit;
-	});
-});
+export const selectVisibleBombs = createVisibleObjectsSelector(selectAllBombNotes);
 
 export const selectAllNotes = createDraftSafeSelector(selectAllColorNotes, selectAllBombNotes, (notes, bombs) => [...notes, ...bombs]);
 export const selectNoteByPosition = createByPositionSelector(selectAllNotes);
@@ -278,14 +261,7 @@ export const { selectAll: selectFutureObstacles } = obstacles.getSelectors(
 		(state) => state?.obstacles ?? obstacles.getInitialState(),
 	),
 );
-export const selectAllVisibleObstacles = createSelector([selectAllObstacles, selectCursorPositionInBeats, (_1, _2, x: number) => x, (_1, _2, _3, x: number) => x], (obstacles, cursorPositionInBeats, beatDepth, surfaceDepth) => {
-	const numOfBeatsInRange = surfaceDepth / beatDepth;
-	const [closeLimit, farLimit] = calculateVisibleRange(cursorPositionInBeats ?? 0, numOfBeatsInRange, { includeSpaceBeforeGrid: true });
-	return obstacles.filter((obstacle) => {
-		const beatEnd = obstacle.time + obstacle.duration;
-		return beatEnd > closeLimit && obstacle.time < farLimit;
-	});
-});
+export const selectAllVisibleObstacles = createVisibleObjectsSelector(selectAllObstacles);
 
 export const selectAllSelectedObjects = createSelector(selectAllSelectedColorNotes, selectAllSelectedBombNotes, selectAllSelectedObstacles, (notes, bombs, obstacles) => {
 	return {

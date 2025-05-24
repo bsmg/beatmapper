@@ -26,7 +26,7 @@ function RouteComponent() {
 		<Fragment>
 			<ReduxForwardingCanvas>
 				<MapVisualization sid={sid} bid={bid} beatDepth={beatmap.noteJumpSpeed} surfaceDepth={surfaceDepth} interactive={false} />
-				<DefaultEnvironment sid={sid} bid={bid} />
+				<DefaultEnvironment sid={sid} bid={bid} surfaceDepth={surfaceDepth} />
 			</ReduxForwardingCanvas>
 		</Fragment>
 	);

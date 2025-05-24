@@ -1,31 +1,31 @@
-import { Fragment, type PropsWithChildren, useMemo } from "react";
+import { Fragment, type PropsWithChildren } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { selectGraphicsQuality } from "$/store/selectors";
-import { Quality } from "$/types";
+import { selectBloomEnabled } from "$/store/selectors";
 
 import { AmbientLight, Bloom, NoBloom } from "$/components/scene/compositions";
 import Runway from "$/components/scene/compositions/environment/runway";
 import { useControls } from "$/components/scene/hooks";
 
-function EnvironmentRoot({ children }: PropsWithChildren) {
-	const graphicsLevel = useAppSelector(selectGraphicsQuality);
-
-	const isBlooming = useMemo(() => graphicsLevel === Quality.HIGH, [graphicsLevel]);
+interface Props extends PropsWithChildren {
+	surfaceDepth: number;
+}
+function EnvironmentRoot({ surfaceDepth, children }: Props) {
+	const isBloomEnabled = useAppSelector(selectBloomEnabled);
 
 	useControls();
 
 	const environment = (
 		<Fragment>
-			<Runway />
+			<Runway surfaceDepth={surfaceDepth} />
 			<AmbientLight />
 		</Fragment>
 	);
 
 	return (
 		<Fragment>
-			{isBlooming ? <Bloom>{children}</Bloom> : children}
-			{isBlooming ? <NoBloom>{environment}</NoBloom> : environment}
+			{isBloomEnabled ? <Bloom>{children}</Bloom> : children}
+			{isBloomEnabled ? <NoBloom>{environment}</NoBloom> : environment}
 		</Fragment>
 	);
 }

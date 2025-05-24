@@ -8,7 +8,7 @@ import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
 import { autosaveWorker, filestore } from "$/setup";
-import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, Quality } from "$/types";
+import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool } from "$/types";
 import { omit } from "$/utils";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
 import { default as root } from "./features";
@@ -19,6 +19,7 @@ import {
 	selectAnnouncements,
 	selectAudioProcessingDelay,
 	selectBeatDepth,
+	selectBloomEnabled,
 	selectDefaultObstacleDuration,
 	selectEventsEditorColor,
 	selectEventsEditorEditMode,
@@ -29,33 +30,38 @@ import {
 	selectEventsEditorTrackOpacity,
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
-	selectGraphicsQuality,
 	selectGridPresetById,
 	selectNew,
-	selectNoteTick,
 	selectNotesEditorDirection,
 	selectNotesEditorTool,
+	selectPacerWait,
 	selectPlaybackRate,
+	selectRenderScale,
 	selectSnap,
 	selectSongById,
 	selectSongIds,
+	selectSongVolume,
+	selectTickType,
+	selectTickVolume,
 	selectUsername,
-	selectVolume,
 } from "./selectors";
 
 export type UserStorageObservers = {
 	"user.new": StorageObserver<RootState, boolean>;
-	"user.username": StorageObserver<RootState, string>;
 	"user.announcements": StorageObserver<RootState, string[]>;
+	"user.username": StorageObserver<RootState, string>;
 	"audio.offset": StorageObserver<RootState, number>;
-	"graphics.quality": StorageObserver<RootState, number>;
+	"graphics.scale": StorageObserver<RootState, number>;
+	"graphics.bloom": StorageObserver<RootState, boolean>;
+	"advanced.wait": StorageObserver<RootState, number>;
 };
 export type SessionStorageObservers = {
 	"track.snap": StorageObserver<RootState, number>;
 	"track.spacing": StorageObserver<RootState, number>;
 	"playback.rate": StorageObserver<RootState, number>;
 	"playback.volume": StorageObserver<RootState, number>;
-	"playback.tick": StorageObserver<RootState, boolean>;
+	"tick.volume": StorageObserver<RootState, number>;
+	"tick.type": StorageObserver<RootState, number>;
 	"notes.tool": StorageObserver<RootState, number>;
 	"notes.direction": StorageObserver<RootState, NoteDirection>;
 	"notes.duration": StorageObserver<RootState, number>;
@@ -92,7 +98,6 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 				if (username) localStorage.setItem("beatmapper:user.username", username);
 				localStorage.setItem("beatmapper:user.announcements", selectAnnouncements(snapshot).toString());
 				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
-				localStorage.setItem("beatmapper:graphics.quality", Object.values(Quality).indexOf(selectGraphicsQuality(snapshot)).toString());
 				for (const [id, song] of Object.entries<any>(snapshot.songs.byId)) {
 					await idb.set(
 						"songs",
@@ -147,10 +152,12 @@ export async function createAppStore() {
 		storage: createStorage({ driver: ls({ base: storagePrefix }) }),
 		observers: {
 			"user.new": { selector: selectNew },
-			"user.username": { selector: (state) => selectUsername(state) ?? "" },
 			"user.announcements": { selector: selectAnnouncements },
+			"user.username": { selector: (state) => selectUsername(state) ?? "" },
 			"audio.offset": { selector: selectAudioProcessingDelay },
-			"graphics.quality": { selector: (state) => Object.values(Quality).indexOf(selectGraphicsQuality(state)) },
+			"graphics.scale": { selector: selectRenderScale },
+			"graphics.bloom": { selector: selectBloomEnabled },
+			"advanced.wait": { selector: selectPacerWait },
 		},
 	});
 	const sessionMiddleware = createStorageMiddleware<RootState, SessionStorageObservers>({
@@ -160,8 +167,9 @@ export async function createAppStore() {
 			"track.snap": { selector: selectSnap },
 			"track.spacing": { selector: selectBeatDepth },
 			"playback.rate": { selector: selectPlaybackRate },
-			"playback.volume": { selector: selectVolume },
-			"playback.tick": { selector: selectNoteTick },
+			"playback.volume": { selector: selectSongVolume },
+			"tick.volume": { selector: selectTickVolume },
+			"tick.type": { selector: selectTickType },
 			"notes.tool": { selector: (state) => Object.values(ObjectTool).indexOf(selectNotesEditorTool(state)) },
 			"notes.direction": { selector: selectNotesEditorDirection },
 			"notes.duration": { selector: selectDefaultObstacleDuration },

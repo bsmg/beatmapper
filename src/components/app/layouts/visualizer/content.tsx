@@ -2,6 +2,8 @@ import { throttle } from "@tanstack/react-pacer";
 import { type MouseEvent, type MouseEventHandler, type ReactNode, type RefObject, useCallback, useMemo, useRef, useState } from "react";
 
 import { styled } from "$:styled-system/jsx";
+import { useAppSelector } from "$/store/hooks";
+import { selectPacerWait } from "$/store/selectors";
 
 function getNewCursorPosition(ev: MouseEvent, ref: RefObject<HTMLElement | null>, duration: number) {
 	if (!ref.current) return 0;
@@ -21,6 +23,7 @@ interface Props {
 	children: (ref: RefObject<HTMLCanvasElement>) => ReactNode;
 }
 function AudioVisualizerContent({ cursorPosition, duration, onVisualizerClick, children }: Props) {
+	const wait = useAppSelector(selectPacerWait);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [scrubbing, setScrubbing] = useState(false);
 
@@ -45,7 +48,7 @@ function AudioVisualizerContent({ cursorPosition, duration, onVisualizerClick, c
 
 				if (onVisualizerClick) onVisualizerClick(event, newCursorPosition);
 			},
-			{ wait: 30 },
+			{ wait: wait },
 		),
 		[duration, onVisualizerClick, scrubbing],
 	);

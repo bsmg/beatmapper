@@ -50,7 +50,7 @@ export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGri
 
 export const rehydrate = createAction("@@STORAGE/rehydrate");
 
-export const { updateUsername, dismissPrompt, updateProcessingDelay, updateGraphicsQuality: updateGraphicsLevel } = user.actions;
+export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updatePacerWait } = user.actions;
 
 export const startLoadingMap = createAction("startLoadingMap", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
@@ -87,9 +87,10 @@ export const {
 	jumpBackwards: seekBackwards,
 	updateCursorPosition,
 	updateTrackScale: updateBeatDepth,
-	updateSongVolume,
 	updatePlaybackRate,
-	updateNoteTick: toggleNoteTick,
+	updateSongVolume,
+	updateTickVolume,
+	updateTickType,
 	updateSnap,
 	incrementSnap,
 	decrementSnap,

@@ -19,7 +19,7 @@ interface Props {
 }
 function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
-	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, beatDepth, surfaceDepth));
+	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const snapTo = useAppSelector(selectSnap);
 	const dispatch = useAppDispatch();
