@@ -1,6 +1,5 @@
 import { docs } from "velite:content";
-import { Fragment, type PropsWithChildren, useMemo } from "react";
-import { Helmet } from "react-helmet";
+import { type PropsWithChildren, useMemo } from "react";
 
 import { Divider, Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
@@ -8,34 +7,30 @@ import { DocsNavigationBlock, DocsProse, DocsTableOfContents } from "$/component
 
 interface Props extends PropsWithChildren {
 	id: string;
+	container: HTMLElement | null;
 }
 
-function DocsPageLayout({ id }: Props) {
-	const document = useMemo(() => docs.find((x) => x.id === id), [id]);
-	if (!document) {
+function DocsPageLayout({ id, container }: Props) {
+	const entry = useMemo(() => docs.find((x) => x.id === id), [id]);
+	if (!entry) {
 		throw new Error("No doc found at this route.");
 	}
 
 	return (
-		<Fragment>
-			<Helmet>
-				<title>Beatmapper Docs - {document.title}</title>
-			</Helmet>
-			<Wrapper>
-				<Stack gap={2}>
-					<Title>{document.title}</Title>
-					{document.subtitle && <Subtitle>{document.subtitle}</Subtitle>}
-				</Stack>
-				<Divider color={"border.muted"} />
-				<ContentWrapper>
-					<MainContent>
-						<DocsProse code={document.code} />
-					</MainContent>
-					<DocsTableOfContents toc={document.tableOfContents} />
-				</ContentWrapper>
-				{(document.prev || document.next) && <DocsNavigationBlock prev={document.prev} next={document.next} />}
-			</Wrapper>
-		</Fragment>
+		<Wrapper>
+			<Stack gap={2}>
+				<Title>{entry.title}</Title>
+				{entry.subtitle && <Subtitle>{entry.subtitle}</Subtitle>}
+			</Stack>
+			<Divider color={"border.muted"} />
+			<ContentWrapper>
+				<MainContent>
+					<DocsProse code={entry.code} />
+				</MainContent>
+				<DocsTableOfContents container={container} toc={entry.tableOfContents} />
+			</ContentWrapper>
+			{(entry.prev || entry.next) && <DocsNavigationBlock prev={entry.prev} next={entry.next} />}
+		</Wrapper>
 	);
 }
 

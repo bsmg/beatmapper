@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react";
 import { styled } from "$:styled-system/jsx";
 import { center, stack } from "$:styled-system/patterns";
 import { Logo } from "$/components/app/compositions";
+import { DocsThemeToggle } from "$/components/docs/compositions";
 
 function DocsSidebarRoot({ children }: PropsWithChildren) {
 	return (
@@ -11,6 +12,9 @@ function DocsSidebarRoot({ children }: PropsWithChildren) {
 				<Logo />
 			</Header>
 			<Navigation>{children}</Navigation>
+			<Footer>
+				<DocsThemeToggle />
+			</Footer>
 		</Wrapper>
 	);
 }
@@ -38,9 +42,18 @@ const Header = styled("header", {
 
 const Navigation = styled("nav", {
 	base: stack.raw({
+		height: "100%",
 		gap: 1,
 		padding: 1.5,
 		overflowY: { base: "visible", md: "auto" },
+	}),
+});
+
+const Footer = styled("footer", {
+	base: center.raw({
+		paddingBlock: 1,
+		borderTopWidth: "sm",
+		borderColor: "border.default",
 	}),
 });
 

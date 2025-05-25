@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Fragment } from "react";
 
@@ -14,11 +14,15 @@ export const Route = createRootRoute({
 		const state = store.getState();
 		return await Promise.resolve(selectInitialized(state));
 	},
+	head: () => {
+		return { meta: [{ title: "Beatmapper" }] };
+	},
 });
 
 function RootComponent() {
 	return (
 		<Fragment>
+			<HeadContent />
 			<Outlet />
 			<Toaster toaster={APP_TOASTER} />
 			{import.meta.env.DEV && <TanStackRouterDevtools position="top-right" />}

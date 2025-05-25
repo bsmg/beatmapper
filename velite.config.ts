@@ -2,13 +2,13 @@ import { defineCollection, defineConfig, s } from "velite";
 
 import { join } from "node:path";
 import { cwd } from "node:process";
-import { default as rehypeExpressiveCode } from "rehype-expressive-code";
+import { type RehypeExpressiveCodeOptions, default as rehypeExpressiveCode } from "rehype-expressive-code";
 import { default as rehypeSlug } from "rehype-slug";
 import { default as remarkGfm } from "remark-gfm";
 
 const mdx = s.mdx({
 	remarkPlugins: [[remarkGfm]],
-	rehypePlugins: [[rehypeSlug], [rehypeExpressiveCode, { themes: ["github-light-default", "github-dark-default"], styleOverrides: { frames: { shadowColor: "transparent" } } }]],
+	rehypePlugins: [[rehypeSlug], [rehypeExpressiveCode, { themes: ["github-light-default", "github-dark-default"], styleOverrides: { frames: { shadowColor: "transparent" } }, themeCssSelector: (theme) => `.${theme.type}` } as RehypeExpressiveCodeOptions]],
 });
 
 function resolveId(path: string, collection: string) {

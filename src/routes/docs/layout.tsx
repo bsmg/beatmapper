@@ -6,6 +6,12 @@ import DocsSidebar from "$/components/docs/templates/sidebar";
 
 export const Route = createFileRoute("/_/docs/_")({
 	component: RouteComponent,
+	onEnter: () => {
+		document.documentElement.className = localStorage.getItem("dark") === "true" ? "dark" : "light";
+	},
+	onLeave: () => {
+		document.documentElement.className = "dark";
+	},
 });
 
 function RouteComponent() {
