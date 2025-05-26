@@ -1,5 +1,5 @@
 import { styled } from "$:styled-system/jsx";
-import { divider, vstack } from "$:styled-system/patterns";
+import { vstack } from "$:styled-system/patterns";
 
 export { default as Item } from "./item";
 
@@ -20,11 +20,13 @@ export const Root = styled("nav", {
 	}),
 });
 
-export const Divider = styled("div", {
-	base: divider.raw({
-		color: "border.default",
+export const Divider = styled("hr", {
+	base: {
+		width: "100%",
+		borderTopWidth: "sm",
+		borderColor: "border.default",
 		borderStyle: "dotted",
-	}),
+	},
 });
 
 export const Section = styled("div", {

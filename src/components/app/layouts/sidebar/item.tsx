@@ -15,7 +15,7 @@ interface Props {
 }
 function AppSidebarNavItem({ icon: Icon, tooltip, active, children, ...delegated }: Props) {
 	return (
-		<Tooltip disabled={!tooltip} render={() => <Text fontWeight={500}>{tooltip}</Text>} positioning={TOOLTIP_POSITIONING}>
+		<Tooltip disabled={!tooltip} render={() => <Text fontWeight={400}>{tooltip}</Text>} positioning={TOOLTIP_POSITIONING}>
 			<Wrapper>
 				<ActiveIndicator data-active={active} />
 				<Contents data-active={active} {...delegated}>

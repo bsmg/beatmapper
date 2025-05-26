@@ -14,9 +14,9 @@ function ReturningHome() {
 					<SongsDataTable />
 				</MainColumn>
 				<SideColumn>
-					<Dialog title="Create new song" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
+					<Dialog title="Create new map" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
 						<Button variant="solid" size="md">
-							Create new song
+							Create new map
 						</Button>
 					</Dialog>
 					<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} />}>

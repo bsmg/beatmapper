@@ -24,7 +24,7 @@ import {
 	selectNote,
 	startLoadingMap,
 } from "$/store/actions";
-import { createActionsForNoteEntityAdapter, createByPositionSelector, createSelectedEntitiesSelector } from "$/store/helpers";
+import { createActionsForNoteEntityAdapter, createGridObjectSelector, createSelectedEntitiesSelector } from "$/store/helpers";
 import { type App, ObjectTool, ObjectType, View } from "$/types";
 
 const adapter = createEntityAdapter<App.IBombNote, EntityId>({
@@ -33,7 +33,7 @@ const adapter = createEntityAdapter<App.IBombNote, EntityId>({
 });
 const { selectAll, selectTotal } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
-const selectByPosition = createByPositionSelector(selectAll);
+const selectByPosition = createGridObjectSelector(selectAll);
 
 const slice = createSlice({
 	name: "bombs",
@@ -117,7 +117,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start && x.time < end } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start - 0.01 && x.time < end } })),
 			);
 		});
 		builder.addCase(mirrorSelection, (state, action) => {

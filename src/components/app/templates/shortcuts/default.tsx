@@ -41,12 +41,6 @@ interface Props {
 	sid: SongId;
 }
 
-/**
- * These are shortcuts that are shared among 3 views:
- * - Notes
- * - Events
- * - Demo
- */
 function DefaultEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();

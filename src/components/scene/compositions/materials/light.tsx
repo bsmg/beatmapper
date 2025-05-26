@@ -53,7 +53,7 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 		case App.BasicEventEffect.FADE: {
 			return {
 				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
-				to: { opacity: 0, emissiveIntensity: 0 },
+				to: { emissive: color, opacity: 0, emissiveIntensity: 0 },
 				immediate: false,
 				reset: false,
 				config: lightSpringConfig,

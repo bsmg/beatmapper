@@ -1,9 +1,10 @@
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { type UserConfig, defineConfig } from "vite";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
 import { default as react } from "@vitejs/plugin-react";
-import { VitePWA as pwa } from "vite-plugin-pwa";
+import { type VitePWAOptions, VitePWA as pwa } from "vite-plugin-pwa";
 
 import packageJson from "./package.json";
 
@@ -22,19 +23,60 @@ export default defineConfig(async (ctx) => {
 
 	await startVelite(isDev, isBuild);
 
-	return {
-		plugins: [
-			react(),
-			pwa({
-				registerType: "autoUpdate",
-				workbox: {
-					maximumFileSizeToCacheInBytes: 2621440, // 2.5 MiB
+	const PWA_OPTIONS: Partial<VitePWAOptions> = {
+		registerType: "prompt",
+		includeAssets: ["/favicon.ico"],
+		manifest: {
+			short_name: "Beatmapper",
+			name: "Beatmapper",
+			icons: [
+				{
+					src: "pwa-64x64.png",
+					sizes: "64x64",
+					type: "image/png",
 				},
-			}),
-		],
+				{
+					src: "pwa-192x192.png",
+					sizes: "192x192",
+					type: "image/png",
+				},
+				{
+					src: "pwa-512x512.png",
+					sizes: "512x512",
+					type: "image/png",
+					purpose: "any",
+				},
+				{
+					src: "maskable-icon-512x512.png",
+					sizes: "512x512",
+					type: "image/png",
+					purpose: "maskable",
+				},
+			],
+			id: "beatmapper",
+			start_url: ".",
+			display: "fullscreen",
+			orientation: "landscape",
+			theme_color: "hsl(222, 25%, 12%)",
+			background_color: "hsl(222, 30%, 7%)",
+		},
+		workbox: {
+			globPatterns: ["**/*"],
+			maximumFileSizeToCacheInBytes: 20971520, // 20 MB
+		},
+	};
+
+	let version = packageJson.version;
+	if (isDev) {
+		const hash = execSync("git rev-parse --short=7 HEAD");
+		version += `-dev.${hash.toString().trim()}`;
+	}
+
+	return {
+		plugins: [react(), pwa(PWA_OPTIONS)],
 		define: {
 			global: "window",
-			version: `\"${packageJson.version}\"`,
+			version: `\"${version}\"`,
 		},
 		resolve: {
 			alias: {

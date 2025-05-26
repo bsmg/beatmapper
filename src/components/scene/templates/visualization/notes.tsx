@@ -25,7 +25,7 @@ interface Props {
 function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
-	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
+	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const dispatch = useAppDispatch();
@@ -41,8 +41,9 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) 
 	// For starting clicking, I can use the `SELECT_NOTE` action, triggered when clicking a block... but they might not be over a block when they release the mouse.
 	// So instead I need to use a mouseUp handler up here.
 	const handlePointerUp = useCallback(
-		(_: PointerEvent) => {
+		(event: PointerEvent) => {
 			if (!interactive) return;
+			event.stopPropagation();
 			// Wait 1 frame before wrapping up. This is to prevent the selection mode from changing before all event-handlers have been processed.
 			// Without the delay, the user might accidentally add notes to the placement grid - further up in the React tree - if they release the mouse while over a grid tile.
 			window.requestAnimationFrame(() => dispatch(finishManagingNoteSelection()));
@@ -53,12 +54,13 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) 
 	useGlobalEventListener("pointerup", handlePointerUp, { shouldFire: !!selectionMode });
 
 	const handleNotePointerDown = useCallback(
-		(ev: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
+		(event: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
 			if (!interactive) return;
+			event.stopPropagation();
 			// We can rapidly select/deselect/delete notes by clicking, holding, and dragging the cursor across the field.
 			let newSelectionMode: ObjectSelectionMode | null = null;
 
-			switch (ev.button) {
+			switch (event.button) {
 				case 0: {
 					newSelectionMode = data.selected ? ObjectSelectionMode.DESELECT : ObjectSelectionMode.SELECT;
 					const action = !data.selected ? selectNote : deselectNote;
@@ -86,9 +88,11 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) 
 	);
 
 	const handleNotePointerOver = useCallback(
-		(_: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
+		(event: PointerEvent, data: Pick<App.IBaseNote, "time" | "posX" | "posY" | "selected">) => {
 			if (!interactive) return;
-			setHoveredId(resolveNoteId(data));
+			event.stopPropagation();
+			const id = resolveNoteId(data);
+			setHoveredId(id);
 			// While selecting/deselecting/deleting notes, pointer-over events are important and should trump others.
 			if (!selectionMode) return;
 			switch (selectionMode) {
@@ -112,8 +116,9 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) 
 	);
 
 	const handleNotePointerOut = useCallback(
-		(_: PointerEvent) => {
+		(event: PointerEvent) => {
 			if (!interactive) return;
+			event.stopPropagation();
 			setHoveredId(null);
 		},
 		[interactive],

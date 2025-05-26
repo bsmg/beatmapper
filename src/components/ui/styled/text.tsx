@@ -23,10 +23,11 @@ export const KBD = styled(ark.kbd, {
 		textTransform: "uppercase",
 		backgroundColor: "bg.muted",
 		color: "fg.muted",
+		borderWidth: "sm",
 		borderBottomWidth: "lg",
 		borderColor: "border.muted",
 		borderRadius: "sm",
-		transform: "translateY(-0.25em)",
+		transform: "translateY(-0.125em)",
 	}),
 });
 

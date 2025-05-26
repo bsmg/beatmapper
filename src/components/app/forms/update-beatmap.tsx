@@ -149,7 +149,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 						render={() => (
 							<Stack gap={2}>
 								<Form.Row>
-									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow Id" />}</Form.AppField>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
 									<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
 								</Form.Row>
 								<Form.AppField name="environmentName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>

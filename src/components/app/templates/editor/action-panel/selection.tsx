@@ -43,13 +43,13 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 
 	const numbers = [];
 	if (numOfSelectedBlocks) {
-		numbers.push(<SelectionCount key="blocks" num={numOfSelectedBlocks} label="block" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.NOTE }))} />);
+		numbers.push(<SelectionCount key="blocks" num={numOfSelectedBlocks} label="note" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.NOTE }))} />);
 	}
 	if (numOfSelectedMines) {
-		numbers.push(<SelectionCount key="mines" num={numOfSelectedMines} label="mine" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.BOMB }))} />);
+		numbers.push(<SelectionCount key="mines" num={numOfSelectedMines} label="bomb" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.BOMB }))} />);
 	}
 	if (numOfSelectedObstacles) {
-		numbers.push(<SelectionCount key="obstacles" num={numOfSelectedObstacles} label="wall" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.OBSTACLE }))} />);
+		numbers.push(<SelectionCount key="obstacles" num={numOfSelectedObstacles} label="obstacle" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.OBSTACLE }))} />);
 	}
 
 	return (

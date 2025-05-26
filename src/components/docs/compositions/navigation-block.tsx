@@ -3,7 +3,7 @@ import { ark } from "@ark-ui/react/factory";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { Divider, HStack, Stack, styled } from "$:styled-system/jsx";
+import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { Text } from "$/components/ui/compositions";
 
 interface NavProps {
@@ -19,7 +19,7 @@ function DocsNavigationBlock({ direction, item }: NavProps) {
 				{item && formattedSubtitle}
 			</Text>
 			<LinkWrapper asChild>
-				<Link to={"/docs/$"} params={{ _splat: `manual/${item?.id}` }}>
+				<Link to={"/docs/$"} params={{ _splat: item?.id }}>
 					{item?.title}
 				</Link>
 			</LinkWrapper>
@@ -55,5 +55,11 @@ function PreviousNextBar({ prev: prevId, next: nextId }: Props) {
 		</Stack>
 	);
 }
+
+const Divider = styled("hr", {
+	base: {
+		borderColor: "border.muted",
+	},
+});
 
 export default PreviousNextBar;

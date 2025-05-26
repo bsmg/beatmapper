@@ -58,7 +58,7 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 				<CoverArtFilePreview songId={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
 				<Stack gap={1}>
 					<Stack gap={0.5}>
-						<Text color={"fg.default"} fontSize="20px" fontWeight={500} lineHeight={1}>
+						<Text color={"fg.default"} fontSize="20px" fontWeight={400} lineHeight={1}>
 							{metadata.title}
 						</Text>
 						<Text color={"fg.muted"} fontSize="16px" fontWeight={400} lineHeight={1}>

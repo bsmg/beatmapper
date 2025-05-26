@@ -1,7 +1,7 @@
 import { docs } from "velite:content";
 import { type PropsWithChildren, useMemo } from "react";
 
-import { Divider, Stack, styled } from "$:styled-system/jsx";
+import { Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
 import { DocsNavigationBlock, DocsProse, DocsTableOfContents } from "$/components/docs/compositions";
 
@@ -58,6 +58,12 @@ const Subtitle = styled("div", {
 		fontSize: "28px",
 		color: "fg.muted",
 		fontWeight: "normal",
+	},
+});
+
+const Divider = styled("hr", {
+	base: {
+		borderColor: "border.muted",
 	},
 });
 

@@ -2,6 +2,9 @@ import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
+import { useAppSelector } from "$/store/hooks";
+import { selectProcessingImport } from "$/store/selectors";
+
 import { Stack } from "$:styled-system/jsx";
 import MapArchiveFileUpload from "$/components/app/compositions/file-upload";
 import { List, Text } from "$/components/ui/compositions";
@@ -10,6 +13,8 @@ interface Props {
 	dialog?: UseDialogContext;
 }
 function ImportMapForm({ dialog }: Props) {
+	const isProcessingImport = useAppSelector(selectProcessingImport);
+
 	const handleFileAccept = useCallback(() => {
 		if (dialog) dialog.setOpen(false);
 	}, [dialog]);
@@ -31,7 +36,7 @@ function ImportMapForm({ dialog }: Props) {
 				<Text color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
 					Drag and drop (or click to select) the .zip file:
 				</Text>
-				<MapArchiveFileUpload onFileAccept={handleFileAccept} />
+				<MapArchiveFileUpload disabled={isProcessingImport} onFileAccept={handleFileAccept} />
 			</Stack>
 		</Fragment>
 	);

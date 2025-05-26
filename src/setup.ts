@@ -10,10 +10,6 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 	name: "beat-mapper-files",
 	version: 3,
 	async upgrade(idb, current, next, tx) {
-		if (current !== 0) {
-			window.alert(`The local database has been updated to version ${next}. Please refresh the page to ensure these migrations can be properly applied.`);
-		}
-
 		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
 		await idb.removeStore("local-forage-detect-blob-support", tx);
 

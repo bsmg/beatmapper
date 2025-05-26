@@ -36,10 +36,10 @@ function EditorStatusBar({ sid }: Props) {
 			<Presence asChild present={view === View.BEATMAP}>
 				<StatusBar.Section>
 					<StatusBar.Group>
-						<StatusBar.Indicator label={pluralize(numOfBlocks, "block")} icon={BoxIcon}>
+						<StatusBar.Indicator label={pluralize(numOfBlocks, "note")} icon={BoxIcon}>
 							{numOfBlocks}
 						</StatusBar.Indicator>
-						<StatusBar.Indicator label={pluralize(numOfMines, "mine")} icon={GlobeIcon}>
+						<StatusBar.Indicator label={pluralize(numOfMines, "bomb")} icon={GlobeIcon}>
 							{numOfMines}
 						</StatusBar.Indicator>
 						<StatusBar.Indicator label={pluralize(numOfObstacles, "obstacle")} icon={CuboidIcon}>

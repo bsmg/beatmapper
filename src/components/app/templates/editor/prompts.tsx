@@ -9,7 +9,7 @@ import { List, Text, Toaster } from "$/components/ui/compositions";
 export const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 	a: ({ ...rest }) => (
 		<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
-			<a {...rest} target="_blank" />
+			<a {...rest} />
 		</Text>
 	),
 	p: ({ ...rest }) => (

@@ -1,10 +1,15 @@
 import { memo, useMemo } from "react";
 import type { Vector3Tuple } from "three";
 
+import { blockCenterUrl, blockDirectionalUrl } from "$/assets";
 import type { App } from "$/types";
+import { useOBJ } from "../../atoms";
 import { resolveRotationForNote } from "../../helpers";
 import BaseNote, { type BaseNoteProps } from "./base";
 import { resolvePathForNoteDirection } from "./helpers";
+
+useOBJ.preload(blockCenterUrl);
+useOBJ.preload(blockDirectionalUrl);
 
 function ColorNote({ position, data, size = 1, ...rest }: Omit<BaseNoteProps<App.IColorNote>, "path" | "children">) {
 	const url = useMemo(() => resolvePathForNoteDirection(data.direction), [data.direction]);

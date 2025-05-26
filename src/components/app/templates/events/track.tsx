@@ -123,7 +123,8 @@ function EventGridTrack({ sid, bid, trackId, width, height, disabled, onEventPoi
 
 		if (mouseButtonDepressed === "left") {
 			const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
-			dispatch(bulkAddBasicEvent(resolveEventData(beatNum, norm ?? 0)));
+			const payload = resolveEventData(beatNum, norm ?? 0);
+			dispatch(bulkAddBasicEvent({ ...payload, overwrite: false }));
 		}
 	}, [dispatch, resolveEventData, cursorAtBeat, norm, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 

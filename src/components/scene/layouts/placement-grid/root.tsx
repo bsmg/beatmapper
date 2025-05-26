@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import type { ObjectPlacementMode } from "$/types";
 
 import { useGlobalEventListener } from "$/components/hooks";
+import { isMetaKeyPressed } from "$/utils";
 import { type IPlacementGridContext, Provider } from "./context";
 import { resolveNoteDirectionForPlacementMode } from "./helpers";
 
@@ -89,7 +90,7 @@ function PlacementGridRoot({ mode, onCellPointerDown, onCellPointerUp, onCellPoi
 			const mouseOverAt = { x: event.pageX, y: event.pageY };
 			const direction = resolveNoteDirectionForPlacementMode(mouseDownAt, mouseOverAt, {
 				mappingMode: mode,
-				precisionPlacement: event.ctrlKey || event.metaKey,
+				precisionPlacement: isMetaKeyPressed(event),
 			});
 			// Mousemoves register very quickly; dozens of identical events might be submitted if we don't stop it, causing a backlog to accumulate on the main thread.
 			if (direction === null || direction === cachedDirection) return;

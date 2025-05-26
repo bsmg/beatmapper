@@ -1,7 +1,7 @@
 import { type UnknownAction, combineReducers } from "@reduxjs/toolkit";
 import undoable, { type FilterFunction, groupByActionTypes, type GroupByFunction, includeAction } from "redux-undo";
 
-import { addObstacle, addToCell, bulkRemoveNote, cutSelection, finishLoadingMap, mirrorColorNote, mirrorSelection, nudgeSelection, pasteSelection, redoObjects, removeAllSelectedObjects, removeNote, removeObstacle, undoObjects, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
+import { addObstacle, addToCell, bulkRemoveNote, cutSelection, mirrorColorNote, mirrorSelection, nudgeSelection, pasteSelection, redoObjects, removeAllSelectedObjects, removeNote, removeObstacle, undoObjects, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
 
 import bombs from "./bombs.slice";
 import notes from "./notes.slice";
@@ -14,19 +14,18 @@ const reducer = combineReducers({
 });
 
 const filter: FilterFunction<ReturnType<typeof reducer>, UnknownAction> = includeAction([
-	finishLoadingMap.type,
 	addToCell.fulfilled.type,
 	removeNote.type,
 	bulkRemoveNote.type,
-	removeAllSelectedObjects.type,
-	cutSelection.fulfilled.type,
-	pasteSelection.fulfilled.type,
+	mirrorColorNote.type,
 	addObstacle.fulfilled.type,
 	updateObstacle.type,
 	updateAllSelectedObstacles.type,
 	removeObstacle.type,
 	mirrorSelection.type,
-	mirrorColorNote.type,
+	removeAllSelectedObjects.type,
+	cutSelection.fulfilled.type,
+	pasteSelection.fulfilled.type,
 	nudgeSelection.fulfilled.type,
 	//
 ]);

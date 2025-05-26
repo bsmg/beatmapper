@@ -54,3 +54,29 @@ If you think you're ready to make a pull request, be sure to run through the fol
   - Use `major` for *any and all* breaking changes (i.e. localstorage, redux state, etc).
 
 Once submitted, a maintainer will review your pull request and, once approved, integrate your changes into a staging branch for future release.
+
+## Knowledge Base
+
+These are some useful guides and documentation for the core technologies used in the project:
+
+- [Ark UI](https://ark-ui.com/docs/overview/introduction)
+- [Drei](https://drei.docs.pmnd.rs/getting-started/introduction)
+- [Panda CSS](https://panda-css.com/docs/overview/getting-started)
+- [React](https://react.dev/learn)
+- [React Spring](https://www.react-spring.dev)
+- [React Three Fiber](https://r3f.docs.pmnd.rs/getting-started/introduction)
+- [React Postprocessing](https://react-postprocessing.docs.pmnd.rs/introduction)
+- [Redux](https://redux.js.org/introduction/getting-started)
+- [Redux Toolkit](https://redux-toolkit.js.org/introduction/getting-started)
+- [TanStack Form](https://tanstack.com/form/latest/docs/framework/react/overview)
+- [TanStack Pacer](https://tanstack.com/pacer/latest/docs/framework/react/overview)
+- [TanStack Router](https://tanstack.com/router/latest/docs/framework/react/overview)
+- [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
+- [TanStack Table](https://tanstack.com/table/latest/docs/framework/react/overview)
+- [three.js](https://threejs.org)
+- [Valibot](https://valibot.dev/guides/introduction)
+- [Velite](https://velite.js.org/guide/quick-start)
+- [Vite](https://vite.dev/guide)
+- [Vitest](https://vitest.dev/guide)
+
+- [BeatSaber-JSMap](https://github.com/KivalEvan/BeatSaber-JSMap)

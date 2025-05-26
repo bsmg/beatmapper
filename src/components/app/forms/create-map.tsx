@@ -116,7 +116,7 @@ function CreateMapForm({ dialog }: Props) {
 				</Form.Row>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
 				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
-				<Form.Submit>Create new song</Form.Submit>
+				<Form.Submit>Create</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>
 	);

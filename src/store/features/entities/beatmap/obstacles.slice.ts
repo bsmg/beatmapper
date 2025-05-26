@@ -131,7 +131,7 @@ const slice = createSlice({
 			const entities = selectAll(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start && x.time < end } })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start - 0.01 && x.time < end } })),
 			);
 		});
 		builder.addCase(mirrorSelection, (state, action) => {

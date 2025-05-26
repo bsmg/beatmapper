@@ -13,15 +13,15 @@ const mdx = s.mdx({
 
 function resolveId(path: string, collection: string) {
 	const [...splat] = path.replace(join(cwd(), `src/content/${collection}`), "").split("\\");
-	return splat.join("/").replace("/index", "").replace(".local", "").slice(1);
+	return splat.join("/").replace("/index", "").replace(".local", "").replace(".mdx", "").slice(1);
 }
 
 const docs = defineCollection({
 	name: "Doc",
 	pattern: "docs/**/*.mdx",
 	schema: s.object({ title: s.string(), subtitle: s.string().optional(), category: s.nullable(s.string()).default(null), order: s.number().default(0), prev: s.string().optional(), next: s.string().optional(), code: mdx, tableOfContents: s.toc() }).transform((data, ctx) => {
-		if (!ctx.meta.stem) return { id: "", ...data };
-		return { id: resolveId(ctx.meta.stem, "docs"), ...data };
+		if (!ctx.meta.path || typeof ctx.meta.path !== "string") return { id: "", ...data };
+		return { id: resolveId(ctx.meta.path, "docs"), ...data };
 	}),
 });
 
@@ -29,8 +29,8 @@ const prompts = defineCollection({
 	name: "Prompt",
 	pattern: "prompts/**/*.mdx",
 	schema: s.object({ title: s.string(), code: mdx }).transform((data, ctx) => {
-		if (!ctx.meta.stem) return { id: "", ...data };
-		return { id: resolveId(ctx.meta.stem, "prompts"), ...data };
+		if (!ctx.meta.path || typeof ctx.meta.path !== "string") return { id: "", ...data };
+		return { id: resolveId(ctx.meta.path, "prompts"), ...data };
 	}),
 });
 

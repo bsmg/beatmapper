@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { DotIcon } from "lucide-react";
 
-import { stack } from "$:styled-system/patterns";
+import { flex, stack } from "$:styled-system/patterns";
 
 import { Container, styled } from "$:styled-system/jsx";
 import { Logo } from "$/components/app/compositions";
@@ -30,18 +30,20 @@ function EditorPageHeader() {
 }
 
 const Wrapper = styled("header", {
-	base: {
+	base: flex.raw({
+		width: "100%",
 		minHeight: "header",
 		backgroundColor: "bg.default",
 		borderBottomWidth: "sm",
 		borderColor: "border.default",
 		paddingBlock: 1.5,
 		paddingBlockEnd: { mdDown: 3 },
-	},
+	}),
 });
 
 const InnerWrapper = styled(Container, {
 	base: stack.raw({
+		width: "100%",
 		direction: { base: "column", md: "row" },
 		align: "center",
 		justify: "space-between",

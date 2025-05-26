@@ -1,7 +1,8 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, isAnyOf } from "@reduxjs/toolkit";
+import { NoteJumpSpeed } from "bsmap";
 import { type CharacteristicName, type DifficultyName, EnvironmentName } from "bsmap/types";
 
-import { DEFAULT_GRID, DEFAULT_NOTE_JUMP_SPEEDS } from "$/constants";
+import { DEFAULT_GRID } from "$/constants";
 import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 import { getAllBeatmaps, getBeatmapById, getBeatmapIds, getBeatmaps, getColorScheme, getCustomColorsModule, getGridSize, getSelectedBeatmap, getSongLastOpenedAt, getSongMetadata, isModuleEnabled, isSongReadonly, resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
 import { processImportedMap } from "$/services/packaging.service";
@@ -116,7 +117,7 @@ const slice = createSlice({
 							[beatmapId]: {
 								...beatmapData,
 								lightshowId: beatmapId,
-								noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[beatmapData.difficulty],
+								noteJumpSpeed: NoteJumpSpeed.FallbackNJS[beatmapData.difficulty],
 								startBeatOffset: 0,
 								environmentName: EnvironmentName[0],
 								colorSchemeName: null,
@@ -159,7 +160,7 @@ const slice = createSlice({
 								lightshowId: data.lightshowId ?? beatmapId,
 								characteristic: data.characteristic,
 								difficulty: data.difficulty,
-								noteJumpSpeed: DEFAULT_NOTE_JUMP_SPEEDS[data.difficulty],
+								noteJumpSpeed: NoteJumpSpeed.FallbackNJS[data.difficulty],
 								startBeatOffset: 0,
 								environmentName: song.environment,
 								colorSchemeName: null,

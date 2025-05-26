@@ -19,7 +19,7 @@ interface Props {
 }
 function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
-	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
+	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const snapTo = useAppSelector(selectSnap);
 	const dispatch = useAppDispatch();
@@ -37,12 +37,12 @@ function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, interactive }: Pro
 	);
 
 	const handlePointerDown = useCallback(
-		(ev: PointerEvent, data: App.IObstacle) => {
+		(event: PointerEvent, data: App.IObstacle) => {
 			if (!interactive) return;
-			ev.stopPropagation();
+			event.stopPropagation();
 			const id = resolveObstacleId(data);
 
-			if (ev.buttons === 2) {
+			if (event.buttons === 2) {
 				dispatch(removeObstacle({ id: id }));
 			}
 		},
@@ -50,15 +50,15 @@ function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, interactive }: Pro
 	);
 
 	const handlePointerUp = useCallback(
-		(ev: PointerEvent, obstacle: App.IObstacle) => {
+		(event: PointerEvent, obstacle: App.IObstacle) => {
 			if (!interactive) return;
-			ev.stopPropagation();
+			event.stopPropagation();
 
 			if (obstacle.tentative) return;
 			// if we're selecting obstacles
 			if (selectionMode && hoveredId) return;
 
-			if (ev.buttons === 0) {
+			if (event.buttons === 0) {
 				resolveClickAction(obstacle);
 			}
 		},
@@ -66,34 +66,44 @@ function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, interactive }: Pro
 	);
 
 	const handlePointerOver = useCallback(
-		(_: PointerEvent, obstacle: App.IObstacle) => {
+		(event: PointerEvent, obstacle: App.IObstacle) => {
 			if (!interactive) return;
+			event.stopPropagation();
 			const id = resolveObstacleId(obstacle);
-			if (!selectionMode) {
-				return setHoveredId(id);
-			}
-			if (selectionMode === ObjectSelectionMode.SELECT && !obstacle.selected) {
-				dispatch(selectObstacle({ id: id }));
-			} else if (selectionMode === ObjectSelectionMode.DESELECT && obstacle.selected) {
-				dispatch(deselectObstacle({ id: id }));
-			} else if (selectionMode === ObjectSelectionMode.DELETE) {
-				dispatch(removeObstacle({ id: id }));
+			setHoveredId(id);
+			switch (selectionMode) {
+				case ObjectSelectionMode.SELECT:
+				case ObjectSelectionMode.DESELECT: {
+					const alreadySelected = obstacle.selected && selectionMode === ObjectSelectionMode.SELECT;
+					const alreadyDeselected = !obstacle.selected && selectionMode === ObjectSelectionMode.DESELECT;
+					if (alreadySelected || alreadyDeselected) return;
+					const action = !obstacle.selected ? selectObstacle : deselectObstacle;
+					return dispatch(action({ id: id }));
+				}
+				case ObjectSelectionMode.DELETE: {
+					return dispatch(removeObstacle({ id: id }));
+				}
+				default: {
+					return;
+				}
 			}
 		},
 		[dispatch, interactive, selectionMode],
 	);
 
 	const handlePointerOut = useCallback(
-		(_: PointerEvent) => {
+		(event: PointerEvent) => {
 			if (!interactive) return;
-			if (hoveredId) setHoveredId(null);
+			event.stopPropagation();
+			setHoveredId(null);
 		},
-		[interactive, hoveredId],
+		[interactive],
 	);
 
 	const resolveWheelAction = useCallback(
 		(event: WheelEvent, data: App.IObstacle, snapTo: number) => {
 			if (!interactive) return;
+			event.stopPropagation();
 			const id = resolveObstacleId(data);
 			// if we're not hovering over an object, no need to fire the event.
 			if (!hoveredId || hoveredId !== id) return;

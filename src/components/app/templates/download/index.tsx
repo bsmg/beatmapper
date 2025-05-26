@@ -59,20 +59,20 @@ function Download({ sid }: Props) {
 		},
 	});
 
-	const canDownload = useMemo(() => import.meta.env.PROD && isDemo, [isDemo]);
+	const demoBlocker = useMemo(() => import.meta.env.PROD && isDemo, [isDemo]);
 
 	return (
 		<Form.AppForm>
 			<Stack gap={4}>
 				<Heading rank={1}>Download Map</Heading>
-				<Form.Root>
-					<Content>
-						<Presence asChild present={canDownload} lazyMount unmountOnExit>
-							<VStack gap={6}>
-								<Text>Unfortunately, the demo map is not available for download.</Text>
-							</VStack>
-						</Presence>
-						<Presence asChild present={!canDownload} lazyMount unmountOnExit>
+				<Presence asChild present={demoBlocker} lazyMount unmountOnExit>
+					<VStack gap={6}>
+						<Text>Unfortunately, the demo map is not available for download.</Text>
+					</VStack>
+				</Presence>
+				<Presence asChild present={!demoBlocker} lazyMount unmountOnExit>
+					<Form.Root>
+						<Content>
 							<VStack gap={6}>
 								<VStack gap={2}>
 									<Text>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Text>
@@ -81,17 +81,17 @@ function Download({ sid }: Props) {
 									</Form.Submit>
 								</VStack>
 							</VStack>
-						</Presence>
-					</Content>
-					<Heading rank={2}>Options</Heading>
-					<Form.Row>
-						<Form.AppField name="version">{(ctx) => <ctx.RadioGroup label="Serial Version" required collection={VERSION_COLLECTION} />}</Form.AppField>
-					</Form.Row>
-					<Form.Row>
-						<Form.AppField name="minify">{(ctx) => <ctx.Switch label="Minify JSON Data" />}</Form.AppField>
-						<Form.AppField name="purgeZeros">{(ctx) => <ctx.Switch label="Prune Default Values" />}</Form.AppField>
-					</Form.Row>
-				</Form.Root>
+						</Content>
+						<Heading rank={2}>Options</Heading>
+						<Form.Row>
+							<Form.AppField name="version">{(ctx) => <ctx.RadioGroup label="Serial Version" required collection={VERSION_COLLECTION} />}</Form.AppField>
+						</Form.Row>
+						<Form.Row>
+							<Form.AppField name="minify">{(ctx) => <ctx.Switch label="Minify JSON Data" />}</Form.AppField>
+							<Form.AppField name="purgeZeros">{(ctx) => <ctx.Switch label="Prune Default Values" />}</Form.AppField>
+						</Form.Row>
+					</Form.Root>
+				</Presence>
 			</Stack>
 		</Form.AppForm>
 	);

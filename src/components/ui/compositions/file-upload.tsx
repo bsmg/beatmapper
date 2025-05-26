@@ -48,7 +48,7 @@ export function FileUpload({ colorPalette = "pink", deletable = true, files: ini
 
 	return (
 		<Builder.Root {...rest} onFileChange={handleChange}>
-			<Builder.Dropzone data-invalid={rest.invalid} className={css({ colorPalette })}>
+			<Builder.Dropzone data-invalid={rest.invalid} data-disabled={rest.disabled} className={css({ colorPalette })}>
 				<AcceptIcon />
 				<Builder.Label>{children ?? rest.accept?.toString() ?? "Any File"}</Builder.Label>
 				<Builder.Trigger asChild>

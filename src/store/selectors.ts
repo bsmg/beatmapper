@@ -8,7 +8,7 @@ import { deriveEventTracksForEnvironment, resolveEventColor, resolveEventEffect 
 import { getEditorOffset } from "$/helpers/song.helpers";
 import { App, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
-import { createByPositionSelector, selectHistory } from "./helpers";
+import { createGridObjectSelector, selectHistory } from "./helpers";
 import type { RootState } from "./setup";
 
 import { shallowEqual } from "react-redux";
@@ -240,7 +240,7 @@ export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
 export const selectVisibleBombs = createVisibleObjectsSelector(selectAllBombNotes);
 
 export const selectAllNotes = createDraftSafeSelector(selectAllColorNotes, selectAllBombNotes, (notes, bombs) => [...notes, ...bombs]);
-export const selectNoteByPosition = createByPositionSelector(selectAllNotes);
+export const selectNoteByPosition = createGridObjectSelector(selectAllNotes);
 
 export const {
 	selectAll: selectAllObstacles,

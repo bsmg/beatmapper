@@ -144,9 +144,9 @@ export const semanticTokens = defineSemanticTokens({
 		},
 	},
 	fonts: {
-		body: { value: ["'Oswald'", "sans-serif"] },
-		monospace: { value: ["'Inconsolata'", "monospace"] },
-		logo: { value: ["'Raleway'", "sans-serif"] },
+		body: { value: ["'Oswald Variable'", "sans-serif"] },
+		monospace: { value: ["'Inconsolata Variable'", "monospace"] },
+		logo: { value: ["'Raleway Variable'", "sans-serif"] },
 	},
 	sizes: {
 		header: { value: "75px" },

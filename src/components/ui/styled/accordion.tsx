@@ -22,7 +22,7 @@ const recipe = sva({
 			justify: "space-between",
 			fontFamily: "body",
 			fontSize: "15px",
-			fontWeight: 500,
+			fontWeight: 400,
 			textTransform: "uppercase",
 			borderRadius: "sm",
 			layerStyle: "fill.ghost",

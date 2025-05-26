@@ -4,13 +4,13 @@ import type { StateWithHistory } from "redux-undo";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { App } from "$/types";
 import { pick } from "$/utils";
-import type { RootState } from "./setup";
 
 export const createSlice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } });
 
 export type Snapshot = ReturnType<typeof selectSnapshot>;
 
-export function selectSnapshot<T extends RootState>(state: T) {
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export function selectSnapshot(state: any) {
 	return {
 		user: state.user,
 		editor: state.editor,
@@ -32,15 +32,20 @@ export function selectHistory<T, R, State>(snapshotSelector: (state: T) => State
 export function createSelectedEntitiesSelector<State, T extends App.IEditorObject>(selectAll: (state: State) => T[]) {
 	return createDraftSafeSelector(selectAll, (state) => state.filter((x) => x.selected === true));
 }
-export function createByPositionSelector<State, T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(selectAll: (state: State) => T[]) {
+export function createGridObjectSelector<State, T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(selectAll: (state: State) => T[]) {
 	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "posX" | "posY">) => query], (state, { time, posX, posY }) => {
 		return state.find((x) => x.time === time && x.posX === posX && x.posY === posY);
+	});
+}
+export function createEventSelector<State, T extends Pick<App.IBasicEvent, "time" | "type">>(selectAll: (state: State) => T[]) {
+	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "type">) => query], (state, { time, type }) => {
+		return state.find((x) => x.time === time && x.type === type);
 	});
 }
 
 export function createActionsForNoteEntityAdapter<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(api: ReducerCreators<EntityState<T, EntityId>>, adapter: EntityAdapter<T, EntityId>) {
 	const { selectAll } = adapter.getSelectors();
-	const selectByPosition = createByPositionSelector(selectAll);
+	const selectByPosition = createGridObjectSelector(selectAll);
 	type NotePayloadAction<T extends {}> = PayloadAction<{ query: Parameters<typeof resolveNoteId>[0] } & T>;
 	return {
 		updateOne: api.reducer((state, action: NotePayloadAction<{ changes: Partial<T> }>) => {

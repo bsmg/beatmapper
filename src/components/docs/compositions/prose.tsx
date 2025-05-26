@@ -146,6 +146,9 @@ const DocumentStyles = styled("div", {
 			borderRadius: "md",
 			fontSize: "0.9em",
 			marginBlock: { base: "30px", _lastOfType: 0 },
+			"& ul": {
+				marginBlock: 0,
+			},
 		},
 	},
 });

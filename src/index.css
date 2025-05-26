@@ -1,5 +1,9 @@
 @layer reset, base, tokens, recipes, utilities;
 
+@import "@fontsource-variable/oswald";
+@import "@fontsource-variable/raleway";
+@import "@fontsource-variable/inconsolata";
+
 @font-face {
 	font-family: system;
 	font-style: normal;
@@ -9,7 +13,7 @@
 
 body {
 	line-height: 1;
-	font-family: "Oswald", sans-serif;
+	font-family: "Oswald Variable", sans-serif;
 }
 
 #root {

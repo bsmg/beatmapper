@@ -8,7 +8,7 @@ import { useMemo, useRef, useState } from "react";
 
 import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 
-import { HStack, styled } from "$:styled-system/jsx";
+import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { ColorNote } from "$/components/scene/compositions";
 
 const MOCK_NOTE = createColorNote({ direction: NoteDirection.DOWN });
@@ -55,7 +55,10 @@ function Logo({ size = "full" }: Props) {
 					<directionalLight intensity={0.125} position={[5, 0, 20]} />
 					<directionalLight intensity={0.125} position={[-20, -10, 4]} />
 				</Canvas>
-				<Title size={size}>Beatmapper</Title>
+				<Stack gap={0.5}>
+					<Title size={size}>Beatmapper</Title>
+					<Subtitle size={size}>{import.meta.env.DEV && version}</Subtitle>
+				</Stack>
 			</HStack>
 		</Link>
 	);
@@ -71,6 +74,20 @@ const Title = styled("span", {
 		size: {
 			mini: { fontSize: "18px" },
 			full: { fontSize: "24px" },
+		},
+	},
+});
+
+const Subtitle = styled("span", {
+	base: {
+		color: "fg.muted",
+		fontFamily: "body",
+		fontWeight: "medium",
+	},
+	variants: {
+		size: {
+			mini: { display: "none" },
+			full: { fontSize: "12px" },
 		},
 	},
 });

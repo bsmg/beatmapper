@@ -17,6 +17,7 @@ export function resolvePositionForObstacle(obstacle: App.IObstacle, { beatDepth 
 		position[0] += obstacle.width * (BLOCK_CELL_SIZE / 2) - BLOCK_CELL_SIZE / 2;
 	}
 	// ----------- Y ------------
+	position[1] -= BLOCK_CELL_SIZE * 0.5;
 	if (obstacle.posY >= 1000 || obstacle.posY <= -1000) {
 		position[1] += (obstacle.height / 1000 - 1) * (BLOCK_CELL_SIZE / 2) - BLOCK_CELL_SIZE / 2;
 	} else {

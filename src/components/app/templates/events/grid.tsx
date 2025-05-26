@@ -3,11 +3,11 @@ import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCa
 
 import { useGlobalEventListener, useMousePositionOverElement, useParentDimensions } from "$/components/hooks";
 import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
-import { bulkRemoveEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
+import { bulkRemoveEvent, deselectEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectLoading, selectSnap } from "$/store/selectors";
 import { type Accept, type App, type BeatmapId, EventEditMode, type ISelectionBoxInBeats, type SongId, TrackType } from "$/types";
-import { clamp, normalize, range, roundToNearest } from "$/utils";
+import { clamp, isMetaKeyPressed, normalize, range, roundToNearest } from "$/utils";
 
 import { styled } from "$:styled-system/jsx";
 import { center, hstack, stack } from "$:styled-system/patterns";
@@ -109,7 +109,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 					startBeat: convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat),
 					endBeat: convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat),
 					// we should also track whether we want the selection box to preserve the existing selection
-					withPrevious: event.ctrlKey || event.metaKey,
+					withPrevious: isMetaKeyPressed(event),
 				});
 			}
 
@@ -157,6 +157,10 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 				event.stopPropagation();
 			}
 			switch (event.button) {
+				case 0: {
+					const action = data.selected ? deselectEvent : selectEvent;
+					return dispatch(action({ query: data, tracks, areLasersLocked }));
+				}
 				case 1: {
 					return dispatch(mirrorBasicEvent({ query: data, tracks, areLasersLocked }));
 				}
@@ -203,7 +207,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 
 	const handleEventWheel = useCallback(
 		(event: WheelEvent, data: App.IBasicEvent) => {
-			event.preventDefault();
+			event.stopPropagation();
 			if (event.altKey) {
 				resolveWheelAction(event, data);
 			}

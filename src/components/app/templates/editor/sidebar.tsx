@@ -21,14 +21,14 @@ function EditorSidebar({ sid, bid }: Props) {
 			<Sidebar.Section>
 				<Sidebar.Item icon={HomeIcon}>{(children) => <Link to="/">{children}</Link>}</Sidebar.Item>
 				<Sidebar.Divider />
-				<Sidebar.Item tooltip="Notes" icon={BoxIcon} active={!!location.pathname.match(/\/notes$/)}>
+				<Sidebar.Item tooltip="Beatmap" icon={BoxIcon} active={!!location.pathname.match(/\/notes$/)}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/notes"} params={params}>
 							{children}
 						</Link>
 					)}
 				</Sidebar.Item>
-				<Sidebar.Item tooltip="Events" icon={ZapIcon} active={!!location.pathname.match(/\/events$/)}>
+				<Sidebar.Item tooltip="Lightshow" icon={ZapIcon} active={!!location.pathname.match(/\/events$/)}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/events"} params={params}>
 							{children}
@@ -58,14 +58,14 @@ function EditorSidebar({ sid, bid }: Props) {
 				</Sidebar.Item>
 			</Sidebar.Section>
 			<Sidebar.Section>
-				<Sidebar.Item tooltip="App settings" icon={SettingsIcon} active={false}>
+				<Sidebar.Item tooltip="Settings" icon={SettingsIcon} active={false}>
 					{(children) => (
 						<Dialog title="App Settings" render={() => <AppSettingsForm />}>
 							<span>{children}</span>
 						</Dialog>
 					)}
 				</Sidebar.Item>
-				<Sidebar.Item tooltip="Help" icon={BookOpenIcon}>
+				<Sidebar.Item tooltip="Documentation" icon={BookOpenIcon}>
 					{(children) => (
 						<Link to="/docs/$" params={{ _splat: "intro" }}>
 							{children}
