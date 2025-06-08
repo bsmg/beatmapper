@@ -1,4 +1,4 @@
-import { createListCollection } from "@ark-ui/react/collection";
+import { createListCollection } from "@ark-ui/react";
 import { createToaster } from "@ark-ui/react/toast";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";

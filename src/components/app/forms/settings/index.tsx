@@ -1,4 +1,4 @@
-import { createListCollection } from "@ark-ui/react/collection";
+import { createListCollection } from "@ark-ui/react";
 import { Fragment } from "react/jsx-runtime";
 
 import { Tabs } from "$/components/ui/compositions";

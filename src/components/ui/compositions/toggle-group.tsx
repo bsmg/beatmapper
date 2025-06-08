@@ -1,4 +1,4 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
+import type { CollectionItem, ListCollection } from "@ark-ui/react";
 import type { ComponentProps } from "react";
 
 import { ListCollectionFor } from "../atoms";

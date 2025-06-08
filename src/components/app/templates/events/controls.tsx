@@ -1,4 +1,4 @@
-import { createListCollection } from "@ark-ui/react/collection";
+import { createListCollection } from "@ark-ui/react";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { type CSSProperties, type ComponentProps, useMemo } from "react";
 

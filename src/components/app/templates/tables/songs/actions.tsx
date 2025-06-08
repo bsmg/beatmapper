@@ -1,4 +1,4 @@
-import { createListCollection } from "@ark-ui/react/collection";
+import { createListCollection } from "@ark-ui/react";
 import type { MenuSelectionDetails } from "@ark-ui/react/menu";
 import { ChevronDownIcon } from "lucide-react";
 import { useCallback, useMemo } from "react";

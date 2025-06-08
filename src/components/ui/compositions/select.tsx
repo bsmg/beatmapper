@@ -1,5 +1,4 @@
-import type { Assign, SelectRootProps } from "@ark-ui/react";
-import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
+import type { Assign, CollectionItem, ListCollection, SelectRootProps } from "@ark-ui/react";
 import { Portal } from "@ark-ui/react/portal";
 import { ChevronDownIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";

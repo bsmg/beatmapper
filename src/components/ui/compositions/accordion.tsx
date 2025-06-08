@@ -1,5 +1,5 @@
+import type { CollectionItem, ListCollection } from "@ark-ui/react";
 import type { UseAccordionItemContext } from "@ark-ui/react/accordion";
-import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { ChevronDownIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 

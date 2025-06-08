@@ -22,9 +22,9 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	},
 	onEnter: async ({ params, loaderData }) => {
 		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
-		if (loaderData) {
+		if (loaderData && "prompt" in loaderData) {
 			const { prompt } = loaderData;
-
+			if (!prompt) return;
 			EDITOR_TOASTER.create({
 				id: prompt.id,
 				type: "loading",

@@ -2,7 +2,7 @@ import { DifficultyName } from "bsmap/types";
 
 import { ColorSchemeKey } from "$/types";
 
-export const CHARACTERISTICS = ["Standard", "NoArrows", "OneSaber", "Legacy", "Lawless"];
+export const CHARACTERISTICS = ["Standard", "NoArrows", "OneSaber", "Legacy", "Lawless"] as const;
 export const DIFFICULTIES = [DifficultyName[0], DifficultyName[1], DifficultyName[2], DifficultyName[3], DifficultyName[4]] as const;
 
 export const DEFAULT_NUM_COLS = 4;

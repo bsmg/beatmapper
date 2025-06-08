@@ -1,4 +1,4 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
+import type { CollectionItem, ListCollection } from "@ark-ui/react";
 import type { UseTabsContext } from "@ark-ui/react/tabs";
 import type { ComponentProps, ReactNode } from "react";
 
