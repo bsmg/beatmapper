@@ -1,0 +1,242 @@
+---
+title: Keyboard Shortcuts
+subtitle: Master the editor
+---
+
+Beatmapper makes heavy use of keyboard (and mouse) shortcuts. 
+You can make maps without learning any of them, but your life will be much easier if you take the time to familiarize yourself with them.
+
+## General Shortcuts
+
+These shortcuts can be used either in the "Beatmap" view or the "Lightshow" view.
+
+<ShortcutTable>
+  <ShortcutItem title="Download map" keys={[["META", "S"]]}>
+    Save a copy of the current map. Do this frequently!
+  </ShortcutItem>
+  <ShortcutItem title="Play / pause the music" keys={[["Space"]]}>
+    Play / pause the music.
+    Will snap to the nearest beat when pausing
+  </ShortcutItem>
+  <ShortcutItem title="Seek forwards" keys={[["↑"], ["→"]]}>
+    Advance the cursor by the "Snapping interval" selected
+  </ShortcutItem>
+  <ShortcutItem title="Seek backwards" keys={[["↓"], ["←"]]}>
+    Rewind the cursor by the "Snapping interval" selected
+  </ShortcutItem>
+  <ShortcutItem title="Quick-select" keys={[["Q"]]}>
+    Select all entities between two beats. Only selects entities in the
+    current view (blocks/mines/obstacles in "Beatmap" view, lighting events in
+    "Lightshow" view)
+  </ShortcutItem>
+  <ShortcutItem title="Jump to a specific beat" keys={[["J"]]}>
+    Moves the cursor to the user-inputted beat number.
+  </ShortcutItem>
+  <ShortcutItem title="Cut selection" keys={[["META", "X"]]}>
+    Copies the active selection to the clipboard, and deletes the selected
+    entities
+  </ShortcutItem>
+  <ShortcutItem title="Copy selection" keys={[["META", "C"]]}>
+    Copies the active selection to the clipboard
+  </ShortcutItem>
+  <ShortcutItem title="Paste selection" keys={[["META", "V"]]}>
+    Inserts the clipboard data into the entity collections.
+  </ShortcutItem>
+  <ShortcutItem title="Delete selection"  keys={[["Del"]]}>
+    Removes the active selection
+  </ShortcutItem>
+  <ShortcutItem title="Skip to the start" keys={[["Home"]]}>
+    Moves the cursor to the first beat of the song.
+  </ShortcutItem>
+  <ShortcutItem title="Skip to the end" keys={[["End"]]}>
+    Moves the cursor to the last beat of the song.
+  </ShortcutItem>
+  <ShortcutItem title="Undo" keys={[["META", "Z"]]}>
+    Undoes the last action
+  </ShortcutItem>
+  <ShortcutItem title="Redo" keys={[["Shift", "META", "Z"]]}>
+    Redo
+    Reverts the last undo
+  </ShortcutItem>
+  <ShortcutItem title="Switch snapping interval" keys={[["META", "1"], ["META", "9"]]} separator="through">
+    Set the snapping interval to a new value, ranging from <Shortcut size="small">meta+1</Shortcut>
+    for 1/16th beat, to <Shortcut size="small">meta+9</Shortcut>
+    for 4 bars
+  </ShortcutItem>
+  <ShortcutItem title="Scroll through snapping intervals" keys={[["META", "SCROLL"], ["META", "↓"], ["META", "↑"]]}>
+    Sweep through available snapping intervals by holding <Shortcut size="small">meta</Shortcut>
+    and either spinning the mousewheel or using the arrow keys
+  </ShortcutItem>
+  <ShortcutItem title="Clears selection" keys={[["Esc"]]}>
+    Clears the current selection
+  </ShortcutItem>
+  <ShortcutItem title="Create bookmark" keys={[["META", "B"]]}>
+    Bookmarks add little flags to the waveform that let you quickly jump to
+    different points in the map. You can right-click to delete existing
+    bookmarks.
+  </ShortcutItem>
+</ShortcutTable>
+
+## "Beatmap" View Shorcuts
+
+These shortcuts are exclusive to placing blocks, mines, and obstacles in the "Beatmap" view.
+
+<ShortcutTable>
+  <ShortcutItem title="Set the direction for note blocks" keys={[[["W","A","S","D","F"]]]}>
+    While <Shortcut size="small" separator=" ">w a s d</Shortcut> choose cardinal directions,
+    <Shortcut size="small">f</Shortcut> resets to a directionless note.
+    <br />
+    Diagonals can be achieved by holding multiple keys
+    (eg. <Shortcut size="small">w+a</Shortcut> for up-left)
+  </ShortcutItem>
+  <ShortcutItem title="Look around" keys={[["SHIFT", "MOVE"]]}>
+    Holding shift allows you to pan the camera, like looking around in a
+    first-person video game
+  </ShortcutItem>
+  <ShortcutItem title="Move around" keys={[["SHIFT", ["W","A","S","D"]]]}>
+    Like Unreal Tournament!
+    <br />
+    You can also rise straight up with <Shortcut size="small">r</Shortcut> or fall straight down with <Shortcut size="small">f</Shortcut>
+  </ShortcutItem>
+  <ShortcutItem title="Reset view" keys={[["Backspace"]]}>
+    Jump back to the original camera position
+  </ShortcutItem>
+  <ShortcutItem title="Select / Deselect all" keys={[["META", "A"]]}>
+    Select all notes/mines/obstacles. Can also be used to deselect everything,
+    if a current selection exists
+  </ShortcutItem>
+  <ShortcutItem title="Set Tool to Left Note" keys={[["R"], ["1"]]}>
+    So that clicking on the placement grid creates a left note
+  </ShortcutItem>
+  <ShortcutItem title="Set Tool to Right Note" keys={[["B"], ["2"]]}>
+    So that clicking on the placement grid creates a right note
+  </ShortcutItem>
+  <ShortcutItem title="Set Tool to Mine" keys={[["3"]]}>
+    So that clicking on the placement grid creates mines
+  </ShortcutItem>
+  <ShortcutItem title="Set Tool to Obstacles" keys={[["4"]]}>
+    So that clicking on the placement grid creates obstacles (walls and ceilings)
+  </ShortcutItem>
+  <ShortcutItem title="Select next tool" keys={[["Tab"]]}>
+    Cycles between left note, right note, bomb, and obstacle
+  </ShortcutItem>
+  <ShortcutItem title="Select previous tool" keys={[["SHIFT", "Tab"]]}>
+    Cycles between left note, right note, bomb, and obstacle
+  </ShortcutItem>
+  <ShortcutItem title="Swap selection horizontally" keys={[["H"]]}>
+    Mirror the selected blocks/mines/obstacles from left to right
+  </ShortcutItem>
+  <ShortcutItem title="Swap selection vertically" keys={[["V"]]}>
+    Mirror the selected blocks/mines/obstacles from top to bottom
+  </ShortcutItem>
+  <ShortcutItem title="Jump forward" keys={[["Page Up"]]}>
+    Advance the cursor forwards by 32 beats
+  </ShortcutItem>
+  <ShortcutItem title="Jump backwards" keys={[["Page Down"]]}>
+    Rewind the cursor backwards by 32 beats
+  </ShortcutItem>
+  <ShortcutItem title="Scrub through time" keys={[["SCROLL"]]}>
+    Scroll the mousewheel to scrub through the song. Tweak the "snapping
+    interval" control to change the precision.
+  </ShortcutItem>
+  <ShortcutItem title="Select entity" keys={[["CLICKLEFT"]]}>
+    Entities are blocks, mines, and obstacles. Click again to deselect it
+  </ShortcutItem>
+  <ShortcutItem title="Delete entity" keys={[["CLICKRIGHT"]]}>
+    Right-click an entity to delete it
+  </ShortcutItem>
+  <ShortcutItem title="Mirror note color" keys={[["CLICKMIDDLE"]]}>
+    Swaps the saber color for a color note. Has no effect on mines and obstacles
+  </ShortcutItem>
+  <ShortcutItem title="Nudge selected notes" keys={[["OPTION", "↓"], ["OPTION", "↑"]]}>
+    Sometimes, you'll want to shift the selection forwards or backwards a bit.
+    <br />
+    By holding <Shortcut size="small">option</Shortcut> and using the arrow keys or spinning the mousewheel, you can nudge notes.
+    <br />
+    <strong>Respects the snapping interval</strong>.
+  </ShortcutItem>
+  <ShortcutItem title="Toggle 'Customize Grid' panel" keys={[["G"]]}>
+    Switches the right side-panel to show the grid configuration options.
+    <br />
+    <strong>Requires "Mapping Extensions" to be enabled</strong>.
+  </ShortcutItem>
+</ShortcutTable>
+
+## "Lightshow" View Shorcuts
+
+These shortcuts are used for placing lighting and ring events in the "Lightshow" view.
+
+<ShortcutTable>
+  <ShortcutItem title="Switch to 'Add' mode" keys={[["A"]]}>
+    There are two edit modes, "Add" and "Select".
+    <br />
+    In "Add" mode, you can click to add events
+  </ShortcutItem>
+  <ShortcutItem title="Switch to 'Select' mode" keys={[["S"]]}>
+    There are two edit modes, "Add" and "Select".
+    <br />
+    In "Select" mode, you can quickly batch-select groups of events
+  </ShortcutItem>
+  <ShortcutItem title="Set light color to 'Red'" keys={[["R"]]}>
+    Sets the color for new events in lighting tracks
+  </ShortcutItem>
+  <ShortcutItem title="Set light color to 'Blue'" keys={[["B"]]}>
+    Sets the color for new events in lighting tracks
+  </ShortcutItem>
+  <ShortcutItem title="Select 'On' tool" keys={[["1"]]}>
+    Sets the event type for new events in lighting tracks
+  </ShortcutItem>
+  <ShortcutItem title="Select 'Off' tool" keys={[["2"]]}>
+    Sets the event type for new events in lighting tracks
+  </ShortcutItem>
+  <ShortcutItem title="Select 'Flash' tool" keys={[["3"]]}>
+    Sets the event type for new events in lighting tracks
+    <br />
+    "Flash" events grow to maximum brightness, and remain on afterwards
+  </ShortcutItem>
+  <ShortcutItem title="Select 'Fade' tool" keys={[["4"]]}>
+    Sets the event type for new events in lighting tracks
+    <br />
+    "Fade" events jump to maximum brightness and fade out, remaining off afterwards
+  </ShortcutItem>
+  <ShortcutItem title="Select next tool" keys={[["Tab"]]}>
+    Cycles between On, Off, Flash, and Fade
+  </ShortcutItem>
+  <ShortcutItem title="Select previous tool" keys={[["Shift", "Tab"]]}>
+    Cycles between On, Off, Flash, and Fade
+  </ShortcutItem>
+  <ShortcutItem title="Zoom out" keys={[["-"]]}>
+    The "Lightshow" view shows a window of events, defaulting to 16 beats. You can
+    increase that to 32 beats, for a wider view.
+  </ShortcutItem>
+  <ShortcutItem title="Zoom in" keys={[["+"]]}>
+    Decrease the number of events shown in the "Lightshow" window.
+    <br />
+    Note that the shortcut can be typed as <Shortcut size="small">shift+=</Shortcut>, to
+    form the `+`. Or use the numpad.
+  </ShortcutItem>
+  <ShortcutItem title="Jump to start" keys={[["Page Up"]]}>
+    Jump to the start of the current window.
+    If you're already right at the start, this jumps to the previous window
+  </ShortcutItem>
+  <ShortcutItem title="Jump to end" keys={[["Page Down"]]}>
+    Jump to the start of the next window.
+  </ShortcutItem>
+  <ShortcutItem title="Select / deselect all" keys={[["META", "A"]]}>
+    Select all events <strong>within the current window</strong>. Unlike in
+    "Beatmap" view, this shortcut only selects what is visible.
+    <br />
+    If any events are selected, this will deselect everything.
+  </ShortcutItem>
+  <ShortcutItem title="Nudge selected events" keys={[["OPTION", "SCROLL"], ["OPTION", "↓"], ["OPTION", "↑"]]}>
+    Shift selected events forwards or backwards.
+    <br />
+    <strong>Respects the snapping interval</strong>.
+  </ShortcutItem>
+  <ShortcutItem title="Toggle the 'event window lock'" keys={[["Z"]]}>
+    Loop playback within the current event window.
+  </ShortcutItem>
+  <ShortcutItem title="Toggle the 'laser lock'" keys={[["X"]]}>
+    Tie the left/right laser tracks together so that events in one affect the other.
+  </ShortcutItem>
+</ShortcutTable>

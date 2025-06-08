@@ -67,7 +67,7 @@ function EditorSidebar({ sid, bid }: Props) {
 				</Sidebar.Item>
 				<Sidebar.Item tooltip="Documentation" icon={BookOpenIcon}>
 					{(children) => (
-						<Link to="/docs/$" params={{ _splat: "intro" }}>
+						<Link to="/docs/$" params={{ _splat: "welcome" }}>
 							{children}
 						</Link>
 					)}

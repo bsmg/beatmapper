@@ -4,31 +4,28 @@ subtitle: 💨
 category: advanced
 ---
 
-By default, walls pop into existence a few beats ahead of the player, and move at the same speed as the notes towards the player. Fast walls offer a way to tweak this behavior, and send walls shooting quickly towards the player.
+By default, walls pop into existence a few beats ahead of the player, and move at the same speed as the notes towards the player. 
+Fast walls offer a way to tweak this behavior, and send walls shooting quickly towards the player.
 
-> Fast walls are a very advanced feature, with many caveats.
->
-> For one thing, you risk injuring players who are startled by how quickly an obstacle flies towards them!
->
-> Additionally, they exploit a loophole in the game's programming, and will likely be patched in the future. Using fast walls might make your maps unplayable.
+> Fast walls are a very unstable feature with many caveats.
+> They exploit a loophole in the game's programming, and there is a strong possibility these behaviors may be patched at some point in the future if they were not already.
 
-### Enabling fast walls
+Fast walls are differentiated with a green outline:
 
-By default, you are not able to place fast walls.
+![Normal wall on the left, fast wall on the right](../../media/images/fast-walls.png)
 
-Head into the "Map settings" page and scroll down to tick the "Enable Fast Walls" checkbox.
+### Creating Fast Walls
 
-### Toggling fast walls
+By default, you are not able to directly place fast walls using traditional means.
+To set a wall as "fast", you need to select it, click the "Change duration" button that will appear on the right-hand panel, and input a negative value when prompted. 
 
-To set a wall as "fast", select it and then click the "Toggle Fast Walls" button in the right side-panel. Fast walls are differentiated with a large "F" in their center:
+### Working with Fast Walls
 
-![](./images/fast-walls.png)
+Simply altering a wall to be "fast" won't guarantee that it moves by the player quickly. The _speed_ of the wall depends on its _duration_ and _start beat offset_.
 
-### Working with fast walls
-
-Simply toggling a wall as "fast" won't guarantee that it moves by the player quickly. The _speed_ of the wall depends on its _duration_ and _start beat offset_.
-
-By default, notes and obstacles spawn 2 beats away from the player. If a note is to be struck on Beat 16, it spawns in the distance on beat 14. "Start beat offset" is a way to tweak that value; it defaults to 0, and you can push the offset back further with positive numbers; a "start beat offset" of 1 means that notes and obstacles start 3 beats away from the player instead of 2.
+By default, notes and obstacles spawn 2 beats away from the player. If a note is to be struck on Beat 16, it spawns in the distance on beat 14. 
+"Start beat offset" is a way to tweak that value; it defaults to 0, and you can push the offset back further with positive numbers; 
+a "start beat offset" of 1 means that notes and obstacles start 3 beats away from the player instead of 2.
 
 With a default "start beat offset" of 0, here's some rough guidelines:
 
@@ -38,6 +35,5 @@ With a default "start beat offset" of 0, here's some rough guidelines:
 
 Fast walls are sort-of the Wild West; not many people understand them that deeply, and they're seldomly used. Some experimentation is required to get a feel for them.
 
-They can provide neat effects in certain songs, especially when combined with [Mapping Extensions](/docs/mods#mapping-extensions) to place the walls outside of the player's personal space. But they carry risks: a future update might break any map that uses them! So please be cautious.
-
-Better support might come in the future, but until their future feels more solid, it's not worth investing time into.
+They can provide neat effects in certain songs, especially when combined with [Mapping Extensions](/docs/mods#mapping-extensions) to place the walls outside of the player's personal space. 
+But they carry risks: modern updates have historically broken maps that use fast walls, so please be cautious.

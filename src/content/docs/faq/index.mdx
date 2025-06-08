@@ -1,0 +1,60 @@
+---
+title: Frequently Asked Questions
+---
+
+We've received a lot of questions around Beatmapper over the years. Here are the more important ones you should probably know the answers to:
+
+## Is the editor still maintained?
+
+Yes! I ([officialMECH](https://github.com/officialmech)) am the sole maintainer and will be periodically updating the editor with new quality-of-life features and bugfixes. 
+However, I work on this project during my free time, so new features might take substantially longer than other editors since my time and attention is limited.
+
+## Can I help contribute to Beatmapper?
+
+Absolutely! The editor is [open-source](https://github.com/bsmg/beatmapper) and MIT-licensed, so regardless of how much programming experience you have, 
+you're welcome to read through the [Contributor's Guide](https://github.com/bsmg/beatmapper/blob/master/CONTRIBUTING.md) if you'd like to help with future development.
+
+## Where is the best place to report bugs / request features?
+
+All user reports are tracked on the [Issues tab of the GitHub repository](https://github.com/bsmg/beatmapper/issues).
+That way, you won't have to scavenge around Discord channels and other feeds to find out whether you're bug/feature has been reported or addressed, 
+and any additional context or updates can be provided in the thread for each report when new developments or updates are available.
+
+## How can I test upcoming features?
+
+We don't support a "dev" branch of Beatmapper to preview upcoming builds like with other community editors, 
+since there is no remote storage mechanism, and local data cannot be easily transferrable across devices or instances (due to various limitations on web platforms).
+
+However, you can always [build a local instance of the editor](/docs/running-locally) off any `staging/*` branch to test an upcoming build of Beatmapper direct from the repository.
+Just be aware that by doing so, **you will not be guaranteed support if you encounter unexpected issues**, since these builds are not guaranteed to be stable in the first place.
+
+## When are we getting support for [INSERT FEATURE HERE]?
+
+Beatmapper is primarily developed by a sole maintainer with limited free time and resources, 
+and it takes a lot of work in order to bring a 5+ year old editor back up to speed with the modern featureset of the game. 
+
+A [compatibility guide](/docs/migration#compatibility) is available that outlines what newer beatmap features are planned and/or supported by the editor for the current update, 
+but please be patient since there is still a lot of work to be done to ensure full compatibility, and it will not happen overnight.
+
+You can always monitor the progress of upcoming features via the [Milestones](https://github.com/bsmg/beatmapper/milestones) tab. 
+Alternatively, if you have the expertise and would like to help accelerate the progress on features currently in the backlog,
+you're welcome to [contribute to ongoing development directly](https://github.com/bsmg/beatmapper/blob/master/CONTRIBUTING.md) 
+and/or reach out if you have any potential questions you have regarding ongoing or future development.
+
+## Are there plans to improve mobile support?
+
+Unfortunately, mobile support is not really possible with the current architecture of the app, 
+mainly due to incomplete implementations for specific web APIs and roadblocking privacy features within the iOS platform that are too difficult to work around at this stage of development:
+
+- iOS does not offer native playback support for the OGG Voribs audio format, which is the only audio format that is allowed for custom maps distributed on BeatSaver. 
+- Because Beatmapper does not have a remote storage layer or directory mounting mechanism, all maps must be manually transferred between desktop and mobile devices, 
+  which ends up being a pretty significant inconvenience when needing to preview your map in-game.
+- The iOS implementation of IndexedDB does not offer full compatibility with non-serial data, 
+  which means multimedia files (like the audio file or cover image) would need to be re-requested every time you open a particular map.
+- When visiting a website on iOS, any locally-stored data will *automatically be wiped* after a week of inactivity, 
+  which completely destroys the whole intent of the local storage mechanism acting as the app's persistence layer.
+
+On top of these roadblocks, we would need to essentially rearchitect the entire UI layer for mobile devices, 
+including a unified component architecture for both desktop and mobile environments.
+
+This is a considerable amount of work for what I would consider to be very little payoff in practice. hence why I'm not really considering it at this time.

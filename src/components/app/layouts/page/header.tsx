@@ -18,7 +18,7 @@ function EditorPageHeader() {
 				<SectionWrapper>
 					<Interleave separator={({ index }) => <DotIcon key={index} />}>
 						<Text asChild textStyle={"link"}>
-							<Link to="/docs/$" params={{ _splat: "intro" }}>
+							<Link to="/docs/$" params={{ _splat: "welcome" }}>
 								Documentation
 							</Link>
 						</Text>

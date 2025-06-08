@@ -1,0 +1,31 @@
+---
+title: Privacy Policy
+subtitle: "Last updated: 2025-06-05"
+category: legal
+---
+
+Beatmapper is proud to be minimally invasive from a privacy standpoint. We collect very little information, and operate in a manner similar to a desktop standalone application.
+
+This document covers the data we collect and how we use it.
+
+## Remotely collected data
+
+All services within Beatmapper operate entirely on-device, and we do not own or operate any remote services outside of the single-page web application distributed via GitHub Pages.
+
+- Beatmapper does not feature a user authentication system; as such, we do not handle any personally-identifiable information (PII).
+- Beatmapper does not feature any client-side analytics; we don't use Google Analytics or any similar services.
+- Beatmapper does not feature any mechanisms to process or store your data on any remote servers or cloud platforms.
+
+In the future I may wish to collect aggregate analytics to improve the editor. 
+For example, one of the editor controls allows users to increase/decrease the spacing between notes. 
+I have no idea how many people use this feature. If the answer is near-zero, it probably makes sense to remove it, and replace it with something more useful.
+
+## Locally saved data
+
+Beatmapper doesn't use any cookies, but we do use other browser storage mechanisms provided by Web APIs: 
+
+- **[IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)** is used for local file storage of related map files, such as audio/image assets and serial map data.
+- **[Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API)** is used for storing persistable application state so that settings can be "sticky". 
+  For example, if you update the render scale, your browser will remember that setting and restore that value tomorrow.
+
+These APIs live entirely within the browser, and all data you provide to the application is solely and exclusively stored on your device.

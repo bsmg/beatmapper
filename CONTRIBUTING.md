@@ -27,13 +27,15 @@ This project is bootstrapped with a modified [Vite](https://vitejs.dev/) + [Reac
 
 ### Project Setup
 
-1. Install [Node.js](https://nodejs.dev/en/learn/how-to-install-nodejs/) and [Visual Studio Code](https://code.visualstudio.com/Download) if you haven't already.
-2. [Create a new fork](https://guides.github.com/activities/forking/) of the repository and [clone it](https://code.visualstudio.com/docs/sourcecontrol/overview#_cloning-a-repository) to your local machine.
-3. [Create a new dedicated branch](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) and sync it to your workspace.
-4. If you're using Visual Studio Code, install the recommended workspace extensions (the editor should prompt you to do so). This will enable useful integrations for your workspace.
-5. Open a new terminal in your cloned directory and run `yarn install`. This will install all necessary dependencies to bundle the application.
-6. Make your changes! You can run `yarn dev` to start a local development environment or `yarn build` + `yarn preview` for a production environment.
-7. Once the server is running, you can open the `localhost` link that appears in console to access the app on your local machine.
+The documentation site has a [very detailed guide](https://beatmapper.app/docs/running-locally) on how to build the web application on your local machine.
+
+Once you have a local copy of the project on your machine, we'd recommend taking these additional steps before you start making any code modifications:
+
+1. [Create a new fork](https://guides.github.com/activities/forking/) of the repository, so that all of your modifications can be tracked on *your* copy of the repository.
+2. [Create a new dedicated branch](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) for your changes
+  and sync it to your workspace.
+3. Read through the guides and resources within the [Knowledge Base](#knowledge-base) located at the bottom of this guide, 
+  so that you can familiarize yourself with the technologies used in this project.
 
 #### Git Hooks
 
@@ -57,7 +59,7 @@ Once submitted, a maintainer will review your pull request and, once approved, i
 
 ## Knowledge Base
 
-These are some useful guides and documentation for the core technologies used in the project:
+These are some of the more useful guides and documentation for the core technologies used in the project:
 
 - [Ark UI](https://ark-ui.com/docs/overview/introduction)
 - [Drei](https://drei.docs.pmnd.rs/getting-started/introduction)

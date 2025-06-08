@@ -1,73 +1,60 @@
 ---
-title: Running locally
-subtitle: Creating your own Beatmapper
+title: Running Locally
+subtitle: How to build your own Beatmapper
+order: -1
 category: advanced
 ---
 
-Beatmapper is open-source, meaning that its source code is made freely available for anyone to read and use. While you can't do _anything_ you want with it (it's [licensed under the MIT license](https://github.com/bsmg/beatmapper/blob/master/LICENSE.md)), you are definitely free to create your own local copy and modify it for your personal, non-commercial endeavors.
+Beatmapper is open-source, meaning that its source code is made freely available for anyone to read and use. 
+While you can't do _anything_ you want with it (it's [licensed under the MIT license](https://github.com/bsmg/beatmapper/blob/master/LICENSE.md)), 
+you are definitely free to create your own local copy and modify it for your personal, non-commercial endeavors.
 
 Here are some reasons you might wish to do this:
 
-- You can make small tweaks, like changing keybindings or removing controls you don't need
+- You can make small tweaks, like adding your own new features or removing flows you don't need
 - If the Beatmapper server goes down, your local copy will always work
+- You can preview upcoming features before they're publically released  
 
-> NOTE: While this document doesn't assume any programming know-how, this is still a pretty technical thing to be doing. The online version should work plenty well for most folks!
+> While this document doesn't assume any programming know-how, this is still a pretty technical thing to be doing. The online version should work plenty well for most folks!
 
 ---
 
 ## Prerequisites
 
-First thing's first, you'll need to [download and install Node.js](https://nodejs.org/en/). Any version greater than 12.0 should work.
+First thing's first, you'll need to [download and install Node.js](https://nodejs.org/en/). We'd recommend installing the LTS version for the greatest assurance of compatibility.
 
 Node.js is a Javascript server environment, which is needed to compile the Beatmapper application.
 
 > During installation on Windows, you'll be asked a number of questions in the install wizard. The default options are all sufficient.
 
-## Cloning or downloading the source code
+We'll also be using an IDE (integrated development environment) to make the process of bootstrapping the project more manageable, especially if you consider yourself non-technical.
 
-Beatmapper is [hosted on GitHub](https://github.com/bsmg/beatmapper), an online source-code repository. We'll need to download a copy of this source code.
+[Visual Studio Code](https://code.visualstudio.com) is the popular choice for a good majority of developers, and is what we'll be using for this walkthrough.
 
-GitHub lets you download a .zip of all the files you'll need:
+## Cloning the Repository
 
-![](./images/download-from-github.gif "If you happen to already know Git, then you should probably fork and clone instead.")
+Beatmapper is [hosted on GitHub](https://github.com/bsmg/beatmapper), an online source-code repository. We'll need to acquire a local copy of this source code.
 
-Unzip the .zip archive. It doesn't really matter where you put it, but for the purposes of this guide, we'll assume you've extracted it on the desktop. You should have a `beatmapper-master` folder on the desktop.
+From a new window, click the "Clone Git Repository..." option. You'll then proceed through a series of prompts.
 
-## Getting to that directory in the terminal
+1. As the repository is hosted on GitHub, choose the "Clone from GitHub" option when prompted.
+2. Type "bsmg/beatmapper" into the next field, and select this option from the ones listed: 
+![](./images/vsc-repository.png)
+3. From there, it'll ask you to select a folder where the repository should be created into. You can choose any folder you like or create a new one.
+4. Once you pick a folder, VSCode will start cloning the contents of the repository into that folder, and will prompt you to open the repository in a new window.
+5. You may be prompted to "trust" the folder, which is common for any repository that is sourced from a remote location. 
+  This should be fine so long as you downloaded Beatmapper from the right source listed in step 3.
+6. You may be prompted to install certain extensions into VSCode. These extensions are sourced from the same official vendors that serve the packages used to build the project, 
+  and are purely included to help make your developer experience nicer and more productive. 
 
-This is where things get a bit tricky, for those without a tinkering-with-computers background.
+From here, you should now have a local copy of the Beatmapper project on your device!
 
-Your computer should come with a terminal application. On MacOS, it's simply called "terminal", and it looks like this:
+## Building the Project
 
-![](./images/mac-terminal.png)
+VSCode offers a way to run terminal commands from the root directory without needing to manually open a dedicated window for a command prompt. 
+To create a new terminal instance, you can click the "Terminal" tab in the menu bar and select the "New Terminal" option, or press <Shortcut>meta+shift+`</Shortcut>
 
-On Windows 10, it's called "Command prompt". It looks slightly different:
-
-![](./images/windows-terminal.png)
-
-While different operating systems feature different terminal environments, the good news is that all the commands we'll need for this process are the same across all common operating systems (Windows, MacOS, Linux).
-
-The terminal is an alternative UI for navigating the operating system; unlike the graphical one you typically use, the terminal does everything through text commands.
-
-Our first order of business is to move into the directory we just created. By default, your terminal should put you in your home directory. If you type `ls`, it should show you a list of the current directory's contents:
-
-![](./images/mac-ls.png)
-
-We need to navigate to the folder we downloaded from GitHub. Assuming that you placed the `beatmapper-master` folder on the desktop, you should be able to get there by typing:
-
-```sh
-cd Desktop/beatmapper-master
-```
-
-`cd` stands for "Change Directory", and it's a way of entering a directory (much like double-clicking a folder to enter it).
-
-Once you're in the correct folder, you can run `ls` again to see a list of the Beatmapper files. It should look something like this:
-
-![](./images/beatmapper-contents.png)
-
-## Building the project
-
-From within the `beatmapper-master` directory, run the following command:
+From within the `beatmapper-master` directory, type in the following command and press <Shortcut>enter</Shortcut> to run it:
 
 ```sh
 yarn install
@@ -90,21 +77,22 @@ The final output should look something like this:
 ➤ YN0000: · Done with warnings in 0s 954ms
 ```
 
-We'll also need to generate some files via the `prepare` scripts that have been predefined in the `package.json` file.
+Some files that are necessary to run the application are not served from the repository nor installed via the previous command.
+Rather, they are autogenerated by certain frameworks that are being used within the project, and need to be initially generated when you first clone the project. 
 
+The scripts used to generate these files are predefined in the `package.json` file, so we'll need to run them once before we can successfully build the application.
 
 ```sh
 yarn prepare:panda && yarn prepare:tsr
 ```
 
-
-Once that command has finished, we're ready to build the project. Run:
+Once that command has finished, we're finally ready to build the project. Run:
 
 ```sh
 yarn build
 ```
 
-This will also take a couple minutes, and you may see a few scary-looking warnings. Pay no attention to them. The final output should look like:
+This will take a couple seconds. The final output should look something like this:
 
 ```
 vite v5.4.3 building for production...
@@ -127,9 +115,12 @@ files generated
   dist/workbox-3e911b1d.js
 ```
 
-We've successfully compiled our application!
+> If you see any scary looking warnings, don't worry about them; 
+> they're just flags from the default build configurations that were left untouched and don't have any real impact on the final bundle created.
 
-## Running a production server
+At this point, we've successfully compiled our application!
+
+## Running a Production Server
 
 The last step in our intrepid adventure: we need to serve the built application.
 
@@ -141,11 +132,12 @@ yarn preview
 
 This command creates a mini webserver, and allows you to access your local version of Beatmapper by visiting http://localhost:4173.
 
-When you do so, you should see the familiar UI of Beatmapper! There is no difference between this local build and the one that runs on this domain. All of the documentation and everything should work just as well
+When you do so, you should see the familiar UI of Beatmapper! There is fundamentally no difference between this local build and the one that runs on this domain. 
+All of the documentation and everything should work just as well
 
 This server will run until you close the terminal window. The process can be interrupted with <Shortcut>META+C</Shortcut>, if you wish to stop the server without closing the window.
 
-### Editing local files
+### Making Changes
 
 When you make changes to local files, you'll need to rebuild the application. After you've made your changes, run the following command to rebuild the application and restart the web server:
 
@@ -153,7 +145,7 @@ When you make changes to local files, you'll need to rebuild the application. Af
 yarn build
 ```
 
-## Running a development server
+## Running a Development Server
 
 If you're making frequent changes to files, you likely don't want to waste time having to rebuild the entire application for every incremental change.
 
@@ -168,168 +160,4 @@ yarn dev
 
 This command will create a dev server at http://localhost:5173, and will refresh the page automatically when any changes are made to your existing code.
 
-## Overriding keyboard shortcuts
-
-Beatmapper has come up with a wholly unique set of keyboard shortcuts. Experienced MediocreMapper users in particular have not enjoyed having to learn a whole new set of keybindings.
-
-Adding custom bindings in the application will take some time, but you can set whatever bindings you want on your local copy!
-
-Here's how shortcuts are organized in Beatmapper:
-
-- Shortcuts used across multiple views are registered in `src/components/app/templates/shortcuts/default.tsx`
-- Shortcuts exclusive to the "Notes view" are registered in `src/components/app/templates/shortcuts/notes.tsx`
-- Shortcuts exclusive to the "Events view" are registered in `src/components/app/templates/shortcuts/events.tsx`
-
-These 3 files contain _almost_ all of the keyboard shortcuts.
-There are some exceptions: for example, moving around in 3D space in the notes view happens in `src/services/controls.service.ts`.
-
-> If you're not a JavaScript/TypeScript developer, the contents of these files might look pretty intimidating.
-Happily, we won't be making any major changes; our tweaks for updating keyboard shortcuts will be pretty minimal.
-
-We'll need a text editor to modify these files. In a pinch, you can use Notepad, but I'd recommend using [VS Code](https://code.visualstudio.com/) - it's cross-platform, free, and pretty great.
-
-Open up those 3 files in this editor.
-
-### Mission: Remapping the "Undo" shortcut
-
-Beatmapper uses the standard convention of having <Shortcut>META+Z</Shortcut> used for undo. On QWERTY keyboards, this works great, but on AZERTY keyboards, this shortcut closes the browser tab!
-
-We want to remap this to <Shortcut>META+W</Shortcut> instead
-
-Inside `GlobalShortcuts.tsx`, there is a section of code around line 90 that looks like:
-
-```ts title="src/components/app/templates/shortcuts/default.tsx"
-switch (ev.code) {
-  case 'Space': {
-    ...
-  }
-
-  case 'Escape': {
-    ...
-  }
-
-  case 'Tab': {
-    ...
-  }
-}
-```
-
-To briefly explain what's happening here: this code runs whenever a key on the keyboard is pressed, and each `case` is listening for a different letter. When the <Shortcut>Spacebar</Shortcut> is pressed, the code inside `case 'Space'` is run.
-
-For individual letters, the pattern is `KeyX`. So the <Shortcut>A</Shortcut> key is `KeyA`. Scroll down until you see this code:
-
-```ts title="src/components/app/templates/shortcuts/default.tsx"
-case 'KeyZ': {
-  if (!isMetaKeyPressed(ev)) {
-    return;
-  }
-
-  if (view === View.BEATMAP) {
-    return dispatch(ev.shiftKey ? redoNotes() : undoNotes());
-  } else if (view === View.LIGHTSHOW) {
-    return dispatch(ev.shiftKey ? redoEvents() : undoEvents());
-  } else {
-    return;
-  }
-}
-```
-
-If we change `KeyZ` to `KeyW`, we'll have successfully remapped! We don't even have to worry about what all that code does, since we're not changing the logic itself; we're just changing which key triggers that logic.
-
-Save the file, and [follow the rebuild steps](#editing-local-files). Your new keyboard shortcut should now work!
-
-### Mission: Remapping the event tools
-
-In the events view, you can use the numbers 1 through 4 to pick between the different event types: <Shortcut>1</Shortcut> is "On", <Shortcut>2</Shortcut> is "Off", <Shortcut>3</Shortcut> is "Flash", <Shortcut>4</Shortcut> is "Fade".
-
-Let's say we want to remap this to use WASD, but only when the "Shift" key is held.
-
-First, let's find where the shortcuts live now. They're in `src/components/app/templates/shortcuts/events.tsx`:
-
-```ts title="src/components/app/templates/shortcuts/events.tsx"
-case 'Digit1': {
-  return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
-}
-case 'Digit2': {
-  return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.OFF }));
-}
-case 'Digit3': {
-  return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FLASH }));
-}
-case 'Digit4': {
-  return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.FADE }));
-}
-```
-
-Let's say we want <Shortcut>Shift + A</Shortcut> to trigger the "On" event. Your instinct might be to simply update `Digit1` to `KeyA`:
-
-```ts title="src/components/app/templates/shortcuts/events.tsx"
-case 'KeyA': {
-  return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
-}
-```
-
-That will allow the <Shortcut>A</Shortcut> key to toggle this tool, but remember, we want it to be <Shortcut>Shift + A</Shortcut>, not just <Shortcut>A</Shortcut> on its own!
-
-We need to wrap this code in a _condition_. Update the code so that it reads:
-
-```ts title="src/components/app/templates/shortcuts/events.tsx"
-case 'KeyA': {
-  if (ev.shiftKey) {
-    return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
-  }
-}
-```
-
-Explaining this code-change in depth is beyond the scope of this documentation, but hopefully its meaning is somewhat clear; If the shift key is held, run the code that selects the "On" tool.
-
-There's one last problem we need to tackle, though; it turns out, we _already had_ a keybinding for the <Shortcut>A</Shortcut> key. If we run this code as-is, we'll _overwrite_ some other bindings that exist for this key.
-
-In VS Code, if you type <Shortcut>META+F</Shortcut>, you'll pull up a little search text field. Enter `KeyA`, and you'll discover that this code exists in the same file:
-
-```ts title="src/components/app/templates/shortcuts/events.tsx"
-case 'KeyA': {
-  if (isMetaKeyPressed(ev)) {
-    ev.preventDefault();
-    return dispatch(toggleSelectAll({ view: View.LIGHTSHOW }));
-  }
-
-  return dispatch(selectEventEditMode({ editMode: EventEditMode.PLACE }));
-}
-```
-
-The "Meta key" that this code references is the Control key on Windows/Linux, and the Command key on Mac. Essentially, these bindings do two things:
-
-- When <Shortcut>META+A</Shortcut> is pressed, select all events in the view.
-- When <Shortcut>A</Shortcut> is pressed on its own, switch the edit mode (<Shortcut>S</Shortcut> is for "Add" mode, <Shortcut>S</Shortcut> is for "Select" mode).
-
-We can't have two different `case 'KeyA':` lines - if we do, the second one will overwrite the first, and we won't be able to use these other shortcuts anymore!
-
-We need to consolidate these two cases. Copy the code we wrote, and paste it in the top of this `case`, like so:
-
-```ts title="src/components/app/templates/shortcuts/events.tsx"
-case 'KeyA': {
-  if (ev.shiftKey) {
-    return dispatch(selectTool({ view: View.LIGHTSHOW, tool: EventTool.ON }));
-  }
-
-  if (isMetaKeyPressed(ev)) {
-    ev.preventDefault();
-    return dispatch(toggleSelectAll({ view: View.LIGHTSHOW }));
-  }
-
-  return dispatch(selectEventEditMode({ editMode: EventEditMode.PLACE }));
-}
-```
-
-Now this code has 3 conditions:
-
-- If the <Shortcut>Shift</Shortcut> key is held, select the "On" event
-- If the <Shortcut>META</Shortcut> key is held, select all entities
-- If neither of those keys are held, switch the edit mode
-
----
-
-## Conclusion
-
-If you don't come from a programming background, these steps might be totally inscrutable. If you haven't been able to add custom shortcuts, please know that it's because I did a poor job explaining, not because you did a poor job understanding.
+> You'll know whether you're running a development environment if the visible note on the Beatmapper logo is a different color than on the public site.

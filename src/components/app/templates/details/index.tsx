@@ -160,7 +160,7 @@ function SongDetails({ sid }: Props) {
 					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings sid={sid} />} checked={enabledCustomColors} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}>
 						Override individual elements of a beatmap's color scheme.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
-							<Link to="/docs/$" params={{ _splat: "mods#custom-colors" }}>
+							<Link to="/docs/$" params={{ _splat: "mods#custom-color-overrides" }}>
 								Learn more
 							</Link>
 						</Text>
