@@ -1,15 +1,35 @@
+import { prompts } from "velite:content";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
-import { Fragment } from "react";
+import type { MDXComponents } from "mdx/types";
+import { type ComponentProps, Fragment } from "react";
 
+import { EDITOR_TOASTER } from "$/components/app/constants";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
-
-import { styled } from "$:styled-system/jsx";
-import { prompts } from "velite:content";
-import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
-import { EDITOR_PROMPT_COMPONENTS, EDITOR_TOASTER } from "$/components/app/templates/editor/prompts";
-import { MDXContent } from "$/components/ui/atoms";
 import { selectAnnouncements } from "$/store/selectors";
+
+import { css } from "$:styled-system/css";
+import { styled } from "$:styled-system/jsx";
+import { Shortcut } from "$/components/app/compositions";
+import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
+import { MDXContent } from "$/components/ui/atoms";
+import { List, Text } from "$/components/ui/compositions";
+
+const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
+	a: ({ ...rest }) => (
+		<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
+			<a {...rest} />
+		</Text>
+	),
+	p: ({ ...rest }) => (
+		<Text asChild textStyle={"paragraph"} className={css({ marginBlockStart: { base: 1.5, _first: 0 }, marginBlockEnd: { base: 1.5, _last: 0 } })}>
+			<p {...rest} />
+		</Text>
+	),
+	ul: ({ ref, ...rest }) => <List.Root type="unordered" variant="marker" {...rest} />,
+	li: ({ ref, ...rest }) => <List.Item {...rest} />,
+	Shortcut: ({ separator, children }: ComponentProps<typeof Shortcut>) => <Shortcut separator={separator}>{children}</Shortcut>,
+};
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	component: RouteComponent,

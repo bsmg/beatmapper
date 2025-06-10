@@ -1,4 +1,4 @@
-import { defineCollection, defineConfig, s } from "velite";
+import { type Collection, defineCollection, defineConfig, s } from "velite";
 
 import { join } from "node:path";
 import { cwd } from "node:process";
@@ -40,7 +40,7 @@ export default defineConfig({
 		clean: true,
 	},
 	collections: {
-		docs: docs,
-		prompts: prompts,
+		docs: docs as Collection,
+		prompts: prompts as Collection,
 	},
 });

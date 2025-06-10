@@ -66,9 +66,7 @@ function Download({ sid }: Props) {
 			<Stack gap={4}>
 				<Heading rank={1}>Download Map</Heading>
 				<Presence asChild present={demoBlocker} lazyMount unmountOnExit>
-					<VStack gap={6}>
-						<Text>Unfortunately, the demo map is not available for download.</Text>
-					</VStack>
+					<Text>Unfortunately, the demo map is not available for download.</Text>
 				</Presence>
 				<Presence asChild present={!demoBlocker} lazyMount unmountOnExit>
 					<Form.Root>

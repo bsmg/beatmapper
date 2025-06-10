@@ -3,20 +3,24 @@ title: Migration Guide
 subtitle: Important differences compared to other editors
 ---
 
-If you're familiar with another editor like MediocreMapper, Beatmapper might seem weird or counter-intuitive. 
+If you're familiar with another editor like ChroMapper or the official level editor, Beatmapper might seem weird or counter-intuitive. 
 I started from scratch with the design, after finding myself frustrated with the editing experience in existing editors.
 
 This document exists to highlight some of the differences, and justify why I feel it's worth deviating from the established convention.
 
 ## Dedicated Views
 
-In MediocreMapper and other editors, both notes and events are edited in the same screen, and previewed at the same time. In Beatmapper, there are 3 separate views:
+In most community editors, both notes and events are edited in the same screen, and previewed at the same time. 
+
+In Beatmapper, all object groups are distributed across separate views:
 
 - A "Beatmap" view for editing blocks, mines, and obstacles
 - A "Lightshow" view for editing lights and ring events
 - A "Preview" view that tries to accurately show what your notes and events look like (still under construction / doesn't really exist yet)
 
-I think that there are advantages to having a dedicated events view, but I'll readily admit that it's not ideal to have the context switching as you tab between views. The main reason for this is around performance - as a web application, Beatmapper incurs a performance penalty, and having everything run at once can drain resources. I have some ideas around how to address this in the future, but it's unavoidable for now.
+I think that there are advantages to having a dedicated events view, but I'll readily admit that it's not ideal to have the context switching as you tab between views. 
+The main reason for this is around performance - as a web application, Beatmapper incurs a performance penalty, and having everything run at once can drain resources. 
+I have some ideas around how to address this in the future, but it's unavoidable for now.
 
 For what it's worth, I haven't heard any complaints about this.
 
@@ -70,7 +74,18 @@ and allows both lightshow behaviors to co-exist without creating awkward conflic
 
 Some beatmap features have limited compatibility in the editor, or offer no compatbility at all. This will give you a rundown of what to expect if you're working with unsupported data.
 
+### Transition Events: *Partial Implementation*
+
+You can import maps with transition events just fine, but they are intentionally not editable by default.
+
+This is because transition events require a proper timescale system to be implemented for simulating lightshow effects, which Beatmapper currently does not have an implementation for.
+
 ### Arcs/Chains: *Unsupported*
+
+The systems for these features haven't been implemented yet. 
+Many systems were rearchitected in anticipation of these features during the rewrite, but it'll take some time before they're ready to land.
+
+### Boost Events: *Unsupported*
 
 The systems for these features haven't been implemented yet. 
 Many systems were rearchitected in anticipation of these features during the rewrite, but it'll take some time before they're ready to land.
@@ -85,22 +100,11 @@ especially since there are two systems for calculating BPM changes that don't qu
 
 Similarly to the above, a proper timescale would need to be implemented for adjusting the jump speed of objects based on variable regions. 
 
-### Transition Events: *Partial Implementation*
-
-You can import maps with transition events just fine, but they are intentionally not editable by default.
-
-This is because transition events require a proper timescale system to be implemented for simulating lightshow effects, which Beatmapper currently does not have an implementation for.
-
-### Boost Events: *Unsupported*
-
-The systems for these features haven't been implemented yet. 
-Many systems were rearchitected in anticipation of these features during the rewrite, but it'll take some time before they're ready to land.
-
 ### Rotation Events: *Not Planned*
 
 The systems for these features haven't been implemented yet. 
 Ideally I'd like to design a more intuitive workflow for rotation events, since ChroMapper's workflow for tracking rotations can be a bit disorienting to manage if you're not used to it, 
-but it's so low priority compared to other features we have on the backlog, and there's a strong change it might be made irrelevant when the official editor workflow lands in a future game update.
+but it's so low priority compared to other features we have on the backlog, and there's a strong change any progress could be made irrelevant when the official editor workflow lands in a future game update.
 
 Chances are very likely we'll be passing on this feature, but hard to say for sure.
 

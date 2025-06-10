@@ -22,7 +22,7 @@ function FirstTimeHome() {
 
 	return (
 		<VStack gap={8}>
-			<Title rank={1}>Beatmapper is an unofficial web-based editor for Beat Saber™</Title>
+			<Title rank={1}>Beatmapper is a web-based level editor for Beat Saber™</Title>
 			<VStack gap={6}>
 				<video src={heroVideo} autoPlay muted loop controls />
 			</VStack>

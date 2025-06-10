@@ -126,7 +126,7 @@ const Wrapper = styled("div", {
 		gap: 0,
 		minWidth: "180px",
 		width: "100%",
-		flexBasis: "180px",
+		flexBasis: { base: undefined, lg: "180px" },
 		lineHeight: 1.4,
 		top: 2,
 	}),

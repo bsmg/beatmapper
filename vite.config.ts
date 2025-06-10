@@ -3,8 +3,9 @@ import { fileURLToPath } from "node:url";
 import { type UserConfig, defineConfig } from "vite";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { default as react } from "@vitejs/plugin-react";
-import { type VitePWAOptions, VitePWA as pwa } from "vite-plugin-pwa";
+import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 
 import packageJson from "./package.json";
 
@@ -54,16 +55,29 @@ export default defineConfig(async (ctx) => {
 				},
 			],
 			id: "beatmapper",
+			description: "A web-based level editor for Beat Saber™.",
+			screenshots: [
+				{
+					src: "screenshot-wide-1920x1080.png",
+					sizes: "1920x1080",
+					type: "image/png",
+					form_factor: "wide",
+				},
+			],
 			start_url: ".",
 			display: "fullscreen",
 			orientation: "landscape",
-			theme_color: "hsl(222, 25%, 12%)",
-			background_color: "hsl(222, 30%, 7%)",
+			theme_color: "hsl(48, 100%, 60%)",
+			background_color: "hsl(222, 32%, 4%)",
 		},
 		workbox: {
 			globPatterns: ["**/*"],
 			maximumFileSizeToCacheInBytes: 20971520, // 20 MB
 		},
+	};
+
+	const TSR_OPTIONS: Parameters<typeof TanStackRouterVite>[0] = {
+		virtualRouteConfig: "src/routes.ts",
 	};
 
 	let version = packageJson.version;
@@ -73,7 +87,8 @@ export default defineConfig(async (ctx) => {
 	}
 
 	return {
-		plugins: [react(), pwa(PWA_OPTIONS)],
+		plugins: [react(), VitePWA(PWA_OPTIONS), TanStackRouterVite(TSR_OPTIONS)],
+		assetsInclude: ["**/*.glsl"],
 		define: {
 			global: "window",
 			version: `\"${version}\"`,
@@ -85,10 +100,6 @@ export default defineConfig(async (ctx) => {
 				"velite:content": fileURLToPath(new URL("./.velite", import.meta.url)),
 			},
 		},
-		assetsInclude: ["**/*.glsl"],
-		build: {
-			commonjsOptions: { transformMixedEsModules: true }, // Change
-		},
 		css: {
 			postcss: {
 				plugins: [pandacss({})],
@@ -97,13 +108,6 @@ export default defineConfig(async (ctx) => {
 		esbuild: {
 			supported: {
 				"top-level-await": true,
-			},
-		},
-		optimizeDeps: {
-			esbuildOptions: {
-				loader: {
-					".js": "jsx",
-				},
 			},
 		},
 	} as UserConfig;

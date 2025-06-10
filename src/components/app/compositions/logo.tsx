@@ -57,7 +57,7 @@ function Logo({ size = "full" }: Props) {
 				</Canvas>
 				<Stack gap={0.5}>
 					<Title size={size}>Beatmapper</Title>
-					<Subtitle size={size}>{import.meta.env.DEV && version}</Subtitle>
+					{import.meta.env.DEV && <Subtitle size={size}>{version}</Subtitle>}
 				</Stack>
 			</HStack>
 		</Link>
