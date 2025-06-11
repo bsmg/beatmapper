@@ -9,7 +9,7 @@ import { APP_TOASTER, MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/cons
 import { useLocalFileQuery } from "$/components/app/hooks";
 import { FileUpload } from "$/components/ui/compositions";
 
-export function LocalFileUpload({ filename, onFileAccept, children, ...rest }: ComponentProps<typeof FileUpload> & { filename: string }) {
+export function LocalFileUpload({ filename, children, ...rest }: ComponentProps<typeof FileUpload> & { filename: string }) {
 	const { data: currentFile, isSuccess } = useLocalFileQuery(filename, {
 		queryKeySuffix: "picker",
 		transform: (file) => (file ? [file] : []),

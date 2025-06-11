@@ -36,13 +36,10 @@ export default function createFileMiddleware({ filestore }: Options) {
 	const audioContext = new AudioContext();
 
 	async function createAudioDataContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File) {
-		const [{ duration, frequency, sampleCount }, { version }] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), filestore.loadInfoContents(songId)]);
+		const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
 
-		const { filename, contents } = await filestore.updateAudioContents(songId, {
-			version: version,
-			frequency,
-			sampleCount,
-		});
+		const { filename, contents } = await filestore.updateAudioDataContents(songId, { version: 4, frequency, sampleCount });
+
 		return { duration, filename, contents };
 	}
 
@@ -59,7 +56,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			// convert it to the serial wrapper data
 			const infoContents = serializeInfoContents(song, selectInfoSerializationOptionsFromState(state, songId));
 			// store the info data in the filestore
-			await filestore.saveInfoContents(
+			const { contents: newInfoContents } = await filestore.saveInfoContents(
 				songId,
 				deepMerge(infoContents, {
 					version: 4, // we'll fallback to v4 by default, since this is the latest supported beatmap version
@@ -68,10 +65,10 @@ export default function createFileMiddleware({ filestore }: Options) {
 			);
 
 			// store song/cover files in the filestore
-			await Promise.all([await filestore.saveSongFile(songId, songFile), await filestore.saveCoverFile(songId, coverArtFile)]);
+			await Promise.all([await filestore.saveSongFile(songId, songFile), await filestore.saveCoverArtFile(songId, coverArtFile)]);
 
 			// store the audio data in the filestore
-			await filestore.saveAudioDataContents(songId, audioDataContents);
+			await filestore.saveAudioDataContents(songId, deepMerge(audioDataContents, { version: newInfoContents.version }));
 
 			// derive the beatmap id from the provided beatmap data within the payload
 			const beatmapId = resolveBeatmapId({ characteristic: beatmapData.characteristic, difficulty: beatmapData.difficulty });

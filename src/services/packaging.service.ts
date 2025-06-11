@@ -156,7 +156,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 
 	await Promise.all([
 		await filestore.saveSongFile(songId, songFile),
-		await filestore.saveCoverFile(songId, coverArtFile),
+		await filestore.saveCoverArtFile(songId, coverArtFile),
 		//
 	]);
 

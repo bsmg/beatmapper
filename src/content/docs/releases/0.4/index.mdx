@@ -6,8 +6,6 @@ order: 0.4
 prev: releases/0.3
 ---
 
-It's been a while.
-
 After more than half a year's worth of maintenance work, the rewrite is finally complete, and the next update to Beatmapper is now live for all users!
 
 While there's not too many user-facing changes in this update, 
@@ -74,7 +72,7 @@ Additionally, workflows for modern proprerties related to beatmap object seriali
   To modify this property, you can hover over a note and <Shortcut>option</Shortcut> + scroll to alter the angle offset in 15-degree increments.
 - The "free/unbounded" obstacle type introduced in v3 and onward now has visual support in-editor, 
   although the bounds of newly-created obstacles will still be constrained to full-height and crouch walls until improved support lands in a future update.
-- You can now quick-edit the duration of an obstacle using <Shortcut>option</Shortcut> + scroll, which now replaces the old janky drag controls from before.
+- You can now quick-edit obstacle duration by using <Shortcut>option</Shortcut> + scroll while hovering over an obstacle, which replaces the old janky drag controls from before.
 - Enabling Mapping Extensions will use the mod's coordinate system for serializable object properties, rather than mixing them in with vanilla values.
 - Basic light events now support float value serialization. 
   - The brightness value will be calculated based on the height from where you click, and will be fixed to the range of 0-1 by default. 
@@ -112,7 +110,7 @@ As this update is slated as a "rewrite", there are TONS of technical changes and
 I'd say a solid 60-70% of the initial codebase has been rewritten in some capacity. 
 
 We won't go too in-depth on the internal changes here, 
-since many of these changes are already documented in extensive detail within the many [PRs](https://github.com/bsmg/beatmapper/pulls?q=is%3Apr+is%3Aclosed) 
+since many of these changes are already documented in extensive detail within the many [PRs](https://github.com/bsmg/beatmapper/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.4.0) 
 made within the last 6 months or so. We'll just list off some of the highlights:
 
 ### Storage Engine Improvements
@@ -141,7 +139,7 @@ The initial integration of Vite's third-party PWA plugin was put together pretty
 and there were some blatant oversights that weren't exactly fleshed out to make installation or offline compatibility work as intended on modern browsers.
 These oversights have now been addressed thanks to some new changes to the project configuration:
 
-- The manifest has been updated according to the new compatibility baselines, supporting maskable icons and additional metadata.
+- The manifest has been updated according to new baselines, supporting maskable icons and additional metadata.
 - You will receive an in-app notification when offline mode is ready.
 - You will now be explicitly prompted to "opt-in" to future updates to the editor, as opposed to auto-updating.
 - All fonts are now bundled within the application directly for offline support via Fontsource, rather than being remotely fetched.
@@ -167,9 +165,9 @@ The "Settings" dialog is now broken up into distinct tabs to better organize the
 
 ### Visualization Updates  
 
-- The beatmap color scheme is now respected, and will derive the correct values from the base environment scheme, 
+- Full-height obstacles have smarter placement controls, where it is now virtually impossible to place a 3-wide wall. Who needs the mapping wiki when you can just fix the problem in the first place!
+- The color scheme for a beatmap is now visually represented, and will derive the correct values from the base environment scheme, 
   the beatmap's environment override, the beatmap's vanilla color scheme overrides, and the beatmap's custom color overrides respectively.
-- Full-height obstacles have smarter placement controls, where it is now physically impossible to place a 3-wide wall. Who needs the mapping wiki when you can just fix the problem in the first place!
 - The "Preview" tab now displays the full map visualization, which now include notes and obstacles, along with simulated Note Jump Speed and Start Beat Offset values.
 
 ### Notable Bug Fixes
@@ -181,14 +179,14 @@ The "Settings" dialog is now broken up into distinct tabs to better organize the
 - The "drag direction" control has been reworked to provide proper closures for the emitted events (this means "tentative" notes will properly remove themselves when the pointer is up).
 - The "join" behavior of the event selection box is now user-controllable by holding down the <Shortcut>meta</Shortcut> key, alongside other closures.
 - When the "bloom" effect is disabled, any light materials will now be tinted with their respective color to improve visibility.
-  ([#1](https://github.com/bsmg/beatmapper/issues/1))
+  ([#7](https://github.com/bsmg/beatmapper/issues/7))
 
 ## Breaking Changes
 
 - The "overdrive" value for color schemes has been removed. 
   The base game never really properly supported this feature in the first place, and I don't think this is widely used enough to warrant its inclusion moving forward.
-- The "Fast Walls" toggle has been removed, as the property was removed when moving to the new baetmap wrappers. 
-  However, you can still create a fast wall by selecting an obstacle and setting the duration to a negative number if you so desire.
+- The "Fast Walls" toggle has been removed, as the property was removed when moving to the new beatmap wrappers. 
+  However, you can still create a fast wall by selecting an obstacle and setting the duration to a negative value manually if you so desire.
 - Certain non-vanilla behaviors, such as fast walls and Mapping Extensions support, will not be 1-to-1 with base game visualization due to some upstream serialziation issues.
 
 ## Wrap-Up
@@ -201,11 +199,11 @@ We can finally start working on actual new features and improvements you've been
 
 Before we wrap up, I'd like to drop some additional thanks to some individuals who indirectly helped get this editor back into shape:
 
-- To Kival Evan, for helping me land many changes to the `bsmap` engine that made my life significantly easier.
+- To Kival Evan, for helping me land many changes to the `bsmap` engine that made the implementation of the new serialization engine significantly easier to manage.
 - To Caeden, Bloodcloak, and other BSMG staff, for allowing me to take the reins of this project into a new direction and spearhead this rewrite.
-- To any users who DM'd me bug reports within the last few months or were courteous enough to drop a ping for other users. 
-  Happy to say that nearly all of the reports are finally addressed in this update, and I'm glad to know that people appreciate the work that went into it.
+- To any users who DM'd me bug reports within the last few months or were courteous enough to drop a courtesy ping. 
+  Happy to say that nearly all of the reports over the past few months are finally addressed in this update, .
 - To you, for reading through this wall of text and may end up actually using this editor again. 
-  It's honestly sick to be able to bring this project back to life, and I'm sure there will be lots of cool things to look forward to.
+  It's honestly sick to be able to bring this project back to life, and I'm glad to know that people appreciate the work that went into it. 
 
-That's all for now. Welcome to the new era. Enjoy the update! ❤️
+That's all for now. Thank you all for your patience over the past few months, and enjoy the new update! ❤️

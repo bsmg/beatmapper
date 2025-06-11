@@ -99,7 +99,7 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveCoverFile<T extends File>(songId: SongId, contents: T) {
+	async saveCoverArtFile<T extends File>(songId: SongId, contents: T) {
 		if (!contents) return this.saveBackupCoverFile();
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
 		return this.saveFile<T>(filename, contents);
@@ -127,7 +127,7 @@ export class BeatmapFilestore extends Filestore {
 			}),
 		);
 	}
-	async updateAudioContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
+	async updateAudioDataContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
 		const savedContents = await this.loadAudioDataContents(songId);
 		return await this.saveAudioDataContents(
 			songId,

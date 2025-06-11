@@ -1,7 +1,7 @@
 import { type UnknownAction, combineReducers } from "@reduxjs/toolkit";
 import undoable, { type FilterFunction, groupByActionTypes, type GroupByFunction, includeAction } from "redux-undo";
 
-import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, cutSelection, mirrorBasicEvent, nudgeSelection, pasteSelection, redoEvents, removeAllSelectedEvents, removeEvent, undoEvents } from "$/store/actions";
+import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, cutSelection, finishLoadingMap, mirrorBasicEvent, nudgeSelection, pasteSelection, redoEvents, removeAllSelectedEvents, removeEvent, undoEvents } from "$/store/actions";
 
 import basic from "./basic.slice";
 
@@ -10,6 +10,7 @@ const reducer = combineReducers({
 });
 
 const filter: FilterFunction<ReturnType<typeof reducer>, UnknownAction> = includeAction([
+	finishLoadingMap.type,
 	addBasicEvent.type,
 	bulkAddBasicEvent.type,
 	removeEvent.type,

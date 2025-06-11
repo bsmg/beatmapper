@@ -1,5 +1,5 @@
 import { Link, useBlocker } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
@@ -71,7 +71,7 @@ function SongDetails({ sid }: Props) {
 			const newSongObject = { ...song, ...value };
 
 			if (coverArtFile) {
-				const { filename: coverArtFilename } = await filestore.saveCoverFile(sid, coverArtFile);
+				const { filename: coverArtFilename } = await filestore.saveCoverArtFile(sid, coverArtFile);
 				newSongObject.coverArtFilename = coverArtFilename;
 			}
 
@@ -105,6 +105,34 @@ function SongDetails({ sid }: Props) {
 		shouldBlockFn: () => (Form.state.isDirty ? !window.confirm("You have unsaved changes! Are you sure you want to leave this page?") : false),
 	});
 
+	const handleAcceptSongFile = useCallback(
+		(file: File) => {
+			setSongFile(file);
+			filestore.saveSongFile(sid, file).then(() => {
+				APP_TOASTER.create({
+					id: "song-file-accepted",
+					type: "success",
+					description: "Successfully updated song file!",
+				});
+			});
+		},
+		[sid],
+	);
+
+	const handleAcceptCoverArtFile = useCallback(
+		(file: File) => {
+			setCoverArtFile(file);
+			filestore.saveCoverArtFile(sid, file).then(() => {
+				APP_TOASTER.create({
+					id: "cover-file-accepted",
+					type: "success",
+					description: "Successfully updated cover art file!",
+				});
+			});
+		},
+		[sid],
+	);
+
 	return (
 		<Stack gap={8}>
 			<Stack gap={6}>
@@ -113,12 +141,12 @@ function SongDetails({ sid }: Props) {
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">
-								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => setSongFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptSongFile(details.files[0])}>
 									Audio File
 								</LocalFileUpload>
 							</Field>
 							<Field label="Cover Art File">
-								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])}>
 									Image File
 								</LocalFileUpload>
 							</Field>
