@@ -1,18 +1,3 @@
-export function debounce<T extends (...args: any[]) => void>(callback: T, wait: number | undefined, timeoutId?: NodeJS.Timeout) {
-	let lastRan = timeoutId;
-	const debounceFn = (...args: Parameters<typeof callback>) => {
-		window.clearTimeout(timeoutId);
-
-		lastRan = setTimeout(() => {
-			callback.apply(null, args);
-		}, wait);
-	};
-
-	debounceFn.cancel = () => window.clearTimeout(lastRan);
-
-	return debounceFn;
-}
-
 export function compose<T extends (...args: any[]) => void>(...fns: T[]) {
 	return fns.reduceRight(
 		(prevFn, nextFn) =>
@@ -22,24 +7,35 @@ export function compose<T extends (...args: any[]) => void>(...fns: T[]) {
 	);
 }
 
-export function throttle<T extends (...args: any[]) => void>(func: T, limit: number) {
-	let lastFunc: string | number | NodeJS.Timeout | undefined;
-	let lastRan: number;
-	return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
-		if (!lastRan) {
-			func.apply(this, args);
-			lastRan = Date.now();
-		} else {
-			clearTimeout(lastFunc);
-			lastFunc = setTimeout(
-				() => {
-					if (Date.now() - lastRan >= limit) {
-						func.apply(this, args);
-						lastRan = Date.now();
-					}
-				},
-				limit - (Date.now() - lastRan),
-			);
+// TODO: this will eventually become native when ES2024 is supported in TS 5.7
+export function withResolvers<T>() {
+	let resolve!: (value: T | PromiseLike<T>) => void;
+	let reject!: (reason?: any) => void;
+	const promise = new Promise<T>((res, rej) => {
+		resolve = res;
+		reject = rej;
+	});
+	return { promise, resolve, reject };
+}
+
+export function tryYield<T, TReturn, TNext, Resultant>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant): Promise<Resultant>;
+export function tryYield<T, TReturn, TNext, Resultant, RejectedResult>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant, onRejected: (e: any) => RejectedResult): Promise<Resultant | RejectedResult>;
+export function tryYield<T, TReturn, TNext, Resultant, RejectedResult = never>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant, onRejected?: (e: any) => RejectedResult): Promise<Resultant | RejectedResult> {
+	const promise = new Promise<T>((resolve, reject) => {
+		try {
+			const iteratorResult = generator.next();
+			if (iteratorResult.done) {
+				reject(new Error("Generator completed without yielding a value"));
+			} else {
+				resolve(iteratorResult.value);
+			}
+		} catch (error) {
+			reject(error);
 		}
-	};
+	});
+	return promise.then(onResolved).catch((error) => {
+		// If onRejected is provided, its result becomes the resolved value
+		if (onRejected) return onRejected(error);
+		throw error; // If no onRejected, re-throw to keep the promise rejected
+	});
 }

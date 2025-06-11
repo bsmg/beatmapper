@@ -1,20 +1,38 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { LOAD } from "redux-storage";
+import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+
+import { addSongFromFile, finishLoadingMap, reloadVisualizer, startLoadingMap } from "$/store/actions";
 
 const initialState = {
-	hasInitialized: false,
+	initialized: false,
+	isLoading: false,
+	isProcessingImport: false,
 };
 
 const slice = createSlice({
 	name: "global",
 	initialState: initialState,
 	selectors: {
-		getHasInitialized: (state) => state.hasInitialized,
+		selectInitialized: (state) => state.initialized,
+		selectLoading: (state) => state.isLoading,
+		selectProcessingImport: (state) => state.isProcessingImport,
 	},
-	reducers: {},
+	reducers: {
+		init: (state) => {
+			return { ...state, initialized: true };
+		},
+	},
 	extraReducers: (builder) => {
-		builder.addCase(LOAD, (state) => {
-			return { ...state, hasInitialized: true };
+		builder.addMatcher(isAnyOf(startLoadingMap), (state) => {
+			return { ...state, isLoading: true };
+		});
+		builder.addMatcher(isAnyOf(finishLoadingMap, reloadVisualizer), (state) => {
+			return { ...state, isLoading: false };
+		});
+		builder.addMatcher(isAnyOf(addSongFromFile.pending), (state) => {
+			return { ...state, isProcessingImport: true };
+		});
+		builder.addMatcher(isAnyOf(addSongFromFile.fulfilled, addSongFromFile.rejected), (state) => {
+			return { ...state, isProcessingImport: false };
 		});
 		builder.addDefaultCase((state) => state);
 	},

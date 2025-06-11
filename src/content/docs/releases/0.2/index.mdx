@@ -1,0 +1,108 @@
+---
+title: v0.2
+subtitle: Advanced features + Quality of Life improvements
+category: release-notes
+order: 0.2
+next: releases/0.3
+---
+
+I haven't exactly done regular releases, but I've added enough new functionality since our original public release that I think it's worth highlighting :)
+
+This release contains mainly 2 types of things:
+
+- Stuff for advanced users
+- Quality-of-life improvements
+
+We'll go through some of the highlights in detail!
+
+> NOTE: Beatmapper is still in Alpha - this is v0.2, not v2.0. All the usual caveats apply!
+
+## Mapping Extensions support
+
+Probably the thing I'm most excited about; Beatmapper now supports Mapping Extensions.
+You can now change the size of the grid, both in terms of # of rows/columns, and in terms of the height/width of each cell.
+
+![](https://user-images.githubusercontent.com/6692932/68554112-30920180-03f4-11ea-9636-3d1c23949ea2.gif)
+
+This lets you do cool stuff like create a 5-lane map, or create a 7-lane map that fits in the same space as the typical 4-lanes.
+I feel like there's so much possibility here, and I'm excited to see what people do with it =)
+
+You can enable Mapping Extensions on the Map Details pane, and then use the "Customize Grid" button in the right side panel to play with it.
+[Learn more](/docs/mods#mapping-extensions) in the docs.
+
+## Installable App
+
+If you use Chrome, you can now "Install" Beatmapper as a regular desktop app!
+
+After using Beatmapper for a few minutes, you should see a little "+" icon get added to the URL in the browser:
+
+![](https://user-images.githubusercontent.com/6692932/68554293-7f8c6680-03f5-11ea-9d25-11e79bee856c.png)
+
+Clicking that "+" will let you install Beatmapper as a desktop app:
+
+![](https://user-images.githubusercontent.com/6692932/68554353-c4180200-03f5-11ea-8842-7245a02491a3.png)
+
+A desktop app comes with a couple advantages:
+
+- Works offline (so does the webapp! But it's more intuitive to use a desktop app offline)
+- No more hunting for the right tab
+- Gets its own taskbar / dock icon: ![](https://user-images.githubusercontent.com/6692932/68554381-0f321500-03f6-11ea-8bfc-b2c9b4cb7dc5.png)
+
+You will always be able to continue using Beatmapper in the browser though :D
+
+## Fast walls
+
+You can now mark obstacles as "fast", so that they'll shoot past faster than blocks and mines.
+This feature's functionality is pretty rough, but it gets the job done!
+[Learn more](/docs/fast-walls).
+
+## Color support
+
+Beat Saber allows you to customize the colors of both sabers, both environment lights, and obstacles. Now you can set that up in Beatmapper!
+[Learn more](/docs/mods#custom-colors)
+
+## Selections in Event Mode
+
+Using the keyboard shortcuts <Shortcut>a</Shortcut> and <Shortcut>s</Shortcut>, you can toggle between "Add" and "Select" modes in the lighting event tab.
+This allows you to quickly select notes, for bulk deleting or copy/pasting:
+
+![](https://user-images.githubusercontent.com/6692932/68554593-2de4db80-03f7-11ea-9193-d25fb428187b.gif)
+
+## Bookmarks
+
+An often-requested feature, bookmarks make it easy to jump around in the map.
+
+![](https://user-images.githubusercontent.com/6692932/68554858-bc0d9180-03f8-11ea-8b97-b64900dd69dc.gif)
+
+To create a bookmark, press <Shortcut>meta+b</Shortcut> and give it a name.
+Click to jump to a bookmark, right-click to remove a bookmark.
+
+## Laser and window locks
+
+While editing lights in Beatmapper, I kept being annoyed by the same 2 problems, so I added solutions! Turns out, they're both addressed by "locks".
+
+### Laser locks
+
+Often I want the left/right lasers to do things in tandem, whether it's turning them off/on or tweaking their speed.
+The "Laser lock" lets you modify lasers in parallel:
+
+![](https://user-images.githubusercontent.com/6692932/68554651-a3e94280-03f7-11ea-89c0-b77a27eb6b76.gif)
+
+### Window lock
+
+The event view in Beatmapper shows you 16 beats at a time (by default; you can also zoom in/out to change that).
+When playing a song, the window jumps to the next 16 beats when the song gets there.
+
+When lighting the very edge of a window, it can be annoying that it keeps jumping forward!
+The "window lock" loops playback within the current window.
+
+![](https://user-images.githubusercontent.com/6692932/68554740-0cd0ba80-03f8-11ea-90c9-4bb56abe8c03.gif)
+
+## So much more
+
+I've been adding lots of small quality-of-life tweaks;
+I'm an [active mapper myself](https://beatsaver.com/uploader/5d152d44f8aa08000618017e), so I've been tweaking things as I go, always trying to increase user-friendliness.
+
+For a better list of recent improvements, check out the [Keyboard Shortcuts](/docs/shortcuts) docs; most new features have an associated keyboard shortcut 🎉
+
+> NOTE: This changelog was ported from the tagged release via the original GitHub repository: https://github.com/joshwcomeau/beatmapper/releases/tag/0.2.0

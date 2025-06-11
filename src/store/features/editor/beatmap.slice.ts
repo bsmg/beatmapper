@@ -1,48 +1,72 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, isAnyOf } from "@reduxjs/toolkit";
+import type { NoteDirection } from "bsmap";
 
-import { NOTE_TOOLS } from "$/constants";
-import { deleteGridPreset, finishManagingNoteSelection, resizeObstacle, resizeSelectedObstacles, saveGridPreset, selectColor, selectNextTool, selectNoteDirection, selectPreviousTool, selectTool, startManagingNoteSelection } from "$/store/actions";
-import { type GridPresets, type ObjectSelectionMode, ObjectTool, View } from "$/types";
+import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, removeGridPreset, saveGridPreset, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
+import { createSlice } from "$/store/helpers";
+import { selectGridSize } from "$/store/selectors";
+import type { RootState } from "$/store/setup";
+import { type IGrid, type IGridPresets, type ObjectSelectionMode, ObjectTool, type SongId, View } from "$/types";
+
+const NOTE_TOOLS = Object.values(ObjectTool);
 
 const initialState = {
 	selectedTool: NOTE_TOOLS[0],
-	selectedDirection: 8,
+	selectedDirection: 8 as NoteDirection,
 	selectionMode: null as ObjectSelectionMode | null, // null | 'select' | 'deselect' | 'delete'.
 	defaultObstacleDuration: 4,
-	gridPresets: {} as GridPresets,
+	gridPresets: {} as IGridPresets,
+};
+
+const fetchGridSize: AsyncThunkPayloadCreator<{ presetSlot: string; grid: IGrid }, { songId: SongId; presetSlot: string }> = (args, api) => {
+	const state = api.getState() as RootState;
+	const grid = selectGridSize(state, args.songId ?? null);
+	return api.fulfillWithValue({ ...args, grid });
 };
 
 const slice = createSlice({
 	name: "notes",
 	initialState: initialState,
 	selectors: {
-		getSelectedNoteTool: (state) => state.selectedTool,
-		getSelectedCutDirection: (state) => state.selectedDirection,
-		getNoteSelectionMode: (state) => state.selectionMode,
-		getDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
-		getGridPresets: (state) => state.gridPresets,
+		selectTool: (state) => state.selectedTool,
+		selectDirection: (state) => state.selectedDirection,
+		selectSelectionMode: (state) => state.selectionMode,
+		selectDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
+		selectGridPresets: (state) => state.gridPresets,
+		selectAllGridPresetIds: (state) => Object.keys(state.gridPresets),
+		selectGridPresetById: (state, id: string) => state.gridPresets[id],
 	},
-	reducers: {},
+	reducers: (api) => {
+		return {
+			updateTool: api.reducer<{ tool: ObjectTool }>((state, action) => {
+				const { tool } = action.payload;
+				return { ...state, selectedTool: tool };
+			}),
+			updateDirection: api.reducer<{ direction: NoteDirection }>((state, action) => {
+				const { direction } = action.payload;
+				return { ...state, selectedDirection: direction };
+			}),
+			upsertGridPreset: api.asyncThunk(fetchGridSize, {
+				fulfilled: (state, action) => {
+					const { presetSlot: key, grid: value } = action.payload;
+					return { ...state, gridPresets: { ...state.gridPresets, [key]: value } };
+				},
+			}),
+			removeGridPreset: api.reducer<{ songId: SongId; presetSlot: string }>((state, action) => {
+				const { presetSlot } = action.payload;
+				delete state.gridPresets[presetSlot];
+			}),
+		};
+	},
 	extraReducers: (builder) => {
-		builder.addCase(selectNoteDirection, (state, action) => {
-			const { direction } = action.payload;
-			return { ...state, selectedDirection: direction };
+		builder.addCase(hydrateSession, (state, action) => {
+			const { "notes.tool": selectedTool, "notes.direction": selectedDirection, "notes.duration": defaultObstacleDuration } = action.payload;
+			if (selectedTool !== undefined) state.selectedTool = Object.values(ObjectTool)[selectedTool];
+			if (selectedDirection !== undefined) state.selectedDirection = selectedDirection;
+			if (defaultObstacleDuration !== undefined) state.defaultObstacleDuration = defaultObstacleDuration;
 		});
-		builder.addCase(selectTool, (state, action) => {
-			const { view, tool } = action.payload;
-			if (view !== View.BEATMAP) return state;
-			return { ...state, selectedTool: tool as ObjectTool };
-		});
-		builder.addCase(selectColor, (state, action) => {
-			const { view, color } = action.payload;
-			if (view !== View.BEATMAP) return state;
-			let toolName: ObjectTool;
-			if (color === "red") {
-				toolName = ObjectTool.LEFT_NOTE;
-			} else {
-				toolName = ObjectTool.RIGHT_NOTE;
-			}
-			return { ...state, selectedTool: toolName };
+		builder.addCase(hydrateGridPresets, (state, action) => {
+			const gridPresets = action.payload;
+			return { ...state, gridPresets: { ...state.gridPresets, ...gridPresets } };
 		});
 		builder.addCase(startManagingNoteSelection, (state, action) => {
 			const { selectionMode } = action.payload;
@@ -55,22 +79,23 @@ const slice = createSlice({
 			const { grid, presetSlot } = action.payload;
 			return { ...state, gridPresets: { ...state.gridPresets, [presetSlot]: grid } };
 		});
-		builder.addCase(deleteGridPreset, (state, action) => {
+		builder.addCase(removeGridPreset, (state, action) => {
 			const { presetSlot } = action.payload;
 			delete state.gridPresets[presetSlot];
 		});
-		builder.addMatcher(isAnyOf(selectNextTool, selectPreviousTool), (state, action) => {
+		builder.addMatcher(isAnyOf(cycleToNextTool, cycleToPrevTool), (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
 			const currentlySelectedTool = state.selectedTool;
-			const incrementBy = selectNextTool.match(action) ? +1 : -1;
+			const incrementBy = cycleToNextTool.match(action) ? +1 : -1;
 			const currentToolIndex = NOTE_TOOLS.indexOf(currentlySelectedTool);
 			const nextTool = NOTE_TOOLS[(currentToolIndex + NOTE_TOOLS.length + incrementBy) % NOTE_TOOLS.length];
 			return { ...state, selectedTool: nextTool };
 		});
-		builder.addMatcher(isAnyOf(resizeObstacle, resizeSelectedObstacles), (state, action) => {
-			const { newBeatDuration } = action.payload;
-			return { ...state, defaultObstacleDuration: newBeatDuration };
+		builder.addMatcher(isAnyOf(updateObstacle, updateAllSelectedObstacles), (state, action) => {
+			const { changes } = action.payload;
+			if (!("duration" in changes) || !changes.duration) return state;
+			return { ...state, defaultObstacleDuration: changes.duration };
 		});
 		builder.addDefaultCase((state) => state);
 	},

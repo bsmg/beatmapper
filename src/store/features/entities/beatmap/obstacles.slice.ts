@@ -1,143 +1,167 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, type EntityId, type Update, createEntityAdapter, isAnyOf } from "@reduxjs/toolkit";
+import { createObstacle, sortObjectFn } from "bsmap";
 
-import { getBeatNumForItem } from "$/helpers/item.helpers";
-import { nudgeObstacles, swapObstacles } from "$/helpers/obstacles.helpers";
-import {
-	createNewObstacle,
-	createNewSong,
-	cutSelection,
-	deleteObstacle,
-	deleteSelectedNotes,
-	deselectAll,
-	deselectAllOfType,
-	deselectObstacle,
-	leaveEditor,
-	loadBeatmapEntities,
-	nudgeSelection,
-	pasteSelection,
-	resizeObstacle,
-	resizeSelectedObstacles,
-	selectAll,
-	selectAllInRange,
-	selectObstacle,
-	startLoadingSong,
-	swapSelectedNotes,
-	toggleFastWallsForSelectedObstacles,
-} from "$/store/actions";
-import { type App, ObjectType, View } from "$/types";
+import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { resolveObstacleId } from "$/helpers/obstacles.helpers";
+import { addObstacle, addSong, cutSelection, deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, mirrorSelection, nudgeSelection, pasteSelection, removeAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
+import { createSelectedEntitiesSelector, createSlice } from "$/store/helpers";
+import { selectCursorPositionInBeats } from "$/store/selectors";
+import type { RootState } from "$/store/setup";
+import { type App, ObjectType, type SongId, View } from "$/types";
+import { roundAwayFloatingPointNonsense } from "$/utils";
 
-const initialState = [] as App.Obstacle[];
+const adapter = createEntityAdapter<App.IObstacle, EntityId>({
+	selectId: resolveObstacleId,
+	sortComparer: sortObjectFn,
+});
+const { selectAll, selectTotal } = adapter.getSelectors();
+const selectAllSelected = createSelectedEntitiesSelector(selectAll);
+
+const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<App.IObstacle> }, { songId: SongId; obstacle: Partial<App.IObstacle> }> = (args, api) => {
+	const state = api.getState() as RootState;
+	let cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
+	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
+	cursorPositionInBeats = roundAwayFloatingPointNonsense(cursorPositionInBeats);
+	return api.fulfillWithValue({
+		obstacle: {
+			...args.obstacle,
+			time: cursorPositionInBeats,
+		} as Omit<App.IObstacle, "id">,
+	});
+};
 
 const slice = createSlice({
 	name: "obstacles",
-	initialState: initialState,
+	initialState: adapter.getInitialState(),
 	selectors: {
-		getObstacles: (state) => state,
-		getSelectedObstacles: (state) => state.filter((x) => x.selected),
-		getNumOfObstacles: (state) => state.length,
+		selectAll: selectAll,
+		selectAllSelected: selectAllSelected,
+		selectTotal: selectTotal,
 	},
-	reducers: {},
+	reducers: (api) => {
+		return {
+			addOne: api.asyncThunk(createFromState, {
+				fulfilled: (state, action) => {
+					const { obstacle: data } = action.payload;
+					return adapter.addOne(state, createObstacle(data));
+				},
+			}),
+			updateOne: api.reducer<Update<App.IObstacle, EntityId>>((state, action) => {
+				return adapter.updateOne(state, action.payload);
+			}),
+			selectOne: api.reducer<{ id: EntityId }>((state, action) => {
+				const { id } = action.payload;
+				return adapter.updateOne(state, { id, changes: { selected: true } });
+			}),
+			deselectOne: api.reducer<{ id: EntityId }>((state, action) => {
+				const { id } = action.payload;
+				return adapter.updateOne(state, { id, changes: { selected: false } });
+			}),
+			updateAllSelected: api.reducer<{ changes: Partial<App.IObstacle> }>((state, action) => {
+				const { changes } = action.payload;
+				const entities = selectAllSelected(state);
+				return adapter.updateMany(
+					state,
+					entities.map((x) => ({ id: adapter.selectId(x), changes })),
+				);
+			}),
+			removeOne: api.reducer<{ id: EntityId }>((state, action) => {
+				return adapter.removeOne(state, action.payload.id);
+			}),
+		};
+	},
 	extraReducers: (builder) => {
-		builder.addCase(loadBeatmapEntities, (_, action) => {
+		builder.addCase(loadBeatmapEntities, (state, action) => {
 			const { obstacles } = action.payload;
-			return obstacles ?? initialState;
+			return adapter.setAll(state, obstacles ?? []);
 		});
-		builder.addCase(createNewObstacle.fulfilled, (state, action) => {
-			const { obstacle } = action.payload;
-			return [...state, obstacle];
+		builder.addCase(addObstacle.fulfilled, (state, action) => {
+			const { obstacle: data } = action.payload;
+			return adapter.addOne(state, createObstacle(data));
 		});
-		builder.addCase(resizeObstacle, (state, action) => {
-			const { id, newBeatDuration } = action.payload;
-			const obstacleIndex = state.findIndex((o) => o.id === id);
-			const obstacle = state[obstacleIndex];
-			obstacle.beatDuration = newBeatDuration;
-		});
-		builder.addCase(resizeSelectedObstacles, (state, action) => {
-			const { newBeatDuration } = action.payload;
-			for (const obstacle of state) {
-				if (obstacle.selected) {
-					obstacle.beatDuration = newBeatDuration;
-				}
-			}
-		});
-		builder.addCase(deleteObstacle, (state, action) => {
-			const { id } = action.payload;
-			return state.filter((obstacle) => obstacle.id !== id);
-		});
-		builder.addCase(deleteSelectedNotes, (state) => {
-			return state.filter((obstacle) => !obstacle.selected);
+		builder.addCase(removeAllSelectedObjects, (state) => {
+			const entities = selectAllSelected(state);
+			return adapter.removeMany(
+				state,
+				entities.map((x) => adapter.selectId(x)),
+			);
 		});
 		builder.addCase(cutSelection.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.filter((obstacle) => !obstacle.selected);
+			const entities = selectAllSelected(state);
+			return adapter.removeMany(
+				state,
+				entities.map((x) => adapter.selectId(x)),
+			);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
-			const { view, data, pasteAtBeat } = action.payload;
+			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const isObstacle = (item: object): item is App.Obstacle => "beatStart" in item;
-			const earliestBeat = getBeatNumForItem(data[0]);
-			const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
-			const deselectedState = state.map((obstacle) => ({ ...obstacle, selected: false }));
-			const obstacles = data.filter(isObstacle);
-			const timeShiftedObstacles = obstacles.map((obstacle) => ({ ...obstacle, selected: true, beatStart: getBeatNumForItem(obstacle) + deltaBetweenPeriods }));
-			return [...deselectedState, ...timeShiftedObstacles];
+			if (!data.obstacles) return state;
+			const entities = selectAll(state);
+			adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+			);
+			const timeShiftedEntities = data.obstacles.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }));
+			return adapter.upsertMany(state, timeShiftedEntities);
 		});
-		builder.addCase(selectObstacle, (state, action) => {
-			const { id } = action.payload;
-			const obstacleIndex = state.findIndex((o) => o.id === id);
-			state[obstacleIndex].selected = true;
-		});
-		builder.addCase(deselectObstacle, (state, action) => {
-			const { id } = action.payload;
-			const obstacleIndex = state.findIndex((o) => o.id === id);
-			state[obstacleIndex].selected = false;
-		});
-		builder.addCase(selectAll.fulfilled, (state, action) => {
+		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.map((obstacle) => ({ ...obstacle, selected: true }));
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: true } })),
+			);
 		});
-		builder.addCase(deselectAll, (state, action) => {
+		builder.addCase(deselectAllEntities, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.map((obstacle) => ({ ...obstacle, selected: false }));
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+			);
 		});
-		builder.addCase(selectAllInRange, (state, action) => {
+		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			const { start, end, view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.map((obstacle) => {
-				const selected = obstacle.beatStart >= start && obstacle.beatStart < end;
-				return { ...obstacle, selected };
-			});
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start - 0.01 && x.time < end } })),
+			);
 		});
-		builder.addCase(swapSelectedNotes, (state, action) => {
+		builder.addCase(mirrorSelection, (state, action) => {
 			const { axis } = action.payload;
-			return swapObstacles(axis, state);
+			if (axis === "vertical") return state;
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, "horizontal") })),
+			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
 			const { view, direction, amount } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return nudgeObstacles(direction, amount, state);
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
+			);
 		});
-		builder.addCase(toggleFastWallsForSelectedObstacles, (state) => {
-			// This action should either set all walls to "fast", or all walls to "slow" (normal), based on if a single selected map is fast already.
-			const areAnySelectedWallsFast = state.some((obstacle) => obstacle.selected && obstacle.fast);
-			const shouldBeFast = !areAnySelectedWallsFast;
-			return state.map((obstacle) => {
-				if (obstacle.selected) return { ...obstacle, fast: shouldBeFast };
-				return obstacle;
-			});
-		});
-		builder.addCase(deselectAllOfType, (state, action) => {
+		builder.addCase(deselectAllEntitiesOfType, (state, action) => {
 			const { itemType } = action.payload;
 			if (itemType !== ObjectType.OBSTACLE) return state;
-			return state.map((obstacle) => {
-				if (!obstacle.selected) return obstacle;
-				return { ...obstacle, selected: false };
-			});
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+			);
 		});
-		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => initialState);
+		builder.addMatcher(isAnyOf(addSong, startLoadingMap, leaveEditor), () => adapter.getInitialState());
 		builder.addDefaultCase((state) => state);
 	},
 });

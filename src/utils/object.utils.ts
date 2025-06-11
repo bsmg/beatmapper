@@ -1,3 +1,6 @@
+import type { DeepPartial } from "bsmap/types";
+import { isEmpty } from "./guards";
+
 export function pick<T extends object, K extends keyof T>(obj: T, ...keys: readonly K[]): Pick<T, K> {
 	const result = {} as T;
 	for (const key of keys) {
@@ -16,6 +19,10 @@ export function omit<T extends object, K extends keyof T>(obj: T, ...keys: reado
 		}
 	}
 	return result;
+}
+
+export function withKeys<T extends object, K extends keyof Required<T>>(obj: T, ...keys: K[]): boolean {
+	return keys.some((key) => key in obj && !!obj[key]);
 }
 
 export function extractTypeFromObject<T extends object, K extends keyof object>(obj: T, type: K) {
@@ -55,4 +62,38 @@ export function shallowCompare<T extends object, K extends keyof T>(o1: T, o2: T
 
 export function hasPropChanged<T extends object, K extends keyof T>(oldProps: Readonly<T>, newProps: T, key: K) {
 	return oldProps[key] !== newProps[key];
+}
+
+export function deepMerge<T extends Record<string, any>>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
+	function isMergeableObject(item: unknown): item is Record<string, any> {
+		return !!(item && typeof item === "object" && !Array.isArray(item));
+	}
+	if (!sources.length) return target;
+	const source = sources.shift();
+	if (source === undefined) return target;
+	let output: T = { ...target };
+	if (isMergeableObject(target) && isMergeableObject(source)) {
+		// Cast source to Record<string, any> within the loop to allow string indexing
+		const mergeSource = source as Record<string, any>;
+		for (const key in mergeSource) {
+			if (Object.prototype.hasOwnProperty.call(mergeSource, key)) {
+				if (key in output && isMergeableObject(output[key])) {
+					const targetValue = output[key] as T[Extract<keyof T, typeof key>];
+					const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
+					output = { ...output, [key]: deepMerge(targetValue, sourceValue) };
+				} else if (isMergeableObject(mergeSource[key])) {
+					output = { ...output, [key]: mergeSource[key] };
+				} else {
+					if (mergeSource[key] !== undefined) {
+						output = { ...output, [key]: mergeSource[key] };
+					}
+				}
+			}
+		}
+	}
+	return deepMerge(output, ...sources);
+}
+
+export function maybeObject<T extends object>(object: T) {
+	return !isEmpty(object) ? object : undefined;
 }

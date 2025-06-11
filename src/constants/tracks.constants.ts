@@ -1,49 +1,37 @@
-import { App, TrackType } from "$/types";
+import { type IEventTrack, TrackType } from "$/types";
+import { pick } from "$/utils";
 
-export const EVENT_TRACKS = [
-	{
-		id: App.TrackId[12],
-		label: "Left laser speed",
-		type: TrackType.VALUE,
-	} as const,
-	{
-		id: App.TrackId[2],
-		label: "Left laser",
-		type: TrackType.LIGHT,
-	} as const,
-	{
-		id: App.TrackId[3],
-		label: "Right laser",
-		type: TrackType.LIGHT,
-	} as const,
-	{
-		id: App.TrackId[13],
-		label: "Right laser speed",
-		type: TrackType.VALUE,
-	} as const,
-	{
-		id: App.TrackId[0],
-		label: "Back laser",
-		type: TrackType.LIGHT,
-	} as const,
-	{
-		id: App.TrackId[4],
-		label: "Primary light",
-		type: TrackType.LIGHT,
-	} as const,
-	{
-		id: App.TrackId[1],
-		label: "Track neons",
-		type: TrackType.LIGHT,
-	} as const,
-	{
-		id: App.TrackId[8],
-		label: "Ring rotation",
-		type: TrackType.TRIGGER,
-	} as const,
-	{
-		id: App.TrackId[9],
-		label: "Small ring zoom",
-		type: TrackType.TRIGGER,
-	} as const,
-] as const;
+export const EVENT_TRACKS = {
+	0: { type: TrackType.LIGHT },
+	1: { type: TrackType.LIGHT },
+	2: { type: TrackType.LIGHT, side: "left" },
+	3: { type: TrackType.LIGHT, side: "right" },
+	4: { type: TrackType.LIGHT },
+	5: { type: TrackType.UNSUPPORTED },
+	6: { type: TrackType.LIGHT, side: "left" },
+	7: { type: TrackType.LIGHT, side: "right" },
+	8: { type: TrackType.TRIGGER },
+	9: { type: TrackType.TRIGGER },
+	10: { type: TrackType.LIGHT, side: "left" },
+	11: { type: TrackType.LIGHT, side: "right" },
+	12: { type: TrackType.VALUE, side: "left" },
+	13: { type: TrackType.VALUE, side: "right" },
+	14: { type: TrackType.UNSUPPORTED },
+	15: { type: TrackType.UNSUPPORTED },
+	16: { type: TrackType.VALUE, side: "left" },
+	17: { type: TrackType.VALUE, side: "right" },
+	18: { type: TrackType.VALUE, side: "left" },
+	19: { type: TrackType.VALUE, side: "right" },
+	40: { type: TrackType.VALUE },
+	41: { type: TrackType.VALUE },
+	42: { type: TrackType.VALUE },
+	43: { type: TrackType.VALUE },
+	100: { type: TrackType.UNSUPPORTED },
+	1000: { type: TrackType.UNSUPPORTED },
+} as const satisfies Record<number, IEventTrack>;
+
+export const ALL_EVENT_TRACKS = EVENT_TRACKS;
+
+export const SUPPORTED_EVENT_TRACKS = pick(ALL_EVENT_TRACKS, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19);
+
+export const COMMON_EVENT_TRACKS = pick(SUPPORTED_EVENT_TRACKS, 0, 1, 2, 3, 4, 8, 9, 12, 13);

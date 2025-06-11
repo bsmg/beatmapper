@@ -1,10 +1,5 @@
-import { EventColor, EventEditMode, EventTool, ObjectTool } from "$/types/editor";
+import { tickSwitchSfxPath, tickWoodblockSfxPath } from "$/assets";
 import { getMetaKeyLabel, pluralize, roundTo } from "$/utils";
-
-export const NOTE_TOOLS = Object.freeze(Object.values(ObjectTool));
-export const EVENT_TOOLS = Object.freeze(Object.values(EventTool));
-export const EVENT_EDIT_MODES = Object.freeze(Object.values(EventEditMode));
-export const EVENT_COLORS = Object.freeze(Object.values(EventColor));
 
 const META_KEY_LABEL = Object.freeze(getMetaKeyLabel());
 
@@ -35,13 +30,11 @@ export const SNAPPING_INCREMENTS = Object.freeze(
 
 export const HIGHEST_PRECISION = SNAPPING_INCREMENTS[0].value;
 
-// Our most precise snapping increments are 1/24 and 1/32.
-// These two numbers share 1/96 as their lowest common multiple
-export const LOWEST_COMMON_MULTIPLE = 1 / 96;
-
 export const BEATS_PER_ZOOM_LEVEL = [32, 16, 8, 4, 2] as const;
 
 export const ZOOM_LEVEL_MIN = 0;
 export const ZOOM_LEVEL_MAX = 4;
 
 export const GRID_PRESET_SLOTS = ["1", "2", "3", "4"] as const;
+
+export const NOTE_TICK_TYPES = [tickWoodblockSfxPath, tickSwitchSfxPath] as const;

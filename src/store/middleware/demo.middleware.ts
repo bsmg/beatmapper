@@ -1,9 +1,10 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { processImportedMap } from "$/services/packaging.service";
-import { importExistingSong, loadDemoMap } from "$/store/actions";
-import { getIsNewUser } from "$/store/selectors";
+import { getSelectedBeatmap, resolveSongId } from "$/helpers/song.helpers";
+import { router } from "$/index";
+import { addSongFromFile, loadDemoMap } from "$/store/actions";
+import { selectNew } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 
 /**
@@ -17,15 +18,13 @@ export default function createDemoMiddleware() {
 		effect: async (_, api) => {
 			// If this is a brand-new user, they won't have the demo song at all
 			const state = api.getState();
-			const isNewUser = getIsNewUser(state);
+			const isNewUser = selectNew(state);
 			if (isNewUser) {
-				const res = await fetch(demoFileUrl);
-				const blob = await res.blob();
-				const songData = await processImportedMap(blob, []);
-				songData.demo = true;
-				await api.dispatch(importExistingSong({ songData }));
-				// TODO: Should pull data from demoSong
-				window.location.href = "/edit/only-now/Normal/notes";
+				const blob = await fetch(demoFileUrl).then((response) => response.blob());
+				const { songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();
+				const sid = resolveSongId({ name: songData.name });
+				const bid = getSelectedBeatmap(songData);
+				router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid, bid: bid.toString() } });
 			}
 		},
 	});

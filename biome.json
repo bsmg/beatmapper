@@ -14,12 +14,13 @@
 		"rules": {
 			"recommended": true,
 			"a11y": {
-				"noSvgWithoutTitle": "warn",
+				"noSvgWithoutTitle": "off",
 				"useKeyWithClickEvents": "info",
 				"useKeyWithMouseEvents": "info"
 			},
 			"complexity": {
-				"noForEach": "warn"
+				"noForEach": "warn",
+				"noBannedTypes": "off"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "warn"

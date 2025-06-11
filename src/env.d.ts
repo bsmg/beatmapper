@@ -6,15 +6,10 @@ interface ImportMetaEnv {
 	VITE_ENABLE_DEVTOOLS: boolean;
 }
 
-declare module "*.mdx" {
-	import type { TocEntry } from "remark-mdx-toc";
-	/** `remark-mdx-frontmatter` */
-	export const frontMatter: Frontmatter;
-	/** `remark-mdx-toc` */
-	export const tableOfContents: TocEntry[];
-}
+declare module "virtual:pwa-register" {
+	import type { RegisterSWOptions } from "vite-plugin-pwa/types";
 
-declare interface Frontmatter {
-	title: string;
-	subtitle: string;
+	export type { RegisterSWOptions };
+
+	export function registerSW(options?: RegisterSWOptions): (reloadPage?: boolean) => Promise<void>;
 }

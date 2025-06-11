@@ -1,1 +1,1 @@
-export { default as autosaveWorker } from "./autosave.worker";
+export { createAutosaveWorker } from "./autosave.worker";

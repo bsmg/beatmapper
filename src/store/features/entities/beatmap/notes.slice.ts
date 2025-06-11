@@ -1,186 +1,172 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createColorNote, mirrorNoteColor, sortObjectFn } from "bsmap";
 
-import { getBeatNumForItem } from "$/helpers/item.helpers";
-import { findNoteIndexByProperties, nudgeNotes, swapNotes } from "$/helpers/notes.helpers";
+import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
-	bulkDeleteNote,
-	clearCellOfNotes,
-	clickPlacementGrid,
-	createNewSong,
+	addSong,
+	addToCell,
+	bulkRemoveNote,
 	cutSelection,
-	deleteNote,
-	deleteSelectedNotes,
-	deselectAll,
-	deselectAllOfType,
+	deselectAllEntities,
+	deselectAllEntitiesOfType,
 	deselectNote,
 	leaveEditor,
 	loadBeatmapEntities,
+	mirrorSelection,
 	nudgeSelection,
 	pasteSelection,
-	selectAll,
-	selectAllInRange,
+	removeAllSelectedObjects,
+	removeFromCell,
+	removeNote,
+	selectAllEntities,
+	selectAllEntitiesInRange,
 	selectNote,
-	setBlockByDragging,
-	startLoadingSong,
-	swapSelectedNotes,
-	toggleNoteColor,
+	startLoadingMap,
 } from "$/store/actions";
-import { type Json, ObjectTool, ObjectType, View } from "$/types";
+import { createActionsForNoteEntityAdapter, createGridObjectSelector, createSelectedEntitiesSelector } from "$/store/helpers";
+import { type App, ObjectTool, ObjectType, View } from "$/types";
 
-const initialState = [] as (Json.Note & { selected?: boolean })[];
-
-function getItemType(item: ObjectTool) {
-	switch (item) {
-		case ObjectTool.LEFT_NOTE: {
-			return 0;
-		}
-		case ObjectTool.RIGHT_NOTE: {
-			return 1;
-		}
-		case ObjectTool.BOMB_NOTE: {
-			return 3;
-		}
-		default: {
-			throw new Error(`Unrecognized item: ${item}`);
-		}
-	}
-}
+const adapter = createEntityAdapter<App.IColorNote, EntityId>({
+	selectId: resolveNoteId,
+	sortComparer: sortObjectFn,
+});
+const { selectAll, selectTotal } = adapter.getSelectors();
+const selectAllSelected = createSelectedEntitiesSelector(selectAll);
+const selectByPosition = createGridObjectSelector(selectAll);
 
 const slice = createSlice({
 	name: "notes",
-	initialState: initialState,
+	initialState: adapter.getInitialState(),
 	selectors: {
-		getNotes: (state) => state,
-		getSelectedNotes: (state) => state.filter((x) => x.selected),
-		getSelectedBlocks: (state) => state.filter((x) => x.selected && x._type < 2),
-		getSelectedMines: (state) => state.filter((x) => x.selected && x._type === 3),
-		getNumOfBlocks: (state) => state.filter((x) => x._type < 2).length,
-		getNumOfMines: (state) => state.filter((x) => x._type === 3).length,
+		selectAll: selectAll,
+		selectAllSelected: selectAllSelected,
+		selectTotal: selectTotal,
 	},
-	reducers: {},
+	reducers: (api) => {
+		const { updateOne } = createActionsForNoteEntityAdapter(api, adapter);
+		return {
+			updateOne: updateOne,
+			mirrorOne: api.reducer<{ query: Parameters<typeof resolveNoteId>[0] }>((state, action) => {
+				const { query } = action.payload;
+				const match = selectByPosition(state, query);
+				if (!match) return state;
+				const color = mirrorNoteColor(match.color);
+				return adapter.updateOne(state, { id: adapter.selectId(match), changes: { color } });
+			}),
+		};
+	},
 	extraReducers: (builder) => {
-		builder.addCase(loadBeatmapEntities, (_, action) => {
+		builder.addCase(loadBeatmapEntities, (state, action) => {
 			const { notes } = action.payload;
-			return notes ?? initialState;
+			return adapter.setAll(state, notes ?? []);
 		});
-		builder.addCase(clickPlacementGrid.fulfilled, (state, action) => {
-			const { rowIndex, colIndex, cursorPositionInBeats, direction: selectedDirection, tool: selectedTool } = action.payload;
-			// Make sure there isn't already a note in this location.
-			const alreadyExists = state.some((note) => note._time === cursorPositionInBeats && note._lineIndex === colIndex && note._lineLayer === rowIndex);
-			if (alreadyExists) {
-				console.warn("Tried to add a double-note in the same spot. Rejected.");
-				return state;
-			}
-			if (selectedDirection === null || selectedTool === null) return state;
-			return [...state, { _time: cursorPositionInBeats, _lineIndex: colIndex, _lineLayer: rowIndex, _type: getItemType(selectedTool), _cutDirection: selectedDirection }];
+		builder.addCase(addToCell.fulfilled, (state, action) => {
+			const { tool: selectedTool, time: beatNum, posX: colIndex, posY: rowIndex, direction } = action.payload;
+			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
+			const color = Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1;
+			return adapter.upsertOne(state, createColorNote({ time: beatNum, posX: colIndex, posY: rowIndex, color: color, direction: direction }));
 		});
-		builder.addCase(clearCellOfNotes.fulfilled, (state, action) => {
-			const { rowIndex, colIndex, cursorPositionInBeats } = action.payload;
-			const matchedNoteIndex = state.findIndex((block) => {
-				return block._lineIndex === colIndex && block._lineLayer === rowIndex && block._time === cursorPositionInBeats;
-			});
-			if (matchedNoteIndex === -1) return state;
-			return [...state.slice(0, matchedNoteIndex), ...state.slice(matchedNoteIndex + 1)];
+		builder.addCase(removeFromCell.fulfilled, (state, action) => {
+			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
+			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
+			if (!match) return state;
+			return adapter.removeOne(state, adapter.selectId(match));
 		});
-		builder.addCase(setBlockByDragging.fulfilled, (state, action) => {
-			const { direction, rowIndex, colIndex, cursorPositionInBeats, selectedTool } = action.payload;
-			const existingBlockIndex = state.findIndex((note) => note._time === cursorPositionInBeats && note._lineIndex === colIndex && note._lineLayer === rowIndex);
-			const newBlock = {
-				_time: cursorPositionInBeats,
-				_lineIndex: colIndex,
-				_lineLayer: rowIndex,
-				_type: getItemType(selectedTool),
-				_cutDirection: direction,
-			};
-			if (existingBlockIndex === -1) return [...state, newBlock];
-			return [...state.slice(0, existingBlockIndex), newBlock, ...state.slice(existingBlockIndex + 1)];
-		});
-		builder.addCase(deleteSelectedNotes, (state) => {
-			return state.filter((note) => !note.selected);
+		builder.addCase(removeAllSelectedObjects, (state) => {
+			const entities = selectAllSelected(state);
+			return adapter.removeMany(
+				state,
+				entities.map((x) => adapter.selectId(x)),
+			);
 		});
 		builder.addCase(cutSelection.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.filter((note) => !note.selected);
+			const entities = selectAllSelected(state);
+			return adapter.removeMany(
+				state,
+				entities.map((x) => adapter.selectId(x)),
+			);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
-			const { view, data, pasteAtBeat } = action.payload;
+			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			function isBlockOrMine(item: object): item is (typeof initialState)[0] {
-				return "_cutDirection" in item;
-			}
-			const earliestBeat = getBeatNumForItem(data[0]);
-			const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
-			const deselectedState = state.map((note) => ({ ...note, selected: false }));
-			const notes = data.filter(isBlockOrMine) as unknown as typeof initialState;
-			const timeShiftedNotes = notes.map((note) => ({ ...note, selected: true, _time: getBeatNumForItem(note) + deltaBetweenPeriods }));
-			return [...deselectedState, ...timeShiftedNotes];
+			if (!data.notes) return state;
+			const entities = selectAll(state);
+			adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+			);
+			const timeShiftedEntities = data.notes.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }));
+			return adapter.upsertMany(state, timeShiftedEntities);
 		});
-		builder.addCase(toggleNoteColor, (state, action) => {
-			const { time, lineLayer, lineIndex } = action.payload;
-			const noteIndex = findNoteIndexByProperties(state, { time, lineLayer, lineIndex });
-			const note = state[noteIndex];
-			// If this is a mine, do nothing
-			if (note._type > 1) return state;
-			return [...state.slice(0, noteIndex), { ...note, _type: note._type === 0 ? 1 : 0 }, ...state.slice(noteIndex + 1)];
-		});
-		builder.addCase(selectAll.fulfilled, (state, action) => {
+		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.map((note) => ({ ...note, selected: true }));
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: true } })),
+			);
 		});
-		builder.addCase(deselectAll, (state, action) => {
+		builder.addCase(deselectAllEntities, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.map((note) => ({ ...note, selected: false }));
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+			);
 		});
-		builder.addCase(selectAllInRange, (state, action) => {
+		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			const { start, end, view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return state.map((note) => {
-				const selected = note._time >= start && note._time < end;
-				return { ...note, selected: selected };
-			});
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start - 0.01 && x.time < end } })),
+			);
 		});
-		builder.addCase(swapSelectedNotes, (state, action) => {
+		builder.addCase(mirrorSelection, (state, action) => {
 			const { axis } = action.payload;
-			return swapNotes(axis, state);
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, axis) })),
+			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
 			const { view, direction, amount } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			return nudgeNotes(direction, amount, state);
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
+			);
 		});
-		builder.addCase(deselectAllOfType, (state, action) => {
+		builder.addCase(deselectAllEntitiesOfType, (state, action) => {
 			const { itemType } = action.payload;
-			if (itemType === ObjectType.OBSTACLE) return state;
-			const typeMap = {
-				0: ObjectType.NOTE,
-				1: ObjectType.NOTE,
-				3: ObjectType.BOMB,
-			};
-			return state.map((note) => {
-				const matchesType = typeMap[note._type as 0 | 1 | 3] === itemType;
-				if (!matchesType || !note.selected) return note;
-				return { ...note, selected: false };
-			});
+			if (itemType !== ObjectType.NOTE) return state;
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+			);
 		});
-		builder.addMatcher(isAnyOf(createNewSong.fulfilled, startLoadingSong, leaveEditor), () => initialState);
-		builder.addMatcher(isAnyOf(deleteNote, bulkDeleteNote), (state, action) => {
-			const { time, lineLayer, lineIndex } = action.payload;
-			const noteIndex = findNoteIndexByProperties(state, { time, lineLayer, lineIndex });
-			// This shouldn't be possible, but if it does somehow happen, it shouldn't crash everything.
-			if (noteIndex === -1) return state;
-			return [...state.slice(0, noteIndex), ...state.slice(noteIndex + 1)];
+		builder.addMatcher(isAnyOf(addSong, startLoadingMap, leaveEditor), () => adapter.getInitialState());
+		builder.addMatcher(isAnyOf(removeNote, bulkRemoveNote), (state, action) => {
+			const { query } = action.payload;
+			const match = selectByPosition(state, query);
+			if (!match) return state;
+			return adapter.removeOne(state, adapter.selectId(match));
 		});
 		builder.addMatcher(isAnyOf(selectNote, deselectNote), (state, action) => {
-			const { time, lineLayer, lineIndex } = action.payload;
-			const noteIndex = findNoteIndexByProperties(state, { time, lineLayer, lineIndex });
+			const { query } = action.payload;
+			const match = selectByPosition(state, query);
+			if (!match) return state;
 			const selected = selectNote.match(action);
-			// This shouldn't be possible, but if it does somehow happen, it shouldn't crash everything.
-			if (noteIndex === -1) return state;
-			const note = state[noteIndex];
-			return [...state.slice(0, noteIndex), { ...note, selected }, ...state.slice(noteIndex + 1)];
+			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { selected: selected } });
 		});
 		builder.addDefaultCase((state) => state);
 	},

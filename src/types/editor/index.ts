@@ -1,7 +1,30 @@
 import type { EntityId } from "@reduxjs/toolkit";
+
 import type { App } from "../beatmap";
+import type { ColorSchemeKey, TrackType } from "./shared";
 
 export * from "./shared";
+
+export type IEntityMap<T> = { [key in EntityId]: T };
+
+export type IColorScheme = { [key in ColorSchemeKey]: string };
+
+export interface IBackgroundBox {
+	time: number;
+	duration?: number | null;
+	startColor?: App.EventColor;
+	endColor?: App.EventColor;
+	startBrightness?: number;
+	endBrightness?: number;
+}
+
+export interface IEventTrack {
+	type: TrackType;
+	label?: string;
+	side?: "left" | "right";
+}
+
+export type IEventTracks = Record<PropertyKey, IEventTrack>;
 
 export interface IGrid {
 	numCols: number;
@@ -10,22 +33,12 @@ export interface IGrid {
 	rowHeight: number;
 }
 
-export type GridPresets = Record<string, IGrid>;
+export type IGridPresets = Record<string, IGrid>;
 
-export interface ISelectionBox extends Pick<DOMRect, "left" | "right" | "top" | "bottom"> {
-	height?: number;
-	width?: number;
-}
 export interface ISelectionBoxInBeats {
 	startBeat: number;
 	endBeat: number;
 	startTrackIndex: number;
 	endTrackIndex: number;
-}
-
-export interface IBackgroundBox {
-	id: EntityId;
-	beatNum: number;
-	duration?: number | null;
-	colorType?: App.EventColorType;
+	withPrevious?: boolean;
 }

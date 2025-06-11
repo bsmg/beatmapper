@@ -1,6 +1,7 @@
-export { default as defaultSfxPath } from "./audio/tick-alt.mp3";
+export { default as tickSwitchSfxPath } from "./audio/switch.mp3";
+export { default as tickWoodblockSfxPath } from "./audio/woodblock.mp3";
 
-export { default as oswaldGlyphs } from "./fonts/oswald.json";
+export { default as oswaldGlyphsUrl } from "./fonts/oswald.json?url";
 
 export { default as pixelSrc } from "./images/pixel.png";
 export { default as defaultCoverArtPath } from "./images/placeholder-cover-art.jpg";

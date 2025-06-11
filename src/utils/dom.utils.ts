@@ -41,8 +41,8 @@ export function isMetaKeyPressed<T extends KeyboardEvent | MouseEvent>(ev: T, na
 }
 
 export function getMetaKeyLabel(navigator?: Navigator) {
-	return getIsMac(navigator) ? "⌘" : "ctrl";
+	return getIsMac(navigator) ? "⌘" : "CTRL";
 }
 export function getOptionKeyLabel(navigator?: Navigator) {
-	return getIsMac(navigator) ? "⌥" : "alt";
+	return getIsMac(navigator) ? "⌥" : "ALT";
 }

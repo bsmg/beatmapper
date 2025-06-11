@@ -8,13 +8,6 @@ export const View = {
 } as const;
 export type View = Member<typeof View>;
 
-export const Quality = {
-	LOW: "low",
-	MEDIUM: "medium",
-	HIGH: "high",
-} as const;
-export type Quality = Member<typeof Quality>;
-
 export const ObjectType = {
 	NOTE: "block",
 	BOMB: "mine",
@@ -54,6 +47,7 @@ export type EventTool = Member<typeof EventTool>;
 export const EventColor = {
 	PRIMARY: "red",
 	SECONDARY: "blue",
+	WHITE: "white",
 } as const;
 export type EventColor = Member<typeof EventColor>;
 
@@ -65,7 +59,19 @@ export type EventEditMode = Member<typeof EventEditMode>;
 
 export const TrackType = {
 	LIGHT: "blocks",
-	TRIGGER: "blocks",
+	TRIGGER: "trigger",
 	VALUE: "speed",
+	UNSUPPORTED: "unknown",
 } as const;
 export type TrackType = Member<typeof TrackType>;
+
+export const ColorSchemeKey = {
+	SABER_LEFT: "colorLeft",
+	SABER_RIGHT: "colorRight",
+	OBSTACLE: "obstacleColor",
+	ENV_LEFT: "envColorLeft",
+	ENV_RIGHT: "envColorRight",
+	BOOST_LEFT: "envColorLeftBoost",
+	BOOST_RIGHT: "envColorRightBoost",
+} as const;
+export type ColorSchemeKey = Member<typeof ColorSchemeKey>;
