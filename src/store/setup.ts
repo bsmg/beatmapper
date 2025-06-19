@@ -46,6 +46,8 @@ import {
 	selectUsername,
 } from "./selectors";
 
+const STORAGE_PREFIX = location.hostname === "localhost" ? "beatmapper" : "";
+
 export type UserStorageObservers = {
 	"user.new": StorageObserver<RootState, boolean>;
 	"user.announcements": StorageObserver<RootState, string[]>;
@@ -83,6 +85,8 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
 		await idb.removeStore("local-forage-detect-blob-support", tx);
 
+		const prefix = STORAGE_PREFIX.length > 0 ? `${STORAGE_PREFIX}:` : "";
+
 		if (next && next >= 3) {
 			await idb.createStore("songs", tx);
 			await idb.createStore("grids", tx);
@@ -90,10 +94,10 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 			if (value) {
 				const snapshot = typeof value === "string" ? JSON.parse(value) : value;
 				const username = selectUsername(snapshot);
-				localStorage.setItem("beatmapper:user.new", String(selectNew(snapshot)));
-				if (username) localStorage.setItem("beatmapper:user.username", username);
-				localStorage.setItem("beatmapper:user.announcements", selectAnnouncements(snapshot).toString());
-				localStorage.setItem("beatmapper:audio.offset", selectAudioProcessingDelay(snapshot).toString());
+				localStorage.setItem(`${prefix}user.new`, String(selectNew(snapshot)));
+				if (username) localStorage.setItem(`${prefix}user.username`, username);
+				localStorage.setItem(`${prefix}user.announcements`, selectAnnouncements(snapshot).toString());
+				localStorage.setItem(`${prefix}audio.offset`, selectAudioProcessingDelay(snapshot).toString());
 				for (const [id, song] of Object.entries<any>(snapshot.songs.byId)) {
 					await idb.set(
 						"songs",
@@ -136,8 +140,6 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 });
 
 export async function createAppStore() {
-	const storagePrefix = location.hostname === "localhost" ? "beatmapper" : "";
-
 	const middleware = createAllSharedMiddleware({
 		filestore: filestore,
 		autosaveWorker: autosaveWorker,
@@ -145,7 +147,7 @@ export async function createAppStore() {
 
 	const userMiddleware = createStorageMiddleware<RootState, UserStorageObservers>({
 		namespace: "user",
-		storage: createStorage({ driver: ls({ base: storagePrefix }) }),
+		storage: createStorage({ driver: ls({ base: STORAGE_PREFIX }) }),
 		observers: {
 			"user.new": { selector: selectNew },
 			"user.announcements": { selector: selectAnnouncements },
@@ -158,7 +160,7 @@ export async function createAppStore() {
 	});
 	const sessionMiddleware = createStorageMiddleware<RootState, SessionStorageObservers>({
 		namespace: "session",
-		storage: createStorage({ driver: ss({ base: storagePrefix }) }),
+		storage: createStorage({ driver: ss({ base: STORAGE_PREFIX }) }),
 		observers: {
 			"track.snap": { selector: selectSnap },
 			"track.spacing": { selector: selectBeatDepth },
