@@ -35,14 +35,14 @@ function FirstTimeHome() {
 						</Button>
 					</OptionColumn>
 					<OptionColumn icon={CirclePlusIcon} title="Create new map" description="Build a new map from scratch, using music from your computer">
-						<Dialog title="Create" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
+						<Dialog title="Create new map" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
 							<Button variant="solid" size="md">
 								Create from scratch
 							</Button>
 						</Dialog>
 					</OptionColumn>
 					<OptionColumn icon={DownloadIcon} title="Import existing map" description="Edit an existing map by selecting it from your computer">
-						<Dialog title="Import" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} />}>
+						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} />}>
 							<Button variant="solid" size="md">
 								Import map
 							</Button>
