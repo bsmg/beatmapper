@@ -61,10 +61,12 @@ export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, mouseDow
 				obstacle.width = rawWidth - half;
 
 				// use the delta to determine whether we're moving from left-to-right or right-to-left
-				if (mouseOverAt.colIndex - mouseDownAt.colIndex > 0) {
+				if (mouseOverAt.colIndex >= half) {
 					obstacle.posX = half - offset;
+					obstacle.width += mouseDownAt.colIndex;
 				} else {
 					obstacle.posX = mouseOverAt.colIndex - offset;
+					obstacle.width += numCols - 1 - mouseDownAt.colIndex;
 				}
 			}
 			return obstacle;
