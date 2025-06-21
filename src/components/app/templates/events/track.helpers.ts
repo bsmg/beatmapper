@@ -50,7 +50,7 @@ export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept
 	let tentativeBox: IBackgroundBox | null = null;
 
 	for (const event of workableEvents) {
-		const eventEffect = resolveEventEffect(event);
+		const eventEffect = resolveEventEffect(event, tracks);
 		const eventColor = resolveEventColor(event);
 
 		const isOn = ON_EVENT_TYPES.includes(eventEffect) && event.floatValue > 0;
