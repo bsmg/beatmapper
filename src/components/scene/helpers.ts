@@ -12,24 +12,13 @@ export interface PositionResolverOptions {
 export function resolvePositionForGridObject<T extends RequiredKeys<Partial<wrapper.IWrapBaseNote>, "posX" | "posY">>(object: T, { beatDepth }: PositionResolverOptions): Vector3Tuple {
 	const position = { x: 0, y: 0, z: 0 };
 
-	if (object.posX >= 1000 || object.posX <= -1000) {
-		const OFFSET_X = BLOCK_CELL_SIZE * -1.5;
-		position.x = (object.posX / 1000) * BLOCK_CELL_SIZE + OFFSET_X;
-		position.x += (object.posX > 0 ? -1 : 1) * BLOCK_CELL_SIZE;
-	} else {
-		const OFFSET_X = BLOCK_CELL_SIZE * -1.5;
-		position.x = object.posX * BLOCK_CELL_SIZE + OFFSET_X;
-	}
-
-	if (object.posY >= 1000 || object.posY <= -1000) {
-		const OFFSET_Y = BLOCK_CELL_SIZE * -1;
-		position.y = (object.posY / 1000) * BLOCK_CELL_SIZE + OFFSET_Y;
-		position.y += (object.posY > 0 ? -1 : 1) * BLOCK_CELL_SIZE;
-	} else {
-		const OFFSET_Y = BLOCK_CELL_SIZE * -1;
-		position.y = object.posY * BLOCK_CELL_SIZE + OFFSET_Y;
-	}
-
+	// ----------- X ------------
+	const posX = object.posX >= 1000 || object.posX <= -1000 ? (object.posX < 0 ? object.posX / 1000 + 1 : object.posX / 1000 - 1) : object.posX;
+	position.x = posX * BLOCK_CELL_SIZE + BLOCK_CELL_SIZE * -1.5;
+	// ----------- Y ------------
+	const posY = object.posY >= 1000 || object.posY <= -1000 ? (object.posY < 0 ? object.posY / 1000 + 1 : object.posY / 1000 - 1) : object.posY;
+	position.y = posY * BLOCK_CELL_SIZE + BLOCK_CELL_SIZE * -1;
+	// ----------- Z ------------
 	if (object.time !== undefined && beatDepth) {
 		position.z = -SONG_OFFSET;
 		// We want to first lay the notes out with proper spacing between them.

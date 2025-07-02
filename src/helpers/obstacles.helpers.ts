@@ -93,6 +93,9 @@ export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, mouseDow
 			obstacle.posX = colIndex >= 0 ? (colIndex + 1) * 1000 : (colIndex - 1) * 1000;
 			obstacle.posY = rowIndex >= 0 ? (rowIndex + 1) * 1000 : (rowIndex - 1) * 1000;
 
+			// hack: the base of an obstacle sits below the base of a note, so we'll apply an offset for placements to make up the difference with the visual grid
+			obstacle.posY += 500;
+
 			return obstacle;
 		}
 	}
