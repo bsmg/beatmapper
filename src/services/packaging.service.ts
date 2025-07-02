@@ -56,8 +56,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 		const serialDifficulty = saveDifficulty(wrapper.difficulty, implicitBeatmapVersion as ImplicitVersion, {
 			optimize: options?.optimize,
-			preprocess: [(data) => createBeatmap({ difficulty: data })],
-			validate: { enabled: false }, // todo: mapping extensions values for obstacles currently breaks validation, needs upstream fix
+			preprocess: [(data) => createBeatmap({ difficulty: data, lightshow: wrapper.lightshow })],
 		});
 		zip.file(wrapper.filename, JSON.stringify(serialDifficulty, null, options?.format ?? 2), {
 			binary: false,
