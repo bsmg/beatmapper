@@ -2,14 +2,14 @@ import { createAudioData, createBeatmap, hasMappingExtensionsNote, hasMappingExt
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
-import { deriveAudioDataFromFile } from "$/helpers/audio.helpers";
+import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
 import { tryYield } from "$/utils";
-import type { BeatmapFileType, ISaveOptions } from "bsmap/types";
+import type { BeatmapFileType, ISaveOptions, wrapper } from "bsmap/types";
 import type { BeatmapFilestore } from "./file.service";
 
 function* getFileFromArchive(archive: JSZip, ...filenames: string[]) {
@@ -159,7 +159,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		//
 	]);
 
-	const { frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
+	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
 
 	// save the audio data file (currently not supported, but better to store it now for future reference)
 	const audioDataContents = await tryYield(
@@ -170,7 +170,14 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 			});
 		},
 		() => {
-			return createAudioData({ version: info.version, frequency, sampleCount });
+			// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
+			const region: wrapper.IWrapAudioDataBPM = {
+				startSampleIndex: 0,
+				endSampleIndex: sampleCount,
+				startBeat: 0,
+				endBeat: convertMillisecondsToBeats(duration * 1000, song.bpm),
+			};
+			return createAudioData({ version: info.version, frequency, sampleCount, bpmData: [region] });
 		},
 	);
 
