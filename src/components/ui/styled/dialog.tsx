@@ -1,5 +1,7 @@
 "use client";
-import { Dialog, dialogAnatomy } from "@ark-ui/react/dialog";
+import { Dialog, dialogAnatomy, useDialogContext } from "@ark-ui/react/dialog";
+import { ark } from "@ark-ui/react/factory";
+import { type ComponentProps, type MouseEventHandler, forwardRef, useCallback } from "react";
 
 import { sva } from "$:styled-system/css";
 import { center, stack } from "$:styled-system/patterns";
@@ -7,7 +9,7 @@ import { createStyleContext } from "../utils/create-style-context";
 import { recipe as heading } from "./heading";
 
 const recipe = sva({
-	slots: dialogAnatomy.keys(),
+	slots: [...dialogAnatomy.keys(), "actionTrigger"],
 	base: {
 		trigger: {
 			cursor: { base: "pointer", _disabled: "not-allowed" },
@@ -97,4 +99,19 @@ export const Positioner = withContext(Dialog.Positioner, "positioner");
 export const Title = withContext(Dialog.Title, "title");
 export const Trigger = withContext(Dialog.Trigger, "trigger");
 
-export { DialogContext as Context } from "@ark-ui/react/dialog";
+export const ActionTrigger = withContext(
+	forwardRef<HTMLButtonElement, ComponentProps<typeof ark.button>>(({ onClick, ...rest }, ref) => {
+		const dialog = useDialogContext();
+		const handleClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
+			(event) => {
+				dialog.setOpen(false);
+				if (onClick) onClick(event);
+			},
+			[dialog, onClick],
+		);
+		return <ark.button {...rest} ref={ref} onClick={(e) => handleClick(e)} />;
+	}),
+	"actionTrigger",
+);
+
+export { DialogContext as Context, type DialogRootBaseProps as BaseProps } from "@ark-ui/react/dialog";

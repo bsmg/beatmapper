@@ -1,4 +1,6 @@
+import { useDialog } from "@ark-ui/react/dialog";
 import { Link, useBlocker } from "@tanstack/react-router";
+import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
 import { useCallback, useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
@@ -13,9 +15,8 @@ import type { SongId } from "$/types";
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
 import { LocalFileUpload } from "$/components/app/compositions";
 import { UpdateBeatmapForm } from "$/components/app/forms";
-import { Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { DialogProvider, Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
-import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -101,10 +102,6 @@ function SongDetails({ sid }: Props) {
 		dispatch(stopPlayback({ offset: offset }));
 	});
 
-	useBlocker({
-		shouldBlockFn: () => (Form.state.isDirty ? !window.confirm("You have unsaved changes! Are you sure you want to leave this page?") : false),
-	});
-
 	const handleAcceptSongFile = useCallback(
 		(file: File) => {
 			setSongFile(file);
@@ -133,11 +130,19 @@ function SongDetails({ sid }: Props) {
 		[sid],
 	);
 
+	const { proceed, reset, status } = useBlocker({
+		shouldBlockFn: () => Form.state.isDirty,
+		withResolver: true,
+	});
+
+	const isDirtyAlert = useDialog({ role: "alertdialog", open: status === "blocked" });
+
 	return (
 		<Stack gap={8}>
 			<Stack gap={6}>
 				<Heading rank={1}>Song Details</Heading>
 				<Form.AppForm>
+					{status === "blocked" && <DialogProvider value={isDirtyAlert} render={() => "You have unsaved changes! Are you sure you want to leave this page?"} onActionClick={(confirmed) => (confirmed ? proceed() : reset())} />}
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">

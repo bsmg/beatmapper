@@ -3,7 +3,7 @@ export { Button } from "./button";
 export { Checkbox } from "./checkbox";
 export { Collapsible } from "./collapsible";
 export { ColorPicker } from "./color-picker";
-export { Dialog } from "./dialog";
+export { Dialog, DialogProvider, PromptDialogProvider } from "./dialog";
 export { Layer, Text } from "./factory";
 export { Field, FieldInput, FieldSelect, FieldTextarea } from "./field";
 export { FileUpload } from "./file-upload";

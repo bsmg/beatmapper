@@ -127,13 +127,6 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 
 	const songId = resolveSongId(song);
 
-	const songAlreadyExists = options.currentSongIds?.some((id) => id === songId);
-	if (songAlreadyExists) {
-		if (!window.confirm("This song appears to be a duplicate. Would you like to overwrite your existing song?")) {
-			throw new Error("Sorry, you already have a song by this name");
-		}
-	}
-
 	// save the info data (Not 100% sure that this is necessary, but better to have and not need)
 	await filestore.saveInfoContents(songId, info);
 

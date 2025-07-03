@@ -1,13 +1,13 @@
 import type { MouseEventHandler } from "react";
 
-import { promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { useAppSelector } from "$/store/hooks";
 import { selectModuleEnabled } from "$/store/selectors";
-import { type SongId, View } from "$/types";
+import type { SongId } from "$/types";
+import { useJumpToBeatPrompt, useQuickSelectPrompt } from "../../hooks/prompts.hooks";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
 import ClipboardActionPanelActionGroup from "$/components/app/templates/action-panel-groups/clipboard";
-import { Button, Tooltip } from "$/components/ui/compositions";
+import { Button, Input, PromptDialogProvider, Tooltip } from "$/components/ui/compositions";
 import HistoryActionPanelActionGroup from "./history";
 
 interface Props {
@@ -15,8 +15,10 @@ interface Props {
 	handleGridConfigClick: MouseEventHandler;
 }
 function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
-	const dispatch = useAppDispatch();
 	const mappingExtensionsEnabled = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
+
+	const { dialog: quickSelectPrompt, handler: handleQuickSelect } = useQuickSelectPrompt({ songId: sid });
+	const { dialog: jumpToBeatPrompt, handler: handleJumpToBeat } = useJumpToBeatPrompt({ songId: sid });
 
 	return (
 		<ActionPanelGroup.Root label="Actions">
@@ -24,14 +26,32 @@ function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
 			<ClipboardActionPanelActionGroup sid={sid} />
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Select everything over a time period"}>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(promptQuickSelect({ songId: sid, view: View.BEATMAP }))}>
-						Quick-select
-					</Button>
+					<PromptDialogProvider
+						value={quickSelectPrompt}
+						title="Quick-select"
+						description="Quick-select all entities in a given range of beats:"
+						placeholder="16-32"
+						render={({ state, placeholder, setState }) => <Input value={state} placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
+						onSubmit={handleQuickSelect}
+					>
+						<Button variant="subtle" size="sm">
+							Quick-select
+						</Button>
+					</PromptDialogProvider>
 				</Tooltip>
 				<Tooltip render={() => "Jump to a specific beat number"}>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(promptJumpToBeat({ songId: sid, pauseTrack: true }))}>
-						Jump to Beat
-					</Button>
+					<PromptDialogProvider
+						value={jumpToBeatPrompt}
+						title="Jump to Beat"
+						description="Enter the beat number you wish to jump to:"
+						placeholder="8"
+						render={({ state, placeholder, setState }) => <Input value={state} placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
+						onSubmit={handleJumpToBeat}
+					>
+						<Button variant="subtle" size="sm">
+							Jump to Beat
+						</Button>
+					</PromptDialogProvider>
 				</Tooltip>
 				{mappingExtensionsEnabled && (
 					<Tooltip render={() => "Change the number of columns/rows"}>

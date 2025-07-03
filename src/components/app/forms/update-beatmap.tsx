@@ -1,8 +1,9 @@
+import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
-import { type MouseEventHandler, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { array, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from "$/components/app/constants";
@@ -10,12 +11,12 @@ import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
+import { useViewFromLocation } from "../hooks";
 
 import { HStack, Stack, Wrap } from "$:styled-system/jsx";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Interleave } from "$/components/ui/atoms";
-import { Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
-import { useViewFromLocation } from "../hooks";
+import { Button, Collapsible, Dialog, DialogProvider, Heading, useAppForm } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;
@@ -78,6 +79,8 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		},
 	});
 
+	const deleteAlert = useDialog({ role: "alertdialog" });
+
 	const handleCopyBeatmap = useCallback(
 		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
 			dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }));
@@ -86,13 +89,9 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		[dispatch, navigate, sid, bid, view],
 	);
 
-	const handleDeleteBeatmap = useCallback<MouseEventHandler>(
-		(ev) => {
-			ev.preventDefault();
-
-			if (!window.confirm("Are you sure you want to do this? This action cannot be undone.")) {
-				return;
-			}
+	const handleDeleteBeatmap = useCallback(
+		(confirmed: boolean) => {
+			if (!confirmed) return;
 
 			// Delete our working state
 			const mutableDifficultiesCopy = { ...beatmaps };
@@ -117,15 +116,19 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		[dispatch, navigate, sid, bid, view, beatmaps],
 	);
 
-	useBlocker({
-		shouldBlockFn: () => (Form.state.isDirty ? !window.confirm(`You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`) : false),
+	const { proceed, reset, status } = useBlocker({
+		shouldBlockFn: () => Form.state.isDirty,
+		withResolver: true,
 	});
+
+	const isDirtyAlert = useDialog({ role: "alertdialog", open: status === "blocked" });
 
 	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
 	const COLOR_SCHEME_COLLECTION = useMemo(() => createColorSchemeCollection({ colorSchemeIds }), [colorSchemeIds]);
 
 	return (
 		<Form.AppForm>
+			{status === "blocked" && <DialogProvider value={isDirtyAlert} render={() => `You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`} onActionClick={(confirmed) => (confirmed ? proceed() : reset())} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
@@ -179,9 +182,11 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 							Copy
 						</Button>
 					</Dialog>
-					<Button variant="subtle" size="sm" colorPalette="red" onClick={handleDeleteBeatmap}>
-						Delete
-					</Button>
+					<DialogProvider value={deleteAlert} render={() => "Are you sure you want to do this? This action cannot be undone."} onActionClick={handleDeleteBeatmap}>
+						<Button variant="subtle" size="sm" colorPalette="red">
+							Delete
+						</Button>
+					</DialogProvider>
 				</Wrap>
 			</Form.Root>
 		</Form.AppForm>

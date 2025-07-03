@@ -1,11 +1,12 @@
 import { useThrottledCallback } from "@tanstack/react-pacer";
-import { useCallback, useRef } from "react";
+import { Fragment, useCallback, useRef } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { useViewFromLocation } from "$/components/app/hooks";
 import { useGlobalEventListener } from "$/components/hooks";
+import { Input } from "$/components/ui/compositions";
+import { PromptDialogProvider } from "$/components/ui/compositions/dialog";
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { promptAddBookmark, promptJumpToBeat, promptQuickSelect } from "$/helpers/prompts.helpers";
 import {
 	copySelection,
 	cutSelection,
@@ -36,6 +37,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectPacerWait } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
+import { useAddBookmarkPrompt, useJumpToBeatPrompt, useQuickSelectPrompt } from "../../hooks/prompts.hooks";
 
 interface Props {
 	sid: SongId;
@@ -46,6 +48,10 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	const view = useViewFromLocation();
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const wait = useAppSelector(selectPacerWait);
+
+	const { dialog: quickSelectPrompt, handler: handleQuickSelect } = useQuickSelectPrompt({ songId: sid });
+	const { dialog: jumpToBeatPrompt, handler: handleJumpToBeat } = useJumpToBeatPrompt({ songId: sid });
+	const { dialog: addBookmarkPrompt, handler: handleAddBookmark } = useAddBookmarkPrompt({ songId: sid, view });
 
 	const keysDepressed = useRef({
 		space: false,
@@ -148,13 +154,13 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return dispatch(pasteSelection({ songId: sid, view }));
 				}
 				case "KeyJ": {
-					return dispatch(promptJumpToBeat({ songId: sid, pauseTrack: true }));
+					return jumpToBeatPrompt.setOpen(true);
 				}
 				case "KeyB": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
 						// If they're holding cmd, create a bookmark
-						return dispatch(promptAddBookmark({ songId: sid, view }));
+						return addBookmarkPrompt.setOpen(true);
 					}
 					return;
 				}
@@ -182,14 +188,14 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 				}
 				case "KeyQ": {
-					return dispatch(promptQuickSelect({ songId: sid, view }));
+					return quickSelectPrompt.setOpen(true);
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[dispatch, sid, view, handleScroll, isDemo],
+		[dispatch, sid, view, handleScroll, isDemo, quickSelectPrompt, jumpToBeatPrompt, addBookmarkPrompt],
 	);
 
 	const handleKeyUp = useCallback(
@@ -220,7 +226,34 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	useGlobalEventListener("keyup", handleKeyUp);
 	useGlobalEventListener("wheel", handleWheel, { options: { passive: true } });
 
-	return null;
+	return (
+		<Fragment>
+			<PromptDialogProvider
+				value={quickSelectPrompt}
+				title="Quick-select"
+				description="Quick-select all entities in a given range of beats:"
+				placeholder="16-32"
+				render={({ state, placeholder, setState }) => <Input value={state} placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
+				onSubmit={handleQuickSelect}
+			/>
+			<PromptDialogProvider
+				value={jumpToBeatPrompt}
+				title="Jump to Beat"
+				description="Enter the beat number you wish to jump to:"
+				placeholder="8"
+				render={({ state, placeholder, setState }) => <Input value={state} type="number" placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
+				onSubmit={handleJumpToBeat}
+			/>
+			<PromptDialogProvider
+				value={addBookmarkPrompt}
+				title="Add Bookmark"
+				description="Enter a name for this bookmark:"
+				placeholder="Start"
+				render={({ state, placeholder, setState }) => <Input value={state} placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
+				onSubmit={handleAddBookmark}
+			/>
+		</Fragment>
+	);
 }
 
 export default DefaultEditorShortcuts;

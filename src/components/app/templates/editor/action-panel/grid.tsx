@@ -1,14 +1,14 @@
-import { Fragment, type MouseEventHandler } from "react";
+import { Fragment, type MouseEventHandler, useMemo } from "react";
 
 import { DEFAULT_GRID, GRID_PRESET_SLOTS } from "$/constants";
-import { promptSaveGridPreset } from "$/helpers/prompts.helpers";
 import { loadGridPreset, removeGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridPresets, selectGridSize } from "$/store/selectors";
 import type { SongId } from "$/types";
 
+import { useSaveGridPresetPrompt } from "$/components/app/hooks/prompts.hooks";
 import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button, Field, FieldInput } from "$/components/ui/compositions";
+import { Button, Field, FieldInput, NativeSelect, PromptDialogProvider } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;
@@ -18,7 +18,9 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, sid));
 	const gridPresets = useAppSelector(selectGridPresets);
 	const dispatch = useAppDispatch();
-	const showPresets = Object.keys(gridPresets).length > 0;
+	const showPresets = useMemo(() => Object.keys(gridPresets).length > 0, [gridPresets]);
+
+	const { dialog: saveGridPresetPrompt, handler: handleSaveGridPreset } = useSaveGridPresetPrompt({ songId: sid });
 
 	return (
 		<Fragment>
@@ -65,9 +67,25 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 				</Field>
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" onClick={() => dispatch(promptSaveGridPreset(gridPresets, { songId: sid }))}>
-					Save Preset
-				</Button>
+				<PromptDialogProvider
+					value={saveGridPresetPrompt}
+					title="Save Grid Preset"
+					description="Choose a slot to save your grid to:"
+					render={({ state, setState }) => (
+						<NativeSelect value={state} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.value)}>
+							{GRID_PRESET_SLOTS.map((value) => (
+								<option key={value} value={value}>
+									{value}
+								</option>
+							))}
+						</NativeSelect>
+					)}
+					onSubmit={handleSaveGridPreset}
+				>
+					<Button variant="subtle" size="sm">
+						Save Preset
+					</Button>
+				</PromptDialogProvider>
 				<Button variant="subtle" size="sm" onClick={finishTweakingGrid}>
 					Finish Customizing
 				</Button>
