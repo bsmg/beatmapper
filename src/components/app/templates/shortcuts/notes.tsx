@@ -3,7 +3,8 @@ import { useCallback, useRef } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectGridSize } from "$/store/selectors";
 import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -12,6 +13,7 @@ interface Props {
 }
 function NotesEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
+	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
 	const keysDepressed = useRef({
 		w: false,
@@ -51,12 +53,12 @@ function NotesEditorShortcuts({ sid }: Props) {
 					return dispatch(updateNotesEditorTool({ tool: ObjectTool.RIGHT_NOTE }));
 				}
 				case "KeyH": {
-					return dispatch(mirrorSelection({ axis: "horizontal" }));
+					return dispatch(mirrorSelection({ axis: "horizontal", grid }));
 				}
 				case "KeyV": {
 					// If the user is pasting with Meta+V, ignore.
 					if (metaKeyPressed) return;
-					return dispatch(mirrorSelection({ axis: "vertical" }));
+					return dispatch(mirrorSelection({ axis: "vertical", grid }));
 				}
 				case "KeyW": {
 					if (ev.shiftKey) return;
@@ -142,7 +144,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[dispatch, sid],
+		[dispatch, sid, grid],
 	);
 
 	const handleKeyUp = useCallback((ev: KeyboardEvent) => {
