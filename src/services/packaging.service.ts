@@ -2,6 +2,7 @@ import { createAudioData, createBeatmap, hasMappingExtensionsNote, hasMappingExt
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
+import { APP_TOASTER } from "$/components/app/constants";
 import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
@@ -79,6 +80,13 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		if (beatmap.difficulty.obstacles.some((x) => hasMappingExtensionsObstacleV3(x))) return true;
 		return false;
 	});
+
+	if (hasMappingExtensions && version === 4) {
+		throw APP_TOASTER.error({
+			id: "incompatible-options",
+			description: "Mapping Extensions is not compatible with the v4 map format.",
+		});
+	}
 
 	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>, {
 		optimize: options?.optimize,
@@ -187,18 +195,14 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		const [{ version, difficulty, lightshow }, { lightshow: derivedLightshow }] = await Promise.all([
 			await tryYield(getFileFromArchive(archive, beatmap.filename), async (o) => {
 				return o.async("string").then((rawContents) => {
-					return loadDifficulty(JSON.parse(rawContents), {
-						schemaCheck: { enabled: false },
-					});
+					return loadDifficulty(JSON.parse(rawContents));
 				});
 			}),
 			await tryYield(
 				getFileFromArchive(archive, beatmap.lightshowFilename),
 				async (o) => {
 					return o.async("string").then((rawContents) => {
-						return loadLightshow(JSON.parse(rawContents), {
-							schemaCheck: { enabled: false },
-						});
+						return loadLightshow(JSON.parse(rawContents));
 					});
 				},
 				() => {

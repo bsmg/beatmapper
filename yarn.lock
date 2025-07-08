@@ -6236,7 +6236,7 @@ __metadata:
     "@vite-pwa/assets-generator": "npm:^1.0.0"
     "@vitejs/plugin-react": "npm:^4.5.1"
     "@zag-js/file-utils": "npm:^1.15.0"
-    bsmap: "npm:^2.2.4"
+    bsmap: "npm:^2.2.6"
     concurrently: "npm:^9.1.2"
     date-fns: "npm:^4.1.0"
     file-saver: "npm:^2.0.5"
@@ -6411,13 +6411,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bsmap@npm:^2.2.4":
-  version: 2.2.4
-  resolution: "bsmap@npm:2.2.4"
+"bsmap@npm:^2.2.6":
+  version: 2.2.6
+  resolution: "bsmap@npm:2.2.6"
   dependencies:
     "@standard-schema/spec": "npm:^1.0.0"
     valibot: "npm:valibot@^1.0.0"
-  checksum: 10/83f1762efac6de6a0a84a9a3f2f5f92ece7491f56d33555f28ef7efb835423640a683f49ebe887bb67849c5eae7c81490d5081a3a2ebd3494b796298ed7ce72c
+  checksum: 10/aba5ef4a0653b09162b55d936f1f81349f3e0a3f429a3e8995b09a0d639604fa9cd61daacc2d54054dd1389c37a4aa56030989b5e91b3132f3ef01f5fe6511df
   languageName: node
   linkType: hard
 
