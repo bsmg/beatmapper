@@ -16,12 +16,11 @@ export function usePrompt<T>({ toaster, validate, fallback, callback }: usePromp
 
 			if (result.issues && result.issues.length > 0) {
 				for (const issue of result.issues) {
-					toaster.error({ id: "prompt-error", description: issue.message });
-					throw new Error(issue.message);
+					return toaster.error({ id: "prompt-error", description: issue.message });
 				}
+			} else {
+				return callback(result.output as T);
 			}
-
-			return callback(result.output as T);
 		},
 		[toaster, validate, fallback, callback],
 	);

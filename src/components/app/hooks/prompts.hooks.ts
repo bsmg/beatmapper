@@ -1,4 +1,4 @@
-import { nonEmpty, pipe, string, transform, trim, values } from "valibot";
+import { nonEmpty, pipe, regex, string, transform, values } from "valibot";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { usePrompt } from "$/components/ui/hooks";
@@ -15,11 +15,13 @@ export function useQuickSelectPrompt({ songId: sid }: Omit<Parameters<typeof sel
 		toaster: APP_TOASTER,
 		validate: pipe(
 			string(),
-			trim(),
-			transform((input) => input.split("-")),
+			regex(/^\d+-\d+$/, 'Invalid format: Expected "[number]-[number]"'),
+			transform((input) => {
+				const [start, end] = input.trim().split("-");
+				return { start: Number.parseFloat(start), end: Number.parseFloat(end) };
+			}),
 		),
-		callback: (range) => {
-			let [start, end] = range.map(Number);
+		callback: ({ start, end }) => {
 			if (typeof end !== "number") {
 				end = Number.POSITIVE_INFINITY;
 			}
@@ -35,7 +37,7 @@ export function useJumpToBeatPrompt({ songId }: Omit<Parameters<typeof jumpToBea
 		toaster: APP_TOASTER,
 		validate: pipe(
 			string(),
-			nonEmpty(),
+			regex(/^\d+$/, "Invalid format: Expected number"),
 			transform((input) => Number.parseFloat(input)),
 		),
 		callback: (beatNum) => {
@@ -65,7 +67,7 @@ export function useUpdateAllSelectedObstaclesPrompt() {
 		fallback: selectedObstacles[0].duration.toString(),
 		validate: pipe(
 			string(),
-			nonEmpty(),
+			regex(/^\d+$/, "Invalid format: Expected number"),
 			transform((input) => Number.parseFloat(input)),
 		),
 		callback: (newDuration) => {

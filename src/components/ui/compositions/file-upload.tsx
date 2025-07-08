@@ -4,6 +4,7 @@ import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, 
 import { type ComponentProps, useCallback, useMemo, useState } from "react";
 
 import { css } from "$:styled-system/css";
+import { APP_TOASTER } from "$/components/app/constants";
 import { Button } from "$/components/ui/compositions";
 import * as Builder from "../styled/file-upload";
 import type { VirtualColorPalette } from "../types";
@@ -26,11 +27,23 @@ export function FileUpload({ colorPalette = "pink", deletable = true, files: ini
 
 	const handleChange = useCallback(
 		(details: FileUploadFileChangeDetails) => {
-			if (details.acceptedFiles.length === 0 && details.rejectedFiles.length > 0) return;
-			if (onFileChange) onFileChange(details);
-			setFiles(details.acceptedFiles);
+			if (details.acceptedFiles.length === 0 && details.rejectedFiles.length > 0) {
+				for (const error of details.rejectedFiles.flatMap((x) => x.errors)) {
+					switch (error) {
+						case "FILE_INVALID_TYPE": {
+							return APP_TOASTER.error({ description: `Invalid file type: File must be of type ${rest.accept?.toString()}` });
+						}
+						default: {
+							return APP_TOASTER.error({ description: "Invalid file" });
+						}
+					}
+				}
+			} else {
+				if (onFileChange) onFileChange(details);
+				setFiles(details.acceptedFiles);
+			}
 		},
-		[onFileChange],
+		[rest.accept, onFileChange],
 	);
 
 	const handleClear = useCallback(

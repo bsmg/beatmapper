@@ -125,11 +125,19 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	const archive = await JSZip.loadAsync(zipFile);
 
 	// pull the info file from the archive
-	const info = await tryYield(getFileFromArchive(archive, "Info.dat", "info.json"), async (o) => {
-		return o.async("string").then((rawContents) => {
-			return loadInfo(JSON.parse(rawContents));
-		});
-	});
+	const info = await tryYield(
+		getFileFromArchive(archive, "Info.dat", "info.json"),
+		async (o) => {
+			return o.async("string").then((rawContents) => {
+				return loadInfo(JSON.parse(rawContents));
+			});
+		},
+		() => {
+			throw APP_TOASTER.error({
+				description: "The file provided is not a valid map archive.",
+			});
+		},
+	);
 	// parse the wrapper into the editor form
 	const song = deserializeInfoContents(info, { readonly: options.readonly });
 
