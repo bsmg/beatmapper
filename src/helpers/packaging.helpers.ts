@@ -1,4 +1,4 @@
-import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo } from "bsmap";
+import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
 import type { EnvironmentAllName, IColor, ModRequirements, v2, wrapper } from "bsmap/types";
 import { colorToHex } from "bsmap/utils";
 
@@ -136,8 +136,8 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 		colorSchemes: allColorSchemes,
 		songPreviewFilename: data.songFilename,
 		coverImageFilename: data.coverArtFilename,
-		difficulties: Object.entries(beatmaps).map(
-			([beatmapId, beatmap]): Partial<wrapper.IWrapInfoBeatmap> => ({
+		difficulties: Object.entries(beatmaps).map(([beatmapId, beatmap]) => {
+			return createInfoBeatmap({
 				filename: `${beatmapId}.beatmap.dat`,
 				lightshowFilename: `${beatmap.lightshowId && beatmap.lightshowId !== "Unnamed" ? beatmap.lightshowId : beatmapId}.lightshow.dat`,
 				characteristic: beatmap.characteristic,
@@ -158,8 +158,8 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 					_obstacleColor: customColors?._obstacleColor,
 					_requirements: requirements.length > 0 ? requirements : undefined,
 				}),
-			}),
-		),
+			});
+		}),
 		customData: {
 			_editors: {
 				_lastEditedBy: "Beatmapper",

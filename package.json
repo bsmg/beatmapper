@@ -1,6 +1,6 @@
 {
 	"name": "beatmapper",
-	"version": "0.4.0",
+	"version": "0.4.1",
 	"type": "module",
 	"private": true,
 	"packageManager": "yarn@4.9.2",
@@ -30,7 +30,7 @@
 		"@tanstack/react-router": "^1.120.18",
 		"@tanstack/react-router-devtools": "^1.120.18",
 		"@tanstack/react-table": "^8.21.3",
-		"bsmap": "^2.2.4",
+		"bsmap": "^2.2.6",
 		"date-fns": "^4.1.0",
 		"file-saver": "^2.0.5",
 		"idb": "^8.0.3",

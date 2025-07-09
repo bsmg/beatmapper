@@ -2,7 +2,8 @@ import { ArrowDownToLineIcon, ArrowUpToLineIcon, DotIcon, FlipHorizontal2Icon, F
 import { Fragment, type MouseEventHandler, useMemo } from "react";
 
 import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectGridSize } from "$/store/selectors";
 import { ObjectType, type SongId, View } from "$/types";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
@@ -38,6 +39,7 @@ interface Props {
 }
 function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, numOfSelectedObstacles }: Props) {
 	const dispatch = useAppDispatch();
+	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
 	const hasSelectedObstacles = useMemo(() => numOfSelectedObstacles >= 1, [numOfSelectedObstacles]);
 
@@ -63,12 +65,12 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 			<ActionPanelGroup.Root label="Actions">
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Mirror selection horizontally"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "horizontal" }))}>
+						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "horizontal", grid }))}>
 							<FlipHorizontal2Icon />
 						</Button>
 					</Tooltip>
 					<Tooltip render={() => "Mirror selection vertically"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "vertical" }))}>
+						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "vertical", grid }))}>
 							<FlipVertical2Icon />
 						</Button>
 					</Tooltip>

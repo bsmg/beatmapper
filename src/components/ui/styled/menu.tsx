@@ -14,7 +14,9 @@ const recipe = sva({
 		content: {
 			layerStyle: "menu.content",
 			width: "100%",
+			maxHeight: "var(--available-height)",
 			zIndex: 1,
+			overflowY: "auto",
 		},
 		item: hstack.raw({
 			padding: 1,

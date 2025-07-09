@@ -21,7 +21,7 @@ export const EDITOR_TOASTER = createToaster({
 
 export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg"];
 export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/png"];
-export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/x-zip-compressed"];
+export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/zip", "application/x-zip-compressed", "application/octet-stream"];
 
 export const CHARACTERISTIC_COLLECTION = createListCollection({
 	items: CHARACTERISTICS,

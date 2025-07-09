@@ -121,11 +121,11 @@ const slice = createSlice({
 			);
 		});
 		builder.addCase(mirrorSelection, (state, action) => {
-			const { axis } = action.payload;
+			const { axis, grid } = action.payload;
 			const entities = selectAllSelected(state);
 			return adapter.updateMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, axis) })),
+				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, axis, grid) })),
 			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {

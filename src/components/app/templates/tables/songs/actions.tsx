@@ -1,7 +1,7 @@
-import { createListCollection } from "@ark-ui/react";
+import { createListCollection, useDialog } from "@ark-ui/react";
 import type { MenuSelectionDetails } from "@ark-ui/react/menu";
 import { ChevronDownIcon } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { isSongReadonly } from "$/helpers/song.helpers";
@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSongById } from "$/store/selectors";
 import type { App, SongId } from "$/types";
 
-import { Button, Menu } from "$/components/ui/compositions";
+import { Button, DialogProvider, Menu } from "$/components/ui/compositions";
 
 interface SongActionListCollection {
 	song: App.ISong;
@@ -34,12 +34,21 @@ function SongsDataTableActions({ sid }: Props) {
 
 	const ACTION_LIST_COLLECTION = useMemo(() => createSongActionListCollection({ song }), [song]);
 
+	const deleteAlert = useDialog({ role: "alertdialog" });
+
+	const handleDeleteAction = useCallback(
+		(confirmed: boolean) => {
+			if (!confirmed) return;
+			return dispatch(removeSong({ id: sid, beatmapIds: beatmapIds }));
+		},
+		[dispatch, sid, beatmapIds],
+	);
+
 	const handleActionSelect = useCallback(
 		(details: MenuSelectionDetails) => {
 			switch (details.value) {
 				case "delete": {
-					if (!window.confirm("Are you sure? This action cannot be undone 😱")) return;
-					return dispatch(removeSong({ id: sid, beatmapIds: beatmapIds }));
+					return deleteAlert.setOpen(true);
 				}
 				case "download": {
 					return dispatch(downloadMapFiles({ songId: sid }));
@@ -52,15 +61,18 @@ function SongsDataTableActions({ sid }: Props) {
 				}
 			}
 		},
-		[dispatch, sid, beatmapIds],
+		[dispatch, sid, deleteAlert],
 	);
 
 	return (
-		<Menu collection={ACTION_LIST_COLLECTION} onSelect={handleActionSelect}>
-			<Button variant="subtle" size="icon">
-				<ChevronDownIcon size={16} />
-			</Button>
-		</Menu>
+		<Fragment>
+			<Menu collection={ACTION_LIST_COLLECTION} onSelect={handleActionSelect}>
+				<Button variant="subtle" size="icon">
+					<ChevronDownIcon size={16} />
+				</Button>
+			</Menu>
+			<DialogProvider value={deleteAlert} render={() => "Are you sure? This action cannot be undone 😱"} onActionClick={handleDeleteAction} />
+		</Fragment>
 	);
 }
 

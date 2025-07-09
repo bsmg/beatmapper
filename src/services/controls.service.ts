@@ -85,22 +85,24 @@ export class Controls {
 			}
 
 			case "Backspace": {
-				event.preventDefault();
+				if (this.enabled) {
+					event.preventDefault();
 
-				this.moveDirections.forwards = false;
-				this.moveDirections.backwards = false;
-				this.moveDirections.left = false;
-				this.moveDirections.right = false;
-				this.moveDirections.up = false;
-				this.moveDirections.down = false;
+					this.moveDirections.forwards = false;
+					this.moveDirections.backwards = false;
+					this.moveDirections.left = false;
+					this.moveDirections.right = false;
+					this.moveDirections.up = false;
+					this.moveDirections.down = false;
 
-				this.velocity.x = 0;
-				this.velocity.y = 0;
-				this.velocity.z = 0;
+					this.velocity.x = 0;
+					this.velocity.y = 0;
+					this.velocity.z = 0;
 
-				this.yawObject.position.set(...this.initialPosition);
-				this.yawObject.rotation.y = 0;
-				this.pitchObject.rotation.x = 0;
+					this.yawObject.position.set(...this.initialPosition);
+					this.yawObject.rotation.y = 0;
+					this.pitchObject.rotation.x = 0;
+				}
 
 				return;
 			}

@@ -1,15 +1,16 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { createBeatmap } from "bsmap";
+import type { wrapper } from "bsmap/types";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
-import { deriveAudioDataFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
+import { convertMillisecondsToBeats, deriveAudioDataFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
 import { type BeatmapSerializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
 import { selectActiveBeatmapId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { SongId } from "$/types";
+import type { App, SongId } from "$/types";
 import { deepMerge } from "$/utils";
 
 export function selectInfoSerializationOptionsFromState(state: RootState, _songId: SongId): InfoSerializationOptions {
@@ -35,10 +36,18 @@ export default function createFileMiddleware({ filestore }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 	const audioContext = new AudioContext();
 
-	async function createAudioDataContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File) {
+	async function createAudioDataContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File, { bpm }: Pick<App.ISong, "bpm">) {
 		const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
 
-		const { filename, contents } = await filestore.updateAudioDataContents(songId, { version: 4, frequency, sampleCount });
+		// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
+		const region: wrapper.IWrapAudioDataBPM = {
+			startSampleIndex: 0,
+			endSampleIndex: sampleCount,
+			startBeat: 0,
+			endBeat: convertMillisecondsToBeats(duration * 1000, bpm),
+		};
+
+		const { filename, contents } = await filestore.updateAudioDataContents(songId, { version: 4, frequency, sampleCount, bpmData: [region] });
 
 		return { duration, filename, contents };
 	}
@@ -46,10 +55,10 @@ export default function createFileMiddleware({ filestore }: Options) {
 	instance.startListening({
 		actionCreator: addSong,
 		effect: async (action, api) => {
-			const { songId, beatmapData, songFile, coverArtFile } = action.payload;
+			const { songId, songData, beatmapData, songFile, coverArtFile } = action.payload;
 			const state = api.getState();
 
-			const { duration, contents: audioDataContents } = await createAudioDataContentsFromFile(songId, filestore, songFile);
+			const { duration, contents: audioDataContents } = await createAudioDataContentsFromFile(songId, filestore, songFile, { bpm: songData.bpm });
 
 			// pull the updated state from the redux layer
 			const song = selectSongById(state, songId);
@@ -89,6 +98,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId, beatmapId } = action.payload;
 			const state = api.getState();
+			const song = selectSongById(state, songId);
 
 			// fetch the metadata for this beatmap from our local store
 			const beatmapContents = await filestore.loadBeatmapContents(songId, beatmapId);
@@ -106,8 +116,8 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 			const [songFile, currentAudioDataContents] = await Promise.all([filestore.loadSongFile(songId), filestore.loadAudioDataContents(songId)]);
 			// only update audio data if it's not already present (typically applies for imported maps).
-			if (!currentAudioDataContents) {
-				await createAudioDataContentsFromFile(songId, filestore, songFile);
+			if (!currentAudioDataContents || currentAudioDataContents.bpmData.length === 0) {
+				await createAudioDataContentsFromFile(songId, filestore, songFile, { bpm: song.bpm });
 			}
 
 			const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
@@ -125,6 +135,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 		effect: async (action, api) => {
 			const { songId, changes: songData } = action.payload;
 			const state = api.getState();
+			const song = selectSongById(state, songId);
 
 			// Pull that updated redux state and save it to our Info.dat
 			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
@@ -132,10 +143,10 @@ export default function createFileMiddleware({ filestore }: Options) {
 			await filestore.updateInfoContents(songId, info);
 
 			// It's possible we updated the song file. We should reload it, so that the waveform is properly updated.
-			if (songData.songFilename) {
+			if (songData.bpm || songData.songFilename) {
 				// always update audio contents when the song file is updated, since sample count and frequency could potentially change.
 				const songFile = await filestore.loadSongFile(songId);
-				await createAudioDataContentsFromFile(songId, filestore, songFile);
+				await createAudioDataContentsFromFile(songId, filestore, songFile, { bpm: songData.bpm ?? song.bpm });
 
 				const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
 				api.dispatch(reloadVisualizer({ duration, waveformData: waveformData.toJSON() }));

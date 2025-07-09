@@ -266,7 +266,7 @@ export const selectAllEntitiesInRange = createAction("selectAllEntitiesInRange",
 	return { payload: { ...args } };
 });
 
-export const mirrorSelection = createAction("mirrorSelection", (args: { axis: "horizontal" | "vertical" }) => {
+export const mirrorSelection = createAction("mirrorSelection", (args: { axis: "horizontal" | "vertical"; grid?: IGrid }) => {
 	return { payload: { ...args } };
 });
 

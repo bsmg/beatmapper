@@ -144,9 +144,14 @@ export function deriveEventTracksForEnvironment(environment: EnvironmentAllName)
 	const environmentTypeMap = renamer.environmentTypeMap[environment];
 	const environmentTrackIds = environmentTypeMap ? Object.keys(environmentTypeMap) : [];
 
+	const legacyEnvironmentNames = Object.keys(renamer.environmentTypeMap).filter((_, i) => i <= 22);
+
 	const filtered = Object.entries(SUPPORTED_EVENT_TRACKS).filter(([id]) => {
-		if (environmentTypeMap) {
+		if (environmentTypeMap && legacyEnvironmentNames.includes(environment)) {
 			return environmentTrackIds.includes(id) || commonEventTracks.includes(id);
+		}
+		if (environmentTypeMap) {
+			return environmentTrackIds.includes(id);
 		}
 		if (commonEventTracks.includes(id)) return true;
 	});
@@ -155,8 +160,41 @@ export function deriveEventTracksForEnvironment(environment: EnvironmentAllName)
 		const trackId = Number.parseInt(id);
 		const label = renamer.eventTypeRename(trackId, environment);
 		let type = track.type;
-		if (environment === "InterscopeEnvironment" && trackId) type = TrackType.VALUE;
-		if (environment === "BillieEnvironment" && trackId) type = TrackType.VALUE;
+		switch (environment) {
+			case "InterscopeEnvironment": {
+				if (trackId === 8) type = TrackType.VALUE;
+				break;
+			}
+			case "BillieEnvironment": {
+				if (trackId === 8) type = TrackType.VALUE;
+				break;
+			}
+			case "LizzoEnvironment": {
+				if (trackId === 8) type = TrackType.LIGHT;
+				if (trackId === 9) type = TrackType.LIGHT;
+				if (trackId === 12) type = TrackType.LIGHT;
+				if (trackId === 16) type = TrackType.TRIGGER;
+				if (trackId === 17) type = TrackType.TRIGGER;
+				break;
+			}
+			case "TheSecondEnvironment": {
+				if (trackId === 9) type = TrackType.VALUE;
+				break;
+			}
+			case "BritneyEnvironment": {
+				if (trackId === 8) type = TrackType.LIGHT;
+				if (trackId === 9) type = TrackType.LIGHT;
+				break;
+			}
+			case "Monstercat2Environment": {
+				if (trackId === 8) type = TrackType.LIGHT;
+				break;
+			}
+			case "MetallicaEnvironment": {
+				if (trackId === 8) type = TrackType.LIGHT;
+				break;
+			}
+		}
 		return [id, { ...track, type, label: label }] as const;
 	});
 

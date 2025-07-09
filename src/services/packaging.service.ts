@@ -2,14 +2,15 @@ import { createAudioData, createBeatmap, hasMappingExtensionsNote, hasMappingExt
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
-import { deriveAudioDataFromFile } from "$/helpers/audio.helpers";
+import { APP_TOASTER } from "$/components/app/constants";
+import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
 import { tryYield } from "$/utils";
-import type { BeatmapFileType, ISaveOptions } from "bsmap/types";
+import type { BeatmapFileType, ISaveOptions, wrapper } from "bsmap/types";
 import type { BeatmapFilestore } from "./file.service";
 
 function* getFileFromArchive(archive: JSZip, ...filenames: string[]) {
@@ -56,8 +57,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 		const serialDifficulty = saveDifficulty(wrapper.difficulty, implicitBeatmapVersion as ImplicitVersion, {
 			optimize: options?.optimize,
-			preprocess: [(data) => createBeatmap({ difficulty: data })],
-			validate: { enabled: false }, // todo: mapping extensions values for obstacles currently breaks validation, needs upstream fix
+			preprocess: [(data) => createBeatmap({ difficulty: data, lightshow: wrapper.lightshow })],
 		});
 		zip.file(wrapper.filename, JSON.stringify(serialDifficulty, null, options?.format ?? 2), {
 			binary: false,
@@ -80,6 +80,13 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		if (beatmap.difficulty.obstacles.some((x) => hasMappingExtensionsObstacleV3(x))) return true;
 		return false;
 	});
+
+	if (hasMappingExtensions && version === 4) {
+		throw APP_TOASTER.error({
+			id: "incompatible-options",
+			description: "Mapping Extensions is not compatible with the v4 map format.",
+		});
+	}
 
 	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>, {
 		optimize: options?.optimize,
@@ -118,22 +125,23 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	const archive = await JSZip.loadAsync(zipFile);
 
 	// pull the info file from the archive
-	const info = await tryYield(getFileFromArchive(archive, "Info.dat", "info.json"), async (o) => {
-		return o.async("string").then((rawContents) => {
-			return loadInfo(JSON.parse(rawContents));
-		});
-	});
+	const info = await tryYield(
+		getFileFromArchive(archive, "Info.dat", "info.json"),
+		async (o) => {
+			return o.async("string").then((rawContents) => {
+				return loadInfo(JSON.parse(rawContents));
+			});
+		},
+		() => {
+			throw APP_TOASTER.error({
+				description: "The file provided is not a valid map archive.",
+			});
+		},
+	);
 	// parse the wrapper into the editor form
 	const song = deserializeInfoContents(info, { readonly: options.readonly });
 
 	const songId = resolveSongId(song);
-
-	const songAlreadyExists = options.currentSongIds?.some((id) => id === songId);
-	if (songAlreadyExists) {
-		if (!window.confirm("This song appears to be a duplicate. Would you like to overwrite your existing song?")) {
-			throw new Error("Sorry, you already have a song by this name");
-		}
-	}
 
 	// save the info data (Not 100% sure that this is necessary, but better to have and not need)
 	await filestore.saveInfoContents(songId, info);
@@ -160,7 +168,7 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		//
 	]);
 
-	const { frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
+	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
 
 	// save the audio data file (currently not supported, but better to store it now for future reference)
 	const audioDataContents = await tryYield(
@@ -171,7 +179,14 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 			});
 		},
 		() => {
-			return createAudioData({ version: info.version, frequency, sampleCount });
+			// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
+			const region: wrapper.IWrapAudioDataBPM = {
+				startSampleIndex: 0,
+				endSampleIndex: sampleCount,
+				startBeat: 0,
+				endBeat: convertMillisecondsToBeats(duration * 1000, song.bpm),
+			};
+			return createAudioData({ version: info.version, frequency, sampleCount, bpmData: [region] });
 		},
 	);
 
@@ -188,18 +203,14 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		const [{ version, difficulty, lightshow }, { lightshow: derivedLightshow }] = await Promise.all([
 			await tryYield(getFileFromArchive(archive, beatmap.filename), async (o) => {
 				return o.async("string").then((rawContents) => {
-					return loadDifficulty(JSON.parse(rawContents), {
-						schemaCheck: { enabled: false },
-					});
+					return loadDifficulty(JSON.parse(rawContents));
 				});
 			}),
 			await tryYield(
 				getFileFromArchive(archive, beatmap.lightshowFilename),
 				async (o) => {
 					return o.async("string").then((rawContents) => {
-						return loadLightshow(JSON.parse(rawContents), {
-							schemaCheck: { enabled: false },
-						});
+						return loadLightshow(JSON.parse(rawContents));
 					});
 				},
 				() => {
