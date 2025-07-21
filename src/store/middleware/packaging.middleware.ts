@@ -5,6 +5,7 @@ import { zipFiles } from "$/services/packaging.service";
 import { downloadMapFiles } from "$/store/actions";
 import { selectBeatmaps } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
+import { deepMerge } from "$/utils";
 
 interface Options {
 	filestore: BeatmapFilestore;
@@ -22,6 +23,10 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 			// Next, I need to fetch all relevant files from disk.
 			const [songFile, coverArtFile] = await Promise.all([await filestore.loadSongFile(songId), await filestore.loadCoverArtFile(songId)]);
 
+			const defaultOptions: typeof options = {
+				optimize: { purgeZeros: version === 2 ? false : options?.optimize?.purgeZeros },
+			};
+
 			await zipFiles(filestore, {
 				version: version ?? null,
 				contents: {
@@ -30,7 +35,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 					songFile,
 					coverArtFile,
 				},
-				options,
+				options: deepMerge(defaultOptions, options as typeof defaultOptions),
 			});
 		},
 	});
