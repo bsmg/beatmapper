@@ -67,7 +67,7 @@ export function useUpdateAllSelectedObstaclesPrompt() {
 		fallback: selectedObstacles[0].duration.toString(),
 		validate: pipe(
 			string(),
-			regex(/^\d+$/, "Invalid format: Expected number"),
+			regex(/^[-+]?[0-9]*\.?[0-9]+$/, "Invalid format: Expected number"),
 			transform((input) => Number.parseFloat(input)),
 		),
 		callback: (newDuration) => {
