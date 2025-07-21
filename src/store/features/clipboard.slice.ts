@@ -25,6 +25,7 @@ const processSelection: CaseReducer<typeof initialState, PayloadAction<typeof in
 		data: {
 			// We want to sort the data so that it goes from earliest beat to latest beat.
 			notes: data.notes?.sort(sortObjectFn),
+			bombs: data.bombs?.sort(sortObjectFn),
 			obstacles: data.obstacles?.sort(sortObjectFn),
 			events: data.events?.sort(sortObjectFn),
 		},
