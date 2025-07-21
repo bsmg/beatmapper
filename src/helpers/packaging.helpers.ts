@@ -150,13 +150,15 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 					mappers: beatmap.mappers.filter((x) => x.length > 0),
 					lighters: beatmap.lighters.filter((x) => x.length > 0),
 				},
-				customData: maybeObject({
+				customData: maybeObject<v2.ICustomDataInfoDifficulty>({
 					_colorLeft: customColors?._colorLeft,
 					_colorRight: customColors?._colorRight,
 					_envColorLeft: customColors?._envColorLeft,
 					_envColorRight: customColors?._envColorRight,
 					_obstacleColor: customColors?._obstacleColor,
 					_requirements: requirements.length > 0 ? requirements : undefined,
+					_difficultyLabel: beatmap.customLabel,
+					_editorOffset: data.offset,
 				}),
 			});
 		}),
