@@ -64,27 +64,31 @@ export function hasPropChanged<T extends object, K extends keyof T>(oldProps: Re
 	return oldProps[key] !== newProps[key];
 }
 
-export function deepMerge<T extends Record<string, any>>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
+export function deepMerge<T extends Record<string, any>>(target: T, ...sources: (NoInfer<DeepPartial<T>> | { overwrite?: boolean })[]): T {
 	function isMergeableObject(item: unknown): item is Record<string, any> {
 		return !!(item && typeof item === "object" && !Array.isArray(item));
 	}
+
+	const overwriteFlag = typeof sources[sources.length - 1] === "object" && "overwrite" in (sources[sources.length - 1] as any) ? (sources.pop() as { overwrite: boolean }).overwrite : false;
+
 	if (!sources.length) return target;
-	const source = sources.shift();
+
+	const source = sources.shift() as NoInfer<DeepPartial<T>> | undefined;
+
 	if (source === undefined) return target;
+
 	let output: T = { ...target };
+
 	if (isMergeableObject(target) && isMergeableObject(source)) {
-		// Cast source to Record<string, any> within the loop to allow string indexing
 		const mergeSource = source as Record<string, any>;
 		for (const key in mergeSource) {
 			if (Object.prototype.hasOwnProperty.call(mergeSource, key)) {
 				if (key in output && isMergeableObject(output[key])) {
 					const targetValue = output[key] as T[Extract<keyof T, typeof key>];
 					const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
-					output = { ...output, [key]: deepMerge(targetValue, sourceValue) };
-				} else if (isMergeableObject(mergeSource[key])) {
-					output = { ...output, [key]: mergeSource[key] };
+					output = { ...output, [key]: deepMerge(targetValue, sourceValue, { overwrite: overwriteFlag }) };
 				} else {
-					if (mergeSource[key] !== undefined) {
+					if (overwriteFlag || mergeSource[key] !== undefined) {
 						output = { ...output, [key]: mergeSource[key] };
 					}
 				}

@@ -1,3 +1,4 @@
+import { parseColor } from "@ark-ui/react/color-picker";
 import { ColorScheme, EnvironmentSchemeName } from "bsmap";
 import type { EnvironmentAllName, IColor, v2 } from "bsmap/types";
 import { colorToHex, hexToRgba } from "bsmap/utils";
@@ -59,7 +60,8 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 	}
 }
 
-export function serializeColorElement(hex: string) {
+export function serializeColorElement(value: string) {
+	const hex = parseColor(value).toHexInt().toString(16);
 	const [r, g, b] = hexToRgba(hex);
 	return { r, g, b, a: 1 };
 }

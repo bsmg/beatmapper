@@ -31,7 +31,7 @@ function ElementControl({ sid, element }: Props & { element: ColorSchemeKey }) {
 	return (
 		<Cell>
 			<VStack gap={2}>
-				<ColorPicker size="lg" value={parseColor(color ?? "black")} onValueChange={(x) => setColor(x.valueAsString)} />
+				<ColorPicker size="lg" value={parseColor(color ?? "black")} onValueChange={(x) => setColor(`#${x.value.toHexInt().toString(16)}`)} />
 				<Heading rank={3}>{BEATMAP_COLOR_KEY_RENAME[element]}</Heading>
 				<Switch checked={active} onCheckedChange={(x) => setActive(!!x.checked)} />
 			</VStack>

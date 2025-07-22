@@ -222,11 +222,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
-						modSettings: {
-							customColors: { [element]: color },
-						},
-					}),
+					changes: deepMerge(song, { modSettings: { customColors: { [element]: color } } }, { overwrite: true }),
 				});
 			}),
 			updateGridSize: api.reducer<{ songId: SongId; changes: Partial<IGrid> }>((state, action) => {
