@@ -1,22 +1,26 @@
-import type { GroupProps } from "@react-three/fiber";
-import { useCallback } from "react";
+import type { GroupProps, ThreeEvent } from "@react-three/fiber";
+import { Fragment, useCallback } from "react";
 
 import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addObstacle, addToCell } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
+import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
 import { type BeatmapId, ObjectTool, type SongId } from "$/types";
 
 import { PlacementGrid } from "$/components/scene/layouts";
-import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 
 interface Props extends GroupProps {
 	sid: SongId;
 	bid: BeatmapId;
+	interactive?: boolean;
+	onCellPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+	onCellWheel?: (event: ThreeEvent<WheelEvent>) => void;
 }
-function EditorPlacementGrid({ sid, bid, ...rest }: Props) {
+function EditorPlacementGrid({ sid, bid, interactive, onCellPointerDown, onCellWheel, ...rest }: Props) {
 	const dispatch = useAppDispatch();
+	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const mode = useAppSelector((state) => selectPlacementMode(state, sid));
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
@@ -27,6 +31,7 @@ function EditorPlacementGrid({ sid, bid, ...rest }: Props) {
 	const handlePointerUp = useCallback(
 		(_: PointerEvent, { cellDownAt, cellOverAt, direction }: Pick<PlacementGrid.IPlacementGridContext, "cellDownAt" | "cellOverAt" | "direction">) => {
 			if (!cellDownAt) return;
+			if (selectionMode) return;
 
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
@@ -48,14 +53,18 @@ function EditorPlacementGrid({ sid, bid, ...rest }: Props) {
 				}
 			}
 		},
-		[dispatch, sid, mode, grid, selectedTool, selectedDirection, defaultObstacleDuration],
+		[dispatch, sid, selectionMode, mode, grid, selectedTool, selectedDirection, defaultObstacleDuration],
 	);
 
 	return (
-		<PlacementGrid.Root {...rest} mode={mode} onCellPointerUp={handlePointerUp}>
-			<PlacementGrid.Layout grid={grid}>{({ colIndex, rowIndex, grid }) => <PlacementGrid.Cell key={`${colIndex}-${rowIndex}`} colIndex={colIndex} rowIndex={rowIndex} grid={grid} />}</PlacementGrid.Layout>
-			{(selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) && <PlacementGrid.TentativeNote grid={grid} mode={mode} color={resolveColorForItem(selectedTool, { customColors: colorScheme })} />}
-			{selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle grid={grid} mode={mode} color={resolveColorForItem(ObjectTool.OBSTACLE, { customColors: colorScheme })} />}
+		<PlacementGrid.Root {...rest} mode={mode} onCellPointerDown={onCellPointerDown} onCellPointerUp={handlePointerUp} onCellWheel={onCellWheel}>
+			<PlacementGrid.Layout grid={grid}>{({ colIndex, rowIndex, grid }) => <PlacementGrid.Cell key={`${colIndex}-${rowIndex}`} layers={!selectionMode ? 1 : 2} colIndex={colIndex} rowIndex={rowIndex} grid={grid} />}</PlacementGrid.Layout>
+			{!selectionMode && (
+				<Fragment>
+					{(selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) && <PlacementGrid.TentativeNote grid={grid} mode={mode} color={resolveColorForItem(selectedTool, { customColors: colorScheme })} />}
+					{selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle grid={grid} mode={mode} color={resolveColorForItem(ObjectTool.OBSTACLE, { customColors: colorScheme })} />}
+				</Fragment>
+			)}
 		</PlacementGrid.Root>
 	);
 }

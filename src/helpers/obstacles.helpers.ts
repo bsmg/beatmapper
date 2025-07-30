@@ -7,6 +7,11 @@ export function resolveObstacleId<T extends Pick<App.IObstacle, "time" | "posX" 
 	return `${x.time}/${x.posX}/${x.width}/${x.posY}/${x.height}`;
 }
 
+export function isObstacle(data: unknown): data is App.IObstacle {
+	if (typeof data !== "object" || !data) return false;
+	return "duration" in data;
+}
+
 export function isFullHeightObstacle<T extends Pick<App.IObstacle, "posY" | "height">>({ posY, height }: T) {
 	return posY === 0 && height === 5;
 }

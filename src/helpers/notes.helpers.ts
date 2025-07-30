@@ -6,6 +6,15 @@ export function resolveNoteId<T extends Pick<App.IBaseNote, "time" | "posX" | "p
 	return `${x.time}/${x.posX}/${x.posY}`;
 }
 
+export function isColorNote(data: unknown): data is App.IColorNote {
+	if (typeof data !== "object" || !data) return false;
+	return "direction" in data && "angleOffset" in data;
+}
+export function isBombNote(data: unknown): data is App.IBombNote {
+	if (typeof data !== "object" || !data) return false;
+	return "direction" in data;
+}
+
 export function createColorNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid, direction: number) {
 	const note = createColorNote({
 		posX: mouseDownAt.colIndex,

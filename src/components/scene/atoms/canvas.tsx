@@ -4,9 +4,12 @@ import { Provider, ReactReduxContext } from "react-redux";
 import { PCFSoftShadowMap } from "three";
 
 const ReduxForwardingCanvas = forwardRef<HTMLCanvasElement, ComponentProps<"div">>(({ children, ...forwarded }, ref) => {
-	const handleCreated = useCallback(({ gl }: RootState) => {
+	const handleCreated = useCallback(({ gl, camera, raycaster }: RootState) => {
 		gl.shadowMap.enabled = true;
 		gl.shadowMap.type = PCFSoftShadowMap;
+		camera.layers.enableAll();
+		raycaster.layers.disableAll();
+		raycaster.layers.enable(1);
 	}, []);
 
 	return (
