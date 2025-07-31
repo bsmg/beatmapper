@@ -49,7 +49,6 @@ function MapVisualization({ sid, bid, beatDepth, surfaceDepth, interactive }: Pr
 		onItemDelete: (x) => dispatch(removeNote({ query: x })),
 		onItemModify: (x) => dispatch(mirrorColorNote({ query: x })),
 		onItemWheel: (x, delta) => {
-			console.log(x);
 			if (!isColorNote(x)) return;
 			const step = 15 / delta;
 			if (Object.values<number>(NoteDirection).includes(x.direction)) {

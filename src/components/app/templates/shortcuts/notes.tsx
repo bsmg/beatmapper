@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize } from "$/store/selectors";
 import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
+import { useAppPrompterContext } from "../../compositions";
 
 interface Props {
 	sid: SongId;
@@ -14,6 +15,8 @@ interface Props {
 function NotesEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
+
+	const { active: activePrompt } = useAppPrompterContext();
 
 	const keysDepressed = useRef({
 		w: false,
@@ -24,6 +27,8 @@ function NotesEditorShortcuts({ sid }: Props) {
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
+			if (activePrompt !== null) return;
+
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
 				case "Digit1": {
@@ -144,32 +149,37 @@ function NotesEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[dispatch, sid, grid],
+		[activePrompt, dispatch, sid, grid],
 	);
 
-	const handleKeyUp = useCallback((ev: KeyboardEvent) => {
-		switch (ev.code) {
-			case "KeyW": {
-				keysDepressed.current.w = false;
-				break;
-			}
-			case "KeyA": {
-				keysDepressed.current.a = false;
-				break;
-			}
-			case "KeyS": {
-				keysDepressed.current.s = false;
-				break;
-			}
-			case "KeyD": {
-				keysDepressed.current.d = false;
-				break;
-			}
+	const handleKeyUp = useCallback(
+		(ev: KeyboardEvent) => {
+			if (activePrompt !== null) return;
 
-			default:
-				return;
-		}
-	}, []);
+			switch (ev.code) {
+				case "KeyW": {
+					keysDepressed.current.w = false;
+					break;
+				}
+				case "KeyA": {
+					keysDepressed.current.a = false;
+					break;
+				}
+				case "KeyS": {
+					keysDepressed.current.s = false;
+					break;
+				}
+				case "KeyD": {
+					keysDepressed.current.d = false;
+					break;
+				}
+
+				default:
+					return;
+			}
+		},
+		[activePrompt],
+	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);

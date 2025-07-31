@@ -5,6 +5,7 @@ import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEn
 import { useAppDispatch } from "$/store/hooks";
 import { EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
+import { useAppPrompterContext } from "../../compositions";
 
 interface Props {
 	sid: SongId;
@@ -12,8 +13,12 @@ interface Props {
 function EventsEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 
+	const { active: activePrompt } = useAppPrompterContext();
+
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
+			if (activePrompt) return;
+
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
 				case "NumpadSubtract":
@@ -71,7 +76,7 @@ function EventsEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[dispatch, sid],
+		[activePrompt, dispatch, sid],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

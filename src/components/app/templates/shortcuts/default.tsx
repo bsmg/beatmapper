@@ -1,11 +1,9 @@
 import { useThrottledCallback } from "@tanstack/react-pacer";
-import { Fragment, useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { useViewFromLocation } from "$/components/app/hooks";
 import { useGlobalEventListener } from "$/components/hooks";
-import { Input } from "$/components/ui/compositions";
-import { PromptDialogProvider } from "$/components/ui/compositions/dialog";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import {
 	copySelection,
@@ -37,7 +35,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectPacerWait } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
-import { useAddBookmarkPrompt, useJumpToBeatPrompt, useQuickSelectPrompt } from "../../hooks/prompts.hooks";
+import { useAppPrompterContext } from "../../compositions";
 
 interface Props {
 	sid: SongId;
@@ -49,9 +47,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
-	const { dialog: quickSelectPrompt, handler: handleQuickSelect } = useQuickSelectPrompt({ songId: sid });
-	const { dialog: jumpToBeatPrompt, handler: handleJumpToBeat } = useJumpToBeatPrompt({ songId: sid });
-	const { dialog: addBookmarkPrompt, handler: handleAddBookmark } = useAddBookmarkPrompt({ songId: sid, view });
+	const { active: activePrompt, openPrompt } = useAppPrompterContext();
 
 	const keysDepressed = useRef({
 		space: false,
@@ -60,8 +56,6 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	// This handler handles mousewheel events, as well as up/down/left/right arrow keys.
 	const handleScroll = useThrottledCallback(
 		(direction: "forwards" | "backwards", ev: KeyboardEvent | WheelEvent) => {
-			if (!view) return;
-
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 
 			// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
@@ -81,6 +75,8 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (!view) return;
+			if (activePrompt !== null) return;
+
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
 			if (metaKeyPressed && !Number.isNaN(Number(ev.key))) {
@@ -154,13 +150,13 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return dispatch(pasteSelection({ songId: sid, view }));
 				}
 				case "KeyJ": {
-					return jumpToBeatPrompt.setOpen(true);
+					return openPrompt("JUMP_TO_BEAT");
 				}
 				case "KeyB": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
 						// If they're holding cmd, create a bookmark
-						return addBookmarkPrompt.setOpen(true);
+						return openPrompt("ADD_BOOKMARK");
 					}
 					return;
 				}
@@ -188,19 +184,21 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 				}
 				case "KeyQ": {
-					return quickSelectPrompt.setOpen(true);
+					return openPrompt("QUICK_SELECT");
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[dispatch, sid, view, handleScroll, isDemo, quickSelectPrompt, jumpToBeatPrompt, addBookmarkPrompt],
+		[view, activePrompt, dispatch, sid, isDemo, handleScroll, openPrompt],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
 			if (!view) return;
+			if (activePrompt !== null) return;
+
 			switch (ev.code) {
 				case "Space": {
 					keysDepressed.current.space = false;
@@ -210,50 +208,26 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 			}
 		},
-		[view],
+		[view, activePrompt],
 	);
 
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
+			if (!view) return;
+			if (activePrompt !== null) return;
+
 			if (ev.altKey) return;
 			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 			handleScroll(direction, ev);
 		},
-		[handleScroll],
+		[view, activePrompt, handleScroll],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);
 	useGlobalEventListener("wheel", handleWheel, { options: { passive: true } });
 
-	return (
-		<Fragment>
-			<PromptDialogProvider
-				value={quickSelectPrompt}
-				title="Quick-select"
-				description="Quick-select all entities in a given range of beats:"
-				placeholder="16-32"
-				render={({ state, placeholder, setState }) => <Input value={state} placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
-				onSubmit={handleQuickSelect}
-			/>
-			<PromptDialogProvider
-				value={jumpToBeatPrompt}
-				title="Jump to Beat"
-				description="Enter the beat number you wish to jump to:"
-				placeholder="8"
-				render={({ state, placeholder, setState }) => <Input value={state} type="number" placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
-				onSubmit={handleJumpToBeat}
-			/>
-			<PromptDialogProvider
-				value={addBookmarkPrompt}
-				title="Add Bookmark"
-				description="Enter a name for this bookmark:"
-				placeholder="Start"
-				render={({ state, placeholder, setState }) => <Input value={state} placeholder={placeholder} onChange={(e) => e.preventDefault()} onValueChange={(details) => setState(details.valueAsString)} />}
-				onSubmit={handleAddBookmark}
-			/>
-		</Fragment>
-	);
+	return null;
 }
 
 export default DefaultEditorShortcuts;

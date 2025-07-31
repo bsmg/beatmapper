@@ -1,6 +1,6 @@
 import type { Assign, ListCollection } from "@ark-ui/react";
 import { type AnyFieldApi, createFormHook, createFormHookContexts, useStore } from "@tanstack/react-form";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type MouseEvent, type ReactNode, useCallback } from "react";
 
 import * as Form from "../styled/form";
 import { Button } from "./button";
@@ -131,12 +131,21 @@ function ToggleGroupField<T extends ToggleItem>({ label, helperText, ...rest }: 
 	);
 }
 
-function SubmitButton({ loading, disabled, children, ...rest }: ComponentProps<typeof Button>) {
+function SubmitButton({ loading, disabled, children, onClick, ...rest }: ComponentProps<typeof Button>) {
 	const form = useFormContext();
+
+	const handleClick = useCallback(
+		(event: MouseEvent<HTMLButtonElement>) => {
+			form.handleSubmit();
+			if (onClick) onClick(event);
+		},
+		[form, onClick],
+	);
+
 	return (
 		<form.Subscribe>
 			{(state) => (
-				<Button variant="solid" size="md" {...rest} loading={state.isSubmitting} disabled={disabled || !state.isDirty || !state.canSubmit} onClick={form.handleSubmit}>
+				<Button variant="solid" size="md" {...rest} loading={state.isSubmitting} disabled={disabled || !state.isDirty || !state.canSubmit} onClick={handleClick}>
 					{children ?? "Submit"}
 				</Button>
 			)}
