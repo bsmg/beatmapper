@@ -10,9 +10,11 @@ import {
 	cutSelection,
 	cycleToNextTool,
 	cycleToPrevTool,
+	decrementPlaybackRate,
 	decrementSnap,
 	deselectAllEntities,
 	downloadMapFiles,
+	incrementPlaybackRate,
 	incrementSnap,
 	jumpToEnd,
 	jumpToStart,
@@ -23,6 +25,7 @@ import {
 	rehydrate,
 	removeAllSelectedEvents,
 	removeAllSelectedObjects,
+	saveBeatmapContents,
 	scrollThroughSong,
 	seekBackwards,
 	seekForwards,
@@ -128,6 +131,18 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				case "End": {
 					return dispatch(jumpToEnd({ songId: sid }));
 				}
+				case "NumpadSubtract":
+				case "Minus": {
+					if (!metaKeyPressed) return;
+					ev.preventDefault();
+					return dispatch(decrementPlaybackRate());
+				}
+				case "NumpadAdd":
+				case "Equal": {
+					if (!metaKeyPressed) return;
+					ev.preventDefault();
+					return dispatch(incrementPlaybackRate());
+				}
 				case "Delete": {
 					if (view === View.LIGHTSHOW) {
 						return dispatch(removeAllSelectedEvents());
@@ -171,6 +186,11 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 				}
 				case "KeyS": {
+					if (!metaKeyPressed) return;
+					ev.preventDefault();
+					return dispatch(saveBeatmapContents({ songId: sid }));
+				}
+				case "KeyP": {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
 					if (import.meta.env.PROD && isDemo) {

@@ -64,6 +64,10 @@ export const loadBeatmapEntities = createAction("loadBeatmapContents", (args: Pa
 	return { payload: { ...args } };
 });
 
+export const saveBeatmapContents = createAction("saveBeatmapContents", (args: { songId: SongId }) => {
+	return { payload: { ...args } };
+});
+
 export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId; version?: ImplicitVersion; options?: Omit<ISaveOptions<BeatmapFileType, 1 | 2 | 3 | 4>, "preprocess" | "postprocess"> }) => {
 	return { payload: { ...args } };
 });
@@ -88,6 +92,8 @@ export const {
 	updateCursorPosition,
 	updateTrackScale: updateBeatDepth,
 	updatePlaybackRate,
+	incrementPlaybackRate,
+	decrementPlaybackRate,
 	updateSongVolume,
 	updateTickVolume,
 	updateTickType,

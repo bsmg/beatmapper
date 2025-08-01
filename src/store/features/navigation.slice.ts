@@ -108,6 +108,12 @@ const slice = createSlice({
 				const { value: playbackRate } = action.payload;
 				return { ...state, playbackRate: playbackRate };
 			}),
+			incrementPlaybackRate: api.reducer((state) => {
+				return { ...state, playbackRate: Math.min(state.playbackRate + 0.25, 2) };
+			}),
+			decrementPlaybackRate: api.reducer((state) => {
+				return { ...state, playbackRate: Math.max(state.playbackRate - 0.25, 0) };
+			}),
 			updateSongVolume: api.reducer<{ value: number }>((state, action) => {
 				const { value: volume } = action.payload;
 				return { ...state, songVolume: volume };

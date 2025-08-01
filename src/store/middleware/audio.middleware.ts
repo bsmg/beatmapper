@@ -1,4 +1,4 @@
-import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
 import { tickWoodblockSfxPath } from "$/assets";
 import { NOTE_TICK_TYPES } from "$/constants";
@@ -7,7 +7,9 @@ import { AudioSample } from "$/services/audio.service";
 import type { BeatmapFilestore } from "$/services/file.service";
 import { Sfx } from "$/services/sfx.service";
 import {
+	decrementPlaybackRate,
 	hydrateSession,
+	incrementPlaybackRate,
 	jumpToBeat,
 	jumpToEnd,
 	jumpToStart,
@@ -43,6 +45,7 @@ import {
 	selectEventsEditorBeatsPerZoomLevel,
 	selectEventsEditorWindowLock,
 	selectNearestBeatForTime,
+	selectPlaybackRate,
 	selectSnap,
 	selectTickVolume,
 	selectTimeForBeat,
@@ -367,10 +370,11 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: updatePlaybackRate,
-		effect: (action, api) => {
+		matcher: isAnyOf(updatePlaybackRate, incrementPlaybackRate, decrementPlaybackRate),
+		effect: (_, api) => {
 			api.unsubscribe();
-			const { value: playbackRate } = action.payload;
+			const state = api.getState();
+			const playbackRate = selectPlaybackRate(state);
 			audioSample.changePlaybackRate(playbackRate);
 			api.subscribe();
 		},

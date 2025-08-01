@@ -92,6 +92,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }));
 				}
 				case "KeyS": {
+					if (metaKeyPressed) return;
 					if (ev.shiftKey) return;
 					keysDepressed.current.s = true;
 					if (keysDepressed.current.a) {
@@ -154,6 +155,8 @@ function NotesEditorShortcuts({ sid }: Props) {
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
+			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
+
 			if (activePrompt !== null) return;
 
 			switch (ev.code) {
@@ -166,6 +169,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 					break;
 				}
 				case "KeyS": {
+					if (metaKeyPressed) return;
 					keysDepressed.current.s = false;
 					break;
 				}

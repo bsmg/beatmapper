@@ -11,8 +11,11 @@ You can make maps without learning any of them, but your life will be much easie
 These shortcuts can be used either in the "Beatmap" view or the "Lightshow" view.
 
 <ShortcutTable>
-  <ShortcutItem title="Download map" keys={[["META", "S"]]}>
-    Save a copy of the current map. Do this frequently!
+  <ShortcutItem title="Save map" keys={[["META", "S"]]}>
+    Save the current contents of the map to disk. Do this frequently!
+  </ShortcutItem>
+  <ShortcutItem title="Download map" keys={[["META", "P"]]}>
+    Export a copy of the current map.
   </ShortcutItem>
   <ShortcutItem title="Play / pause the music" keys={[["Space"]]}>
     Play / pause the music.
@@ -23,6 +26,12 @@ These shortcuts can be used either in the "Beatmap" view or the "Lightshow" view
   </ShortcutItem>
   <ShortcutItem title="Seek backwards" keys={[["↓"], ["←"]]}>
     Rewind the cursor by the "Snapping interval" selected
+  </ShortcutItem>
+   <ShortcutItem title="Increment playback rate" keys={[["META", "="]]}>
+    Increase the playback rate of the song by 0.25x. Caps at 0x speed.
+  </ShortcutItem>
+  <ShortcutItem title="Decrement playback rate" keys={[["META", "-"]]}>
+    Decrease the playback rate of the song by 0.25x. Caps at 2x speed.
   </ShortcutItem>
   <ShortcutItem title="Quick-select" keys={[["Q"]]}>
     Select all entities between two beats. Only selects entities in the
@@ -98,7 +107,7 @@ These shortcuts are exclusive to placing blocks, mines, and obstacles in the "Be
     <br />
     You can also rise straight up with <Shortcut size="small">r</Shortcut> or fall straight down with <Shortcut size="small">f</Shortcut>
   </ShortcutItem>
-  <ShortcutItem title="Reset view" keys={[["Backspace"]]}>
+  <ShortcutItem title="Reset view" keys={[["SHIFT", "Backspace"]]}>
     Jump back to the original camera position
   </ShortcutItem>
   <ShortcutItem title="Select / Deselect all" keys={[["META", "A"]]}>

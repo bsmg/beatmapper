@@ -1,3 +1,4 @@
+import { APP_TOASTER } from "$/components/app/constants";
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
 import { selectBeatmapSerializationOptionsFromState, selectInfoSerializationOptionsFromState } from "$/store/middleware/file.middleware";
@@ -35,6 +36,11 @@ export async function save(state: RootState, filestore: BeatmapFilestore, songId
 			await filestore.updateBeatmapContents(songId, targetBeatmapId, { lightshow: contents.lightshow });
 		}
 	}
+
+	return APP_TOASTER.create({
+		type: "info",
+		description: `Contents for "${beatmapId ? `${songId}/${beatmapId}` : songId}" has been saved.`,
+	});
 }
 
 interface Options {

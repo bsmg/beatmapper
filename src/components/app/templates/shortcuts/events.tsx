@@ -23,11 +23,14 @@ function EventsEditorShortcuts({ sid }: Props) {
 			switch (ev.code) {
 				case "NumpadSubtract":
 				case "Minus": {
+					if (metaKeyPressed) return;
+					ev.preventDefault();
 					return dispatch(decrementEventsEditorZoom());
 				}
 				case "NumpadAdd":
-				// Shift+Equal is "Plus"
 				case "Equal": {
+					if (metaKeyPressed) return;
+					ev.preventDefault();
 					return dispatch(incrementEventsEditorZoom());
 				}
 				case "KeyA": {
