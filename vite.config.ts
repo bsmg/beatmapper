@@ -1,13 +1,13 @@
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { type UserConfig, defineConfig } from "vite";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { default as react } from "@vitejs/plugin-react";
+import { type UserConfig, defineConfig } from "vite";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 
-import packageJson from "./package.json";
+import packageJson from "./package.json" with { type: "json" };
 
 async function startVelite(isDev: boolean, isBuild: boolean) {
 	if (!process.env.VELITE_STARTED && (isDev || isBuild)) {
@@ -81,6 +81,7 @@ export default defineConfig(async (ctx) => {
 	};
 
 	let version = packageJson.version;
+
 	if (isDev) {
 		const hash = execSync("git rev-parse --short=7 HEAD");
 		version += `-dev.${hash.toString().trim()}`;
@@ -98,6 +99,23 @@ export default defineConfig(async (ctx) => {
 				$: fileURLToPath(new URL("./src", import.meta.url)),
 				"$:styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)),
 				"velite:content": fileURLToPath(new URL("./.velite", import.meta.url)),
+			},
+		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks: (id) => {
+						if (id.includes(".velite")) return "content";
+						if (id.includes("node_modules")) {
+							if (id.includes("three.core.js")) return "vendor-three-core";
+							if (id.includes("three") || id.includes("@react-three")) return "vendor-three";
+							if (id.includes("@ark-ui") || id.includes("@zag-js")) return "vendor-ui";
+							if (id.includes("@tanstack")) return "vendor-tanstack";
+							if (id.includes("bsmap")) return "vendor-bsmap";
+							return "vendor";
+						}
+					},
+				},
 			},
 		},
 		css: {

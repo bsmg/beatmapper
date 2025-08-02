@@ -27,7 +27,6 @@
 		"source.fixAll.biome": "never",
 		"source.fixAll.ts": "always"
 	},
-	"typescript.tsdk": "node_modules\\typescript\\lib",
 	"[typescript]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},

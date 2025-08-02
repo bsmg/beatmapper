@@ -79,6 +79,5 @@
 	"resolutions": {
 		"@types/react": "^18",
 		"redux": "^5"
-	},
-	"browserslist": ["defaults and fully supports es6-module", "maintained node versions"]
+	}
 }
