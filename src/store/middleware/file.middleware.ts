@@ -7,8 +7,8 @@ import { convertMillisecondsToBeats, deriveAudioDataFromFile, deriveWaveformData
 import { type BeatmapSerializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
-import { selectActiveBeatmapId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSongById } from "$/store/selectors";
+import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
+import { selectActiveBeatmapId, selectActiveSongId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
 import { deepMerge } from "$/utils";
@@ -52,6 +52,18 @@ export default function createFileMiddleware({ filestore }: Options) {
 		return { duration, filename, contents };
 	}
 
+	instance.startListening({
+		actionCreator: rehydrate,
+		effect: (_, api) => {
+			const state = api.getState();
+
+			const songId = selectActiveSongId(state);
+			const beatmapId = selectActiveBeatmapId(state);
+			if (!songId || !beatmapId) return;
+
+			api.dispatch(startLoadingMap({ songId, beatmapId }));
+		},
+	});
 	instance.startListening({
 		actionCreator: addSong,
 		effect: async (action, api) => {

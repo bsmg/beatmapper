@@ -1,5 +1,6 @@
 import { type DevToolsEnhancerOptions, configureStore } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
+import { initStateWithPrevTab } from "redux-state-sync";
 import { createStorage } from "unstorage";
 import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
@@ -202,6 +203,7 @@ export async function createAppStore() {
 	});
 
 	const devTools: DevToolsEnhancerOptions = {
+		name: "Beatmapper",
 		actionsDenylist: [tick.type, updateEventsEditorCursor.type],
 	};
 
@@ -221,6 +223,8 @@ export async function createAppStore() {
 	]).then(() => {
 		store.dispatch(init());
 	});
+
+	initStateWithPrevTab(store);
 
 	return store;
 }
