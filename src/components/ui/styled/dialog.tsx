@@ -1,7 +1,5 @@
 "use client";
-import { Dialog, dialogAnatomy, useDialogContext } from "@ark-ui/react/dialog";
-import { ark } from "@ark-ui/react/factory";
-import { type ComponentProps, type MouseEventHandler, forwardRef, useCallback } from "react";
+import { Dialog, dialogAnatomy } from "@ark-ui/react/dialog";
 
 import { sva } from "$:styled-system/css";
 import { center, stack } from "$:styled-system/patterns";
@@ -44,11 +42,11 @@ const recipe = sva({
 			layerStyle: "fill.surface",
 			animationStyle: { _open: "slide-fade-in", _closed: "slide-fade-out" },
 			zIndex: 5,
+			"& > :first-child": {
+				marginRight: 6,
+			},
 		}),
-		title: {
-			...heading.raw({ rank: 1 }),
-			marginRight: 6,
-		},
+		title: heading.raw({ rank: 1 }),
 		description: {
 			textStyle: "paragraph",
 			fontSize: "0.9375rem",
@@ -98,20 +96,5 @@ export const Description = withContext(Dialog.Description, "description");
 export const Positioner = withContext(Dialog.Positioner, "positioner");
 export const Title = withContext(Dialog.Title, "title");
 export const Trigger = withContext(Dialog.Trigger, "trigger");
-
-export const ActionTrigger = withContext(
-	forwardRef<HTMLButtonElement, ComponentProps<typeof ark.button>>(({ onClick, ...rest }, ref) => {
-		const dialog = useDialogContext();
-		const handleClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
-			(event) => {
-				dialog.setOpen(false);
-				if (onClick) onClick(event);
-			},
-			[dialog, onClick],
-		);
-		return <ark.button {...rest} ref={ref} onClick={(e) => handleClick(e)} />;
-	}),
-	"actionTrigger",
-);
 
 export { DialogContext as Context, type DialogRootBaseProps as BaseProps } from "@ark-ui/react/dialog";

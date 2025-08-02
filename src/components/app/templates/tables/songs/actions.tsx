@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSongById } from "$/store/selectors";
 import type { App, SongId } from "$/types";
 
-import { Button, DialogProvider, Menu } from "$/components/ui/compositions";
+import { AlertDialogProvider, Button, Menu, Text } from "$/components/ui/compositions";
 
 interface SongActionListCollection {
 	song: App.ISong;
@@ -36,13 +36,9 @@ function SongsDataTableActions({ sid }: Props) {
 
 	const deleteAlert = useDialog({ role: "alertdialog" });
 
-	const handleDeleteAction = useCallback(
-		(confirmed: boolean) => {
-			if (!confirmed) return;
-			return dispatch(removeSong({ id: sid, beatmapIds: beatmapIds }));
-		},
-		[dispatch, sid, beatmapIds],
-	);
+	const handleDeleteAction = useCallback(() => {
+		return dispatch(removeSong({ id: sid, beatmapIds: beatmapIds }));
+	}, [dispatch, sid, beatmapIds]);
 
 	const handleActionSelect = useCallback(
 		(details: MenuSelectionDetails) => {
@@ -71,7 +67,7 @@ function SongsDataTableActions({ sid }: Props) {
 					<ChevronDownIcon size={16} />
 				</Button>
 			</Menu>
-			<DialogProvider value={deleteAlert} render={() => "Are you sure? This action cannot be undone 😱"} onActionClick={handleDeleteAction} />
+			<AlertDialogProvider value={deleteAlert} render={() => <Text>Are you sure? This action cannot be undone 😱</Text>} onSubmit={handleDeleteAction} />
 		</Fragment>
 	);
 }

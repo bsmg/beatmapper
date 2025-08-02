@@ -15,7 +15,7 @@ import type { SongId } from "$/types";
 import { Stack, Wrap, styled } from "$:styled-system/jsx";
 import { LocalFileUpload } from "$/components/app/compositions";
 import { UpdateBeatmapForm } from "$/components/app/forms";
-import { DialogProvider, Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { AlertDialogProvider, Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
@@ -142,7 +142,7 @@ function SongDetails({ sid }: Props) {
 			<Stack gap={6}>
 				<Heading rank={1}>Song Details</Heading>
 				<Form.AppForm>
-					{status === "blocked" && <DialogProvider value={isDirtyAlert} render={() => "You have unsaved changes! Are you sure you want to leave this page?"} onActionClick={(confirmed) => (confirmed ? proceed() : reset())} />}
+					{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text>You have unsaved changes! Are you sure you want to leave this page?</Text>} onSubmit={proceed} onCancel={reset} />}
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">

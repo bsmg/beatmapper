@@ -62,7 +62,7 @@ const { Provider, useContext } = createPrompter(({ createPrompt }) => {
 			},
 		}),
 		UPDATE_OBSTACLE_DURATION: createPrompt({
-			title: "Update Duration for Selected Obstacles",
+			title: "Update Duration for Obstacles",
 			defaultValues: ({ props: { selectedObstacles } }) => ({ duration: selectedObstacles[0].duration }),
 			validate: object({ duration: pipe(number(), gtValue(0)) }),
 			render: ({ form }) => <form.AppField name="duration">{(ctx) => <ctx.NumberInput autoFocus label="Duration" placeholder="4" />}</form.AppField>,

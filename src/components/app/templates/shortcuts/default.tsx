@@ -165,15 +165,13 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return dispatch(pasteSelection({ songId: sid, view }));
 				}
 				case "KeyJ": {
+					ev.preventDefault();
 					return openPrompt("JUMP_TO_BEAT");
 				}
 				case "KeyB": {
-					if (metaKeyPressed) {
-						ev.preventDefault();
-						// If they're holding cmd, create a bookmark
-						return openPrompt("ADD_BOOKMARK");
-					}
-					return;
+					if (!metaKeyPressed) return;
+					ev.preventDefault();
+					return openPrompt("ADD_BOOKMARK");
 				}
 				case "KeyZ": {
 					if (!metaKeyPressed) return;
@@ -204,6 +202,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 				}
 				case "KeyQ": {
+					ev.preventDefault();
 					return openPrompt("QUICK_SELECT");
 				}
 				default: {

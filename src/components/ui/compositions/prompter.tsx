@@ -76,8 +76,8 @@ export function createPrompterFactory<TProps>() {
 			const handleSubmit = useCallback(
 				(e: MouseEvent<HTMLButtonElement> | FormEvent<HTMLFormElement>) => {
 					e.preventDefault();
-					form.handleSubmit();
 					dialog.setOpen(false);
+					form.handleSubmit();
 				},
 				[dialog, form],
 			);
