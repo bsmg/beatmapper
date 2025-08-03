@@ -1,5 +1,6 @@
-import { type Doc, docs } from "velite:content";
 import { createFileRoute } from "@tanstack/react-router";
+
+import { type Doc, docs } from "$:content";
 
 import { ErrorBoundary } from "$/components/app/layouts";
 import DocsPageLayout from "$/components/docs/templates/page";

@@ -1,5 +1,6 @@
-import { docs } from "velite:content";
 import { createListCollection } from "@ark-ui/react";
+
+import { docs } from "$:content";
 
 import { Sidebar } from "$/components/docs/layouts";
 import { Accordion } from "$/components/ui/compositions";

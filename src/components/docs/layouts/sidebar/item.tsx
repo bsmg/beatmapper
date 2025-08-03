@@ -1,5 +1,6 @@
-import type { Doc } from "velite:content";
 import { Link } from "@tanstack/react-router";
+
+import type { Doc } from "$:content";
 
 import { styled } from "$:styled-system/jsx";
 import { Text } from "$/components/ui/compositions";

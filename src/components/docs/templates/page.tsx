@@ -1,5 +1,6 @@
-import { docs } from "velite:content";
 import { type PropsWithChildren, useMemo } from "react";
+
+import { docs } from "$:content";
 
 import { Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";

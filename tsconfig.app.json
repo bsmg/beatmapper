@@ -27,7 +27,7 @@
 		"paths": {
 			"$/*": ["src/*"],
 			"$:styled-system/*": ["styled-system/*"],
-			"velite:content": [".velite"]
+			"$:content": [".velite"]
 		}
 	},
 	"include": ["src", "styled-system"]

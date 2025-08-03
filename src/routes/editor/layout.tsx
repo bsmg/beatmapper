@@ -1,8 +1,8 @@
-import { prompts } from "velite:content";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
+import { prompts } from "$:content";
 import { EDITOR_TOASTER } from "$/components/app/constants";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";

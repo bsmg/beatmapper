@@ -3,26 +3,16 @@ import { fileURLToPath } from "node:url";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { default as velite } from "@velite/plugin-vite";
 import { default as react } from "@vitejs/plugin-react";
 import { type UserConfig, defineConfig } from "vite";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 
 import packageJson from "./package.json" with { type: "json" };
 
-async function startVelite(isDev: boolean, isBuild: boolean) {
-	if (!process.env.VELITE_STARTED && (isDev || isBuild)) {
-		process.env.VELITE_STARTED = "1";
-		const { build } = await import("velite");
-		await build({ watch: isDev, clean: !isDev });
-	}
-}
-
 // https://vitejs.dev/config/
 export default defineConfig(async (ctx) => {
 	const isDev = ctx.mode === "development";
-	const isBuild = ctx.command === "build";
-
-	await startVelite(isDev, isBuild);
 
 	const PWA_OPTIONS: Partial<VitePWAOptions> = {
 		registerType: "prompt",
@@ -88,7 +78,7 @@ export default defineConfig(async (ctx) => {
 	}
 
 	return {
-		plugins: [react(), VitePWA(PWA_OPTIONS), TanStackRouterVite(TSR_OPTIONS)],
+		plugins: [react(), VitePWA(PWA_OPTIONS), TanStackRouterVite(TSR_OPTIONS), velite()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
 			global: "window",
@@ -98,7 +88,7 @@ export default defineConfig(async (ctx) => {
 			alias: {
 				$: fileURLToPath(new URL("./src", import.meta.url)),
 				"$:styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)),
-				"velite:content": fileURLToPath(new URL("./.velite", import.meta.url)),
+				"$:content": fileURLToPath(new URL("./.velite", import.meta.url)),
 			},
 		},
 		build: {

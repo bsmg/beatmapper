@@ -1,7 +1,8 @@
-import { docs } from "velite:content";
 import { ark } from "@ark-ui/react/factory";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+
+import { docs } from "$:content";
 
 import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { Text } from "$/components/ui/compositions";
