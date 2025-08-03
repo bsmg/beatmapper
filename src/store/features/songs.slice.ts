@@ -20,7 +20,8 @@ const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelector
 const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof processImportedMap>[1] }> = async (args, api) => {
 	try {
 		const { readonly } = args.options;
-		const songData = await processImportedMap(args.file, args.options);
+		const archive = await args.file.arrayBuffer();
+		const songData = await processImportedMap(new Uint8Array(archive), args.options);
 		const songId = resolveSongId({ name: songData.name });
 		return api.fulfillWithValue({ songId, songData: { ...songData, demo: readonly } });
 	} catch (e) {

@@ -1,6 +1,6 @@
 import { createAudioData, createBeatmap, hasMappingExtensionsNote, hasMappingExtensionsObstacleV3, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
+import { type Unzipped, type Zippable, unzip, zip } from "fflate";
 import { saveAs } from "file-saver";
-import JSZip from "jszip";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
@@ -9,16 +9,16 @@ import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
-import { tryYield } from "$/utils";
+import { yieldValue } from "$/utils";
 import type { BeatmapFileType, ISaveOptions, wrapper } from "bsmap/types";
 import type { BeatmapFilestore } from "./file.service";
 
-function* getFileFromArchive(archive: JSZip, ...filenames: string[]) {
-	const allFilenamesInArchive = Object.keys(archive.files);
+function* getFileFromArchive(archive: Unzipped, ...filenames: string[]) {
+	const allFilenamesInArchive = Object.keys(archive);
 	// Ideally, our .zip archive will just have all the files we need.
 	for (const filename of filenames) {
 		const matchingFilename = allFilenamesInArchive.find((name) => name.toString().toLowerCase() === filename.toLowerCase());
-		if (matchingFilename) yield archive.files[matchingFilename];
+		if (matchingFilename) yield { data: archive[matchingFilename], name: matchingFilename };
 	}
 	throw new Error(`Missing required files, looking for one of type: ${filenames.toString()}`);
 }
@@ -35,15 +35,16 @@ interface ZipOptions {
 }
 export async function zipFiles(filestore: BeatmapFilestore, { version, contents, options }: ZipOptions) {
 	const { songId, beatmapsById, songFile, coverArtFile } = contents;
-
-	const zip = new JSZip();
+	const encoder = new TextEncoder();
 
 	const wrapperInfo = await filestore.loadInfoContents(songId);
 
 	const implicitInfoVersion = version ?? (wrapperInfo.version >= 0 ? wrapperInfo.version : 4);
 
-	zip.file(wrapperInfo.audio.filename, songFile, { binary: true });
-	zip.file(wrapperInfo.coverImageFilename, coverArtFile, { binary: true });
+	const zippable: Zippable = {
+		[wrapperInfo.audio.filename]: new Uint8Array(await songFile.arrayBuffer()),
+		[wrapperInfo.coverImageFilename]: new Uint8Array(await coverArtFile.arrayBuffer()),
+	};
 
 	const beatmapContents = await Promise.all(
 		Object.keys(beatmapsById).map(async (beatmapId) => {
@@ -59,18 +60,14 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 			optimize: options?.optimize,
 			preprocess: [(data) => createBeatmap({ difficulty: data, lightshow: wrapper.lightshow })],
 		});
-		zip.file(wrapper.filename, JSON.stringify(serialDifficulty, null, options?.format ?? 2), {
-			binary: false,
-		});
+		zippable[wrapper.filename] = encoder.encode(JSON.stringify(serialDifficulty, null, options?.format ?? 2));
 
 		if (implicitBeatmapVersion === 4) {
 			const serialLightshow = saveLightshow(wrapper.lightshow, implicitBeatmapVersion, {
 				optimize: options?.optimize,
 				preprocess: [(data) => createBeatmap({ lightshow: data })],
 			});
-			zip.file(wrapper.lightshowFilename, JSON.stringify(serialLightshow, null, options?.format ?? 2), {
-				binary: false,
-			});
+			zippable[wrapper.lightshowFilename] = encoder.encode(JSON.stringify(serialLightshow, null, options?.format ?? 2));
 		}
 	}
 
@@ -102,7 +99,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		],
 	});
 
-	zip.file(wrapperInfo.filename, JSON.stringify(info, null, options?.format ?? 2), { binary: false });
+	zippable[wrapperInfo.filename] = encoder.encode(JSON.stringify(info, null, options?.format ?? 2));
 
 	if (implicitInfoVersion >= 2) {
 		const wrapperAudioData = await filestore.loadAudioDataContents(songId);
@@ -110,27 +107,33 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		const serialAudioData = saveAudioData(wrapperAudioData, (implicitAudioData === 3 ? 2 : implicitAudioData) as Extract<ImplicitVersion, 2 | 4>, {
 			optimize: options?.optimize,
 		});
-		zip.file("AudioData.dat", JSON.stringify(serialAudioData, null, options?.format ?? 2));
+		zippable["AudioData.dat"] = encoder.encode(JSON.stringify(serialAudioData, null, options?.format ?? 2));
 	}
 
-	zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 9 } }).then((blob) => {
-		const filename = `${songId}.zip`;
-		saveAs(blob, filename);
+	const file = await new Promise<Uint8Array>((resolve) => {
+		zip(zippable, (_, data) => resolve(data));
+	}).then((zippable) => {
+		return new File([zippable], `${songId}.zip`);
 	});
+
+	saveAs(file, file.name);
 }
 
-export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAsync>[0], options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.ISong> {
+export async function processImportedMap(zipFile: Uint8Array, options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.ISong> {
 	const audioContext = new AudioContext();
+	const decoder = new TextDecoder("utf-8");
+
 	// start by unzipping it
-	const archive = await JSZip.loadAsync(zipFile);
+	const archive = await new Promise<Record<string, Uint8Array>>((resolve) => {
+		unzip(zipFile, (_, data) => resolve(data));
+	});
 
 	// pull the info file from the archive
-	const info = await tryYield(
+	const info = await yieldValue(
 		getFileFromArchive(archive, "Info.dat", "info.json"),
-		async (o) => {
-			return o.async("string").then((rawContents) => {
-				return loadInfo(JSON.parse(rawContents));
-			});
+		({ data }) => {
+			const contents = decoder.decode(data);
+			return loadInfo(JSON.parse(contents));
 		},
 		() => {
 			throw APP_TOASTER.error({
@@ -148,17 +151,13 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 
 	// save the assets - cover art and song file - to our local store
 	const [songFile, coverArtFile] = await Promise.all([
-		await tryYield(getFileFromArchive(archive, song.songFilename), async (o) => {
-			return o.async("blob").then((blob) => {
-				// we'll process the imported blobs as files when we save them to the filestore,
-				// that way, we can preserve extra data like the filename and mime type
-				return new File([blob], song.songFilename, { type: blob.type !== "" ? blob.type : "audio/ogg" });
-			});
+		await yieldValue(getFileFromArchive(archive, song.songFilename), async ({ data }) => {
+			// we'll process the imported blobs as files when we save them to the filestore,
+			// that way, we can preserve extra data like the filename and mime type
+			return new File([data], song.songFilename);
 		}),
-		await tryYield(getFileFromArchive(archive, song.coverArtFilename), async (o) => {
-			return o.async("blob").then((blob) => {
-				return new File([blob], song.coverArtFilename, { type: blob.type !== "" ? blob.type : "image/jpeg" });
-			});
+		await yieldValue(getFileFromArchive(archive, song.coverArtFilename), async ({ data }) => {
+			return new File([data], song.coverArtFilename);
 		}),
 	]);
 
@@ -171,12 +170,11 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
 
 	// save the audio data file (currently not supported, but better to store it now for future reference)
-	const audioDataContents = await tryYield(
+	const audioDataContents = await yieldValue(
 		getFileFromArchive(archive, info.audio.audioDataFilename, "BPMInfo.dat"),
-		async (o) => {
-			return o.async("string").then((rawContents) => {
-				return loadAudioData(JSON.parse(rawContents));
-			});
+		async ({ data }) => {
+			const contents = decoder.decode(data);
+			return loadAudioData(JSON.parse(contents));
 		},
 		() => {
 			// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
@@ -201,17 +199,15 @@ export async function processImportedMap(zipFile: Parameters<typeof JSZip.loadAs
 		const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
 
 		const [{ version, difficulty, lightshow }, { lightshow: derivedLightshow }] = await Promise.all([
-			await tryYield(getFileFromArchive(archive, beatmap.filename), async (o) => {
-				return o.async("string").then((rawContents) => {
-					return loadDifficulty(JSON.parse(rawContents));
-				});
+			await yieldValue(getFileFromArchive(archive, beatmap.filename), async ({ data }) => {
+				const contents = decoder.decode(data);
+				return loadDifficulty(JSON.parse(contents));
 			}),
-			await tryYield(
+			await yieldValue(
 				getFileFromArchive(archive, beatmap.lightshowFilename),
-				async (o) => {
-					return o.async("string").then((rawContents) => {
-						return loadLightshow(JSON.parse(rawContents));
-					});
+				async ({ data }) => {
+					const contents = decoder.decode(data);
+					return loadLightshow(JSON.parse(contents));
 				},
 				() => {
 					return { lightshow: null };

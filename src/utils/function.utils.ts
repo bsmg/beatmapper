@@ -18,9 +18,7 @@ export function withResolvers<T>() {
 	return { promise, resolve, reject };
 }
 
-export function tryYield<T, TReturn, TNext, Resultant>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant): Promise<Resultant>;
-export function tryYield<T, TReturn, TNext, Resultant, RejectedResult>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant, onRejected: (e: any) => RejectedResult): Promise<Resultant | RejectedResult>;
-export function tryYield<T, TReturn, TNext, Resultant, RejectedResult = never>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant, onRejected?: (e: any) => RejectedResult): Promise<Resultant | RejectedResult> {
+export function yieldValue<T, TReturn, TNext, Resultant, RejectedResult = never>(generator: Generator<T, TReturn, TNext>, onResolved: (x: T) => Resultant, onRejected?: (e: any) => RejectedResult): Promise<Resultant | RejectedResult> {
 	const promise = new Promise<T>((resolve, reject) => {
 		try {
 			const iteratorResult = generator.next();
