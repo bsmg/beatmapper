@@ -5227,6 +5227,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zag-js/color-utils@npm:^1.21.1":
+  version: 1.21.1
+  resolution: "@zag-js/color-utils@npm:1.21.1"
+  dependencies:
+    "@zag-js/utils": "npm:1.21.1"
+  checksum: 10/f718037161bf4a93d412bbe2817e105636041074e689a1b3667f71e6e227cbd81f3997751b350db284874f9bc5b4afbf9e3c197a74f72f2c2828698e632c46a2
+  languageName: node
+  linkType: hard
+
 "@zag-js/combobox@npm:1.15.0":
   version: 1.15.0
   resolution: "@zag-js/combobox@npm:1.15.0"
@@ -5913,6 +5922,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zag-js/utils@npm:1.21.1":
+  version: 1.21.1
+  resolution: "@zag-js/utils@npm:1.21.1"
+  checksum: 10/b1a58c65cbaf8062dfd073bddf0acad9d6f7d0a3cd9766f05361b0e7ce68c225773ce26e64b060bd9f86df2684e7c4c360dda0022bf4451ebd10b4d3296e8d47
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:1":
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
@@ -6255,6 +6271,7 @@ __metadata:
     "@velite/plugin-vite": "npm:^0.0.1"
     "@vite-pwa/assets-generator": "npm:^1.0.0"
     "@vitejs/plugin-react": "npm:^4.5.1"
+    "@zag-js/color-utils": "npm:^1.21.1"
     "@zag-js/file-utils": "npm:^1.15.0"
     bsmap: "npm:^2.2.6"
     concurrently: "npm:^9.1.2"

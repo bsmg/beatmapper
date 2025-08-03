@@ -1,7 +1,7 @@
-import { parseColor } from "@ark-ui/react/color-picker";
+import { parseColor } from "@zag-js/color-utils";
 import { ColorScheme, EnvironmentSchemeName } from "bsmap";
 import type { EnvironmentAllName, IColor, v2 } from "bsmap/types";
-import { colorToHex, hexToRgba } from "bsmap/utils";
+import { colorToHex } from "bsmap/utils";
 
 import { token } from "$:styled-system/tokens";
 import { DEFAULT_COLOR_SCHEME } from "$/constants";
@@ -61,9 +61,13 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 }
 
 export function serializeColorElement(value: string) {
-	const hex = parseColor(value).toHexInt().toString(16);
-	const [r, g, b] = hexToRgba(hex);
-	return { r, g, b, a: 1 };
+	const color = parseColor(value).toFormat("rgba");
+	return {
+		r: color.getChannelValuePercent("red"),
+		g: color.getChannelValuePercent("green"),
+		b: color.getChannelValuePercent("blue"),
+		a: color.getChannelValuePercent("alpha"),
+	};
 }
 
 export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
