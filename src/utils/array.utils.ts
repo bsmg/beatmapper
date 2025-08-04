@@ -1,6 +1,15 @@
 import type { ArrayPredicate } from "$/types";
 import { uniqPredicate } from "./predicates";
 
+export function isArrayEmpty<T>(obj: T[]) {
+	return obj.length === 0;
+}
+
+export function ensureArray<T>(obj: Iterable<T> | ArrayLike<T>): T[] | undefined {
+	const array = Array.from(obj);
+	return !isArrayEmpty(array) ? array : undefined;
+}
+
 export function sample<T>(arr: T[]) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -27,7 +36,7 @@ export function convertArrayToMap<T extends { id: PropertyKey }>(list: T[]) {
 	}, {});
 }
 
-export function uniq<T>(arr: T[]) {
+export function distinct<T>(arr: T[]) {
 	return arr.filter(uniqPredicate);
 }
 

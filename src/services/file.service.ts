@@ -2,9 +2,9 @@ import type { wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
-import type { BeatmapId, MaybeDefined, SongId } from "$/types";
-import { omit, pick } from "$/utils";
-import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow } from "bsmap";
+import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
+import { deepAssign, ensureArray, ensureObject, omit, pick } from "$/utils";
+import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow, sortObjectFn } from "bsmap";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -124,6 +124,7 @@ export class BeatmapFilestore extends Filestore {
 			createInfo({
 				...(savedContents ?? newContents),
 				...omit(newContents, "version", "filename"),
+				customData: ensureObject(deepAssign(savedContents.customData, { ...newContents.customData })),
 			}),
 		);
 	}
@@ -134,6 +135,7 @@ export class BeatmapFilestore extends Filestore {
 			createAudioData({
 				...(savedContents ?? newContents),
 				...omit(newContents, "version", "filename"),
+				customData: ensureObject(deepAssign(savedContents.customData, { ...newContents.customData })),
 			}),
 		);
 	}
@@ -146,15 +148,20 @@ export class BeatmapFilestore extends Filestore {
 				...(savedContents ?? newContents),
 				// we might have an updated lightshow filename if we update the lightshow id.
 				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
+				// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
 				difficulty: createDifficulty({
-					// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
 					...pick(savedContents.difficulty, "colorNotes", "bombNotes", "obstacles"),
 					...newContents.difficulty,
+					customData: ensureObject(deepAssign(savedContents.difficulty.customData, { ...newContents.difficulty?.customData })),
 				}),
+				// for lightshow, we'll merge the contents and only replace collections that are directly supported.
 				lightshow: createLightshow({
-					// for lightshow, we'll merge the contents and only replace collections that are directly supported.
 					...savedContents.lightshow,
 					...newContents.lightshow,
+					customData: ensureObject(deepAssign(savedContents.lightshow.customData, { ...newContents.lightshow?.customData })),
+				}),
+				customData: ensureObject({
+					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks)?.sort(sortObjectFn),
 				}),
 			}),
 		);

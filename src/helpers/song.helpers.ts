@@ -2,7 +2,7 @@ import { CharacteristicName, DifficultyName } from "bsmap/types";
 
 import { DEFAULT_GRID, DIFFICULTIES } from "$/constants";
 import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, Member } from "$/types";
-import { deepMerge, slugify } from "$/utils";
+import { deepAssign, slugify } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 import { patchEnvironmentName } from "./packaging.helpers";
 
@@ -121,7 +121,7 @@ export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficult
 	const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
 	const isDisabled = mappingExtensions?.isEnabled === false;
 	if (isLegacy || isDisabled) return DEFAULT_GRID;
-	return deepMerge(DEFAULT_GRID as IGrid, {
+	return deepAssign<IGrid>(DEFAULT_GRID, {
 		numRows: mappingExtensions.numRows,
 		numCols: mappingExtensions.numCols,
 		colWidth: mappingExtensions.colWidth,

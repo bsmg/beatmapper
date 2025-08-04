@@ -8,7 +8,7 @@ import { getAllBeatmaps, getBeatmapById, getBeatmapIds, getBeatmaps, getColorSch
 import { processImportedMap } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { type App, type BeatmapId, type ColorSchemeKey, type IGrid, ObjectPlacementMode, type RequiredKeys, type SongId } from "$/types";
-import { deepMerge } from "$/utils";
+import { deepAssign } from "$/utils";
 import { createSlice } from "../helpers";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
@@ -155,7 +155,7 @@ const slice = createSlice({
 				const mappers = username !== "" ? [username] : [];
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						difficultiesById: {
 							[beatmapId]: {
 								lightshowId: data.lightshowId ?? beatmapId,
@@ -177,7 +177,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						difficultiesById: {
 							[targetBeatmapId]: { ...getBeatmapById(song, sourceBeatmapId), ...changes },
 						},
@@ -189,7 +189,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						difficultiesById: {
 							[beatmapId]: { ...changes },
 						},
@@ -211,7 +211,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						modSettings: {
 							[key]: { isEnabled: !song.modSettings[key]?.isEnabled },
 						},
@@ -223,7 +223,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, { modSettings: { customColors: { [element]: color } } }, { overwrite: true }),
+					changes: deepAssign(song, { modSettings: { customColors: { [element]: color } } }),
 				});
 			}),
 			updateGridSize: api.reducer<{ songId: SongId; changes: Partial<IGrid> }>((state, action) => {
@@ -231,7 +231,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						modSettings: {
 							mappingExtensions: { ...changes },
 						},
@@ -261,7 +261,7 @@ const slice = createSlice({
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
-				changes: deepMerge(song, {
+				changes: deepAssign(song, {
 					modSettings: {
 						mappingExtensions: { ...grid },
 					},

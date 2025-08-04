@@ -4,13 +4,14 @@ import { saveAs } from "file-saver";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
+import { serializeCustomBookmark } from "$/helpers/bookmarks.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
-import { yieldValue } from "$/utils";
-import type { BeatmapFileType, ISaveOptions, wrapper } from "bsmap/types";
+import { deepAssign, yieldValue } from "$/utils";
+import type { BeatmapFileType, ISaveOptions, v2, v3, wrapper } from "bsmap/types";
 import type { BeatmapFilestore } from "./file.service";
 
 function* getFileFromArchive(archive: Unzipped, ...filenames: string[]) {
@@ -48,30 +49,44 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 
 	const beatmapContents = await Promise.all(
 		Object.keys(beatmapsById).map(async (beatmapId) => {
-			const difficulty = await filestore.loadBeatmapContents(songId, beatmapId);
-			return { beatmap: difficulty };
+			return filestore.loadBeatmapContents(songId, beatmapId);
 		}),
 	);
 
-	for (const { beatmap: wrapper } of beatmapContents) {
-		const implicitBeatmapVersion = version ?? (wrapper.version >= 0 ? wrapper.version : 4);
+	for (const beatmap of beatmapContents) {
+		const implicitBeatmapVersion = version ?? (beatmap.version >= 0 ? beatmap.version : 4);
 
-		const serialDifficulty = saveDifficulty(wrapper.difficulty, implicitBeatmapVersion as ImplicitVersion, {
+		const serialDifficulty = saveDifficulty(beatmap.difficulty, implicitBeatmapVersion as ImplicitVersion, {
 			optimize: options?.optimize,
-			preprocess: [(data) => createBeatmap({ difficulty: data, lightshow: wrapper.lightshow })],
+			validate: { compatibility: { enabled: true, throwOn: { incompatibleObject: false } } },
+			preprocess: [
+				(data) => {
+					const customData: v2.ICustomDataDifficulty | v3.ICustomDataDifficulty = {
+						// v2 custom data
+						_bookmarks: implicitBeatmapVersion <= 2 ? beatmap.customData.bookmarks?.map((x: App.IBookmark) => serializeCustomBookmark(2, x, {})) : [],
+						// v3 custom data
+						bookmarks: implicitBeatmapVersion >= 3 ? beatmap.customData.bookmarks?.map((x: App.IBookmark) => serializeCustomBookmark(3, x, {})) : [],
+					};
+					return createBeatmap({
+						difficulty: deepAssign(data, { customData: customData }),
+						lightshow: beatmap.lightshow,
+					});
+				},
+			],
 		});
-		zippable[wrapper.filename] = encoder.encode(JSON.stringify(serialDifficulty, null, options?.format ?? 2));
+		zippable[beatmap.filename] = encoder.encode(JSON.stringify(serialDifficulty, null, options?.format ?? 2));
 
 		if (implicitBeatmapVersion === 4) {
-			const serialLightshow = saveLightshow(wrapper.lightshow, implicitBeatmapVersion, {
+			const serialLightshow = saveLightshow(beatmap.lightshow, implicitBeatmapVersion, {
 				optimize: options?.optimize,
+				validate: { compatibility: { enabled: true, throwOn: { incompatibleObject: false } } },
 				preprocess: [(data) => createBeatmap({ lightshow: data })],
 			});
-			zippable[wrapper.lightshowFilename] = encoder.encode(JSON.stringify(serialLightshow, null, options?.format ?? 2));
+			zippable[beatmap.lightshowFilename] = encoder.encode(JSON.stringify(serialLightshow, null, options?.format ?? 2));
 		}
 	}
 
-	const hasMappingExtensions = beatmapContents.some(({ beatmap }) => {
+	const hasMappingExtensions = beatmapContents.some((beatmap) => {
 		if (beatmap.difficulty.colorNotes.some((x) => hasMappingExtensionsNote(x))) return true;
 		if (beatmap.difficulty.bombNotes.some((x) => hasMappingExtensionsNote(x))) return true;
 		if (beatmap.difficulty.obstacles.some((x) => hasMappingExtensionsObstacleV3(x))) return true;

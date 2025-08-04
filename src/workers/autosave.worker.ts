@@ -25,15 +25,15 @@ export async function save(state: RootState, filestore: BeatmapFilestore, songId
 	// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 	if (beatmapId) {
 		const entities = selectAllEntities(state);
-		const { difficulty, lightshow } = serializeBeatmapContents(entities, selectBeatmapSerializationOptionsFromState(state, songId));
-		const { contents } = await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow });
+		const { difficulty, lightshow, customData } = serializeBeatmapContents(entities, selectBeatmapSerializationOptionsFromState(state, songId));
+		const { contents } = await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow, customData });
 
 		// we want to copy lightshow data across beatmaps that share the same lightshow id
 		const lightshowId = selectLightshowIdForBeatmap(state, songId, beatmapId);
 		const beatmapIds = selectBeatmapIdsWithLightshowId(state, songId, lightshowId);
 
-		for (const targetBeatmapId of beatmapIds) {
-			await filestore.updateBeatmapContents(songId, targetBeatmapId, { lightshow: contents.lightshow });
+		for (const targetBeatmapId of beatmapIds.filter((x) => x !== beatmapId)) {
+			await filestore.updateBeatmapContents(songId, targetBeatmapId, { lightshow: contents.lightshow, customData });
 		}
 	}
 

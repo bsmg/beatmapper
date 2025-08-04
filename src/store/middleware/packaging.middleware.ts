@@ -5,7 +5,7 @@ import { zipFiles } from "$/services/packaging.service";
 import { downloadMapFiles } from "$/store/actions";
 import { selectBeatmaps } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { deepMerge } from "$/utils";
+import { deepAssign } from "$/utils";
 
 interface Options {
 	filestore: BeatmapFilestore;
@@ -35,7 +35,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 					songFile,
 					coverArtFile,
 				},
-				options: deepMerge(defaultOptions, options as typeof defaultOptions),
+				options: deepAssign(defaultOptions, options as typeof defaultOptions),
 			});
 		},
 	});

@@ -1,29 +1,24 @@
 import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
-import type { EnvironmentAllName, IColor, ModRequirements, v2, wrapper } from "bsmap/types";
+import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
 import { colorToHex } from "bsmap/utils";
 
 import type { Accept, App, ColorSchemeKey, IColorScheme, IEntityMap } from "$/types";
-import { deepMerge, withKeys as hasKeys, maybeObject, uniq } from "$/utils";
-import { deserializeCustomBookmark, serializeCustomBookmark } from "./bookmarks.helpers";
+import { deepAssign, distinct, ensureObject, hasKeys } from "$/utils";
+import { deserializeCustomBookmark } from "./bookmarks.helpers";
 import { serializeColorElement } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
-import { getBeatmaps, getCustomColorsModule, getModSettings, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
+import { getBeatmaps, getCustomColorsModule, getExtensionsModule, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
 function coalesceBeatmapCollection(data: App.ISong) {
 	const beatmaps = getBeatmaps(data);
 
 	// Has this song enabled any mod support?
-	const enabledCustomColors = isModuleEnabled(data, "customColors");
-	const mappingExtensionsEnabled = isModuleEnabled(data, "mappingExtensions");
+	const isCustomColorsEnabled = isModuleEnabled(data, "customColors");
+	const isMappingExtensionsEnabled = isModuleEnabled(data, "mappingExtensions");
 
-	const requirements: string[] = [];
-	if (mappingExtensionsEnabled) {
-		requirements.push("Mapping Extensions");
-	}
+	const colors = isCustomColorsEnabled ? getCustomColorsModule(data) : undefined;
 
-	const colors = enabledCustomColors ? getCustomColorsModule(data) : undefined;
-
-	const customColors = maybeObject({
+	const customColors = ensureObject({
 		_colorLeft: colors?.colorLeft ? serializeColorElement(colors.colorLeft) : undefined,
 		_colorRight: colors?.colorRight ? serializeColorElement(colors.colorRight) : undefined,
 		_obstacleColor: colors?.obstacleColor ? serializeColorElement(colors.obstacleColor) : undefined,
@@ -33,11 +28,13 @@ function coalesceBeatmapCollection(data: App.ISong) {
 		_envColorRightBoost: colors?.envColorRightBoost ? serializeColorElement(colors.envColorRightBoost) : undefined,
 	});
 
-	const editorSettings: App.IEditorData["editorSettings"] = {
-		modSettings: maybeObject(getModSettings(data)),
-	};
+	const editorSettings: App.IEditorData["editorSettings"] = ensureObject({
+		modSettings: ensureObject({
+			mappingExtensions: isMappingExtensionsEnabled ? getExtensionsModule(data) : undefined,
+		}),
+	});
 
-	return { beatmaps, requirements, customColors, editorSettings };
+	return { beatmaps, customColors, editorSettings };
 }
 
 export function patchEnvironmentName(environment: Accept<EnvironmentAllName, string>): EnvironmentAllName {
@@ -45,7 +42,7 @@ export function patchEnvironmentName(environment: Accept<EnvironmentAllName, str
 	return environment as EnvironmentAllName;
 }
 
-export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.IModSettings {
+export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): Partial<App.IModSettings> {
 	function resolveColor(data: wrapper.IWrapInfo, key: ColorSchemeKey) {
 		if (data.difficulties.some((x) => hasKeys(x.customData, `_${key}`))) {
 			const customColorExists = data.difficulties.find((x) => x.customData[`_${key}`]);
@@ -79,7 +76,7 @@ export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): App.IModSett
 		mappingExtensions: isMappingExtensionsEnabled ? mappingExtensions : undefined,
 	};
 
-	return deepMerge(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings });
+	return deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings });
 }
 
 export interface InfoSerializationOptions {
@@ -92,7 +89,7 @@ export interface InfoDeserializationOptions {
 export function serializeInfoContents(data: App.ISong, options: InfoSerializationOptions) {
 	const { beatmaps, customColors, editorSettings } = coalesceBeatmapCollection(data);
 
-	const allEnvironments = uniq(Object.values(beatmaps).map((x) => x.environmentName));
+	const allEnvironments = distinct(Object.values(beatmaps).map((x) => x.environmentName));
 
 	const envColorScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(data.environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
 
@@ -110,10 +107,6 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 			environment1ColorBoost: serializeColorElement(scheme.envColorRightBoost) ?? envColorScheme._envColorRightBoost ?? envColorScheme._envColorRight,
 		};
 	});
-
-	const requirements: ModRequirements[] = [];
-
-	if (data.modSettings.mappingExtensions?.isEnabled) requirements.push("Mapping Extensions");
 
 	return createInfo({
 		song: {
@@ -150,15 +143,14 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 					mappers: beatmap.mappers.filter((x) => x.length > 0),
 					lighters: beatmap.lighters.filter((x) => x.length > 0),
 				},
-				customData: maybeObject<v2.ICustomDataInfoDifficulty>({
+				customData: ensureObject<v2.ICustomDataInfoDifficulty>({
 					_colorLeft: customColors?._colorLeft,
 					_colorRight: customColors?._colorRight,
 					_envColorLeft: customColors?._envColorLeft,
 					_envColorRight: customColors?._envColorRight,
 					_obstacleColor: customColors?._obstacleColor,
-					_requirements: requirements.length > 0 ? requirements : undefined,
-					_difficultyLabel: beatmap.customLabel,
-					_editorOffset: data.offset,
+					_difficultyLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
+					_editorOffset: data.offset !== 0 ? data.offset : undefined,
 				}),
 			});
 		}),
@@ -167,7 +159,7 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 				_lastEditedBy: "Beatmapper",
 				Beatmapper: {
 					version: version,
-					editorSettings: maybeObject(editorSettings),
+					editorSettings: editorSettings,
 				},
 			},
 		},
@@ -239,19 +231,19 @@ export function serializeBeatmapContents(data: Partial<App.IBeatmapEntities>, { 
 	const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats }));
 	const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats }));
 	const events = data.events?.map(shiftByOffset({ editorOffsetInBeats }));
-	const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats })).map((x) => serializeCustomBookmark(3, x, {}));
+	const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
 
 	return createBeatmap({
 		difficulty: {
 			colorNotes: notes,
 			bombNotes: bombs,
 			obstacles: obstacles,
-			customData: {
-				bookmarks: bookmarks,
-			},
 		},
 		lightshow: {
 			basicEvents: events,
+		},
+		customData: {
+			bookmarks: bookmarks,
 		},
 	});
 }
@@ -260,17 +252,17 @@ export function deserializeBeatmapContents(data: wrapper.IWrapBeatmap, { editorO
 	const bombs = data.difficulty.bombNotes;
 	const obstacles = data.difficulty.obstacles;
 	const events = data.lightshow.basicEvents;
-	const bookmarks = [
+	const bookmarks = distinct([
 		...(data.difficulty.customData?._bookmarks?.map((x) => deserializeCustomBookmark(2, x, {})) ?? []),
 		...(data.difficulty.customData?.bookmarks?.map((x) => deserializeCustomBookmark(3, x, {})) ?? []),
 		//
-	];
+	]);
 
 	return {
 		notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 		bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 		obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 		events: events?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-		bookmarks: bookmarks?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+		bookmarks: data.customData.bookmarks ?? bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 	};
 }
