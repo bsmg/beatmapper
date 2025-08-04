@@ -17,7 +17,7 @@ export function selectSnapshot(state: any) {
 		songs: {
 			byId: state.songs.entities,
 		},
-		navigation: pick(state.navigation, "snapTo", "beatDepth", "volume", "playNoteTick"),
+		navigation: pick<Record<string, any>, string>(state.navigation, ["snapTo", "beatDepth", "volume", "playNoteTick"]),
 	};
 }
 

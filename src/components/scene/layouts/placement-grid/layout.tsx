@@ -10,8 +10,8 @@ interface Props {
 	children: (cell: CellProps) => ReactNode;
 }
 function PlacementGridLayout({ grid, children, ...rest }: Props) {
-	return range(grid.numRows).map((rowIndex) => {
-		return range(grid.numCols).map((colIndex) => {
+	return Array.from(range(grid.numRows)).map((rowIndex) => {
+		return Array.from(range(grid.numCols)).map((colIndex) => {
 			return children({ ...rest, colIndex, rowIndex, grid });
 		});
 	});

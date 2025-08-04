@@ -3186,6 +3186,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jsr/std__internal@npm:^1.0.9":
+  version: 1.0.10
+  resolution: "@jsr/std__internal@npm:1.0.10::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__internal%2F1.0.10.tgz"
+  checksum: 10/aa02e54348fd5eeafed59bbf453706ca81895cc05a47062485e015b802d9f164e9519f550a5b31b91729ddbb5cada55d8514528342fb8f97d30435f1dd25f13b
+  languageName: node
+  linkType: hard
+
 "@mdx-js/mdx@npm:^3.1.0":
   version: 3.1.0
   resolution: "@mdx-js/mdx@npm:3.1.0"
@@ -4177,6 +4184,80 @@ __metadata:
   version: 0.3.0
   resolution: "@standard-schema/utils@npm:0.3.0"
   checksum: 10/7084f875d322792f2e0a5904009434c8374b9345b09ba89828b68fd56fa3c2b366d35bf340d9e8c72736ef01793c2f70d350c372ed79845dc3566c58d34b4b51
+  languageName: node
+  linkType: hard
+
+"@std/collections@jsr:^1.1.2":
+  version: 1.1.2
+  resolution: "@std/collections@jsr:1.1.2::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__collections%2F1.1.2.tgz"
+  checksum: 10/1fafee8e0d6aac0c8bd05162901f44d05cd39c9ed82d657275a12749770abc98b8aa67af44b2a5f29d878ae13b102134e511c0fffb3df22be0b9162759080de9
+  languageName: node
+  linkType: hard
+
+"@std/collections@npm:@jsr/std__collections@^1.1.2":
+  version: 1.1.2
+  resolution: "@jsr/std__collections@npm:1.1.2::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__collections%2F1.1.2.tgz"
+  checksum: 10/1fafee8e0d6aac0c8bd05162901f44d05cd39c9ed82d657275a12749770abc98b8aa67af44b2a5f29d878ae13b102134e511c0fffb3df22be0b9162759080de9
+  languageName: node
+  linkType: hard
+
+"@std/media-types@jsr:^1.1.0":
+  version: 1.1.0
+  resolution: "@std/media-types@jsr:1.1.0::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__media-types%2F1.1.0.tgz"
+  checksum: 10/ad98bcf9fb7291382fe664af372ec4d52234227a6240ad169625a857166551e0b66fa26f71d4ae14f7a89fc8123ed4f6938ebfbefb411718856f92b9c6221c1e
+  languageName: node
+  linkType: hard
+
+"@std/media-types@npm:@jsr/std__media-types@^1.1.0":
+  version: 1.1.0
+  resolution: "@jsr/std__media-types@npm:1.1.0::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__media-types%2F1.1.0.tgz"
+  checksum: 10/ad98bcf9fb7291382fe664af372ec4d52234227a6240ad169625a857166551e0b66fa26f71d4ae14f7a89fc8123ed4f6938ebfbefb411718856f92b9c6221c1e
+  languageName: node
+  linkType: hard
+
+"@std/path@jsr:^1.1.1":
+  version: 1.1.1
+  resolution: "@std/path@jsr:1.1.1::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__path%2F1.1.1.tgz"
+  dependencies:
+    "@jsr/std__internal": "npm:^1.0.9"
+  checksum: 10/c00ae4528885c06cc2ae05c9e4599891e95f1d27f1ce65e8d5b2728aac1fc13f45619f0ee6fe59f5939c04512a64b59f4eda75ae72699d1822bf1c0e145ecf2f
+  languageName: node
+  linkType: hard
+
+"@std/path@npm:@jsr/std__path@^1.1.1":
+  version: 1.1.1
+  resolution: "@jsr/std__path@npm:1.1.1::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__path%2F1.1.1.tgz"
+  dependencies:
+    "@jsr/std__internal": "npm:^1.0.9"
+  checksum: 10/c00ae4528885c06cc2ae05c9e4599891e95f1d27f1ce65e8d5b2728aac1fc13f45619f0ee6fe59f5939c04512a64b59f4eda75ae72699d1822bf1c0e145ecf2f
+  languageName: node
+  linkType: hard
+
+"@std/random@jsr:^0.1.2":
+  version: 0.1.2
+  resolution: "@std/random@jsr:0.1.2::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__random%2F0.1.2.tgz"
+  checksum: 10/7c4e8c220aca1008e102e200e6370a4bdac83a2dc6dd40343c530c75e76721b4e31184e2fcae776461b5ff1587302c013622cba599aebf818ae5f08fc1ab3958
+  languageName: node
+  linkType: hard
+
+"@std/random@npm:@jsr/std__random@^0.1.2":
+  version: 0.1.2
+  resolution: "@jsr/std__random@npm:0.1.2::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__random%2F0.1.2.tgz"
+  checksum: 10/7c4e8c220aca1008e102e200e6370a4bdac83a2dc6dd40343c530c75e76721b4e31184e2fcae776461b5ff1587302c013622cba599aebf818ae5f08fc1ab3958
+  languageName: node
+  linkType: hard
+
+"@std/text@jsr:^1.0.15":
+  version: 1.0.15
+  resolution: "@std/text@jsr:1.0.15::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__text%2F1.0.15.tgz"
+  checksum: 10/3aab9eafd3bf2f6305072a2e3a1b3684db165471caa5c4b882adc84239e3f84a245170a5c3b93f0ac689862bc04a75ca7cbb15a060849e0953900cbded465e19
+  languageName: node
+  linkType: hard
+
+"@std/text@npm:@jsr/std__text@^1.0.15":
+  version: 1.0.15
+  resolution: "@jsr/std__text@npm:1.0.15::__archiveUrl=https%3A%2F%2Fnpm.jsr.io%2F~%2F11%2F%40jsr%2Fstd__text%2F1.0.15.tgz"
+  checksum: 10/3aab9eafd3bf2f6305072a2e3a1b3684db165471caa5c4b882adc84239e3f84a245170a5c3b93f0ac689862bc04a75ca7cbb15a060849e0953900cbded465e19
   languageName: node
   linkType: hard
 
@@ -6253,6 +6334,11 @@ __metadata:
     "@react-three/postprocessing": "npm:^2.19.1"
     "@reduxjs/toolkit": "npm:^2.8.2"
     "@standard-schema/spec": "npm:^1.0.0"
+    "@std/collections": "jsr:^1.1.2"
+    "@std/media-types": "jsr:^1.1.0"
+    "@std/path": "jsr:^1.1.1"
+    "@std/random": "jsr:^0.1.2"
+    "@std/text": "jsr:^1.0.15"
     "@tanstack/react-form": "npm:^1.12.2"
     "@tanstack/react-pacer": "npm:^0.8.0"
     "@tanstack/react-query": "npm:^5.80.6"

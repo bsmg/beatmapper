@@ -62,10 +62,6 @@ export function convertCartesianToPolar<T extends Vector2Like>(point: T, centerP
 	return [theta, radius];
 }
 
-export function convertCartesianLineToPolar<T extends Vector2Like>(line: T[], centerPoint: T) {
-	return line.map((point) => convertCartesianToPolar(point, centerPoint));
-}
-
 export function convertPolarToCartesian([θ, radius]: Vector2Tuple) {
 	const x = radius * Math.cos(θ);
 	const y = radius * Math.sin(θ);

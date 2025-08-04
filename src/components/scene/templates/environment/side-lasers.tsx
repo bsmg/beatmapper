@@ -15,7 +15,7 @@ const Z_OFFSET = -100;
 const X_DISTANCE_BETWEEN_BEAMS = 2;
 const Z_DISTANCE_BETWEEN_BEAMS = 20;
 
-const laserIndices = range(0, NUM_OF_HORIZONTAL_BEAMS);
+const laserIndices = Array.from(range(0, NUM_OF_HORIZONTAL_BEAMS));
 
 function scaleToSeconds(x: number) {
 	return x / 1000;

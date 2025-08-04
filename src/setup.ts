@@ -4,6 +4,7 @@ import { type StorageValue, createStorage } from "unstorage";
 import { BeatmapFilestore } from "./services/file.service";
 import { type LegacyStorageSchema, createDriver } from "./services/storage.service";
 import { createAppStore } from "./store/setup";
+import { extname, typeByExtension } from "./utils";
 import { createAutosaveWorker } from "./workers";
 
 export const driver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
@@ -17,9 +18,10 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 			await idb.createStore("entries", tx);
 			function rewriteKey(key: string) {
 				const [sid, filename] = key.split("_");
-				if (filename.endsWith(".ogg")) return `${sid}.song`;
-				if (filename.endsWith(".jpg") || filename.endsWith(".jpeg") || filename.endsWith(".png")) return `${sid}.cover`;
 				if (filename === "Info.dat") return `${sid}.info`;
+				const extension = extname(filename);
+				if (extension === ".ogg" || extension === ".egg") return `${sid}.song`;
+				if (extension === ".jpg" || extension === ".jpeg" || extension === ".png") return `${sid}.cover`;
 				const bid = filename.split(".").slice(0, -1).join(".");
 				return `${sid}.${bid}.beatmap`;
 			}
@@ -28,7 +30,8 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 				if (filename === "Info.dat") {
 					return loadInfo(JSON.parse(value as string));
 				}
-				if (filename.endsWith(".dat")) {
+				const extension = extname(filename);
+				if (extension === ".dat") {
 					const [bid] = filename.split(".");
 					return loadDifficulty(JSON.parse(value as string), {
 						postprocess: [(data) => createBeatmap({ ...data, filename: `${bid}.beatmap.dat`, lightshowFilename: "Common.lightshow.dat" })],
@@ -36,11 +39,9 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 				}
 				if (typeof value === "string") return JSON.parse(value);
 				if (value instanceof Blob) {
-					let type = "application/octet-stream";
-					if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) type = "image/jpeg";
-					if (filename.endsWith(".png")) type = "image/png";
-					if (filename.endsWith(".ogg")) type = "audio/ogg";
-					return new File([value], filename, { type });
+					let type = typeByExtension(extension);
+					if (extension === ".egg") type = "audio/ogg";
+					return new File([value], filename, { type: type ?? "application/octet-stream" });
 				}
 				return value;
 			}

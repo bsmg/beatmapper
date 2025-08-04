@@ -10,18 +10,24 @@ import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
-import { deepAssign, yieldValue } from "$/utils";
+import { deepAssign, extname, typeByExtension, yieldValue } from "$/utils";
 import type { BeatmapFileType, ISaveOptions, v2, v3, wrapper } from "bsmap/types";
 import type { BeatmapFilestore } from "./file.service";
 
-function* getFileFromArchive(archive: Unzipped, ...filenames: string[]) {
-	const allFilenamesInArchive = Object.keys(archive);
+function* getFileFromArchive(archive: Unzipped, ...paths: string[]) {
+	const allPathsInArchive = Object.keys(archive);
 	// Ideally, our .zip archive will just have all the files we need.
-	for (const filename of filenames) {
-		const matchingFilename = allFilenamesInArchive.find((name) => name.toString().toLowerCase() === filename.toLowerCase());
-		if (matchingFilename) yield { data: archive[matchingFilename], name: matchingFilename };
+	for (const queryPath of paths) {
+		const matchingFilename = allPathsInArchive.find((archivePath) => queryPath === archivePath);
+		if (matchingFilename) {
+			const extension = extname(matchingFilename);
+			let type = typeByExtension(extension);
+			if (extension === ".egg") type = "audio/ogg";
+			if (extension === ".dat") type = "application/json";
+			yield { data: archive[matchingFilename], name: matchingFilename, type };
+		}
 	}
-	throw new Error(`Missing required files, looking for one of type: ${filenames.toString()}`);
+	throw new Error(`Missing required files, looking for one of type: ${paths.toString()}`);
 }
 
 interface ZipOptions {
@@ -166,13 +172,13 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 
 	// save the assets - cover art and song file - to our local store
 	const [songFile, coverArtFile] = await Promise.all([
-		await yieldValue(getFileFromArchive(archive, song.songFilename), async ({ data }) => {
+		await yieldValue(getFileFromArchive(archive, song.songFilename), async ({ data, name, type }) => {
 			// we'll process the imported blobs as files when we save them to the filestore,
 			// that way, we can preserve extra data like the filename and mime type
-			return new File([data], song.songFilename);
+			return new File([data], name, { type: type ?? "application/octet-stream" });
 		}),
-		await yieldValue(getFileFromArchive(archive, song.coverArtFilename), async ({ data }) => {
-			return new File([data], song.coverArtFilename);
+		await yieldValue(getFileFromArchive(archive, song.coverArtFilename), async ({ data, name, type }) => {
+			return new File([data], name, { type: type ?? "application/octet-stream" });
 		}),
 	]);
 

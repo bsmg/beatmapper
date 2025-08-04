@@ -57,8 +57,9 @@ function NativeSelectField({ label, helperText, collection, ...rest }: Assign<Da
 			<NativeSelect id={rest.id ?? field.name} {...rest} value={field.state.value ?? ""} onValueChange={(details) => field.handleChange(details.value)}>
 				{collection.items.map((item) => {
 					const value = collection.getItemValue(item);
+					if (value === null) return null;
 					return (
-						<option key={value} value={value ?? ""}>
+						<option key={value} value={value}>
 							{collection.stringifyItem(item)}
 						</option>
 					);

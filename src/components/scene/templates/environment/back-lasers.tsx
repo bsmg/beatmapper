@@ -11,7 +11,7 @@ const sides = ["left", "right"];
 const NUM_OF_BEAMS_PER_SIDE = 5;
 const DISTANCE_BETWEEN_BEAMS = 25;
 
-const INDICES = range(0, NUM_OF_BEAMS_PER_SIDE);
+const INDICES = Array.from(range(0, NUM_OF_BEAMS_PER_SIDE));
 
 interface Props {
 	sid: SongId;

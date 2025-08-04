@@ -58,14 +58,3 @@ export function createBombNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDow
 		}
 	}
 }
-
-export function calculateNoteDensity(numOfNotes: number, segmentLengthInBeats: number, bpm: number) {
-	if (numOfNotes === 0) {
-		return 0;
-	}
-
-	const numOfNotesPerBeat = numOfNotes / segmentLengthInBeats;
-	const notesPerSecond = numOfNotesPerBeat * (bpm / 60);
-
-	return notesPerSecond;
-}

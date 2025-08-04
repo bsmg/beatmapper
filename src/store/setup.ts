@@ -113,7 +113,7 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 								(acc, [id, beatmap]) => {
 									const bid = id.toString() ?? beatmap.id.toString();
 									acc[bid] = {
-										...omit(beatmap, "id"),
+										...omit<Record<string, unknown>, string>(beatmap, ["id"]),
 										lightshowId: "Common",
 										characteristic: "Standard",
 										difficulty: resolveDifficultyFromBeatmapId(bid),

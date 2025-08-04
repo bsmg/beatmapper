@@ -1,8 +1,8 @@
 import type { v2 as v2t, v3 as v3t } from "bsmap/types";
-import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import type { App } from "$/types";
 import { random } from "$/utils";
+import { deserializeColorToHex, serializeColorToArray } from "./colors.helpers";
 import { createSerializationFactory } from "./serialization.helpers";
 
 export function resolveBookmarkId<T extends Pick<App.IBookmark, "time">>(x: T) {
@@ -62,11 +62,11 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 					return {
 						_time: data.time,
 						_name: data.name,
-						_color: hexToRgba(data.color),
+						_color: serializeColorToArray(data.color),
 					};
 				},
 				deserialize: (data, { index = random(0, 5) }) => {
-					const color = data._color ? colorToHex(data._color) : undefined;
+					const color = data._color ? deserializeColorToHex(data._color) : undefined;
 					return {
 						time: data._time,
 						name: data._name,
@@ -81,11 +81,11 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 					return {
 						b: data.time,
 						n: data.name,
-						c: hexToRgba(data.color),
+						c: serializeColorToArray(data.color),
 					};
 				},
 				deserialize: (data, { index = random(0, 5) }) => {
-					const color = data.c ? colorToHex(data.c) : undefined;
+					const color = data.c ? deserializeColorToHex(data.c) : undefined;
 					return {
 						time: data.b,
 						name: data.n,

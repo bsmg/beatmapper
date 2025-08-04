@@ -1,4 +1,4 @@
-import { getFormattedBeatNum, getFormattedTimestamp } from "$/helpers/audio.helpers";
+import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition, selectCursorPositionInBeats, selectPlaying } from "$/store/selectors";
 import type { SongId } from "$/types";
@@ -9,7 +9,7 @@ import { Stat } from "$/components/ui/compositions";
 export function EditorTimeStat() {
 	const displayString = useAppSelector((state) => {
 		const cursorPosition = selectCursorPosition(state);
-		return getFormattedTimestamp(cursorPosition);
+		return formatCursorPosition(cursorPosition);
 	});
 	return <Stat label="Time">{displayString}</Stat>;
 }
@@ -29,7 +29,7 @@ export function EditorBeatStat({ sid }: Props) {
 		// Instead of trying to debounce rendering, let's just round the value aggressively
 		const roundedCursorPosition = isPlaying ? roundToNearest(cursorPositionInBeats, 0.5) : cursorPositionInBeats;
 
-		displayString = getFormattedBeatNum(roundedCursorPosition);
+		displayString = formatCursorPositionInBeats(roundedCursorPosition);
 
 		return displayString;
 	});

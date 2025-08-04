@@ -1,6 +1,5 @@
-import { createListCollection } from "@ark-ui/react";
 import type { PropsWithChildren } from "react";
-import { gtValue, nonEmpty, number, object, picklist, pipe, regex, string } from "valibot";
+import { gtValue, nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { createPrompterFactory } from "$/components/ui/compositions";
 import { GRID_PRESET_SLOTS } from "$/constants";
@@ -9,6 +8,7 @@ import { addBookmark, jumpToBeat, saveGridPreset, selectAllEntitiesInRange, upda
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedObstacles } from "$/store/selectors";
 import type { App, SongId, View } from "$/types";
+import { GRID_PRESET_SLOT_COLLECTION } from "../constants";
 
 interface Props {
 	sid: SongId;
@@ -19,8 +19,6 @@ interface Props {
 const createPrompter = createPrompterFactory<Props>();
 
 const { Provider, useContext } = createPrompter(({ createPrompt }) => {
-	const GRID_PRESET_SLOT_COLLECTION = createListCollection({ items: GRID_PRESET_SLOTS });
-
 	return {
 		QUICK_SELECT: createPrompt({
 			title: "Quick Select",
@@ -73,7 +71,7 @@ const { Provider, useContext } = createPrompter(({ createPrompt }) => {
 		SAVE_GRID_PRESET: createPrompt({
 			title: "Save Grid Preset",
 			defaultValues: () => ({ slot: GRID_PRESET_SLOTS[0] }),
-			validate: object({ slot: picklist(GRID_PRESET_SLOTS) }),
+			validate: object({ slot: string() }),
 			render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Select autoFocus label="Preset Slot" collection={GRID_PRESET_SLOT_COLLECTION} />}</form.AppField>,
 			onSubmit: ({ value, props: { sid } }) => {
 				return store.dispatch(saveGridPreset({ songId: sid, presetSlot: value.slot }));

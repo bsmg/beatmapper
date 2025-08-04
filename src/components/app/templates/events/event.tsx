@@ -18,24 +18,25 @@ function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<t
 	const eventEffect = resolveEventEffect(event, options.tracks);
 
 	const color = resolveColorForItem(isLightEvent(event, options.tracks) ? (eventColor ?? eventEffect) : eventEffect, options);
+
 	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
 	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
 
 	switch (eventEffect) {
 		case App.BasicEventEffect.ON: {
-			return color;
+			return { value: color, style: color };
 		}
 		case App.BasicEventEffect.FLASH: {
-			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})`;
+			return { value: color, style: `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})` };
 		}
 		case App.BasicEventEffect.FADE: {
-			return `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})`;
+			return { value: color, style: `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})` };
 		}
 		case App.BasicEventEffect.TRANSITION: {
-			return `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})`;
+			return { value: color, style: `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})` };
 		}
 		default: {
-			return `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor}, ${semiTransparentColor})`;
+			return { value: color, style: `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor}, ${semiTransparentColor})` };
 		}
 	}
 }
@@ -62,7 +63,7 @@ function EventGridEventItem({ sid, bid, event: data, trackWidth, onEventPointerD
 
 		const background = resolveBackgroundForEvent(data, { tracks, customColors: colorScheme });
 
-		return { transform: `translateX(${centeredOffset}px)`, background, color: isColorDark(background) ? "white" : "black" };
+		return { transform: `translateX(${centeredOffset}px)`, background: background.style, color: isColorDark(background.value) ? "white" : "black" };
 	}, [data, tracks, startBeat, endBeat, trackWidth, colorScheme]);
 
 	const handlePointerDown = useCallback(

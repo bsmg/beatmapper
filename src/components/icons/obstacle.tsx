@@ -1,13 +1,11 @@
 import type { LucideProps } from "lucide-react";
 import { type CSSProperties, useMemo } from "react";
 
-import { DEFAULT_COLOR_SCHEME } from "$/constants";
-
 interface Props extends LucideProps {
 	color?: string;
 }
 
-function ObstacleIcon({ color = DEFAULT_COLOR_SCHEME.obstacleColor, size }: Props) {
+function ObstacleIcon({ color, size }: Props) {
 	const style = useMemo(() => ({ "--color": color }) as CSSProperties, [color]);
 
 	const palette = useMemo(

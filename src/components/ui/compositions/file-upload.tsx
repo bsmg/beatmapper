@@ -9,11 +9,11 @@ import { Button } from "$/components/ui/compositions";
 import * as Builder from "../styled/file-upload";
 import type { VirtualColorPalette } from "../types";
 
-export function resolveIconForFileType(accept?: FileMimeType) {
+function resolveIconForFileType(accept?: FileMimeType) {
 	if (accept?.startsWith("image/")) return FileImageIcon;
 	if (accept?.startsWith("audio/")) return FileAudioIcon;
 	if (accept?.startsWith("text/")) return FileTextIcon;
-	if (accept?.startsWith("application/x") || accept === "application.zip") return FileArchiveIcon;
+	if (accept?.startsWith("application/x-") || accept === "application/zip") return FileArchiveIcon;
 	return FileIcon;
 }
 

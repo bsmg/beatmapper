@@ -1,12 +1,13 @@
 import { Fragment, type MouseEventHandler, useMemo } from "react";
 
-import { DEFAULT_GRID, GRID_PRESET_SLOTS } from "$/constants";
+import { DEFAULT_GRID } from "$/constants";
 import { loadGridPreset, removeGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridPresets, selectGridSize } from "$/store/selectors";
 import type { SongId } from "$/types";
 
 import { useAppPrompterContext } from "$/components/app/compositions";
+import { GRID_PRESET_SLOT_COLLECTION } from "$/components/app/constants";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button, Field, FieldInput } from "$/components/ui/compositions";
 
@@ -30,7 +31,7 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 			{showPresets && (
 				<ActionPanelGroup.Root label="Presets">
 					<ActionPanelGroup.ActionGroup>
-						{GRID_PRESET_SLOTS.map((slot) => (
+						{GRID_PRESET_SLOT_COLLECTION.items.map(({ value: slot }) => (
 							<Button
 								key={slot}
 								variant="subtle"

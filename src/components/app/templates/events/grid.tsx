@@ -52,7 +52,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 	const snapTo = useAppSelector(selectSnap);
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 
-	const beatNums = useMemo(() => range(Math.floor(startBeat), Math.ceil(endBeat)), [startBeat, endBeat]);
+	const beatNums = useMemo(() => Array.from(range(Math.floor(startBeat), Math.ceil(endBeat))), [startBeat, endBeat]);
 
 	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
 	const [mouseDownAt, setMouseDownAt] = useState<{ x: number; y: number } | null>(null);

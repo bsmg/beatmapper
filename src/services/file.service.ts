@@ -3,7 +3,7 @@ import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
 import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
-import { deepAssign, ensureArray, ensureObject, omit, pick } from "$/utils";
+import { basename, deepAssign, ensureArray, ensureObject, omit, pick } from "$/utils";
 import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow, sortObjectFn } from "bsmap";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
@@ -57,8 +57,7 @@ export class BeatmapFilestore extends Filestore {
 	private async saveBackupCoverFile() {
 		// If the user doesn't have a cover image yet, we'll supply a default.
 		// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
-		const pathPieces = defaultCoverArtPath.split("/");
-		const coverArtFilename = pathPieces[pathPieces.length - 1];
+		const coverArtFilename = basename(defaultCoverArtPath);
 		// I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
 		if (await this.storage.hasItem(coverArtFilename)) {
 			const file = this.loadFile<File>(coverArtFilename);
@@ -123,7 +122,7 @@ export class BeatmapFilestore extends Filestore {
 			songId,
 			createInfo({
 				...(savedContents ?? newContents),
-				...omit(newContents, "version", "filename"),
+				...omit(newContents, ["version", "filename"]),
 				customData: ensureObject(deepAssign(savedContents.customData, { ...newContents.customData })),
 			}),
 		);
@@ -134,7 +133,7 @@ export class BeatmapFilestore extends Filestore {
 			songId,
 			createAudioData({
 				...(savedContents ?? newContents),
-				...omit(newContents, "version", "filename"),
+				...omit(newContents, ["version", "filename"]),
 				customData: ensureObject(deepAssign(savedContents.customData, { ...newContents.customData })),
 			}),
 		);
@@ -150,7 +149,7 @@ export class BeatmapFilestore extends Filestore {
 				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
 				// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
 				difficulty: createDifficulty({
-					...pick(savedContents.difficulty, "colorNotes", "bombNotes", "obstacles"),
+					...pick(savedContents.difficulty, ["colorNotes", "bombNotes", "obstacles"]),
 					...newContents.difficulty,
 					customData: ensureObject(deepAssign(savedContents.difficulty.customData, { ...newContents.difficulty?.customData })),
 				}),

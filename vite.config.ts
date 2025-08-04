@@ -100,6 +100,7 @@ export default defineConfig(async (ctx) => {
 							if (id.includes("three.core.js")) return "vendor-three-core";
 							if (id.includes("three") || id.includes("@react-three")) return "vendor-three";
 							if (id.includes("@ark-ui") || id.includes("@zag-js")) return "vendor-ui";
+							if (id.includes("@std")) return "vendor-std";
 							if (id.includes("@tanstack")) return "vendor-tanstack";
 							if (id.includes("bsmap")) return "vendor-bsmap";
 							return "vendor";

@@ -1,7 +1,7 @@
 import { CharacteristicName, DifficultyName } from "bsmap/types";
 
-import { DEFAULT_GRID, DIFFICULTIES } from "$/constants";
-import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, Member } from "$/types";
+import { DEFAULT_GRID } from "$/constants";
+import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid } from "$/types";
 import { deepAssign, slugify } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 import { patchEnvironmentName } from "./packaging.helpers";
@@ -25,9 +25,9 @@ export function resolveLightshowIdFromFilename(filename: string, beatmapId: Beat
 	return rawId !== "Unnamed" ? rawId : beatmapId.toString();
 }
 /** @deprecated this is really only used during migration flow, don't use this elsewhere */
-export function resolveDifficultyFromBeatmapId(bid: BeatmapId): Member<typeof DIFFICULTIES> {
-	for (const difficulty of [...DIFFICULTIES].reverse()) {
-		if (difficulty === bid.toString()) return difficulty.substring(0, difficulty.length) as Member<typeof DIFFICULTIES>;
+export function resolveDifficultyFromBeatmapId(bid: BeatmapId) {
+	for (const difficulty of ["ExpertPlus", "Expert", "Hard", "Normal", "Easy"].reverse()) {
+		if (difficulty === bid.toString()) return difficulty.substring(0, difficulty.length);
 	}
 	throw new Error(`Could not resolve difficulty from id: ${bid}`);
 }

@@ -13,7 +13,7 @@ type TFormApi<TValue> = ReturnType<typeof useAppForm<TValue, any, any, any, any,
 export interface IPrompt<TValue, TProps> {
 	title: string;
 	defaultValues: (ctx: { props: TProps }) => TValue;
-	validate: StandardSchemaV1<TValue>;
+	validate?: StandardSchemaV1<TValue>;
 	render: (ctx: { form: TFormApi<TValue> }) => ReactNode;
 	onSubmit: (ctx: { value: TValue; props: TProps }) => void;
 }
@@ -65,6 +65,7 @@ export function createPrompterFactory<TProps>() {
 			const form = useAppForm({
 				defaultValues: prompts[active].defaultValues({ props: rest as TProps }),
 				validators: {
+					onMount: prompts[active].validate,
 					onChange: prompts[active].validate,
 					onSubmit: prompts[active].validate,
 				},
@@ -82,10 +83,14 @@ export function createPrompterFactory<TProps>() {
 				[dialog, form],
 			);
 
-			const handleCancel = useCallback(() => {
-				dialog.setOpen(false);
-				form.reset();
-			}, [dialog, form]);
+			const handleCancel = useCallback(
+				(ev: MouseEvent<HTMLButtonElement>) => {
+					ev.preventDefault();
+					dialog.setOpen(false);
+					form.reset();
+				},
+				[dialog, form],
+			);
 
 			return (
 				<form.AppForm>

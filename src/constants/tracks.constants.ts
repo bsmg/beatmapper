@@ -1,7 +1,7 @@
 import { type IEventTrack, TrackType } from "$/types";
 import { pick } from "$/utils";
 
-export const EVENT_TRACKS = {
+export const ALL_EVENT_TRACKS = {
 	0: { type: TrackType.LIGHT },
 	1: { type: TrackType.LIGHT },
 	2: { type: TrackType.LIGHT, side: "left" },
@@ -30,8 +30,6 @@ export const EVENT_TRACKS = {
 	1000: { type: TrackType.UNSUPPORTED },
 } as const satisfies Record<number, IEventTrack>;
 
-export const ALL_EVENT_TRACKS = EVENT_TRACKS;
+export const SUPPORTED_EVENT_TRACKS = pick(ALL_EVENT_TRACKS, ["0", "1", "2", "3", "4", "6", "7", "8", "9", "10", "11", "12", "13", "16", "17", "18", "19", "40", "41", "42", "43"]);
 
-export const SUPPORTED_EVENT_TRACKS = pick(ALL_EVENT_TRACKS, 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 40, 41, 42, 43);
-
-export const COMMON_EVENT_TRACKS = pick(SUPPORTED_EVENT_TRACKS, 0, 1, 2, 3, 4, 8, 9, 12, 13);
+export const COMMON_EVENT_TRACKS = pick(SUPPORTED_EVENT_TRACKS, ["0", "1", "2", "3", "4", "8", "9", "12", "13"]);

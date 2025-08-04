@@ -21,7 +21,7 @@ function EditorBeatMarkers({ sid }: Props) {
 
 	const totalNumOfBeats = useMemo(() => Math.ceil(durationInBeats ?? 0), [durationInBeats]);
 
-	const linesArray = useMemo(() => range(totalNumOfBeats * 4), [totalNumOfBeats]);
+	const linesArray = useMemo(() => Array.from(range(totalNumOfBeats * 4)), [totalNumOfBeats]);
 
 	const visibleSubsetOfLines = linesArray.filter((i) => {
 		const beat = i / 4;

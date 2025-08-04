@@ -1,13 +1,4 @@
-export function compose<T extends (...args: any[]) => void>(...fns: T[]) {
-	return fns.reduceRight(
-		(prevFn, nextFn) =>
-			(...args: Parameters<typeof prevFn>) =>
-				nextFn(prevFn(...args)),
-		(value: unknown) => value,
-	);
-}
-
-// TODO: this will eventually become native when ES2024 is supported in TS 5.7
+// TODO: this will become native once the app targets ES2024
 export function withResolvers<T>() {
 	let resolve!: (value: T | PromiseLike<T>) => void;
 	let reject!: (reason?: any) => void;

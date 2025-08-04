@@ -22,13 +22,13 @@ import {
 } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
-import { findUniquesWithinArrays } from "$/utils";
+import { difference } from "$/utils";
 import { jumpToBeat, redoEvents, redoObjects, undoEvents, undoObjects } from "../actions";
 
 function jumpToEarliestNote(api: MiddlewareAPI, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { past: App.IBeatmapEntities[K]; future: App.IBeatmapEntities[K] } }) {
-	const relevantNotes = findUniquesWithinArrays(args.notes.past, args.notes.future);
-	const relevantBombs = findUniquesWithinArrays(args.bombs.past, args.bombs.future);
-	const relevantObstacles = findUniquesWithinArrays(args.obstacles.past, args.obstacles.future);
+	const relevantNotes = difference(args.notes.past, args.notes.future);
+	const relevantBombs = difference(args.bombs.past, args.bombs.future);
+	const relevantObstacles = difference(args.obstacles.past, args.obstacles.future);
 
 	if (relevantNotes.length === 0 && relevantBombs.length === 0 && relevantObstacles.length === 0) {
 		return;
@@ -59,7 +59,7 @@ function jumpToEarliestNote(api: MiddlewareAPI, songId: SongId, args: { [K in "n
 
 function switchEventPagesIfNecessary(api: MiddlewareAPI, songId: SongId, args: { [K in "events"]: { past: App.IBeatmapEntities[K]; future: App.IBeatmapEntities[K] } }) {
 	const state = api.getState() as RootState;
-	const relevantEvents = findUniquesWithinArrays(args.events.past, args.events.future);
+	const relevantEvents = difference(args.events.past, args.events.future);
 
 	if (relevantEvents.length === 0) {
 		return;

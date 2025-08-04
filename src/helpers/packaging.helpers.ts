@@ -1,11 +1,10 @@
 import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
 import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
-import { colorToHex } from "bsmap/utils";
 
 import type { Accept, App, ColorSchemeKey, IColorScheme, IEntityMap } from "$/types";
 import { deepAssign, distinct, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark } from "./bookmarks.helpers";
-import { serializeColorElement } from "./colors.helpers";
+import { deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
 import { getBeatmaps, getCustomColorsModule, getExtensionsModule, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
@@ -19,13 +18,13 @@ function coalesceBeatmapCollection(data: App.ISong) {
 	const colors = isCustomColorsEnabled ? getCustomColorsModule(data) : undefined;
 
 	const customColors = ensureObject({
-		_colorLeft: colors?.colorLeft ? serializeColorElement(colors.colorLeft) : undefined,
-		_colorRight: colors?.colorRight ? serializeColorElement(colors.colorRight) : undefined,
-		_obstacleColor: colors?.obstacleColor ? serializeColorElement(colors.obstacleColor) : undefined,
-		_envColorLeft: colors?.envColorLeft ? serializeColorElement(colors.envColorLeft) : undefined,
-		_envColorRight: colors?.envColorRight ? serializeColorElement(colors.envColorRight) : undefined,
-		_envColorLeftBoost: colors?.envColorLeftBoost ? serializeColorElement(colors.envColorLeftBoost) : undefined,
-		_envColorRightBoost: colors?.envColorRightBoost ? serializeColorElement(colors.envColorRightBoost) : undefined,
+		_colorLeft: colors?.colorLeft ? serializeColorToObject(colors.colorLeft) : undefined,
+		_colorRight: colors?.colorRight ? serializeColorToObject(colors.colorRight) : undefined,
+		_obstacleColor: colors?.obstacleColor ? serializeColorToObject(colors.obstacleColor) : undefined,
+		_envColorLeft: colors?.envColorLeft ? serializeColorToObject(colors.envColorLeft) : undefined,
+		_envColorRight: colors?.envColorRight ? serializeColorToObject(colors.envColorRight) : undefined,
+		_envColorLeftBoost: colors?.envColorLeftBoost ? serializeColorToObject(colors.envColorLeftBoost) : undefined,
+		_envColorRightBoost: colors?.envColorRightBoost ? serializeColorToObject(colors.envColorRightBoost) : undefined,
 	});
 
 	const editorSettings: App.IEditorData["editorSettings"] = ensureObject({
@@ -47,7 +46,7 @@ export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): Partial<App.
 		if (data.difficulties.some((x) => hasKeys(x.customData, `_${key}`))) {
 			const customColorExists = data.difficulties.find((x) => x.customData[`_${key}`]);
 			const customColor = customColorExists?.customData[`_${key}`];
-			if (customColor) return colorToHex(customColor).slice(0, 7);
+			if (customColor) return deserializeColorToHex(customColor).slice(0, 7);
 		}
 	}
 
@@ -98,13 +97,13 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 			name: name,
 			overrideNotes: true,
 			overrideLights: true,
-			saberLeftColor: serializeColorElement(scheme.colorLeft) ?? envColorScheme._colorRight,
-			saberRightColor: serializeColorElement(scheme.colorRight) ?? envColorScheme._colorRight,
-			environment0Color: serializeColorElement(scheme.envColorLeft) ?? envColorScheme._envColorLeft,
-			environment1Color: serializeColorElement(scheme.envColorRight) ?? envColorScheme._envColorRight,
-			obstaclesColor: serializeColorElement(scheme.obstacleColor) ?? envColorScheme._obstacleColor,
-			environment0ColorBoost: serializeColorElement(scheme.envColorLeftBoost) ?? envColorScheme._envColorLeftBoost ?? envColorScheme._envColorLeft,
-			environment1ColorBoost: serializeColorElement(scheme.envColorRightBoost) ?? envColorScheme._envColorRightBoost ?? envColorScheme._envColorRight,
+			saberLeftColor: serializeColorToObject(scheme.colorLeft, true) ?? envColorScheme._colorRight,
+			saberRightColor: serializeColorToObject(scheme.colorRight, true) ?? envColorScheme._colorRight,
+			environment0Color: serializeColorToObject(scheme.envColorLeft, true) ?? envColorScheme._envColorLeft,
+			environment1Color: serializeColorToObject(scheme.envColorRight, true) ?? envColorScheme._envColorRight,
+			obstaclesColor: serializeColorToObject(scheme.obstacleColor, true) ?? envColorScheme._obstacleColor,
+			environment0ColorBoost: serializeColorToObject(scheme.envColorLeftBoost, true) ?? envColorScheme._envColorLeftBoost ?? envColorScheme._envColorLeft,
+			environment1ColorBoost: serializeColorToObject(scheme.envColorRightBoost, true) ?? envColorScheme._envColorRightBoost ?? envColorScheme._envColorRight,
 		};
 	});
 
@@ -168,13 +167,13 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.ISong {
 	const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<Required<IColorScheme>>, scheme) => {
 		acc[scheme.name] = {
-			colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
-			colorRight: colorToHex(scheme.saberRightColor).slice(0, 7),
-			obstacleColor: colorToHex(scheme.obstaclesColor).slice(0, 7),
-			envColorLeft: colorToHex(scheme.environment0Color).slice(0, 7),
-			envColorRight: colorToHex(scheme.environment1Color).slice(0, 7),
-			envColorLeftBoost: colorToHex(scheme.environment0ColorBoost).slice(0, 7),
-			envColorRightBoost: colorToHex(scheme.environment1ColorBoost).slice(0, 7),
+			colorLeft: deserializeColorToHex(scheme.saberLeftColor).slice(0, 7),
+			colorRight: deserializeColorToHex(scheme.saberRightColor).slice(0, 7),
+			obstacleColor: deserializeColorToHex(scheme.obstaclesColor).slice(0, 7),
+			envColorLeft: deserializeColorToHex(scheme.environment0Color).slice(0, 7),
+			envColorRight: deserializeColorToHex(scheme.environment1Color).slice(0, 7),
+			envColorLeftBoost: deserializeColorToHex(scheme.environment0ColorBoost).slice(0, 7),
+			envColorRightBoost: deserializeColorToHex(scheme.environment1ColorBoost).slice(0, 7),
 		};
 		return acc;
 	}, {});
