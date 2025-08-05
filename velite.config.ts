@@ -1,11 +1,11 @@
-import { defineCollection, defineConfig, s } from "velite";
-
 import { join } from "node:path";
 import { cwd } from "node:process";
+
 import { type RehypeExpressiveCodeOptions, default as rehypeExpressiveCode } from "rehype-expressive-code";
 import { type IOptions, rehypeGithubAlerts } from "rehype-github-alerts";
 import { default as rehypeSlug } from "rehype-slug";
 import { default as remarkGfm } from "remark-gfm";
+import { defineCollection, defineConfig, s } from "velite";
 
 const mdx = s.mdx({
 	remarkPlugins: [[remarkGfm]],

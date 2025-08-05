@@ -1,13 +1,13 @@
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
+import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize } from "$/store/selectors";
 import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
-import { useAppPrompterContext } from "../../compositions";
 
 interface Props {
 	sid: SongId;

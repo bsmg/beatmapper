@@ -1,7 +1,7 @@
+import { randomIntegerBetween } from "@std/random/integer-between";
 import type { v2 as v2t, v3 as v3t } from "bsmap/types";
 
 import type { App } from "$/types";
-import { random } from "$/utils";
 import { deserializeColorToHex, serializeColorToArray } from "./colors.helpers";
 import { createSerializationFactory } from "./serialization.helpers";
 
@@ -34,8 +34,8 @@ export function getNewBookmarkColor(bookmarks: Pick<App.IBookmark, "color">[]) {
 	return firstUnusedColor ?? BOOKMARK_COLORS[0];
 }
 
-type SerializationOptions = [{}, {}, {}, {}, {}];
-type DeserializationOptions = [{ index?: number }, {}, {}, {}, {}];
+type SerializationOptions = [{ [k: string]: never }, { [k: string]: never }, { [k: string]: never }, { [k: string]: never }, { [k: string]: never }];
+type DeserializationOptions = [{ index?: number }, { [k: string]: never }, { [k: string]: never }, { [k: string]: never }, { [k: string]: never }];
 
 export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createSerializationFactory<App.IBookmark, [Omit<v2t.IBookmark, "_color">, v2t.IBookmark, v3t.IBookmark], SerializationOptions, DeserializationOptions>("CustomBookmark", () => {
 	return {
@@ -47,7 +47,7 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 						_name: data.name,
 					};
 				},
-				deserialize: (data, { index = random(0, 5) }) => {
+				deserialize: (data, { index = randomIntegerBetween(0, 5) }) => {
 					return {
 						time: data._time,
 						name: data._name,
@@ -65,7 +65,7 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 						_color: serializeColorToArray(data.color),
 					};
 				},
-				deserialize: (data, { index = random(0, 5) }) => {
+				deserialize: (data, { index = randomIntegerBetween(0, 5) }) => {
 					const color = data._color ? deserializeColorToHex(data._color) : undefined;
 					return {
 						time: data._time,
@@ -84,7 +84,7 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 						c: serializeColorToArray(data.color),
 					};
 				},
-				deserialize: (data, { index = random(0, 5) }) => {
+				deserialize: (data, { index = randomIntegerBetween(0, 5) }) => {
 					const color = data.c ? deserializeColorToHex(data.c) : undefined;
 					return {
 						time: data.b,

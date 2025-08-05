@@ -1,9 +1,8 @@
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
-import type { App } from "$/types";
-
 import { Obj } from "$/components/scene/atoms";
+import type { App } from "$/types";
 
 export interface BaseNoteProps<T extends App.IBaseNote> extends Omit<ComponentProps<typeof Obj>, "children"> {
 	data: T;

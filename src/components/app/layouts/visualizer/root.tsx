@@ -1,7 +1,8 @@
+import { type ComponentProps, forwardRef } from "react";
+
+import { Spinner } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
-import { Spinner } from "$/components/ui/compositions";
-import { type ComponentProps, forwardRef } from "react";
 
 interface Props extends ComponentProps<"div"> {
 	isLoading?: boolean;

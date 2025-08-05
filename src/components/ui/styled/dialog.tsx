@@ -1,9 +1,10 @@
 "use client";
+
 import { Dialog, dialogAnatomy } from "@ark-ui/react/dialog";
 
 import { sva } from "$:styled-system/css";
+import { createStyleContext } from "$:styled-system/jsx";
 import { center, stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../utils/create-style-context";
 import { recipe as heading } from "./heading";
 
 const recipe = sva({

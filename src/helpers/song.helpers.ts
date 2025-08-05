@@ -1,8 +1,9 @@
+import { slugify } from "@std/text/unstable-slugify";
 import { CharacteristicName, DifficultyName } from "bsmap/types";
 
 import { DEFAULT_GRID } from "$/constants";
 import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid } from "$/types";
-import { deepAssign, slugify } from "$/utils";
+import { deepAssign } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 import { patchEnvironmentName } from "./packaging.helpers";
 

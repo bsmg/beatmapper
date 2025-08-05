@@ -1,8 +1,9 @@
 "use client";
+
 import { Tooltip, tooltipAnatomy } from "@ark-ui/react/tooltip";
 
 import { sva } from "$:styled-system/css";
-import { createStyleContext } from "../utils/create-style-context";
+import { createStyleContext } from "$:styled-system/jsx";
 
 const recipe = sva({
 	slots: tooltipAnatomy.keys(),

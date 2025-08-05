@@ -1,5 +1,6 @@
-import { DEFAULT_COL_WIDTH, DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_ROW_HEIGHT } from "$/constants";
 import { describe, expect, it } from "vitest";
+
+import { DEFAULT_COL_WIDTH, DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_ROW_HEIGHT } from "$/constants";
 import { convertGridIndicesToNaturalGrid } from "./grid.helpers";
 
 describe("Grid helpers", () => {

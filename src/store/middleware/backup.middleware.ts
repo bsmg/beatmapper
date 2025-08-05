@@ -1,4 +1,4 @@
-import { type PayloadAction, createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 
 import { downloadMapFiles, leaveEditor, saveBeatmapContents } from "$/store/actions";
 import type { RootState } from "$/store/setup";

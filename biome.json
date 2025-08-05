@@ -1,7 +1,6 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.1.3/schema.json",
 	"files": {
-		"ignore": ["dist", ".yarn/**", "src/vendor/**"],
 		"ignoreUnknown": true
 	},
 	"vcs": {
@@ -10,48 +9,26 @@
 		"useIgnoreFile": true
 	},
 	"linter": {
-		"enabled": true,
 		"rules": {
-			"recommended": true,
-			"a11y": {
-				"noSvgWithoutTitle": "off",
-				"useKeyWithClickEvents": "info",
-				"useKeyWithMouseEvents": "info"
-			},
-			"complexity": {
-				"noForEach": "warn",
-				"noBannedTypes": "off"
-			},
-			"correctness": {
-				"useExhaustiveDependencies": "warn"
-			},
-			"performance": {
-				"noAccumulatingSpread": "warn"
-			},
 			"style": {
-				"noParameterAssign": "warn",
-				"useConst": "warn"
-			},
-			"suspicious": {
-				"noArrayIndexKey": "warn",
-				"noAssignInExpressions": "warn",
-				"noExplicitAny": "warn",
-				"noShadowRestrictedNames": "warn",
-				"useDefaultSwitchClauseLast": "warn"
+				"noParameterAssign": "off"
 			}
 		}
 	},
 	"formatter": {
-		"enabled": true,
 		"lineEnding": "lf",
 		"lineWidth": 320
 	},
-	"organizeImports": {
-		"enabled": true
-	},
-	"json": {
-		"parser": {
-			"allowComments": true
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [[":NODE:"], ":BLANK_LINE:", [":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"], ":BLANK_LINE:", [":ALIAS:", ":PATH:"]]
+					}
+				}
+			}
 		}
 	}
 }

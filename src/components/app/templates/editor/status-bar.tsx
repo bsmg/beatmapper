@@ -2,14 +2,13 @@ import { Presence } from "@ark-ui/react/presence";
 import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 
 import { useViewFromLocation } from "$/components/app/hooks";
+import { StatusBar } from "$/components/app/layouts";
 import { updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles, selectedTotalBombNotes } from "$/store/selectors";
+import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectedTotalBombNotes, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { pluralize } from "$/utils";
-
 import { styled } from "$:styled-system/jsx";
-import { StatusBar } from "$/components/app/layouts";
 
 interface Props {
 	sid: SongId;

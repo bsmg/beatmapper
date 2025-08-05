@@ -1,5 +1,5 @@
 import { animated } from "@react-spring/three";
-import { type MeshProps, useThree } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import { useMemo } from "react";
 import { AdditiveBlending, Color, FrontSide } from "three";
 
@@ -7,6 +7,7 @@ import { glowFragmentShader, glowVertexShader } from "$/assets";
 import { useLightSpring } from "$/components/scene/compositions/materials/light";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import type { SongId } from "$/types";
+import type { MeshProps } from "$/types/vendor";
 import { normalize } from "$/utils";
 
 interface Props extends MeshProps {

@@ -1,8 +1,7 @@
-import type { SongId } from "$/types";
-
 import { useAppPrompterContext } from "$/components/app/compositions";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button } from "$/components/ui/compositions";
+import type { SongId } from "$/types";
 
 interface Props {
 	sid: SongId;

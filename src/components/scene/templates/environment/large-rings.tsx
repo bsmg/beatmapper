@@ -1,8 +1,7 @@
-import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
-import type { BeatmapId, SongId } from "$/types";
-
 import { LitSquareRing } from "$/components/scene/compositions/environment";
+import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
 import { Environment } from "$/components/scene/layouts";
+import type { BeatmapId, SongId } from "$/types";
 
 const INITIAL_ROTATION = Math.PI * 0.25;
 const DISTANCE_BETWEEN_RINGS = 18;

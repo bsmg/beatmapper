@@ -1,12 +1,11 @@
 import { Fragment, useMemo } from "react";
 
+import { TubeLight } from "$/components/scene/compositions/environment";
+import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
-
-import { TubeLight } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 
 const NUM_OF_HORIZONTAL_BEAMS = 4;
 const X_OFFSET = 40;

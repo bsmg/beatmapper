@@ -1,12 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { DotIcon } from "lucide-react";
 
-import { flex, stack } from "$:styled-system/patterns";
-
-import { Container, styled } from "$:styled-system/jsx";
 import { Logo } from "$/components/app/compositions";
 import { Interleave } from "$/components/ui/atoms";
 import { Text } from "$/components/ui/compositions";
+import { Container, styled } from "$:styled-system/jsx";
+import { flex, stack } from "$:styled-system/patterns";
 
 function EditorPageHeader() {
 	return (

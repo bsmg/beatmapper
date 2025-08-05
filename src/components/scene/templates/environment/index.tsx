@@ -1,8 +1,6 @@
-import type { BeatmapId, SongId } from "$/types";
-
 import { useControls } from "$/components/scene/hooks";
-
 import { Environment } from "$/components/scene/layouts";
+import type { BeatmapId, SongId } from "$/types";
 import BackLasers from "./back-lasers";
 import LargeRings from "./large-rings";
 import PrimaryLights from "./primary-lights";

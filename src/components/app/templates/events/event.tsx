@@ -1,15 +1,14 @@
-import { type PointerEvent, memo, useCallback, useMemo } from "react";
+import { memo, type PointerEvent, useCallback, useMemo } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
+import { Button } from "$/components/ui/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment } from "$/store/selectors";
 import { App, type BeatmapId, type IEventTracks, type SongId } from "$/types";
 import { isColorDark, normalize } from "$/utils";
-
 import { styled } from "$:styled-system/jsx";
-import { Button } from "$/components/ui/compositions";
 
 const BLOCK_WIDTH = 8;
 

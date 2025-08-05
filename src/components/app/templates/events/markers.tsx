@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 
-import { token } from "$:styled-system/tokens";
 import { useAppSelector } from "$/store/hooks";
 import { selectEventsEditorBeatsPerZoomLevel } from "$/store/selectors";
 import { range } from "$/utils";
+import { token } from "$:styled-system/tokens";
 
 interface Props {
 	width: number;
@@ -34,7 +34,7 @@ function EventGridMarkers({ width, height, primaryDivisions }: Props) {
 	}, [beatLines, primaryDivisions, height, segmentWidth]);
 
 	return (
-		<svg width={width} height={height}>
+		<svg role="presentation" width={width} height={height}>
 			{beatLines}
 			{primaryLines}
 		</svg>

@@ -1,6 +1,6 @@
 import type { EntityId } from "@reduxjs/toolkit";
 
-import type { App } from "../beatmap";
+import type { App } from "$/types/beatmap";
 import type { ColorSchemeKey, TrackType } from "./shared";
 
 export * from "./shared";

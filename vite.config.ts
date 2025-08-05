@@ -2,10 +2,10 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { default as velite } from "@velite/plugin-vite";
 import { default as react } from "@vitejs/plugin-react";
-import { type UserConfig, defineConfig } from "vite";
+import { defineConfig, type UserConfig } from "vite";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 
 import packageJson from "./package.json" with { type: "json" };
@@ -66,7 +66,7 @@ export default defineConfig(async (ctx) => {
 		},
 	};
 
-	const TSR_OPTIONS: Parameters<typeof TanStackRouterVite>[0] = {
+	const TSR_OPTIONS: Parameters<typeof tanstackRouter>[0] = {
 		virtualRouteConfig: "src/routes.ts",
 	};
 
@@ -78,7 +78,7 @@ export default defineConfig(async (ctx) => {
 	}
 
 	return {
-		plugins: [react(), VitePWA(PWA_OPTIONS), TanStackRouterVite(TSR_OPTIONS), velite()],
+		plugins: [react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
 			global: "window",
@@ -99,7 +99,7 @@ export default defineConfig(async (ctx) => {
 						if (id.includes("node_modules")) {
 							if (id.includes("three.core.js")) return "vendor-three-core";
 							if (id.includes("three") || id.includes("@react-three")) return "vendor-three";
-							if (id.includes("@ark-ui") || id.includes("@zag-js")) return "vendor-ui";
+							if (id.includes("@ark-ui") || id.includes("@floating-ui") || id.includes("@zag-js") || id.includes("lucide")) return "vendor-ui";
 							if (id.includes("@std")) return "vendor-std";
 							if (id.includes("@tanstack")) return "vendor-tanstack";
 							if (id.includes("bsmap")) return "vendor-bsmap";

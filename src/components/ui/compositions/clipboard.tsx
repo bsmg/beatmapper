@@ -1,7 +1,7 @@
+import { CheckIcon, CopyIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
-import { CheckIcon, CopyIcon } from "lucide-react";
-import * as Builder from "../styled/clipboard";
+import * as Builder from "$/components/ui/styled/clipboard";
 
 export interface ClipboardProps extends ComponentProps<typeof Builder.Root> {}
 export function Clipboard({ children, ...rest }: ClipboardProps) {

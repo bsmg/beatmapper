@@ -1,8 +1,9 @@
-import { ColorScheme, EnvironmentSchemeName, createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
+import { distinct } from "@std/collections/distinct";
+import { ColorScheme, createBeatmap, createInfo, createInfoBeatmap, EnvironmentSchemeName } from "bsmap";
 import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
 
 import type { Accept, App, ColorSchemeKey, IColorScheme, IEntityMap } from "$/types";
-import { deepAssign, distinct, ensureObject, hasKeys } from "$/utils";
+import { deepAssign, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark } from "./bookmarks.helpers";
 import { deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";

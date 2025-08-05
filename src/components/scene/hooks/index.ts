@@ -1,4 +1,4 @@
-export { useLightProps, useRingCount, useRingRotation, useRingZoom, type UseLightPropsReturn, type UseRingCountOptions, type UseRingRotationOptions, type UseRingZoomOptions } from "./environment.hooks";
+export { type UseLightPropsReturn, type UseRingCountOptions, type UseRingRotationOptions, type UseRingZoomOptions, useLightProps, useRingCount, useRingRotation, useRingZoom } from "./environment.hooks";
 export { useControls } from "./use-controls";
-export { useEventTrack, type UseEventTrackOptions } from "./use-event-track";
+export { type UseEventTrackOptions, useEventTrack } from "./use-event-track";
 export { useObjectPlacement } from "./use-object-placement";

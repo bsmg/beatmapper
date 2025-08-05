@@ -1,14 +1,13 @@
 import { Presence } from "@ark-ui/react/presence";
 import { createSelector } from "@reduxjs/toolkit";
 
+import { useViewFromLocation } from "$/components/app/hooks";
+import { ActionPanelGroup } from "$/components/app/layouts";
+import { Button } from "$/components/ui/compositions";
 import { copySelection, cutSelection, pasteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllSelectedObjects, selectClipboardHasObjects } from "$/store/selectors";
 import { type SongId, View } from "$/types";
-
-import { useViewFromLocation } from "$/components/app/hooks";
-import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;

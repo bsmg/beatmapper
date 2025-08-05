@@ -1,8 +1,9 @@
-import type { Assign, ListCollection } from "@ark-ui/react";
+import type { Assign } from "@ark-ui/react";
+import type { ListCollection } from "@ark-ui/react/collection";
 import { type AnyFieldApi, createFormHook, createFormHookContexts, useStore } from "@tanstack/react-form";
 import { type ComponentProps, type MouseEvent, type ReactNode, useCallback } from "react";
 
-import * as Form from "../styled/form";
+import * as Builder from "$/components/ui/styled/form";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
 import { Field, type FieldProps } from "./field";
@@ -154,7 +155,7 @@ function SubmitButton({ loading, disabled, children, onClick, ...rest }: Compone
 	);
 }
 
-export const { useAppForm, withForm } = createFormHook({
+export const { useAppForm, withForm, withFieldGroup } = createFormHook({
 	fieldContext,
 	formContext,
 	fieldComponents: {
@@ -171,8 +172,8 @@ export const { useAppForm, withForm } = createFormHook({
 		ToggleGroup: ToggleGroupField,
 	},
 	formComponents: {
-		Root: Form.Root,
-		Row: Form.Row,
+		Root: Builder.Root,
+		Row: Builder.Row,
 		Submit: SubmitButton,
 	},
 });

@@ -1,12 +1,11 @@
+import { ActionPanelGroup } from "$/components/app/layouts";
+import { BombNoteIcon, ColorNoteIcon, ObstacleIcon } from "$/components/icons";
+import { Button, Tooltip } from "$/components/ui/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectNotesEditorTool } from "$/store/selectors";
 import { type BeatmapId, ObjectTool, type SongId } from "$/types";
-
-import { ActionPanelGroup } from "$/components/app/layouts";
-import { BombNoteIcon, ColorNoteIcon, ObstacleIcon } from "$/components/icons";
-import { Button, Tooltip } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;

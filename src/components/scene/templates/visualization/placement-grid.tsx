@@ -1,6 +1,7 @@
-import type { GroupProps, ThreeEvent } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
 import { Fragment, useCallback } from "react";
 
+import { PlacementGrid } from "$/components/scene/layouts";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
@@ -8,8 +9,7 @@ import { addObstacle, addToCell } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
 import { type BeatmapId, ObjectTool, type SongId } from "$/types";
-
-import { PlacementGrid } from "$/components/scene/layouts";
+import type { GroupProps } from "$/types/vendor";
 
 interface Props extends GroupProps {
 	sid: SongId;

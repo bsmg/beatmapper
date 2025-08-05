@@ -1,8 +1,8 @@
 import { HelpCircleIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import * as Builder from "$/components/ui/styled/field";
 import { HStack } from "$:styled-system/jsx";
-import * as Builder from "../styled/field";
 import { Input as BaseInput, NativeSelect as BaseSelect, Textarea as BaseTextarea } from "./input";
 import { Tooltip } from "./tooltip";
 

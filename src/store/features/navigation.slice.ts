@@ -1,11 +1,11 @@
-import { type AsyncThunkPayloadCreator, type ReducerCreators, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { finishLoadingMap, hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
+import { createSlice } from "$/store/helpers";
+import { selectEditorOffset } from "$/store/selectors";
+import type { RootState } from "$/store/setup";
 import type { SongId, View } from "$/types";
-import { createSlice } from "../helpers";
-import { selectEditorOffset } from "../selectors";
-import type { RootState } from "../setup";
 
 const initialState = {
 	isPlaying: false,

@@ -1,13 +1,12 @@
 import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
 import type { ComponentProps } from "react";
 
-import { addSongFromFile } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectSongIds } from "$/store/selectors";
-
 import { APP_TOASTER, MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileQuery } from "$/components/app/hooks";
 import { FileUpload } from "$/components/ui/compositions";
+import { addSongFromFile } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectSongIds } from "$/store/selectors";
 
 export function LocalFileUpload({ filename, children, ...rest }: ComponentProps<typeof FileUpload> & { filename: string }) {
 	const { data: currentFile, isSuccess } = useLocalFileQuery(filename, {

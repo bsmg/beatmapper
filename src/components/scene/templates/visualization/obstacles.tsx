@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 
+import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllVisibleObstacles, selectColorScheme } from "$/store/selectors";
 import { type App, type BeatmapId, ObjectTool, type SongId } from "$/types";
-
-import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
 
 interface Props {
 	sid: SongId;

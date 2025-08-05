@@ -1,8 +1,7 @@
-import type { SongId } from "$/types";
-
 import { BracketRing } from "$/components/scene/compositions/environment";
 import { useEventTrack, useRingCount } from "$/components/scene/hooks";
 import { Environment } from "$/components/scene/layouts";
+import type { SongId } from "$/types";
 
 const INITIAL_ROTATION = Math.PI * 0.25;
 const FIRST_RING_OFFSET = -50;

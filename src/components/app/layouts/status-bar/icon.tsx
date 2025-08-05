@@ -1,8 +1,8 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, MouseEventHandler } from "react";
 
-import { styled } from "$:styled-system/jsx";
 import { Button } from "$/components/ui/compositions";
+import { styled } from "$:styled-system/jsx";
 
 interface Props {
 	icon: ComponentType<LucideProps>;

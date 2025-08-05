@@ -1,9 +1,10 @@
-import type { MeshProps, ThreeEvent } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
 import { memo, useCallback, useContext, useMemo } from "react";
 import { DoubleSide } from "three";
 
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
 import type { IGrid } from "$/types";
+import type { MeshProps } from "$/types/vendor";
 import { Context } from "./context";
 
 const CELL_PADDING = 0.05;

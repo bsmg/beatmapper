@@ -1,5 +1,5 @@
-import { type EntityId, type PayloadAction, createDraftSafeSelector, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
-import { type EventType, createBasicEvent, sortObjectFn } from "bsmap";
+import { createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createBasicEvent, type EventType, sortObjectFn } from "bsmap";
 
 import { isLightEvent, isMirroredTrack, resolveEventDerivedProps, resolveEventId, resolveEventValue, resolveMirroredTrack } from "$/helpers/events.helpers";
 import { nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";

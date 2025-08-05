@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 
-import { For } from "../atoms";
-import * as Builder from "../styled/slider";
+import { For } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/slider";
 
 export interface SliderProps extends ComponentProps<typeof Builder.Root> {
 	marks?: Array<number>;

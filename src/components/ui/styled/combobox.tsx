@@ -1,8 +1,9 @@
 "use client";
+
 import { Combobox, comboboxAnatomy } from "@ark-ui/react/combobox";
 
 import { sva } from "$:styled-system/css";
-import { createStyleContext } from "../utils/create-style-context";
+import { createStyleContext } from "$:styled-system/jsx";
 
 const recipe = sva({
 	slots: comboboxAnatomy.keys(),
@@ -26,6 +27,5 @@ export const List = withContext(Combobox.List, "list");
 export const Positioner = withContext(Combobox.Positioner, "positioner");
 export const Trigger = withContext(Combobox.Trigger, "trigger");
 
-export { ComboboxContext as Context } from "@ark-ui/react/combobox";
-
 export type { ComboboxHighlightChangeDetails as HighlightChangeDetails, ComboboxInputValueChangeDetails as InputValueChangeDetails, ComboboxOpenChangeDetails as OpenChangeDetails, ComboboxValueChangeDetails as ValueChangeDetails } from "@ark-ui/react/combobox";
+export { ComboboxContext as Context } from "@ark-ui/react/combobox";

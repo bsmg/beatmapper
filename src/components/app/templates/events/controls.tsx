@@ -1,18 +1,17 @@
-import { createListCollection } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
-import { type CSSProperties, type ComponentProps, useMemo } from "react";
+import { type ComponentProps, type CSSProperties, useMemo } from "react";
 
+import { EventEffectIcon } from "$/components/icons";
+import { Button, Field, Toggle, ToggleGroup, Tooltip } from "$/components/ui/compositions";
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel } from "$/store/selectors";
 import { type BeatmapId, EventColor, EventEditMode, EventTool, type SongId } from "$/types";
-
 import { HStack, styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
-import { EventEffectIcon } from "$/components/icons";
-import { Button, Field, Toggle, ToggleGroup, Tooltip } from "$/components/ui/compositions";
 
 const EDIT_MODE_LIST_COLLECTION = createListCollection({
 	items: Object.values(EventEditMode).map((value, index) => {
@@ -118,7 +117,9 @@ const Box = styled("div", {
 	base: {
 		boxSize: "16px",
 		borderRadius: "sm",
-		background: "linear-gradient(0deg, color-mix(in srgb, var(--color), black 15%), color-mix(in srgb, var(--color), white 15%))",
+		backgroundLinear: "to-t",
+		gradientFrom: "color-mix(in srgb, var(--color), black 15%)",
+		gradientTo: "color-mix(in srgb, var(--color), white 15%)",
 	},
 });
 

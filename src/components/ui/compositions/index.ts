@@ -10,6 +10,7 @@ export { FileUpload } from "./file-upload";
 export { useAppForm } from "./form";
 export { Heading } from "./heading";
 export { Input, NativeSelect, Textarea } from "./input";
+export * as List from "./list";
 export { Menu, type MenuItem } from "./menu";
 export { createPrompt, createPrompterFactory } from "./prompter";
 export { RadioButtonGroup, type RadioButtonItem } from "./radio-button-group";
@@ -28,5 +29,3 @@ export { Toggle } from "./toggle";
 export { ToggleGroup, type ToggleItem } from "./toggle-group";
 export { Tooltip } from "./tooltip";
 export { Waveform } from "./waveform";
-
-export * as List from "./list";

@@ -1,12 +1,11 @@
 import { Fragment } from "react";
 
+import { TubeLight } from "$/components/scene/compositions/environment";
+import { LightMaterial } from "$/components/scene/compositions/materials";
 import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
-
-import { TubeLight } from "$/components/scene/compositions/environment";
-import { LightMaterial } from "$/components/scene/compositions/materials";
 
 const Y_POSITION = 5;
 const Z_POSITION = -85;

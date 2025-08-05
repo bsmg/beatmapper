@@ -2,7 +2,6 @@ import { createStateSyncMiddleware } from "redux-state-sync";
 
 import type { BeatmapFilestore } from "$/services/file.service";
 import type { createAutosaveWorker } from "$/workers";
-
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";

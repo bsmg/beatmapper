@@ -1,8 +1,7 @@
+import { EditorAudioVisualizer } from "$/components/app/templates/editor";
 import type { SongId } from "$/types";
-
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import { EditorAudioVisualizer } from "$/components/app/templates/editor";
 import EditorNavigationControls from "./playback";
 
 interface Props {

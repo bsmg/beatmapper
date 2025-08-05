@@ -1,7 +1,7 @@
+import { v2, v3 } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
 import type { App } from "$/types";
-import { v2, v3 } from "bsmap/types";
 import { BOOKMARK_COLORS, deserializeCustomBookmark, getNewBookmarkColor, serializeCustomBookmark } from "./bookmarks.helpers";
 
 describe("bookmark serialization", () => {

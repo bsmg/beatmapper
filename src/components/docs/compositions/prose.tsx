@@ -1,12 +1,12 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
-import { styled } from "$:styled-system/jsx";
 import { Shortcut } from "$/components/app/compositions";
 import * as ContentComponents from "$/components/docs/content";
 import { MDXContent } from "$/components/ui/atoms";
 import { Text } from "$/components/ui/compositions";
 import { KBD } from "$/components/ui/styled";
+import { styled } from "$:styled-system/jsx";
 import DocsMedia from "./media";
 
 const Subtle = styled("span", {

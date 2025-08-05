@@ -3,6 +3,7 @@ import { NoteDirection } from "bsmap";
 import { Fragment, useCallback, useRef } from "react";
 import type { Object3D } from "three";
 
+import { TrackMover } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { useControls, useObjectPlacement } from "$/components/scene/hooks";
 import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
@@ -11,8 +12,6 @@ import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObst
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
 import type { App, BeatmapId, SongId } from "$/types";
-
-import { TrackMover } from "$/components/scene/compositions";
 import EditorBeatMarkers from "./markers";
 import EditorNotes from "./notes";
 import EditorObstacles from "./obstacles";

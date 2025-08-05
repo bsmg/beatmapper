@@ -9,7 +9,7 @@ interface Props {
 function Mouse({ width = 18, height = 27, activeButton }: Props) {
 	return (
 		<Wrapper>
-			<svg width={width} height={height} viewBox="0 0 18 27" fill="none">
+			<svg role="presentation" width={width} height={height} viewBox="0 0 18 27" fill="none">
 				<path d="M1 10H18V19C18 23.4183 14.4183 27 10 27H9C4.58172 27 1 23.4183 1 19V10Z" fill={token.var("colors.slate.300")} />
 				<path d="M3 2.5C0.499984 5 0.999987 9 0.999987 9H8.99999V0C8.99999 0 5.50002 0 3 2.5Z" fill={activeButton === "clickleft" ? token.var("colors.pink.500") : token.var("colors.slate.300")} />
 				<path d="M15.9695 2.5C18.4569 5 17.9594 9 17.9594 9H10V0C10 0 13.4822 0 15.9695 2.5Z" fill={activeButton === "clickright" ? token.var("colors.pink.500") : token.var("colors.slate.300")} />

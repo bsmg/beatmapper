@@ -4,8 +4,8 @@ import { Portal } from "@ark-ui/react/portal";
 import { XIcon } from "lucide-react";
 import { type ComponentProps, type PropsWithChildren, type ReactNode, useCallback } from "react";
 
+import * as Builder from "$/components/ui/styled/dialog";
 import { HStack, Stack } from "$:styled-system/jsx";
-import * as Builder from "../styled/dialog";
 import { Button } from "./button";
 
 export interface DialogProps {

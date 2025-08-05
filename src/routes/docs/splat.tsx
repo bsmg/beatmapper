@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { type Doc, docs } from "$:content";
-
 import { ErrorBoundary } from "$/components/app/layouts";
 import DocsPageLayout from "$/components/docs/templates/page";
+import { type Doc, docs } from "$:content";
 
 // hack: tsr rewrites only work with a server environment, so we'll just cheat if we navigate to an old route
 function rewriteId(splat: string | undefined) {

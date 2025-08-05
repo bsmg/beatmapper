@@ -1,13 +1,12 @@
+import { Presence } from "@ark-ui/react/presence";
 import { useMemo, useState } from "react";
 
 import { useOnChange, useOnKeydown } from "$/components/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
 import { type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
-
 import { styled } from "$:styled-system/jsx";
 import { center, vstack } from "$:styled-system/patterns";
-import { Presence } from "@ark-ui/react";
 import DefaultActionPanel from "./default";
 import GridActionPanel from "./grid";
 import SelectionActionPanel from "./selection";
@@ -36,15 +35,11 @@ function EditorActionPanel({ sid, bid }: Props) {
 		selectedBlocks.length + selectedMines.length + selectedObstacles.length,
 	);
 
-	useOnKeydown(
-		"KeyG",
-		() => {
-			if (mappingMode === ObjectPlacementMode.EXTENSIONS) {
-				setShowGridConfig((currentVal) => !currentVal);
-			}
-		},
-		[mappingMode],
-	);
+	useOnKeydown("KeyG", () => {
+		if (mappingMode === ObjectPlacementMode.EXTENSIONS) {
+			setShowGridConfig((currentVal) => !currentVal);
+		}
+	}, [mappingMode]);
 
 	return (
 		<OuterWrapper onWheel={(ev) => ev.stopPropagation()}>

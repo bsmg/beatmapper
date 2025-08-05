@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { useViewFromLocation } from "$/components/app/hooks";
 import { EditorView } from "$/components/app/layouts";

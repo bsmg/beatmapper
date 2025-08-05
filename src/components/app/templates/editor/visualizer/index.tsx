@@ -1,15 +1,14 @@
 import { type MouseEvent, useCallback, useDeferredValue } from "react";
 
+import { AudioVisualizer } from "$/components/app/layouts";
 import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
+import { Waveform } from "$/components/ui/compositions";
 import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import { jumpToBeat, removeBookmark, scrubVisualizer } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectLoading, selectRenderScale, selectWaveformData } from "$/store/selectors";
 import type { SongId } from "$/types";
 import { roundToNearest } from "$/utils";
-
-import { AudioVisualizer } from "$/components/app/layouts";
-import { Waveform } from "$/components/ui/compositions";
 import EditorBookmark from "./bookmark";
 
 interface Props {

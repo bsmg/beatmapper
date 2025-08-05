@@ -1,13 +1,12 @@
-import type { GroupProps } from "@react-three/fiber";
 import { useContext, useMemo } from "react";
 
+import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
 import { FUDGE_FACTOR, SONG_OFFSET } from "$/components/scene/constants";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectDefaultObstacleDuration } from "$/store/selectors";
 import type { IGrid, ObjectPlacementMode } from "$/types";
-
-import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
+import type { GroupProps } from "$/types/vendor";
 import { Context } from "./context";
 
 // hack: a tiny bit of fudge factor is added to the z position, so that the grid cells are still interactable while resizing the obstacle.

@@ -3,11 +3,11 @@ import type { FileMimeType } from "@zag-js/file-utils";
 import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, Trash2Icon } from "lucide-react";
 import { type ComponentProps, useCallback, useMemo, useState } from "react";
 
-import { css } from "$:styled-system/css";
 import { APP_TOASTER } from "$/components/app/constants";
 import { Button } from "$/components/ui/compositions";
-import * as Builder from "../styled/file-upload";
-import type { VirtualColorPalette } from "../types";
+import * as Builder from "$/components/ui/styled/file-upload";
+import type { VirtualColorPalette } from "$/styles/types";
+import { css } from "$:styled-system/css";
 
 function resolveIconForFileType(accept?: FileMimeType) {
 	if (accept?.startsWith("image/")) return FileImageIcon;

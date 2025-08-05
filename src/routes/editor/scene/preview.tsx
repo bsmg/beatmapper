@@ -2,12 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { NoteJumpSpeed } from "bsmap";
 import { Fragment } from "react/jsx-runtime";
 
-import { selectBeatmapById, selectSongById } from "$/store/selectors";
-
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import DefaultEnvironment from "$/components/scene/templates/environment";
 import MapVisualization from "$/components/scene/templates/visualization";
 import { store } from "$/setup";
+import { selectBeatmapById, selectSongById } from "$/store/selectors";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 	component: RouteComponent,

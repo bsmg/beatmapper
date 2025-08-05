@@ -1,4 +1,7 @@
-import { type DevToolsEnhancerOptions, configureStore } from "@reduxjs/toolkit";
+// biome-ignore-all lint/suspicious/noExplicitAny: type validations for migration steps are not super necessary
+
+import { configureStore, type DevToolsEnhancerOptions } from "@reduxjs/toolkit";
+import { omit } from "@std/collections/omit";
 import type { NoteDirection } from "bsmap";
 import { initStateWithPrevTab } from "redux-state-sync";
 import { createStorage } from "unstorage";
@@ -7,13 +10,12 @@ import { default as ss } from "unstorage/drivers/session-storage";
 
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
-import { type LegacyStorageSchema, createDriver } from "$/services/storage.service";
+import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
 import { autosaveWorker, filestore } from "$/setup";
 import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool } from "$/types";
-import { omit } from "$/utils";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
 import { default as root } from "./features";
-import { type StorageObserver, createAllSharedMiddleware, createStorageMiddleware } from "./middleware";
+import { createAllSharedMiddleware, createStorageMiddleware, type StorageObserver } from "./middleware";
 import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
 import {
 	selectAllGridPresetIds,

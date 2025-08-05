@@ -1,13 +1,12 @@
 import type { Assign } from "@ark-ui/react";
-import { type CSSProperties, type ComponentProps, type PropsWithoutRef, useMemo } from "react";
+import { type ComponentProps, type CSSProperties, type PropsWithoutRef, useMemo } from "react";
 
-import { BeatmapFilestore } from "$/services/file.service";
-import type { SongId } from "$/types";
-
-import { styled } from "$:styled-system/jsx";
-import { center } from "$:styled-system/patterns";
 import { LocalFilePreview, type LocalFileProps } from "$/components/app/atoms";
 import { Spinner } from "$/components/ui/compositions";
+import { BeatmapFilestore } from "$/services/file.service";
+import type { SongId } from "$/types";
+import { styled } from "$:styled-system/jsx";
+import { center } from "$:styled-system/patterns";
 
 interface CoverArtProps extends PropsWithoutRef<ComponentProps<"img">> {
 	songId: SongId;

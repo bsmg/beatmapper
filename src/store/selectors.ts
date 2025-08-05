@@ -1,6 +1,7 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { calculateNps } from "bsmap";
 import type { wrapper } from "bsmap/types";
+import { shallowEqual } from "react-redux";
 
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
@@ -8,10 +9,6 @@ import { deriveEventTracksForEnvironment, resolveEventColor, resolveEventEffect 
 import { getEditorOffset } from "$/helpers/song.helpers";
 import { App, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
-import { createGridObjectSelector, selectHistory } from "./helpers";
-import type { RootState } from "./setup";
-
-import { shallowEqual } from "react-redux";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
@@ -26,6 +23,8 @@ import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
+import { createGridObjectSelector, selectHistory } from "./helpers";
+import type { RootState } from "./setup";
 
 export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
 	return state.global;

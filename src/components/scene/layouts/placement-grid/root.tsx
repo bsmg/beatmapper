@@ -1,9 +1,9 @@
-import type { GroupProps, ThreeEvent } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useState } from "react";
 
-import type { ObjectPlacementMode } from "$/types";
-
 import { useGlobalEventListener } from "$/components/hooks";
+import type { ObjectPlacementMode } from "$/types";
+import type { GroupProps } from "$/types/vendor";
 import { isMetaKeyPressed } from "$/utils";
 import { type IPlacementGridContext, Provider } from "./context";
 import { resolveNoteDirectionForPlacementMode } from "./helpers";

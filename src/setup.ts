@@ -1,10 +1,11 @@
+import { typeByExtension } from "@std/media-types/type-by-extension";
+import { extname } from "@std/path/extname";
 import { createBeatmap, loadDifficulty, loadInfo } from "bsmap";
-import { type StorageValue, createStorage } from "unstorage";
+import { createStorage, type StorageValue } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
-import { type LegacyStorageSchema, createDriver } from "./services/storage.service";
+import { createDriver, type LegacyStorageSchema } from "./services/storage.service";
 import { createAppStore } from "./store/setup";
-import { extname, typeByExtension } from "./utils";
 import { createAutosaveWorker } from "./workers";
 
 export const driver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({

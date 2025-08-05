@@ -2,7 +2,7 @@ import { Portal } from "@ark-ui/react/portal";
 import type { UseTooltipContext } from "@ark-ui/react/tooltip";
 import type { ComponentProps, ReactNode } from "react";
 
-import * as Builder from "../styled/tooltip";
+import * as Builder from "$/components/ui/styled/tooltip";
 
 interface Props extends ComponentProps<typeof Builder.Root> {
 	showArrow?: boolean;

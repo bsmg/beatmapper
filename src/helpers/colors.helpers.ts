@@ -2,8 +2,8 @@ import { parseColor } from "@zag-js/color-utils";
 import { ColorScheme, EnvironmentSchemeName } from "bsmap";
 import type { ColorArray, EnvironmentAllName, IColor, Vector3, Vector4, v2 } from "bsmap/types";
 
-import { token } from "$:styled-system/tokens";
 import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "$/types";
+import { token } from "$:styled-system/tokens";
 import { patchEnvironmentName } from "./packaging.helpers";
 
 export interface ColorResolverOptions {

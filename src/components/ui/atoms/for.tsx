@@ -1,4 +1,4 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { useMemo } from "react";
 
 interface ForProps<T> {

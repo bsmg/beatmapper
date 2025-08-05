@@ -1,8 +1,5 @@
 import type { DeepPartial } from "bsmap/types";
 
-export { omit } from "@std/collections/omit";
-export { pick } from "@std/collections/pick";
-
 export function isObjectEmpty<T extends object>(obj: T) {
 	for (const key in obj) {
 		if (Object.hasOwn(obj, key) && obj[key] !== undefined) return false;
@@ -21,11 +18,12 @@ export function hasKeys<T extends object, K extends keyof Required<T>>(obj: T, .
 	return false;
 }
 
-function isAssignable(item: unknown): item is Record<string, any> {
+function isAssignable(item: unknown): item is Record<string, unknown> {
 	return !!(item && typeof item === "object" && !Array.isArray(item));
 }
 
-export function deepAssign<T extends Record<string, any>>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
+// biome-ignore lint/suspicious/noExplicitAny: valid use case
+export function deepAssign<T extends { [k: string]: any }>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
 	if (!sources.length) return target;
 
 	const source = sources.shift() as NoInfer<DeepPartial<T>> | undefined;
@@ -35,7 +33,7 @@ export function deepAssign<T extends Record<string, any>>(target: T, ...sources:
 	let output: T = { ...target };
 
 	if (isAssignable(target) && isAssignable(source)) {
-		const mergeSource = source as Record<string, any>;
+		const mergeSource = source as { [k: string]: never };
 		for (const key in mergeSource) {
 			if (Object.hasOwn(mergeSource, key)) {
 				if (key in output && isAssignable(output[key])) {

@@ -1,4 +1,4 @@
-import { type NoteColor, mirrorNoteColor, mirrorNoteDirectionHorizontally, mirrorNoteDirectionVertically } from "bsmap";
+import { mirrorNoteColor, mirrorNoteDirectionHorizontally, mirrorNoteDirectionVertically, type NoteColor } from "bsmap";
 
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import type { IGrid } from "$/types";

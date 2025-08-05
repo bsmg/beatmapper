@@ -1,11 +1,11 @@
 import { useCallback } from "react";
 
+import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import { EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
-import { useAppPrompterContext } from "../../compositions";
 
 interface Props {
 	sid: SongId;

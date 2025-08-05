@@ -1,15 +1,14 @@
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
+import { SNAPPING_INCREMENT_LIST_COLLECTION } from "$/components/app/constants";
+import { useViewFromLocation } from "$/components/app/hooks";
+import { Button, Select } from "$/components/ui/compositions";
 import { jumpToEnd, jumpToStart, pausePlayback, seekBackwards, seekForwards, startPlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
 import type { SongId } from "$/types";
-
 import { styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
-import { SNAPPING_INCREMENT_LIST_COLLECTION } from "$/components/app/constants";
-import { useViewFromLocation } from "$/components/app/hooks";
-import { Button, Select } from "$/components/ui/compositions";
 import { EditorBeatStat, EditorTimeStat } from "./stats";
 
 interface Props {

@@ -14,6 +14,7 @@
 		"tsconfig.json": "tsconfig.*.json",
 		"vite.config.ts": "*.config.js, *.config.cjs, *.config.mjs, *.config.ts"
 	},
+	"files.eol": "\n",
 	"files.exclude": {
 		"**/.git": true,
 		"**/.yarn/install-state.gz": true,
@@ -22,10 +23,9 @@
 		"**/yarn.lock": true
 	},
 	"editor.codeActionsOnSave": {
-		"source.organizeImports": "always",
-		"source.organizeImports.biome": "never",
-		"source.fixAll.biome": "never",
-		"source.fixAll.ts": "always"
+		"source.removeUnusedImports": "explicit",
+		"source.fixAll.biome": "explicit",
+		"source.action.organizeImports.biome": "explicit"
 	},
 	"[typescript]": {
 		"editor.defaultFormatter": "biomejs.biome"

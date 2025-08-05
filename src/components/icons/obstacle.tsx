@@ -18,7 +18,7 @@ function ObstacleIcon({ color, size }: Props) {
 	);
 
 	return (
-		<svg width={`calc(${size} * 1.25)`} height={`calc(${size} * 1.5)`} fill="none" viewBox="0 0 43 31" style={style}>
+		<svg role="presentation" width={`calc(${size} * 1.25)`} height={`calc(${size} * 1.5)`} fill="none" viewBox="0 0 43 31" style={style}>
 			<mask id="prefix__a" fill="#fff">
 				<rect x={1} y={1} width={36} height={24} rx={1} />
 			</mask>

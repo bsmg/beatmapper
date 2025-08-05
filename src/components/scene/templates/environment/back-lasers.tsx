@@ -1,10 +1,9 @@
 import type { Vector3Tuple } from "three";
 
+import { TubeLight } from "$/components/scene/compositions/environment";
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 import type { BeatmapId, SongId } from "$/types";
 import { range } from "$/utils";
-
-import { TubeLight } from "$/components/scene/compositions/environment";
 
 const sides = ["left", "right"];
 

@@ -1,10 +1,10 @@
 import type { AsyncThunkPayloadCreator, CaseReducer, PayloadAction } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
+import { createSlice } from "$/store/helpers";
+import { selectAllSelectedEntities } from "$/store/selectors";
+import type { RootState } from "$/store/setup";
 import { type App, View } from "$/types";
-import { createSlice } from "../helpers";
-import { selectAllSelectedEntities } from "../selectors";
-import type { RootState } from "../setup";
 
 const initialState = {
 	view: null as View | null,

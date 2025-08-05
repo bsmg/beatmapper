@@ -1,7 +1,9 @@
 import { type AnimatedProps, animated } from "@react-spring/three";
-import type { Euler, GroupProps } from "@react-three/fiber";
+import type { Euler } from "@react-three/fiber";
 import { useMemo } from "react";
 import type { ColorRepresentation } from "three";
+
+import type { GroupProps } from "$/types/vendor";
 
 interface ModelProps {
 	side?: "top" | "bottom";

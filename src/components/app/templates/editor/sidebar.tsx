@@ -1,12 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { BookOpenIcon, BoxIcon, DownloadIcon, HomeIcon, ListIcon, PlayIcon, SettingsIcon, ZapIcon } from "lucide-react";
-
-import type { BeatmapId, SongId } from "$/types";
+import { useMemo } from "react";
 
 import { AppSettingsForm } from "$/components/app/forms";
 import { Sidebar } from "$/components/app/layouts";
 import { Dialog } from "$/components/ui/compositions";
-import { useMemo } from "react";
+import type { BeatmapId, SongId } from "$/types";
 
 interface Props {
 	sid: SongId;

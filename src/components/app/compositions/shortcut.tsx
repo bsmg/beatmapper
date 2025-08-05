@@ -1,9 +1,8 @@
 import { Children, type PropsWithChildren } from "react";
 
-import { getMetaKeyLabel, getOptionKeyLabel } from "$/utils";
-
-import { styled } from "$:styled-system/jsx";
 import { KBD } from "$/components/ui/styled";
+import { getMetaKeyLabel, getOptionKeyLabel } from "$/utils";
+import { styled } from "$:styled-system/jsx";
 import Mouse from "./mouse";
 
 function resolveIcon(code: string) {

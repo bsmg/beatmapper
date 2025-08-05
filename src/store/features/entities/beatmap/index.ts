@@ -1,8 +1,7 @@
-import { type UnknownAction, combineReducers } from "@reduxjs/toolkit";
-import undoable, { type FilterFunction, groupByActionTypes, type GroupByFunction, includeAction } from "redux-undo";
+import { combineReducers, type UnknownAction } from "@reduxjs/toolkit";
+import undoable, { type FilterFunction, type GroupByFunction, groupByActionTypes, includeAction } from "redux-undo";
 
 import { addObstacle, addToCell, bulkRemoveNote, cutSelection, finishLoadingMap, mirrorColorNote, mirrorSelection, nudgeSelection, pasteSelection, redoObjects, removeAllSelectedObjects, removeNote, removeObstacle, undoObjects, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
-
 import bombs from "./bombs.slice";
 import notes from "./notes.slice";
 import obstacles from "./obstacles.slice";

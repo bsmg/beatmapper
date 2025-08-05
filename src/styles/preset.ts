@@ -1,5 +1,4 @@
 import { definePreset } from "@pandacss/dev";
-
 import base from "@pandacss/dev/presets";
 
 import { animationStyles, keyframes, layerStyles, semanticTokens, textStyles, tokens } from "./theme";

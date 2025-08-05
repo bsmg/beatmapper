@@ -1,17 +1,16 @@
+import { createListCollection } from "@ark-ui/react/collection";
+import { ArrowUpFromDotIcon, TrashIcon } from "lucide-react";
 import { Fragment, type MouseEventHandler, useState } from "react";
 
+import { useAppPrompterContext } from "$/components/app/compositions";
+import { ActionPanelGroup } from "$/components/app/layouts";
+import { Button, Field, FieldInput, Select, Tooltip } from "$/components/ui/compositions";
 import { DEFAULT_GRID } from "$/constants";
 import { loadGridPreset, removeGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridPresets, selectGridSize } from "$/store/selectors";
 import type { SongId } from "$/types";
-
-import { useAppPrompterContext } from "$/components/app/compositions";
-import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button, Field, FieldInput, Select, Tooltip } from "$/components/ui/compositions";
 import { isObjectEmpty } from "$/utils";
-import { createListCollection } from "@ark-ui/react";
-import { ArrowUpFromDotIcon, TrashIcon } from "lucide-react";
 
 interface Props {
 	sid: SongId;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats } from "./audio.helpers";
 
 describe("Audio helpers", () => {

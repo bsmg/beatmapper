@@ -1,5 +1,6 @@
-import { type App, type IGrid, ObjectPlacementMode } from "$/types";
 import { createBombNote, createColorNote } from "bsmap";
+
+import { type App, type IGrid, ObjectPlacementMode } from "$/types";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
 
 export function resolveNoteId<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(x: T) {

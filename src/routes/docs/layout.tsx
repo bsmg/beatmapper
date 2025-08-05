@@ -1,8 +1,8 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+import DocsSidebar from "$/components/docs/templates/sidebar";
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import DocsSidebar from "$/components/docs/templates/sidebar";
 
 export const Route = createFileRoute("/_/docs/_")({
 	component: RouteComponent,

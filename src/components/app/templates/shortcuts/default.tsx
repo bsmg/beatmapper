@@ -1,6 +1,7 @@
-import { useThrottledCallback } from "@tanstack/react-pacer";
+import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useCallback, useRef } from "react";
 
+import { useAppPrompterContext } from "$/components/app/compositions";
 import { APP_TOASTER } from "$/components/app/constants";
 import { useViewFromLocation } from "$/components/app/hooks";
 import { useGlobalEventListener } from "$/components/hooks";
@@ -38,7 +39,6 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectPacerWait } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
-import { useAppPrompterContext } from "../../compositions";
 
 interface Props {
 	sid: SongId;

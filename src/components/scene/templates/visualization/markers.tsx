@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 
+import { BeatMarker } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectCursorPositionInBeats, selectDurationInBeats, selectSurfaceDepth } from "$/store/selectors";
 import type { SongId } from "$/types";
 import { range } from "$/utils";
-
-import { BeatMarker } from "$/components/scene/compositions";
 
 interface Props {
 	sid: SongId;

@@ -1,9 +1,10 @@
 "use client";
+
 import { Toast, toastAnatomy } from "@ark-ui/react/toast";
 
 import { sva } from "$:styled-system/css";
+import { createStyleContext } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: toastAnatomy.keys(),
@@ -51,4 +52,4 @@ export const CloseTrigger = withContext(Toast.CloseTrigger, "closeTrigger");
 export const Description = withContext(Toast.Description, "description");
 export const Title = withContext(Toast.Title, "title");
 
-export { ToastContext as Context, createToaster, Toaster, type ToastContextProps as ContextProps, type ToasterProps } from "@ark-ui/react/toast";
+export { createToaster, ToastContext as Context, type ToastContextProps as ContextProps, Toaster, type ToasterProps } from "@ark-ui/react/toast";

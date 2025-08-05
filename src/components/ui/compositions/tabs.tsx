@@ -1,11 +1,11 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import type { UseTabsContext } from "@ark-ui/react/tabs";
 import type { ComponentProps, ReactNode } from "react";
 
+import { ListCollectionFor } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/tabs";
+import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
-import { ListCollectionFor } from "../atoms";
-import * as Builder from "../styled/tabs";
-import type { VirtualColorPalette } from "../types";
 
 export interface TabsItem extends CollectionItem {
 	value: string;

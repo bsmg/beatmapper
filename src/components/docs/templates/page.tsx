@@ -1,10 +1,9 @@
 import { type PropsWithChildren, useMemo } from "react";
 
+import { DocsNavigationBlock, DocsProse, DocsTableOfContents } from "$/components/docs/compositions";
 import { docs } from "$:content";
-
 import { Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import { DocsNavigationBlock, DocsProse, DocsTableOfContents } from "$/components/docs/compositions";
 
 interface Props extends PropsWithChildren {
 	id: string;

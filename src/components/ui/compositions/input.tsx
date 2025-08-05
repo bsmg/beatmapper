@@ -1,10 +1,10 @@
 import type { Assign } from "@ark-ui/react";
 import { type ChangeEvent, type ComponentProps, useCallback } from "react";
 
+import { type UseControlledValueProps, useControlledValue } from "$/components/ui/hooks";
+import { Input as StyledInput, Select as StyledSelect, Textarea as StyledTextarea } from "$/components/ui/styled/input";
+import type { VirtualColorPalette } from "$/styles/types";
 import { css, cx } from "$:styled-system/css";
-import { type UseControlledValueProps, useControlledValue } from "../hooks/use-controlled-value";
-import { Input as StyledInput, Select as StyledSelect, Textarea as StyledTextarea } from "../styled/input";
-import type { VirtualColorPalette } from "../types";
 
 export interface InputProps extends Assign<ComponentProps<typeof StyledInput>, UseControlledValueProps<{ value: string | number; valueAsString: string; valueAsNumber: number; valueAsDate: Date | null }>> {
 	colorPalette?: VirtualColorPalette;

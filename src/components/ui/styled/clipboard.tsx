@@ -1,7 +1,9 @@
+"use client";
+
 import { Clipboard, clipboardAnatomy } from "@ark-ui/react/clipboard";
 
 import { sva } from "$:styled-system/css";
-import { createStyleContext } from "../utils/create-style-context";
+import { createStyleContext } from "$:styled-system/jsx";
 
 const recipe = sva({
 	slots: [...clipboardAnatomy.keys()],

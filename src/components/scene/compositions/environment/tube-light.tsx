@@ -1,7 +1,6 @@
-import type { GroupProps } from "@react-three/fiber";
-
 import { LightMaterial } from "$/components/scene/compositions/materials";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
+import type { GroupProps } from "$/types/vendor";
 
 interface Props extends GroupProps {
 	light: UseLightPropsReturn;

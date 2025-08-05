@@ -1,14 +1,13 @@
 import { parseColor } from "@ark-ui/react/color-picker";
 import { useDeferredValue, useEffect, useState } from "react";
 
+import { ColorPicker, Heading, Switch } from "$/components/ui/compositions";
 import { updateCustomColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCustomColors } from "$/store/selectors";
 import { ColorSchemeKey, type SongId } from "$/types";
-
-import { VStack, styled } from "$:styled-system/jsx";
+import { styled, VStack } from "$:styled-system/jsx";
 import { vstack, wrap } from "$:styled-system/patterns";
-import { ColorPicker, Heading, Switch } from "$/components/ui/compositions";
 
 const BEATMAP_COLOR_KEY_RENAME = {
 	[ColorSchemeKey.SABER_LEFT]: "Left Saber",

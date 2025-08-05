@@ -1,15 +1,14 @@
 import { animated as a, useSpring } from "@react-spring/three";
 import { Canvas } from "@react-three/fiber";
 import { Link } from "@tanstack/react-router";
-import { NoteDirection, createColorNote } from "bsmap";
+import { createColorNote, NoteDirection } from "bsmap";
 import type { EnvironmentAllName } from "bsmap/types";
 import { type DateArg, endOfMonth, endOfWeek, isWithinInterval, startOfMonth, startOfWeek } from "date-fns";
 import { useMemo, useRef, useState } from "react";
 
-import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
-
-import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { ColorNote } from "$/components/scene/compositions";
+import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
+import { HStack, Stack, styled } from "$:styled-system/jsx";
 
 const MOCK_NOTE = createColorNote({ direction: NoteDirection.DOWN });
 

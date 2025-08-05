@@ -5,12 +5,11 @@ import { useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
-
-import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 
 interface Props {
 	dialog?: UseDialogContext;

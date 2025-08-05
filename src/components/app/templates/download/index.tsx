@@ -4,16 +4,15 @@ import { boolean, object, picklist } from "valibot";
 
 import { VERSION_COLLECTION } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
+import { Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { Panel } from "$/components/ui/styled";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { downloadMapFiles, pausePlayback } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectPlaying } from "$/store/selectors";
 import type { SongId } from "$/types";
-
-import { Stack, VStack, styled } from "$:styled-system/jsx";
+import { Stack, styled, VStack } from "$:styled-system/jsx";
 import { vstack } from "$:styled-system/patterns";
-import { Heading, Text, useAppForm } from "$/components/ui/compositions";
-import { Panel } from "$/components/ui/styled";
 
 interface Props {
 	sid: SongId;

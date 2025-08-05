@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import * as Builder from "../styled/switch";
+import * as Builder from "$/components/ui/styled/switch";
 
 export interface SwitchProps extends ComponentProps<typeof Builder.Root> {}
 export function Switch({ children, ...rest }: SwitchProps) {

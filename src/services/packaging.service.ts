@@ -1,5 +1,8 @@
+import { typeByExtension } from "@std/media-types/type-by-extension";
+import { extname } from "@std/path/extname";
 import { createAudioData, createBeatmap, hasMappingExtensionsNote, hasMappingExtensionsObstacleV3, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
-import { type Unzipped, type Zippable, unzip, zip } from "fflate";
+import type { BeatmapFileType, ISaveOptions, v2, v3, wrapper } from "bsmap/types";
+import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 import { saveAs } from "file-saver";
 
 import { APP_TOASTER } from "$/components/app/constants";
@@ -10,8 +13,7 @@ import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
-import { deepAssign, extname, typeByExtension, yieldValue } from "$/utils";
-import type { BeatmapFileType, ISaveOptions, v2, v3, wrapper } from "bsmap/types";
+import { deepAssign, yieldValue } from "$/utils";
 import type { BeatmapFilestore } from "./file.service";
 
 function* getFileFromArchive(archive: Unzipped, ...paths: string[]) {
@@ -131,10 +133,10 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 		zippable["AudioData.dat"] = encoder.encode(JSON.stringify(serialAudioData, null, options?.format ?? 2));
 	}
 
-	const file = await new Promise<Uint8Array>((resolve) => {
+	const file = await new Promise<Uint8Array<ArrayBufferLike>>((resolve) => {
 		zip(zippable, (_, data) => resolve(data));
 	}).then((zippable) => {
-		return new File([zippable], `${songId}.zip`);
+		return new File([zippable.buffer as BlobPart], `${songId}.zip`);
 	});
 
 	saveAs(file, file.name);
@@ -151,12 +153,13 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 
 	// pull the info file from the archive
 	const info = await yieldValue(
-		getFileFromArchive(archive, "Info.dat", "info.json"),
+		getFileFromArchive(archive, "Info.dat", "info.dat", "info.json"),
 		({ data }) => {
 			const contents = decoder.decode(data);
 			return loadInfo(JSON.parse(contents));
 		},
-		() => {
+		(error) => {
+			console.error(error);
 			throw APP_TOASTER.error({
 				description: "The file provided is not a valid map archive.",
 			});
@@ -175,10 +178,10 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 		await yieldValue(getFileFromArchive(archive, song.songFilename), async ({ data, name, type }) => {
 			// we'll process the imported blobs as files when we save them to the filestore,
 			// that way, we can preserve extra data like the filename and mime type
-			return new File([data], name, { type: type ?? "application/octet-stream" });
+			return new File([data as BlobPart], name, { type: type ?? "application/octet-stream" });
 		}),
 		await yieldValue(getFileFromArchive(archive, song.coverArtFilename), async ({ data, name, type }) => {
-			return new File([data], name, { type: type ?? "application/octet-stream" });
+			return new File([data as BlobPart], name, { type: type ?? "application/octet-stream" });
 		}),
 	]);
 

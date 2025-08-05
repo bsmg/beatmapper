@@ -1,5 +1,6 @@
+import { pick } from "@std/collections/pick";
+
 import { type IEventTrack, TrackType } from "$/types";
-import { pick } from "$/utils";
 
 export const ALL_EVENT_TRACKS = {
 	0: { type: TrackType.LIGHT },

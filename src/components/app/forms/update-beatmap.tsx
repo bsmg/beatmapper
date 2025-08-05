@@ -6,17 +6,16 @@ import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { array, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from "$/components/app/constants";
+import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { CreateBeatmapForm } from "$/components/app/forms";
+import { useViewFromLocation } from "$/components/app/hooks";
+import { Interleave } from "$/components/ui/atoms";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
-import { useViewFromLocation } from "../hooks";
-
 import { HStack, Stack, Wrap } from "$:styled-system/jsx";
-import { CreateBeatmapForm } from "$/components/app/forms";
-import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;

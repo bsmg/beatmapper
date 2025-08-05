@@ -1,11 +1,10 @@
 import { ExternalLinkIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Doc } from "$:content";
-import { hstack, stack } from "$:styled-system/patterns";
 import type { Member } from "$/types";
-
+import type { Doc } from "$:content";
 import { HStack, styled } from "$:styled-system/jsx";
+import { hstack, stack } from "$:styled-system/patterns";
 
 type TocEntry = Member<Doc["tableOfContents"]>;
 

@@ -1,5 +1,5 @@
-import { token } from "$:styled-system/tokens";
 import { EventTool } from "$/types";
+import { token } from "$:styled-system/tokens";
 
 function getPathForTool(tool: EventTool) {
 	switch (tool) {
@@ -23,7 +23,7 @@ interface Props {
 
 function EventToolIcon({ tool, color }: Props) {
 	return (
-		<svg width={16} height={16} viewBox="0 0 32 32" fill="none">
+		<svg role="presentation" width={16} height={16} viewBox="0 0 32 32" fill="none">
 			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke={token.var("colors.border.default")} />
 			<path d={getPathForTool(tool)} fill={color} stroke="none" />
 		</svg>

@@ -1,6 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 
-import * as Builder from "../styled/stat";
+import * as Builder from "$/components/ui/styled/stat";
 
 interface Props extends PropsWithChildren {
 	label?: ReactNode;

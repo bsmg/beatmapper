@@ -1,4 +1,4 @@
-import { type SpringConfig, animated, useSpring } from "@react-spring/three";
+import { animated, type SpringConfig, useSpring } from "@react-spring/three";
 import { type ComponentProps, useMemo } from "react";
 
 import { useOnChange } from "$/components/hooks";

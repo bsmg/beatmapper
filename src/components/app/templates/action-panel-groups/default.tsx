@@ -1,13 +1,12 @@
 import type { MouseEventHandler } from "react";
 
-import { useAppSelector } from "$/store/hooks";
-import { selectModuleEnabled } from "$/store/selectors";
-import type { SongId } from "$/types";
-
 import { useAppPrompterContext } from "$/components/app/compositions";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import ClipboardActionPanelActionGroup from "$/components/app/templates/action-panel-groups/clipboard";
 import { Button, Tooltip } from "$/components/ui/compositions";
+import { useAppSelector } from "$/store/hooks";
+import { selectModuleEnabled } from "$/store/selectors";
+import type { SongId } from "$/types";
 import HistoryActionPanelActionGroup from "./history";
 
 interface Props {

@@ -1,15 +1,14 @@
 import { Fragment, useMemo } from "react";
 
+import { BombNote, ColorNote } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
+import { resolvePositionForGridObject } from "$/components/scene/helpers";
 import { HIGHEST_PRECISION } from "$/constants";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCursorPositionInBeats, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
 import { type App, type BeatmapId, ObjectTool, type SongId } from "$/types";
-import { resolvePositionForGridObject } from "../../helpers";
-
-import { BombNote, ColorNote } from "$/components/scene/compositions";
 
 interface Props {
 	sid: SongId;

@@ -1,12 +1,11 @@
 import { DotIcon } from "lucide-react";
 
-import { center, stack } from "$:styled-system/patterns";
-
-import { Container, HStack, styled } from "$:styled-system/jsx";
 import { Logo } from "$/components/app/compositions";
 import { Interleave } from "$/components/ui/atoms";
 import { Text } from "$/components/ui/compositions";
 import { AnchorLink, RouterLink } from "$/components/ui/styled";
+import { Container, HStack, styled } from "$:styled-system/jsx";
+import { center, stack } from "$:styled-system/patterns";
 
 function Footer() {
 	return (

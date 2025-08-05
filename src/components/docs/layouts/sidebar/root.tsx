@@ -1,9 +1,9 @@
 import type { PropsWithChildren } from "react";
 
-import { styled } from "$:styled-system/jsx";
-import { center, stack } from "$:styled-system/patterns";
 import { Logo } from "$/components/app/compositions";
 import { DocsThemeToggle } from "$/components/docs/compositions";
+import { styled } from "$:styled-system/jsx";
+import { center, stack } from "$:styled-system/patterns";
 
 function DocsSidebarRoot({ children }: PropsWithChildren) {
 	return (

@@ -1,10 +1,10 @@
-import type { GroupProps } from "@react-three/fiber";
 import { memo, useMemo } from "react";
 import { BoxGeometry, type ColorRepresentation, DoubleSide } from "three";
 
-import { token } from "$:styled-system/tokens";
 import { isFastObstacle } from "$/helpers/obstacles.helpers";
 import type { App } from "$/types";
+import type { GroupProps } from "$/types/vendor";
+import { token } from "$:styled-system/tokens";
 
 interface Props extends GroupProps {
 	data: App.IObstacle;

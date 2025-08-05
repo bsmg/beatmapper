@@ -7,9 +7,9 @@ import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 import { getAllBeatmaps, getBeatmapById, getBeatmapIds, getBeatmaps, getColorScheme, getCustomColorsModule, getGridSize, getSelectedBeatmap, getSongLastOpenedAt, getSongMetadata, isModuleEnabled, isSongReadonly, resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
 import { processImportedMap } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
+import { createSlice } from "$/store/helpers";
 import { type App, type BeatmapId, type ColorSchemeKey, type IGrid, ObjectPlacementMode, type RequiredKeys, type SongId } from "$/types";
 import { deepAssign } from "$/utils";
-import { createSlice } from "../helpers";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,

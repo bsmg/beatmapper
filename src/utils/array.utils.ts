@@ -1,5 +1,3 @@
-export { distinct } from "@std/collections/distinct";
-
 export function isArrayEmpty<T>(obj: T[]) {
 	return obj.length === 0;
 }

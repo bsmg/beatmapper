@@ -1,9 +1,9 @@
 import { useContext, useMemo } from "react";
 
 import { ColorNote } from "$/components/scene/compositions";
+import { resolvePositionForGridObject } from "$/components/scene/helpers";
 import { createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import type { IGrid, ObjectPlacementMode } from "$/types";
-import { resolvePositionForGridObject } from "../../helpers";
 import { Context } from "./context";
 
 interface Props {

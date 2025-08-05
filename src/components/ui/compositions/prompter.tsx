@@ -1,14 +1,14 @@
 import { useDialog, useDialogContext } from "@ark-ui/react/dialog";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
-import { type FormEvent, type MouseEvent, type PropsWithChildren, type ReactNode, createContext, useCallback, useContext, useState } from "react";
+import { createContext, type FormEvent, type MouseEvent, type PropsWithChildren, type ReactNode, useCallback, useContext, useState } from "react";
 
 import { HStack } from "$:styled-system/jsx";
 import { Button } from "./button";
 import { DialogProvider } from "./dialog";
 import { useAppForm } from "./form";
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-type TFormApi<TValue> = ReturnType<typeof useAppForm<TValue, any, any, any, any, any, any, any, any, any>>;
+// biome-ignore lint/suspicious/noExplicitAny: validators are inferred
+type TFormApi<TValue> = ReturnType<typeof useAppForm<TValue, any, any, any, any, any, any, any, any, any, any, any>>;
 
 export interface IPrompt<TValue, TProps> {
 	title: string;
@@ -26,7 +26,7 @@ export interface IPrompter<TPrompts extends { [key in PropertyKey]: IPrompt<unkn
 	openPrompt: (id: keyof TPrompts) => void;
 }
 export function createPrompterFactory<TProps>() {
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	// biome-ignore lint/suspicious/noExplicitAny: value is inferred
 	return <const TPrompts extends { [key in PropertyKey]: IPrompt<any, TProps> }>(builder: (ctx: { createPrompt: typeof createPrompt }) => TPrompts) => {
 		const prompts = builder({ createPrompt });
 
