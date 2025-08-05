@@ -2,17 +2,16 @@ import type { PropsWithChildren } from "react";
 import { gtValue, nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { createPrompterFactory } from "$/components/ui/compositions";
-import { GRID_PRESET_SLOTS } from "$/constants";
 import { store } from "$/setup";
 import { addBookmark, jumpToBeat, saveGridPreset, selectAllEntitiesInRange, updateAllSelectedObstacles } from "$/store/actions";
 import { useAppSelector } from "$/store/hooks";
-import { selectAllSelectedObstacles } from "$/store/selectors";
-import type { App, SongId, View } from "$/types";
-import { GRID_PRESET_SLOT_COLLECTION } from "../constants";
+import { selectAllSelectedObstacles, selectGridPresets } from "$/store/selectors";
+import type { App, IGridPresets, SongId, View } from "$/types";
 
 interface Props {
 	sid: SongId;
 	view: View;
+	gridPresets: IGridPresets;
 	selectedObstacles: App.IObstacle[];
 }
 
@@ -70,9 +69,9 @@ const { Provider, useContext } = createPrompter(({ createPrompt }) => {
 		}),
 		SAVE_GRID_PRESET: createPrompt({
 			title: "Save Grid Preset",
-			defaultValues: () => ({ slot: GRID_PRESET_SLOTS[0] }),
-			validate: object({ slot: string() }),
-			render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Select autoFocus label="Preset Slot" collection={GRID_PRESET_SLOT_COLLECTION} />}</form.AppField>,
+			defaultValues: () => ({ slot: "" }),
+			validate: object({ slot: pipe(string(), nonEmpty()) }),
+			render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Input label="Preset Name" />}</form.AppField>,
 			onSubmit: ({ value, props: { sid } }) => {
 				return store.dispatch(saveGridPreset({ songId: sid, presetSlot: value.slot }));
 			},
@@ -82,9 +81,10 @@ const { Provider, useContext } = createPrompter(({ createPrompt }) => {
 
 export function AppPrompter({ sid, view, children }: Pick<Props, "sid" | "view"> & PropsWithChildren) {
 	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
+	const gridPresets = useAppSelector(selectGridPresets);
 
 	return (
-		<Provider sid={sid} view={view} selectedObstacles={selectedObstacles}>
+		<Provider sid={sid} view={view} selectedObstacles={selectedObstacles} gridPresets={gridPresets}>
 			{children}
 		</Provider>
 	);

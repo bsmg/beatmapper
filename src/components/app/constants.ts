@@ -7,7 +7,7 @@ import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsm
 import { token } from "$:styled-system/tokens";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import type { App, BeatmapId } from "$/types";
-import { getMetaKeyLabel, range } from "$/utils";
+import { getMetaKeyLabel } from "$/utils";
 
 export const APP_TOASTER = createToaster({
 	placement: "bottom-end",
@@ -49,11 +49,6 @@ export const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
 	items: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
 	itemToValue: (item) => item.value,
 	itemToString: (item) => (item.shortcutKey ? `${item.label} (${getMetaKeyLabel()}+${item.shortcutKey})` : item.label),
-});
-
-export const GRID_PRESET_SLOT_COLLECTION = createListCollection({
-	items: Array.from(range(1, 4)).map((x) => ({ value: x.toString() })),
-	itemToValue: (item) => item.value,
 });
 
 interface ColorSchemeListCollectionOptions {

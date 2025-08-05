@@ -1,7 +1,7 @@
 import { type AsyncThunkPayloadCreator, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
-import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, removeGridPreset, saveGridPreset, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
+import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import { selectGridSize } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -74,14 +74,6 @@ const slice = createSlice({
 		});
 		builder.addCase(finishManagingNoteSelection, (state) => {
 			return { ...state, selectionMode: null };
-		});
-		builder.addCase(saveGridPreset.fulfilled, (state, action) => {
-			const { grid, presetSlot } = action.payload;
-			return { ...state, gridPresets: { ...state.gridPresets, [presetSlot]: grid } };
-		});
-		builder.addCase(removeGridPreset, (state, action) => {
-			const { presetSlot } = action.payload;
-			delete state.gridPresets[presetSlot];
 		});
 		builder.addMatcher(isAnyOf(cycleToNextTool, cycleToPrevTool), (state, action) => {
 			const { view } = action.payload;

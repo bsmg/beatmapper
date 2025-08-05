@@ -37,6 +37,4 @@ export const BEATS_PER_ZOOM_LEVEL = [32, 16, 8, 4, 2] as const;
 export const ZOOM_LEVEL_MIN = 0;
 export const ZOOM_LEVEL_MAX = 4;
 
-export const GRID_PRESET_SLOTS = ["1", "2", "3", "4"] as const;
-
 export const NOTE_TICK_TYPES = [tickWoodblockSfxPath, tickSwitchSfxPath] as const;
