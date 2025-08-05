@@ -25,9 +25,9 @@ export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/
 export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/zip", "application/x-zip-compressed", "application/octet-stream"];
 
 export const CHARACTERISTIC_COLLECTION = createListCollection({
-	items: ["Standard", "NoArrows", "OneSaber", "Legacy", "Lawless"] as const,
-	itemToValue: (item) => item,
-	itemToString: (item) => CharacteristicRename[item],
+	items: (["Standard", "NoArrows", "OneSaber", "Legacy", "Lawless"] as const).map((value) => ({ value })),
+	itemToValue: (item) => item.value,
+	itemToString: (item) => CharacteristicRename[item.value],
 });
 export const DIFFICULTY_COLLECTION = createListCollection({
 	items: (["Easy", "Normal", "Hard", "Expert", "ExpertPlus"] as const).map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
@@ -77,11 +77,11 @@ interface BeatmapCharacteristicListCollection {
 export function createBeatmapCharacteristicListCollection({ beatmaps, currentBeatmap }: BeatmapCharacteristicListCollection) {
 	return createListCollection({
 		items: CHARACTERISTIC_COLLECTION.items,
-		itemToString: (item) => CharacteristicRename[item],
+		itemToString: (item) => CharacteristicRename[item.value],
 		isItemDisabled: (item) => {
-			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item);
+			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item.value);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;
-			return currentBeatmap?.characteristic === item;
+			return currentBeatmap?.characteristic === item.value;
 		},
 	});
 }
