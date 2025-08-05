@@ -8,6 +8,7 @@ on:
 
 env:
   NODE_VERSION: 20.x
+  YARN_ENABLE_HARDENED_MODE: 0
 
 jobs:
   check:
