@@ -126,18 +126,18 @@ export class BeatmapFilestore extends Filestore {
 			createInfo({
 				...(savedContents ?? newContents),
 				...omit(newContents, ["version", "filename"]),
-				customData: ensureObject(deepAssign(savedContents.customData, { ...newContents.customData })),
+				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
 			}),
 		);
 	}
 	async updateAudioDataContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
-		const savedContents = await this.loadAudioDataContents(songId);
+		const savedContents = await this.loadAudioDataContents(songId).catch(() => createAudioData({ ...newContents }));
 		return await this.saveAudioDataContents(
 			songId,
 			createAudioData({
 				...(savedContents ?? newContents),
 				...omit(newContents, ["version", "filename"]),
-				customData: ensureObject(deepAssign(savedContents.customData, { ...newContents.customData })),
+				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
 			}),
 		);
 	}
@@ -154,13 +154,13 @@ export class BeatmapFilestore extends Filestore {
 				difficulty: createDifficulty({
 					...pick(savedContents.difficulty, ["colorNotes", "bombNotes", "obstacles"]),
 					...newContents.difficulty,
-					customData: ensureObject(deepAssign(savedContents.difficulty.customData, { ...newContents.difficulty?.customData })),
+					customData: ensureObject(deepAssign(savedContents?.difficulty.customData, { ...newContents.difficulty?.customData })),
 				}),
 				// for lightshow, we'll merge the contents and only replace collections that are directly supported.
 				lightshow: createLightshow({
 					...savedContents.lightshow,
 					...newContents.lightshow,
-					customData: ensureObject(deepAssign(savedContents.lightshow.customData, { ...newContents.lightshow?.customData })),
+					customData: ensureObject(deepAssign(savedContents?.lightshow.customData, { ...newContents.lightshow?.customData })),
 				}),
 				customData: ensureObject({
 					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks)?.sort(sortObjectFn),
