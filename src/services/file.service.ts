@@ -163,7 +163,7 @@ export class BeatmapFilestore extends Filestore {
 					customData: ensureObject(deepAssign(savedContents?.lightshow.customData, { ...newContents.lightshow?.customData })),
 				}),
 				customData: ensureObject({
-					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks)?.sort(sortObjectFn),
+					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
 				}),
 			}),
 		);

@@ -84,11 +84,6 @@ function SongDetails({ sid }: Props) {
 			dispatch(updateSong({ songId: sid, changes: newSongObject }));
 
 			formApi.reset(value);
-
-			return APP_TOASTER.create({
-				type: "success",
-				description: "Successfully updated!",
-			});
 		},
 	});
 
