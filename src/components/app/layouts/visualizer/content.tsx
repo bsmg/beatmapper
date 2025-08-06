@@ -1,9 +1,9 @@
-import { throttle } from "@tanstack/react-pacer";
+import { throttle } from "@tanstack/pacer/throttler";
 import { type MouseEvent, type MouseEventHandler, type ReactNode, type RefObject, useCallback, useMemo, useRef, useState } from "react";
 
-import { styled } from "$:styled-system/jsx";
 import { useAppSelector } from "$/store/hooks";
 import { selectPacerWait } from "$/store/selectors";
+import { styled } from "$:styled-system/jsx";
 
 function getNewCursorPosition(ev: MouseEvent, ref: RefObject<HTMLElement | null>, duration: number) {
 	if (!ref.current) return 0;

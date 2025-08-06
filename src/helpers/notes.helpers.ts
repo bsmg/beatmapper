@@ -1,9 +1,19 @@
-import { type App, type IGrid, ObjectPlacementMode } from "$/types";
 import { createBombNote, createColorNote } from "bsmap";
+
+import { type App, type IGrid, ObjectPlacementMode } from "$/types";
 import { convertGridColumn, convertGridRow } from "./grid.helpers";
 
 export function resolveNoteId<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(x: T) {
 	return `${x.time}/${x.posX}/${x.posY}`;
+}
+
+export function isColorNote(data: unknown): data is App.IColorNote {
+	if (typeof data !== "object" || !data) return false;
+	return "direction" in data && "angleOffset" in data;
+}
+export function isBombNote(data: unknown): data is App.IBombNote {
+	if (typeof data !== "object" || !data) return false;
+	return "direction" in data;
 }
 
 export function createColorNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid, direction: number) {
@@ -48,15 +58,4 @@ export function createBombNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDow
 			return note;
 		}
 	}
-}
-
-export function calculateNoteDensity(numOfNotes: number, segmentLengthInBeats: number, bpm: number) {
-	if (numOfNotes === 0) {
-		return 0;
-	}
-
-	const numOfNotesPerBeat = numOfNotes / segmentLengthInBeats;
-	const notesPerSecond = numOfNotesPerBeat * (bpm / 60);
-
-	return notesPerSecond;
 }

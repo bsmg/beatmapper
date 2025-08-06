@@ -1,9 +1,8 @@
+import { Field, FieldInput } from "$/components/ui/compositions";
+import { Form } from "$/components/ui/styled";
 import { updateUsername } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectUsername } from "$/store/selectors";
-
-import { Field, FieldInput } from "$/components/ui/compositions";
-import { Form } from "$/components/ui/styled";
 
 function AppUserSettings() {
 	const dispatch = useAppDispatch();

@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import * as Builder from "../styled/toggle";
+import * as Builder from "$/components/ui/styled/toggle";
 
 interface Props extends ComponentProps<typeof Builder.Root> {}
 

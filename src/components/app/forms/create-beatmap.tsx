@@ -7,7 +7,6 @@ import { object } from "valibot";
 
 import { APP_TOASTER, createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
 import { useAppForm } from "$/components/ui/compositions";
-import { DIFFICULTIES } from "$/constants";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
@@ -37,7 +36,7 @@ function CreateBeatmapForm({ dialog, sid, bid, onSubmit: afterCreate, children }
 		},
 		onSubmit: async ({ value }) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === value.characteristic);
-			if (withMatchingCharacteristic.length >= DIFFICULTIES.length) {
+			if (withMatchingCharacteristic.length >= DIFFICULTY_LIST_COLLECTION.size) {
 				return APP_TOASTER.create({
 					id: "all-difficulties-exist",
 					type: "error",

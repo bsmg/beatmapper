@@ -2,9 +2,9 @@ import { memo, useMemo } from "react";
 import type { Vector3Tuple } from "three";
 
 import { blockCenterUrl, blockDirectionalUrl } from "$/assets";
+import { useOBJ } from "$/components/scene/atoms";
+import { resolveRotationForNote } from "$/components/scene/helpers";
 import type { App } from "$/types";
-import { useOBJ } from "../../atoms";
-import { resolveRotationForNote } from "../../helpers";
 import BaseNote, { type BaseNoteProps } from "./base";
 import { resolvePathForNoteDirection } from "./helpers";
 

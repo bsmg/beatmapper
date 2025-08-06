@@ -1,7 +1,8 @@
-import { mineUrl } from "$/assets";
-import type { App } from "$/types";
 import { memo } from "react";
-import { useOBJ } from "../../atoms";
+
+import { mineUrl } from "$/assets";
+import { useOBJ } from "$/components/scene/atoms";
+import type { App } from "$/types";
 import BaseNote, { type BaseNoteProps } from "./base";
 
 useOBJ.preload(mineUrl);

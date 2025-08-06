@@ -1,7 +1,7 @@
 import { ark } from "@ark-ui/react/factory";
 import { type ComponentProps, useMemo } from "react";
 
-import { Heading as Styled } from "../styled/heading";
+import { Heading as Styled } from "$/components/ui/styled/heading";
 
 const ARR = [ark.h1, ark.h2, ark.h3, ark.h4, ark.h5, ark.h6] as const;
 

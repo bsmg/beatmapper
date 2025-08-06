@@ -1,10 +1,11 @@
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
+import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectGridSize } from "$/store/selectors";
+import { selectGridSize, selectLoading } from "$/store/selectors";
 import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -13,7 +14,10 @@ interface Props {
 }
 function NotesEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
+	const isLoading = useAppSelector(selectLoading);
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
+
+	const { active: activePrompt } = useAppPrompterContext();
 
 	const keysDepressed = useRef({
 		w: false,
@@ -24,6 +28,9 @@ function NotesEditorShortcuts({ sid }: Props) {
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
+			if (isLoading) return;
+			if (activePrompt) return;
+
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
 				case "Digit1": {
@@ -87,6 +94,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }));
 				}
 				case "KeyS": {
+					if (metaKeyPressed) return;
 					if (ev.shiftKey) return;
 					keysDepressed.current.s = true;
 					if (keysDepressed.current.a) {
@@ -144,32 +152,41 @@ function NotesEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[dispatch, sid, grid],
+		[isLoading, activePrompt, dispatch, sid, grid],
 	);
 
-	const handleKeyUp = useCallback((ev: KeyboardEvent) => {
-		switch (ev.code) {
-			case "KeyW": {
-				keysDepressed.current.w = false;
-				break;
-			}
-			case "KeyA": {
-				keysDepressed.current.a = false;
-				break;
-			}
-			case "KeyS": {
-				keysDepressed.current.s = false;
-				break;
-			}
-			case "KeyD": {
-				keysDepressed.current.d = false;
-				break;
-			}
+	const handleKeyUp = useCallback(
+		(ev: KeyboardEvent) => {
+			if (isLoading) return;
+			if (activePrompt) return;
 
-			default:
-				return;
-		}
-	}, []);
+			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
+
+			switch (ev.code) {
+				case "KeyW": {
+					keysDepressed.current.w = false;
+					break;
+				}
+				case "KeyA": {
+					keysDepressed.current.a = false;
+					break;
+				}
+				case "KeyS": {
+					if (metaKeyPressed) return;
+					keysDepressed.current.s = false;
+					break;
+				}
+				case "KeyD": {
+					keysDepressed.current.d = false;
+					break;
+				}
+
+				default:
+					return;
+			}
+		},
+		[isLoading, activePrompt],
+	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);

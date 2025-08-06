@@ -1,4 +1,4 @@
-import { debounce } from "@tanstack/react-pacer";
+import { debounce } from "@tanstack/pacer/debouncer";
 import { type DependencyList, type RefObject, useEffect, useState } from "react";
 
 import { useAppSelector } from "$/store/hooks";
@@ -40,7 +40,7 @@ export function useBoundingBox<T extends HTMLElement>(ref: RefObject<T | null>, 
 			window.removeEventListener("scroll", recalculate);
 			window.removeEventListener("resize", recalculate);
 		};
-	}, [ref]);
+	}, [ref, wait]);
 
 	return [ref as RefObject<T>, boundingBox] as const;
 }

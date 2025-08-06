@@ -1,9 +1,8 @@
 import type { MouseEventHandler } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import type { BeatmapId, SongId } from "$/types";
-
 import { DefaultActionPanelGroup, NoteDirectionActionPanelGroup, NoteToolActionPanelGroup } from "$/components/app/templates/action-panel-groups";
+import type { BeatmapId, SongId } from "$/types";
 
 interface Props {
 	sid: SongId;

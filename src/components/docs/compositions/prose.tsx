@@ -1,12 +1,12 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
-import { styled } from "$:styled-system/jsx";
 import { Shortcut } from "$/components/app/compositions";
 import * as ContentComponents from "$/components/docs/content";
 import { MDXContent } from "$/components/ui/atoms";
 import { Text } from "$/components/ui/compositions";
 import { KBD } from "$/components/ui/styled";
+import { styled } from "$:styled-system/jsx";
 import DocsMedia from "./media";
 
 const Subtle = styled("span", {
@@ -140,12 +140,18 @@ const DocumentStyles = styled("div", {
 		},
 		"& blockquote": {
 			padding: "20px",
-			backgroundColor: "bg.muted",
+			colorPalette: "slate",
+			backgroundColor: { _light: "colorPalette.100", _dark: "colorPalette.900" },
 			borderLeftWidth: "4px",
-			borderColor: "border.muted",
+			borderColor: { _light: "colorPalette.300", _dark: "colorPalette.700" },
 			borderRadius: "md",
 			fontSize: "0.9em",
 			marginBlock: { base: "30px", _lastOfType: 0 },
+			"&.alert-note": { colorPalette: "blue" },
+			"&.alert-tip": { colorPalette: "green" },
+			"&.alert-important": { colorPalette: "pink" },
+			"&.alert-warning": { colorPalette: "yellow" },
+			"&.alert-caution": { colorPalette: "red" },
 			"& ul": {
 				marginBlock: 0,
 			},

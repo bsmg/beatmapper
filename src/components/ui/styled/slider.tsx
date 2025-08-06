@@ -1,9 +1,10 @@
 "use client";
+
 import { Slider, sliderAnatomy } from "@ark-ui/react/slider";
 
 import { sva } from "$:styled-system/css";
+import { createStyleContext } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: sliderAnatomy.keys(),

@@ -3,12 +3,6 @@ import { type JsonWaveformData, default as WaveformData } from "waveform-data";
 import { roundToNearest } from "$/utils";
 import { convertFileToArrayBuffer } from "./file.helpers";
 
-export function createHtmlAudioElement(url: string) {
-	const elem = document.createElement("audio");
-	elem.src = url;
-	return elem;
-}
-
 export function convertMillisecondsToBeats(ms: number, bpm: number) {
 	const bps = bpm / 60;
 
@@ -59,13 +53,13 @@ export function snapToNearestBeat(cursorPosition: number, bpm: number, offset: n
 	return convertBeatsToMilliseconds(Math.round(cursorPositionInBeats), bpm) + offset;
 }
 
-export function getFormattedTimestamp(cursorPosition: number) {
+export function formatCursorPosition(cursorPosition: number) {
 	const seconds = String(Math.floor((cursorPosition / 1000) % 60)).padStart(2, "0");
 	const minutes = String(Math.floor((cursorPosition / (1000 * 60)) % 60)).padStart(2, "0");
 
 	return `${minutes}:${seconds}`;
 }
 
-export function getFormattedBeatNum(cursorPositionInBeats: number) {
+export function formatCursorPositionInBeats(cursorPositionInBeats: number) {
 	return cursorPositionInBeats.toFixed(3);
 }

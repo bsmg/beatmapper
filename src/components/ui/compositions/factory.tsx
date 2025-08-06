@@ -2,9 +2,9 @@ import type { Assign } from "@ark-ui/react";
 import { ark } from "@ark-ui/react/factory";
 import { type ComponentProps, useMemo } from "react";
 
+import type { VirtualColorPalette } from "$/styles/types";
 import { css, cx } from "$:styled-system/css";
 import type { SystemStyleObject } from "$:styled-system/types";
-import type { VirtualColorPalette } from "../types";
 
 interface TextProps extends Assign<Omit<ComponentProps<typeof ark.span>, "color">, Pick<SystemStyleObject, "fontFamily" | "fontSize" | "fontWeight" | "lineHeight">> {
 	textStyle?: SystemStyleObject["textStyle"];

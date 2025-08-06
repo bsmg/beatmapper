@@ -1,4 +1,4 @@
-import { type ReducerCreators, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createSlice, isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
 
 import { BEATS_PER_ZOOM_LEVEL, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import { cycleToNextTool, cycleToPrevTool, hydrateSession } from "$/store/actions";

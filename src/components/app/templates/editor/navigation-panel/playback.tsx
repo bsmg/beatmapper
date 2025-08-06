@@ -1,24 +1,15 @@
-import { createListCollection } from "@ark-ui/react";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
-import { SNAPPING_INCREMENTS } from "$/constants";
+import { SNAPPING_INCREMENT_LIST_COLLECTION } from "$/components/app/constants";
+import { useViewFromLocation } from "$/components/app/hooks";
+import { Button, Select } from "$/components/ui/compositions";
 import { jumpToEnd, jumpToStart, pausePlayback, seekBackwards, seekForwards, startPlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
 import type { SongId } from "$/types";
-
 import { styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
-import { useViewFromLocation } from "$/components/app/hooks";
-import { Button, Select } from "$/components/ui/compositions";
 import { EditorBeatStat, EditorTimeStat } from "./stats";
-
-const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
-	items: SNAPPING_INCREMENTS.map((item) => {
-		const label = item.shortcutKey ? `${item.label} (${item.shortcutLabel})` : item.label;
-		return { value: item.value.toString(), label };
-	}),
-});
 
 interface Props {
 	sid: SongId;
@@ -35,7 +26,7 @@ function EditorNavigationControls({ sid }: Props) {
 	return (
 		<Wrapper>
 			<Column>
-				<Select collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap({ value: Number(ev.value[0]) }))}>
+				<Select collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap({ value: Number.parseFloat(ev.value[0]) }))}>
 					Snap To
 				</Select>
 			</Column>

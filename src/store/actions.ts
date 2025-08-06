@@ -1,5 +1,8 @@
+// biome-ignore-all assist/source/organizeImports: circular dependencies
+
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
 import type { BeatmapFileType, ISaveOptions } from "bsmap/types";
+import type { JsonWaveformData } from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
@@ -8,7 +11,6 @@ import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { type App, type BeatmapId, type IEventTracks, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
 import { roundToNearest } from "$/utils";
-import type { JsonWaveformData } from "waveform-data";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
 	selectAllBasicEvents,
@@ -64,6 +66,10 @@ export const loadBeatmapEntities = createAction("loadBeatmapContents", (args: Pa
 	return { payload: { ...args } };
 });
 
+export const saveBeatmapContents = createAction("saveBeatmapContents", (args: { songId: SongId }) => {
+	return { payload: { ...args } };
+});
+
 export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId; version?: ImplicitVersion; options?: Omit<ISaveOptions<BeatmapFileType, 1 | 2 | 3 | 4>, "preprocess" | "postprocess"> }) => {
 	return { payload: { ...args } };
 });
@@ -88,6 +94,8 @@ export const {
 	updateCursorPosition,
 	updateTrackScale: updateBeatDepth,
 	updatePlaybackRate,
+	incrementPlaybackRate,
+	decrementPlaybackRate,
 	updateSongVolume,
 	updateTickVolume,
 	updateTickType,

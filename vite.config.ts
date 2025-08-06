@@ -1,28 +1,18 @@
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { type UserConfig, defineConfig } from "vite";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import { default as velite } from "@velite/plugin-vite";
 import { default as react } from "@vitejs/plugin-react";
+import { defineConfig, type UserConfig } from "vite";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 
-import packageJson from "./package.json";
-
-async function startVelite(isDev: boolean, isBuild: boolean) {
-	if (!process.env.VELITE_STARTED && (isDev || isBuild)) {
-		process.env.VELITE_STARTED = "1";
-		const { build } = await import("velite");
-		await build({ watch: isDev, clean: !isDev });
-	}
-}
+import packageJson from "./package.json" with { type: "json" };
 
 // https://vitejs.dev/config/
 export default defineConfig(async (ctx) => {
 	const isDev = ctx.mode === "development";
-	const isBuild = ctx.command === "build";
-
-	await startVelite(isDev, isBuild);
 
 	const PWA_OPTIONS: Partial<VitePWAOptions> = {
 		registerType: "prompt",
@@ -76,18 +66,19 @@ export default defineConfig(async (ctx) => {
 		},
 	};
 
-	const TSR_OPTIONS: Parameters<typeof TanStackRouterVite>[0] = {
+	const TSR_OPTIONS: Parameters<typeof tanstackRouter>[0] = {
 		virtualRouteConfig: "src/routes.ts",
 	};
 
 	let version = packageJson.version;
+
 	if (isDev) {
 		const hash = execSync("git rev-parse --short=7 HEAD");
 		version += `-dev.${hash.toString().trim()}`;
 	}
 
 	return {
-		plugins: [react(), VitePWA(PWA_OPTIONS), TanStackRouterVite(TSR_OPTIONS)],
+		plugins: [react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
 			global: "window",
@@ -97,7 +88,25 @@ export default defineConfig(async (ctx) => {
 			alias: {
 				$: fileURLToPath(new URL("./src", import.meta.url)),
 				"$:styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)),
-				"velite:content": fileURLToPath(new URL("./.velite", import.meta.url)),
+				"$:content": fileURLToPath(new URL("./.velite", import.meta.url)),
+			},
+		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks: (id) => {
+						if (id.includes(".velite")) return "content";
+						if (id.includes("node_modules")) {
+							if (id.includes("three.core.js")) return "vendor-three-core";
+							if (id.includes("three") || id.includes("@react-three")) return "vendor-three";
+							if (id.includes("@ark-ui") || id.includes("@floating-ui") || id.includes("@zag-js") || id.includes("lucide")) return "vendor-ui";
+							if (id.includes("@std")) return "vendor-std";
+							if (id.includes("@tanstack")) return "vendor-tanstack";
+							if (id.includes("bsmap")) return "vendor-bsmap";
+							return "vendor";
+						}
+					},
+				},
 			},
 		},
 		css: {

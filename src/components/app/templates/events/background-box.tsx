@@ -5,7 +5,6 @@ import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventEditorStartAndEndBeat } from "$/store/selectors";
 import type { BeatmapId, IBackgroundBox, SongId } from "$/types";
 import { clamp, normalize } from "$/utils";
-
 import { styled } from "$:styled-system/jsx";
 
 interface Props {

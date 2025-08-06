@@ -2,12 +2,11 @@ import { CirclePlusIcon, DownloadIcon, PackageOpenIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { heroVideo } from "$/assets";
-import { loadDemoMap } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
-
-import { VStack, Wrap, styled } from "$:styled-system/jsx";
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
 import { Button, Dialog, Heading } from "$/components/ui/compositions";
+import { loadDemoMap } from "$/store/actions";
+import { useAppDispatch } from "$/store/hooks";
+import { styled, VStack, Wrap } from "$:styled-system/jsx";
 import OptionColumn from "./option";
 
 function FirstTimeHome() {

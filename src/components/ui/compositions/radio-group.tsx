@@ -1,11 +1,11 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { Presence } from "@ark-ui/react/presence";
 import type { ComponentProps } from "react";
 
+import { ListCollectionFor } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/radio-group";
 import { css } from "$:styled-system/css";
 import { Circle } from "$:styled-system/jsx";
-import { ListCollectionFor } from "../atoms";
-import * as Builder from "../styled/radio-group";
 
 export interface RadioItem extends CollectionItem {}
 

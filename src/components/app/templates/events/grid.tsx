@@ -5,10 +5,9 @@ import { useGlobalEventListener, useMousePositionOverElement, useParentDimension
 import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
 import { bulkRemoveEvent, deselectEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectLoading, selectSnap } from "$/store/selectors";
+import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectEventTracksForEnvironment, selectLoading, selectSnap } from "$/store/selectors";
 import { type Accept, type App, type BeatmapId, EventEditMode, type ISelectionBoxInBeats, type SongId, TrackType } from "$/types";
 import { clamp, isMetaKeyPressed, normalize, range, roundToNearest } from "$/utils";
-
 import { styled } from "$:styled-system/jsx";
 import { center, hstack, stack } from "$:styled-system/patterns";
 import EventGridCursor from "./cursor";
@@ -52,7 +51,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 	const snapTo = useAppSelector(selectSnap);
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 
-	const beatNums = useMemo(() => range(Math.floor(startBeat), Math.ceil(endBeat)), [startBeat, endBeat]);
+	const beatNums = useMemo(() => Array.from(range(Math.floor(startBeat), Math.ceil(endBeat - 1))), [startBeat, endBeat]);
 
 	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
 	const [mouseDownAt, setMouseDownAt] = useState<{ x: number; y: number } | null>(null);

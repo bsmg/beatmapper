@@ -1,5 +1,5 @@
-import { type EventType, createBasicEvent } from "bsmap";
-import { type ComponentProps, type PointerEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
+import { createBasicEvent, type EventType } from "bsmap";
+import { type ComponentProps, memo, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
 import { resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
@@ -10,21 +10,20 @@ import {
 	selectDurationInBeats,
 	selectEditorOffsetInBeats,
 	selectEventEditorStartAndEndBeat,
-	selectEventTracksForEnvironment,
 	selectEventsEditorColor,
 	selectEventsEditorCursor,
 	selectEventsEditorEditMode,
 	selectEventsEditorMirrorLock,
 	selectEventsEditorTool,
+	selectEventTracksForEnvironment,
 	selectInitialStateForTrack,
 } from "$/store/selectors";
 import { type Accept, App, type BeatmapId, EventEditMode, type SongId, TrackType } from "$/types";
 import { clamp, normalize } from "$/utils";
-import { createBackgroundBoxes } from "./track.helpers";
-
 import { styled } from "$:styled-system/jsx";
 import EventGridBackgroundBox from "./background-box";
 import EventGridEventItem from "./event";
+import { createBackgroundBoxes } from "./track.helpers";
 
 interface Props extends ComponentProps<typeof Wrapper> {
 	sid: SongId;

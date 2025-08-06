@@ -1,7 +1,7 @@
 import type { PropsWithChildren, ReactNode } from "react";
 
-import { VStack } from "$:styled-system/jsx";
 import { Heading } from "$/components/ui/compositions";
+import { VStack } from "$:styled-system/jsx";
 
 interface Props extends PropsWithChildren {
 	label: ReactNode;

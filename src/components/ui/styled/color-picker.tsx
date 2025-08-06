@@ -1,9 +1,10 @@
 "use client";
+
 import { ColorPicker, colorPickerAnatomy } from "@ark-ui/react/color-picker";
 
 import { sva } from "$:styled-system/css";
+import { createStyleContext } from "$:styled-system/jsx";
 import { hstack, stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: colorPickerAnatomy.keys(),

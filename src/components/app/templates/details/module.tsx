@@ -1,10 +1,10 @@
 import { ark } from "@ark-ui/react/factory";
 import type { SwitchCheckedChangeDetails } from "@ark-ui/react/switch";
+import { HelpCircleIcon } from "lucide-react";
 import { type PropsWithChildren, type ReactNode, useCallback, useState } from "react";
 
-import { HStack, styled } from "$:styled-system/jsx";
 import { Collapsible, Heading, Switch, Tooltip } from "$/components/ui/compositions";
-import { HelpCircleIcon } from "lucide-react";
+import { HStack, styled } from "$:styled-system/jsx";
 
 interface Props extends PropsWithChildren {
 	label: string;

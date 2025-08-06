@@ -4,19 +4,18 @@ import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
 import { useCallback, useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
+import { LocalFileUpload } from "$/components/app/compositions";
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { UpdateBeatmapForm } from "$/components/app/forms";
 import { useMount } from "$/components/hooks";
+import { AlertDialogProvider, Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { BeatmapFilestore } from "$/services/file.service";
 import { filestore } from "$/setup";
 import { stopPlayback, updateModuleEnabled, updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectEditorOffset, selectModuleEnabled, selectSongById } from "$/store/selectors";
 import type { SongId } from "$/types";
-
-import { Stack, Wrap, styled } from "$:styled-system/jsx";
-import { LocalFileUpload } from "$/components/app/compositions";
-import { UpdateBeatmapForm } from "$/components/app/forms";
-import { DialogProvider, Field, Heading, Text, useAppForm } from "$/components/ui/compositions";
-import { BeatmapFilestore } from "$/services/file.service";
+import { Stack, styled, Wrap } from "$:styled-system/jsx";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
@@ -85,11 +84,6 @@ function SongDetails({ sid }: Props) {
 			dispatch(updateSong({ songId: sid, changes: newSongObject }));
 
 			formApi.reset(value);
-
-			return APP_TOASTER.create({
-				type: "success",
-				description: "Successfully updated!",
-			});
 		},
 	});
 
@@ -142,7 +136,7 @@ function SongDetails({ sid }: Props) {
 			<Stack gap={6}>
 				<Heading rank={1}>Song Details</Heading>
 				<Form.AppForm>
-					{status === "blocked" && <DialogProvider value={isDirtyAlert} render={() => "You have unsaved changes! Are you sure you want to leave this page?"} onActionClick={(confirmed) => (confirmed ? proceed() : reset())} />}
+					{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text>You have unsaved changes! Are you sure you want to leave this page?</Text>} onSubmit={proceed} onCancel={reset} />}
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">

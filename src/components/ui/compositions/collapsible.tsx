@@ -1,7 +1,7 @@
 import type { UseCollapsibleContext } from "@ark-ui/react/collapsible";
 import type { ComponentProps, ReactNode } from "react";
 
-import * as Builder from "../styled/collapsible";
+import * as Builder from "$/components/ui/styled/collapsible";
 
 interface Props extends ComponentProps<typeof Builder.Root> {
 	render: (ctx: UseCollapsibleContext) => ReactNode;

@@ -1,9 +1,8 @@
+import { Field, Slider, Switch } from "$/components/ui/compositions";
+import { Form } from "$/components/ui/styled";
 import { updateBloomEnabled, updateRenderScale } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBloomEnabled, selectRenderScale } from "$/store/selectors";
-
-import { Field, Slider, Switch } from "$/components/ui/compositions";
-import { Form } from "$/components/ui/styled";
 
 function AppGraphicsSettings() {
 	const dispatch = useAppDispatch();

@@ -6,17 +6,16 @@ import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { array, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, ENVIRONMENT_COLLECTION, createColorSchemeCollection } from "$/components/app/constants";
+import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { CreateBeatmapForm } from "$/components/app/forms";
+import { useViewFromLocation } from "$/components/app/hooks";
+import { Interleave } from "$/components/ui/atoms";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
-import { useViewFromLocation } from "../hooks";
-
 import { HStack, Stack, Wrap } from "$:styled-system/jsx";
-import { CreateBeatmapForm } from "$/components/app/forms";
-import { Interleave } from "$/components/ui/atoms";
-import { Button, Collapsible, Dialog, DialogProvider, Heading, useAppForm } from "$/components/ui/compositions";
 
 interface Props {
 	sid: SongId;
@@ -71,11 +70,6 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			);
 
 			formApi.reset(value);
-
-			return APP_TOASTER.create({
-				type: "success",
-				description: "Successfully updated!",
-			});
 		},
 	});
 
@@ -89,32 +83,27 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		[dispatch, navigate, sid, bid, view],
 	);
 
-	const handleDeleteBeatmap = useCallback(
-		(confirmed: boolean) => {
-			if (!confirmed) return;
+	const handleDeleteBeatmap = useCallback(() => {
+		// Delete our working state
+		const mutableDifficultiesCopy = { ...beatmaps };
+		delete mutableDifficultiesCopy[bid];
 
-			// Delete our working state
-			const mutableDifficultiesCopy = { ...beatmaps };
-			delete mutableDifficultiesCopy[bid];
+		// Don't let the user delete the last difficulty!
+		const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
+		if (remainingDifficultyIds.length === 0) {
+			return APP_TOASTER.create({
+				id: "last-difficulty",
+				type: "error",
+				description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
+			});
+		}
 
-			// Don't let the user delete the last difficulty!
-			const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
-			if (remainingDifficultyIds.length === 0) {
-				return APP_TOASTER.create({
-					id: "last-difficulty",
-					type: "error",
-					description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
-				});
-			}
+		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
+		const nextDifficultyId = remainingDifficultyIds[0];
 
-			// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
-			const nextDifficultyId = remainingDifficultyIds[0];
-
-			dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
-			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
-		},
-		[dispatch, navigate, sid, bid, view, beatmaps],
-	);
+		dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
+		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
+	}, [dispatch, navigate, sid, bid, view, beatmaps]);
 
 	const { proceed, reset, status } = useBlocker({
 		shouldBlockFn: () => Form.state.isDirty,
@@ -128,7 +117,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <DialogProvider value={isDirtyAlert} render={() => `You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`} onActionClick={(confirmed) => (confirmed ? proceed() : reset())} />}
+			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => `You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
@@ -182,11 +171,11 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 							Copy
 						</Button>
 					</Dialog>
-					<DialogProvider value={deleteAlert} render={() => "Are you sure you want to do this? This action cannot be undone."} onActionClick={handleDeleteBeatmap}>
+					<AlertDialogProvider value={deleteAlert} render={() => <Text>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
 						<Button variant="subtle" size="sm" colorPalette="red">
 							Delete
 						</Button>
-					</DialogProvider>
+					</AlertDialogProvider>
 				</Wrap>
 			</Form.Root>
 		</Form.AppForm>

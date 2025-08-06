@@ -1,4 +1,4 @@
-import { type EntityId, createEntityAdapter, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { createColorNote, mirrorNoteColor, sortObjectFn } from "bsmap";
 
 import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";

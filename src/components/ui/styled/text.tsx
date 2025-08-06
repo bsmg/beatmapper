@@ -1,8 +1,10 @@
+"use client";
+
 import { ark } from "@ark-ui/react/factory";
+import { createLink } from "@tanstack/react-router";
 
 import { styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
-import { createLink } from "@tanstack/react-router";
 
 export const Paragraph = styled(ark.p, {
 	base: {

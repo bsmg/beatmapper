@@ -2,10 +2,10 @@ import { ark } from "@ark-ui/react/factory";
 import { Presence } from "@ark-ui/react/presence";
 import { type ComponentProps, type MouseEventHandler, useCallback, useMemo } from "react";
 
+import { Button as Styled } from "$/components/ui/styled/button";
+import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
 import { Float } from "$:styled-system/jsx";
-import { Button as Styled } from "../styled/button";
-import type { VirtualColorPalette } from "../types";
 import { Spinner } from "./spinner";
 
 export interface ButtonProps extends ComponentProps<typeof Styled> {

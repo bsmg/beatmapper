@@ -1,9 +1,9 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, PropsWithChildren } from "react";
 
-import { VStack, styled } from "$:styled-system/jsx";
-import { vstack } from "$:styled-system/patterns";
 import { Heading, Text } from "$/components/ui/compositions";
+import { styled, VStack } from "$:styled-system/jsx";
+import { vstack } from "$:styled-system/patterns";
 
 interface Props extends PropsWithChildren {
 	title: string;

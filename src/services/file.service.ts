@@ -1,10 +1,13 @@
+import { omit } from "@std/collections/omit";
+import { pick } from "@std/collections/pick";
+import { basename } from "@std/path/basename";
+import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
-import type { BeatmapId, MaybeDefined, SongId } from "$/types";
-import { omit, pick } from "$/utils";
-import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow } from "bsmap";
+import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
+import { deepAssign, ensureArray, ensureObject } from "$/utils";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
 
@@ -57,8 +60,7 @@ export class BeatmapFilestore extends Filestore {
 	private async saveBackupCoverFile() {
 		// If the user doesn't have a cover image yet, we'll supply a default.
 		// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
-		const pathPieces = defaultCoverArtPath.split("/");
-		const coverArtFilename = pathPieces[pathPieces.length - 1];
+		const coverArtFilename = basename(defaultCoverArtPath);
 		// I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
 		if (await this.storage.hasItem(coverArtFilename)) {
 			const file = this.loadFile<File>(coverArtFilename);
@@ -123,17 +125,19 @@ export class BeatmapFilestore extends Filestore {
 			songId,
 			createInfo({
 				...(savedContents ?? newContents),
-				...omit(newContents, "version", "filename"),
+				...omit(newContents, ["version", "filename"]),
+				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
 			}),
 		);
 	}
 	async updateAudioDataContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
-		const savedContents = await this.loadAudioDataContents(songId);
+		const savedContents = await this.loadAudioDataContents(songId).catch(() => createAudioData({ ...newContents }));
 		return await this.saveAudioDataContents(
 			songId,
 			createAudioData({
 				...(savedContents ?? newContents),
-				...omit(newContents, "version", "filename"),
+				...omit(newContents, ["version", "filename"]),
+				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
 			}),
 		);
 	}
@@ -146,15 +150,20 @@ export class BeatmapFilestore extends Filestore {
 				...(savedContents ?? newContents),
 				// we might have an updated lightshow filename if we update the lightshow id.
 				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
+				// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
 				difficulty: createDifficulty({
-					// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
-					...pick(savedContents.difficulty, "colorNotes", "bombNotes", "obstacles"),
+					...pick(savedContents.difficulty, ["colorNotes", "bombNotes", "obstacles"]),
 					...newContents.difficulty,
+					customData: ensureObject(deepAssign(savedContents?.difficulty.customData, { ...newContents.difficulty?.customData })),
 				}),
+				// for lightshow, we'll merge the contents and only replace collections that are directly supported.
 				lightshow: createLightshow({
-					// for lightshow, we'll merge the contents and only replace collections that are directly supported.
 					...savedContents.lightshow,
 					...newContents.lightshow,
+					customData: ensureObject(deepAssign(savedContents?.lightshow.customData, { ...newContents.lightshow?.customData })),
+				}),
+				customData: ensureObject({
+					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
 				}),
 			}),
 		);

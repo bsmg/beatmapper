@@ -2,14 +2,13 @@ import { Presence } from "@ark-ui/react/presence";
 import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 
 import { useViewFromLocation } from "$/components/app/hooks";
+import { StatusBar } from "$/components/app/layouts";
 import { updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles, selectedTotalBombNotes } from "$/store/selectors";
+import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectedTotalBombNotes, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { pluralize } from "$/utils";
-
 import { styled } from "$:styled-system/jsx";
-import { StatusBar } from "$/components/app/layouts";
 
 interface Props {
 	sid: SongId;
@@ -36,13 +35,13 @@ function EditorStatusBar({ sid }: Props) {
 			<Presence asChild present={view === View.BEATMAP}>
 				<StatusBar.Section>
 					<StatusBar.Group>
-						<StatusBar.Indicator label={pluralize(numOfBlocks, "note")} icon={BoxIcon}>
+						<StatusBar.Indicator label={`${numOfBlocks} ${pluralize(numOfBlocks, "note")}`} icon={BoxIcon}>
 							{numOfBlocks}
 						</StatusBar.Indicator>
-						<StatusBar.Indicator label={pluralize(numOfMines, "bomb")} icon={GlobeIcon}>
+						<StatusBar.Indicator label={`${numOfMines} ${pluralize(numOfMines, "bomb")}`} icon={GlobeIcon}>
 							{numOfMines}
 						</StatusBar.Indicator>
-						<StatusBar.Indicator label={pluralize(numOfObstacles, "obstacle")} icon={CuboidIcon}>
+						<StatusBar.Indicator label={`${numOfObstacles} ${pluralize(numOfObstacles, "obstacle")}`} icon={CuboidIcon}>
 							{numOfObstacles}
 						</StatusBar.Indicator>
 					</StatusBar.Group>

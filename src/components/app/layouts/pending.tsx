@@ -1,5 +1,5 @@
-import { Float, styled } from "$:styled-system/jsx";
 import { Spinner } from "$/components/ui/compositions";
+import { Float, styled } from "$:styled-system/jsx";
 
 function PendingBoundary() {
 	return (

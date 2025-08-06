@@ -4,14 +4,14 @@ import type { wrapper } from "bsmap/types";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 import { convertMillisecondsToBeats, deriveAudioDataFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
-import { type BeatmapSerializationOptions, type InfoSerializationOptions, deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { type BeatmapSerializationOptions, deserializeBeatmapContents, type InfoSerializationOptions, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
-import { selectActiveBeatmapId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSongById } from "$/store/selectors";
+import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
+import { selectActiveBeatmapId, selectActiveSongId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
-import { deepMerge } from "$/utils";
+import { deepAssign } from "$/utils";
 
 export function selectInfoSerializationOptionsFromState(state: RootState, _songId: SongId): InfoSerializationOptions {
 	const duration = selectDuration(state);
@@ -53,6 +53,18 @@ export default function createFileMiddleware({ filestore }: Options) {
 	}
 
 	instance.startListening({
+		actionCreator: rehydrate,
+		effect: (_, api) => {
+			const state = api.getState();
+
+			const songId = selectActiveSongId(state);
+			const beatmapId = selectActiveBeatmapId(state);
+			if (!songId || !beatmapId) return;
+
+			api.dispatch(startLoadingMap({ songId, beatmapId }));
+		},
+	});
+	instance.startListening({
 		actionCreator: addSong,
 		effect: async (action, api) => {
 			const { songId, songData, beatmapData, songFile, coverArtFile } = action.payload;
@@ -67,7 +79,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			// store the info data in the filestore
 			const { contents: newInfoContents } = await filestore.saveInfoContents(
 				songId,
-				deepMerge(infoContents, {
+				deepAssign(infoContents, {
 					version: 4, // we'll fallback to v4 by default, since this is the latest supported beatmap version
 					audio: { duration }, // pull the duration value in, since we don't provide this from the state directly
 				}),
@@ -77,7 +89,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			await Promise.all([await filestore.saveSongFile(songId, songFile), await filestore.saveCoverArtFile(songId, coverArtFile)]);
 
 			// store the audio data in the filestore
-			await filestore.saveAudioDataContents(songId, deepMerge(audioDataContents, { version: newInfoContents.version }));
+			await filestore.saveAudioDataContents(songId, deepAssign(audioDataContents, { version: newInfoContents.version }));
 
 			// derive the beatmap id from the provided beatmap data within the payload
 			const beatmapId = resolveBeatmapId({ characteristic: beatmapData.characteristic, difficulty: beatmapData.difficulty });

@@ -18,7 +18,7 @@ When creating a new issue, please use the corresponding templates to better orga
 
 ## For Developers
 
-This project is bootstrapped with a modified [Vite](https://vitejs.dev/) + [React](https://react.dev/) + [Typescript](https://www.typescriptlang.org/) template.
+This project is bootstrapped with a modified [Vite](https://vitejs.dev/) + [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) template.
 
 ### Prerequisites
 
@@ -62,7 +62,11 @@ Once submitted, a maintainer will review your pull request and, once approved, i
 These are some of the more useful guides and documentation for the core technologies used in the project:
 
 - [Ark UI](https://ark-ui.com/docs/overview/introduction)
+- [Biome](https://biomejs.dev/guides/getting-started/)
 - [Drei](https://drei.docs.pmnd.rs/getting-started/introduction)
+- [Lefthook](https://lefthook.dev)
+- [Lucide](https://lucide.dev/guide/packages/lucide-react)
+- [MDX](https://mdxjs.com)
 - [Panda CSS](https://panda-css.com/docs/overview/getting-started)
 - [React](https://react.dev/learn)
 - [React Spring](https://www.react-spring.dev)
@@ -72,13 +76,16 @@ These are some of the more useful guides and documentation for the core technolo
 - [Redux Toolkit](https://redux-toolkit.js.org/introduction/getting-started)
 - [TanStack Form](https://tanstack.com/form/latest/docs/framework/react/overview)
 - [TanStack Pacer](https://tanstack.com/pacer/latest/docs/framework/react/overview)
-- [TanStack Router](https://tanstack.com/router/latest/docs/framework/react/overview)
 - [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
+- [TanStack Router](https://tanstack.com/router/latest/docs/framework/react/overview)
 - [TanStack Table](https://tanstack.com/table/latest/docs/framework/react/overview)
 - [three.js](https://threejs.org)
+- [TypeScript](https://www.typescriptlang.org/)
+- [unstorage](https://unstorage.unjs.io)
 - [Valibot](https://valibot.dev/guides/introduction)
 - [Velite](https://velite.js.org/guide/quick-start)
 - [Vite](https://vite.dev/guide)
+- [Vite PWA](https://vite-pwa-org.netlify.app)
 - [Vitest](https://vitest.dev/guide)
 
 - [BeatSaber-JSMap](https://github.com/KivalEvan/BeatSaber-JSMap)

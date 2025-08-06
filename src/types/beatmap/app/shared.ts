@@ -1,6 +1,6 @@
 import type { ICustomDataBase } from "bsmap/types";
 
-import type { Accept, Member } from "../../utils";
+import type { Accept, Member } from "$/types/utils";
 
 export interface IEditorObject {
 	selected?: boolean;

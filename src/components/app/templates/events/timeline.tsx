@@ -4,7 +4,6 @@ import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectEventsEditorCursor } from "$/store/selectors";
 import type { SongId } from "$/types";
-
 import { styled } from "$:styled-system/jsx";
 import { flex } from "$:styled-system/patterns";
 

@@ -1,15 +1,9 @@
-export function convertHexToRGBA(hex: string, alpha = 1) {
-	const r = Number.parseInt(hex.slice(1, 3), 16);
-	const g = Number.parseInt(hex.slice(3, 5), 16);
-	const b = Number.parseInt(hex.slice(5, 7), 16);
+import { parseColor } from "@zag-js/color-utils";
 
-	return { r, g, b, alpha };
-}
-
-export function isColorDark(hexColor: string): boolean {
-	const { r, g, b } = convertHexToRGBA(hexColor);
+export function isColorDark(value: string): boolean {
+	const color = parseColor(value).toFormat("rgba");
 	// Calculate luminance using the relative luminance formula
-	const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+	const luminance = (0.299 * color.getChannelValue("red") + 0.587 * color.getChannelValue("green") + 0.114 * color.getChannelValue("blue")) / 255;
 	// Consider the color dark if the luminance is below a threshold (e.g., 0.5)
 	return luminance < 0.5;
 }

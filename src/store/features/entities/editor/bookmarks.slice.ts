@@ -1,4 +1,4 @@
-import { type AsyncThunkPayloadCreator, type EntityId, createEntityAdapter, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, createEntityAdapter, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
 import { getNewBookmarkColor, resolveBookmarkId } from "$/helpers/bookmarks.helpers";

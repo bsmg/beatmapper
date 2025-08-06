@@ -1,10 +1,9 @@
 import type { PropsWithChildren } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import type { BeatmapId, SongId } from "$/types";
-
 import { EditorNavigationPanel, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
 import { DefaultEditorShortcuts } from "$/components/app/templates/shortcuts";
+import type { BeatmapId, SongId } from "$/types";
 
 interface Props extends PropsWithChildren {
 	sid: SongId;

@@ -1,3 +1,4 @@
+import type { ThreeEvent } from "@react-three/fiber";
 import { createContext } from "react";
 
 export interface IPlacementGridContext {
@@ -5,9 +6,10 @@ export interface IPlacementGridContext {
 	cellOverAt: { rowIndex: number; colIndex: number } | null;
 	hoveredCell: { rowIndex: number; colIndex: number } | null;
 	direction: number | null;
-	onCellPointerDown?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "cellDownAt">) => void;
-	onCellPointerOver?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "cellDownAt" | "cellOverAt">) => void;
-	onCellPointerOut?: (event: PointerEvent, payload: Pick<IPlacementGridContext, "cellOverAt">) => void;
+	onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementGridContext, "cellDownAt">) => void;
+	onCellPointerOver?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementGridContext, "cellDownAt" | "cellOverAt">) => void;
+	onCellPointerOut?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementGridContext, "cellOverAt">) => void;
+	onCellWheel?: (event: ThreeEvent<WheelEvent>, payload: Pick<IPlacementGridContext, "cellOverAt">) => void;
 }
 
 export const Context = createContext<IPlacementGridContext>({ cellDownAt: null, cellOverAt: null, hoveredCell: null, direction: null });

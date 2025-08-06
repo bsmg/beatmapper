@@ -1,10 +1,10 @@
 import { Presence } from "@ark-ui/react/presence";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 
-import { Container, Stack, Wrap, styled } from "$:styled-system/jsx";
 import { Button, Heading, Text } from "$/components/ui/compositions";
 import { Clipboard } from "$/components/ui/compositions/clipboard";
 import { AnchorLink } from "$/components/ui/styled";
+import { Container, Stack, styled, Wrap } from "$:styled-system/jsx";
 
 interface Props extends ErrorComponentProps {
 	interactive?: boolean;

@@ -3,9 +3,9 @@ import { Presence } from "@ark-ui/react/presence";
 import { ArrowRightIcon, type LucideProps } from "lucide-react";
 import { type ComponentProps, type ComponentType, useMemo } from "react";
 
+import * as Builder from "$/components/ui/styled/list";
+import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
-import * as Builder from "../styled/list";
-import type { VirtualColorPalette } from "../types";
 
 const TYPES = { unordered: ark.ul, ordered: ark.ol } as const;
 

@@ -1,8 +1,8 @@
-import { docs } from "velite:content";
-import { createListCollection } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 
 import { Sidebar } from "$/components/docs/layouts";
 import { Accordion } from "$/components/ui/compositions";
+import { docs } from "$:content";
 
 function getDocsForCategory(category: string | null) {
 	return docs.filter((x) => x.category === category).sort((a, b) => a.order - b.order);

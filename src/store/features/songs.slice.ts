@@ -7,9 +7,9 @@ import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 import { getAllBeatmaps, getBeatmapById, getBeatmapIds, getBeatmaps, getColorScheme, getCustomColorsModule, getGridSize, getSelectedBeatmap, getSongLastOpenedAt, getSongMetadata, isModuleEnabled, isSongReadonly, resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
 import { processImportedMap } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
+import { createSlice } from "$/store/helpers";
 import { type App, type BeatmapId, type ColorSchemeKey, type IGrid, ObjectPlacementMode, type RequiredKeys, type SongId } from "$/types";
-import { deepMerge } from "$/utils";
-import { createSlice } from "../helpers";
+import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
@@ -20,7 +20,8 @@ const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelector
 const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof processImportedMap>[1] }> = async (args, api) => {
 	try {
 		const { readonly } = args.options;
-		const songData = await processImportedMap(args.file, args.options);
+		const archive = await args.file.arrayBuffer();
+		const songData = await processImportedMap(new Uint8Array(archive), args.options);
 		const songId = resolveSongId({ name: songData.name });
 		return api.fulfillWithValue({ songId, songData: { ...songData, demo: readonly } });
 	} catch (e) {
@@ -154,7 +155,7 @@ const slice = createSlice({
 				const mappers = username !== "" ? [username] : [];
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						difficultiesById: {
 							[beatmapId]: {
 								lightshowId: data.lightshowId ?? beatmapId,
@@ -176,7 +177,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						difficultiesById: {
 							[targetBeatmapId]: { ...getBeatmapById(song, sourceBeatmapId), ...changes },
 						},
@@ -188,7 +189,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						difficultiesById: {
 							[beatmapId]: { ...changes },
 						},
@@ -210,7 +211,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						modSettings: {
 							[key]: { isEnabled: !song.modSettings[key]?.isEnabled },
 						},
@@ -222,11 +223,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
-						modSettings: {
-							customColors: { [element]: color },
-						},
-					}),
+					changes: deepAssign(song, { modSettings: { customColors: { [element]: color } } }),
 				});
 			}),
 			updateGridSize: api.reducer<{ songId: SongId; changes: Partial<IGrid> }>((state, action) => {
@@ -234,7 +231,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepMerge(song, {
+					changes: deepAssign(song, {
 						modSettings: {
 							mappingExtensions: { ...changes },
 						},
@@ -264,7 +261,7 @@ const slice = createSlice({
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
-				changes: deepMerge(song, {
+				changes: deepAssign(song, {
 					modSettings: {
 						mappingExtensions: { ...grid },
 					},

@@ -1,10 +1,8 @@
 import { defineAnimationStyles, defineKeyframes, defineLayerStyles, defineSemanticTokens, defineTextStyles, defineTokens } from "@pandacss/dev";
-
 import base from "@pandacss/dev/presets";
-
 import { DifficultyName } from "bsmap/types";
 
-const { radii, shadows, durations, animations, aspectRatios, blurs } = base.theme.tokens;
+const { radii, shadows, durations, animations, aspectRatios } = base.theme.tokens;
 const { spin, pulse } = base.theme.keyframes;
 
 export const tokens = defineTokens({
@@ -98,9 +96,6 @@ export const tokens = defineTokens({
 	},
 	aspectRatios: {
 		square: aspectRatios.square,
-	},
-	blurs: {
-		base: blurs.base,
 	},
 	opacity: {
 		disabled: { value: 0.35 },

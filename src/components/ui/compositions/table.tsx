@@ -1,6 +1,6 @@
-import { type RowData, type Table, flexRender } from "@tanstack/react-table";
+import { flexRender, type RowData, type Table } from "@tanstack/react-table";
 
-import * as Builder from "../styled/table";
+import * as Builder from "$/components/ui/styled/table";
 
 export interface DataTableProps<T extends RowData> {
 	table: Table<T>;

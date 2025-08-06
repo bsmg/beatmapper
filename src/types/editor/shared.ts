@@ -1,4 +1,4 @@
-import type { Member } from "../utils";
+import type { Member } from "$/types/utils";
 
 export const View = {
 	DETAILS: "details",

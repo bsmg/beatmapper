@@ -2,14 +2,13 @@ import { NoteDirection } from "bsmap";
 import { ArrowDownIcon, ArrowDownLeftIcon, ArrowDownRightIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, ArrowUpLeftIcon, ArrowUpRightIcon, CircleIcon } from "lucide-react";
 import { useMemo } from "react";
 
+import { ActionPanelGroup } from "$/components/app/layouts";
+import { Button } from "$/components/ui/compositions";
 import { updateNotesEditorDirection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectNotesEditorDirection, selectNotesEditorTool } from "$/store/selectors";
 import { ObjectTool } from "$/types";
-
 import { Grid } from "$:styled-system/jsx";
-import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button } from "$/components/ui/compositions";
 
 function NoteDirectionActionPanelGroup() {
 	const dispatch = useAppDispatch();

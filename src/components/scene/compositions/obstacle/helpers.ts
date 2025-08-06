@@ -1,6 +1,6 @@
 import { BLOCK_CELL_SIZE, FUDGE_FACTOR } from "$/components/scene/constants";
+import { type PositionResolverOptions, resolvePositionForGridObject } from "$/components/scene/helpers";
 import type { App } from "$/types";
-import { type PositionResolverOptions, resolvePositionForGridObject } from "../../helpers";
 
 interface Options extends PositionResolverOptions {
 	beatDepth: number;

@@ -1,19 +1,19 @@
-import { prompts } from "velite:content";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
-import { type ComponentProps, Fragment } from "react";
+import type { ComponentProps } from "react";
 
+import { AppPrompter, Shortcut } from "$/components/app/compositions";
 import { EDITOR_TOASTER } from "$/components/app/constants";
-import { store } from "$/setup";
-import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
-import { selectAnnouncements } from "$/store/selectors";
-
-import { css } from "$:styled-system/css";
-import { styled } from "$:styled-system/jsx";
-import { Shortcut } from "$/components/app/compositions";
+import { useViewFromLocation } from "$/components/app/hooks";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
 import { MDXContent } from "$/components/ui/atoms";
 import { List, Text } from "$/components/ui/compositions";
+import { store } from "$/setup";
+import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
+import { selectAnnouncements } from "$/store/selectors";
+import { prompts } from "$:content";
+import { css } from "$:styled-system/css";
+import { styled } from "$:styled-system/jsx";
 
 const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 	a: ({ ...rest }) => (
@@ -63,14 +63,16 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 
 function RouteComponent() {
 	const { sid, bid } = Route.useParams();
+	const view = useViewFromLocation();
+
 	return (
-		<Fragment>
+		<AppPrompter sid={sid} view={view}>
 			<EditorSidebar sid={sid} bid={bid} />
 			<Wrapper>
 				<Outlet />
 			</Wrapper>
 			<EditorPrompts />
-		</Fragment>
+		</AppPrompter>
 	);
 }
 

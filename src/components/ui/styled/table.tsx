@@ -1,8 +1,9 @@
 "use client";
+
 import { ark } from "@ark-ui/react/factory";
 
 import { sva } from "$:styled-system/css";
-import { createStyleContext } from "../utils/create-style-context";
+import { createStyleContext } from "$:styled-system/jsx";
 
 const recipe = sva({
 	slots: ["root", "body", "cell", "footer", "head", "header", "row", "caption"],

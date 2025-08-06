@@ -1,15 +1,14 @@
 import { ArrowDownToLineIcon, ArrowUpToLineIcon, DotIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
 import { Fragment, type MouseEventHandler, useMemo } from "react";
 
-import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectGridSize } from "$/store/selectors";
-import { ObjectType, type SongId, View } from "$/types";
-
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { ClipboardActionPanelActionGroup, HistoryActionPanelActionGroup, ObstaclesActionPanelGroup } from "$/components/app/templates/action-panel-groups";
 import { Interleave } from "$/components/ui/atoms";
 import { Button, StrikethroughOnHover, Text, Tooltip } from "$/components/ui/compositions";
+import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectGridSize } from "$/store/selectors";
+import { ObjectType, type SongId, View } from "$/types";
 
 interface CountProps {
 	num: number;
@@ -57,7 +56,7 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 	return (
 		<Fragment>
 			<ActionPanelGroup.Root label="Selection">
-				<ActionPanelGroup.ActionGroup>
+				<ActionPanelGroup.ActionGroup gap="sm">
 					<Interleave separator={() => <DotIcon size={16} />}>{numbers}</Interleave>
 				</ActionPanelGroup.ActionGroup>
 			</ActionPanelGroup.Root>

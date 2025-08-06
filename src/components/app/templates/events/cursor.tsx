@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useCallback } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPositionInBeats, selectEventEditorStartAndEndBeat } from "$/store/selectors";
 import type { SongId } from "$/types";
 import { normalize } from "$/utils";
-
 import { styled } from "$:styled-system/jsx";
 
 interface Props {
@@ -14,16 +13,19 @@ interface Props {
 function EventGridCursor({ sid, gridWidth }: Props) {
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+
+	const createStyles = useCallback(
+		(cursor: number) => {
+			const cursorOffsetInWindow = normalize(cursor, startBeat, endBeat, 0, gridWidth);
+			return {
+				transform: `translateX(${cursorOffsetInWindow}px)`,
+			};
+		},
+		[startBeat, endBeat, gridWidth],
+	);
+
 	if (cursorPositionInBeats === null) return;
-
-	const styles = useMemo(() => {
-		const cursorOffsetInWindow = normalize(cursorPositionInBeats, startBeat, endBeat, 0, gridWidth);
-		return {
-			transform: `translateX(${cursorOffsetInWindow}px)`,
-		};
-	}, [cursorPositionInBeats, startBeat, endBeat, gridWidth]);
-
-	return <Element style={styles} />;
+	return <Element style={createStyles(cursorPositionInBeats)} />;
 }
 
 const Element = styled("div", {

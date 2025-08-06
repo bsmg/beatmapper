@@ -1,23 +1,25 @@
-import { type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type ReducerCreators, asyncThunkCreator, buildCreateSlice, createDraftSafeSelector } from "@reduxjs/toolkit";
+import { asyncThunkCreator, buildCreateSlice, createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type ReducerCreators } from "@reduxjs/toolkit";
+import { pick } from "@std/collections/pick";
 import type { StateWithHistory } from "redux-undo";
 
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { App } from "$/types";
-import { pick } from "$/utils";
 
 export const createSlice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } });
 
+/** @deprecated */
 export type Snapshot = ReturnType<typeof selectSnapshot>;
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export function selectSnapshot(state: any) {
+/** @deprecated */
+// biome-ignore lint/suspicious/noExplicitAny: only used during migrations
+export function selectSnapshot<T extends { [k: string]: any }>(state: T) {
 	return {
 		user: state.user,
 		editor: state.editor,
 		songs: {
 			byId: state.songs.entities,
 		},
-		navigation: pick(state.navigation, "snapTo", "beatDepth", "volume", "playNoteTick"),
+		navigation: pick<T, keyof T>(state.navigation, ["snapTo", "beatDepth", "volume", "playNoteTick"]),
 	};
 }
 

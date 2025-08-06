@@ -1,13 +1,11 @@
 import type { LucideProps } from "lucide-react";
 import { type CSSProperties, useMemo } from "react";
 
-import { DEFAULT_COLOR_SCHEME } from "$/constants";
-
 interface Props extends LucideProps {
 	color?: string;
 }
 
-function ObstacleIcon({ color = DEFAULT_COLOR_SCHEME.obstacleColor, size }: Props) {
+function ObstacleIcon({ color, size }: Props) {
 	const style = useMemo(() => ({ "--color": color }) as CSSProperties, [color]);
 
 	const palette = useMemo(
@@ -20,7 +18,7 @@ function ObstacleIcon({ color = DEFAULT_COLOR_SCHEME.obstacleColor, size }: Prop
 	);
 
 	return (
-		<svg width={`calc(${size} * 1.25)`} height={`calc(${size} * 1.5)`} fill="none" viewBox="0 0 43 31" style={style}>
+		<svg role="presentation" width={`calc(${size} * 1.25)`} height={`calc(${size} * 1.5)`} fill="none" viewBox="0 0 43 31" style={style}>
 			<mask id="prefix__a" fill="#fff">
 				<rect x={1} y={1} width={36} height={24} rx={1} />
 			</mask>

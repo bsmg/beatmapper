@@ -1,8 +1,8 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentProps, ComponentType } from "react";
 
-import { HStack } from "$:styled-system/jsx";
 import { Switch, Tooltip } from "$/components/ui/compositions";
+import { HStack } from "$:styled-system/jsx";
 import StatusBarIcon from "./icon";
 
 interface Props extends ComponentProps<typeof Switch> {

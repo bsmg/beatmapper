@@ -1,8 +1,10 @@
 import { useCallback } from "react";
 
+import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectLoading } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -11,18 +13,27 @@ interface Props {
 }
 function EventsEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
+	const isLoading = useAppSelector(selectLoading);
+
+	const { active: activePrompt } = useAppPrompterContext();
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
+			if (isLoading) return;
+			if (activePrompt) return;
+
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
 				case "NumpadSubtract":
 				case "Minus": {
+					if (metaKeyPressed) return;
+					ev.preventDefault();
 					return dispatch(decrementEventsEditorZoom());
 				}
 				case "NumpadAdd":
-				// Shift+Equal is "Plus"
 				case "Equal": {
+					if (metaKeyPressed) return;
+					ev.preventDefault();
 					return dispatch(incrementEventsEditorZoom());
 				}
 				case "KeyA": {
@@ -71,7 +82,7 @@ function EventsEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[dispatch, sid],
+		[isLoading, activePrompt, dispatch, sid],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

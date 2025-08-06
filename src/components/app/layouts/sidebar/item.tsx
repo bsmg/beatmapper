@@ -1,9 +1,9 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
+import { Text, Tooltip } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import { center, linkOverlay } from "$:styled-system/patterns";
-import { Text, Tooltip } from "$/components/ui/compositions";
 
 const TOOLTIP_POSITIONING = { placement: "right" } as const;
 

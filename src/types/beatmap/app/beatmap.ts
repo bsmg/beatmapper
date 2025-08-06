@@ -1,4 +1,5 @@
 import type { wrapper } from "bsmap/types";
+
 import type { IWrapEditorObject } from "./shared";
 
 export type IBaseNote = IWrapEditorObject<wrapper.IWrapBaseNote>;

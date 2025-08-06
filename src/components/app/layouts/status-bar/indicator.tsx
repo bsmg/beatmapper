@@ -1,9 +1,9 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, PropsWithChildren } from "react";
 
+import { Text, Tooltip } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
-import { Text, Tooltip } from "$/components/ui/compositions";
 
 interface Props extends PropsWithChildren {
 	label: string;

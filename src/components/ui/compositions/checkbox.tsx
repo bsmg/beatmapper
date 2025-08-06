@@ -1,7 +1,7 @@
 import { type LucideProps, MinusIcon, XIcon } from "lucide-react";
 import { type ComponentProps, type ComponentType, forwardRef } from "react";
 
-import * as Builder from "../styled/checkbox";
+import * as Builder from "$/components/ui/styled/checkbox";
 
 export interface CheckboxProps extends ComponentProps<typeof Builder.Root> {
 	icon?: ComponentType<LucideProps>;

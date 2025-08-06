@@ -1,10 +1,10 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react";
 import type { UseAccordionItemContext } from "@ark-ui/react/accordion";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { ChevronDownIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
-import { ListCollectionFor } from "../atoms";
-import * as Builder from "../styled/accordion";
+import { ListCollectionFor } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/accordion";
 
 export interface AccordionItem extends CollectionItem {
 	value: string;

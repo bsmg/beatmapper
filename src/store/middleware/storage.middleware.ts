@@ -1,9 +1,9 @@
-import { type Middleware, createAction, isAction } from "@reduxjs/toolkit";
+import { createAction, isAction, type Middleware } from "@reduxjs/toolkit";
+import { distinct } from "@std/collections/distinct";
 import type { Storage, StorageValue } from "unstorage";
 
 import { rehydrate } from "$/store/actions";
 import type { MaybeDefined } from "$/types";
-import { uniq } from "$/utils";
 
 // the common architecture other packages use for persisting redux state is to clone the entire state object into storage and then hydrate the redux store all at once.
 // this is a really bad means of persistence for many reasons:
@@ -223,7 +223,7 @@ export function createEntityStorageMiddleware<State, T extends StorageValue = St
 			// if the two states aren't equal, time to figure out what changed
 			if (nextState !== state) {
 				// we need to reference old keys in order to remove storage entries for removed entities
-				const allKeys = uniq([...observer.keys(nextState), ...observer.keys(state)]);
+				const allKeys = distinct([...observer.keys(nextState), ...observer.keys(state)]);
 				return Promise.resolve(
 					Object.values(allKeys).reduce(
 						(acc: { key: string | undefined; value: T | undefined }, key) => {

@@ -1,14 +1,19 @@
-import { type Collection, defineCollection, defineConfig, s } from "velite";
-
 import { join } from "node:path";
 import { cwd } from "node:process";
+
 import { type RehypeExpressiveCodeOptions, default as rehypeExpressiveCode } from "rehype-expressive-code";
+import { type IOptions, rehypeGithubAlerts } from "rehype-github-alerts";
 import { default as rehypeSlug } from "rehype-slug";
 import { default as remarkGfm } from "remark-gfm";
+import { defineCollection, defineConfig, s } from "velite";
 
 const mdx = s.mdx({
 	remarkPlugins: [[remarkGfm]],
-	rehypePlugins: [[rehypeSlug], [rehypeExpressiveCode, { themes: ["github-light-default", "github-dark-default"], styleOverrides: { frames: { shadowColor: "transparent" } }, themeCssSelector: (theme) => `.${theme.type}` } as RehypeExpressiveCodeOptions]],
+	rehypePlugins: [
+		[rehypeSlug],
+		[rehypeGithubAlerts, { build: (alert, children) => ({ type: "element", tagName: "blockquote", properties: { className: [`alert-${alert.keyword.toLowerCase()}`] }, children: [...children] }) } as Partial<IOptions>],
+		[rehypeExpressiveCode, { themes: ["github-light-default", "github-dark-default"], styleOverrides: { frames: { shadowColor: "transparent" } }, themeCssSelector: (theme) => `.${theme.type}` } as RehypeExpressiveCodeOptions],
+	],
 });
 
 function resolveId(path: string, collection: string) {
@@ -40,7 +45,7 @@ export default defineConfig({
 		clean: true,
 	},
 	collections: {
-		docs: docs as Collection,
-		prompts: prompts as Collection,
+		docs: docs,
+		prompts: prompts,
 	},
 });

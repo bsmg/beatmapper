@@ -1,8 +1,8 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import type { ComponentProps } from "react";
 
-import { ListCollectionFor } from "../atoms";
-import * as Builder from "../styled/menu";
+import { ListCollectionFor } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/menu";
 
 export interface MenuItem extends CollectionItem {}
 

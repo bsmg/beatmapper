@@ -1,8 +1,8 @@
-import type { Doc } from "velite:content";
 import { Link } from "@tanstack/react-router";
 
-import { styled } from "$:styled-system/jsx";
 import { Text } from "$/components/ui/compositions";
+import type { Doc } from "$:content";
+import { styled } from "$:styled-system/jsx";
 
 interface Props {
 	entry: Doc;

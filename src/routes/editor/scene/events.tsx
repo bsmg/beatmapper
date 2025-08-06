@@ -1,16 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useMemo } from "react";
 
-import { token } from "$:styled-system/tokens";
-import { useAppSelector } from "$/store/hooks";
-import { selectEventsEditorPreview, selectEventsEditorTrackOpacity, selectSurfaceDepth } from "$/store/selectors";
-
-import { styled } from "$:styled-system/jsx";
-import { stack } from "$:styled-system/patterns";
 import { EventGridControls, EventGridEditor } from "$/components/app/templates/events";
 import { EventsEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import DefaultEnvironment from "$/components/scene/templates/environment";
+import { useAppSelector } from "$/store/hooks";
+import { selectEventsEditorPreview, selectEventsEditorTrackOpacity, selectSurfaceDepth } from "$/store/selectors";
+import { styled } from "$:styled-system/jsx";
+import { stack } from "$:styled-system/patterns";
+import { token } from "$:styled-system/tokens";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 	component: RouteComponent,

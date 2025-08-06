@@ -1,7 +1,7 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import type { CharacteristicName, DifficultyName, EnvironmentAllName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 
-import type { IColorScheme, IEntityMap, IGrid } from "../../editor";
+import type { IColorScheme, IEntityMap, IGrid } from "$/types/editor";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;

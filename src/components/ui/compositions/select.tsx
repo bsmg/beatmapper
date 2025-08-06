@@ -1,10 +1,12 @@
-import type { Assign, CollectionItem, ListCollection, SelectRootProps } from "@ark-ui/react";
+import type { Assign } from "@ark-ui/react";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { Portal } from "@ark-ui/react/portal";
+import type { SelectRootProps } from "@ark-ui/react/select";
 import { ChevronDownIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";
 
-import { ListCollectionFor } from "../atoms";
-import * as Builder from "../styled/select";
+import { ListCollectionFor } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/select";
 
 export interface SelectItem extends CollectionItem {}
 

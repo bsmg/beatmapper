@@ -1,5 +1,4 @@
 import { type Interpolation, useSprings, useTrail } from "@react-spring/three";
-import type { GroupProps } from "@react-three/fiber";
 import type { ReactNode } from "react";
 
 import { useRingRotation, useRingZoom } from "$/components/scene/hooks";
@@ -7,6 +6,7 @@ import { resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAnimateEnvironment } from "$/store/selectors";
 import type { App } from "$/types";
+import type { GroupProps } from "$/types/vendor";
 
 interface Props extends Omit<GroupProps, "children"> {
 	count: number;
@@ -27,22 +27,20 @@ function Rings({ count, lastRotationEvent, lastZoomEvent, minDistance, maxDistan
 		count,
 		(index) => {
 			return {
-				ratio: ratio + index,
+				ratio: ratio,
 				immediate: !animateRingMotion,
+				delay: index * 50,
 			};
 		},
 		[count, ratio],
 	);
-	const [zoom] = useSprings(
-		count,
-		() => {
-			return {
-				distance: distance,
-				immediate: !animateRingMotion,
-			};
-		},
-		[count, distance],
-	);
+
+	const [zoom] = useSprings(count, () => {
+		return {
+			distance: distance,
+			immediate: !animateRingMotion,
+		};
+	}, [count, distance]);
 
 	return (
 		<group {...rest}>

@@ -1,10 +1,10 @@
 import { useSwitch } from "@ark-ui/react/switch";
 import { MoonIcon, SunIcon } from "lucide-react";
+import { useEffect } from "react";
 
+import { Switch } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
-import { Switch } from "$/components/ui/compositions";
-import { useEffect } from "react";
 
 function ThemeToggle() {
 	const ctx = useSwitch({ defaultChecked: localStorage.getItem("dark") === "true" });

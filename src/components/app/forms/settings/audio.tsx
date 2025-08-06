@@ -1,12 +1,11 @@
-import { createListCollection } from "@ark-ui/react";
-
-import { updateProcessingDelay, updateTickType } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAudioProcessingDelay, selectTickType } from "$/store/selectors";
+import { createListCollection } from "@ark-ui/react/collection";
 
 import { ListCollectionFor } from "$/components/ui/atoms";
 import { Field, FieldInput, FieldSelect } from "$/components/ui/compositions";
 import { Form } from "$/components/ui/styled";
+import { updateProcessingDelay, updateTickType } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectAudioProcessingDelay, selectTickType } from "$/store/selectors";
 
 const TICK_MAP = ["woodblock", "switch"];
 

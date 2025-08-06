@@ -1,9 +1,10 @@
 "use client";
+
 import { Accordion, accordionAnatomy } from "@ark-ui/react/accordion";
 
 import { sva } from "$:styled-system/css";
+import { createStyleContext } from "$:styled-system/jsx";
 import { hstack, vstack } from "$:styled-system/patterns";
-import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: accordionAnatomy.keys(),
@@ -47,5 +48,5 @@ export const ItemIndicator = withContext(Accordion.ItemIndicator, "itemIndicator
 export const Item = withContext(Accordion.Item, "item");
 export const ItemTrigger = withContext(Accordion.ItemTrigger, "itemTrigger");
 
-export { AccordionContext as Context, AccordionItemContext as ItemContext } from "@ark-ui/react/accordion";
 export type { AccordionFocusChangeDetails as FocusChangeDetails, AccordionValueChangeDetails as ValueChangeDetails } from "@ark-ui/react/accordion";
+export { AccordionContext as Context, AccordionItemContext as ItemContext } from "@ark-ui/react/accordion";

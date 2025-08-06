@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 
+import { BeatMarker } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectCursorPositionInBeats, selectDurationInBeats, selectSurfaceDepth } from "$/store/selectors";
 import type { SongId } from "$/types";
 import { range } from "$/utils";
-
-import { BeatMarker } from "$/components/scene/compositions";
 
 interface Props {
 	sid: SongId;
@@ -21,7 +20,7 @@ function EditorBeatMarkers({ sid }: Props) {
 
 	const totalNumOfBeats = useMemo(() => Math.ceil(durationInBeats ?? 0), [durationInBeats]);
 
-	const linesArray = useMemo(() => range(totalNumOfBeats * 4), [totalNumOfBeats]);
+	const linesArray = useMemo(() => Array.from(range(totalNumOfBeats * 4)), [totalNumOfBeats]);
 
 	const visibleSubsetOfLines = linesArray.filter((i) => {
 		const beat = i / 4;

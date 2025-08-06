@@ -1,1 +1,1 @@
-export { usePrompt } from "./use-prompt";
+export { type UseControlledValueProps, useControlledValue } from "./use-controlled-value";

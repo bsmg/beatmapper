@@ -1,12 +1,11 @@
 import { Fragment, useMemo } from "react";
 
+import { TubeLight } from "$/components/scene/compositions/environment";
+import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
-
-import { TubeLight } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 
 const NUM_OF_HORIZONTAL_BEAMS = 4;
 const X_OFFSET = 40;
@@ -15,7 +14,7 @@ const Z_OFFSET = -100;
 const X_DISTANCE_BETWEEN_BEAMS = 2;
 const Z_DISTANCE_BETWEEN_BEAMS = 20;
 
-const laserIndices = range(0, NUM_OF_HORIZONTAL_BEAMS);
+const laserIndices = Array.from(range(0, NUM_OF_HORIZONTAL_BEAMS));
 
 function scaleToSeconds(x: number) {
 	return x / 1000;

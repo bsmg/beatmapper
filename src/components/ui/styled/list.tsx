@@ -1,9 +1,11 @@
+"use client";
+
 import { ark } from "@ark-ui/react/factory";
 import { type Consumer, createContext } from "react";
 
 import { type RecipeVariantProps, sva } from "$:styled-system/css";
+import { createStyleContext } from "$:styled-system/jsx";
 import { hstack, stack } from "$:styled-system/patterns";
-import { createStyleContext } from "../utils/create-style-context";
 
 const recipe = sva({
 	slots: ["root", "item", "indicator"],

@@ -1,6 +1,6 @@
 import { defineConfig } from "@pandacss/dev";
-
 import { default as base } from "@pandacss/preset-base";
+
 import { default as beatmapper } from "./src/styles/preset";
 
 export default defineConfig({

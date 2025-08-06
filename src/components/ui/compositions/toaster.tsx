@@ -3,7 +3,7 @@ import type { CreateToasterReturn } from "@ark-ui/react/toast";
 import { XIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
-import * as Builder from "../styled/toaster";
+import * as Builder from "$/components/ui/styled/toaster";
 import { Button } from "./button";
 import { Heading } from "./heading";
 

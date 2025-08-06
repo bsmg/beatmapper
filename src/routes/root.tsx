@@ -1,12 +1,11 @@
-import { HeadContent, Outlet, createRootRoute } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Fragment } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
+import { Toaster } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { selectInitialized } from "$/store/selectors";
-
-import { Toaster } from "$/components/ui/compositions";
 
 export const Route = createRootRoute({
 	component: RootComponent,

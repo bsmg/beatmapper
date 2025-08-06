@@ -1,8 +1,8 @@
 import { PipetteIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import * as Builder from "$/components/ui/styled/color-picker";
 import { HStack, VStack } from "$:styled-system/jsx";
-import * as Builder from "../styled/color-picker";
 
 export interface ColorPickerProps extends ComponentProps<typeof Builder.Root> {
 	alpha?: boolean;

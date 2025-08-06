@@ -1,8 +1,8 @@
-import type { CollectionItem, ListCollection } from "@ark-ui/react";
-import type { CSSProperties, ComponentProps, ReactNode } from "react";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
 
-import { ListCollectionFor } from "../atoms";
-import * as Builder from "../styled/radio-button-group";
+import { ListCollectionFor } from "$/components/ui/atoms";
+import * as Builder from "$/components/ui/styled/radio-button-group";
 import { Tooltip } from "./tooltip";
 
 export interface RadioButtonItem extends CollectionItem {
