@@ -13,7 +13,7 @@ export default function createBackupMiddleware({ worker }: Options) {
 	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
-		matcher: isAnyOf(saveBeatmapContents),
+		matcher: isAnyOf(saveBeatmapContents, downloadMapFiles, leaveEditor),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			const { songId } = action.payload;
 			const state = api.getState();
@@ -22,7 +22,7 @@ export default function createBackupMiddleware({ worker }: Options) {
 		},
 	});
 	instance.startListening({
-		matcher: isAnyOf(updateSong, downloadMapFiles),
+		matcher: isAnyOf(updateSong),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			const { songId } = action.payload;
 			const state = api.getState();
@@ -30,7 +30,7 @@ export default function createBackupMiddleware({ worker }: Options) {
 		},
 	});
 	instance.startListening({
-		matcher: isAnyOf(updateBeatmap, leaveEditor),
+		matcher: isAnyOf(updateBeatmap),
 		effect: async (action: PayloadAction<{ songId: SongId; beatmapId: BeatmapId }>, api) => {
 			const { songId, beatmapId } = action.payload;
 			const state = api.getState();
