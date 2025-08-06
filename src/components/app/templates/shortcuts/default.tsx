@@ -36,7 +36,7 @@ import {
 	updateSnap,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDemo, selectPacerWait } from "$/store/selectors";
+import { selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
 import { type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -47,6 +47,7 @@ interface Props {
 function DefaultEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
 	const view = useViewFromLocation();
+	const isLoading = useAppSelector(selectLoading);
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
@@ -77,8 +78,9 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
+			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt !== null) return;
+			if (activePrompt) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
@@ -210,13 +212,14 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[view, activePrompt, dispatch, sid, isDemo, handleScroll, openPrompt],
+		[isLoading, view, activePrompt, dispatch, sid, isDemo, handleScroll, openPrompt],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
+			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt !== null) return;
+			if (activePrompt) return;
 
 			switch (ev.code) {
 				case "Space": {
@@ -227,19 +230,20 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 			}
 		},
-		[view, activePrompt],
+		[isLoading, view, activePrompt],
 	);
 
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
+			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt !== null) return;
+			if (activePrompt) return;
 
 			if (ev.altKey) return;
 			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 			handleScroll(direction, ev);
 		},
-		[view, activePrompt, handleScroll],
+		[isLoading, view, activePrompt, handleScroll],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

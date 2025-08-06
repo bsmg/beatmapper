@@ -5,7 +5,7 @@ import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectGridSize } from "$/store/selectors";
+import { selectGridSize, selectLoading } from "$/store/selectors";
 import { ObjectTool, type SongId, View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -14,6 +14,7 @@ interface Props {
 }
 function NotesEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
+	const isLoading = useAppSelector(selectLoading);
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
 	const { active: activePrompt } = useAppPrompterContext();
@@ -27,7 +28,8 @@ function NotesEditorShortcuts({ sid }: Props) {
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
-			if (activePrompt !== null) return;
+			if (isLoading) return;
+			if (activePrompt) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
@@ -150,14 +152,15 @@ function NotesEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[activePrompt, dispatch, sid, grid],
+		[isLoading, activePrompt, dispatch, sid, grid],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
-			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
+			if (isLoading) return;
+			if (activePrompt) return;
 
-			if (activePrompt !== null) return;
+			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 
 			switch (ev.code) {
 				case "KeyW": {
@@ -182,7 +185,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 					return;
 			}
 		},
-		[activePrompt],
+		[isLoading, activePrompt],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
