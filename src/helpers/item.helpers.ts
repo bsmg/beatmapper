@@ -17,12 +17,22 @@ export function nudgeItem<T extends { time: number }>(item: T, direction: "forwa
 	} as Partial<T>;
 }
 
+function isExtendedCoordinate(x: number) {
+	return x >= 1000 || x <= -1000;
+}
+function deserializeCoordinate(x: number) {
+	return isExtendedCoordinate(x) ? x / 1000 + (x > 0 ? -1 : 1) : x;
+}
+function serializeCoordinate(x: number, extensions?: boolean) {
+	if (extensions) return (x >= 0 ? x + 1 : x - 1) * 1000;
+	return x;
+}
+
 function mirrorCoordinate(coordinate: number, count: number, offset?: number) {
-	const fromExtended = (x: number) => (x >= 1000 || x <= -1000 ? x / 1000 + (x > 0 ? -1 : 1) : x);
-	const value = fromExtended(coordinate);
+	const value = deserializeCoordinate(coordinate);
 	const axis = (count - 1) / 2;
-	const mirrored = axis - value + axis + (offset ? 1 - fromExtended(offset ?? 0) : 0);
-	return (mirrored >= 0 ? mirrored + 1 : mirrored - 1) * 1000;
+	const mirrored = axis - value + axis + (offset ? 1 - deserializeCoordinate(offset ?? 0) : 0);
+	return serializeCoordinate(mirrored, isExtendedCoordinate(coordinate));
 }
 
 export function mirrorItem<T extends { posX?: number; posY?: number; color?: NoteColor; direction?: number }>(item: T, axis: "horizontal" | "vertical", grid?: IGrid, offset?: number) {
