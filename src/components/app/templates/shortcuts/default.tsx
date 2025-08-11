@@ -98,7 +98,8 @@ function DefaultEditorShortcuts({ sid }: Props) {
 						ev.preventDefault();
 						return dispatch(rehydrate());
 					}
-					return;
+					ev.preventDefault();
+					return Promise.resolve(dispatch(saveBeatmapContents({ songId: sid }))).then(() => window.location.reload());
 				}
 				case "Space": {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.

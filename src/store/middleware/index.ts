@@ -26,7 +26,7 @@ export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options
 	const audioMiddleware = createAudioMiddleware({ filestore });
 	const fileMiddleware = createFileMiddleware({ filestore });
 	const downloadMiddleware = createPackagingMiddleware({ filestore });
-	const backupMiddleware = createBackupMiddleware({ worker: autosaveWorker });
+	const backupMiddleware = createBackupMiddleware({ filestore, worker: autosaveWorker });
 	const demoMiddleware = createDemoMiddleware();
 	const historyMiddleware = createHistoryMiddleware();
 

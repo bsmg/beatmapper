@@ -74,7 +74,7 @@ export const downloadMapFiles = createAction("downloadMap", (args: { songId: Son
 	return { payload: { ...args } };
 });
 
-export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; beatmapId: BeatmapId }) => {
+export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; beatmapId: BeatmapId; entities: Partial<App.IBeatmapEntities> }) => {
 	return { payload: { ...args } };
 });
 
