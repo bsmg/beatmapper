@@ -20,31 +20,31 @@ function NoteDirectionActionPanelGroup() {
 	return (
 		<ActionPanelGroup.Root label="Notes">
 			<Grid columns={3} gap={0.5}>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.UP_LEFT} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_LEFT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.UP_LEFT} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_LEFT }))}>
 					<ArrowUpLeftIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.UP} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.UP} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP }))}>
 					<ArrowUpIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.UP_RIGHT} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_RIGHT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.UP_RIGHT} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_RIGHT }))}>
 					<ArrowUpRightIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.LEFT} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.LEFT} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }))}>
 					<ArrowLeftIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.ANY} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.ANY }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.ANY} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.ANY }))}>
 					<CircleIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.RIGHT} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.RIGHT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.RIGHT} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.RIGHT }))}>
 					<ArrowRightIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.DOWN_LEFT} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_LEFT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.DOWN_LEFT} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_LEFT }))}>
 					<ArrowDownLeftIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.DOWN} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.DOWN} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN }))}>
 					<ArrowDownIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.DOWN_RIGHT} onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_RIGHT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} data-active={selectedDirection === NoteDirection.DOWN_RIGHT} unfocusOnClick onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_RIGHT }))}>
 					<ArrowDownRightIcon />
 				</Button>
 			</Grid>

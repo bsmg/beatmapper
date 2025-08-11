@@ -236,6 +236,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
+			ev.preventDefault();
 			if (isLoading) return;
 			if (!view) return;
 			if (activePrompt) return;
@@ -249,7 +250,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);
-	useGlobalEventListener("wheel", handleWheel, { options: { passive: true } });
+	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
 
 	return null;
 }

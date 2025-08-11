@@ -13,13 +13,13 @@ export interface ButtonProps extends ComponentProps<typeof Styled> {
 	loading?: boolean;
 	unfocusOnClick?: boolean;
 }
-export function Button({ colorPalette: color, loading, onClick, unfocusOnClick, asChild, children, ...rest }: ButtonProps) {
-	const handleClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
+export function Button({ colorPalette: color, loading, onClickCapture, unfocusOnClick, asChild, children, ...rest }: ButtonProps) {
+	const handleClickCapture = useCallback<MouseEventHandler<HTMLButtonElement>>(
 		(event) => {
 			if (unfocusOnClick) event.currentTarget.blur();
-			if (onClick) onClick(event);
+			if (onClickCapture) onClickCapture(event);
 		},
-		[onClick, unfocusOnClick],
+		[onClickCapture, unfocusOnClick],
 	);
 
 	const colorPalette = useMemo(() => {
@@ -29,7 +29,7 @@ export function Button({ colorPalette: color, loading, onClick, unfocusOnClick, 
 	}, [color, rest.variant]);
 
 	return (
-		<Styled disabled={rest.disabled || loading} data-loading={loading} onClick={handleClick} className={css({ colorPalette: colorPalette })} {...rest}>
+		<Styled disabled={rest.disabled || loading} data-loading={loading} onClickCapture={handleClickCapture} className={css({ colorPalette: colorPalette })} {...rest}>
 			<ark.span asChild={asChild}>{children}</ark.span>
 			<Presence asChild present={!!loading} lazyMount unmountOnExit>
 				<Float placement={"middle-center"}>

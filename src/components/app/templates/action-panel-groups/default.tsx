@@ -24,18 +24,18 @@ function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
 			<ClipboardActionPanelActionGroup sid={sid} />
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Select everything over a time period"}>
-					<Button variant="subtle" size="sm" onClick={() => openPrompt("QUICK_SELECT")}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => openPrompt("QUICK_SELECT")}>
 						Quick-select
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Jump to a specific beat number"}>
-					<Button variant="subtle" size="sm" onClick={() => openPrompt("JUMP_TO_BEAT")}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => openPrompt("JUMP_TO_BEAT")}>
 						Jump to Beat
 					</Button>
 				</Tooltip>
 				{mappingExtensionsEnabled && (
 					<Tooltip render={() => "Change the number of columns/rows"}>
-						<Button variant="subtle" size="sm" onClick={handleGridConfigClick}>
+						<Button variant="subtle" size="sm" unfocusOnClick onClick={handleGridConfigClick}>
 							Customize Grid
 						</Button>
 					</Tooltip>

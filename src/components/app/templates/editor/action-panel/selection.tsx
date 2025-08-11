@@ -64,30 +64,30 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 			<ActionPanelGroup.Root label="Actions">
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Mirror selection horizontally"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "horizontal", grid }))}>
+						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(mirrorSelection({ axis: "horizontal", grid }))}>
 							<FlipHorizontal2Icon />
 						</Button>
 					</Tooltip>
 					<Tooltip render={() => "Mirror selection vertically"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(mirrorSelection({ axis: "vertical", grid }))}>
+						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(mirrorSelection({ axis: "vertical", grid }))}>
 							<FlipVertical2Icon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Nudge selection forwards"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))}>
+						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))}>
 							<ArrowUpToLineIcon />
 						</Button>
 					</Tooltip>
 					<Tooltip render={() => "Nudge selection backwards"}>
-						<Button variant="ghost" size="icon" onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))}>
+						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))}>
 							<ArrowDownToLineIcon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" onClick={() => dispatch(deselectAllEntities({ view: View.BEATMAP }))}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => dispatch(deselectAllEntities({ view: View.BEATMAP }))}>
 						Clear selection
 					</Button>
 				</ActionPanelGroup.ActionGroup>

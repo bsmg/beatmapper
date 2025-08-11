@@ -59,23 +59,23 @@ function EventGridControls({ sid, bid, ...rest }: Props) {
 		<Wrapper {...rest}>
 			<HStack gap={4} justify={"flex-start"}>
 				<Field cosmetic size="sm" label="Edit Mode">
-					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorEditMode({ editMode: details.value[0] as EventEditMode }))} />
+					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} unfocusOnClick value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorEditMode({ editMode: details.value[0] as EventEditMode }))} />
 				</Field>
 				<Field cosmetic size="sm" label="Light Color">
-					<ToggleGroup collection={COLOR_LIST_COLLECTION} value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorColor({ color: details.value[0] as EventColor }))} />
+					<ToggleGroup collection={COLOR_LIST_COLLECTION} unfocusOnClick value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorColor({ color: details.value[0] as EventColor }))} />
 				</Field>
 				<Field cosmetic size="sm" label="Light Effect">
-					<ToggleGroup collection={EFFECT_LIST_COLLECTION} value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorTool({ tool: details.value[0] as EventTool }))} />
+					<ToggleGroup collection={EFFECT_LIST_COLLECTION} unfocusOnClick value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorTool({ tool: details.value[0] as EventTool }))} />
 				</Field>
 				<Field cosmetic size="sm" label="Locks">
 					<HStack gap={1}>
 						<Tooltip render={() => "Loop playback within the current event window (L)"}>
-							<Toggle pressed={isLockedToCurrentWindow} onPressedChange={() => dispatch(updateEventsEditorWindowLock())}>
+							<Toggle unfocusOnClick pressed={isLockedToCurrentWindow} onPressedChange={() => dispatch(updateEventsEditorWindowLock())}>
 								<RepeatIcon size={16} />
 							</Toggle>
 						</Tooltip>
 						<Tooltip render={() => "Pair side lasers for symmetrical left/right events"}>
-							<Toggle pressed={areLasersLocked} onPressedChange={() => dispatch(updateEventsEditorMirrorLock())}>
+							<Toggle unfocusOnClick pressed={areLasersLocked} onPressedChange={() => dispatch(updateEventsEditorMirrorLock())}>
 								<LockIcon size={16} />
 							</Toggle>
 						</Tooltip>
@@ -85,10 +85,10 @@ function EventGridControls({ sid, bid, ...rest }: Props) {
 			<HStack gap={4} justify={"flex-end"}>
 				<Field cosmetic size="sm" label="Zoom" align="end">
 					<HStack gap={1}>
-						<Button variant="subtle" size="sm" onClick={() => dispatch(decrementEventsEditorZoom())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
+						<Button variant="subtle" size="sm" unfocusOnClick onClick={() => dispatch(decrementEventsEditorZoom())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
 							<ZoomOutIcon size={14} />
 						</Button>
-						<Button variant="subtle" size="sm" onClick={() => dispatch(incrementEventsEditorZoom())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
+						<Button variant="subtle" size="sm" unfocusOnClick onClick={() => dispatch(incrementEventsEditorZoom())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
 							<ZoomInIcon size={14} />
 						</Button>
 					</HStack>
