@@ -1,7 +1,7 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { createColorNote, mirrorNoteColor, sortObjectFn } from "bsmap";
 
-import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
 	addSong,
@@ -131,9 +131,15 @@ const slice = createSlice({
 		builder.addCase(mirrorSelection, (state, action) => {
 			const { axis, grid } = action.payload;
 			const entities = selectAllSelected(state);
-			return adapter.updateMany(
+			adapter.removeMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, axis, grid) })),
+				entities.map((x) => adapter.selectId(x)),
+			);
+			return adapter.addMany(
+				state,
+				entities.map((x) => {
+					return { ...x, ...mirrorGridObjectProperties(x, axis, grid, 0), ...mirrorBaseNoteProperties(x, axis) };
+				}),
 			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {

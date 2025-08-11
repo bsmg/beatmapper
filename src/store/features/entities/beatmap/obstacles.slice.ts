@@ -1,7 +1,7 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, type EntityId, isAnyOf, type Update } from "@reduxjs/toolkit";
 import { createObstacle, sortObjectFn } from "bsmap";
 
-import { mirrorItem, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { mirrorGridObjectProperties, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { addObstacle, addSong, cutSelection, deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, mirrorSelection, nudgeSelection, pasteSelection, removeAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
 import { createSelectedEntitiesSelector, createSlice } from "$/store/helpers";
@@ -138,9 +138,15 @@ const slice = createSlice({
 			const { axis, grid } = action.payload;
 			if (axis === "vertical") return state;
 			const entities = selectAllSelected(state);
-			return adapter.updateMany(
+			adapter.removeMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: mirrorItem(x, "horizontal", grid, x.width) })),
+				entities.map((x) => adapter.selectId(x)),
+			);
+			return adapter.addMany(
+				state,
+				entities.map((x) => {
+					return { ...x, ...mirrorGridObjectProperties(x, axis, grid, x.width) };
+				}),
 			);
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
