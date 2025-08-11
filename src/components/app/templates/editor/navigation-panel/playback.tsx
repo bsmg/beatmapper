@@ -26,24 +26,24 @@ function EditorNavigationControls({ sid }: Props) {
 	return (
 		<Wrapper>
 			<Column>
-				<Select collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap({ value: Number.parseFloat(ev.value[0]) }))}>
+				<Select unfocusOnClick collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap({ value: Number.parseFloat(ev.value[0]) }))}>
 					Snap To
 				</Select>
 			</Column>
 			<Column>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(jumpToStart({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(jumpToStart({ songId: sid }))}>
 					<SkipBackIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekBackwards({ songId: sid, view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(seekBackwards({ songId: sid, view }))}>
 					<RewindIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(playButtonAction({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(playButtonAction({ songId: sid }))}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(seekForwards({ songId: sid, view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(seekForwards({ songId: sid, view }))}>
 					<FastForwardIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} onClick={() => dispatch(jumpToEnd({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(jumpToEnd({ songId: sid }))}>
 					<SkipForwardIcon />
 				</Button>
 			</Column>

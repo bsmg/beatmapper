@@ -15,7 +15,7 @@ function StatusBarRangeControl({ label, minIcon, maxIcon, min, max, step, value,
 		<Tooltip render={() => label}>
 			<HStack gap={1}>
 				<StatusBarIcon size={14} icon={minIcon} onClick={() => onValueChange?.({ value: [min ?? 0] })} disabled={disabled} />
-				<Slider {...delegated} size="sm" min={min} max={max} step={step} value={value} onValueChange={onValueChange} disabled={disabled} />
+				<Slider {...delegated} size="sm" min={min} max={max} step={step} value={value} onValueChange={onValueChange} disabled={disabled} unfocusOnClick />
 				<StatusBarIcon size={14} icon={maxIcon} onClick={() => onValueChange?.({ value: [max ?? 100] })} disabled={disabled} />
 			</HStack>
 		</Tooltip>

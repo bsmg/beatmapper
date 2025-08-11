@@ -14,7 +14,7 @@ Before you jump the gun, we ask that you first and foremost check the following 
 
 If you issue has already been listed, you're welcome to add a comment if you have any additional context to contribute!
 
-When creating a new issue, please use the corresponding templates to better organize the context surrounding your issue and make it as easy as possible for maintainers to address your issue in a timely manner.
+When creating a new issue, **please use the corresponding templates** to better organize the context surrounding your issue and make it as easy as possible for maintainers to address your issue in a timely manner.
 
 ## For Developers
 

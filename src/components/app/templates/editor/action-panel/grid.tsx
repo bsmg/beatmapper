@@ -30,7 +30,7 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 			{!isObjectEmpty(gridPresets) && (
 				<ActionPanelGroup.Root label="Grid Presets">
 					<ActionPanelGroup.ActionGroup>
-						<Select collection={createListCollection({ items: Object.keys(gridPresets) })} value={[slot]} onValueChange={(x) => setSlot(x.value[0])} />
+						<Select unfocusOnClick collection={createListCollection({ items: Object.keys(gridPresets) })} value={[slot]} onValueChange={(x) => setSlot(x.value[0])} />
 					</ActionPanelGroup.ActionGroup>
 					<ActionPanelGroup.ActionGroup>
 						<Tooltip render={() => "Load Grid Preset"}>

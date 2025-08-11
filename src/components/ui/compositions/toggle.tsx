@@ -1,4 +1,4 @@
-import { type ComponentProps, type MouseEventHandler, useCallback } from "react";
+import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback } from "react";
 
 import * as Builder from "$/components/ui/styled/toggle";
 
@@ -6,17 +6,16 @@ interface Props extends ComponentProps<typeof Builder.Root> {
 	unfocusOnClick?: boolean;
 }
 
-export function Toggle({ children, unfocusOnClick, onClickCapture, ...rest }: Props) {
-	const handleClickCapture = useCallback<MouseEventHandler<HTMLButtonElement>>(
-		(event) => {
+export function Toggle({ children, unfocusOnClick, ...rest }: Props) {
+	const handleUnfocus = useCallback(
+		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
 			if (unfocusOnClick) event.currentTarget.blur();
-			if (onClickCapture) onClickCapture(event);
 		},
-		[onClickCapture, unfocusOnClick],
+		[unfocusOnClick],
 	);
 
 	return (
-		<Builder.Root {...rest} onClickCapture={handleClickCapture}>
+		<Builder.Root {...rest} onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
 			{children}
 		</Builder.Root>
 	);

@@ -20,7 +20,7 @@ const recipe = sva({
 
 const { withProvider, withContext } = createStyleContext(recipe);
 
-export const Root = withProvider(Toggle.Root, "root", { defaultProps: { onClickCapture: (e) => e.currentTarget.blur() } });
+export const Root = withProvider(Toggle.Root, "root");
 export const Indicator = withContext(Toggle.Indicator, "indicator");
 
 export { ToggleContext as Context } from "@ark-ui/react/toggle";

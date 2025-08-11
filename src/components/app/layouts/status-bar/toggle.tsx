@@ -15,7 +15,7 @@ function StatusBarToggleControl({ label, onIcon, offIcon, checked, onCheckedChan
 		<Tooltip render={() => label}>
 			<HStack gap={1}>
 				<StatusBarIcon size={14} opacity={checked ? 0.5 : 1} icon={offIcon} onClick={() => onCheckedChange?.({ checked: false })} disabled={disabled} />
-				<Switch {...rest} size="sm" checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
+				<Switch {...rest} size="sm" checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} unfocusOnClick />
 				<StatusBarIcon size={14} opacity={checked ? 1 : 0.5} icon={onIcon} onClick={() => onCheckedChange?.({ checked: true })} disabled={disabled} />
 			</HStack>
 		</Tooltip>

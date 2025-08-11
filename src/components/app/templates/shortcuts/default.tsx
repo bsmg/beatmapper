@@ -76,6 +76,10 @@ function DefaultEditorShortcuts({ sid }: Props) {
 		{ wait: wait },
 	);
 
+	const handleRefresh = useCallback(() => {
+		dispatch(saveBeatmapContents({ songId: sid }));
+	}, [dispatch, sid]);
+
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
@@ -98,8 +102,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 						ev.preventDefault();
 						return dispatch(rehydrate());
 					}
-					ev.preventDefault();
-					return Promise.resolve(dispatch(saveBeatmapContents({ songId: sid }))).then(() => window.location.reload());
+					return;
 				}
 				case "Space": {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
@@ -251,6 +254,8 @@ function DefaultEditorShortcuts({ sid }: Props) {
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);
 	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
+
+	useGlobalEventListener("beforeunload", handleRefresh);
 
 	return null;
 }
