@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { getSelectedBeatmap, resolveSongId } from "$/helpers/song.helpers";
+import { getSelectedBeatmap } from "$/helpers/song.helpers";
 import { router } from "$/index";
 import { addSongFromFile, loadDemoMap } from "$/store/actions";
 import type { RootState } from "$/store/setup";
@@ -16,10 +16,9 @@ export default function createDemoMiddleware() {
 		actionCreator: loadDemoMap,
 		effect: async (_, api) => {
 			const blob = await fetch(demoFileUrl).then((response) => response.blob());
-			const { songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();
-			const sid = resolveSongId({ name: songData.name });
+			const { songId: sid, songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();
 			const bid = getSelectedBeatmap(songData);
-			router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid, bid: bid.toString() } });
+			router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: bid.toString() } });
 		},
 	});
 

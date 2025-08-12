@@ -10,7 +10,7 @@ import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/a
 import { serializeCustomBookmark } from "$/helpers/bookmarks.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
-import { getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename, resolveSongId } from "$/helpers/song.helpers";
+import { createSongId, getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "$/helpers/song.helpers";
 import { filestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
 import { deepAssign, yieldValue } from "$/utils";
@@ -168,7 +168,7 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 	// parse the wrapper into the editor form
 	const song = deserializeInfoContents(info, { readonly: options.readonly });
 
-	const songId = resolveSongId(song);
+	const songId = createSongId(song);
 
 	// save the info data (Not 100% sure that this is necessary, but better to have and not need)
 	await filestore.saveInfoContents(songId, info);
@@ -257,6 +257,7 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 
 	return {
 		...song,
+		id: songId,
 		selectedDifficulty: getSelectedBeatmap(song),
 		createdAt: Date.now(),
 	};

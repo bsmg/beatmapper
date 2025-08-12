@@ -31,6 +31,7 @@ export interface IBeatmap {
 }
 
 export interface ISong {
+	id: EntityId;
 	name: string;
 	subName: string;
 	artistName: string;

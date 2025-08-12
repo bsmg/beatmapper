@@ -22,8 +22,7 @@ const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData
 		const { readonly } = args.options;
 		const archive = await args.file.arrayBuffer();
 		const songData = await processImportedMap(new Uint8Array(archive), args.options);
-		const songId = resolveSongId({ name: songData.name });
-		return api.fulfillWithValue({ songId, songData: { ...songData, demo: readonly } });
+		return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: readonly } });
 	} catch (e) {
 		return api.rejectWithValue(e);
 	}
@@ -95,7 +94,7 @@ const slice = createSlice({
 					return {
 						payload: {
 							songId: songId,
-							songData: { ...rest },
+							songData: { ...rest, id: songId.toString() },
 							beatmapId: resolveBeatmapId({ characteristic: selectedCharacteristic, difficulty: selectedDifficulty }),
 							beatmapData: { characteristic: selectedCharacteristic, difficulty: selectedDifficulty, mappers, lighters: mappers },
 							songFile,

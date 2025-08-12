@@ -2,6 +2,7 @@
 
 import { configureStore, type DevToolsEnhancerOptions } from "@reduxjs/toolkit";
 import { omit } from "@std/collections/omit";
+import { toPascalCase } from "@std/text/to-pascal-case";
 import type { NoteDirection } from "bsmap";
 import { initStateWithPrevTab } from "redux-state-sync";
 import { createStorage } from "unstorage";
@@ -83,8 +84,8 @@ export type SessionStorageObservers = {
 
 const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
 	name: "beat-mapper-state",
-	version: 3,
-	async upgrade(idb, current, next, tx) {
+	version: 4,
+	async upgrade(idb, _current, next, tx) {
 		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
 		await idb.removeStore("local-forage-detect-blob-support", tx);
 
@@ -138,6 +139,17 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 				}
 			}
 			await idb.removeStore("keyvaluepairs", tx);
+		}
+		if (next && next >= 4) {
+			const keys = await idb.keys("songs", tx);
+			await Promise.all([
+				keys.forEach(async (sid) => {
+					if (sid === toPascalCase(sid)) return;
+					const current = (await idb.get("songs", sid, tx)) as App.ISong;
+					await idb.set("songs", toPascalCase(sid), { ...current, id: toPascalCase(sid) }, tx);
+					await idb.delete("songs", sid);
+				}),
+			]);
 		}
 	},
 });

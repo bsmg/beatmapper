@@ -6,7 +6,7 @@ import { gtValue, minLength, number, object, pipe, string, transform } from "val
 
 import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
-import { resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
+import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
@@ -62,7 +62,7 @@ function CreateMapForm({ dialog }: Props) {
 				});
 			}
 
-			const songId = resolveSongId({ name: value.name });
+			const songId = createSongId(value);
 			const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
 
 			// Song IDs must be unique, and song IDs are generated from the name.
