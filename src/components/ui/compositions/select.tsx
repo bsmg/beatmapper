@@ -3,7 +3,7 @@ import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { Portal } from "@ark-ui/react/portal";
 import type { SelectRootProps } from "@ark-ui/react/select";
 import { ChevronDownIcon } from "lucide-react";
-import type { PropsWithChildren } from "react";
+import { type KeyboardEvent, type MouseEvent, type PropsWithChildren, useCallback, useRef } from "react";
 
 import { ListCollectionFor } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/select";
@@ -14,12 +14,22 @@ export interface SelectProps<T extends SelectItem> extends Assign<SelectRootProp
 	collection: ListCollection<T>;
 	size?: "sm" | "md";
 	placeholder?: string;
+	unfocusOnClick?: boolean;
 }
-export function Select<T extends SelectItem>({ collection, placeholder, children, ...rest }: SelectProps<T>) {
+export function Select<T extends SelectItem>({ collection, placeholder, children, unfocusOnClick, ...rest }: SelectProps<T>) {
+	const ref = useRef<HTMLDivElement>(null);
+
+	const handleUnfocus = useCallback(
+		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+			if (unfocusOnClick) event.currentTarget.blur();
+		},
+		[unfocusOnClick],
+	);
+
 	return (
-		<Builder.Root collection={collection as ListCollection<SelectItem>} {...rest}>
+		<Builder.Root ref={ref} collection={collection as ListCollection<SelectItem>} {...rest} onKeyDown={(e) => e.stopPropagation()}>
 			<Builder.Control>
-				<Builder.Trigger>
+				<Builder.Trigger onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
 					{children && <Builder.Label>{children}</Builder.Label>}
 					<Builder.ValueText placeholder={placeholder} />
 					<Builder.Indicator>

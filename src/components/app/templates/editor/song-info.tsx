@@ -2,7 +2,7 @@ import type { SelectValueChangeDetails } from "@ark-ui/react/select";
 import { useNavigate } from "@tanstack/react-router";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { PlusIcon } from "lucide-react";
-import { Fragment, memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 
 import { CoverArtFilePreview } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
@@ -52,41 +52,37 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 	);
 
 	return (
-		<Fragment>
-			<OuterWrapper gap={1.5}>
-				<CoverArtFilePreview songId={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
-				<Stack gap={1}>
-					<Stack gap={0.5}>
-						<Text color={"fg.default"} fontSize="20px" fontWeight={400} lineHeight={1}>
-							{metadata.title}
-						</Text>
-						<Text color={"fg.muted"} fontSize="16px" fontWeight={400} lineHeight={1}>
-							{metadata.artist}
-						</Text>
-					</Stack>
-					{showDifficultySelector && bid && (
-						<Fragment>
-							<HStack gap={0.5}>
-								<Select size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
-								<Dialog
-									title="Create New Beatmap"
-									unmountOnExit
-									render={(ctx) => (
-										<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCreate}>
-											{() => "Create beatmap"}
-										</CreateBeatmapForm>
-									)}
-								>
-									<Button variant="ghost" size="sm">
-										<PlusIcon size={16} />
-									</Button>
-								</Dialog>
-							</HStack>
-						</Fragment>
-					)}
+		<OuterWrapper gap={1.5}>
+			<CoverArtFilePreview songId={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
+			<Stack gap={1}>
+				<Stack gap={0.5}>
+					<Text color={"fg.default"} fontSize="20px" fontWeight={400} lineHeight={1}>
+						{metadata.title}
+					</Text>
+					<Text color={"fg.muted"} fontSize="16px" fontWeight={400} lineHeight={1}>
+						{metadata.artist}
+					</Text>
 				</Stack>
-			</OuterWrapper>
-		</Fragment>
+				{showDifficultySelector && bid && (
+					<HStack gap={0.5}>
+						<Select unfocusOnClick size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
+						<Dialog
+							title="Create New Beatmap"
+							unmountOnExit
+							render={(ctx) => (
+								<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCreate}>
+									{() => "Create beatmap"}
+								</CreateBeatmapForm>
+							)}
+						>
+							<Button variant="ghost" size="sm">
+								<PlusIcon size={16} />
+							</Button>
+						</Dialog>
+					</HStack>
+				)}
+			</Stack>
+		</OuterWrapper>
 	);
 }
 

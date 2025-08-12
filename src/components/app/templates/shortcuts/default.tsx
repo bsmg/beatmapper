@@ -76,6 +76,10 @@ function DefaultEditorShortcuts({ sid }: Props) {
 		{ wait: wait },
 	);
 
+	const handleRefresh = useCallback(() => {
+		dispatch(saveBeatmapContents({ songId: sid }));
+	}, [dispatch, sid]);
+
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
@@ -235,6 +239,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
+			ev.preventDefault();
 			if (isLoading) return;
 			if (!view) return;
 			if (activePrompt) return;
@@ -248,7 +253,9 @@ function DefaultEditorShortcuts({ sid }: Props) {
 
 	useGlobalEventListener("keydown", handleKeyDown);
 	useGlobalEventListener("keyup", handleKeyUp);
-	useGlobalEventListener("wheel", handleWheel, { options: { passive: true } });
+	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
+
+	useGlobalEventListener("beforeunload", handleRefresh);
 
 	return null;
 }

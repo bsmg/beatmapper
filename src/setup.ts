@@ -1,17 +1,19 @@
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
+import { toPascalCase } from "@std/text/to-pascal-case";
 import { createBeatmap, loadDifficulty, loadInfo } from "bsmap";
 import { createStorage, type StorageValue } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
 import { createDriver, type LegacyStorageSchema } from "./services/storage.service";
 import { createAppStore } from "./store/setup";
+import type { App } from "./types";
 import { createAutosaveWorker } from "./workers";
 
 export const driver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
 	name: "beat-mapper-files",
-	version: 3,
-	async upgrade(idb, current, next, tx) {
+	version: 4,
+	async upgrade(idb, _current, next, tx) {
 		// this is a remnant of localforage, and is no longer necessary since blobs are universally supported
 		await idb.removeStore("local-forage-detect-blob-support", tx);
 
@@ -52,6 +54,18 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 				await idb.set("entries", rewriteKey(key), rewriteValue(value, key), tx);
 			}
 			await idb.removeStore("keyvaluepairs", tx);
+		}
+		if (next && next >= 4) {
+			const keys = await idb.keys("entries", tx);
+			await Promise.all([
+				keys.forEach(async (key) => {
+					const sid = key.split(".")[0];
+					if (sid === toPascalCase(sid)) return;
+					const current = (await idb.get("entries", key, tx)) as App.ISong;
+					await idb.set("entries", key.replace(sid, toPascalCase(sid)), current, tx);
+					await idb.delete("entries", key, tx);
+				}),
+			]);
 		}
 	},
 });

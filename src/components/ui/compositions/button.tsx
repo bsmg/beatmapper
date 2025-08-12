@@ -1,6 +1,6 @@
 import { ark } from "@ark-ui/react/factory";
 import { Presence } from "@ark-ui/react/presence";
-import { type ComponentProps, type MouseEventHandler, useCallback, useMemo } from "react";
+import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback, useMemo } from "react";
 
 import { Button as Styled } from "$/components/ui/styled/button";
 import type { VirtualColorPalette } from "$/styles/types";
@@ -13,13 +13,12 @@ export interface ButtonProps extends ComponentProps<typeof Styled> {
 	loading?: boolean;
 	unfocusOnClick?: boolean;
 }
-export function Button({ colorPalette: color, loading, onClick, unfocusOnClick, asChild, children, ...rest }: ButtonProps) {
-	const handleClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
-		(event) => {
+export function Button({ colorPalette: color, loading, unfocusOnClick, asChild, children, ...rest }: ButtonProps) {
+	const handleUnfocus = useCallback(
+		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
 			if (unfocusOnClick) event.currentTarget.blur();
-			if (onClick) onClick(event);
 		},
-		[onClick, unfocusOnClick],
+		[unfocusOnClick],
 	);
 
 	const colorPalette = useMemo(() => {
@@ -29,7 +28,7 @@ export function Button({ colorPalette: color, loading, onClick, unfocusOnClick, 
 	}, [color, rest.variant]);
 
 	return (
-		<Styled disabled={rest.disabled || loading} data-loading={loading} onClick={handleClick} className={css({ colorPalette: colorPalette })} {...rest}>
+		<Styled disabled={rest.disabled || loading} data-loading={loading} onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus} className={css({ colorPalette: colorPalette })} {...rest}>
 			<ark.span asChild={asChild}>{children}</ark.span>
 			<Presence asChild present={!!loading} lazyMount unmountOnExit>
 				<Float placement={"middle-center"}>

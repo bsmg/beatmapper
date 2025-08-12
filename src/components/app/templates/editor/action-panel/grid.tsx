@@ -30,16 +30,16 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 			{!isObjectEmpty(gridPresets) && (
 				<ActionPanelGroup.Root label="Grid Presets">
 					<ActionPanelGroup.ActionGroup>
-						<Select collection={createListCollection({ items: Object.keys(gridPresets) })} value={[slot]} onValueChange={(x) => setSlot(x.value[0])} />
+						<Select unfocusOnClick collection={createListCollection({ items: Object.keys(gridPresets) })} value={[slot]} onValueChange={(x) => setSlot(x.value[0])} />
 					</ActionPanelGroup.ActionGroup>
 					<ActionPanelGroup.ActionGroup>
 						<Tooltip render={() => "Load Grid Preset"}>
-							<Button variant="subtle" size="sm" disabled={!gridPresets[slot]} onClick={() => dispatch(loadGridPreset({ songId: sid, grid: gridPresets[slot] }))}>
+							<Button variant="subtle" size="sm" disabled={!gridPresets[slot]} unfocusOnClick onClick={() => dispatch(loadGridPreset({ songId: sid, grid: gridPresets[slot] }))}>
 								<ArrowUpFromDotIcon size={16} />
 							</Button>
 						</Tooltip>
 						<Tooltip render={() => "Delete Grid Preset"}>
-							<Button variant="subtle" size="sm" disabled={!gridPresets[slot]} onClick={() => dispatch(removeGridPreset({ songId: sid, presetSlot: slot }))}>
+							<Button variant="subtle" size="sm" disabled={!gridPresets[slot]} unfocusOnClick onClick={() => dispatch(removeGridPreset({ songId: sid, presetSlot: slot }))}>
 								<TrashIcon size={16} />
 							</Button>
 						</Tooltip>
@@ -63,13 +63,13 @@ function GridActionPanel({ sid, finishTweakingGrid }: Props) {
 					</Field>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" onClick={() => openPrompt("SAVE_GRID_PRESET")}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => openPrompt("SAVE_GRID_PRESET")}>
 						Save as Preset
 					</Button>
-					<Button variant="subtle" size="sm" onClick={() => sid && dispatch(updateGridSize({ songId: sid, changes: DEFAULT_GRID }))}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => sid && dispatch(updateGridSize({ songId: sid, changes: DEFAULT_GRID }))}>
 						Reset Grid
 					</Button>
-					<Button variant="subtle" size="sm" onClick={finishTweakingGrid}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={finishTweakingGrid}>
 						Finish Customizing
 					</Button>
 				</ActionPanelGroup.ActionGroup>

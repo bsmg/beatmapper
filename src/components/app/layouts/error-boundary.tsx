@@ -42,7 +42,7 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 								</Wrap>
 							</Stack>
 							<Text>
-								If you're still encountering issues, please <AnchorLink href="https://github.com/bsmg/beatmapper/issues/new">fill out a bug report</AnchorLink> on the repository.
+								If you're still encountering issues, please <AnchorLink href="https://github.com/bsmg/beatmapper/issues/new?template=bug.md">fill out a bug report</AnchorLink> on the repository.
 							</Text>
 						</Stack>
 					</Presence>

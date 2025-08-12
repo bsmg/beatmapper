@@ -1,4 +1,4 @@
-import { slugify } from "@std/text/unstable-slugify";
+import { toPascalCase } from "@std/text/to-pascal-case";
 import { CharacteristicName, DifficultyName } from "bsmap/types";
 
 import { DEFAULT_GRID } from "$/constants";
@@ -7,8 +7,11 @@ import { deepAssign } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 import { patchEnvironmentName } from "./packaging.helpers";
 
-export function resolveSongId(x: Pick<App.ISong, "name">): string {
-	return slugify(x.name);
+export function createSongId(x: Pick<App.ISong, "name">): string {
+	return toPascalCase(x.name);
+}
+export function resolveSongId(x: Pick<App.ISong, "id">): string {
+	return x.id.toString();
 }
 export function resolveBeatmapId(x: Pick<App.IBeatmap, "characteristic" | "difficulty">): string {
 	if (x.characteristic !== "Standard") return `${x.difficulty}${x.characteristic}`;

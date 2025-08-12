@@ -20,22 +20,22 @@ function NoteToolActionPanelGroup({ sid, bid }: Props) {
 		<ActionPanelGroup.Root label="Items">
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Left Color Note"}>
-					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.LEFT_NOTE} onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.LEFT_NOTE }))}>
+					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.LEFT_NOTE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.LEFT_NOTE }))}>
 						<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.LEFT_NOTE, { customColors: colorScheme })} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Right Color Note"}>
-					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.RIGHT_NOTE} onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.RIGHT_NOTE }))}>
+					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.RIGHT_NOTE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.RIGHT_NOTE }))}>
 						<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.RIGHT_NOTE, { customColors: colorScheme })} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Bomb Note"}>
-					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.BOMB_NOTE} onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.BOMB_NOTE }))}>
+					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.BOMB_NOTE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.BOMB_NOTE }))}>
 						<BombNoteIcon size={20} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Obstacle"}>
-					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.OBSTACLE} onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.OBSTACLE }))}>
+					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.OBSTACLE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.OBSTACLE }))}>
 						<ObstacleIcon size={20} color={resolveColorForItem(ObjectTool.OBSTACLE, { customColors: colorScheme })} />
 					</Button>
 				</Tooltip>

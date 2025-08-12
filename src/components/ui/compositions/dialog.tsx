@@ -39,7 +39,7 @@ function Contents({ title, description, render, children }: DialogProps & PropsW
 
 export function Dialog({ children, ...rest }: Assign<ComponentProps<typeof Builder.Root>, DialogProps>) {
 	return (
-		<Builder.Root {...rest}>
+		<Builder.Root {...rest} modal={false}>
 			{children && (
 				<Builder.Trigger asChild>
 					<span>{children}</span>

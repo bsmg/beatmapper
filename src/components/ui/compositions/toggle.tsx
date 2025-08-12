@@ -1,9 +1,22 @@
-import type { ComponentProps } from "react";
+import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback } from "react";
 
 import * as Builder from "$/components/ui/styled/toggle";
 
-interface Props extends ComponentProps<typeof Builder.Root> {}
+interface Props extends ComponentProps<typeof Builder.Root> {
+	unfocusOnClick?: boolean;
+}
 
-export function Toggle({ children, ...rest }: Props) {
-	return <Builder.Root {...rest}>{children}</Builder.Root>;
+export function Toggle({ children, unfocusOnClick, ...rest }: Props) {
+	const handleUnfocus = useCallback(
+		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+			if (unfocusOnClick) event.currentTarget.blur();
+		},
+		[unfocusOnClick],
+	);
+
+	return (
+		<Builder.Root {...rest} onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
+			{children}
+		</Builder.Root>
+	);
 }

@@ -87,6 +87,8 @@ function MapVisualization({ sid, bid, beatDepth, surfaceDepth, interactive }: Pr
 		(event: ThreeEvent<PointerEvent>) => {
 			if (selectionMode) return;
 			if (isDispatchingEvent.current) return;
+			// ignore left click, since we don't want passthrough to take priority over placements
+			if (event.button === 0) return;
 
 			const intersects = raycaster.intersectObjects(scene.children, true);
 
