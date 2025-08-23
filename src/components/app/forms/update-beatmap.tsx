@@ -4,7 +4,7 @@ import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, number, object, pipe, string, transform } from "valibot";
+import { array, minValue, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
@@ -16,6 +16,20 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 import { HStack, Stack, Wrap } from "$:styled-system/jsx";
+
+const SCHEMA = object({
+	lightshowId: string(),
+	noteJumpSpeed: pipe(number(), minValue(0)),
+	startBeatOffset: number(),
+	environmentName: EnvironmentAllNameSchema,
+	colorSchemeName: string(),
+	mappers: array(string()),
+	lighters: array(string()),
+	customLabel: pipe(
+		string(),
+		transform((input) => (input === "" ? undefined : input)),
+	),
+});
 
 interface Props {
 	sid: SongId;
@@ -42,19 +56,9 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			customLabel: savedVersion.customLabel ?? "",
 		},
 		validators: {
-			onChange: object({
-				lightshowId: string(),
-				noteJumpSpeed: number(),
-				startBeatOffset: number(),
-				environmentName: EnvironmentAllNameSchema,
-				colorSchemeName: string(),
-				mappers: array(string()),
-				lighters: array(string()),
-				customLabel: pipe(
-					string(),
-					transform((input) => (input === "" ? undefined : input)),
-				),
-			}),
+			onMount: SCHEMA,
+			onChange: SCHEMA,
+			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
 			dispatch(
@@ -117,7 +121,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => `You have unsaved changes! Are you sure you want to leave this page?\n\n(You tweaked a value for the "${bid}" beatmap)`} onSubmit={proceed} onCancel={reset} />}
+			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>

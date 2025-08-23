@@ -43,7 +43,7 @@ const recipe = sva({
 			layerStyle: "fill.surface",
 			animationStyle: { _open: "slide-fade-in", _closed: "slide-fade-out" },
 			zIndex: 5,
-			"& > :first-child": {
+			'& > :not[data-role="alertdialog"]:first-child': {
 				marginRight: 6,
 			},
 		}),

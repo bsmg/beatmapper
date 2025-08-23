@@ -44,6 +44,7 @@ function Download({ sid }: Props) {
 		validators: {
 			onMount: SCHEMA,
 			onChange: SCHEMA,
+			onSubmit: SCHEMA,
 		},
 		onSubmit: ({ value }) => {
 			dispatch(

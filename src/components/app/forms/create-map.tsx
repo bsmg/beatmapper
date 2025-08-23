@@ -11,6 +11,19 @@ import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
 
+const SCHEMA = object({
+	name: pipe(string(), minLength(1)),
+	subName: pipe(string()),
+	artistName: pipe(string(), minLength(1)),
+	bpm: pipe(number(), gtValue(0)),
+	offset: pipe(
+		number(),
+		transform((input) => (Number.isNaN(input) ? undefined : input)),
+	),
+	characteristic: CharacteristicNameSchema,
+	difficulty: DifficultyNameSchema,
+});
+
 interface Props {
 	dialog?: UseDialogContext;
 }
@@ -35,18 +48,9 @@ function CreateMapForm({ dialog }: Props) {
 			difficulty: "Easy" as DifficultyName,
 		},
 		validators: {
-			onChange: object({
-				name: pipe(string(), minLength(1)),
-				subName: pipe(string()),
-				artistName: pipe(string(), minLength(1)),
-				bpm: pipe(number(), gtValue(0)),
-				offset: pipe(
-					number(),
-					transform((input) => (Number.isNaN(input) ? undefined : input)),
-				),
-				characteristic: CharacteristicNameSchema,
-				difficulty: DifficultyNameSchema,
-			}),
+			onMount: SCHEMA,
+			onChange: SCHEMA,
+			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
 			if (!coverArtFile) {

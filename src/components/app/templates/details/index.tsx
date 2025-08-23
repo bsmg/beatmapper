@@ -19,6 +19,28 @@ import { Stack, styled, Wrap } from "$:styled-system/jsx";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
+const SCHEMA = object({
+	name: pipe(string(), minLength(1)),
+	subName: pipe(string()),
+	artistName: pipe(string(), minLength(1)),
+	bpm: pipe(number(), gtValue(0)),
+	offset: pipe(
+		number(),
+		transform((input) => (Number.isNaN(input) ? undefined : input)),
+	),
+	swingAmount: pipe(
+		number(),
+		transform(() => 0.5),
+	),
+	swingPeriod: pipe(
+		number(),
+		transform(() => 0),
+	),
+	previewStartTime: pipe(number()),
+	previewDuration: pipe(number()),
+	environment: union([EnvironmentNameSchema, EnvironmentV3NameSchema]),
+});
+
 interface Props {
 	sid: SongId;
 }
@@ -45,27 +67,9 @@ function SongDetails({ sid }: Props) {
 			environment: song.environment,
 		},
 		validators: {
-			onChange: object({
-				name: pipe(string(), minLength(1)),
-				subName: pipe(string()),
-				artistName: pipe(string(), minLength(1)),
-				bpm: pipe(number(), gtValue(0)),
-				offset: pipe(
-					number(),
-					transform((input) => (Number.isNaN(input) ? undefined : input)),
-				),
-				swingAmount: pipe(
-					number(),
-					transform(() => 0.5),
-				),
-				swingPeriod: pipe(
-					number(),
-					transform(() => 0),
-				),
-				previewStartTime: pipe(number()),
-				previewDuration: pipe(number()),
-				environment: union([EnvironmentNameSchema, EnvironmentV3NameSchema]),
-			}),
+			onMount: SCHEMA,
+			onChange: SCHEMA,
+			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
 			const newSongObject = { ...song, ...value };

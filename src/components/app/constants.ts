@@ -73,16 +73,15 @@ export function createBeatmapListCollection({ beatmapIds }: BeatmapListCollectio
 
 interface BeatmapCharacteristicListCollection {
 	beatmaps: App.IBeatmap[];
-	currentBeatmap?: App.IBeatmap;
 }
-export function createBeatmapCharacteristicListCollection({ beatmaps, currentBeatmap }: BeatmapCharacteristicListCollection) {
+export function createBeatmapCharacteristicListCollection({ beatmaps }: BeatmapCharacteristicListCollection) {
 	return createListCollection({
 		items: CHARACTERISTIC_COLLECTION.items,
 		itemToString: (item) => CharacteristicRename[item.value],
 		isItemDisabled: (item) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item.value);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;
-			return currentBeatmap?.characteristic === item.value;
+			return false;
 		},
 	});
 }

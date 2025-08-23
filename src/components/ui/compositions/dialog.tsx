@@ -8,10 +8,10 @@ import * as Builder from "$/components/ui/styled/dialog";
 import { HStack, Stack } from "$:styled-system/jsx";
 import { Button } from "./button";
 
-export interface DialogProps {
-	render: (ctx: UseDialogContext) => ReactNode;
+export interface DialogProps extends Builder.BaseProps {
 	title?: ReactNode;
 	description?: ReactNode;
+	render: (ctx: UseDialogContext) => ReactNode;
 }
 
 function Contents({ title, description, render, children }: DialogProps & PropsWithChildren) {
@@ -28,9 +28,6 @@ function Contents({ title, description, render, children }: DialogProps & PropsW
 					)}
 					<Builder.Context>{(ctx) => render(ctx)}</Builder.Context>
 					{children}
-					<Builder.CloseTrigger>
-						<XIcon />
-					</Builder.CloseTrigger>
 				</Builder.Content>
 			</Builder.Positioner>
 		</Portal>
@@ -45,7 +42,11 @@ export function Dialog({ children, ...rest }: Assign<ComponentProps<typeof Build
 					<span>{children}</span>
 				</Builder.Trigger>
 			)}
-			<Contents {...rest} />
+			<Contents {...rest}>
+				<Builder.CloseTrigger>
+					<XIcon />
+				</Builder.CloseTrigger>
+			</Contents>
 		</Builder.Root>
 	);
 }
@@ -58,7 +59,11 @@ export function DialogProvider({ value, children, title, description, render, ..
 					<span>{children}</span>
 				</Builder.Trigger>
 			)}
-			<Contents {...value} title={title} description={description} render={render} />
+			<Contents {...value} title={title} description={description} render={render}>
+				<Builder.CloseTrigger>
+					<XIcon />
+				</Builder.CloseTrigger>
+			</Contents>
 		</Builder.RootProvider>
 	);
 }
