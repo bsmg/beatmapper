@@ -21,9 +21,10 @@ export function RadioGroup<T extends CollectionItem>({ collection, children, ...
 					const value = collection.getItemValue(item);
 					if (!value) return null;
 					const label = collection.stringifyItem(item);
+					const disabled = collection.getItemDisabled(item);
 					return (
-						<Builder.Item key={value} value={value}>
-							<Builder.ItemControl>
+						<Builder.Item key={value} value={value} disabled={disabled}>
+							<Builder.ItemControl data-disabled={disabled}>
 								<Builder.Context>
 									{(ctx) => (
 										<Presence asChild present={ctx.value === value}>
@@ -32,7 +33,7 @@ export function RadioGroup<T extends CollectionItem>({ collection, children, ...
 									)}
 								</Builder.Context>
 							</Builder.ItemControl>
-							<Builder.ItemText>{label ?? value}</Builder.ItemText>
+							<Builder.ItemText data-disabled={disabled}>{label ?? value}</Builder.ItemText>
 							<Builder.ItemHiddenInput />
 						</Builder.Item>
 					);

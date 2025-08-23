@@ -41,8 +41,9 @@ export const ENVIRONMENT_COLLECTION = createListCollection({
 });
 
 export const VERSION_COLLECTION = createListCollection({
-	items: ["1", "2", "3", "4"],
-	itemToString: (item) => ["1.5.0", "2.6.0", "3.3.0", "4.1.0"][Number.parseInt(item) - 1],
+	items: ["4", "3", "2", "1"].map((x, i) => ({ value: x, index: i })),
+	itemToString: (item) => ["v4 (4.1.0)", "v3 (3.3.0)", "v2 (2.6.0)", "v1 (1.5.0)"][item.index],
+	isItemDisabled: (item) => item.value === "1",
 });
 
 export const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({

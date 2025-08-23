@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import * as Builder from "$/components/ui/styled/field";
 import { HStack } from "$:styled-system/jsx";
 import { Input as BaseInput, NativeSelect as BaseSelect, Textarea as BaseTextarea } from "./input";
+import { MDXRender } from "./mdx";
 import { Tooltip } from "./tooltip";
 
 export interface FieldProps extends Omit<ComponentProps<typeof Builder.Root>, "label"> {
@@ -21,7 +22,7 @@ export function Field({ label, cosmetic, children, helperText, errorText, ...res
 						<span>{label}</span>
 					</Builder.Label>
 					{helperText && (
-						<Tooltip render={() => helperText}>
+						<Tooltip interactive render={() => (typeof helperText === "string" ? <MDXRender code={helperText} /> : helperText)}>
 							<Builder.HelperText>
 								<HelpCircleIcon size={16} />
 							</Builder.HelperText>

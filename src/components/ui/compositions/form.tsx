@@ -147,7 +147,7 @@ function SubmitButton({ loading, disabled, children, onClick, ...rest }: Compone
 	return (
 		<form.Subscribe>
 			{(state) => (
-				<Button variant="solid" size="md" {...rest} loading={state.isSubmitting} disabled={disabled || !state.isDirty || !state.canSubmit} onClick={handleClick}>
+				<Button variant="solid" size="md" {...rest} loading={state.isSubmitting} disabled={disabled || !state.canSubmit} onClick={handleClick}>
 					{children ?? "Submit"}
 				</Button>
 			)}

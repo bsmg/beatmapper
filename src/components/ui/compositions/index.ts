@@ -11,6 +11,7 @@ export { useAppForm } from "./form";
 export { Heading } from "./heading";
 export { Input, NativeSelect, Textarea } from "./input";
 export * as List from "./list";
+export { MDXRender } from "./mdx";
 export { Menu, type MenuItem } from "./menu";
 export { createPrompt, createPrompterFactory } from "./prompter";
 export { RadioButtonGroup, type RadioButtonItem } from "./radio-button-group";
