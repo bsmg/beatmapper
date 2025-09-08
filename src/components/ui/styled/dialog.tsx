@@ -18,7 +18,7 @@ const recipe = sva({
 			left: 0,
 			top: 0,
 			width: "100vw",
-			height: "100vh",
+			height: "100dvh",
 			backdropFilter: "blur(8px)",
 			backgroundColor: "bg.backdrop",
 			animationStyle: { _open: "fade-in", _closed: "fade-out" },

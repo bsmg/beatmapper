@@ -7,7 +7,7 @@ export const Root = styled("nav", {
 	base: vstack.raw({
 		position: "relative",
 		width: "sidebar",
-		height: "100vh",
+		height: "100dvh",
 		justify: "space-between",
 		gap: 2,
 		paddingBlock: 2,

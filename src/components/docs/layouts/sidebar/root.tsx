@@ -22,7 +22,7 @@ function DocsSidebarRoot({ children }: PropsWithChildren) {
 const Wrapper = styled("div", {
 	base: stack.raw({
 		minWidth: "300px",
-		maxHeight: "100vh",
+		maxHeight: { base: undefined, md: "100dvh" },
 		gap: 0,
 		fontFamily: "'system'",
 		backgroundColor: "bg.default",

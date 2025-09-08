@@ -1,4 +1,4 @@
-import { throttle } from "@tanstack/pacer/throttler";
+import { useThrottler } from "@tanstack/react-pacer/throttler";
 import { type MouseEvent, type MouseEventHandler, type ReactNode, type RefObject, useCallback, useMemo, useRef, useState } from "react";
 
 import { useAppSelector } from "$/store/hooks";
@@ -38,24 +38,21 @@ function AudioVisualizerContent({ cursorPosition, duration, onVisualizerClick, c
 		[duration, onVisualizerClick],
 	);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: correct use case
-	const throttledHandler = useCallback(
-		throttle(
-			(event) => {
-				if (!scrubbing || !duration) return;
+	const throttler = useThrottler<MouseEventHandler<HTMLElement>>(
+		(event) => {
+			if (!scrubbing || !duration) return;
 
-				const newCursorPosition = getNewCursorPosition(event, canvasRef, duration);
+			const newCursorPosition = getNewCursorPosition(event, canvasRef, duration);
 
-				if (onVisualizerClick) onVisualizerClick(event, newCursorPosition);
-			},
-			{ wait: wait },
-		),
-		[duration, onVisualizerClick, scrubbing],
+			if (onVisualizerClick) onVisualizerClick(event, newCursorPosition);
+		},
+		{ wait: wait },
+		() => ({ duration, scrubbing, onVisualizerClick }),
 	);
 
-	const handleMouseMove: MouseEventHandler = (ev) => {
+	const handleMouseMove: MouseEventHandler<HTMLElement> = (ev) => {
 		ev.persist();
-		throttledHandler(ev);
+		throttler.maybeExecute(ev);
 	};
 
 	const handleMouseDown: MouseEventHandler = () => {

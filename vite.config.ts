@@ -81,7 +81,6 @@ export default defineConfig(async (ctx) => {
 		plugins: [react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
-			global: "window",
 			version: `\"${version}\"`,
 		},
 		resolve: {
@@ -97,9 +96,11 @@ export default defineConfig(async (ctx) => {
 					manualChunks: (id) => {
 						if (id.includes(".velite")) return "content";
 						if (id.includes("node_modules")) {
+							if (id.includes("acorn/dist")) return "vendor-acorn";
 							if (id.includes("three.core.js")) return "vendor-three-core";
 							if (id.includes("three") || id.includes("@react-three")) return "vendor-three";
-							if (id.includes("@ark-ui") || id.includes("@floating-ui") || id.includes("@zag-js") || id.includes("lucide")) return "vendor-ui";
+							if (id.includes("@ark-ui") || id.includes("@floating-ui") || id.includes("@react-spring") || id.includes("@zag-js") || id.includes("lucide")) return "vendor-ui";
+							if (id.includes("react-dom")) return "vendor-react";
 							if (id.includes("@std")) return "vendor-std";
 							if (id.includes("@tanstack")) return "vendor-tanstack";
 							if (id.includes("bsmap")) return "vendor-bsmap";

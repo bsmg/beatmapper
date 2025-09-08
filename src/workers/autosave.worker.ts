@@ -36,10 +36,9 @@ export async function save(state: RootState, filestore: BeatmapFilestore, songId
 		}
 	}
 
-	return APP_TOASTER.create({
-		type: "info",
-		description: `Contents for "${beatmapId ? `${songId}/${beatmapId}` : songId}" has been saved.`,
-	});
+	const id = `${beatmapId ? `${songId}/${beatmapId}` : songId}`;
+
+	return APP_TOASTER.success({ id: `save/${id}`, description: `Contents for "${id}" has been saved.` });
 }
 
 interface Options {

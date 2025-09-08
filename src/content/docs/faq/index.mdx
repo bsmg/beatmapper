@@ -39,17 +39,16 @@ but please be patient since there is still a lot of work to be done to ensure fu
 
 ## Are there plans to improve mobile support?
 
-Unfortunately, mobile support is not really possible with the current architecture of the app, 
-mainly due to incomplete implementations for specific web APIs and roadblocking privacy features within the iOS platform that are too difficult to work around at this stage of development:
+While Beatmapper's current architecture creates a path forward for having a viable mobile editor within the ecosystem, 
+there are still a considerable number of roadblocks that make it very difficult to fully pursue:
 
-- iOS does not offer native playback support for the OGG Voribs audio format, which is the only audio format that is allowed for custom maps distributed on BeatSaver. 
 - Because Beatmapper does not have a remote storage layer or directory mounting mechanism, all maps must be manually transferred between desktop and mobile devices, 
-  which ends up being a pretty significant inconvenience when needing to preview your map in-game.
-- The iOS implementation of IndexedDB does not offer full compatibility with non-serial data, 
-  which means multimedia files (like the audio file or cover image) would need to be re-requested every time you open a particular map.
-- When visiting a website on iOS, any locally-stored data will *automatically be wiped* after a week of inactivity, 
-  which completely destroys the whole intent of the local storage mechanism acting as the app's persistence layer.
+  which ends up being a pretty significant inconvenience when needing to preview your maps in-game.
+- Some platforms may have reduced support for architectures/frameworks used to provide core functionality. 
+  For example, iOS devices will refuse to process blobs/files in "private browsing" modes, which completely breaks processing workflows for the storage layer and editor views.
+- Some platforms may automatically delete locally-stored data after periods of inactivity, 
+  which destroys the whole intent of the local storage mechanism acting as the app's persistence layer.
 
-On top of these roadblocks, we would need to essentially rearchitect the entire UI layer for mobile devices, 
-including a unified component architecture for both desktop and mobile environments.
-This is a considerable amount of work for what I would consider to be very little payoff in practice. hence why I'm not really considering it at this time.
+On top of these roadblocks, we would need to create an entirely new workflow for the editor view that would work for mobile devices, 
+and create a unified architecture and workflow that can be shared across desktop and mobile environments.
+This is a considerable amount of work for what I would consider to be very little payoff, hence why it's not in strong consideration at this time.

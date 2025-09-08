@@ -20,7 +20,7 @@ export const EDITOR_TOASTER = createToaster({
 	max: 1,
 });
 
-export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg"];
+export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg", "application/ogg"];
 export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/png"];
 export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/zip", "application/x-zip-compressed", "application/octet-stream"];
 
@@ -42,7 +42,7 @@ export const ENVIRONMENT_COLLECTION = createListCollection({
 
 export const VERSION_COLLECTION = createListCollection({
 	items: ["4", "3", "2", "1"].map((x, i) => ({ value: x, index: i })),
-	itemToString: (item) => ["v4 (4.1.0)", "v3 (3.3.0)", "v2 (2.6.0)", "v1 (1.5.0)"][item.index],
+	itemToString: (item) => ["v4", "v3", "v2", "v1"][item.index],
 	isItemDisabled: (item) => item.value === "1",
 });
 

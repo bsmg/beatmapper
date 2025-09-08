@@ -53,16 +53,16 @@ function CreateMapForm({ dialog }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
-			if (!coverArtFile) {
-				return APP_TOASTER.create({
-					type: "error",
-					description: "Please select a cover art file first",
-				});
-			}
 			if (!songFile) {
 				return APP_TOASTER.create({
 					type: "error",
 					description: "Please select a song file first",
+				});
+			}
+			if (!coverArtFile) {
+				return APP_TOASTER.create({
+					type: "error",
+					description: "Please select a cover art file first",
 				});
 			}
 
@@ -97,12 +97,12 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Row>
 				<Field label="Song File">
-					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
+					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} acceptedFiles={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
 						Audio File
 					</FileUpload>
 				</Field>
 				<Field label="Cover Art File">
-					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} acceptedFiles={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 						Image File
 					</FileUpload>
 				</Field>

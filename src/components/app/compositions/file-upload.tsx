@@ -9,13 +9,13 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
 
 export function LocalFileUpload({ filename, children, ...rest }: ComponentProps<typeof FileUpload> & { filename: string }) {
-	const { data: currentFile, isSuccess } = useLocalFileQuery(filename, {
+	const { data: currentFiles, isSuccess } = useLocalFileQuery(filename, {
 		queryKeySuffix: "picker",
 		transform: (file) => (file ? [file] : []),
 	});
 
 	return (
-		<FileUpload {...rest} key={`${filename}.${isSuccess}`} files={currentFile}>
+		<FileUpload {...rest} key={`${filename}.${isSuccess}`} acceptedFiles={currentFiles}>
 			{children}
 		</FileUpload>
 	);
@@ -48,5 +48,3 @@ export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<t
 		</FileUpload>
 	);
 }
-
-export default MapArchiveFileUpload;

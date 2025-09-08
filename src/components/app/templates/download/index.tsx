@@ -91,7 +91,7 @@ function Download({ sid }: Props) {
 								{(ctx) => (
 									<Stack>
 										<ctx.RadioGroup label="Serial Version" helperText={"The [serial format](https://bsmg.wiki/mapping/map-format#schemas) to export your map contents to. Generally, higher versions will offer better compatibility."} collection={VERSION_COLLECTION} />
-										<Text color={"yellow.500!"} fontSize={"0.875em"}>
+										<Text color={"fg.muted"} fontSize={"0.875em"}>
 											{ctx.state.value !== null ? null : "NOTE: If the version is left unset, the implicit version of your map will be used (derived from when the map was originally created/imported in the editor)."}
 										</Text>
 									</Stack>

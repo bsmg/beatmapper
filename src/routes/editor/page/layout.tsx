@@ -18,7 +18,7 @@ function RouteComponent() {
 
 const Wrapper = styled("div", {
 	base: {
-		maxHeight: "100vh",
+		maxHeight: "100dvh",
 		overflow: "auto",
 		paddingBlock: 8,
 	},
