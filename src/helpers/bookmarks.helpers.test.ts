@@ -1,3 +1,4 @@
+// biome-ignore lint/correctness/noUnusedImports: false positive
 import { v2, v3 } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 

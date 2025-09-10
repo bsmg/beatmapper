@@ -16,7 +16,7 @@ function EditorViewScene({ sid, bid, showBeatmapPicker, children }: Props) {
 			<EditorSongInfo sid={sid} bid={bid} showDifficultySelector={!!showBeatmapPicker} />
 			{children}
 			<EditorNavigationPanel sid={sid} />
-			<EditorStatusBar sid={sid} />
+			<EditorStatusBar />
 			<DefaultEditorShortcuts sid={sid} />
 		</Fragment>
 	);

@@ -81,7 +81,7 @@ export default defineConfig(async (ctx) => {
 		plugins: [react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
-			version: `\"${version}\"`,
+			version: `"${version}"`,
 		},
 		resolve: {
 			alias: {

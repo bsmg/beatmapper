@@ -225,7 +225,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 			<MainWrapper>
 				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
 					{allTracks.map(([id, { label }]) => (
-						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(Number.parseInt(id))} onContextMenu={(ev) => ev.preventDefault()}>
+						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(Number.parseInt(id, 10))} onContextMenu={(ev) => ev.preventDefault()}>
 							{label}
 						</Prefix>
 					))}
@@ -236,17 +236,17 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 					</TrackMarkersWrapper>
 					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
 						{allTracks.map(([id]) => {
-							const isDisabled = isTrackDisabled(Number.parseInt(id));
+							const isDisabled = isTrackDisabled(Number.parseInt(id, 10));
 							return (
 								<EventGridTrack
 									key={id}
 									sid={sid}
 									bid={bid}
-									trackId={Number.parseInt(id)}
+									trackId={Number.parseInt(id, 10)}
 									width={dimensions.width}
 									height={rowHeight}
 									disabled={isDisabled}
-									onPointerOver={(ev) => handlePointerOver(ev, Number.parseInt(id))}
+									onPointerOver={(ev) => handlePointerOver(ev, Number.parseInt(id, 10))}
 									onPointerOut={handlePointerOut}
 									onEventPointerDown={handleEventPointerDown}
 									onEventPointerOver={handleEventPointerOver}

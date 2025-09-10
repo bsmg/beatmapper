@@ -50,7 +50,7 @@ function Download({ sid }: Props) {
 			dispatch(
 				downloadMapFiles({
 					songId: sid,
-					version: value.version ? (Number.parseInt(value.version) as ImplicitVersion) : undefined,
+					version: value.version ? (Number.parseInt(value.version, 10) as ImplicitVersion) : undefined,
 					options: {
 						format: value.minify ? 0 : 2,
 						optimize: {

@@ -1,12 +1,8 @@
 import { useAppPrompterContext } from "$/components/app/compositions";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button } from "$/components/ui/compositions";
-import type { SongId } from "$/types";
 
-interface Props {
-	sid: SongId;
-}
-function ObstaclesActionPanelGroup({ sid }: Props) {
+function ObstaclesActionPanelGroup() {
 	const { openPrompt } = useAppPrompterContext();
 
 	return (

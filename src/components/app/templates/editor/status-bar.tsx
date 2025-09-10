@@ -6,14 +6,11 @@ import { StatusBar } from "$/components/app/layouts";
 import { updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectedTotalBombNotes, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
-import { type SongId, View } from "$/types";
+import { View } from "$/types";
 import { pluralize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 
-interface Props {
-	sid: SongId;
-}
-function EditorStatusBar({ sid }: Props) {
+function EditorStatusBar() {
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 	const playbackRate = useAppSelector(selectPlaybackRate);

@@ -16,7 +16,7 @@ interface MDXProps {
 	components?: MDXComponents;
 }
 export const MDXRender = memo(({ code, components }: MDXProps) => {
-	// @ts-ignore
+	// @ts-expect-error
 	const { default: Component } = useMemo(() => evaluateSync(code, { Fragment, jsx, jsxs, jsxDEV }), [code]);
 	const sharedComponents = useMemo(() => ({ ...DEFAULT_COMPONENTS, ...components }), [components]);
 	return <Component components={sharedComponents} />;

@@ -17,7 +17,7 @@ const recipe = sva({
 			wordWrap: "break-word",
 			colorPalette: {
 				base: "slate",
-				// @ts-ignore
+				// @ts-expect-error
 				'&[data-type="success"]': "green",
 				'&[data-type="error"]': "red",
 				'&[data-type="info"]': "blue",

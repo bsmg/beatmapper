@@ -60,7 +60,7 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 					<Interleave separator={() => <DotIcon size={16} />}>{numbers}</Interleave>
 				</ActionPanelGroup.ActionGroup>
 			</ActionPanelGroup.Root>
-			{hasSelectedObstacles && <ObstaclesActionPanelGroup sid={sid} />}
+			{hasSelectedObstacles && <ObstaclesActionPanelGroup />}
 			<ActionPanelGroup.Root label="Actions">
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Mirror selection horizontally"}>

@@ -47,7 +47,6 @@ function Rings({ count, lastRotationEvent, lastZoomEvent, minDistance, maxDistan
 			{rotation.map((props, index) => {
 				const zRotation = props.ratio.to((o) => o);
 				const zPosition = zoom[index].distance.to((o) => o * index * -1);
-				// @ts-ignore
 				return children(index, { zPosition, zRotation });
 			})}
 		</group>
