@@ -18,6 +18,7 @@ const recipe = sva({
 		item: hstack.raw({
 			color: "fg.default",
 			gap: 1,
+			opacity: { base: 1, _disabled: "disabled" },
 		}),
 		itemControl: center.raw({
 			boxSize: "1em",
@@ -29,10 +30,13 @@ const recipe = sva({
 			outlineStyle: { base: "none", _focus: "solid" },
 			outlineColor: "border.outline",
 			outlineOffset: 0.25,
-			cursor: "pointer",
+			opacity: { base: 1, _disabled: "disabled" },
+			cursor: { base: "pointer", _disabled: "not-allowed" },
 		}),
 		itemText: {
 			userSelect: "none",
+			opacity: { base: 1, _disabled: "disabled" },
+			cursor: { base: "pointer", _disabled: "not-allowed" },
 		},
 	},
 	variants: {

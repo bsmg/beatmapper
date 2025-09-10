@@ -20,7 +20,7 @@ export const EDITOR_TOASTER = createToaster({
 	max: 1,
 });
 
-export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg"];
+export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg", "application/ogg"];
 export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/png"];
 export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/zip", "application/x-zip-compressed", "application/octet-stream"];
 
@@ -41,8 +41,9 @@ export const ENVIRONMENT_COLLECTION = createListCollection({
 });
 
 export const VERSION_COLLECTION = createListCollection({
-	items: ["1", "2", "3", "4"],
-	itemToString: (item) => ["1.5.0", "2.6.0", "3.3.0", "4.1.0"][Number.parseInt(item) - 1],
+	items: ["4", "3", "2", "1"].map((x, i) => ({ value: x, index: i })),
+	itemToString: (item) => ["v4", "v3", "v2", "v1"][item.index],
+	isItemDisabled: (item) => item.value === "1",
 });
 
 export const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
@@ -72,16 +73,15 @@ export function createBeatmapListCollection({ beatmapIds }: BeatmapListCollectio
 
 interface BeatmapCharacteristicListCollection {
 	beatmaps: App.IBeatmap[];
-	currentBeatmap?: App.IBeatmap;
 }
-export function createBeatmapCharacteristicListCollection({ beatmaps, currentBeatmap }: BeatmapCharacteristicListCollection) {
+export function createBeatmapCharacteristicListCollection({ beatmaps }: BeatmapCharacteristicListCollection) {
 	return createListCollection({
 		items: CHARACTERISTIC_COLLECTION.items,
 		itemToString: (item) => CharacteristicRename[item.value],
 		isItemDisabled: (item) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item.value);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;
-			return currentBeatmap?.characteristic === item.value;
+			return false;
 		},
 	});
 }

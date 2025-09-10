@@ -166,7 +166,7 @@ export const selectEventEditorStartAndEndBeat = createSelector(selectCursorPosit
 export const selectObjectsCanUndo = createSelector(
 	(state: RootState) => state.entities.beatmap,
 	(history) => {
-		return history.past.length > 0;
+		return history.past.length > 1;
 	},
 );
 export const selectObjectsCanRedo = createSelector(

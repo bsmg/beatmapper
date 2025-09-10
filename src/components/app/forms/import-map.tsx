@@ -2,7 +2,7 @@ import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import MapArchiveFileUpload from "$/components/app/compositions/file-upload";
+import { MapArchiveFileUpload } from "$/components/app/compositions/file-upload";
 import { List, Text } from "$/components/ui/compositions";
 import { useAppSelector } from "$/store/hooks";
 import { selectProcessingImport } from "$/store/selectors";

@@ -158,7 +158,7 @@ const slice = createSlice({
 				return isInWindow && isInVisibleTracks;
 			});
 			for (const event of allVisible) {
-				const eventTrackIndex = allTracks.findIndex((id) => Number.parseInt(id) === event.type);
+				const eventTrackIndex = allTracks.findIndex((id) => Number.parseInt(id, 10) === event.type);
 				const isInSelectionBox = eventTrackIndex >= selectionBoxInBeats.startTrackIndex && eventTrackIndex <= selectionBoxInBeats.endTrackIndex;
 				adapter.updateOne(state, { id: adapter.selectId(event), changes: { selected: isInSelectionBox || (selectionBoxInBeats.withPrevious && event.selected) } });
 			}

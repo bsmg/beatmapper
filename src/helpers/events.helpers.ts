@@ -7,7 +7,7 @@ import type { LightshowEntitySerializationOptions } from "./object.helpers";
 import { createPropertySerializationFactory } from "./serialization.helpers";
 
 export function resolveTrackType(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const match = Object.entries(tracks).find(([id]) => trackId === Number.parseInt(id));
+	const match = Object.entries(tracks).find(([id]) => trackId === Number.parseInt(id, 10));
 	if (!match) return TrackType.UNSUPPORTED;
 	return match[1].type;
 }
@@ -51,40 +51,40 @@ export function resolveEventType<T extends Pick<App.IBasicEvent, "type" | "value
 export function isLightTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const LIGHT_TRACKS = Object.entries(tracks)
 		.filter(([, { type }]) => type === TrackType.LIGHT)
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	return LIGHT_TRACKS.includes(trackId);
 }
 export function isTriggerTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const TRIGGER_TRACKS = Object.entries(tracks)
 		.filter(([, { type }]) => type === TrackType.TRIGGER)
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	return TRIGGER_TRACKS.includes(trackId);
 }
 export function isValueTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const VALUE_TRACKS = Object.entries(tracks)
 		.filter(([, { type }]) => type === TrackType.VALUE)
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	return VALUE_TRACKS.includes(trackId);
 }
 export function isMirroredTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const mirrorTracks = Object.entries(tracks)
 		.filter(([, track]) => "side" in track && !!track.side)
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	return mirrorTracks.includes(trackId);
 }
 export function isSideTrack(trackId: Accept<EventType, number>, side: "left" | "right", tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const mirrorTracks = Object.entries(tracks)
 		.filter(([, track]) => "side" in track && track.side === side)
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	return mirrorTracks.includes(trackId);
 }
 export function resolveMirroredTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const leftTracks = Object.entries(tracks)
 		.filter(([, track]) => "side" in track && track.side === "left")
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	const rightTracks = Object.entries(tracks)
 		.filter(([, track]) => "side" in track && track.side === "right")
-		.map<number>(([id]) => Number.parseInt(id));
+		.map<number>(([id]) => Number.parseInt(id, 10));
 	return leftTracks.includes(trackId) ? rightTracks[leftTracks.indexOf(trackId)] : leftTracks[rightTracks.indexOf(trackId)];
 }
 
@@ -154,10 +154,11 @@ export function deriveEventTracksForEnvironment(environment: EnvironmentAllName)
 			return environmentTrackIds.includes(id);
 		}
 		if (commonEventTracks.includes(id)) return true;
+		return false;
 	});
 
 	const processed = filtered.map(([id, track]) => {
-		const trackId = Number.parseInt(id);
+		const trackId = Number.parseInt(id, 10);
 		const label = renamer.eventTypeRename(trackId, environment);
 		let type = track.type;
 		switch (environment) {

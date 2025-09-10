@@ -37,7 +37,7 @@ const Wrapper = styled("div", {
 const MainContent = styled("main", {
 	base: {
 		flex: 1,
-		height: "100vh",
+		height: "100dvh",
 		overflowY: "auto",
 	},
 });

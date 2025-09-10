@@ -12,6 +12,11 @@ import { useAppSelector } from "$/store/hooks";
 import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
 import type { BeatmapId, SongId } from "$/types";
 
+const SCHEMA = object({
+	characteristic: CharacteristicNameSchema,
+	difficulty: DifficultyNameSchema,
+});
+
 interface Props {
 	dialog?: UseDialogContext;
 	sid: SongId;
@@ -25,14 +30,13 @@ function CreateBeatmapForm({ dialog, sid, bid, onSubmit: afterCreate, children }
 
 	const Form = useAppForm({
 		defaultValues: {
-			characteristic: "" as CharacteristicName,
-			difficulty: "" as DifficultyName,
+			characteristic: null as unknown as CharacteristicName,
+			difficulty: null as unknown as DifficultyName,
 		},
 		validators: {
-			onChange: object({
-				characteristic: CharacteristicNameSchema,
-				difficulty: DifficultyNameSchema,
-			}),
+			onMount: SCHEMA,
+			onChange: SCHEMA,
+			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === value.characteristic);
@@ -60,14 +64,14 @@ function CreateBeatmapForm({ dialog, sid, bid, onSubmit: afterCreate, children }
 
 	const selectedCharacteristic = useStore(Form.store, (state) => state.values.characteristic);
 
-	const CHARACTERISTIC_LIST_COLLECTION = useMemo(() => createBeatmapCharacteristicListCollection({ beatmaps, currentBeatmap }), [beatmaps, currentBeatmap]);
+	const CHARACTERISTIC_LIST_COLLECTION = useMemo(() => createBeatmapCharacteristicListCollection({ beatmaps }), [beatmaps]);
 	const DIFFICULTY_LIST_COLLECTION = useMemo(() => createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic: selectedCharacteristic }), [beatmaps, currentBeatmap, selectedCharacteristic]);
 
 	return (
 		<Form.AppForm>
 			<Form.Root>
-				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" collection={CHARACTERISTIC_LIST_COLLECTION} />}</Form.AppField>
-				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" collection={DIFFICULTY_LIST_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_LIST_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_LIST_COLLECTION} />}</Form.AppField>
 				<Form.Submit>
 					<Form.Subscribe>{(ctx) => children({ id: ctx.values.difficulty })}</Form.Subscribe>
 				</Form.Submit>

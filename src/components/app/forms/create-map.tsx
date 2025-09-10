@@ -11,6 +11,19 @@ import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
 
+const SCHEMA = object({
+	name: pipe(string(), minLength(1)),
+	subName: pipe(string()),
+	artistName: pipe(string(), minLength(1)),
+	bpm: pipe(number(), gtValue(0)),
+	offset: pipe(
+		number(),
+		transform((input) => (Number.isNaN(input) ? undefined : input)),
+	),
+	characteristic: CharacteristicNameSchema,
+	difficulty: DifficultyNameSchema,
+});
+
 interface Props {
 	dialog?: UseDialogContext;
 }
@@ -35,30 +48,21 @@ function CreateMapForm({ dialog }: Props) {
 			difficulty: "Easy" as DifficultyName,
 		},
 		validators: {
-			onChange: object({
-				name: pipe(string(), minLength(1)),
-				subName: pipe(string()),
-				artistName: pipe(string(), minLength(1)),
-				bpm: pipe(number(), gtValue(0)),
-				offset: pipe(
-					number(),
-					transform((input) => (Number.isNaN(input) ? undefined : input)),
-				),
-				characteristic: CharacteristicNameSchema,
-				difficulty: DifficultyNameSchema,
-			}),
+			onMount: SCHEMA,
+			onChange: SCHEMA,
+			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
-			if (!coverArtFile) {
-				return APP_TOASTER.create({
-					type: "error",
-					description: "Please select a cover art file first",
-				});
-			}
 			if (!songFile) {
 				return APP_TOASTER.create({
 					type: "error",
 					description: "Please select a song file first",
+				});
+			}
+			if (!coverArtFile) {
+				return APP_TOASTER.create({
+					type: "error",
+					description: "Please select a cover art file first",
 				});
 			}
 
@@ -93,12 +97,12 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Row>
 				<Field label="Song File">
-					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} files={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
+					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} acceptedFiles={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
 						Audio File
 					</FileUpload>
 				</Field>
 				<Field label="Cover Art File">
-					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} files={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
+					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} acceptedFiles={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
 						Image File
 					</FileUpload>
 				</Field>

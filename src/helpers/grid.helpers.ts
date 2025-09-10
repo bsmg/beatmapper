@@ -26,7 +26,7 @@ export function convertGridColumn(colIndex: number, numCols: number, colWidth: n
 }
 
 // TODO: `numRows` is unused and should be removed
-export function convertGridRow(rowIndex: number, numRows: number, rowHeight: number) {
+export function convertGridRow(rowIndex: number, _numRows: number, rowHeight: number) {
 	return rowIndex * rowHeight;
 }
 

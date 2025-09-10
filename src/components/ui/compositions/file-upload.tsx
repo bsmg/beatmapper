@@ -1,7 +1,7 @@
-import type { FileUploadFileChangeDetails } from "@ark-ui/react/file-upload";
+import { useFileUpload } from "@ark-ui/react/file-upload";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, Trash2Icon } from "lucide-react";
-import { type ComponentProps, useCallback, useMemo, useState } from "react";
+import { type ComponentProps, useMemo } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { Button } from "$/components/ui/compositions";
@@ -20,38 +20,30 @@ function resolveIconForFileType(accept?: FileMimeType) {
 interface Props extends ComponentProps<typeof Builder.Root> {
 	colorPalette?: VirtualColorPalette;
 	deletable?: boolean;
-	files?: File[];
 }
-export function FileUpload({ colorPalette = "pink", deletable = true, files: initialFiles = [], onFileChange, children, ...rest }: Props) {
-	const [files, setFiles] = useState<File[]>(initialFiles);
-
-	const handleChange = useCallback(
-		(details: FileUploadFileChangeDetails) => {
-			if (details.acceptedFiles.length === 0 && details.rejectedFiles.length > 0) {
-				for (const error of details.rejectedFiles.flatMap((x) => x.errors)) {
+export function FileUpload({ colorPalette = "pink", deletable = true, onFileReject, children, ...rest }: Props) {
+	const ctx = useFileUpload({
+		...rest,
+		onFileReject: (details) => {
+			if (onFileReject) onFileReject(details);
+			for (const { file, errors } of details.files) {
+				for (const error of errors) {
+					let message = "";
 					switch (error) {
 						case "FILE_INVALID_TYPE": {
-							return APP_TOASTER.error({ description: `Invalid file type: File must be of type ${rest.accept?.toString()}` });
+							message = `Invalid file type: Expected "${rest.accept?.toString()}" but received "${file.type}"`;
+							break;
 						}
 						default: {
-							return APP_TOASTER.error({ description: "Invalid file" });
+							message = `Unhandled error: "${error}"`;
+							break;
 						}
 					}
+					return APP_TOASTER.error({ id: error, description: message });
 				}
-			} else {
-				if (onFileChange) onFileChange(details);
-				setFiles(details.acceptedFiles);
 			}
 		},
-		[rest.accept, onFileChange],
-	);
-
-	const handleClear = useCallback(
-		(name: string) => {
-			setFiles(files.filter((file) => file.name !== name));
-		},
-		[files],
-	);
+	});
 
 	const AcceptIcon = useMemo(() => {
 		if (Array.isArray(rest.accept)) return resolveIconForFileType(rest.accept[0]);
@@ -60,7 +52,7 @@ export function FileUpload({ colorPalette = "pink", deletable = true, files: ini
 	}, [rest.accept]);
 
 	return (
-		<Builder.Root {...rest} onFileChange={handleChange}>
+		<Builder.RootProvider value={ctx}>
 			<Builder.Dropzone data-invalid={rest.invalid} data-disabled={rest.disabled} className={css({ colorPalette })}>
 				<AcceptIcon />
 				<Builder.Label>{children ?? rest.accept?.toString() ?? "Any File"}</Builder.Label>
@@ -68,27 +60,29 @@ export function FileUpload({ colorPalette = "pink", deletable = true, files: ini
 					<Button size="sm">Open File Picker</Button>
 				</Builder.Trigger>
 			</Builder.Dropzone>
-			{files.length > 0 && (
-				<Builder.ItemGroup>
-					{files.map((file) => (
-						<Builder.Item key={file.name} file={file}>
-							<Builder.ItemPreview>
-								<FileIcon />
-							</Builder.ItemPreview>
-							<Builder.ItemName />
-							<Builder.ItemSizeText />
-							{deletable && (
-								<Builder.ItemDeleteTrigger asChild onClick={() => handleClear(file.name)}>
-									<Button variant="ghost" size="icon">
-										<Trash2Icon />
-									</Button>
-								</Builder.ItemDeleteTrigger>
-							)}
-						</Builder.Item>
-					))}
-				</Builder.ItemGroup>
-			)}
+			<Builder.ItemGroup>
+				<Builder.Context>
+					{(ctx) =>
+						ctx.acceptedFiles.map((file) => (
+							<Builder.Item key={file.name} file={file}>
+								<Builder.ItemPreview>
+									<FileIcon />
+								</Builder.ItemPreview>
+								<Builder.ItemName />
+								<Builder.ItemSizeText />
+								{deletable && (
+									<Builder.ItemDeleteTrigger asChild>
+										<Button variant="ghost" size="icon">
+											<Trash2Icon />
+										</Button>
+									</Builder.ItemDeleteTrigger>
+								)}
+							</Builder.Item>
+						))
+					}
+				</Builder.Context>
+			</Builder.ItemGroup>
 			<Builder.HiddenInput />
-		</Builder.Root>
+		</Builder.RootProvider>
 	);
 }
