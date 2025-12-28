@@ -1,5 +1,5 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
-import { calculateNps } from "bsmap";
+import { calculateNps, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
@@ -262,12 +262,18 @@ export const { selectAll: selectFutureObstacles } = obstacles.getSelectors(
 );
 export const selectAllVisibleObstacles = createVisibleObjectsSelector(selectAllObstacles);
 
-export const selectAllSelectedObjects = createSelector(selectAllSelectedColorNotes, selectAllSelectedBombNotes, selectAllSelectedObstacles, (notes, bombs, obstacles) => {
+export const selectSelectedObjects = createSelector(selectAllSelectedColorNotes, selectAllSelectedBombNotes, selectAllSelectedObstacles, (notes, bombs, obstacles) => {
 	return {
 		notes: notes.length > 0 ? notes : undefined,
 		bombs: bombs.length > 0 ? bombs : undefined,
 		obstacles: obstacles.length > 0 ? obstacles : undefined,
 	};
+});
+export const selectAllSelectedObjects = createSelector(selectAllSelectedColorNotes, selectAllSelectedBombNotes, selectAllSelectedObstacles, (notes, bombs, obstacles) => {
+	return [...notes, ...bombs, ...obstacles].sort(sortObjectFn);
+});
+export const selectAnySelectedObjects = createSelector(selectAllSelectedObjects, (objects) => {
+	return objects.length > 0;
 });
 
 export const {
@@ -305,13 +311,19 @@ export const selectInitialStateForTrack = createDraftSafeSelector([selectAllBasi
 	};
 });
 
-export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basic) => {
+export const selectSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basic) => {
 	return {
 		basic: basic.length > 0 ? basic : undefined,
 	};
 });
+export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basic) => {
+	return [...basic].sort(sortObjectFn);
+});
+export const selectAnySelectedEvents = createSelector(selectAllSelectedEvents, (events) => {
+	return events.length > 0;
+});
 
-export const selectAllSelectedEntities = createSelector([selectAllSelectedObjects, selectAllSelectedEvents, (_, view: View) => view], (objects, events, view) => {
+export const selectSelectedBeatmapEntities = createSelector([selectSelectedObjects, selectSelectedEvents, (_, view: View) => view], (objects, events, view): Partial<Omit<App.IBeatmapEntities, "bookmarks">> => {
 	return {
 		notes: view === View.BEATMAP ? objects.notes : undefined,
 		bombs: view === View.BEATMAP ? objects.bombs : undefined,
@@ -319,15 +331,23 @@ export const selectAllSelectedEntities = createSelector([selectAllSelectedObject
 		events: view === View.LIGHTSHOW ? events.basic : undefined,
 	};
 });
+export const selectAllSelectedBeatmapEntities = createSelector([selectAllSelectedObjects, selectAllSelectedEvents], (objects, events) => {
+	return [...objects, ...events].sort(sortObjectFn);
+});
 
 export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: Pick<RootState, "entities">) => {
 	return state.entities.editor.bookmarks;
 });
 
-export const selectAllEntities = createSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBookmarks], (notes, bombs, obstacles, events, bookmarks) => {
+export const selectBeatmapEntities = createSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBookmarks], (notes, bombs, obstacles, events, bookmarks): App.IBeatmapEntities => {
 	return { notes, bombs, obstacles, events, bookmarks };
 });
 
-export const { selectData: selectClipboardData, selectHasObjects: selectClipboardHasObjects } = clipboard.getSelectors((state: Pick<RootState, "clipboard">) => {
+export const {
+	selectData: selectClipboardData,
+	selectHasObjects: selectClipboardHasObjects,
+	selectHasEvents: selectClipboardHasEvents,
+	selectEarliestBeat,
+} = clipboard.getSelectors((state: Pick<RootState, "clipboard">) => {
 	return state.clipboard;
 });

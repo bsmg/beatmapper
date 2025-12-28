@@ -2,18 +2,18 @@ import type { AsyncThunkPayloadCreator, CaseReducer, PayloadAction } from "@redu
 import { sortObjectFn } from "bsmap";
 
 import { createSlice } from "$/store/helpers";
-import { selectAllSelectedEntities } from "$/store/selectors";
+import { selectSelectedBeatmapEntities } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import { type App, View } from "$/types";
+import type { App, View } from "$/types";
 
 const initialState = {
 	view: null as View | null,
-	data: {} as Partial<Omit<App.IBeatmapEntities, "bookmarks">> | null,
+	data: {} as Partial<Omit<App.IBeatmapEntities, "bookmarks">>,
 };
 
 const fetchClipboardData: AsyncThunkPayloadCreator<typeof initialState, { view: View }> = (args: { view: View }, api) => {
 	const state = api.getState() as RootState;
-	const selection = selectAllSelectedEntities(state, args.view);
+	const selection = selectSelectedBeatmapEntities(state, args.view);
 	return api.fulfillWithValue({ ...args, data: selection });
 };
 
@@ -37,7 +37,17 @@ const slice = createSlice({
 	initialState: initialState,
 	selectors: {
 		selectData: (state) => state.data,
-		selectHasObjects: (state) => state.data && state.view === View.BEATMAP,
+		selectHasObjects: (state) => {
+			if (state.data.notes) return state.data.notes.length > 0;
+			if (state.data.bombs) return state.data.bombs.length > 0;
+			if (state.data.obstacles) return state.data.obstacles.length > 0;
+		},
+		selectHasEvents: (state) => {
+			if (state.data.events) return state.data.events.length > 0;
+		},
+		selectEarliestBeat: (state) => {
+			return [...(state.data.notes ?? []), ...(state.data.bombs ?? []), ...(state.data.obstacles ?? []), ...(state.data.events ?? [])].sort(sortObjectFn)[0].time;
+		},
 	},
 	reducers: (api) => {
 		return {

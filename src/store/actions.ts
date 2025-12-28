@@ -6,7 +6,6 @@ import type { JsonWaveformData } from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
-import { resolveTimeForItem } from "$/helpers/item.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { type App, type BeatmapId, type IEventTracks, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
@@ -21,6 +20,7 @@ import {
 	selectClipboardData,
 	selectCursorPositionInBeats,
 	selectDurationInBeats,
+	selectEarliestBeat,
 	selectEventEditorStartAndEndBeat,
 	selectEventsEditorCursor,
 	selectNotesEditorDirection,
@@ -331,7 +331,7 @@ export const pasteSelection = createAsyncThunk("pasteSelection", (args: { songId
 	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
 	const pasteAtBeat = args.view === View.BEATMAP ? selectCursorPositionInBeats(state, args.songId) : selectEventsEditorCursor(state);
 	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
-	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map(resolveTimeForItem).sort((a, b) => a - b)[0];
+	const earliestBeat = selectEarliestBeat(state);
 	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
 	// Every entity that has an ID (obstacles, events) needs a unique ID, we shouldn't blindly copy it over.
 	return api.fulfillWithValue({ ...args, data: data, deltaBetweenPeriods });

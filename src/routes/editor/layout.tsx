@@ -10,7 +10,7 @@ import { MDXContent } from "$/components/ui/atoms";
 import { List, Text } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
-import { selectAllEntities, selectAnnouncements } from "$/store/selectors";
+import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
 import { prompts } from "$:content";
 import { css } from "$:styled-system/css";
 import { styled } from "$:styled-system/jsx";
@@ -58,7 +58,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	},
 	onLeave: async ({ params }) => {
 		const state = store.getState();
-		const entities = selectAllEntities(state);
+		const entities = selectBeatmapEntities(state);
 		await Promise.resolve(store.dispatch(leaveEditor({ songId: params.sid, beatmapId: params.bid, entities })));
 	},
 });

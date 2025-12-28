@@ -2,7 +2,7 @@ import { APP_TOASTER } from "$/components/app/constants";
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import type { BeatmapFilestore } from "$/services/file.service";
 import { selectBeatmapSerializationOptionsFromState, selectInfoSerializationOptionsFromState } from "$/store/middleware/file.middleware";
-import { selectAllEntities, selectBeatmapIdsWithLightshowId, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
+import { selectBeatmapEntities, selectBeatmapIdsWithLightshowId, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
 
@@ -23,7 +23,7 @@ export async function save(state: RootState, filestore: BeatmapFilestore, songId
 
 	// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 	if (beatmapId) {
-		const activeEntities = entities ?? selectAllEntities(state);
+		const activeEntities = entities ?? selectBeatmapEntities(state);
 		const { difficulty, lightshow, customData } = serializeBeatmapContents(activeEntities, selectBeatmapSerializationOptionsFromState(state, songId));
 		const { contents } = await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow, customData });
 
