@@ -6,11 +6,12 @@ import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "
 import { token } from "$:styled-system/tokens";
 import { patchEnvironmentName } from "./packaging.helpers";
 
+const DEFAULT_COLOR_SCHEME = ColorScheme["Default Custom"] as Required<v2.IColorScheme>;
+
 export interface ColorResolverOptions {
 	customColors: IColorScheme;
 }
 export function resolveColorForItem<T extends string | number>(item: T | undefined, { customColors: colorScheme }: ColorResolverOptions) {
-	const DEFAULT_COLOR_SCHEME = ColorScheme["Default Custom"] as Required<v2.IColorScheme>;
 	switch (item) {
 		case ObjectTool.LEFT_NOTE: {
 			return colorScheme.colorLeft ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._colorLeft);
@@ -121,7 +122,12 @@ export function deserializeColorToHex<T extends IColor | ColorArray>(value: T) {
 }
 
 export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
-	const envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+	let envScheme = DEFAULT_COLOR_SCHEME;
+
+	if (environment in EnvironmentSchemeName) {
+		envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+	}
+
 	return {
 		[ColorSchemeKey.SABER_LEFT]: deserializeColorToHex(envScheme._colorLeft).slice(0, 7),
 		[ColorSchemeKey.SABER_RIGHT]: deserializeColorToHex(envScheme._colorRight).slice(0, 7),
