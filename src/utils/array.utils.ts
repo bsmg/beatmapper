@@ -7,17 +7,17 @@ export function ensureArray<T>(obj: Iterable<T> | ArrayLike<T>): T[] | undefined
 	return !isArrayEmpty(array) ? array : undefined;
 }
 
-export function difference<T>(arr1: T[], arr2: T[]) {
+export function difference<T, C = T>(arr1: T[], arr2: T[], comparator = (x: T) => x as unknown as C) {
 	const uniques: T[] = [];
 
-	const setA = new Set(arr1);
-	const setB = new Set(arr2);
+	const setA = new Set(arr1.map(comparator));
+	const setB = new Set(arr2.map(comparator));
 
 	for (const item of arr1) {
-		if (!setB.has(item)) uniques.push(item);
+		if (!setB.has(comparator(item))) uniques.push(item);
 	}
 	for (const item of arr2) {
-		if (!setA.has(item)) uniques.push(item);
+		if (!setA.has(comparator(item))) uniques.push(item);
 	}
 
 	return uniques;
