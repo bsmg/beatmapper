@@ -1,7 +1,7 @@
 import { omit } from "@std/collections/omit";
 import { pick } from "@std/collections/pick";
 import { basename } from "@std/path/basename";
-import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow, sortObjectFn } from "bsmap";
+import { createAudioData, createBeatmap, createInfo, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
@@ -121,51 +121,29 @@ export class BeatmapFilestore extends Filestore {
 
 	async updateInfoContents(songId: SongId, newContents: Partial<wrapper.IWrapInfo>) {
 		const savedContents = await this.loadInfoContents(songId).catch(() => createInfo({ ...newContents }));
-		return await this.saveInfoContents(
-			songId,
-			createInfo({
-				...(savedContents ?? newContents),
-				...omit(newContents, ["version", "filename"]),
-				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
-			}),
-		);
+		return await this.saveInfoContents(songId, createInfo(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
 	async updateAudioDataContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
 		const savedContents = await this.loadAudioDataContents(songId).catch(() => createAudioData({ ...newContents }));
-		return await this.saveAudioDataContents(
-			songId,
-			createAudioData({
-				...(savedContents ?? newContents),
-				...omit(newContents, ["version", "filename"]),
-				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
-			}),
-		);
+		return await this.saveAudioDataContents(songId, createAudioData(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
 	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: Partial<wrapper.IWrapBeatmap>) {
 		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
 		return await this.saveBeatmapContents(
 			songId,
 			beatmapId,
-			createBeatmap({
-				...(savedContents ?? newContents),
-				// we might have an updated lightshow filename if we update the lightshow id.
-				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
-				// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
-				difficulty: createDifficulty({
-					...pick(savedContents.difficulty, ["colorNotes", "bombNotes", "obstacles"]),
-					...newContents.difficulty,
-					customData: ensureObject(deepAssign(savedContents?.difficulty.customData, { ...newContents.difficulty?.customData })),
+			createBeatmap(
+				deepAssign(savedContents, omit(newContents, ["version", "filename"]), {
+					// for difficulty, we'll remove all unsupported collections since those objects can cause issues the user would be unable to fix.
+					difficulty: deepAssign(savedContents.difficulty, { ...newContents.difficulty }),
+					// for lightshow, we'll merge the contents and only replace collections that are directly supported.
+					lightshow: deepAssign(savedContents.lightshow, pick({ ...newContents.lightshow }, ["basicEvents"])),
+					// we'll supply our own wrappers for editor-specific collections.
+					customData: ensureObject({
+						bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
+					}),
 				}),
-				// for lightshow, we'll merge the contents and only replace collections that are directly supported.
-				lightshow: createLightshow({
-					...savedContents.lightshow,
-					...newContents.lightshow,
-					customData: ensureObject(deepAssign(savedContents?.lightshow.customData, { ...newContents.lightshow?.customData })),
-				}),
-				customData: ensureObject({
-					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
-				}),
-			}),
+			),
 		);
 	}
 
