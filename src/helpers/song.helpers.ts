@@ -110,8 +110,10 @@ export function getColorScheme<T extends Pick<App.ISong, "modSettings" | "diffic
 		obstacleColor: resolveColor("obstacleColor"),
 		envColorLeft: resolveColor("envColorLeft"),
 		envColorRight: resolveColor("envColorRight"),
+		envColorWhite: resolveColor("envColorWhite"),
 		envColorLeftBoost: resolveColor("envColorLeftBoost"),
 		envColorRightBoost: resolveColor("envColorRightBoost"),
+		envColorWhiteBoost: resolveColor("envColorWhiteBoost"),
 	};
 }
 

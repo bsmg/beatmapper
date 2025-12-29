@@ -43,7 +43,7 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive, handlePoi
 						layers={1}
 						data={note}
 						position={position}
-						color={resolveColorForItem(color, { customColors: colorScheme })}
+						color={resolveColorForItem(color, { colorScheme })}
 						transparent={adjustedNoteZPosition > -SONG_OFFSET * 2}
 						onPointerDown={(e) => handlePointerDown(e.nativeEvent, note)}
 						onPointerOver={(e) => handlePointerOver(e.nativeEvent, note)}
@@ -62,7 +62,7 @@ function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive, handlePoi
 						layers={1}
 						data={note}
 						position={position}
-						color={resolveColorForItem(ObjectTool.BOMB_NOTE, { customColors: colorScheme })}
+						color={resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}
 						transparent={adjustedNoteZPosition > -SONG_OFFSET * 2}
 						onPointerDown={(e) => handlePointerDown(e.nativeEvent, note)}
 						onPointerOver={(e) => handlePointerOver(e.nativeEvent, note)}

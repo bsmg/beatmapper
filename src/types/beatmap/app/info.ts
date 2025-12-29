@@ -48,7 +48,7 @@ export interface ISong {
 	environment: EnvironmentName | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
-	colorSchemesById: IEntityMap<Required<IColorScheme>>;
+	colorSchemesById: IEntityMap<IColorScheme>;
 	difficultiesById: IEntityMap<IBeatmap>;
 	selectedDifficulty?: BeatmapId;
 	createdAt?: number;

@@ -22,7 +22,7 @@ function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, handlePointerDown,
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 
-	const obstacleColor = useMemo(() => resolveColorForItem(ObjectTool.OBSTACLE, { customColors: colorScheme }), [colorScheme]);
+	const obstacleColor = useMemo(() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme }), [colorScheme]);
 
 	return obstacles.map((obstacle) => {
 		const actualPosition = resolvePositionForObstacle(obstacle, { beatDepth });

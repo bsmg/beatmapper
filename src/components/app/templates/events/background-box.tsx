@@ -19,8 +19,8 @@ function EventGridBackgroundBox({ sid, bid, box }: Props) {
 	const styles = useMemo(() => {
 		const startOffset = normalize(box.time, startBeat, endBeat, 0, 100);
 		const width = normalize(box.duration ?? 0, 0, endBeat - startBeat, 0, 100);
-		const startColor = resolveColorForItem(box.startColor, { customColors: colorScheme });
-		const endColor = resolveColorForItem(box.endColor, { customColors: colorScheme });
+		const startColor = resolveColorForItem(box.startColor, { colorScheme });
+		const endColor = resolveColorForItem(box.endColor, { colorScheme });
 		return {
 			left: `${startOffset}%`,
 			width: `${width}%`,

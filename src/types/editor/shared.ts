@@ -71,7 +71,9 @@ export const ColorSchemeKey = {
 	OBSTACLE: "obstacleColor",
 	ENV_LEFT: "envColorLeft",
 	ENV_RIGHT: "envColorRight",
+	ENV_WHITE: "envColorWhite",
 	BOOST_LEFT: "envColorLeftBoost",
 	BOOST_RIGHT: "envColorRightBoost",
+	BOOST_WHITE: "envColorWhiteBoost",
 } as const;
 export type ColorSchemeKey = Member<typeof ColorSchemeKey>;

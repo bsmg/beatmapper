@@ -7,7 +7,17 @@ export * from "./shared";
 
 export type IEntityMap<T> = { [key in EntityId]: T };
 
-export type IColorScheme = { [key in ColorSchemeKey]: string };
+export type IColorScheme = {
+	[ColorSchemeKey.SABER_LEFT]: string;
+	[ColorSchemeKey.SABER_RIGHT]: string;
+	[ColorSchemeKey.OBSTACLE]: string;
+	[ColorSchemeKey.ENV_LEFT]: string;
+	[ColorSchemeKey.ENV_RIGHT]: string;
+	[ColorSchemeKey.ENV_WHITE]?: string;
+	[ColorSchemeKey.BOOST_LEFT]: string;
+	[ColorSchemeKey.BOOST_RIGHT]: string;
+	[ColorSchemeKey.BOOST_WHITE]?: string;
+};
 
 export interface IBackgroundBox {
 	time: number;

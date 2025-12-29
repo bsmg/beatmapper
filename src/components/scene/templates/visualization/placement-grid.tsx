@@ -61,8 +61,8 @@ function EditorPlacementGrid({ sid, bid, interactive, onCellPointerDown, onCellW
 			<PlacementGrid.Layout grid={grid}>{({ colIndex, rowIndex, grid }) => <PlacementGrid.Cell key={`${colIndex}-${rowIndex}`} layers={!selectionMode ? 1 : 2} colIndex={colIndex} rowIndex={rowIndex} grid={grid} />}</PlacementGrid.Layout>
 			{!selectionMode && (
 				<Fragment>
-					{(selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) && <PlacementGrid.TentativeNote grid={grid} mode={mode} color={resolveColorForItem(selectedTool, { customColors: colorScheme })} />}
-					{selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle grid={grid} mode={mode} color={resolveColorForItem(ObjectTool.OBSTACLE, { customColors: colorScheme })} />}
+					{(selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) && <PlacementGrid.TentativeNote grid={grid} mode={mode} color={resolveColorForItem(selectedTool, { colorScheme })} />}
+					{selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle grid={grid} mode={mode} color={resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })} />}
 				</Fragment>
 			)}
 		</PlacementGrid.Root>

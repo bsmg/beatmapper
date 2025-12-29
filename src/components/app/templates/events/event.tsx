@@ -60,7 +60,7 @@ function EventGridEventItem({ sid, bid, event: data, trackWidth, onEventPointerD
 		const offset = normalize(data.time, startBeat, endBeat, 0, trackWidth);
 		const centeredOffset = offset - BLOCK_WIDTH / 2;
 
-		const background = resolveBackgroundForEvent(data, { tracks, customColors: colorScheme });
+		const background = resolveBackgroundForEvent(data, { tracks, colorScheme });
 
 		return { transform: `translateX(${centeredOffset}px)`, background: background.style, color: isColorDark(background.value) ? "white" : "black" };
 	}, [data, tracks, startBeat, endBeat, trackWidth, colorScheme]);

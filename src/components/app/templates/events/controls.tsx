@@ -23,17 +23,17 @@ const EDIT_MODE_LIST_COLLECTION = createListCollection({
 interface EventListCollection extends ColorResolverOptions {
 	selectedColor?: EventColor;
 }
-function createEventColorListCollection({ customColors }: EventListCollection) {
+function createEventColorListCollection({ colorScheme }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventColor).map((value) => {
-			return { value, label: <Box style={{ "--color": resolveColorForItem(value, { customColors }) } as CSSProperties} /> };
+			return { value, label: <Box style={{ "--color": resolveColorForItem(value, { colorScheme }) } as CSSProperties} /> };
 		}),
 	});
 }
-function createEventEffectListCollection({ selectedColor, customColors }: EventListCollection) {
+function createEventEffectListCollection({ selectedColor, colorScheme }: EventListCollection) {
 	return createListCollection({
 		items: Object.values(EventTool).map((value) => {
-			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, { customColors })} /> };
+			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, { colorScheme })} /> };
 		}),
 	});
 }
@@ -52,8 +52,8 @@ function EventGridControls({ sid, bid, ...rest }: Props) {
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 	const zoomLevel = useAppSelector(selectEventsEditorZoomLevel);
 
-	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ customColors: colorScheme }), [colorScheme]);
-	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ customColors: colorScheme, selectedColor }), [colorScheme, selectedColor]);
+	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ colorScheme }), [colorScheme]);
+	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ colorScheme, selectedColor }), [colorScheme, selectedColor]);
 
 	return (
 		<Wrapper {...rest}>

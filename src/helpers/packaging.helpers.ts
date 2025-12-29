@@ -1,11 +1,11 @@
 import { distinct } from "@std/collections/distinct";
-import { ColorScheme, createBeatmap, createInfo, createInfoBeatmap, EnvironmentSchemeName } from "bsmap";
-import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
+import { createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
+import type { EnvironmentAllName, v2, wrapper } from "bsmap/types";
 
-import type { Accept, App, ColorSchemeKey, IColorScheme, IEntityMap } from "$/types";
+import { type Accept, type App, ColorSchemeKey, type IColorScheme, type IEntityMap } from "$/types";
 import { deepAssign, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark } from "./bookmarks.helpers";
-import { deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
+import { deriveColorSchemeFromEnvironment, deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
 import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
 import { getBeatmaps, getCustomColorsModule, getExtensionsModule, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
@@ -24,8 +24,10 @@ function coalesceBeatmapCollection(data: App.ISong) {
 		_obstacleColor: colors?.obstacleColor ? serializeColorToObject(colors.obstacleColor) : undefined,
 		_envColorLeft: colors?.envColorLeft ? serializeColorToObject(colors.envColorLeft) : undefined,
 		_envColorRight: colors?.envColorRight ? serializeColorToObject(colors.envColorRight) : undefined,
+		_envColorWhite: colors?.envColorWhite ? serializeColorToObject(colors.envColorWhite) : undefined,
 		_envColorLeftBoost: colors?.envColorLeftBoost ? serializeColorToObject(colors.envColorLeftBoost) : undefined,
 		_envColorRightBoost: colors?.envColorRightBoost ? serializeColorToObject(colors.envColorRightBoost) : undefined,
+		_envColorWhiteBoost: colors?.envColorWhiteBoost ? serializeColorToObject(colors.envColorWhiteBoost) : undefined,
 	});
 
 	const editorSettings: App.IEditorData["editorSettings"] = ensureObject({
@@ -43,28 +45,31 @@ export function patchEnvironmentName(environment: Accept<EnvironmentAllName, str
 }
 
 export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): Partial<App.IModSettings> {
-	function resolveColor(data: wrapper.IWrapInfo, key: ColorSchemeKey) {
-		if (data.difficulties.some((x) => hasKeys(x.customData, `_${key}`))) {
-			const customColorExists = data.difficulties.find((x) => x.customData[`_${key}`]);
-			const customColor = customColorExists?.customData[`_${key}`];
-			if (customColor) return deserializeColorToHex(customColor).slice(0, 7);
-		}
-	}
+	const activeCustomColors = Object.values(ColorSchemeKey).reduce(
+		(acc, key) => {
+			const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
+			acc[key as ColorSchemeKey] = color ? deserializeColorToHex(color).slice(0, 7) : undefined;
+			return acc;
+		},
+		{} as { [key in ColorSchemeKey]?: string },
+	);
 
-	const isCustomColorsEnabled = data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorLeftBoost", "_envColorRightBoost", "_obstacleColor"));
+	const isCustomColorsEnabled = data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor"));
 	const isMappingExtensionsEnabled = data.difficulties.some((beatmap) => beatmap.customData._requirements?.includes("Mapping Extensions"));
 
-	const customColors = {
+	const customColors = ensureObject({
 		...data.customData.editors?.Beatmapper?.editorSettings?.modSettings?.customColors,
 		isEnabled: isCustomColorsEnabled,
-		colorLeft: resolveColor(data, "colorLeft"),
-		colorRight: resolveColor(data, "colorRight"),
-		envColorLeft: resolveColor(data, "envColorLeft"),
-		envColorRight: resolveColor(data, "envColorRight"),
-		envColorLeftBoost: resolveColor(data, "envColorLeftBoost"),
-		envColorRightBoost: resolveColor(data, "envColorRightBoost"),
-		obstacleColor: resolveColor(data, "obstacleColor"),
-	};
+		colorLeft: activeCustomColors.colorLeft ?? undefined,
+		colorRight: activeCustomColors.colorRight ?? undefined,
+		envColorLeft: activeCustomColors.envColorLeft ?? undefined,
+		envColorRight: activeCustomColors.envColorRight ?? undefined,
+		envColorWhite: activeCustomColors.envColorWhite ?? undefined,
+		envColorLeftBoost: activeCustomColors.envColorLeftBoost ?? undefined,
+		envColorRightBoost: activeCustomColors.envColorRightBoost ?? undefined,
+		envColorWhiteBoost: activeCustomColors.envColorWhiteBoost ?? undefined,
+		obstacleColor: activeCustomColors.obstacleColor ?? undefined,
+	});
 
 	const mappingExtensions = {
 		...data.customData.editors?.Beatmapper?.editorSettings?.modSettings?.mappingExtensions,
@@ -89,24 +94,26 @@ export interface InfoDeserializationOptions {
 export function serializeInfoContents(data: App.ISong, options: InfoSerializationOptions) {
 	const { beatmaps, customColors, editorSettings } = coalesceBeatmapCollection(data);
 
-	const allEnvironments = distinct(Object.values(beatmaps).map((x) => x.environmentName));
-
-	const envColorScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(data.environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+	const envColorScheme = deriveColorSchemeFromEnvironment(patchEnvironmentName(data.environment));
 
 	const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): wrapper.IWrapInfoColorScheme => {
 		return {
 			name: name,
 			overrideNotes: true,
 			overrideLights: true,
-			saberLeftColor: serializeColorToObject(scheme.colorLeft, true) ?? envColorScheme._colorRight,
-			saberRightColor: serializeColorToObject(scheme.colorRight, true) ?? envColorScheme._colorRight,
-			environment0Color: serializeColorToObject(scheme.envColorLeft, true) ?? envColorScheme._envColorLeft,
-			environment1Color: serializeColorToObject(scheme.envColorRight, true) ?? envColorScheme._envColorRight,
-			obstaclesColor: serializeColorToObject(scheme.obstacleColor, true) ?? envColorScheme._obstacleColor,
-			environment0ColorBoost: serializeColorToObject(scheme.envColorLeftBoost, true) ?? envColorScheme._envColorLeftBoost ?? envColorScheme._envColorLeft,
-			environment1ColorBoost: serializeColorToObject(scheme.envColorRightBoost, true) ?? envColorScheme._envColorRightBoost ?? envColorScheme._envColorRight,
+			saberLeftColor: serializeColorToObject(scheme.colorLeft ?? envColorScheme.colorLeft, true),
+			saberRightColor: serializeColorToObject(scheme.colorRight ?? envColorScheme.colorRight, true),
+			obstaclesColor: serializeColorToObject(scheme.obstacleColor ?? envColorScheme.obstacleColor, true),
+			environment0Color: serializeColorToObject(scheme.envColorLeft ?? envColorScheme.envColorLeft, true),
+			environment1Color: serializeColorToObject(scheme.envColorRight ?? envColorScheme.envColorRight, true),
+			environmentWColor: scheme.envColorWhite ? serializeColorToObject(scheme.envColorWhite ?? envColorScheme.envColorWhite, true) : undefined,
+			environment0ColorBoost: serializeColorToObject(scheme.envColorLeftBoost ?? envColorScheme.envColorLeftBoost, true),
+			environment1ColorBoost: serializeColorToObject(scheme.envColorRightBoost ?? envColorScheme.envColorRightBoost, true),
+			environmentWColorBoost: scheme.envColorWhiteBoost ? serializeColorToObject(scheme.envColorWhiteBoost ?? envColorScheme.envColorWhiteBoost, true) : undefined,
 		};
 	});
+
+	const allEnvironments = distinct(Object.values(beatmaps).map((x) => x.environmentName));
 
 	return createInfo({
 		song: {
@@ -146,9 +153,13 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 				customData: ensureObject<v2.ICustomDataInfoDifficulty>({
 					_colorLeft: customColors?._colorLeft,
 					_colorRight: customColors?._colorRight,
+					_obstacleColor: customColors?._obstacleColor,
 					_envColorLeft: customColors?._envColorLeft,
 					_envColorRight: customColors?._envColorRight,
-					_obstacleColor: customColors?._obstacleColor,
+					_envColorWhite: customColors?._envColorWhite,
+					_envColorLeftBoost: customColors?._envColorLeftBoost,
+					_envColorRightBoost: customColors?._envColorRightBoost,
+					_envColorWhiteBoost: customColors?._envColorWhiteBoost,
 					_difficultyLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
 					_editorOffset: data.offset !== 0 ? data.offset : undefined,
 				}),
@@ -165,16 +176,18 @@ export function serializeInfoContents(data: App.ISong, options: InfoSerializatio
 		},
 	});
 }
-export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.ISong {
-	const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<Required<IColorScheme>>, scheme) => {
+export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): Omit<App.ISong, "id"> {
+	const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<IColorScheme>, scheme) => {
 		acc[scheme.name] = {
 			colorLeft: deserializeColorToHex(scheme.saberLeftColor).slice(0, 7),
 			colorRight: deserializeColorToHex(scheme.saberRightColor).slice(0, 7),
 			obstacleColor: deserializeColorToHex(scheme.obstaclesColor).slice(0, 7),
 			envColorLeft: deserializeColorToHex(scheme.environment0Color).slice(0, 7),
 			envColorRight: deserializeColorToHex(scheme.environment1Color).slice(0, 7),
+			envColorWhite: scheme.environmentWColor ? deserializeColorToHex(scheme.environmentWColor).slice(0, 7) : undefined,
 			envColorLeftBoost: deserializeColorToHex(scheme.environment0ColorBoost).slice(0, 7),
 			envColorRightBoost: deserializeColorToHex(scheme.environment1ColorBoost).slice(0, 7),
+			envColorWhiteBoost: scheme.environmentWColorBoost ? deserializeColorToHex(scheme.environmentWColorBoost).slice(0, 7) : undefined,
 		};
 		return acc;
 	}, {});

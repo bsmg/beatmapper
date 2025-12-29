@@ -37,7 +37,7 @@ export function useLightProps({ sid, bid, lastEvent }: UseLightPropsOptions) {
 		return {
 			lastEventId: lastEvent ? resolveEventId(lastEvent) : null,
 			effect: deriveEffectForEvent(lastEvent),
-			color: deriveColorForEvent(lastEvent, { customColors: colorScheme }),
+			color: deriveColorForEvent(lastEvent, { colorScheme }),
 			brightness: deriveBrightnessForEvent(lastEvent),
 		};
 	}, [lastEvent, colorScheme]);

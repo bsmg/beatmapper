@@ -21,12 +21,12 @@ function NoteToolActionPanelGroup({ sid, bid }: Props) {
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Left Color Note"}>
 					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.LEFT_NOTE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.LEFT_NOTE }))}>
-						<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.LEFT_NOTE, { customColors: colorScheme })} />
+						<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.LEFT_NOTE, { colorScheme })} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Right Color Note"}>
 					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.RIGHT_NOTE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.RIGHT_NOTE }))}>
-						<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.RIGHT_NOTE, { customColors: colorScheme })} />
+						<ColorNoteIcon size={20} color={resolveColorForItem(ObjectTool.RIGHT_NOTE, { colorScheme })} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Bomb Note"}>
@@ -36,7 +36,7 @@ function NoteToolActionPanelGroup({ sid, bid }: Props) {
 				</Tooltip>
 				<Tooltip render={() => "Obstacle"}>
 					<Button variant="ghost" size="icon" data-active={selectedTool === ObjectTool.OBSTACLE} unfocusOnClick onClick={() => dispatch(updateNotesEditorTool({ tool: ObjectTool.OBSTACLE }))}>
-						<ObstacleIcon size={20} color={resolveColorForItem(ObjectTool.OBSTACLE, { customColors: colorScheme })} />
+						<ObstacleIcon size={20} color={resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })} />
 					</Button>
 				</Tooltip>
 			</ActionPanelGroup.ActionGroup>
