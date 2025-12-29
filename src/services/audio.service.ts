@@ -111,6 +111,7 @@ export class AudioSample {
 	}
 
 	getCurrentTime() {
+		if (!this.isPlaying) return this.startOffset;
 		return this.getRateAdjustedElapsed() + (this.playbackRateLastSetAt - this.startTime);
 	}
 
