@@ -5,7 +5,7 @@ import { downloadMapFiles, leaveEditor, saveBeatmapContents, updateBeatmap, upda
 import type { RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
 import type { createAutosaveWorker } from "$/workers";
-import { selectActiveBeatmapId } from "../selectors";
+import { selectSelectedBeatmap } from "../selectors";
 
 interface Options {
 	filestore: BeatmapFilestore;
@@ -19,7 +19,7 @@ export default function createBackupMiddleware({ worker }: Options) {
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			const { songId } = action.payload;
 			const state = api.getState();
-			const beatmapId = selectActiveBeatmapId(state);
+			const beatmapId = selectSelectedBeatmap(state, songId);
 			await worker.save(state, songId, beatmapId);
 		},
 	});

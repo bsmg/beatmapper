@@ -24,7 +24,7 @@ const SONG_TABLE = [
 		header: () => null,
 		cell: (ctx) => {
 			const [sid] = ctx.getValue();
-			return <CoverArtFilePreview songId={sid} width={40} />;
+			return <CoverArtFilePreview sid={sid} width={40} />;
 		},
 	}),
 	helper.accessor((data) => [getSongMetadata(data), isSongReadonly(data)] as const, {

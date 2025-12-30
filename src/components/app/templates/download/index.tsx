@@ -1,4 +1,5 @@
 import { Presence } from "@ark-ui/react/presence";
+import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
@@ -10,7 +11,6 @@ import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { downloadMapFiles, pausePlayback } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectPlaying } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { Stack, styled, VStack } from "$:styled-system/jsx";
 import { vstack } from "$:styled-system/patterns";
 
@@ -20,10 +20,9 @@ const SCHEMA = object({
 	purgeZeros: boolean(),
 });
 
-interface Props {
-	sid: SongId;
-}
-function Download({ sid }: Props) {
+function Download() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const isPlaying = useAppSelector(selectPlaying);

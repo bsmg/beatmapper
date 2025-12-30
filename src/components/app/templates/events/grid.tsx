@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import type { EventType } from "bsmap";
 import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
@@ -6,7 +7,7 @@ import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
 import { bulkRemoveEvent, deselectEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectEventTracksForEnvironment, selectLoading, selectSnap } from "$/store/selectors";
-import { type Accept, type App, type BeatmapId, EventEditMode, type ISelectionBoxInBeats, type SongId, TrackType } from "$/types";
+import { type Accept, type App, EventEditMode, type ISelectionBoxInBeats, TrackType } from "$/types";
 import { clamp, isMetaKeyPressed, normalize, range, roundToNearest } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 import { center, hstack, stack } from "$:styled-system/patterns";
@@ -30,11 +31,9 @@ function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNu
 	return roundedPositionInBeats + startBeat;
 }
 
-interface Props extends ComponentProps<typeof Wrapper> {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function EventGridEditor({ sid, bid, ...rest }: Props) {
+function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const allTracks = useMemo(() => Object.entries(tracks), [tracks]);
@@ -219,7 +218,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 			<HeaderWrapper onContextMenu={(ev) => ev.preventDefault()}>
 				<ActionsWrapper />
 				<TimelineWrapper>
-					<EventGridTimeline sid={sid} beatNums={beatNums} />
+					<EventGridTimeline beatNums={beatNums} />
 				</TimelineWrapper>
 			</HeaderWrapper>
 			<MainWrapper>
@@ -240,8 +239,6 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 							return (
 								<EventGridTrack
 									key={id}
-									sid={sid}
-									bid={bid}
 									trackId={Number.parseInt(id, 10)}
 									width={dimensions.width}
 									height={rowHeight}
@@ -256,7 +253,7 @@ function EventGridEditor({ sid, bid, ...rest }: Props) {
 						})}
 					</TrackContentsWrapper>
 					{selectionBox && <EventGridSelectionBox box={selectionBox} />}
-					<EventGridCursor sid={sid} gridWidth={dimensions.width} />
+					<EventGridCursor gridWidth={dimensions.width} />
 					{typeof mousePositionInPx === "number" && <MouseCursor style={{ left: mousePositionInPx }} />}
 				</TracksWrapper>
 			</MainWrapper>

@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import type { MouseEventHandler } from "react";
 
 import { useAppPrompterContext } from "$/components/app/compositions";
@@ -6,22 +7,22 @@ import ClipboardActionPanelActionGroup from "$/components/app/templates/action-p
 import { Button, Tooltip } from "$/components/ui/compositions";
 import { useAppSelector } from "$/store/hooks";
 import { selectModuleEnabled } from "$/store/selectors";
-import type { SongId } from "$/types";
 import HistoryActionPanelActionGroup from "./history";
 
 interface Props {
-	sid: SongId;
 	handleGridConfigClick: MouseEventHandler;
 }
-function DefaultActionPanelGroup({ sid, handleGridConfigClick }: Props) {
+function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const mappingExtensionsEnabled = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
 	const { openPrompt } = useAppPrompterContext();
 
 	return (
 		<ActionPanelGroup.Root label="Actions">
-			<HistoryActionPanelActionGroup sid={sid} />
-			<ClipboardActionPanelActionGroup sid={sid} />
+			<HistoryActionPanelActionGroup />
+			<ClipboardActionPanelActionGroup />
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Select everything over a time period"}>
 					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => openPrompt("QUICK_SELECT")}>

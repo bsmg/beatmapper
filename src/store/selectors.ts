@@ -1,18 +1,17 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { calculateNps, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import type { EventType, wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { deriveEventTracksForEnvironment, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { getEditorOffset } from "$/helpers/song.helpers";
-import { App, type SongId, View } from "$/types";
+import { type Accept, App, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
-import selected from "./features/entities/active.slice";
 import bombs from "./features/entities/beatmap/bombs.slice";
 import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
@@ -28,10 +27,6 @@ import type { RootState } from "./setup";
 
 export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
 	return state.global;
-});
-
-export const { selectActiveSongId, selectActiveBeatmapId } = selected.getSelectors((state: Pick<RootState, "entities">) => {
-	return state.entities.active;
 });
 
 export const {
@@ -59,15 +54,8 @@ export const {
 	return state.songs;
 });
 
-// for selectors that depend on an actively selected song, we should have a fallback value prepared in the off chance the song doesn't exist in state or the called value returns undefined.
-export function createActiveSongSelectorFactory<T>(selector: (song: App.ISong) => T) {
-	return createSelector(selectSongById, selectSongs, selectActiveSongId, (song, songs, sid) => {
-		if (sid) return selector(songs[sid]);
-		return selector(song);
-	});
-}
-export const selectBpm = createActiveSongSelectorFactory((s) => s.bpm);
-export const selectEditorOffset = createActiveSongSelectorFactory(getEditorOffset);
+export const selectBpm = createSelector(selectSongById, (s) => s.bpm);
+export const selectEditorOffset = createSelector(selectSongById, getEditorOffset);
 export const selectEditorOffsetInBeats = createSelector(selectBpm, selectEditorOffset, (bpm, offset) => {
 	return convertMillisecondsToBeats(offset, bpm);
 });
@@ -297,10 +285,10 @@ export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 		(state) => state?.basic ?? basic.getInitialState(),
 	),
 );
-export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat, endBeat }) => {
+export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: Accept<EventType, number>) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat, endBeat }, events) => {
 	return events.filter((event) => event.time >= startBeat && event.time < endBeat);
 });
-export const selectInitialStateForTrack = createDraftSafeSelector([selectAllBasicEventsForTrack, selectEventEditorStartAndEndBeat], (events, { startBeat }) => {
+export const selectInitialStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: Accept<EventType, number>) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, events) => {
 	const eventsInWindow = events.filter((event) => event.time <= startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
 	const eventEffect = lastEvent ? resolveEventEffect(lastEvent) : null;

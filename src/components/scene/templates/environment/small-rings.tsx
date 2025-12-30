@@ -1,17 +1,13 @@
 import { BracketRing } from "$/components/scene/compositions/environment";
 import { useEventTrack, useRingCount } from "$/components/scene/hooks";
 import { Environment } from "$/components/scene/layouts";
-import type { SongId } from "$/types";
 
 const INITIAL_ROTATION = Math.PI * 0.25;
 const FIRST_RING_OFFSET = -50;
 
-interface Props {
-	sid: SongId;
-}
-function SmallRings({ sid }: Props) {
-	const [lastRotationEvent] = useEventTrack({ sid, trackId: 8 });
-	const [lastZoomEvent] = useEventTrack({ sid, trackId: 9 });
+function SmallRings() {
+	const [lastRotationEvent] = useEventTrack({ trackId: 8 });
+	const [lastZoomEvent] = useEventTrack({ trackId: 9 });
 
 	const numOfRings = useRingCount({ count: 12 });
 

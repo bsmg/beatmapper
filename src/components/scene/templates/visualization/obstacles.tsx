@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
@@ -5,11 +6,9 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllVisibleObstacles, selectColorScheme } from "$/store/selectors";
-import { type App, type BeatmapId, ObjectTool, type SongId } from "$/types";
+import { type App, ObjectTool } from "$/types";
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	beatDepth: number;
 	surfaceDepth: number;
 	interactive?: boolean;
@@ -18,7 +17,9 @@ interface Props {
 	handlePointerOut: (event: PointerEvent) => void;
 	handleWheel: (event: WheelEvent, data: App.IObstacle) => void;
 }
-function EditorObstacles({ sid, bid, beatDepth, surfaceDepth, handlePointerDown, handlePointerOver, handlePointerOut, handleWheel }: Props) {
+function EditorObstacles({ beatDepth, surfaceDepth, handlePointerDown, handlePointerOver, handlePointerOut, handleWheel }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 

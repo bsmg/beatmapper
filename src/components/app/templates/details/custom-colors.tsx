@@ -1,11 +1,12 @@
 import { parseColor } from "@ark-ui/react/color-picker";
+import { useParams } from "@tanstack/react-router";
 import { useDeferredValue, useEffect, useState } from "react";
 
 import { ColorPicker, Heading, Switch } from "$/components/ui/compositions";
 import { updateCustomColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCustomColors } from "$/store/selectors";
-import { ColorSchemeKey, type SongId } from "$/types";
+import { ColorSchemeKey } from "$/types";
 import { styled, VStack } from "$:styled-system/jsx";
 import { vstack, wrap } from "$:styled-system/patterns";
 
@@ -21,10 +22,9 @@ const BEATMAP_COLOR_KEY_RENAME = {
 	[ColorSchemeKey.BOOST_WHITE]: "Boost W",
 } as const;
 
-interface Props {
-	sid: SongId;
-}
-function ElementControl({ sid, element }: Props & { element: ColorSchemeKey }) {
+function ElementControl({ element }: { element: ColorSchemeKey }) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid));
@@ -49,11 +49,11 @@ function ElementControl({ sid, element }: Props & { element: ColorSchemeKey }) {
 	);
 }
 
-function CustomColorSettings({ sid }: Props) {
+function CustomColorSettings() {
 	return (
 		<Row>
 			{Object.values(ColorSchemeKey).map((element) => {
-				return <ElementControl key={element} sid={sid} element={element} />;
+				return <ElementControl key={element} element={element} />;
 			})}
 		</Row>
 	);

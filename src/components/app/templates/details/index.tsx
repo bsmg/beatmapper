@@ -1,5 +1,5 @@
 import { useDialog } from "@ark-ui/react/dialog";
-import { Link, useBlocker } from "@tanstack/react-router";
+import { Link, useBlocker, useParams } from "@tanstack/react-router";
 import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
 import { useCallback, useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
@@ -14,7 +14,6 @@ import { filestore } from "$/setup";
 import { stopPlayback, updateModuleEnabled, updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectEditorOffset, selectModuleEnabled, selectSongById } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { Stack, styled, Wrap } from "$:styled-system/jsx";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
@@ -41,10 +40,9 @@ const SCHEMA = object({
 	environment: union([EnvironmentNameSchema, EnvironmentV3NameSchema]),
 });
 
-interface Props {
-	sid: SongId;
-}
-function SongDetails({ sid }: Props) {
+function SongDetails() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
 	const enabledCustomColors = useAppSelector((state) => selectModuleEnabled(state, sid, "customColors"));
@@ -179,7 +177,7 @@ function SongDetails({ sid }: Props) {
 					{beatmapIds.map((beatmapId) => {
 						return (
 							<BeatmapWrapper key={beatmapId}>
-								<UpdateBeatmapForm sid={sid} bid={beatmapId} />
+								<UpdateBeatmapForm bid={beatmapId} />
 							</BeatmapWrapper>
 						);
 					})}
@@ -188,7 +186,7 @@ function SongDetails({ sid }: Props) {
 			<Stack gap={6}>
 				<Heading rank={1}>Advanced Settings</Heading>
 				<Stack gap={3}>
-					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings sid={sid} />} checked={enabledCustomColors} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}>
+					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings />} checked={enabledCustomColors} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}>
 						Override individual elements of a beatmap's color scheme.{" "}
 						<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
 							<Link to="/docs/$" params={{ _splat: "mods#custom-color-overrides" }}>

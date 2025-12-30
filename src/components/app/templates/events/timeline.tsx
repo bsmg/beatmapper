@@ -1,17 +1,18 @@
+import { useParams } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 
 import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectEventsEditorCursor } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { styled } from "$:styled-system/jsx";
 import { flex } from "$:styled-system/patterns";
 
 interface Props {
-	sid: SongId;
 	beatNums: number[];
 }
-function EventGridTimeline({ sid, beatNums }: Props) {
+function EventGridTimeline({ beatNums }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const selectedBeat = useAppSelector(selectEventsEditorCursor);
 

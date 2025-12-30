@@ -1,5 +1,5 @@
 import type { SelectValueChangeDetails } from "@ark-ui/react/select";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { PlusIcon } from "lucide-react";
 import { memo, useCallback, useMemo } from "react";
@@ -7,12 +7,11 @@ import { memo, useCallback, useMemo } from "react";
 import { CoverArtFilePreview } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { useViewFromLocation } from "$/components/app/hooks";
 import { Button, Dialog, Select, Text } from "$/components/ui/compositions";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata, selectUsername } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
+import type { BeatmapId } from "$/types";
 import { HStack, Stack, styled } from "$:styled-system/jsx";
 
 const COVER_ART_SIZES = {
@@ -21,13 +20,13 @@ const COVER_ART_SIZES = {
 };
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	showDifficultySelector: boolean;
 }
-function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
+function EditorSongInfo({ showDifficultySelector }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
-	const view = useViewFromLocation();
 	const navigate = useNavigate();
 	const username = useAppSelector(selectUsername);
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
@@ -53,7 +52,7 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 
 	return (
 		<OuterWrapper gap={1.5}>
-			<CoverArtFilePreview songId={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
+			<CoverArtFilePreview sid={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
 			<Stack gap={1}>
 				<Stack gap={0.5}>
 					<Text color={"fg.default"} fontSize="20px" fontWeight={400} lineHeight={1}>
@@ -63,14 +62,14 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 						{metadata.artist}
 					</Text>
 				</Stack>
-				{showDifficultySelector && bid && (
+				{showDifficultySelector && (
 					<HStack gap={0.5}>
 						<Select unfocusOnClick size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
 						<Dialog
 							title="Create New Beatmap"
 							unmountOnExit
 							render={(ctx) => (
-								<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCreate}>
+								<CreateBeatmapForm dialog={ctx} onSubmit={handleCreate}>
 									{() => "Create beatmap"}
 								</CreateBeatmapForm>
 							)}

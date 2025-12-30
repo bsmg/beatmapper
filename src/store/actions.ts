@@ -50,7 +50,9 @@ export const { load: loadSession, save: saveSession, hydrate: hydrateSession } =
 export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = createEntityStorageActions<App.ISong>("songs");
 export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGridPresets } = createEntityStorageActions<Member<IGridPresets>>("grids");
 
-export const rehydrate = createAction("@@STORAGE/rehydrate");
+export const rehydrate = createAction("@@STORAGE/rehydrate", (args: { songId: SongId; beatmapId: BeatmapId }) => {
+	return { payload: { ...args } };
+});
 
 export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updatePacerWait } = user.actions;
 
@@ -108,7 +110,7 @@ export const reloadVisualizer = createAction("reloadVisualizer", (args: { durati
 	return { payload: { ...args } };
 });
 
-export const togglePlaying = createAction("togglePlaying", (args: { songId: SongId }) => {
+export const togglePlaying = createAction("togglePlaying", (args: { songId: SongId; view: View }) => {
 	return { payload: { ...args } };
 });
 

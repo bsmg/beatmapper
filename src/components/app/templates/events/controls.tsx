@@ -1,4 +1,5 @@
 import { createListCollection } from "@ark-ui/react/collection";
+import { useParams } from "@tanstack/react-router";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { type ComponentProps, type CSSProperties, useMemo } from "react";
 
@@ -9,7 +10,7 @@ import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel } from "$/store/selectors";
-import { type BeatmapId, EventColor, EventEditMode, EventTool, type SongId } from "$/types";
+import { EventColor, EventEditMode, EventTool } from "$/types";
 import { HStack, styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
 
@@ -38,11 +39,9 @@ function createEventEffectListCollection({ selectedColor, colorScheme }: EventLi
 	});
 }
 
-interface Props extends ComponentProps<typeof Wrapper> {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function EventGridControls({ sid, bid, ...rest }: Props) {
+function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);

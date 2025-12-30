@@ -1,5 +1,6 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
+import { useParams } from "@tanstack/react-router";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { type ReactNode, useMemo } from "react";
@@ -10,7 +11,7 @@ import { useAppForm } from "$/components/ui/compositions";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
+import type { BeatmapId } from "$/types";
 
 const SCHEMA = object({
 	characteristic: CharacteristicNameSchema,
@@ -19,14 +20,14 @@ const SCHEMA = object({
 
 interface Props {
 	dialog?: UseDialogContext;
-	sid: SongId;
-	bid?: BeatmapId;
 	onSubmit: (bid: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => void;
 	children: (beatmap: { id: BeatmapId }) => ReactNode;
 }
-function CreateBeatmapForm({ dialog, sid, bid, onSubmit: afterCreate, children }: Props) {
+function CreateBeatmapForm({ dialog, onSubmit: afterCreate, children }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const beatmaps = useAppSelector((state) => selectAllBeatmaps(state, sid));
-	const currentBeatmap = useAppSelector((state) => (bid ? selectBeatmapById(state, sid, bid) : undefined));
+	const currentBeatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
 	const Form = useAppForm({
 		defaultValues: {

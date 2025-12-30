@@ -1,4 +1,5 @@
 import { createListCollection } from "@ark-ui/react/collection";
+import { useParams } from "@tanstack/react-router";
 import { ArrowUpFromDotIcon, TrashIcon } from "lucide-react";
 import { Fragment, type MouseEventHandler, useState } from "react";
 
@@ -9,14 +10,14 @@ import { DEFAULT_GRID } from "$/constants";
 import { loadGridPreset, removeGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridPresets, selectGridSize } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { isObjectEmpty } from "$/utils";
 
 interface Props {
-	sid: SongId;
 	finishTweakingGrid: MouseEventHandler;
 }
-function GridActionPanel({ sid, finishTweakingGrid }: Props) {
+function GridActionPanel({ finishTweakingGrid }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, sid));
 	const gridPresets = useAppSelector(selectGridPresets);

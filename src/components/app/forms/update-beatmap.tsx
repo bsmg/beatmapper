@@ -1,5 +1,5 @@
 import { useDialog } from "@ark-ui/react/dialog";
-import { useBlocker, useNavigate } from "@tanstack/react-router";
+import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
@@ -8,13 +8,12 @@ import { array, minValue, number, object, pipe, string, transform } from "valibo
 
 import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { useViewFromLocation } from "$/components/app/hooks";
 import { Interleave } from "$/components/ui/atoms";
 import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
+import type { BeatmapId } from "$/types";
 import { HStack, Stack, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
@@ -32,13 +31,14 @@ const SCHEMA = object({
 });
 
 interface Props {
-	sid: SongId;
 	bid: BeatmapId;
 }
-function UpdateBeatmapForm({ sid, bid }: Props) {
+function UpdateBeatmapForm({ bid }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-	const view = useViewFromLocation();
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
@@ -166,7 +166,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 						title="Copy Beatmap"
 						unmountOnExit
 						render={(ctx) => (
-							<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCopyBeatmap}>
+							<CreateBeatmapForm dialog={ctx} onSubmit={handleCopyBeatmap}>
 								{() => "Copy beatmap"}
 							</CreateBeatmapForm>
 						)}

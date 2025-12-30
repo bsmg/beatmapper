@@ -1,15 +1,16 @@
 import { animated, useSpring } from "@react-spring/three";
+import { useParams } from "@tanstack/react-router";
 import type { PropsWithChildren } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectAnimateTrack, selectCursorPositionInBeats } from "$/store/selectors";
-import type { SongId } from "$/types";
 
 interface Props extends PropsWithChildren {
-	sid: SongId;
 	beatDepth: number;
 }
-function TrackMover({ sid, beatDepth, children }: Props) {
+function TrackMover({ beatDepth, children }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const animateBlockMotion = useAppSelector(selectAnimateTrack);
 

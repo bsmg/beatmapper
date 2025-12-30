@@ -1,21 +1,20 @@
 import { Presence } from "@ark-ui/react/presence";
+import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { useOnChange, useOnKeydown } from "$/components/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
-import { type BeatmapId, ObjectPlacementMode, type SongId } from "$/types";
+import { ObjectPlacementMode } from "$/types";
 import { styled } from "$:styled-system/jsx";
 import { center, vstack } from "$:styled-system/patterns";
 import DefaultActionPanel from "./default";
 import GridActionPanel from "./grid";
 import SelectionActionPanel from "./selection";
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function EditorActionPanel({ sid, bid }: Props) {
+function EditorActionPanel() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const mappingMode = useAppSelector((state) => selectPlacementMode(state, sid));
 	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);
 	const selectedMines = useAppSelector(selectAllSelectedBombNotes);
@@ -45,17 +44,17 @@ function EditorActionPanel({ sid, bid }: Props) {
 		<OuterWrapper onWheel={(ev) => ev.stopPropagation()}>
 			<Presence asChild present={!showGridConfig && !isAnythingSelected} lazyMount unmountOnExit>
 				<Wrapper>
-					<DefaultActionPanel sid={sid} bid={bid} handleGridConfigClick={() => setShowGridConfig(true)} />
+					<DefaultActionPanel handleGridConfigClick={() => setShowGridConfig(true)} />
 				</Wrapper>
 			</Presence>
 			<Presence asChild present={isAnythingSelected} lazyMount unmountOnExit>
 				<Wrapper>
-					<SelectionActionPanel sid={sid} numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />
+					<SelectionActionPanel numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />
 				</Wrapper>
 			</Presence>
 			<Presence asChild present={showGridConfig} lazyMount unmountOnExit>
 				<Wrapper>
-					<GridActionPanel sid={sid} finishTweakingGrid={() => setShowGridConfig(false)} />
+					<GridActionPanel finishTweakingGrid={() => setShowGridConfig(false)} />
 				</Wrapper>
 			</Presence>
 		</OuterWrapper>

@@ -1,16 +1,17 @@
+import { useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPositionInBeats, selectEventEditorStartAndEndBeat } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { normalize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 
 interface Props {
-	sid: SongId;
 	gridWidth: number;
 }
-function EventGridCursor({ sid, gridWidth }: Props) {
+function EventGridCursor({ gridWidth }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 

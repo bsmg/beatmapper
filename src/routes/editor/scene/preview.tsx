@@ -27,14 +27,13 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 });
 
 function RouteComponent() {
-	const { sid, bid } = Route.useParams();
 	const { jumpSpeed, jumpOffset } = Route.useLoaderData();
 
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<MapVisualization sid={sid} bid={bid} beatDepth={jumpSpeed} surfaceDepth={jumpOffset} interactive={false} />
-				<DefaultEnvironment sid={sid} bid={bid} surfaceDepth={jumpOffset} />
+				<MapVisualization beatDepth={jumpSpeed} surfaceDepth={jumpOffset} interactive={false} />
+				<DefaultEnvironment surfaceDepth={jumpOffset} />
 			</ReduxForwardingCanvas>
 		</Fragment>
 	);

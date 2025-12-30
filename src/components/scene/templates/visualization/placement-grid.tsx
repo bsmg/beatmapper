@@ -1,4 +1,5 @@
 import type { ThreeEvent } from "@react-three/fiber";
+import { useParams } from "@tanstack/react-router";
 import { Fragment, useCallback } from "react";
 
 import { PlacementGrid } from "$/components/scene/layouts";
@@ -8,17 +9,17 @@ import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addObstacle, addToCell } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
-import { type BeatmapId, ObjectTool, type SongId } from "$/types";
+import { ObjectTool } from "$/types";
 import type { GroupProps } from "$/types/vendor";
 
 interface Props extends GroupProps {
-	sid: SongId;
-	bid: BeatmapId;
 	interactive?: boolean;
 	onCellPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
 	onCellWheel?: (event: ThreeEvent<WheelEvent>) => void;
 }
-function EditorPlacementGrid({ sid, bid, interactive, onCellPointerDown, onCellWheel, ...rest }: Props) {
+function EditorPlacementGrid({ interactive, onCellPointerDown, onCellWheel, ...rest }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const mode = useAppSelector((state) => selectPlacementMode(state, sid));

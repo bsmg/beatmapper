@@ -1,3 +1,4 @@
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 import { useAppPrompterContext } from "$/components/app/compositions";
@@ -5,13 +6,13 @@ import { useGlobalEventListener } from "$/components/hooks";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
-import { EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
+import { EventColor, EventEditMode, EventTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-interface Props {
-	sid: SongId;
-}
-function EventsEditorShortcuts({ sid }: Props) {
+function EventsEditorShortcuts() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
@@ -39,7 +40,7 @@ function EventsEditorShortcuts({ sid }: Props) {
 				case "KeyA": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view: View.LIGHTSHOW }));
+						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
 					}
 					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.PLACE }));
 				}
@@ -82,7 +83,7 @@ function EventsEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[isLoading, activePrompt, dispatch, sid],
+		[isLoading, activePrompt, dispatch, sid, view],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

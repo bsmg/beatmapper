@@ -8,7 +8,7 @@ import { type BeatmapSerializationOptions, deserializeBeatmapContents, type Info
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
-import { selectActiveBeatmapId, selectActiveSongId, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSongById } from "$/store/selectors";
+import { selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
 import { deepAssign } from "$/utils";
@@ -54,13 +54,8 @@ export default function createFileMiddleware({ filestore }: Options) {
 
 	instance.startListening({
 		actionCreator: rehydrate,
-		effect: (_, api) => {
-			const state = api.getState();
-
-			const songId = selectActiveSongId(state);
-			const beatmapId = selectActiveBeatmapId(state);
-			if (!songId || !beatmapId) return;
-
+		effect: (action, api) => {
+			const { songId, beatmapId } = action.payload;
 			api.dispatch(startLoadingMap({ songId, beatmapId }));
 		},
 	});
@@ -179,7 +174,7 @@ export default function createFileMiddleware({ filestore }: Options) {
 			const state = api.getState();
 
 			// we need to reference the currently selected beatmap to supply the correct serial version for the filestore
-			const activeBeatmapId = selectActiveBeatmapId(state);
+			const activeBeatmapId = selectSelectedBeatmap(state, songId);
 			if (!activeBeatmapId) throw new Error("Could not reference active beatmap.");
 			// grab the implicit version from the source data, so we can keep all related files on the same version
 			const version = await filestore.loadImplicitVersion(songId, activeBeatmapId);

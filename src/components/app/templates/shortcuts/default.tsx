@@ -1,9 +1,9 @@
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
 import { useAppPrompterContext } from "$/components/app/compositions";
 import { APP_TOASTER } from "$/components/app/constants";
-import { useViewFromLocation } from "$/components/app/hooks";
 import { useGlobalEventListener } from "$/components/hooks";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import {
@@ -37,16 +37,14 @@ import {
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
-import { type SongId, View } from "$/types";
+import { View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-interface Props {
-	sid: SongId;
-}
+function DefaultEditorShortcuts() {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
-function DefaultEditorShortcuts({ sid }: Props) {
 	const dispatch = useAppDispatch();
-	const view = useViewFromLocation();
 	const isLoading = useAppSelector(selectLoading);
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const wait = useAppSelector(selectPacerWait);
@@ -100,7 +98,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				case "F5": {
 					if (ev.shiftKey) {
 						ev.preventDefault();
-						return dispatch(rehydrate());
+						return dispatch(rehydrate({ songId: sid, beatmapId: bid }));
 					}
 					return;
 				}
@@ -108,7 +106,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
 					if (keysDepressed.current.space) return;
 					keysDepressed.current.space = true;
-					return dispatch(togglePlaying({ songId: sid }));
+					return dispatch(togglePlaying({ songId: sid, view }));
 				}
 				case "Escape": {
 					return dispatch(deselectAllEntities({ view }));
@@ -216,7 +214,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[isLoading, view, activePrompt, dispatch, sid, isDemo, handleScroll, openPrompt],
+		[isLoading, view, activePrompt, dispatch, sid, bid, isDemo, handleScroll, openPrompt],
 	);
 
 	const handleKeyUp = useCallback(

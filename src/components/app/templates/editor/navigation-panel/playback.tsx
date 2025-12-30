@@ -1,27 +1,23 @@
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
 import { SNAPPING_INCREMENT_LIST_COLLECTION } from "$/components/app/constants";
-import { useViewFromLocation } from "$/components/app/hooks";
 import { Button, Select } from "$/components/ui/compositions";
-import { jumpToEnd, jumpToStart, pausePlayback, seekBackwards, seekForwards, startPlayback, updateSnap } from "$/store/actions";
+import { jumpToEnd, jumpToStart, seekBackwards, seekForwards, togglePlaying, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
 import { EditorBeatStat, EditorTimeStat } from "./stats";
 
-interface Props {
-	sid: SongId;
-}
-function EditorNavigationControls({ sid }: Props) {
+function EditorNavigationControls() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
-	const view = useViewFromLocation();
 	const isPlaying = useAppSelector(selectPlaying);
 	const isLoadingSong = useAppSelector(selectLoading);
 	const snapTo = useAppSelector(selectSnap);
-
-	const playButtonAction = isPlaying ? pausePlayback : startPlayback;
 
 	return (
 		<Wrapper>
@@ -37,7 +33,7 @@ function EditorNavigationControls({ sid }: Props) {
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(seekBackwards({ songId: sid, view }))}>
 					<RewindIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(playButtonAction({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(togglePlaying({ songId: sid, view }))}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnClick onClick={() => dispatch(seekForwards({ songId: sid, view }))}>
@@ -49,7 +45,7 @@ function EditorNavigationControls({ sid }: Props) {
 			</Column>
 			<Column>
 				<EditorTimeStat />
-				<EditorBeatStat sid={sid} />
+				<EditorBeatStat />
 			</Column>
 		</Wrapper>
 	);

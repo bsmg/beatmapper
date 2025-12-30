@@ -1,14 +1,14 @@
+import { useParams } from "@tanstack/react-router";
+
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button } from "$/components/ui/compositions";
 import { redoObjects, undoObjects } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
-import type { SongId } from "$/types";
 
-interface Props {
-	sid: SongId;
-}
-function HistoryActionPanelActionGroup({ sid }: Props) {
+function HistoryActionPanelActionGroup() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const canUndo = useAppSelector(selectObjectsCanUndo);
 	const canRedo = useAppSelector(selectObjectsCanRedo);

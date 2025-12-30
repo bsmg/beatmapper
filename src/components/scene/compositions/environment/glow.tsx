@@ -6,17 +6,15 @@ import { AdditiveBlending, Color, FrontSide } from "three";
 import { glowFragmentShader, glowVertexShader } from "$/assets";
 import { useLightSpring } from "$/components/scene/compositions/materials/light";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
-import type { SongId } from "$/types";
 import type { MeshProps } from "$/types/vendor";
 import { normalize } from "$/utils";
 
 interface Props extends MeshProps {
-	sid: SongId;
 	size: number;
 	light: UseLightPropsReturn;
 	bloom?: boolean;
 }
-function Glow({ sid, size, light, bloom: isBlooming, ...rest }: Props) {
+function Glow({ size, light, bloom: isBlooming, ...rest }: Props) {
 	const { camera } = useThree();
 
 	const [spring] = useLightSpring({ light });

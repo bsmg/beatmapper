@@ -125,11 +125,11 @@ export default function createAudioMiddleware({ filestore }: Options) {
 		actionCreator: togglePlaying,
 		effect: (action, api) => {
 			const state = api.getState();
-			const { songId } = action.payload;
+			const { songId, view } = action.payload;
 			if (state.navigation.isPlaying) {
 				api.dispatch(pausePlayback({ songId }));
 			} else {
-				api.dispatch(startPlayback({ songId }));
+				api.dispatch(startPlayback({ songId, view }));
 			}
 		},
 	});
@@ -140,10 +140,8 @@ export default function createAudioMiddleware({ filestore }: Options) {
 			// Keep track of the last beat we saw, so we know which chunk of time the current tick is accessing (by looking at the delta between last and current)
 			let lastBeat = 0;
 			const state = api.getState();
-			const { songId } = action.payload;
+			const { songId, view } = action.payload;
 			const duration = selectDuration(state);
-			const viewMatch = window.location.pathname.match(/\/(\w+)$/);
-			const view = viewMatch ? (viewMatch[1] as View) : null;
 
 			function onTick() {
 				const currentTime = audioSample.getCurrentTime() * 1000;

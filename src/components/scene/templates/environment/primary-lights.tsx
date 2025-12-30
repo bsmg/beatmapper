@@ -4,7 +4,6 @@ import { TubeLight } from "$/components/scene/compositions/environment";
 import { LightMaterial } from "$/components/scene/compositions/materials";
 import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
-import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 
 const Y_POSITION = 5;
@@ -17,14 +16,10 @@ const CHEVRON_ANGLE = Math.PI * 0.2;
 
 const SIDE_BEAM_LENGTH = 250;
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function PrimaryLights({ sid, bid }: Props) {
-	const [lastEvent] = useEventTrack({ sid, trackId: 4 });
+function PrimaryLights() {
+	const [lastEvent] = useEventTrack({ trackId: 4 });
 
-	const light = useLightProps({ sid, bid, lastEvent });
+	const light = useLightProps({ lastEvent });
 
 	return (
 		<Fragment>

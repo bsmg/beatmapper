@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import { Fragment, useMemo } from "react";
 
 import { BombNote, ColorNote } from "$/components/scene/compositions";
@@ -8,11 +9,9 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCursorPositionInBeats, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
-import { type App, type BeatmapId, ObjectTool, type SongId } from "$/types";
+import { type App, ObjectTool } from "$/types";
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	beatDepth: number;
 	surfaceDepth: number;
 	interactive?: boolean;
@@ -21,7 +20,9 @@ interface Props {
 	handlePointerOut: (event: PointerEvent) => void;
 	handleWheel: (event: WheelEvent, data: App.IBaseNote) => void;
 }
-function EditorNotes({ sid, bid, beatDepth, surfaceDepth, interactive, handlePointerDown, handlePointerOver, handlePointerOut, handleWheel }: Props) {
+function EditorNotes({ beatDepth, surfaceDepth, interactive, handlePointerDown, handlePointerOver, handlePointerOut, handleWheel }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));

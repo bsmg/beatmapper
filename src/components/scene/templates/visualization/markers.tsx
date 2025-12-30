@@ -1,16 +1,15 @@
+import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { BeatMarker } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectCursorPositionInBeats, selectDurationInBeats, selectSurfaceDepth } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { range } from "$/utils";
 
-interface Props {
-	sid: SongId;
-}
-function EditorBeatMarkers({ sid }: Props) {
+function EditorBeatMarkers() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const beatDepth = useAppSelector(selectBeatDepth);

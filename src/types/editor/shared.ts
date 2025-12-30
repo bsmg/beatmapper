@@ -5,6 +5,7 @@ export const View = {
 	BEATMAP: "notes",
 	LIGHTSHOW: "events",
 	PREVIEW: "preview",
+	DOWNLOAD: "download",
 } as const;
 export type View = Member<typeof View>;
 

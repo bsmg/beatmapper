@@ -14,20 +14,19 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/notes")({
 });
 
 function RouteComponent() {
-	const { sid, bid } = Route.useParams();
 	const beatDepth = useAppSelector(selectBeatDepth);
 	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<MapVisualization sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive />
+				<MapVisualization beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive />
 				<AmbientLight />
 				<Runway surfaceDepth={surfaceDepth} includeEdgeStrips />
 				<fogExp2 attach="fog" args={[0x000000, 0.02]} />
 			</ReduxForwardingCanvas>
-			<EditorActionPanel sid={sid} bid={bid} />
-			<NotesEditorShortcuts sid={sid} />
+			<EditorActionPanel />
+			<NotesEditorShortcuts />
 		</Fragment>
 	);
 }

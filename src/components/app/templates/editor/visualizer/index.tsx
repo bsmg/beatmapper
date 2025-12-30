@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import { type MouseEvent, useCallback, useDeferredValue } from "react";
 
 import { AudioVisualizer } from "$/components/app/layouts";
@@ -7,14 +8,12 @@ import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import { jumpToBeat, removeBookmark, scrubVisualizer } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectLoading, selectRenderScale, selectWaveformData } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 import EditorBookmark from "./bookmark";
 
-interface Props {
-	sid: SongId;
-}
-function EditorAudioVisualizer({ sid }: Props) {
+function EditorAudioVisualizer() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const waveformData = useAppSelector(selectWaveformData);
 	const isLoadingSong = useAppSelector(selectLoading);

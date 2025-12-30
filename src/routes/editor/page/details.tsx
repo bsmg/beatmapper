@@ -7,6 +7,5 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_page/details")({
 });
 
 function RouteComponent() {
-	const { sid } = Route.useParams();
-	return <DetailsView sid={sid} />;
+	return <DetailsView />;
 }

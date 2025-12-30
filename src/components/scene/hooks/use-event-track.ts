@@ -1,9 +1,10 @@
+import { useParams } from "@tanstack/react-router";
 import type { EventType } from "bsmap";
 import { useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
-import type { Accept, App, SongId } from "$/types";
+import type { Accept, App } from "$/types";
 
 function findLastEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent[], currentBeat: number, processingDelayInBeats: number) {
 	for (let i = events.length - 1; i >= 0; i--) {
@@ -16,10 +17,11 @@ function findLastEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent
 }
 
 export interface UseEventTrackOptions {
-	sid: SongId;
 	trackId: Accept<EventType, number>;
 }
-export function useEventTrack({ sid, trackId }: UseEventTrackOptions) {
+export function useEventTrack({ trackId }: UseEventTrackOptions) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, sid));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));

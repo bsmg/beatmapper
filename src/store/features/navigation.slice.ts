@@ -58,7 +58,7 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			startPlayback: api.reducer<{ songId: SongId }>((state) => {
+			startPlayback: api.reducer<{ songId: SongId; view: View }>((state) => {
 				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
 			}),
 			pausePlayback: api.reducer<{ songId: SongId }>((state) => {

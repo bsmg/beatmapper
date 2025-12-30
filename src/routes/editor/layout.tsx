@@ -4,13 +4,13 @@ import type { ComponentProps } from "react";
 
 import { AppPrompter, Shortcut } from "$/components/app/compositions";
 import { EDITOR_TOASTER } from "$/components/app/constants";
-import { useViewFromLocation } from "$/components/app/hooks";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
 import { MDXContent } from "$/components/ui/atoms";
 import { List, Text } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
+import type { View } from "$/types";
 import { prompts } from "$:content";
 import { css } from "$:styled-system/css";
 import { styled } from "$:styled-system/jsx";
@@ -33,43 +33,52 @@ const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	component: RouteComponent,
+	beforeLoad: ({ location }) => {
+		const segments = location.pathname.split("/");
+
+		return {
+			view: segments[segments.length - 1] as View,
+		};
+	},
 	loader: () => {
 		const state = store.getState();
 		const seenPrompts = selectAnnouncements(state);
-		const unseenPrompts = prompts.filter((prompt) => !seenPrompts.includes(prompt.id));
-		const prompt = unseenPrompts[0];
-		return { prompt };
+
+		return {
+			unseenPrompt: prompts.find((prompt) => !seenPrompts.includes(prompt.id)),
+		};
 	},
 	onEnter: async ({ params, loaderData }) => {
 		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
-		if (loaderData && "prompt" in loaderData) {
-			const { prompt } = loaderData;
-			if (!prompt) return;
-			EDITOR_TOASTER.create({
-				id: prompt.id,
-				type: "loading",
-				title: prompt.title,
-				description: <MDXContent code={prompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
-				onStatusChange: (details) => {
-					if (details.status === "dismissing") store.dispatch(dismissPrompt({ id: prompt.id }));
-				},
-			});
+
+		if (loaderData && "unseenPrompt" in loaderData) {
+			const { unseenPrompt } = loaderData;
+
+			if (unseenPrompt) {
+				EDITOR_TOASTER.create({
+					id: unseenPrompt.id,
+					type: "loading",
+					title: unseenPrompt.title,
+					description: <MDXContent code={unseenPrompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
+					onStatusChange: (details) => {
+						if (details.status === "dismissing") store.dispatch(dismissPrompt({ id: unseenPrompt.id }));
+					},
+				});
+			}
 		}
 	},
 	onLeave: async ({ params }) => {
 		const state = store.getState();
 		const entities = selectBeatmapEntities(state);
+
 		await Promise.resolve(store.dispatch(leaveEditor({ songId: params.sid, beatmapId: params.bid, entities })));
 	},
 });
 
 function RouteComponent() {
-	const { sid, bid } = Route.useParams();
-	const view = useViewFromLocation();
-
 	return (
-		<AppPrompter sid={sid} view={view}>
-			<EditorSidebar sid={sid} bid={bid} />
+		<AppPrompter>
+			<EditorSidebar />
 			<Wrapper>
 				<Outlet />
 			</Wrapper>

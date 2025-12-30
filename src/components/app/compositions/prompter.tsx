@@ -1,3 +1,4 @@
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import type { PropsWithChildren } from "react";
 import { gtValue, nonEmpty, number, object, pipe, regex, string } from "valibot";
 
@@ -79,7 +80,10 @@ const { Provider, useContext } = createPrompter(({ createPrompt }) => {
 	};
 });
 
-export function AppPrompter({ sid, view, children }: Pick<Props, "sid" | "view"> & PropsWithChildren) {
+export function AppPrompter({ children }: PropsWithChildren) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
 	const gridPresets = useAppSelector(selectGridPresets);
 

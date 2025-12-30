@@ -1,7 +1,7 @@
 import { Presence } from "@ark-ui/react/presence";
+import { useRouteContext } from "@tanstack/react-router";
 import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 
-import { useViewFromLocation } from "$/components/app/hooks";
 import { StatusBar } from "$/components/app/layouts";
 import { updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -11,6 +11,8 @@ import { pluralize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 
 function EditorStatusBar() {
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 	const playbackRate = useAppSelector(selectPlaybackRate);
@@ -24,8 +26,6 @@ function EditorStatusBar() {
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
 	const noteDensity = useAppSelector(selectNoteDensity);
-
-	const view = useViewFromLocation();
 
 	return (
 		<Wrapper onWheel={(ev) => ev.stopPropagation()}>

@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import { memo, type PointerEvent, useCallback, useMemo } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
@@ -6,7 +7,7 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment } from "$/store/selectors";
-import { App, type BeatmapId, type IEventTracks, type SongId } from "$/types";
+import { App, type IEventTracks } from "$/types";
 import { isColorDark, normalize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 
@@ -41,8 +42,6 @@ function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<t
 }
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	event: App.IBasicEvent;
 	trackWidth: number;
 	onEventPointerDown?: (event: PointerEvent, data: App.IBasicEvent) => void;
@@ -51,7 +50,9 @@ interface Props {
 	onEventPointerOut?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridEventItem({ sid, bid, event: data, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Props) {
+function EventGridEventItem({ event: data, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));

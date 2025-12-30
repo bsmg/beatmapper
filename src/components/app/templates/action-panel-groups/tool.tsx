@@ -1,3 +1,5 @@
+import { useParams } from "@tanstack/react-router";
+
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { BombNoteIcon, ColorNoteIcon, ObstacleIcon } from "$/components/icons";
 import { Button, Tooltip } from "$/components/ui/compositions";
@@ -5,13 +7,11 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectNotesEditorTool } from "$/store/selectors";
-import { type BeatmapId, ObjectTool, type SongId } from "$/types";
+import { ObjectTool } from "$/types";
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function NoteToolActionPanelGroup({ sid, bid }: Props) {
+function NoteToolActionPanelGroup() {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectNotesEditorTool);

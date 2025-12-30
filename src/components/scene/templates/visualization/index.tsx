@@ -1,4 +1,5 @@
 import { type ThreeEvent, useThree } from "@react-three/fiber";
+import { useParams } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { Fragment, useCallback, useRef } from "react";
 import type { Object3D } from "three";
@@ -11,15 +12,13 @@ import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObstacle, selectNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
-import type { App, BeatmapId, SongId } from "$/types";
+import type { App } from "$/types";
 import EditorBeatMarkers from "./markers";
 import EditorNotes from "./notes";
 import EditorObstacles from "./obstacles";
 import EditorPlacementGrid from "./placement-grid";
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	beatDepth: number;
 	surfaceDepth: number;
 	interactive?: boolean;
@@ -29,7 +28,9 @@ interface Props {
  *
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
-function MapVisualization({ sid, bid, beatDepth, surfaceDepth, interactive }: Props) {
+function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	useControls();
 
 	const { raycaster, scene } = useThree((state) => state);
@@ -134,12 +135,12 @@ function MapVisualization({ sid, bid, beatDepth, surfaceDepth, interactive }: Pr
 
 	return (
 		<Fragment>
-			<TrackMover sid={sid} beatDepth={beatDepth}>
-				{interactive && <EditorBeatMarkers sid={sid} />}
-				<EditorNotes sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...notes} />
-				<EditorObstacles sid={sid} bid={bid} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...obstacles} />
+			<TrackMover beatDepth={beatDepth}>
+				{interactive && <EditorBeatMarkers />}
+				<EditorNotes beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...notes} />
+				<EditorObstacles beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...obstacles} />
 			</TrackMover>
-			{interactive && <EditorPlacementGrid sid={sid} bid={bid} position-z={-SONG_OFFSET} onCellPointerDown={handleCellPointerDown} onCellWheel={handleCellWheel} />}
+			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} onCellPointerDown={handleCellPointerDown} onCellWheel={handleCellWheel} />}
 		</Fragment>
 	);
 }

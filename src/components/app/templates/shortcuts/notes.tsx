@@ -1,3 +1,4 @@
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
@@ -6,13 +7,13 @@ import { useGlobalEventListener } from "$/components/hooks";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize, selectLoading } from "$/store/selectors";
-import { ObjectTool, type SongId, View } from "$/types";
+import { ObjectTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-interface Props {
-	sid: SongId;
-}
-function NotesEditorShortcuts({ sid }: Props) {
+function NotesEditorShortcuts() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
@@ -82,7 +83,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 					if (ev.shiftKey) return;
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view: View.BEATMAP }));
+						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
 					}
 					keysDepressed.current.a = true;
 					if (keysDepressed.current.w) {
@@ -152,7 +153,7 @@ function NotesEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[isLoading, activePrompt, dispatch, sid, grid],
+		[isLoading, activePrompt, dispatch, sid, view, grid],
 	);
 
 	const handleKeyUp = useCallback(

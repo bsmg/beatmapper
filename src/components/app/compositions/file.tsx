@@ -9,14 +9,14 @@ import { styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
 
 interface CoverArtProps extends PropsWithoutRef<ComponentProps<"img">> {
-	songId: SongId;
+	sid: SongId;
 	width?: CSSProperties["width"];
 }
-export function CoverArtFilePreview({ songId, width, ...rest }: Assign<Omit<LocalFileProps, "filename" | "children">, CoverArtProps>) {
+export function CoverArtFilePreview({ sid, width, ...rest }: Assign<Omit<LocalFileProps, "filename" | "children">, CoverArtProps>) {
 	const style = useMemo(() => ({ width, height: width }), [width]);
 	return (
 		<CoverArtWrapper style={style}>
-			<LocalFilePreview filename={BeatmapFilestore.resolveFilename(songId, "cover", {})} fallback={<Spinner />}>
+			<LocalFilePreview filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} fallback={<Spinner />}>
 				{(src) => <CoverArtImage {...rest} src={src} style={style} />}
 			</LocalFilePreview>
 		</CoverArtWrapper>

@@ -1,3 +1,4 @@
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { ArrowDownToLineIcon, ArrowUpToLineIcon, DotIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
 import { Fragment, type MouseEventHandler, useMemo } from "react";
 
@@ -8,7 +9,7 @@ import { Button, StrikethroughOnHover, Text, Tooltip } from "$/components/ui/com
 import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize } from "$/store/selectors";
-import { ObjectType, type SongId, View } from "$/types";
+import { ObjectType } from "$/types";
 
 interface CountProps {
 	num: number;
@@ -31,12 +32,14 @@ function SelectionCount({ num, label, onClick }: CountProps) {
 }
 
 interface Props {
-	sid: SongId;
 	numOfSelectedBlocks: number;
 	numOfSelectedMines: number;
 	numOfSelectedObstacles: number;
 }
-function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, numOfSelectedObstacles }: Props) {
+function SelectionActionPanel({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedObstacles }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
@@ -76,23 +79,23 @@ function SelectionActionPanel({ sid, numOfSelectedBlocks, numOfSelectedMines, nu
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Nudge selection forwards"}>
-						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ direction: "forwards", view: View.BEATMAP }))}>
+						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ view, direction: "forwards" }))}>
 							<ArrowUpToLineIcon />
 						</Button>
 					</Tooltip>
 					<Tooltip render={() => "Nudge selection backwards"}>
-						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ direction: "backwards", view: View.BEATMAP }))}>
+						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ view, direction: "backwards" }))}>
 							<ArrowDownToLineIcon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => dispatch(deselectAllEntities({ view: View.BEATMAP }))}>
+					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => dispatch(deselectAllEntities({ view }))}>
 						Clear selection
 					</Button>
 				</ActionPanelGroup.ActionGroup>
-				<HistoryActionPanelActionGroup sid={sid} />
-				<ClipboardActionPanelActionGroup sid={sid} />
+				<HistoryActionPanelActionGroup />
+				<ClipboardActionPanelActionGroup />
 			</ActionPanelGroup.Root>
 		</Fragment>
 	);

@@ -1,8 +1,9 @@
+import { useParams } from "@tanstack/react-router";
+
 import { Stat } from "$/components/ui/compositions";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition, selectCursorPositionInBeats, selectPlaying } from "$/store/selectors";
-import type { SongId } from "$/types";
 import { roundToNearest } from "$/utils";
 
 export function EditorTimeStat() {
@@ -13,10 +14,9 @@ export function EditorTimeStat() {
 	return <Stat label="Time">{displayString}</Stat>;
 }
 
-interface Props {
-	sid: SongId;
-}
-export function EditorBeatStat({ sid }: Props) {
+export function EditorBeatStat() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const displayString = useAppSelector((state) => {
 		const isPlaying = selectPlaying(state);
 

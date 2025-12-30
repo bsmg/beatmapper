@@ -1,21 +1,16 @@
 import { LitSquareRing } from "$/components/scene/compositions/environment";
 import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
 import { Environment } from "$/components/scene/layouts";
-import type { BeatmapId, SongId } from "$/types";
 
 const INITIAL_ROTATION = Math.PI * 0.25;
 const DISTANCE_BETWEEN_RINGS = 18;
 const FIRST_RING_OFFSET = -60;
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function LargeRings({ sid, bid }: Props) {
-	const [lastLightEvent] = useEventTrack({ sid, trackId: 1 });
-	const [lastRotationEvent] = useEventTrack({ sid, trackId: 8 });
+function LargeRings() {
+	const [lastLightEvent] = useEventTrack({ trackId: 1 });
+	const [lastRotationEvent] = useEventTrack({ trackId: 8 });
 
-	const light = useLightProps({ sid, bid, lastEvent: lastLightEvent });
+	const light = useLightProps({ lastEvent: lastLightEvent });
 
 	const numOfRings = useRingCount({ count: 16 });
 

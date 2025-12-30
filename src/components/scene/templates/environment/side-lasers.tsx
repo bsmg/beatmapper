@@ -4,7 +4,6 @@ import { TubeLight } from "$/components/scene/compositions/environment";
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
 
 const NUM_OF_HORIZONTAL_BEAMS = 4;
@@ -48,18 +47,16 @@ function getSinRotationValue(side: "left" | "right", beamIndex: number, time: nu
 }
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	side: "left" | "right";
 	timescale?: (cursorPosition: number) => number;
 }
-function SideLasers({ sid, bid, side, timescale = scaleToSeconds }: Props) {
+function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 
-	const [lastLightEvent] = useEventTrack({ sid, trackId: side === "left" ? 2 : 3 });
-	const [lastSpeedEvent] = useEventTrack({ sid, trackId: side === "left" ? 12 : 13 });
+	const [lastLightEvent] = useEventTrack({ trackId: side === "left" ? 2 : 3 });
+	const [lastSpeedEvent] = useEventTrack({ trackId: side === "left" ? 12 : 13 });
 
-	const light = useLightProps({ sid, bid, lastEvent: lastLightEvent });
+	const light = useLightProps({ lastEvent: lastLightEvent });
 
 	const laserSpeed = useMemo(() => {
 		if (!lastSpeedEvent) return 0;

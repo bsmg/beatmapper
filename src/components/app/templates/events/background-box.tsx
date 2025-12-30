@@ -1,18 +1,19 @@
+import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventEditorStartAndEndBeat } from "$/store/selectors";
-import type { BeatmapId, IBackgroundBox, SongId } from "$/types";
+import type { IBackgroundBox } from "$/types";
 import { clamp, normalize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	box: IBackgroundBox;
 }
-function EventGridBackgroundBox({ sid, bid, box }: Props) {
+function EventGridBackgroundBox({ box }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 

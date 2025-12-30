@@ -1,4 +1,5 @@
 import type { EntityId } from "@reduxjs/toolkit";
+import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import type { ColorRepresentation } from "three";
 
@@ -7,7 +8,7 @@ import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectPlaying, selectRenderScale } from "$/store/selectors";
-import { App, type BeatmapId, type SongId } from "$/types";
+import { App } from "$/types";
 
 function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
 	if (!lastEvent) return App.BasicEventEffect.OFF;
@@ -26,11 +27,11 @@ function deriveBrightnessForEvent(lastEvent: App.IBasicEvent | null) {
 }
 
 interface UseLightPropsOptions {
-	sid: SongId;
-	bid: BeatmapId;
 	lastEvent: App.IBasicEvent | null;
 }
-export function useLightProps({ sid, bid, lastEvent }: UseLightPropsOptions) {
+export function useLightProps({ lastEvent }: UseLightPropsOptions) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const derived = useMemo(() => {

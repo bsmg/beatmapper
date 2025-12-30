@@ -1,3 +1,4 @@
+import { useParams } from "@tanstack/react-router";
 import { createBasicEvent, type EventType } from "bsmap";
 import { type ComponentProps, memo, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -18,7 +19,7 @@ import {
 	selectEventTracksForEnvironment,
 	selectInitialStateForTrack,
 } from "$/store/selectors";
-import { type Accept, App, type BeatmapId, EventEditMode, type SongId, TrackType } from "$/types";
+import { type Accept, App, EventEditMode, TrackType } from "$/types";
 import { clamp, normalize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 import EventGridBackgroundBox from "./background-box";
@@ -26,8 +27,6 @@ import EventGridEventItem from "./event";
 import { createBackgroundBoxes } from "./track.helpers";
 
 interface Props extends ComponentProps<typeof Wrapper> {
-	sid: SongId;
-	bid: BeatmapId;
 	trackId: Accept<EventType, number>;
 	width: number;
 	height: number;
@@ -37,18 +36,20 @@ interface Props extends ComponentProps<typeof Wrapper> {
 	onEventPointerOver?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridTrack({ sid, bid, trackId, width, height, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Props) {
+function EventGridTrack({ trackId, width, height, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+
 	const dispatch = useAppDispatch();
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const cursorAtBeat = useAppSelector(selectEventsEditorCursor);
 	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const offsetInBeats = useAppSelector((state) => -selectEditorOffsetInBeats(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
-	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, trackId));
+	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
 	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
-	const initialTrackLightingState = useAppSelector((state) => selectInitialStateForTrack(state, trackId));
+	const initialTrackLightingState = useAppSelector((state) => selectInitialStateForTrack(state, sid, trackId));
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
 	const [mouseButtonDepressed, setMouseButtonDepressed] = useState<"left" | "right" | null>(null);
@@ -130,10 +131,10 @@ function EventGridTrack({ sid, bid, trackId, width, height, disabled, onEventPoi
 	return (
 		<Wrapper key={trackId} {...rest} style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			{backgroundBoxes.map((box) => (
-				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} sid={sid} bid={bid} box={box} />
+				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />
 			))}
 			{events.map((event) => {
-				return <EventGridEventItem key={resolveEventId(event)} sid={sid} bid={bid} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />;
+				return <EventGridEventItem key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />;
 			})}
 		</Wrapper>
 	);
