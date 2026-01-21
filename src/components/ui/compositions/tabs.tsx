@@ -4,17 +4,16 @@ import { type ComponentProps, type KeyboardEvent, type MouseEvent, type ReactNod
 
 import { ListCollectionFor } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/tabs";
-import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
+import type { SystemStyleObject } from "$:styled-system/types";
 
 export interface TabsItem extends CollectionItem {
 	value: string;
 	render: (ctx: UseTabsContext) => ReactNode;
 }
 
-export interface TabsProps<T extends TabsItem> extends ComponentProps<typeof Builder.Root> {
+export interface TabsProps<T extends TabsItem> extends ComponentProps<typeof Builder.Root>, Pick<SystemStyleObject, "colorPalette"> {
 	collection: ListCollection<T>;
-	colorPalette?: VirtualColorPalette;
 	unfocusOnClick?: boolean;
 }
 export function Tabs<T extends TabsItem>({ collection, colorPalette = "pink", unfocusOnClick, ...rest }: TabsProps<T>) {

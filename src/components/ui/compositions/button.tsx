@@ -3,13 +3,12 @@ import { Presence } from "@ark-ui/react/presence";
 import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback, useMemo } from "react";
 
 import { Button as Styled } from "$/components/ui/styled/button";
-import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
 import { Float } from "$:styled-system/jsx";
+import type { SystemStyleObject } from "$:styled-system/types";
 import { Spinner } from "./spinner";
 
-export interface ButtonProps extends ComponentProps<typeof Styled> {
-	colorPalette?: VirtualColorPalette;
+export interface ButtonProps extends ComponentProps<typeof Styled>, Pick<SystemStyleObject, "colorPalette"> {
 	loading?: boolean;
 	unfocusOnClick?: boolean;
 }

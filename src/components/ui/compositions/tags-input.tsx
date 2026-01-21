@@ -2,12 +2,11 @@ import { XIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
 import * as Builder from "$/components/ui/styled/tags-input";
-import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
+import type { SystemStyleObject } from "$:styled-system/types";
 
-export interface TagsInputProps extends ComponentProps<typeof Builder.Root> {
+export interface TagsInputProps extends ComponentProps<typeof Builder.Root>, Pick<SystemStyleObject, "colorPalette"> {
 	placeholder?: string;
-	colorPalette?: VirtualColorPalette;
 }
 export function TagsInput({ id, placeholder = "Add...", colorPalette = "pink", children, ...rest }: TagsInputProps) {
 	return (

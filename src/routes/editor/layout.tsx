@@ -17,7 +17,7 @@ import { styled } from "$:styled-system/jsx";
 
 const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 	a: ({ ...rest }) => (
-		<Text asChild textStyle={"link"} colorPalette={"yellow"} color={"colorPalette.500"}>
+		<Text asChild textStyle={"link"} color={"yellow.500"}>
 			<a {...rest} />
 		</Text>
 	),

@@ -4,14 +4,13 @@ import { ArrowRightIcon, type LucideProps } from "lucide-react";
 import { type ComponentProps, type ComponentType, useMemo } from "react";
 
 import * as Builder from "$/components/ui/styled/list";
-import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
+import type { SystemStyleObject } from "$:styled-system/types";
 
 const TYPES = { unordered: ark.ul, ordered: ark.ol } as const;
 
-export interface ListRootProps extends ComponentProps<typeof Builder.Root> {
+export interface ListRootProps extends ComponentProps<typeof Builder.Root>, Pick<SystemStyleObject, "colorPalette"> {
 	type: "unordered" | "ordered";
-	colorPalette?: VirtualColorPalette;
 }
 export function Root({ type, colorPalette = "blue", children, ...rest }: ListRootProps) {
 	const context = useMemo(() => ({ variant: rest.variant }), [rest.variant]);

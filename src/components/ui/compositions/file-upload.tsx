@@ -6,8 +6,8 @@ import { type ComponentProps, useMemo } from "react";
 import { APP_TOASTER } from "$/components/app/constants";
 import { Button } from "$/components/ui/compositions";
 import * as Builder from "$/components/ui/styled/file-upload";
-import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
+import type { SystemStyleObject } from "$:styled-system/types";
 
 function resolveIconForFileType(accept?: FileMimeType) {
 	if (accept?.startsWith("image/")) return FileImageIcon;
@@ -17,8 +17,7 @@ function resolveIconForFileType(accept?: FileMimeType) {
 	return FileIcon;
 }
 
-interface Props extends ComponentProps<typeof Builder.Root> {
-	colorPalette?: VirtualColorPalette;
+interface Props extends ComponentProps<typeof Builder.Root>, Pick<SystemStyleObject, "colorPalette"> {
 	deletable?: boolean;
 }
 export function FileUpload({ colorPalette = "pink", deletable = true, onFileReject, children, ...rest }: Props) {
