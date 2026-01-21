@@ -5,18 +5,16 @@ import type { SelectRootProps } from "@ark-ui/react/select";
 import { ChevronDownIcon } from "lucide-react";
 import { type KeyboardEvent, type MouseEvent, type PropsWithChildren, useCallback, useRef } from "react";
 
-import { ListCollectionFor } from "$/components/ui/atoms";
+import { ForListCollection } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/select";
 
-export interface SelectItem extends CollectionItem {}
-
-export interface SelectProps<T extends SelectItem> extends Assign<SelectRootProps<SelectItem>, PropsWithChildren> {
+export interface SelectProps<T extends CollectionItem> extends Assign<SelectRootProps<CollectionItem>, PropsWithChildren> {
 	collection: ListCollection<T>;
 	size?: "sm" | "md";
 	placeholder?: string;
 	unfocusOnClick?: boolean;
 }
-export function Select<T extends SelectItem>({ collection, placeholder, children, unfocusOnClick, ...rest }: SelectProps<T>) {
+export function Select<T extends CollectionItem>({ collection, placeholder, children, unfocusOnClick, ...rest }: SelectProps<T>) {
 	const ref = useRef<HTMLDivElement>(null);
 
 	const handleUnfocus = useCallback(
@@ -27,7 +25,7 @@ export function Select<T extends SelectItem>({ collection, placeholder, children
 	);
 
 	return (
-		<Builder.Root ref={ref} collection={collection as ListCollection<SelectItem>} {...rest} onKeyDown={(e) => e.stopPropagation()}>
+		<Builder.Root ref={ref} collection={collection as ListCollection<CollectionItem>} {...rest} onKeyDown={(e) => e.stopPropagation()}>
 			<Builder.Control>
 				<Builder.Trigger onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
 					{children && <Builder.Label>{children}</Builder.Label>}
@@ -40,19 +38,14 @@ export function Select<T extends SelectItem>({ collection, placeholder, children
 			<Portal>
 				<Builder.Positioner>
 					<Builder.Content>
-						<ListCollectionFor collection={collection}>
-							{(item) => {
-								const value = collection.getItemValue(item);
-								if (!value) return null;
-								const label = collection.stringifyItem(item);
-								return (
-									<Builder.Item key={value} item={value}>
-										<Builder.ItemText>{label}</Builder.ItemText>
-										<Builder.ItemIndicator>✓</Builder.ItemIndicator>
-									</Builder.Item>
-								);
-							}}
-						</ListCollectionFor>
+						<ForListCollection collection={collection}>
+							{(_, { value, label }) => (
+								<Builder.Item key={value} item={value}>
+									<Builder.ItemText>{label}</Builder.ItemText>
+									<Builder.ItemIndicator>✓</Builder.ItemIndicator>
+								</Builder.Item>
+							)}
+						</ForListCollection>
 					</Builder.Content>
 				</Builder.Positioner>
 			</Portal>

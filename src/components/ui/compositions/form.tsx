@@ -1,18 +1,19 @@
 import type { Assign } from "@ark-ui/react";
-import type { ListCollection } from "@ark-ui/react/collection";
+import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { type AnyFieldApi, createFormHook, createFormHookContexts, useStore } from "@tanstack/react-form";
 import { type ComponentProps, type MouseEvent, type ReactNode, useCallback } from "react";
 
+import { ForListCollection } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/form";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
 import { Field, type FieldProps } from "./field";
 import { Input, NativeSelect, Textarea } from "./input";
 import { RadioButtonGroup, type RadioButtonGroupProps } from "./radio-button-group";
-import { RadioGroup, type RadioGroupProps, type RadioItem } from "./radio-group";
+import { RadioGroup, type RadioGroupProps } from "./radio-group";
 import { Switch } from "./switch";
 import { TagsInput } from "./tags-input";
-import { ToggleGroup, type ToggleGroupProps, type ToggleItem } from "./toggle-group";
+import { ToggleGroup, type ToggleGroupProps } from "./toggle-group";
 
 const { useFieldContext, useFormContext, fieldContext, formContext } = createFormHookContexts();
 
@@ -56,15 +57,13 @@ function NativeSelectField({ label, helperText, collection, ...rest }: Assign<Da
 	return (
 		<Field id={rest.id ?? field.name} label={label} helperText={helperText} errorText={error?.message} invalid={!!error} required={rest.required}>
 			<NativeSelect id={rest.id ?? field.name} {...rest} value={field.state.value ?? ""} onValueChange={(details) => field.handleChange(details.value)}>
-				{collection.items.map((item) => {
-					const value = collection.getItemValue(item);
-					if (value === null) return null;
-					return (
+				<ForListCollection collection={collection}>
+					{(_, { value, label }) => (
 						<option key={value} value={value}>
-							{collection.stringifyItem(item)}
+							{label}
 						</option>
-					);
-				})}
+					)}
+				</ForListCollection>
 			</NativeSelect>
 		</Field>
 	);
@@ -96,7 +95,7 @@ function SwitchField({ label, helperText, ...rest }: Assign<DataFieldProps, Comp
 		</Field>
 	);
 }
-function RadioGroupField<T extends RadioItem>({ label, helperText, ...rest }: Assign<DataFieldProps, RadioGroupProps<T>>) {
+function RadioGroupField<T extends CollectionItem>({ label, helperText, ...rest }: Assign<DataFieldProps, RadioGroupProps<T>>) {
 	const field = useFieldContext<string | null>();
 	const error = useFieldError(field);
 	return (
@@ -105,7 +104,7 @@ function RadioGroupField<T extends RadioItem>({ label, helperText, ...rest }: As
 		</Field>
 	);
 }
-function RadioButtonGroupField<T extends RadioItem>({ label, helperText, ...rest }: Assign<DataFieldProps, RadioButtonGroupProps<T>>) {
+function RadioButtonGroupField<T extends CollectionItem>({ label, helperText, ...rest }: Assign<DataFieldProps, RadioButtonGroupProps<T>>) {
 	const field = useFieldContext<string | null>();
 	const error = useFieldError(field);
 	return (
@@ -123,7 +122,7 @@ function TagsInputField({ label, helperText, ...rest }: Assign<DataFieldProps, C
 		</Field>
 	);
 }
-function ToggleGroupField<T extends ToggleItem>({ label, helperText, ...rest }: Assign<DataFieldProps, ToggleGroupProps<T>>) {
+function ToggleGroupField<T extends CollectionItem>({ label, helperText, ...rest }: Assign<DataFieldProps, ToggleGroupProps<T>>) {
 	const field = useFieldContext<string[]>();
 	const error = useFieldError(field);
 	return (

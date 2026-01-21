@@ -1,4 +1,4 @@
 export { Canvas } from "./canvas";
-export { For, ListCollectionFor } from "./for";
+export { For, ForListCollection } from "./for";
 export { Interleave } from "./interleave";
 export { MDXContent } from "./mdx";

@@ -1,40 +1,29 @@
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 
-import { ListCollectionFor } from "$/components/ui/atoms";
+import { ForListCollection } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/radio-button-group";
-import { Tooltip } from "./tooltip";
 
-export interface RadioButtonItem extends CollectionItem {
-	value: string;
-	tooltip?: ReactNode;
+function getItemStyles(item: CollectionItem): CSSProperties {
+	return { "--current-color": typeof item === "object" && !!item && "color" in item ? item.color : undefined };
 }
 
-export interface RadioButtonGroupProps<T extends RadioButtonItem> extends ComponentProps<typeof Builder.Root> {
+export interface RadioButtonGroupProps<T extends CollectionItem> extends ComponentProps<typeof Builder.Root> {
 	collection: ListCollection<T>;
 }
-export function RadioButtonGroup<T extends RadioButtonItem>({ collection, children, ...rest }: RadioButtonGroupProps<T>) {
+export function RadioButtonGroup<T extends CollectionItem>({ collection, children, ...rest }: RadioButtonGroupProps<T>) {
 	return (
 		<Builder.Root defaultValue={collection.firstValue} {...rest}>
 			{children && <Builder.Label>{children}</Builder.Label>}
 			<Builder.Indicator />
-			<ListCollectionFor collection={collection}>
-				{(item) => {
-					const value = collection.getItemValue(item);
-					if (!value) return null;
-					const label = collection.stringifyItem(item);
-					const disabled = collection.getItemDisabled(item);
-					const style = { "--current-color": item.color } as CSSProperties;
-					return (
-						<Tooltip key={value} disabled={!item.tooltip} render={() => item.tooltip}>
-							<Builder.Item value={value} disabled={disabled} data-disabled={disabled} style={style}>
-								<Builder.ItemText>{label}</Builder.ItemText>
-								<Builder.ItemHiddenInput />
-							</Builder.Item>
-						</Tooltip>
-					);
-				}}
-			</ListCollectionFor>
+			<ForListCollection collection={collection}>
+				{(item, { value, label, disabled }) => (
+					<Builder.Item key={value} value={value} disabled={disabled} data-disabled={disabled} style={getItemStyles(item)}>
+						<Builder.ItemText>{label}</Builder.ItemText>
+						<Builder.ItemHiddenInput />
+					</Builder.Item>
+				)}
+			</ForListCollection>
 		</Builder.Root>
 	);
 }

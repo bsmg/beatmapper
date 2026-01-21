@@ -32,7 +32,7 @@ function DocsSidebar() {
 					<Sidebar.NavItem key={entry.id} entry={entry} />
 				))}
 			</Sidebar.NavGroup>
-			<Accordion collection={DOCS_LIST_COLLECTION} multiple />
+			<Accordion collection={DOCS_LIST_COLLECTION} multiple renderItem={(item) => item.render()} />
 		</Sidebar.Root>
 	);
 }

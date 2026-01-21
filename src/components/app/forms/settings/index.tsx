@@ -23,7 +23,7 @@ const collection = createListCollection({
 function AppSettings() {
 	return (
 		<Fragment>
-			<Tabs unfocusOnClick collection={collection} />
+			<Tabs unfocusOnClick collection={collection} renderItem={(item) => item.render()} />
 		</Fragment>
 	);
 }
