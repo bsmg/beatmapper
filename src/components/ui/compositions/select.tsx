@@ -3,31 +3,26 @@ import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
 import { Portal } from "@ark-ui/react/portal";
 import type { SelectRootProps } from "@ark-ui/react/select";
 import { ChevronDownIcon } from "lucide-react";
-import { type KeyboardEvent, type MouseEvent, type PropsWithChildren, useCallback, useRef } from "react";
+import { type PropsWithChildren, useRef } from "react";
 
 import { ForListCollection } from "$/components/ui/atoms";
+import { type UseInteractableOptions, useInteractable } from "$/components/ui/hooks/use-interactable";
 import * as Builder from "$/components/ui/styled/select";
 
-export interface SelectProps<T extends CollectionItem> extends Assign<SelectRootProps<CollectionItem>, PropsWithChildren> {
+export interface SelectProps<T extends CollectionItem> extends Assign<SelectRootProps<CollectionItem>, PropsWithChildren>, UseInteractableOptions {
 	collection: ListCollection<T>;
 	size?: "sm" | "md";
 	placeholder?: string;
-	unfocusOnClick?: boolean;
 }
-export function Select<T extends CollectionItem>({ collection, placeholder, children, unfocusOnClick, ...rest }: SelectProps<T>) {
+export function Select<T extends CollectionItem>({ collection, placeholder, children, unfocusOnPress, ...rest }: SelectProps<T>) {
 	const ref = useRef<HTMLDivElement>(null);
 
-	const handleUnfocus = useCallback(
-		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-			if (unfocusOnClick) event.currentTarget.blur();
-		},
-		[unfocusOnClick],
-	);
+	const { handlePress } = useInteractable({ unfocusOnPress });
 
 	return (
 		<Builder.Root ref={ref} collection={collection as ListCollection<CollectionItem>} {...rest} onKeyDown={(e) => e.stopPropagation()}>
 			<Builder.Control>
-				<Builder.Trigger onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
+				<Builder.Trigger onClickCapture={handlePress} onKeyDownCapture={handlePress}>
 					{children && <Builder.Label>{children}</Builder.Label>}
 					<Builder.ValueText placeholder={placeholder} />
 					<Builder.Indicator>

@@ -27,7 +27,7 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 			<ThinStrip style={sharedStyles} />
 			<Flag
 				{...rest}
-				unfocusOnClick
+				unfocusOnPress
 				style={sharedStyles}
 				onMouseEnter={() => setIsHovering(true)}
 				onMouseLeave={() => setIsHovering(false)}

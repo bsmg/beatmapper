@@ -64,7 +64,7 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 				</Stack>
 				{showDifficultySelector && (
 					<HStack gap={0.5}>
-						<Select unfocusOnClick size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
+						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
 						<Dialog
 							title="Create New Beatmap"
 							unmountOnExit

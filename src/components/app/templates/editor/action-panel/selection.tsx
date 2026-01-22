@@ -67,30 +67,30 @@ function SelectionActionPanel({ numOfSelectedBlocks, numOfSelectedMines, numOfSe
 			<ActionPanelGroup.Root label="Actions">
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Mirror selection horizontally"}>
-						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(mirrorSelection({ axis: "horizontal", grid }))}>
+						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => dispatch(mirrorSelection({ axis: "horizontal", grid }))}>
 							<FlipHorizontal2Icon />
 						</Button>
 					</Tooltip>
 					<Tooltip render={() => "Mirror selection vertically"}>
-						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(mirrorSelection({ axis: "vertical", grid }))}>
+						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => dispatch(mirrorSelection({ axis: "vertical", grid }))}>
 							<FlipVertical2Icon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Nudge selection forwards"}>
-						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ view, direction: "forwards" }))}>
+						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => dispatch(nudgeSelection({ view, direction: "forwards" }))}>
 							<ArrowUpToLineIcon />
 						</Button>
 					</Tooltip>
 					<Tooltip render={() => "Nudge selection backwards"}>
-						<Button variant="ghost" size="icon" unfocusOnClick onClick={() => dispatch(nudgeSelection({ view, direction: "backwards" }))}>
+						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => dispatch(nudgeSelection({ view, direction: "backwards" }))}>
 							<ArrowDownToLineIcon />
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" unfocusOnClick onClick={() => dispatch(deselectAllEntities({ view }))}>
+					<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(deselectAllEntities({ view }))}>
 						Clear selection
 					</Button>
 				</ActionPanelGroup.ActionGroup>

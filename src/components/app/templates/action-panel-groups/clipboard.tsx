@@ -19,15 +19,15 @@ function ClipboardActionPanelActionGroup() {
 		<ActionPanelGroup.ActionGroup>
 			<Presence asChild present={isAnythingSelected}>
 				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnClick onClick={() => dispatch(cutSelection({ view }))}>
+					<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(cutSelection({ view }))}>
 						Cut
 					</Button>
-					<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnClick onClick={() => dispatch(copySelection({ view }))}>
+					<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(copySelection({ view }))}>
 						Copy
 					</Button>
 				</ActionPanelGroup.ActionGroup>
 			</Presence>
-			<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} unfocusOnClick onClick={() => dispatch(pasteSelection({ songId: sid, view }))}>
+			<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} unfocusOnPress onClick={() => dispatch(pasteSelection({ songId: sid, view }))}>
 				Paste Selection
 			</Button>
 		</ActionPanelGroup.ActionGroup>

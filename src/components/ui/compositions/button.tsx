@@ -1,24 +1,19 @@
 import { ark } from "@ark-ui/react/factory";
 import { Presence } from "@ark-ui/react/presence";
-import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback, useMemo } from "react";
+import { type ComponentProps, useMemo } from "react";
 
+import { type UseInteractableOptions, useInteractable } from "$/components/ui/hooks/use-interactable";
 import { Button as Styled } from "$/components/ui/styled/button";
 import { css } from "$:styled-system/css";
 import { Float } from "$:styled-system/jsx";
 import type { SystemStyleObject } from "$:styled-system/types";
 import { Spinner } from "./spinner";
 
-export interface ButtonProps extends ComponentProps<typeof Styled>, Pick<SystemStyleObject, "colorPalette"> {
+export interface ButtonProps extends ComponentProps<typeof Styled>, UseInteractableOptions, Pick<SystemStyleObject, "colorPalette"> {
 	loading?: boolean;
-	unfocusOnClick?: boolean;
 }
-export function Button({ colorPalette: color, loading, unfocusOnClick, asChild, children, ...rest }: ButtonProps) {
-	const handleUnfocus = useCallback(
-		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-			if (unfocusOnClick) event.currentTarget.blur();
-		},
-		[unfocusOnClick],
-	);
+export function Button({ colorPalette: color, loading, unfocusOnPress, asChild, children, ...rest }: ButtonProps) {
+	const { handlePress } = useInteractable({ unfocusOnPress });
 
 	const colorPalette = useMemo(() => {
 		if (color) return color;
@@ -27,7 +22,7 @@ export function Button({ colorPalette: color, loading, unfocusOnClick, asChild, 
 	}, [color, rest.variant]);
 
 	return (
-		<Styled disabled={rest.disabled || loading} data-loading={loading} onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus} className={css({ colorPalette: colorPalette })} {...rest}>
+		<Styled disabled={rest.disabled || loading} data-loading={loading} onClickCapture={handlePress} onKeyDownCapture={handlePress} className={css({ colorPalette: colorPalette })} {...rest}>
 			<ark.span asChild={asChild}>{children}</ark.span>
 			<Presence asChild present={!!loading} lazyMount unmountOnExit>
 				<Float placement={"middle-center"}>

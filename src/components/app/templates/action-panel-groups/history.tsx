@@ -15,10 +15,10 @@ function HistoryActionPanelActionGroup() {
 
 	return (
 		<ActionPanelGroup.ActionGroup>
-			<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnClick onClick={() => dispatch(undoObjects({ songId: sid }))}>
+			<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnPress onClick={() => dispatch(undoObjects({ songId: sid }))}>
 				Undo
 			</Button>
-			<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnClick onClick={() => dispatch(redoObjects({ songId: sid }))}>
+			<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnPress onClick={() => dispatch(redoObjects({ songId: sid }))}>
 				Redo
 			</Button>
 		</ActionPanelGroup.ActionGroup>

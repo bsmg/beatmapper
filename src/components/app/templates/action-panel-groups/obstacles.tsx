@@ -8,7 +8,7 @@ function ObstaclesActionPanelGroup() {
 	return (
 		<ActionPanelGroup.Root label="Obstacles">
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" unfocusOnClick onClick={() => openPrompt("UPDATE_OBSTACLE_DURATION")}>
+				<Button variant="subtle" size="sm" unfocusOnPress onClick={() => openPrompt("UPDATE_OBSTACLE_DURATION")}>
 					Change duration
 				</Button>
 			</ActionPanelGroup.ActionGroup>

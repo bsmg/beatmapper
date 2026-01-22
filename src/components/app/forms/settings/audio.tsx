@@ -22,7 +22,7 @@ function AppAudioSettings() {
 		<Form.Root size="sm">
 			<Form.Row>
 				<Field label="Note tick type" helperText="Change the sound effect played when simulating a hitsound during playback.">
-					<FieldSelect value={TICK_MAP[tickType]} onValueChange={(details) => dispatch(updateTickType({ value: TICK_MAP.indexOf(details.value) }))}>
+					<FieldSelect value={TICK_MAP[tickType]} onValueChange={(details) => dispatch(updateTickType({ value: TICK_MAP.indexOf(details.valueAsString) }))}>
 						<ForListCollection collection={NOTE_TICK_COLLECTION}>
 							{(_, { value, label }) => (
 								<option key={value} value={value}>

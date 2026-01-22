@@ -13,7 +13,7 @@ interface Props {
 }
 function StatusBarIcon({ icon: Icon, onClick, size = 16, disabled }: Props) {
 	return (
-		<Wrapper unfocusOnClick disabled={disabled} onClick={onClick}>
+		<Wrapper unfocusOnPress disabled={disabled} onClick={onClick}>
 			<Icon size={size} />
 		</Wrapper>
 	);
