@@ -98,13 +98,13 @@ function DocsTableOfContents({ container, toc }: Props) {
 	return (
 		<Wrapper>
 			<Title>Table of Contents</Title>
-			<HeadingLink href="#" data-active={activeHeadingId === null} onClick={() => container?.scrollTo({ top: 0 })}>
+			<HeadingLink href="#" aria-current={activeHeadingId === null} onClick={() => container?.scrollTo({ top: 0 })}>
 				Introduction
 			</HeadingLink>
 			{toc.map((entry) => {
 				const id = entry.url.replace("#", "");
 				return (
-					<HeadingLink key={id} href={entry.url} data-active={id === activeHeadingId}>
+					<HeadingLink key={id} href={entry.url} aria-current={id === activeHeadingId}>
 						{entry.title}
 					</HeadingLink>
 				);
@@ -145,7 +145,7 @@ const HeadingLink = styled("a", {
 	base: {
 		textStyle: "link",
 		colorPalette: "pink",
-		color: { base: "fg.muted", _hover: "fg.default", _active: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
+		color: { base: "fg.muted", _hover: "fg.default", _current: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
 		paddingBlock: 1,
 	},
 });

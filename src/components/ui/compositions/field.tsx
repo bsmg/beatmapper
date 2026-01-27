@@ -18,7 +18,7 @@ export function Field({ label, cosmetic, children, helperText, errorText, ...res
 		<Builder.Root {...rest}>
 			{label && (
 				<HStack gap={1}>
-					<Builder.Label asChild={cosmetic} data-required={rest.required}>
+					<Builder.Label asChild={cosmetic}>
 						<span>{label}</span>
 					</Builder.Label>
 					{helperText && (

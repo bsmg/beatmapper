@@ -18,7 +18,7 @@ export function RadioButtonGroup<T extends CollectionItem>({ collection, childre
 			<Builder.Indicator />
 			<ForListCollection collection={collection}>
 				{(item, { value, label, disabled }) => (
-					<Builder.Item key={value} value={value} disabled={disabled} data-disabled={disabled} style={getItemStyles(item)}>
+					<Builder.Item key={value} value={value} disabled={disabled} style={getItemStyles(item)}>
 						<Builder.ItemText>{label}</Builder.ItemText>
 						<Builder.ItemHiddenInput />
 					</Builder.Item>

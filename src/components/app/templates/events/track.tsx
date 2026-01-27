@@ -129,7 +129,7 @@ function EventGridTrack({ trackId, width, height, disabled, onEventPointerDown, 
 	}, [dispatch, resolveEventData, cursorAtBeat, norm, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
 	return (
-		<Wrapper key={trackId} {...rest} style={styles} data-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
+		<Wrapper key={trackId} {...rest} style={styles} aria-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			{backgroundBoxes.map((box) => (
 				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />
 			))}

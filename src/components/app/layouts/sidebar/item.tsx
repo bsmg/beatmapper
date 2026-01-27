@@ -17,8 +17,8 @@ function AppSidebarNavItem({ icon: Icon, tooltip, active, children, ...delegated
 	return (
 		<Tooltip disabled={!tooltip} render={() => <Text fontWeight={400}>{tooltip}</Text>} positioning={TOOLTIP_POSITIONING}>
 			<Wrapper>
-				<ActiveIndicator data-active={active} />
-				<Contents data-active={active} {...delegated}>
+				<ActiveIndicator aria-current={active} />
+				<Contents aria-current={active} {...delegated}>
 					{children(
 						<Overlay>
 							<Icon size={20} />
@@ -49,7 +49,7 @@ const ActiveIndicator = styled("div", {
 		borderRightRadius: "md",
 		transitionProperty: "transform",
 		transitionDuration: "fast",
-		transform: { base: "translateX(-4px)", _active: "translateX(0)" },
+		transform: { base: "translateX(-4px)", _current: "translateX(0)" },
 	},
 });
 

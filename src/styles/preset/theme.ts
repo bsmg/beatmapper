@@ -224,7 +224,7 @@ export const layerStyles = defineLayerStyles({
 	},
 	"fill.ghost": {
 		value: {
-			backgroundColor: { base: "transparent", _hover: "bg.ghost", _active: "bg.ghost" },
+			backgroundColor: { base: "transparent", _hover: "bg.ghost", _pressed: "bg.ghost" },
 			"--current-color": { base: "fg.default", _disabled: "fg.disabled" },
 			color: "var(--current-color)",
 			_icon: { color: "var(--current-color)" },

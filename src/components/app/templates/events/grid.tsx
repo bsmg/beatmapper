@@ -214,7 +214,7 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 	);
 
 	return (
-		<Wrapper {...rest} ref={tracksScrollContainer} data-loading={isLoading}>
+		<Wrapper {...rest} ref={tracksScrollContainer} aria-busy={isLoading}>
 			<HeaderWrapper onContextMenu={(ev) => ev.preventDefault()}>
 				<ActionsWrapper />
 				<TimelineWrapper>
@@ -224,7 +224,7 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 			<MainWrapper>
 				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
 					{allTracks.map(([id, { label }]) => (
-						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(Number.parseInt(id, 10))} onContextMenu={(ev) => ev.preventDefault()}>
+						<Prefix key={id} style={{ height: rowHeight }} aria-disabled={isTrackDisabled(Number.parseInt(id, 10))} onContextMenu={(ev) => ev.preventDefault()}>
 							{label}
 						</Prefix>
 					))}

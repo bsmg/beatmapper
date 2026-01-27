@@ -22,7 +22,7 @@ export function Button({ colorPalette: color, loading, unfocusOnPress, asChild, 
 	}, [color, rest.variant]);
 
 	return (
-		<Styled disabled={rest.disabled || loading} data-loading={loading} onClickCapture={handlePress} onKeyDownCapture={handlePress} className={css({ colorPalette: colorPalette })} {...rest}>
+		<Styled disabled={rest.disabled || loading} aria-busy={loading} onClickCapture={handlePress} onKeyDownCapture={handlePress} className={css({ colorPalette: colorPalette })} {...rest}>
 			<ark.span asChild={asChild}>{children}</ark.span>
 			<Presence asChild present={!!loading} lazyMount unmountOnExit>
 				<Float placement={"middle-center"}>

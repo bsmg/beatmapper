@@ -17,7 +17,7 @@ export function RadioGroup<T extends CollectionItem>({ collection, children, ...
 			<ForListCollection collection={collection}>
 				{(_, { value, label, disabled }) => (
 					<Builder.Item key={value} value={value} disabled={disabled}>
-						<Builder.ItemControl data-disabled={disabled}>
+						<Builder.ItemControl>
 							<Builder.Context>
 								{(ctx) => (
 									<Presence asChild present={ctx.value === value}>
@@ -26,7 +26,7 @@ export function RadioGroup<T extends CollectionItem>({ collection, children, ...
 								)}
 							</Builder.Context>
 						</Builder.ItemControl>
-						<Builder.ItemText data-disabled={disabled}>{label ?? value}</Builder.ItemText>
+						<Builder.ItemText>{label ?? value}</Builder.ItemText>
 						<Builder.ItemHiddenInput />
 					</Builder.Item>
 				)}
