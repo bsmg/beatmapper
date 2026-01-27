@@ -1,17 +1,18 @@
 import { definePreset } from "@pandacss/dev";
-import base from "@pandacss/dev/presets";
 
+import { defineDynamicTokens } from "../utils";
+import * as patterns from "./patterns";
 import { animationStyles, keyframes, layerStyles, semanticTokens, textStyles, tokens } from "./theme";
-import * as utilities from "./utilities";
 
 interface PresetOptions {
 	unit?: number;
 }
 export default function preset({ unit = 8 }: PresetOptions) {
-	const spacing = [0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 36].reduce((acc: Record<number, { value: string }>, n) => {
-		acc[n] = { value: `${unit * n}px` };
-		return acc;
-	}, {});
+	const colorPalette = ["slate", "gray", "pink", "red", "yellow", "green", "blue"];
+
+	const spacing = defineDynamicTokens([0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 36], (value) => {
+		return { value: `${unit * value}px` };
+	});
 
 	return definePreset({
 		name: "beatmapper",
@@ -27,9 +28,11 @@ export default function preset({ unit = 8 }: PresetOptions) {
 			},
 		},
 		theme: {
+			colorPalette: {
+				include: colorPalette,
+			},
 			extend: {
-				breakpoints: base.theme.breakpoints,
-				tokens: { ...tokens, spacing: { ...spacing } },
+				tokens: { ...tokens, spacing },
 				semanticTokens: semanticTokens,
 				keyframes: keyframes,
 				textStyles: textStyles,
@@ -38,22 +41,10 @@ export default function preset({ unit = 8 }: PresetOptions) {
 			},
 		},
 		patterns: {
-			extend: {
-				container: {
-					transform: () => ({
-						position: "relative",
-						maxWidth: "1000px",
-						marginInline: "auto",
-						paddingInline: { base: "4", md: "6", lg: "8" },
-					}),
-				},
-			},
-		},
-		utilities: {
-			extend: { ...utilities },
+			extend: { ...patterns },
 		},
 		staticCss: {
-			css: [{ properties: { colorPalette: ["slate", "pink", "red", "blue", "yellow", "green"] } }],
+			css: [{ properties: { colorPalette } }],
 		},
 	});
 }

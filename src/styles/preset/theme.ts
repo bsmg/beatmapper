@@ -1,9 +1,5 @@
 import { defineAnimationStyles, defineKeyframes, defineLayerStyles, defineSemanticTokens, defineTextStyles, defineTokens } from "@pandacss/dev";
-import base from "@pandacss/dev/presets";
 import { DifficultyName } from "bsmap/types";
-
-const { radii, shadows, durations, animations, aspectRatios } = base.theme.tokens;
-const { spin, pulse } = base.theme.keyframes;
 
 export const tokens = defineTokens({
 	colors: {
@@ -65,37 +61,10 @@ export const tokens = defineTokens({
 			900: { value: "hsl(165, 50%, 10%)" },
 		},
 	},
-	letterSpacings: {
-		normal: { value: "0em" },
-		wider: { value: "0.05em" },
-	},
-	lineHeights: {
-		snug: { value: "1.375" },
-		normal: { value: "1.5" },
-	},
-	radii: {
-		sm: radii.sm,
-		md: radii.md,
-		full: radii.full,
-	},
 	borderWidths: {
 		sm: { value: "1px" },
 		md: { value: "2px" },
 		lg: { value: "4px" },
-	},
-	shadows: {
-		xl: shadows.xl,
-	},
-	durations: {
-		normal: durations.normal,
-		fast: durations.fast,
-	},
-	animations: {
-		spin: animations.spin,
-		pulse: animations.pulse,
-	},
-	aspectRatios: {
-		square: aspectRatios.square,
 	},
 	opacity: {
 		disabled: { value: 0.35 },
@@ -157,8 +126,6 @@ export const semanticTokens = defineSemanticTokens({
 });
 
 export const keyframes = defineKeyframes({
-	spin: spin,
-	pulse: pulse,
 	"fade-in": {
 		from: { opacity: 0 },
 		to: { opacity: 1 },
