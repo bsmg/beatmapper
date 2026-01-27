@@ -1,10 +1,8 @@
 import { Presence } from "@ark-ui/react/presence";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 
-import { Button, Heading, Text } from "$/components/ui/compositions";
-import { Clipboard } from "$/components/ui/compositions/clipboard";
-import { AnchorLink } from "$/components/ui/styled";
-import { Container, Stack, styled, Wrap } from "$:styled-system/jsx";
+import { AnchorLink, Button, Clipboard, Heading } from "$/components/ui/compositions";
+import { Container, Stack, styled, Text, Wrap } from "$:styled-system/jsx";
 
 interface Props extends ErrorComponentProps {
 	interactive?: boolean;
@@ -18,7 +16,7 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 				<Stack gap={3}>
 					<Stack gap={2}>
 						<Heading rank={1}>{error.name}</Heading>
-						<Text>{error.message}</Text>
+						<Text textStyle={"paragraph"}>{error.message}</Text>
 					</Stack>
 					<Stack gap={2}>
 						<Heading rank={3}>Stack Trace</Heading>
@@ -31,7 +29,7 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 					<Presence asChild present={interactive}>
 						<Stack gap={3}>
 							<Stack gap={1}>
-								<Text>If this error was a false positive, you can click the following buttons to revalidate the route and retry any loader operations.</Text>
+								<Text textStyle={"paragraph"}>If this error was a false positive, you can click the following buttons to revalidate the route and retry any loader operations.</Text>
 								<Wrap gap={1}>
 									<Button variant="subtle" size="sm" onClick={() => reset()}>
 										Reset
@@ -41,7 +39,7 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 									</Button>
 								</Wrap>
 							</Stack>
-							<Text>
+							<Text textStyle={"paragraph"}>
 								If you're still encountering issues, please <AnchorLink href="https://github.com/bsmg/beatmapper/issues/new?template=bug.md">fill out a bug report</AnchorLink> on the repository.
 							</Text>
 						</Stack>

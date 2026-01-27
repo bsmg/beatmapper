@@ -9,12 +9,12 @@ import { array, minValue, number, object, pipe, string, transform } from "valibo
 import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
-import { HStack, Stack, Wrap } from "$:styled-system/jsx";
+import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	lightshowId: string(),
@@ -121,7 +121,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
+			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text textStyle={"paragraph"}>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
@@ -175,7 +175,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 							Copy
 						</Button>
 					</Dialog>
-					<AlertDialogProvider value={deleteAlert} render={() => <Text>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
+					<AlertDialogProvider value={deleteAlert} render={() => <Text textStyle={"paragraph"}>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
 						<Button variant="subtle" size="sm" colorPalette="red">
 							Delete
 						</Button>

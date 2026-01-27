@@ -5,11 +5,12 @@ import { Fragment, type MouseEventHandler, useMemo } from "react";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { ClipboardActionPanelActionGroup, HistoryActionPanelActionGroup, ObstaclesActionPanelGroup } from "$/components/app/templates/action-panel-groups";
 import { Interleave } from "$/components/ui/atoms";
-import { Button, StrikethroughOnHover, Text, Tooltip } from "$/components/ui/compositions";
+import { Button, Tooltip } from "$/components/ui/compositions";
 import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize } from "$/store/selectors";
 import { ObjectType } from "$/types";
+import { StrikethroughOnHover, Text } from "$:styled-system/jsx";
 
 interface CountProps {
 	num: number;
@@ -20,14 +21,12 @@ function SelectionCount({ num, label, onClick }: CountProps) {
 	const pluralizedLabel = useMemo(() => (num === 1 ? label : `${label}s`), [num, label]);
 
 	return (
-		<Button onClick={onClick}>
-			<StrikethroughOnHover>
-				<Text colorPalette="yellow" color={"colorPalette.500"} fontWeight={"bold"}>
-					{num}
-				</Text>{" "}
-				{pluralizedLabel}
-			</StrikethroughOnHover>
-		</Button>
+		<StrikethroughOnHover as={Button} color="red.500" onClick={onClick}>
+			<Text color="yellow.500" fontWeight={"bold"}>
+				{num}
+			</Text>{" "}
+			{pluralizedLabel}
+		</StrikethroughOnHover>
 	);
 }
 

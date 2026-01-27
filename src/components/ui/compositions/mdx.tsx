@@ -1,14 +1,14 @@
 import { evaluateSync } from "@mdx-js/mdx";
 import type { MDXComponents } from "mdx/types";
-import { memo, useMemo } from "react";
+import { forwardRef, memo, useMemo } from "react";
 import { jsxDEV } from "react/jsx-dev-runtime";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 
-import { css } from "$:styled-system/css";
-import { AnchorLink } from "../styled";
+import { AnchorLink } from "$/components/ui/compositions";
+import { css, cx } from "$:styled-system/css";
 
 const DEFAULT_COMPONENTS: MDXComponents = {
-	a: ({ ref, ...rest }) => <AnchorLink target="_blank" className={css({ color: "yellow.500" })} {...rest} />,
+	a: forwardRef(({ className, ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} className={cx(css({ color: "yellow.500" }), className)} />),
 };
 
 interface MDXProps {

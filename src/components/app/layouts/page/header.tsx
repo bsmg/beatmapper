@@ -1,9 +1,8 @@
-import { Link } from "@tanstack/react-router";
 import { DotIcon } from "lucide-react";
 
 import { Logo } from "$/components/app/compositions";
 import { Interleave } from "$/components/ui/atoms";
-import { Text } from "$/components/ui/compositions";
+import { RouterLink } from "$/components/ui/compositions";
 import { Container, styled } from "$:styled-system/jsx";
 import { flex, stack } from "$:styled-system/patterns";
 
@@ -16,11 +15,9 @@ function EditorPageHeader() {
 				</SectionWrapper>
 				<SectionWrapper>
 					<Interleave separator={({ index }) => <DotIcon key={index} />}>
-						<Text asChild textStyle={"link"}>
-							<Link to="/docs/$" params={{ _splat: "welcome" }}>
-								Documentation
-							</Link>
-						</Text>
+						<RouterLink to="/docs/$" params={{ _splat: "welcome" }}>
+							Documentation
+						</RouterLink>
 					</Interleave>
 				</SectionWrapper>
 			</InnerWrapper>

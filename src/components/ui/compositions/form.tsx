@@ -1,10 +1,12 @@
 import type { Assign } from "@ark-ui/react";
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
+import { ark } from "@ark-ui/react/factory";
 import { type AnyFieldApi, createFormHook, createFormHookContexts, useStore } from "@tanstack/react-form";
 import { type ComponentProps, type MouseEvent, type ReactNode, useCallback } from "react";
 
 import { ForListCollection } from "$/components/ui/atoms";
-import * as Builder from "$/components/ui/styled/form";
+import { styled } from "$:styled-system/jsx";
+import { stack, wrap } from "$:styled-system/patterns";
 import { Button } from "./button";
 import { Checkbox } from "./checkbox";
 import { Field, type FieldProps } from "./field";
@@ -171,8 +173,26 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
 		ToggleGroup: ToggleGroupField,
 	},
 	formComponents: {
-		Root: Builder.Root,
-		Row: Builder.Row,
+		Root: styled(ark.div, {
+			base: stack.raw({
+				gap: 4,
+			}),
+			variants: {
+				size: {
+					sm: { gap: 2 },
+					md: { gap: 4 },
+				},
+			},
+			defaultVariants: {
+				size: "md",
+			},
+		}),
+		Row: styled(ark.div, {
+			base: wrap.raw({
+				gap: 2,
+				"& > *": { flex: 1 },
+			}),
+		}),
 		Submit: SubmitButton,
 	},
 });

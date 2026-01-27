@@ -1,38 +1,21 @@
 import type { MDXComponents } from "mdx/types";
-import type { ComponentProps } from "react";
+import { type ComponentProps, forwardRef } from "react";
 
 import { Shortcut } from "$/components/app/compositions";
 import * as ContentComponents from "$/components/docs/content";
 import { MDXContent } from "$/components/ui/atoms";
-import { Text } from "$/components/ui/compositions";
-import { KBD } from "$/components/ui/styled";
+import { AnchorLink } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import DocsMedia from "./media";
 
-const Subtle = styled("span", {
-	base: {
-		fontStyle: "italic",
-		color: "fg.subtle",
-	},
-});
-
 const sharedComponents: MDXComponents = {
-	a: ({ ...props }) => (
-		<Text asChild textStyle={"link"}>
-			<a {...props} />
-		</Text>
-	),
+	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} {...rest} />),
 	img: ({ alt, title, ...rest }) => (
 		<DocsMedia caption={alt ?? title}>
 			<img {...rest} alt={alt} title={title} />
 		</DocsMedia>
 	),
-	Key: ({ children }) => <KBD>{children}</KBD>,
-	Subtle: Subtle,
-	Shortcut: ({ separator, children }) => <Shortcut separator={separator}>{children}</Shortcut>,
-	YoutubeEmbed: ({ title, width = 560, height = 315, src }) => {
-		return <iframe width={width} height={height} src={src} title={title} frameBorder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
-	},
+	Shortcut,
 	...ContentComponents,
 };
 

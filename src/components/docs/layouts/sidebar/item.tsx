@@ -1,6 +1,4 @@
-import { Link } from "@tanstack/react-router";
-
-import { Text } from "$/components/ui/compositions";
+import { RouterLink } from "$/components/ui/compositions";
 import type { Doc } from "$:content";
 import { styled } from "$:styled-system/jsx";
 
@@ -9,15 +7,13 @@ interface Props {
 }
 function DocsSidebarNavItem({ entry }: Props) {
 	return (
-		<NavLinkWrapper asChild onClick={() => window.scrollTo({ top: 0 })}>
-			<Link to={"/docs/$"} params={{ _splat: entry.id }}>
-				{entry.title}
-			</Link>
-		</NavLinkWrapper>
+		<RouterLink as={NavLinkWrapper} to={"/docs/$"} params={{ _splat: entry.id }} onClick={() => window.scrollTo({ top: 0 })}>
+			{entry.title}
+		</RouterLink>
 	);
 }
 
-const NavLinkWrapper = styled(Text, {
+const NavLinkWrapper = styled("a", {
 	base: {
 		height: "35px",
 		textStyle: "link",

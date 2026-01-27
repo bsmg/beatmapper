@@ -2,11 +2,11 @@ import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
-import { MapArchiveFileUpload } from "$/components/app/compositions/file-upload";
-import { List, Text } from "$/components/ui/compositions";
+import { MapArchiveFileUpload } from "$/components/app/compositions";
+import { List } from "$/components/ui/compositions";
 import { useAppSelector } from "$/store/hooks";
 import { selectProcessingImport } from "$/store/selectors";
-import { Stack } from "$:styled-system/jsx";
+import { Stack, Text } from "$:styled-system/jsx";
 
 interface Props {
 	dialog?: UseDialogContext;
@@ -21,7 +21,7 @@ function ImportMapForm({ dialog }: Props) {
 	return (
 		<Fragment>
 			<Stack gap={0}>
-				<Text textStyle={"paragraph"} fontSize={18} fontWeight={400}>
+				<Text textStyle={"paragraph"} color={"fg.default"} fontSize={"18px"} fontWeight={400}>
 					To import a map, the following conditions must be met:
 				</Text>
 				<List.Root type="unordered" variant="plain">
@@ -32,7 +32,7 @@ function ImportMapForm({ dialog }: Props) {
 				</List.Root>
 			</Stack>
 			<Stack gap={2}>
-				<Text color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
+				<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
 					Drag and drop (or click to select) the .zip file:
 				</Text>
 				<MapArchiveFileUpload disabled={isProcessingImport} onFileAccept={handleFileAccept} />

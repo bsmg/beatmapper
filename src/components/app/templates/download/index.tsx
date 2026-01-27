@@ -5,14 +5,12 @@ import { boolean, null_, object, picklist, union } from "valibot";
 
 import { VERSION_COLLECTION } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
-import { Heading, Text, useAppForm } from "$/components/ui/compositions";
-import { Panel } from "$/components/ui/styled";
+import { Heading, useAppForm } from "$/components/ui/compositions";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { downloadMapFiles, pausePlayback } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectPlaying } from "$/store/selectors";
-import { Stack, styled, VStack } from "$:styled-system/jsx";
-import { vstack } from "$:styled-system/patterns";
+import { Stack, styled, Text, VStack } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	version: union([picklist(["1", "2", "3", "4"]), null_()]),
@@ -68,14 +66,14 @@ function Download() {
 			<Stack gap={4}>
 				<Heading rank={1}>Download Map</Heading>
 				<Presence asChild present={demoBlocker} lazyMount unmountOnExit>
-					<Text>Unfortunately, the demo map is not available for download.</Text>
+					<Text textStyle={"paragraph"}>Unfortunately, the demo map is not available for download.</Text>
 				</Presence>
 				<Presence asChild present={!demoBlocker} lazyMount unmountOnExit>
 					<Form.Root>
 						<Content>
 							<VStack gap={6}>
 								<VStack gap={2}>
-									<Text>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Text>
+									<Text textStyle={"paragraph"}>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Text>
 									<Form.Submit variant="solid" size="md">
 										Download map files
 									</Form.Submit>
@@ -90,7 +88,7 @@ function Download() {
 								{(ctx) => (
 									<Stack>
 										<ctx.RadioGroup label="Serial Version" helperText={"The [serial format](https://bsmg.wiki/mapping/map-format#schemas) to export your map contents to. Generally, higher versions will offer better compatibility."} collection={VERSION_COLLECTION} />
-										<Text color={"fg.muted"} fontSize={"0.875em"}>
+										<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"0.875em"}>
 											{ctx.state.value !== null ? null : "NOTE: If the version is left unset, the implicit version of your map will be used (derived from when the map was originally created/imported in the editor)."}
 										</Text>
 									</Stack>
@@ -108,11 +106,13 @@ function Download() {
 	);
 }
 
-const Content = styled(Panel, {
-	base: vstack.raw({
+const Content = styled(VStack, {
+	base: {
+		layerStyle: "fill.surface",
+		colorPalette: "slate",
 		padding: 4,
 		textAlign: "center",
-	}),
+	},
 });
 
 export default Download;

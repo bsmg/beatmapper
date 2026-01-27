@@ -1,6 +1,6 @@
 import { Children, type PropsWithChildren } from "react";
 
-import { KBD } from "$/components/ui/styled";
+import { Kbd } from "$/components/ui/styled/kbd";
 import { getMetaKeyLabel, getOptionKeyLabel } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 import Mouse from "./mouse";
@@ -20,22 +20,22 @@ function resolveIcon(code: string) {
 	const alias = code.toLowerCase() in aliases ? aliases[code.toLowerCase()] : code.toLowerCase();
 
 	if (code.length === 1) {
-		return <KBD key={alias}>{alias}</KBD>;
+		return <Kbd key={alias}>{alias}</Kbd>;
 	}
 	switch (code.toLowerCase()) {
 		case "up":
 		case "down":
 		case "left":
 		case "right": {
-			return <KBD key={alias}>{alias}</KBD>;
+			return <Kbd key={alias}>{alias}</Kbd>;
 		}
 		case "option":
 		case "meta": {
-			return <KBD key={alias}>{alias}</KBD>;
+			return <Kbd key={alias}>{alias}</Kbd>;
 		}
 		case "spacebar":
 		case "space": {
-			return <KBD key={alias}>{alias}</KBD>;
+			return <Kbd key={alias}>{alias}</Kbd>;
 		}
 		case "move":
 		case "clickleft":
@@ -45,7 +45,7 @@ function resolveIcon(code: string) {
 			return <Mouse key={alias} activeButton={alias} />;
 		}
 		default: {
-			return <KBD key={alias}>{alias}</KBD>;
+			return <Kbd key={alias}>{alias}</Kbd>;
 		}
 	}
 }

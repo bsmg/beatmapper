@@ -7,12 +7,12 @@ import { memo, useCallback, useMemo } from "react";
 import { CoverArtFilePreview } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { Button, Dialog, Select, Text } from "$/components/ui/compositions";
+import { Button, Dialog, Select } from "$/components/ui/compositions";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata, selectUsername } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
-import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 const COVER_ART_SIZES = {
 	medium: 75,
@@ -55,10 +55,10 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 			<CoverArtFilePreview sid={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
 			<Stack gap={1}>
 				<Stack gap={0.5}>
-					<Text color={"fg.default"} fontSize="20px" fontWeight={400} lineHeight={1}>
+					<Text color={"fg.default"} fontSize={"20px"} fontWeight={400} lineHeight={1}>
 						{metadata.title}
 					</Text>
-					<Text color={"fg.muted"} fontSize="16px" fontWeight={400} lineHeight={1}>
+					<Text color={"fg.muted"} fontSize={"16px"} fontWeight={400} lineHeight={1}>
 						{metadata.artist}
 					</Text>
 				</Stack>

@@ -2,8 +2,7 @@ import { PlusIcon } from "lucide-react";
 import { type PropsWithChildren, useMemo } from "react";
 
 import { Shortcut } from "$/components/app/compositions";
-import { Text } from "$/components/ui/compositions";
-import { styled } from "$:styled-system/jsx";
+import { styled, Text } from "$:styled-system/jsx";
 import { grid, stack, wrap } from "$:styled-system/patterns";
 
 const IconRow = styled("span", {
@@ -86,7 +85,7 @@ export function ShortcutItem({ title, keys, separator, children }: Props) {
 		<ShortcutWrapper>
 			<Keys>{rows}</Keys>
 			<Children>
-				<Text color={"fg.default"} fontSize={"18px"} fontWeight={700}>
+				<Text textStyle={"paragraph"} color={"fg.default"} fontSize={"18px"} fontWeight={700}>
 					{title}
 				</Text>
 				<Sidenote>{children}</Sidenote>

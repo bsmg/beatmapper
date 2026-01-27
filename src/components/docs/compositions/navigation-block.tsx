@@ -1,10 +1,9 @@
 import { ark } from "@ark-ui/react/factory";
-import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { Text } from "$/components/ui/compositions";
+import { RouterLink } from "$/components/ui/compositions";
 import { docs } from "$:content";
-import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 interface NavProps {
 	direction: "previous" | "next";
@@ -15,14 +14,12 @@ function DocsNavigationBlock({ direction, item }: NavProps) {
 
 	return (
 		<Stack gap={0.5} align={direction === "previous" ? "flex-start" : "flex-end"}>
-			<Text color={"fg.muted"} fontSize={"14px"}>
+			<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"14px"}>
 				{item && formattedSubtitle}
 			</Text>
-			<LinkWrapper asChild>
-				<Link to={"/docs/$"} params={{ _splat: item?.id }}>
-					{item?.title}
-				</Link>
-			</LinkWrapper>
+			<RouterLink as={LinkWrapper} to={"/docs/$"} params={{ _splat: item?.id }}>
+				{item?.title}
+			</RouterLink>
 		</Stack>
 	);
 }

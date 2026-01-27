@@ -1,34 +1,26 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
-import type { ComponentProps } from "react";
+import { forwardRef } from "react";
 
 import { AppPrompter, Shortcut } from "$/components/app/compositions";
 import { EDITOR_TOASTER } from "$/components/app/constants";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
 import { MDXContent } from "$/components/ui/atoms";
-import { List, Text } from "$/components/ui/compositions";
+import { AnchorLink, List } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
 import type { View } from "$/types";
 import { prompts } from "$:content";
-import { css } from "$:styled-system/css";
-import { styled } from "$:styled-system/jsx";
+import { css, cx } from "$:styled-system/css";
+import { styled, Text } from "$:styled-system/jsx";
 
 const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
-	a: ({ ...rest }) => (
-		<Text asChild textStyle={"link"} color={"yellow.500"}>
-			<a {...rest} />
-		</Text>
-	),
-	p: ({ ...rest }) => (
-		<Text asChild textStyle={"paragraph"} className={css({ marginBlockStart: { base: 1.5, _first: 0 }, marginBlockEnd: { base: 1.5, _last: 0 } })}>
-			<p {...rest} />
-		</Text>
-	),
-	ul: ({ ref, ...rest }) => <List.Root type="unordered" variant="marker" {...rest} />,
-	li: ({ ref, ...rest }) => <List.Item {...rest} />,
-	Shortcut: ({ separator, children }: ComponentProps<typeof Shortcut>) => <Shortcut separator={separator}>{children}</Shortcut>,
+	a: forwardRef(({ className, ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} className={cx(css({ color: "yellow.500" }), className)} />),
+	p: forwardRef(({ className, ...rest }, ref) => <Text as={"p"} ref={ref} {...rest} textStyle={"paragraph"} className={cx(css({ marginBlockStart: { base: 1.5, _first: 0 }, marginBlockEnd: { base: 1.5, _last: 0 } }), className)} />),
+	ul: forwardRef(({ ...rest }, ref) => <List.Root ref={ref} type="unordered" variant="marker" {...rest} />),
+	li: forwardRef(({ ...rest }, ref) => <List.Item ref={ref} {...rest} />),
+	Shortcut,
 };
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
