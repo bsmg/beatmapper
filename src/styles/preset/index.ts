@@ -2,6 +2,8 @@ import { definePreset } from "@pandacss/dev";
 
 import { defineDynamicTokens } from "../utils";
 import * as patterns from "./patterns";
+import * as recipes from "./recipes";
+import * as slotRecipes from "./slot-recipes";
 import { animationStyles, keyframes, layerStyles, semanticTokens, textStyles, tokens } from "./theme";
 
 interface PresetOptions {
@@ -34,6 +36,8 @@ export default function preset({ unit = 8 }: PresetOptions) {
 				layerStyles: layerStyles,
 				animationStyles: animationStyles,
 			},
+			recipes: recipes,
+			slotRecipes: slotRecipes,
 		},
 		patterns: {
 			extend: { ...patterns },
