@@ -1,4 +1,3 @@
-import { ark } from "@ark-ui/react/factory";
 import { Presence } from "@ark-ui/react/presence";
 import { type ComponentProps, useMemo } from "react";
 
@@ -12,7 +11,7 @@ import { Spinner } from "./spinner";
 export interface ButtonProps extends ComponentProps<typeof Styled>, UseInteractableOptions, Pick<SystemStyleObject, "colorPalette"> {
 	loading?: boolean;
 }
-export function Button({ colorPalette: color, loading, unfocusOnPress, asChild, children, ...rest }: ButtonProps) {
+export function Button({ colorPalette: color, loading, unfocusOnPress, children, ...rest }: ButtonProps) {
 	const { handlePress } = useInteractable({ unfocusOnPress });
 
 	const colorPalette = useMemo(() => {
@@ -23,7 +22,7 @@ export function Button({ colorPalette: color, loading, unfocusOnPress, asChild, 
 
 	return (
 		<Styled disabled={rest.disabled || loading} aria-busy={loading} onClickCapture={handlePress} onKeyDownCapture={handlePress} className={css({ colorPalette: colorPalette })} {...rest}>
-			<ark.span asChild={asChild}>{children}</ark.span>
+			{children}
 			<Presence asChild present={!!loading} lazyMount unmountOnExit>
 				<Float placement={"middle-center"}>
 					<Spinner size={16} />

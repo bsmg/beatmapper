@@ -19,7 +19,7 @@ export function TagsInput({ id, placeholder = "Add...", colorPalette = "pink", c
 							<Builder.Item key={value} index={index} value={value}>
 								<Builder.ItemPreview>
 									<Builder.ItemText>{value}</Builder.ItemText>
-									<Builder.ItemDeleteTrigger asChild>
+									<Builder.ItemDeleteTrigger>
 										<XIcon />
 									</Builder.ItemDeleteTrigger>
 								</Builder.ItemPreview>

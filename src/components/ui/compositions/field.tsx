@@ -1,6 +1,7 @@
 import { HelpCircleIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/field";
 import { HStack } from "$:styled-system/jsx";
 import { Input as BaseInput, NativeSelect as BaseSelect, Textarea as BaseTextarea } from "./input";
@@ -14,13 +15,13 @@ export interface FieldProps extends Omit<ComponentProps<typeof Builder.Root>, "l
 	errorText?: React.ReactNode;
 }
 export function Field({ label, cosmetic, children, helperText, errorText, ...rest }: FieldProps) {
+	const Label = useRender(Builder.Label, toPolymorphic(cosmetic ? "span" : "label"));
+
 	return (
 		<Builder.Root {...rest}>
 			{label && (
 				<HStack gap={1}>
-					<Builder.Label asChild={cosmetic}>
-						<span>{label}</span>
-					</Builder.Label>
+					<Label>{label}</Label>
 					{helperText && (
 						<Tooltip interactive render={() => (typeof helperText === "string" ? <MDXRender code={helperText} /> : helperText)}>
 							<Builder.HelperText>
@@ -37,23 +38,11 @@ export function Field({ label, cosmetic, children, helperText, errorText, ...res
 }
 
 export function FieldInput({ ...rest }: ComponentProps<typeof BaseInput>) {
-	return (
-		<Builder.Input asChild>
-			<BaseInput {...rest} />
-		</Builder.Input>
-	);
+	return <BaseInput as={Builder.Input} {...rest} />;
 }
 export function FieldSelect({ ...rest }: ComponentProps<typeof BaseSelect>) {
-	return (
-		<Builder.Select asChild>
-			<BaseSelect {...rest} />
-		</Builder.Select>
-	);
+	return <BaseSelect as={Builder.Select} {...rest} />;
 }
 export function FieldTextarea({ ...rest }: ComponentProps<typeof BaseTextarea>) {
-	return (
-		<Builder.Textarea asChild>
-			<BaseTextarea {...rest} />
-		</Builder.Textarea>
-	);
+	return <BaseTextarea as={Builder.Textarea} {...rest} />;
 }

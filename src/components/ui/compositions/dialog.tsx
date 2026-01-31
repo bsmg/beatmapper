@@ -4,6 +4,7 @@ import { Portal } from "@ark-ui/react/portal";
 import { XIcon } from "lucide-react";
 import { type ComponentProps, type PropsWithChildren, type ReactNode, useCallback } from "react";
 
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/dialog";
 import { HStack, Stack } from "$:styled-system/jsx";
 import { Button } from "./button";
@@ -35,13 +36,11 @@ function Contents({ title, description, render, children }: DialogProps & PropsW
 }
 
 export function Dialog({ children, ...rest }: Assign<ComponentProps<typeof Builder.Root>, DialogProps>) {
+	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+
 	return (
 		<Builder.Root {...rest} modal={false}>
-			{children && (
-				<Builder.Trigger asChild>
-					<span>{children}</span>
-				</Builder.Trigger>
-			)}
+			<Trigger>{children}</Trigger>
 			<Contents {...rest}>
 				<Builder.CloseTrigger>
 					<XIcon />
@@ -52,13 +51,11 @@ export function Dialog({ children, ...rest }: Assign<ComponentProps<typeof Build
 }
 
 export function DialogProvider({ value, children, title, description, render, ...rest }: Assign<ComponentProps<typeof Builder.RootProvider>, DialogProps>) {
+	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+
 	return (
 		<Builder.RootProvider {...rest} value={value}>
-			{children && (
-				<Builder.Trigger asChild>
-					<span>{children}</span>
-				</Builder.Trigger>
-			)}
+			<Trigger>{children}</Trigger>
 			<Contents {...value} title={title} description={description} render={render}>
 				<Builder.CloseTrigger>
 					<XIcon />
@@ -69,6 +66,8 @@ export function DialogProvider({ value, children, title, description, render, ..
 }
 
 export function AlertDialogProvider({ value, children, title, description, render, onSubmit, onCancel, ...rest }: ComponentProps<typeof DialogProvider> & { onSubmit?: () => void; onCancel?: () => void }) {
+	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+
 	const handleSubmit = useCallback(
 		(ctx: UseDialogContext) => {
 			ctx.setOpen(false);
@@ -87,11 +86,7 @@ export function AlertDialogProvider({ value, children, title, description, rende
 
 	return (
 		<Builder.RootProvider {...rest} value={value}>
-			{children && (
-				<Builder.Trigger asChild>
-					<span>{children}</span>
-				</Builder.Trigger>
-			)}
+			<Trigger>{children}</Trigger>
 			<Contents {...value} title={title} description={description} render={render}>
 				<Builder.Context>
 					{(ctx) => (

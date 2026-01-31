@@ -5,6 +5,7 @@ import { type ComponentProps, useMemo } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
 import { Button } from "$/components/ui/compositions";
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/file-upload";
 import { css } from "$:styled-system/css";
 import type { SystemStyleObject } from "$:styled-system/types";
@@ -21,6 +22,11 @@ interface Props extends ComponentProps<typeof Builder.Root>, Pick<SystemStyleObj
 	deletable?: boolean;
 }
 export function FileUpload({ colorPalette = "pink", deletable = true, onFileReject, children, ...rest }: Props) {
+	const ItemDeleteTrigger = useRender(
+		Builder.ItemDeleteTrigger,
+		toPolymorphic(Button, (Element, delegated) => <Element {...delegated} variant="ghost" size="icon" />),
+	);
+
 	const ctx = useFileUpload({
 		...rest,
 		onFileReject: (details) => {
@@ -55,9 +61,9 @@ export function FileUpload({ colorPalette = "pink", deletable = true, onFileReje
 			<Builder.Dropzone className={css({ colorPalette })}>
 				<AcceptIcon />
 				<Builder.Label>{children ?? rest.accept?.toString() ?? "Any File"}</Builder.Label>
-				<Builder.Trigger asChild>
-					<Button size="sm">Open File Picker</Button>
-				</Builder.Trigger>
+				<Button variant="subtle" size="sm">
+					Open File Picker
+				</Button>
 			</Builder.Dropzone>
 			<Builder.ItemGroup>
 				<Builder.Context>
@@ -70,11 +76,9 @@ export function FileUpload({ colorPalette = "pink", deletable = true, onFileReje
 								<Builder.ItemName />
 								<Builder.ItemSizeText />
 								{deletable && (
-									<Builder.ItemDeleteTrigger asChild>
-										<Button variant="ghost" size="icon">
-											<Trash2Icon />
-										</Button>
-									</Builder.ItemDeleteTrigger>
+									<ItemDeleteTrigger>
+										<Trash2Icon />
+									</ItemDeleteTrigger>
 								)}
 							</Builder.Item>
 						))

@@ -11,9 +11,6 @@ export interface HeadingProps {
 }
 export function Heading({ rank = 1, ...rest }: Assign<ComponentProps<typeof Styled>, HeadingProps>) {
 	const Element = useMemo(() => ARR[rank - 1], [rank]);
-	return (
-		<Styled rank={rank.toString() as `${1 | 2 | 3 | 4 | 5 | 6}`} asChild>
-			<Element {...rest} />
-		</Styled>
-	);
+
+	return <Styled as={Element} rank={rank.toString() as `${1 | 2 | 3 | 4 | 5 | 6}`} {...rest} />;
 }

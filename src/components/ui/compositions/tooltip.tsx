@@ -2,6 +2,7 @@ import { Portal } from "@ark-ui/react/portal";
 import type { UseTooltipContext } from "@ark-ui/react/tooltip";
 import type { ComponentProps, ReactNode } from "react";
 
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/tooltip";
 
 interface Props extends ComponentProps<typeof Builder.Root> {
@@ -12,12 +13,13 @@ interface Props extends ComponentProps<typeof Builder.Root> {
 	disabled?: boolean;
 }
 export function Tooltip({ showArrow = true, portalled = true, portalRef, children, render, disabled, ...rest }: Props) {
+	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+
 	if (disabled) return children;
+
 	return (
 		<Builder.Root {...rest}>
-			<Builder.Trigger asChild>
-				<span>{children}</span>
-			</Builder.Trigger>
+			<Trigger>{children}</Trigger>
 			<Portal disabled={!portalled} container={portalRef}>
 				<Builder.Positioner>
 					<Builder.Content>

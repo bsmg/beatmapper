@@ -32,7 +32,7 @@ function SongDetailsModule({ label, render, checked: initialOpen, onCheckedChang
 						{label}
 						{children && (
 							<Tooltip interactive render={() => children}>
-								<IconWrapper asChild>
+								<IconWrapper>
 									<HelpCircleIcon size={16} />
 								</IconWrapper>
 							</Tooltip>

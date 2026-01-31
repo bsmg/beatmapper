@@ -59,7 +59,7 @@ function EditorSidebar() {
 				<Sidebar.Item tooltip="Settings" icon={SettingsIcon} active={false}>
 					{(children) => (
 						<Dialog title="App Settings" render={() => <AppSettingsForm />}>
-							<span>{children}</span>
+							{children}
 						</Dialog>
 					)}
 				</Sidebar.Item>

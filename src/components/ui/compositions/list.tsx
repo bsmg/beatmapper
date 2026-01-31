@@ -14,12 +14,13 @@ export interface ListRootProps extends ComponentProps<typeof Builder.Root>, Pick
 }
 export function Root({ type, colorPalette = "blue", children, ...rest }: ListRootProps) {
 	const context = useMemo(() => ({ variant: rest.variant }), [rest.variant]);
+
 	const Element = useMemo(() => TYPES[type], [type]);
 
 	return (
 		<Builder.Provider value={context}>
-			<Builder.Root asChild {...rest} className={css({ colorPalette })}>
-				<Element>{children}</Element>
+			<Builder.Root as={Element} {...rest} className={css({ colorPalette })}>
+				{children}
 			</Builder.Root>
 		</Builder.Provider>
 	);
@@ -28,19 +29,19 @@ export function Root({ type, colorPalette = "blue", children, ...rest }: ListRoo
 export interface ListItemProps extends ComponentProps<typeof Builder.Item> {
 	indicator?: ComponentType<LucideProps>;
 }
-export function Item({ asChild, indicator: Indicator = ArrowRightIcon, children, ...rest }: ListItemProps) {
+export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest }: ListItemProps) {
 	return (
 		<Builder.Item {...rest}>
 			<Builder.Context>
 				{(ctx) => (
 					<Presence asChild present={ctx.variant === "plain"}>
-						<Builder.Indicator asChild>
+						<Builder.Indicator>
 							<Indicator />
 						</Builder.Indicator>
 					</Presence>
 				)}
 			</Builder.Context>
-			<ark.span asChild={asChild}>{children}</ark.span>
+			{children}
 		</Builder.Item>
 	);
 }
