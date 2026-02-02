@@ -1,21 +1,31 @@
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import { type ReactNode, useMemo } from "react";
+import { Fragment, type ReactNode, useMemo } from "react";
 
 interface ForProps<T> {
 	each: T[] | readonly T[] | undefined;
 	fallback?: React.ReactNode;
-	children: (item: Exclude<T, null | undefined>, index: number) => ReactNode;
+	interleave?: ReactNode | ((index: number) => ReactNode);
+	children: (item: Exclude<T, null | undefined>, index: number, array: Exclude<T, null | undefined>[]) => ReactNode;
 }
-export function For<T>({ each, fallback, children }: ForProps<T>) {
+export function For<T>({ each, fallback, interleave, children }: ForProps<T>) {
 	return useMemo(() => {
-		if (!each || each?.length === 0) return fallback ?? null;
+		if (!each || each.length === 0) return fallback ?? null;
 
-		const items = each.filter((x) => x !== null || x !== undefined);
+		const items = each.filter((x): x is Exclude<T, null | undefined> => x !== null && x !== undefined);
 
-		return items.map((value, index) => {
-			return children(value as Exclude<T, null | undefined>, index);
+		if (items.length === 0) return fallback ?? null;
+
+		return items.map((value, index, array) => {
+			const isLast = index === items.length - 1;
+			const itemKey = index;
+			return (
+				<Fragment key={itemKey}>
+					{children(value as Exclude<T, null | undefined>, index, array as Exclude<T, null | undefined>[])}
+					{!isLast && interleave && <Fragment key={`interleave-${itemKey}`}>{typeof interleave === "function" ? interleave(index) : interleave}</Fragment>}
+				</Fragment>
+			);
 		});
-	}, [each, fallback, children]);
+	}, [each, fallback, children, interleave]);
 }
 
 interface ForListCollectionProps<T> extends Omit<ForProps<T>, "each" | "children"> {

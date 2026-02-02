@@ -1,6 +1,7 @@
 import { XIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import { For } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/tags-input";
 import { css } from "$:styled-system/css";
 import type { SystemStyleObject } from "$:styled-system/types";
@@ -14,20 +15,22 @@ export function TagsInput({ id, placeholder = "Add...", colorPalette = "pink", c
 			{children && <Builder.Label>{children}</Builder.Label>}
 			<Builder.Control className={css({ colorPalette: colorPalette })}>
 				<Builder.Context>
-					{(api) => {
-						return api.value.map((value, index) => (
-							<Builder.Item key={value} index={index} value={value}>
-								<Builder.ItemPreview>
-									<Builder.ItemText>{value}</Builder.ItemText>
-									<Builder.ItemDeleteTrigger>
-										<XIcon />
-									</Builder.ItemDeleteTrigger>
-								</Builder.ItemPreview>
-								<Builder.ItemInput />
-								<Builder.HiddenInput />
-							</Builder.Item>
-						));
-					}}
+					{(api) => (
+						<For each={api.value}>
+							{(value, index) => (
+								<Builder.Item key={value} index={index} value={value}>
+									<Builder.ItemPreview>
+										<Builder.ItemText>{value}</Builder.ItemText>
+										<Builder.ItemDeleteTrigger>
+											<XIcon />
+										</Builder.ItemDeleteTrigger>
+									</Builder.ItemPreview>
+									<Builder.ItemInput />
+									<Builder.HiddenInput />
+								</Builder.Item>
+							)}
+						</For>
+					)}
 				</Builder.Context>
 				<Builder.Input placeholder={placeholder} />
 				<Builder.ClearTrigger>

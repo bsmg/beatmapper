@@ -1,6 +1,6 @@
-import { Presence } from "@ark-ui/react/presence";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 
+import { Show } from "$/components/ui/atoms";
 import { AnchorLink, Button, Clipboard, Heading } from "$/components/ui/compositions";
 import { Container, Stack, styled, Text, Wrap } from "$:styled-system/jsx";
 
@@ -26,7 +26,7 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 							</Clipboard>
 						)}
 					</Stack>
-					<Presence asChild present={interactive}>
+					<Show when={interactive}>
 						<Stack gap={3}>
 							<Stack gap={1}>
 								<Text textStyle={"paragraph"}>If this error was a false positive, you can click the following buttons to revalidate the route and retry any loader operations.</Text>
@@ -43,7 +43,7 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 								If you're still encountering issues, please <AnchorLink href="https://github.com/bsmg/beatmapper/issues/new?template=bug.md">fill out a bug report</AnchorLink> on the repository.
 							</Text>
 						</Stack>
-					</Presence>
+					</Show>
 				</Stack>
 			</Container>
 		</Wrapper>

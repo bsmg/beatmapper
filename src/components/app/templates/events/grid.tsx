@@ -3,6 +3,7 @@ import type { EventType } from "bsmap";
 import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
 import { useGlobalEventListener, useMousePositionOverElement, useParentDimensions } from "$/components/hooks";
+import { For } from "$/components/ui/atoms";
 import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
 import { bulkRemoveEvent, deselectEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -223,34 +224,35 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 			</HeaderWrapper>
 			<MainWrapper>
 				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
-					{allTracks.map(([id, { label }]) => (
-						<Prefix key={id} style={{ height: rowHeight }} aria-disabled={isTrackDisabled(Number.parseInt(id, 10))} onContextMenu={(ev) => ev.preventDefault()}>
-							{label}
-						</Prefix>
-					))}
+					<For each={allTracks}>
+						{([id, { label }]) => (
+							<Prefix key={id} style={{ height: rowHeight }} aria-disabled={isTrackDisabled(Number.parseInt(id, 10))} onContextMenu={(ev) => ev.preventDefault()}>
+								{label}
+							</Prefix>
+						)}
+					</For>
 				</PrefixWrapper>
 				<TracksWrapper editMode={selectedEditMode}>
 					<TrackMarkersWrapper ref={container}>
 						<EventGridMarkers width={dimensions.width} height={dimensions.height} primaryDivisions={4} />
 					</TrackMarkersWrapper>
 					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
-						{allTracks.map(([id]) => {
-							const isDisabled = isTrackDisabled(Number.parseInt(id, 10));
-							return (
+						<For each={allTracks}>
+							{([id]) => (
 								<EventGridTrack
 									key={id}
 									trackId={Number.parseInt(id, 10)}
 									width={dimensions.width}
 									height={rowHeight}
-									disabled={isDisabled}
+									disabled={isTrackDisabled(Number.parseInt(id, 10))}
 									onPointerOver={(ev) => handlePointerOver(ev, Number.parseInt(id, 10))}
 									onPointerOut={handlePointerOut}
 									onEventPointerDown={handleEventPointerDown}
 									onEventPointerOver={handleEventPointerOver}
 									onEventWheel={handleEventWheel}
 								/>
-							);
-						})}
+							)}
+						</For>
 					</TrackContentsWrapper>
 					{selectionBox && <EventGridSelectionBox box={selectionBox} />}
 					<EventGridCursor gridWidth={dimensions.width} />

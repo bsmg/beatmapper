@@ -1,10 +1,10 @@
-import { Presence } from "@ark-ui/react/presence";
 import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
 import { VERSION_COLLECTION } from "$/components/app/constants";
 import { useMount } from "$/components/hooks";
+import { Show } from "$/components/ui/atoms";
 import { Heading, useAppForm } from "$/components/ui/compositions";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { downloadMapFiles, pausePlayback } from "$/store/actions";
@@ -65,10 +65,7 @@ function Download() {
 		<Form.AppForm>
 			<Stack gap={4}>
 				<Heading rank={1}>Download Map</Heading>
-				<Presence asChild present={demoBlocker} lazyMount unmountOnExit>
-					<Text textStyle={"paragraph"}>Unfortunately, the demo map is not available for download.</Text>
-				</Presence>
-				<Presence asChild present={!demoBlocker} lazyMount unmountOnExit>
+				<Show when={!demoBlocker} fallback={<Text textStyle={"paragraph"}>Unfortunately, the demo map is not available for download.</Text>}>
 					<Form.Root>
 						<Content>
 							<VStack gap={6}>
@@ -100,7 +97,7 @@ function Download() {
 							<Form.AppField name="purgeZeros">{(ctx) => <ctx.Switch label="Prune Default Values" helperText="Removes any properties that can be polyfilled with [defaulted values](https://bsmg.wiki/mapping/map-format#defaulted-properties). Useful for optimizing maps with larger filesizes." />}</Form.AppField>
 						</Form.Row>
 					</Form.Root>
-				</Presence>
+				</Show>
 			</Stack>
 		</Form.AppForm>
 	);

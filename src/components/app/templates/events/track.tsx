@@ -3,6 +3,7 @@ import { createBasicEvent, type EventType } from "bsmap";
 import { type ComponentProps, memo, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks";
+import { For } from "$/components/ui/atoms";
 import { resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
 import { bulkAddBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -130,12 +131,8 @@ function EventGridTrack({ trackId, width, height, disabled, onEventPointerDown, 
 
 	return (
 		<Wrapper key={trackId} {...rest} style={styles} aria-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
-			{backgroundBoxes.map((box) => (
-				<EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />
-			))}
-			{events.map((event) => {
-				return <EventGridEventItem key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />;
-			})}
+			<For each={backgroundBoxes}>{(box) => <EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />}</For>
+			<For each={events}>{(event) => <EventGridEventItem key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />}</For>
 		</Wrapper>
 	);
 }

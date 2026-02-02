@@ -126,7 +126,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
 					<HStack gap={0}>
-						<Interleave separator={({ index }) => <DotIcon key={index} size={16} />}>
+						<Interleave separator={(index) => <DotIcon key={index} size={16} />}>
 							<Heading rank={4}>{CharacteristicRename[savedVersion.characteristic]}</Heading>
 							<Heading rank={4}>{DifficultyRename[savedVersion.difficulty]}</Heading>
 						</Interleave>

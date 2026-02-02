@@ -14,7 +14,7 @@ function EditorPageHeader() {
 					<Logo />
 				</SectionWrapper>
 				<SectionWrapper>
-					<Interleave separator={({ index }) => <DotIcon key={index} />}>
+					<Interleave separator={(index) => <DotIcon key={index} />}>
 						<RouterLink to="/docs/$" params={{ _splat: "welcome" }}>
 							Documentation
 						</RouterLink>

@@ -8,6 +8,7 @@ import { LocalFileUpload } from "$/components/app/compositions";
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { useMount } from "$/components/hooks";
+import { For } from "$/components/ui/atoms";
 import { AlertDialogProvider, Field, Heading, RouterLink, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { filestore } from "$/setup";
@@ -174,13 +175,13 @@ function SongDetails() {
 			<Stack gap={6}>
 				<Heading rank={1}>Beatmaps</Heading>
 				<Wrap gap={2} justify={"center"}>
-					{beatmapIds.map((beatmapId) => {
-						return (
+					<For each={beatmapIds}>
+						{(beatmapId) => (
 							<BeatmapWrapper key={beatmapId}>
 								<UpdateBeatmapForm bid={beatmapId} />
 							</BeatmapWrapper>
-						);
-					})}
+						)}
+					</For>
 				</Wrap>
 			</Stack>
 			<Stack gap={6}>

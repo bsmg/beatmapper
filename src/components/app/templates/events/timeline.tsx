@@ -1,6 +1,7 @@
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 
+import { For } from "$/components/ui/atoms";
 import { scrubEventsHeader } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectEventsEditorCursor } from "$/store/selectors";
@@ -44,11 +45,13 @@ function EventGridTimeline({ beatNums }: Props) {
 
 	return (
 		<Header onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove}>
-			{beatNums.map((num) => (
-				<HeaderCell key={num}>
-					<BeatNums>{num}</BeatNums>
-				</HeaderCell>
-			))}
+			<For each={beatNums}>
+				{(num) => (
+					<HeaderCell key={num}>
+						<BeatNums>{num}</BeatNums>
+					</HeaderCell>
+				)}
+			</For>
 		</Header>
 	);
 }

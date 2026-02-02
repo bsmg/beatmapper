@@ -13,7 +13,7 @@ function Footer() {
 				<SectionWrapper>
 					<Logo size="mini" />
 					<HStack gap={0}>
-						<Interleave separator={({ index }) => <DotIcon key={index} />}>
+						<Interleave separator={(index) => <DotIcon key={index} />}>
 							<RouterLink to="/docs/$" params={{ _splat: "privacy-policy" }}>
 								Privacy
 							</RouterLink>

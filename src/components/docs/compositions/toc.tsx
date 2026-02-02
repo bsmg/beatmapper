@@ -1,6 +1,7 @@
 import { ExternalLinkIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { For } from "$/components/ui/atoms";
 import type { Member } from "$/types";
 import type { Doc } from "$:content";
 import { HStack, styled } from "$:styled-system/jsx";
@@ -16,7 +17,7 @@ function useActiveHeading(headings: TocEntry[], containerElement: HTMLElement | 
 
 	useEffect(() => {
 		headingElementsRef.current = headings.map((entry) => ({
-			id: entry.url.replace("#", ""),
+			id: entry.url,
 			element: document.querySelector(entry.url),
 		}));
 	}, [headings]);
@@ -37,7 +38,7 @@ function useActiveHeading(headings: TocEntry[], containerElement: HTMLElement | 
 		// If neither condition is met, I'll assume I'm still in the intro, although this would have to be a VERY long intro to ever be true.
 		const headingBoxes = headings.map((entry) => {
 			const elem = document.querySelector(entry.url);
-			return { id: entry.url.replace("#", ""), box: elem?.getBoundingClientRect() };
+			return { id: entry.url, box: elem?.getBoundingClientRect() };
 		});
 
 		// The first heading within the viewport is the one we want to highlight.
@@ -101,14 +102,13 @@ function DocsTableOfContents({ container, toc }: Props) {
 			<HeadingLink href="#" aria-current={activeHeadingId === null} onClick={() => container?.scrollTo({ top: 0 })}>
 				Introduction
 			</HeadingLink>
-			{toc.map((entry) => {
-				const id = entry.url.replace("#", "");
-				return (
-					<HeadingLink key={id} href={entry.url} aria-current={id === activeHeadingId}>
+			<For each={toc}>
+				{(entry) => (
+					<HeadingLink key={entry.url} href={entry.url} aria-current={entry.url === activeHeadingId}>
 						{entry.title}
 					</HeadingLink>
-				);
-			})}
+				)}
+			</For>
 			<GithubLink href={`https://github.com/bsmg/beatmapper/edit/master/src/content${location.pathname}/index.mdx`}>
 				<HStack gap={1}>
 					Suggest an edit

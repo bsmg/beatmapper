@@ -1,8 +1,8 @@
-import { Presence } from "@ark-ui/react/presence";
 import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { useOnChange, useOnKeydown } from "$/components/hooks";
+import { Match, Switch } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
 import { ObjectPlacementMode } from "$/types";
@@ -42,21 +42,16 @@ function EditorActionPanel() {
 
 	return (
 		<OuterWrapper onWheel={(ev) => ev.stopPropagation()}>
-			<Presence asChild present={!showGridConfig && !isAnythingSelected} lazyMount unmountOnExit>
-				<Wrapper>
-					<DefaultActionPanel handleGridConfigClick={() => setShowGridConfig(true)} />
-				</Wrapper>
-			</Presence>
-			<Presence asChild present={isAnythingSelected} lazyMount unmountOnExit>
-				<Wrapper>
-					<SelectionActionPanel numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />
-				</Wrapper>
-			</Presence>
-			<Presence asChild present={showGridConfig} lazyMount unmountOnExit>
-				<Wrapper>
-					<GridActionPanel finishTweakingGrid={() => setShowGridConfig(false)} />
-				</Wrapper>
-			</Presence>
+			<Wrapper>
+				<Switch fallback={<DefaultActionPanel handleGridConfigClick={() => setShowGridConfig(true)} />}>
+					<Match when={isAnythingSelected}>
+						<SelectionActionPanel numOfSelectedBlocks={selectedBlocks.length} numOfSelectedMines={selectedMines.length} numOfSelectedObstacles={selectedObstacles.length} />
+					</Match>
+					<Match when={showGridConfig}>
+						<GridActionPanel finishTweakingGrid={() => setShowGridConfig(false)} />
+					</Match>
+				</Switch>
+			</Wrapper>
 		</OuterWrapper>
 	);
 }

@@ -4,6 +4,7 @@ import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, 
 import { type ComponentProps, useMemo } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
+import { For } from "$/components/ui/atoms";
 import { Button } from "$/components/ui/compositions";
 import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/file-upload";
@@ -67,22 +68,24 @@ export function FileUpload({ colorPalette = "pink", deletable = true, onFileReje
 			</Builder.Dropzone>
 			<Builder.ItemGroup>
 				<Builder.Context>
-					{(ctx) =>
-						ctx.acceptedFiles.map((file) => (
-							<Builder.Item key={file.name} file={file}>
-								<Builder.ItemPreview>
-									<FileIcon />
-								</Builder.ItemPreview>
-								<Builder.ItemName />
-								<Builder.ItemSizeText />
-								{deletable && (
-									<ItemDeleteTrigger>
-										<Trash2Icon />
-									</ItemDeleteTrigger>
-								)}
-							</Builder.Item>
-						))
-					}
+					{(ctx) => (
+						<For each={ctx.acceptedFiles}>
+							{(file) => (
+								<Builder.Item key={file.name} file={file}>
+									<Builder.ItemPreview>
+										<FileIcon />
+									</Builder.ItemPreview>
+									<Builder.ItemName />
+									<Builder.ItemSizeText />
+									{deletable && (
+										<ItemDeleteTrigger>
+											<Trash2Icon />
+										</ItemDeleteTrigger>
+									)}
+								</Builder.Item>
+							)}
+						</For>
+					)}
 				</Builder.Context>
 			</Builder.ItemGroup>
 			<Builder.HiddenInput />

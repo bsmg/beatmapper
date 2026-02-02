@@ -2,6 +2,7 @@ import { parseColor } from "@ark-ui/react/color-picker";
 import { useParams } from "@tanstack/react-router";
 import { useDeferredValue, useEffect, useState } from "react";
 
+import { For } from "$/components/ui/atoms";
 import { ColorPicker, Heading, Switch } from "$/components/ui/compositions";
 import { updateCustomColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -52,9 +53,7 @@ function ElementControl({ element }: { element: ColorSchemeKey }) {
 function CustomColorSettings() {
 	return (
 		<Row>
-			{Object.values(ColorSchemeKey).map((element) => {
-				return <ElementControl key={element} element={element} />;
-			})}
+			<For each={Object.values(ColorSchemeKey)}>{(element) => <ElementControl key={element} element={element} />}</For>
 		</Row>
 	);
 }

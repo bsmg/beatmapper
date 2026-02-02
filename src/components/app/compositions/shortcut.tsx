@@ -1,5 +1,6 @@
 import { Children, type PropsWithChildren } from "react";
 
+import { For } from "$/components/ui/atoms";
 import { Kbd } from "$/components/ui/styled/kbd";
 import { getMetaKeyLabel, getOptionKeyLabel } from "$/utils";
 import { styled } from "$:styled-system/jsx";
@@ -52,20 +53,20 @@ function resolveIcon(code: string) {
 
 interface Props extends PropsWithChildren {
 	separator?: string;
+	children: string;
 }
 export function Shortcut({ separator = "+", children }: Props) {
-	return Children.map(children, (child) => {
-		if (typeof child !== "string") throw new Error("");
-		const keys = child.toString().trim().split(separator);
-		return (
-			<Row>
-				{keys.map((c, i) => {
-					if (i !== 0) return [separator, resolveIcon(c.trim())];
-					return resolveIcon(c.trim());
-				})}
-			</Row>
-		);
-	});
+	return (
+		<For each={Children.toArray(children)}>
+			{(child) => (
+				<Row>
+					<For each={child.toString().trim().split(separator)} interleave={() => separator}>
+						{(code) => resolveIcon(code.trim())}
+					</For>
+				</Row>
+			)}
+		</For>
+	);
 }
 
 const Row = styled("span", {

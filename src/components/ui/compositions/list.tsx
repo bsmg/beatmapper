@@ -1,8 +1,8 @@
 import { ark } from "@ark-ui/react/factory";
-import { Presence } from "@ark-ui/react/presence";
 import { ArrowRightIcon, type LucideProps } from "lucide-react";
 import { type ComponentProps, type ComponentType, useMemo } from "react";
 
+import { Show } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/list";
 import { css } from "$:styled-system/css";
 import type { SystemStyleObject } from "$:styled-system/types";
@@ -34,11 +34,11 @@ export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest 
 		<Builder.Item {...rest}>
 			<Builder.Context>
 				{(ctx) => (
-					<Presence asChild present={ctx.variant === "plain"}>
+					<Show when={ctx.variant === "plain"}>
 						<Builder.Indicator>
 							<Indicator />
 						</Builder.Indicator>
-					</Presence>
+					</Show>
 				)}
 			</Builder.Context>
 			{children}

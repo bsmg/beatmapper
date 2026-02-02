@@ -59,7 +59,7 @@ function SelectionActionPanel({ numOfSelectedBlocks, numOfSelectedMines, numOfSe
 		<Fragment>
 			<ActionPanelGroup.Root label="Selection">
 				<ActionPanelGroup.ActionGroup gap="sm">
-					<Interleave separator={() => <DotIcon size={16} />}>{numbers}</Interleave>
+					<Interleave separator={(index) => <DotIcon key={index} size={16} />}>{numbers}</Interleave>
 				</ActionPanelGroup.ActionGroup>
 			</ActionPanelGroup.Root>
 			{hasSelectedObstacles && <ObstaclesActionPanelGroup />}
