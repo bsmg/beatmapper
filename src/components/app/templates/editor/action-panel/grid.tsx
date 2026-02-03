@@ -2,12 +2,12 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { useParams } from "@tanstack/react-router";
 import { ArrowUpFromDotIcon, TrashIcon } from "lucide-react";
 import { Fragment, type MouseEventHandler, useState } from "react";
+import { nonEmpty, object, pipe, string } from "valibot";
 
-import { useAppPrompterContext } from "$/components/app/compositions";
 import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button, Field, FieldInput, Select, Tooltip } from "$/components/ui/compositions";
+import { Button, Field, FieldInput, Select, Tooltip, usePrompt } from "$/components/ui/compositions";
 import { DEFAULT_GRID } from "$/constants";
-import { loadGridPreset, removeGridPreset, updateGridSize } from "$/store/actions";
+import { loadGridPreset, removeGridPreset, saveGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridPresets, selectGridSize } from "$/store/selectors";
 import { isObjectEmpty } from "$/utils";
@@ -24,7 +24,16 @@ function GridActionPanel({ finishTweakingGrid }: Props) {
 
 	const [slot, setSlot] = useState<string>("");
 
-	const { openPrompt } = useAppPrompterContext();
+	const { trigger: triggerSaveGridPreset } = usePrompt({
+		title: "Save Grid Preset",
+		description: "Saves your current grid settings to a preset.",
+		defaultValues: { slot: "" },
+		validate: object({ slot: pipe(string(), nonEmpty()) }),
+		render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Input label="Preset Name" />}</form.AppField>,
+		onSubmit: ({ value }) => {
+			return dispatch(saveGridPreset({ songId: sid, presetSlot: value.slot }));
+		},
+	});
 
 	return (
 		<Fragment>
@@ -64,7 +73,7 @@ function GridActionPanel({ finishTweakingGrid }: Props) {
 					</Field>
 				</ActionPanelGroup.ActionGroup>
 				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" unfocusOnPress onClick={() => openPrompt("SAVE_GRID_PRESET")}>
+					<Button variant="subtle" size="sm" unfocusOnPress onClick={triggerSaveGridPreset}>
 						Save as Preset
 					</Button>
 					<Button variant="subtle" size="sm" unfocusOnPress onClick={() => sid && dispatch(updateGridSize({ songId: sid, changes: DEFAULT_GRID }))}>

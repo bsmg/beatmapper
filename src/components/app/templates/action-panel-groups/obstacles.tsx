@@ -1,14 +1,30 @@
-import { useAppPrompterContext } from "$/components/app/compositions";
+import { gtValue, number, object, pipe } from "valibot";
+
 import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button } from "$/components/ui/compositions";
+import { Button, usePrompt } from "$/components/ui/compositions";
+import { updateAllSelectedObstacles } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectAllSelectedObstacles } from "$/store/selectors";
 
 function ObstaclesActionPanelGroup() {
-	const { openPrompt } = useAppPrompterContext();
+	const dispatch = useAppDispatch();
+	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
+
+	const { trigger: triggerUpdateDurationForObstacles } = usePrompt({
+		title: "Update Duration for Obstacles",
+		description: "Changes the duration for all selected obstacles.",
+		validate: object({ duration: pipe(number(), gtValue(0)) }),
+		defaultValues: { duration: selectedObstacles[0].duration },
+		render: ({ form }) => <form.AppField name="duration">{(ctx) => <ctx.NumberInput autoFocus label="Duration" placeholder="4" />}</form.AppField>,
+		onSubmit: ({ value: { duration } }) => {
+			return dispatch(updateAllSelectedObstacles({ changes: { duration: duration } }));
+		},
+	});
 
 	return (
 		<ActionPanelGroup.Root label="Obstacles">
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" unfocusOnPress onClick={() => openPrompt("UPDATE_OBSTACLE_DURATION")}>
+				<Button variant="subtle" size="sm" unfocusOnPress onClick={triggerUpdateDurationForObstacles}>
 					Change duration
 				</Button>
 			</ActionPanelGroup.ActionGroup>

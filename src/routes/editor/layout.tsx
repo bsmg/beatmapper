@@ -2,11 +2,11 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
 import { forwardRef } from "react";
 
-import { AppPrompter, Shortcut } from "$/components/app/compositions";
+import { Shortcut } from "$/components/app/compositions";
 import { EDITOR_TOASTER } from "$/components/app/constants";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
 import { MDXContent } from "$/components/ui/atoms";
-import { AnchorLink, List } from "$/components/ui/compositions";
+import { AnchorLink, List, Prompter } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
@@ -69,13 +69,13 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 
 function RouteComponent() {
 	return (
-		<AppPrompter>
+		<Prompter>
 			<EditorSidebar />
 			<Wrapper>
 				<Outlet />
 			</Wrapper>
 			<EditorPrompts />
-		</AppPrompter>
+		</Prompter>
 	);
 }
 

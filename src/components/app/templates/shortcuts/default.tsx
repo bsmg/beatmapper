@@ -2,11 +2,12 @@ import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
-import { useAppPrompterContext } from "$/components/app/compositions";
-import { APP_TOASTER } from "$/components/app/constants";
+import { APP_TOASTER, createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { useGlobalEventListener } from "$/components/hooks";
+import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import {
+	addBookmark,
 	copySelection,
 	cutSelection,
 	cycleToNextTool,
@@ -17,6 +18,7 @@ import {
 	downloadMapFiles,
 	incrementPlaybackRate,
 	incrementSnap,
+	jumpToBeat,
 	jumpToEnd,
 	jumpToStart,
 	nudgeSelection,
@@ -30,6 +32,7 @@ import {
 	scrollThroughSong,
 	seekBackwards,
 	seekForwards,
+	selectAllEntitiesInRange,
 	togglePlaying,
 	undoEvents,
 	undoObjects,
@@ -49,7 +52,26 @@ function DefaultEditorShortcuts() {
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
-	const { active: activePrompt, openPrompt } = useAppPrompterContext();
+	const { trigger: triggerQuickSelect } = usePrompt(
+		createQuickSelectPrompt({
+			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
+			onSubmit: ({ value: { start, end } }) => dispatch(selectAllEntitiesInRange({ songId: sid, view: view, start, end })),
+		}),
+	);
+	const { trigger: triggerJumpToBeat } = usePrompt(
+		createJumpToBeatPrompt({
+			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ songId: sid, pauseTrack: true, beatNum: beatNum })),
+		}),
+	);
+	const { trigger: triggerAddBookmark } = usePrompt(
+		createAddBookmarkPrompt({
+			render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" />}</form.AppField>,
+			onSubmit: ({ value }) => dispatch(addBookmark({ songId: sid, view, name: value.name })),
+		}),
+	);
+
+	const { isPromptActive } = usePrompter();
 
 	const keysDepressed = useRef({
 		space: false,
@@ -82,7 +104,7 @@ function DefaultEditorShortcuts() {
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
@@ -170,12 +192,12 @@ function DefaultEditorShortcuts() {
 				}
 				case "KeyJ": {
 					ev.preventDefault();
-					return openPrompt("JUMP_TO_BEAT");
+					return triggerJumpToBeat();
 				}
 				case "KeyB": {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
-					return openPrompt("ADD_BOOKMARK");
+					return triggerAddBookmark();
 				}
 				case "KeyZ": {
 					if (!metaKeyPressed) return;
@@ -207,21 +229,21 @@ function DefaultEditorShortcuts() {
 				}
 				case "KeyQ": {
 					ev.preventDefault();
-					return openPrompt("QUICK_SELECT");
+					return triggerQuickSelect();
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[isLoading, view, activePrompt, dispatch, sid, bid, isDemo, handleScroll, openPrompt],
+		[isLoading, view, dispatch, sid, bid, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			switch (ev.code) {
 				case "Space": {
@@ -232,7 +254,7 @@ function DefaultEditorShortcuts() {
 					return;
 			}
 		},
-		[isLoading, view, activePrompt],
+		[isLoading, view, isPromptActive],
 	);
 
 	const handleWheel = useCallback(
@@ -240,13 +262,13 @@ function DefaultEditorShortcuts() {
 			ev.preventDefault();
 			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			if (ev.altKey) return;
 			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 			handleScroll(direction, ev);
 		},
-		[isLoading, view, activePrompt, handleScroll],
+		[isLoading, view, isPromptActive, handleScroll],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

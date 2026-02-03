@@ -1,8 +1,8 @@
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
+import { usePrompter } from "$/components/ui/compositions";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
@@ -16,12 +16,12 @@ function EventsEditorShortcuts() {
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
-	const { active: activePrompt } = useAppPrompterContext();
+	const { isPromptActive } = usePrompter();
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
@@ -83,7 +83,7 @@ function EventsEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, activePrompt, dispatch, sid, view],
+		[isLoading, isPromptActive, dispatch, sid, view],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

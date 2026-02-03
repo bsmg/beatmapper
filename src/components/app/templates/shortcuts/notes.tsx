@@ -2,8 +2,8 @@ import { useParams, useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
-import { useAppPrompterContext } from "$/components/app/compositions";
 import { useGlobalEventListener } from "$/components/hooks";
+import { usePrompter } from "$/components/ui/compositions";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize, selectLoading } from "$/store/selectors";
@@ -18,7 +18,7 @@ function NotesEditorShortcuts() {
 	const isLoading = useAppSelector(selectLoading);
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
-	const { active: activePrompt } = useAppPrompterContext();
+	const { isPromptActive } = usePrompter();
 
 	const keysDepressed = useRef({
 		w: false,
@@ -30,7 +30,7 @@ function NotesEditorShortcuts() {
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
@@ -153,13 +153,13 @@ function NotesEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, activePrompt, dispatch, sid, view, grid],
+		[isLoading, isPromptActive, dispatch, sid, view, grid],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 
@@ -186,7 +186,7 @@ function NotesEditorShortcuts() {
 					return;
 			}
 		},
-		[isLoading, activePrompt],
+		[isLoading, isPromptActive],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
