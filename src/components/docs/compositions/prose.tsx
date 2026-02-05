@@ -3,18 +3,18 @@ import { type ComponentProps, forwardRef } from "react";
 
 import { Shortcut } from "$/components/app/compositions";
 import * as ContentComponents from "$/components/docs/content";
-import { MDXContent } from "$/components/ui/atoms";
+import { MDX } from "$/components/ui/atoms";
 import { AnchorLink } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import DocsMedia from "./media";
 
-const sharedComponents: MDXComponents = {
+const PROSE_MDX_COMPONENTS: MDXComponents = {
 	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} {...rest} />),
-	img: ({ alt, title, ...rest }) => (
+	img: forwardRef(({ alt, title, ...rest }, ref) => (
 		<DocsMedia caption={alt ?? title}>
-			<img {...rest} alt={alt} title={title} />
+			<img ref={ref} {...rest} alt={alt} title={title} />
 		</DocsMedia>
-	),
+	)),
 	Shortcut,
 	...ContentComponents,
 };
@@ -29,10 +29,10 @@ const sharedComponents: MDXComponents = {
  *
  * This component handles both of those concerns.
  */
-function DocsProse({ components, code }: ComponentProps<typeof MDXContent>) {
+function DocsProse({ code }: ComponentProps<typeof MDX>) {
 	return (
 		<DocumentStyles>
-			<MDXContent code={code} components={{ ...sharedComponents, ...components }} />
+			<MDX code={code} components={PROSE_MDX_COMPONENTS} />
 		</DocumentStyles>
 	);
 }

@@ -5,7 +5,7 @@ import { forwardRef } from "react";
 import { Shortcut } from "$/components/app/compositions";
 import { EDITOR_TOASTER } from "$/components/app/constants";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
-import { MDXContent } from "$/components/ui/atoms";
+import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 					id: unseenPrompt.id,
 					type: "loading",
 					title: unseenPrompt.title,
-					description: <MDXContent code={unseenPrompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
+					description: <MDX code={unseenPrompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
 					onStatusChange: (details) => {
 						if (details.status === "dismissing") store.dispatch(dismissPrompt({ id: unseenPrompt.id }));
 					},

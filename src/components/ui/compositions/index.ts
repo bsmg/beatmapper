@@ -12,7 +12,6 @@ export { Heading } from "./heading";
 export { Input, NativeSelect, Textarea } from "./input";
 export { AnchorLink, RouterLink } from "./link";
 export * as List from "./list";
-export { MDXRender } from "./mdx";
 export { Menu } from "./menu";
 export { Prompter } from "./prompter";
 export { createPromptFactory, usePrompt, usePrompter } from "./prompter.context";
