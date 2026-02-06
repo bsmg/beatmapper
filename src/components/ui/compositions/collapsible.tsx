@@ -12,7 +12,7 @@ export function Collapsible({ children, render, ...rest }: Props) {
 
 	return (
 		<Builder.Root {...rest}>
-			<Trigger>{children}</Trigger>
+			{children && <Trigger>{children}</Trigger>}
 			<Builder.Context>
 				{(ctx) => {
 					const content = render(ctx);

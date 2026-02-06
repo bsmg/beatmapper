@@ -13,7 +13,7 @@ export function Menu<T extends CollectionItem>({ collection, children, ...rest }
 
 	return (
 		<Builder.Root {...rest}>
-			<Trigger>{children}</Trigger>
+			{children && <Trigger>{children}</Trigger>}
 			<Builder.Positioner>
 				<Builder.Content>
 					<ForListCollection collection={collection}>

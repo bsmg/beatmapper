@@ -40,7 +40,7 @@ export function Dialog({ children, ...rest }: Assign<ComponentProps<typeof Build
 
 	return (
 		<Builder.Root {...rest} modal={false}>
-			<Trigger>{children}</Trigger>
+			{children && <Trigger>{children}</Trigger>}
 			<Contents {...rest}>
 				<Builder.CloseTrigger>
 					<XIcon />
@@ -55,7 +55,7 @@ export function DialogProvider({ value, children, title, description, render, ..
 
 	return (
 		<Builder.RootProvider {...rest} value={value}>
-			<Trigger>{children}</Trigger>
+			{children && <Trigger>{children}</Trigger>}
 			<Contents {...value} title={title} description={description} render={render}>
 				<Builder.CloseTrigger>
 					<XIcon />
@@ -86,7 +86,7 @@ export function AlertDialogProvider({ value, children, title, description, rende
 
 	return (
 		<Builder.RootProvider {...rest} value={value}>
-			<Trigger>{children}</Trigger>
+			{children && <Trigger>{children}</Trigger>}
 			<Contents {...value} title={title} description={description} render={render}>
 				<Builder.Context>
 					{(ctx) => (

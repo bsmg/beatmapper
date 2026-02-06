@@ -19,7 +19,7 @@ export function Tooltip({ showArrow = true, portalled = true, portalRef, childre
 
 	return (
 		<Builder.Root {...rest}>
-			<Trigger>{children}</Trigger>
+			{children && <Trigger>{children}</Trigger>}
 			<Portal disabled={!portalled} container={portalRef}>
 				<Builder.Positioner>
 					<Builder.Content>
