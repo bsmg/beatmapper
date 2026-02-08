@@ -97,14 +97,10 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Row>
 				<Field label="Song File">
-					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} acceptedFiles={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
-						Audio File
-					</FileUpload>
+					<FileUpload label="Audio File" accept={SONG_FILE_ACCEPT_TYPE} acceptedFiles={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])} />
 				</Field>
 				<Field label="Cover Art File">
-					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} acceptedFiles={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
-						Image File
-					</FileUpload>
+					<FileUpload label="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} acceptedFiles={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])} />
 				</Field>
 			</Form.Row>
 			<Form.Root>

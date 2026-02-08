@@ -5,9 +5,10 @@ import { For } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/table";
 
 export interface DataTableProps<T extends RowData> {
-	table: Table<T>;
+	data: Table<T>;
 }
-export function DataTable<T extends RowData>({ table: data }: DataTableProps<T>) {
+
+export function DataTable<T extends RowData>({ data }: DataTableProps<T>) {
 	const model = data.getRowModel();
 
 	const getHeaderCellStyles = useCallback((header: Header<T, unknown>) => {

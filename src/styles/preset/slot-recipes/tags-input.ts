@@ -1,6 +1,8 @@
 import { tagsInputAnatomy } from "@ark-ui/react/tags-input";
 import { defineSlotRecipe } from "@pandacss/dev";
 
+import { input } from "../recipes";
+
 export const tagsInput = defineSlotRecipe({
 	className: "tags-input",
 	slots: tagsInputAnatomy.keys(),
@@ -13,6 +15,8 @@ export const tagsInput = defineSlotRecipe({
 			userSelect: "none",
 		},
 		control: {
+			...input.base,
+			...input.variants?.size?.md,
 			display: "flex",
 			flex: 1,
 			flexWrap: "wrap",
@@ -51,8 +55,8 @@ export const tagsInput = defineSlotRecipe({
 			borderRadius: "md",
 		},
 		itemDeleteTrigger: {
-			paddingInline: 0.5,
-			fontSize: "12px",
+			padding: 0.5,
+			marginInlineStart: 1,
 			layerStyle: "fill.ghost",
 			borderRadius: "md",
 			cursor: "pointer",

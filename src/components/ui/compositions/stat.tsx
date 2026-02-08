@@ -1,11 +1,13 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import type { Assign } from "@ark-ui/react";
+import type { PropsWithChildren } from "react";
 
 import * as Builder from "$/components/ui/styled/stat";
 
-interface Props extends PropsWithChildren {
-	label?: ReactNode;
+export interface StatProps {
+	label?: string;
 }
-export function Stat({ label, children }: Props) {
+
+export function Stat({ label, children }: Assign<PropsWithChildren, StatProps>) {
 	return (
 		<Builder.Root>
 			{label && <Builder.Label>{label}</Builder.Label>}

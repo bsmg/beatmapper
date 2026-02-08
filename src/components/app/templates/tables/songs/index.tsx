@@ -89,7 +89,7 @@ function SongsDataTable() {
 
 	return (
 		<Wrapper>
-			<DataTable table={table} />
+			<DataTable data={table} />
 			{isProcessingImport && (
 				<LoadingBlocker>
 					<Spinner />

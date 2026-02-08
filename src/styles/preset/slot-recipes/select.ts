@@ -5,27 +5,39 @@ export const select = defineSlotRecipe({
 	className: "select",
 	slots: selectAnatomy.keys(),
 	base: {
-		trigger: {
+		root: {
 			display: "flex",
-			flexDirection: "row",
 			alignItems: "center",
-			gap: 2,
-			width: "100%",
-			backgroundColor: { _hover: "bg.ghost" },
-			paddingInline: 1,
-			borderRadius: "md",
-			fontSize: "14px",
-			userSelect: "none",
-			overflow: "hidden",
-			cursor: "pointer",
+			justifyContent: "space-between",
+			gap: 1,
 		},
 		label: {
 			color: "fg.muted",
 			pointerEvents: "none",
+			whiteSpace: "nowrap",
 			userSelect: "none",
+			fontSize: "0.875rem",
 		},
-		indicator: {
-			color: "fg.muted",
+		control: {
+			position: "relative",
+			width: "100%",
+			display: "flex",
+			flexDirection: "row",
+			alignItems: "center",
+			justifyContent: "center",
+			backgroundColor: { _hover: "bg.ghost" },
+			borderRadius: "md",
+		},
+		trigger: {
+			display: "flex",
+			alignItems: "center",
+			gap: 1,
+			paddingInline: 1,
+			width: "100%",
+			fontSize: "14px",
+			userSelect: "none",
+			overflow: "hidden",
+			cursor: "pointer",
 		},
 		valueText: {
 			flex: 1,
@@ -33,6 +45,20 @@ export const select = defineSlotRecipe({
 			position: "relative",
 			display: "flex",
 			justifyContent: "space-between",
+		},
+		indicator: {
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			color: "fg.muted",
+			pointerEvents: "none",
+		},
+		clearTrigger: {
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			layerStyle: "fill.ghost",
+			borderRadius: "sm",
 		},
 		content: {
 			layerStyle: "menu.content",
@@ -56,18 +82,21 @@ export const select = defineSlotRecipe({
 	variants: {
 		size: {
 			sm: {
-				trigger: {
-					height: "24px",
-				},
+				trigger: { height: "24px" },
+				clearTrigger: { height: "24px" },
 			},
 			md: {
-				trigger: {
-					height: "iconButton",
-				},
+				trigger: { height: "iconButton" },
+				clearTrigger: { height: "iconButton" },
 			},
+		},
+		orientation: {
+			horizontal: { root: { flexDirection: "row" } },
+			vertical: { root: { flexDirection: "column-reverse" } },
 		},
 	},
 	defaultVariants: {
 		size: "md",
+		orientation: "horizontal",
 	},
 });

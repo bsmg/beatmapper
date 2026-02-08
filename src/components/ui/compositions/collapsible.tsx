@@ -1,25 +1,34 @@
+import type { Assign } from "@ark-ui/react";
 import type { UseCollapsibleContext } from "@ark-ui/react/collapsible";
+import { ChevronRightIcon, type LucideProps } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
+import { Show } from "$/components/ui/atoms";
+import { type ComposableFn, useComposable } from "$/components/ui/hooks/use-composable";
 import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/collapsible";
 
-interface Props extends ComponentProps<typeof Builder.Root> {
+export interface CollapsibleProps {
+	children?: ComposableFn<[Indicator: typeof Indicator]>;
 	render: (ctx: UseCollapsibleContext) => ReactNode;
 }
-export function Collapsible({ children, render, ...rest }: Props) {
+
+function Indicator({ ...rest }: LucideProps) {
+	return (
+		<Builder.Indicator>
+			<ChevronRightIcon {...rest} />
+		</Builder.Indicator>
+	);
+}
+
+export function Collapsible({ children, render, ...rest }: Assign<ComponentProps<typeof Builder.Root>, CollapsibleProps>) {
 	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+	const renderTrigger = useComposable(children, (Indicator) => <Indicator size={18} />);
 
 	return (
 		<Builder.Root {...rest}>
-			{children && <Trigger>{children}</Trigger>}
-			<Builder.Context>
-				{(ctx) => {
-					const content = render(ctx);
-					if (!content) return null;
-					return <Builder.Content>{content}</Builder.Content>;
-				}}
-			</Builder.Context>
+			{children && <Trigger>{renderTrigger(Indicator)}</Trigger>}
+			<Builder.Context>{(ctx) => <Show when={render(ctx)}>{(content) => <Builder.Content>{content}</Builder.Content>}</Show>}</Builder.Context>
 		</Builder.Root>
 	);
 }

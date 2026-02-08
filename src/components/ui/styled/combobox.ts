@@ -23,5 +23,4 @@ export const List = withContext(Combobox.List, "list");
 export const Positioner = withContext(Combobox.Positioner, "positioner");
 export const Trigger = withContext(Combobox.Trigger, "trigger");
 
-export type { ComboboxHighlightChangeDetails as HighlightChangeDetails, ComboboxInputValueChangeDetails as InputValueChangeDetails, ComboboxOpenChangeDetails as OpenChangeDetails, ComboboxValueChangeDetails as ValueChangeDetails } from "@ark-ui/react/combobox";
 export { ComboboxContext as Context } from "@ark-ui/react/combobox";

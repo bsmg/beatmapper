@@ -1,3 +1,4 @@
+import type { Assign } from "@ark-ui/react";
 import { ark } from "@ark-ui/react/factory";
 import { ArrowRightIcon, type LucideProps } from "lucide-react";
 import { type ComponentProps, type ComponentType, useMemo } from "react";
@@ -9,10 +10,11 @@ import type { SystemStyleObject } from "$:styled-system/types";
 
 const TYPES = { unordered: ark.ul, ordered: ark.ol } as const;
 
-export interface ListRootProps extends ComponentProps<typeof Builder.Root>, Pick<SystemStyleObject, "colorPalette"> {
+export interface ListRootProps extends Pick<SystemStyleObject, "colorPalette"> {
 	type: "unordered" | "ordered";
 }
-export function Root({ type, colorPalette = "blue", children, ...rest }: ListRootProps) {
+
+export function Root({ type, colorPalette = "blue", children, ...rest }: Assign<ComponentProps<typeof Builder.Root>, ListRootProps>) {
 	const context = useMemo(() => ({ variant: rest.variant }), [rest.variant]);
 
 	const Element = useMemo(() => TYPES[type], [type]);
@@ -26,21 +28,20 @@ export function Root({ type, colorPalette = "blue", children, ...rest }: ListRoo
 	);
 }
 
-export interface ListItemProps extends ComponentProps<typeof Builder.Item> {
+export interface ListItemProps {
 	indicator?: ComponentType<LucideProps>;
 }
-export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest }: ListItemProps) {
+
+export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest }: Assign<ComponentProps<typeof Builder.Item>, ListItemProps>) {
+	const api = Builder.useListContext();
+
 	return (
 		<Builder.Item {...rest}>
-			<Builder.Context>
-				{(ctx) => (
-					<Show when={ctx.variant === "plain"}>
-						<Builder.Indicator>
-							<Indicator />
-						</Builder.Indicator>
-					</Show>
-				)}
-			</Builder.Context>
+			<Show when={api.variant === "plain"}>
+				<Builder.Indicator>
+					<Indicator />
+				</Builder.Indicator>
+			</Show>
 			{children}
 		</Builder.Item>
 	);

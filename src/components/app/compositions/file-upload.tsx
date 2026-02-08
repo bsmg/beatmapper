@@ -8,17 +8,13 @@ import { addSongFromFile } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
 
-export function LocalFileUpload({ filename, children, ...rest }: ComponentProps<typeof FileUpload> & { filename: string }) {
+export function LocalFileUpload({ filename, ...rest }: ComponentProps<typeof FileUpload> & { filename: string }) {
 	const { data: currentFiles, isSuccess } = useLocalFileQuery(filename, {
 		queryKeySuffix: "picker",
 		transform: (file) => (file ? [file] : []),
 	});
 
-	return (
-		<FileUpload {...rest} key={`${filename}.${isSuccess}`} acceptedFiles={currentFiles}>
-			{children}
-		</FileUpload>
-	);
+	return <FileUpload {...rest} key={`${filename}.${isSuccess}`} acceptedFiles={currentFiles} />;
 }
 
 export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<typeof FileUpload>) {
@@ -42,9 +38,5 @@ export function MapArchiveFileUpload({ onFileAccept, ...rest }: ComponentProps<t
 		if (onFileAccept) onFileAccept(details);
 	};
 
-	return (
-		<FileUpload {...rest} accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept}>
-			Map Archive File
-		</FileUpload>
-	);
+	return <FileUpload {...rest} label="Map Archive File" accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept} />;
 }

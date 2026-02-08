@@ -32,7 +32,6 @@ export const slider = defineSlotRecipe({
 			outlineColor: "border.outline",
 			outlineOffset: 0.25,
 			cursor: "pointer",
-			zIndex: 1,
 		},
 		markerGroup: {
 			flex: 1,
@@ -59,8 +58,8 @@ export const slider = defineSlotRecipe({
 				root: { height: "16px" },
 				label: { fontSize: "0.75rem" },
 				control: { height: "12px", marginInline: "6px" },
-				range: { height: "2px" },
 				track: { height: "2px", marginBlockStart: "5px" },
+				range: { height: "2px" },
 				thumb: { boxSize: "12px", marginBlockStart: "-7px" },
 				markerGroup: { marginBlockStart: "-5px" },
 				marker: { _before: { height: "8px" } },

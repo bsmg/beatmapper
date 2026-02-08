@@ -9,6 +9,7 @@ const ARR = [ark.h1, ark.h2, ark.h3, ark.h4, ark.h5, ark.h6] as const;
 export interface HeadingProps {
 	rank: 1 | 2 | 3 | 4 | 5 | 6;
 }
+
 export function Heading({ rank = 1, ...rest }: Assign<ComponentProps<typeof Styled>, HeadingProps>) {
 	const Element = useMemo(() => ARR[rank - 1], [rank]);
 

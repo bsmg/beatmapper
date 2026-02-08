@@ -13,6 +13,7 @@ export const colorPicker = defineSlotRecipe({
 			userSelect: "none",
 		},
 		content: {
+			minWidth: "200px",
 			display: "flex",
 			flexDirection: "column",
 			gap: 1,
@@ -24,8 +25,9 @@ export const colorPicker = defineSlotRecipe({
 			zIndex: 3,
 		},
 		formatTrigger: {
-			width: "100%",
+			flex: 1,
 			paddingBlock: 0.5,
+			paddingInline: 1,
 			layerStyle: "fill.ghost",
 			borderRadius: "sm",
 			cursor: "pointer",
@@ -76,9 +78,8 @@ export const colorPicker = defineSlotRecipe({
 		},
 		view: {
 			display: "flex",
-			flexDirection: "row",
-			gap: 0.5,
-			minWidth: "200px",
+			flexDirection: "column",
+			gap: 1.5,
 		},
 		transparencyGrid: {
 			backgroundColor: "transparent",

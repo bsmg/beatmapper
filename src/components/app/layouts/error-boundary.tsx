@@ -2,7 +2,8 @@ import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 
 import { Show } from "$/components/ui/atoms";
 import { AnchorLink, Button, Clipboard, Heading } from "$/components/ui/compositions";
-import { Container, Stack, styled, Text, Wrap } from "$:styled-system/jsx";
+import { css } from "$:styled-system/css";
+import { Container, Float, Stack, styled, Text, Wrap } from "$:styled-system/jsx";
 
 interface Props extends ErrorComponentProps {
 	interactive?: boolean;
@@ -21,9 +22,18 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 					<Stack gap={2}>
 						<Heading rank={3}>Stack Trace</Heading>
 						{error.stack && (
-							<Clipboard value={error.stack}>
-								<StackWrapper>{error.stack}</StackWrapper>
-							</Clipboard>
+							<StackWrapper>
+								{error.stack}
+								<Float placement="top-end" offset={"2"} className={css({ position: "sticky", alignSelf: "flex-start" })}>
+									<Clipboard value={error.stack}>
+										{(Indicator) => (
+											<Button variant="subtle" size="icon" colorPalette="red">
+												<Indicator size={18} />
+											</Button>
+										)}
+									</Clipboard>
+								</Float>
+							</StackWrapper>
 						)}
 					</Stack>
 					<Show when={interactive}>
@@ -58,6 +68,8 @@ const Wrapper = styled("div", {
 
 const StackWrapper = styled("pre", {
 	base: {
+		position: "relative",
+		display: "flex",
 		padding: 2,
 		colorPalette: "red",
 		layerStyle: "fill.surface",

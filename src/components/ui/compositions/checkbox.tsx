@@ -1,27 +1,50 @@
+import type { Assign } from "@ark-ui/react";
 import { type LucideProps, MinusIcon, XIcon } from "lucide-react";
-import { type ComponentProps, type ComponentType, forwardRef } from "react";
+import { type ComponentProps, type ComponentType, Fragment, forwardRef } from "react";
 
+import { useFieldData } from "$/components/ui/hooks/form.hooks";
 import { type UseInteractableOptions, useInteractable } from "$/components/ui/hooks/use-interactable";
 import * as Builder from "$/components/ui/styled/checkbox";
+import { Field, type FieldProps } from "./field";
 
-export interface CheckboxProps extends ComponentProps<typeof Builder.Root>, UseInteractableOptions {
+export interface CheckboxProps extends UseInteractableOptions {
+	label?: string;
 	icon?: ComponentType<LucideProps>;
 }
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({ icon: Icon = XIcon, children, unfocusOnPress, ...rest }, ref) => {
+
+function Indicator({ icon: Icon = XIcon, ...rest }: Assign<LucideProps, CheckboxProps>) {
+	return (
+		<Fragment>
+			<Builder.Indicator>
+				<Icon {...rest} />
+			</Builder.Indicator>
+			<Builder.Indicator indeterminate>
+				<MinusIcon {...rest} />
+			</Builder.Indicator>
+		</Fragment>
+	);
+}
+
+export const Checkbox = forwardRef<HTMLInputElement, Assign<ComponentProps<typeof Builder.Root>, CheckboxProps>>(({ label, icon, unfocusOnPress, ...rest }, ref) => {
 	const { handlePress } = useInteractable({ unfocusOnPress });
 
 	return (
 		<Builder.Root {...rest}>
 			<Builder.Control onClickCapture={handlePress} onKeyDownCapture={handlePress}>
-				<Builder.Indicator>
-					<Icon size={16} />
-				</Builder.Indicator>
-				<Builder.Indicator indeterminate>
-					<MinusIcon size={16} />
-				</Builder.Indicator>
+				<Indicator icon={icon} size={16} />
 			</Builder.Control>
-			{children && <Builder.Label>{children}</Builder.Label>}
+			{label && <Builder.Label>{label}</Builder.Label>}
 			<Builder.HiddenInput ref={ref} />
 		</Builder.Root>
 	);
 });
+
+export function CheckboxDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Checkbox>, FieldProps>) {
+	const [field, { required, invalid, errorText }] = useFieldData<boolean>(delegated);
+
+	return (
+		<Field id={field.name} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Checkbox {...delegated} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
+		</Field>
+	);
+}

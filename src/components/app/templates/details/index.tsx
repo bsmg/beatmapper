@@ -143,14 +143,10 @@ function SongDetails() {
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">
-								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptSongFile(details.files[0])}>
-									Audio File
-								</LocalFileUpload>
+								<LocalFileUpload label="Audio File" filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptSongFile(details.files[0])} />
 							</Field>
 							<Field label="Cover Art File">
-								<LocalFileUpload filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])}>
-									Image File
-								</LocalFileUpload>
+								<LocalFileUpload label="Image File" filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} />
 							</Field>
 						</Form.Row>
 						<Form.Row>
@@ -166,7 +162,7 @@ function SongDetails() {
 							<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required placeholder="(in seconds)" />}</Form.AppField>
 						</Form.Row>
 						<Form.Row>
-							<Form.AppField name="environment">{(ctx) => <ctx.Select label="Environment" collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+							<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Environment" creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 						</Form.Row>
 						<Form.Submit>Update song details</Form.Submit>
 					</Form.Root>

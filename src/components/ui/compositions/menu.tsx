@@ -1,19 +1,32 @@
+import type { Assign } from "@ark-ui/react";
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import type { ComponentProps } from "react";
+import { Portal } from "@ark-ui/react/portal";
+import { ChevronDownIcon, type LucideProps } from "lucide-react";
+import type { ComponentProps, RefObject } from "react";
 
 import { ForListCollection } from "$/components/ui/atoms";
+import { type ComposableFn, useComposable } from "$/components/ui/hooks/use-composable";
 import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/menu";
 
-export interface MenuProps<T extends CollectionItem> extends ComponentProps<typeof Builder.Root> {
+export interface MenuProps<T extends CollectionItem> {
+	children?: ComposableFn<[Indicator: typeof Indicator]>;
 	collection: ListCollection<T>;
+	portalled?: boolean;
+	portalRef?: RefObject<HTMLElement>;
 }
-export function Menu<T extends CollectionItem>({ collection, children, ...rest }: MenuProps<T>) {
-	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
 
+function Indicator({ ...rest }: LucideProps) {
 	return (
-		<Builder.Root {...rest}>
-			{children && <Trigger>{children}</Trigger>}
+		<Builder.Indicator>
+			<ChevronDownIcon {...rest} />
+		</Builder.Indicator>
+	);
+}
+
+function Overlay<T extends CollectionItem>({ collection, portalled = true, portalRef }: MenuProps<T>) {
+	return (
+		<Portal disabled={!portalled} container={portalRef}>
 			<Builder.Positioner>
 				<Builder.Content>
 					<ForListCollection collection={collection}>
@@ -25,6 +38,18 @@ export function Menu<T extends CollectionItem>({ collection, children, ...rest }
 					</ForListCollection>
 				</Builder.Content>
 			</Builder.Positioner>
+		</Portal>
+	);
+}
+
+export function Menu<T extends CollectionItem>({ children, collection, portalled, portalRef, ...rest }: Assign<ComponentProps<typeof Builder.Root>, MenuProps<T>>) {
+	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+	const renderTrigger = useComposable(children, (Indicator) => <Indicator size={16} />);
+
+	return (
+		<Builder.Root {...rest}>
+			{children && <Trigger>{renderTrigger(Indicator)}</Trigger>}
+			<Overlay collection={collection} portalled={portalled} portalRef={portalRef} />
 		</Builder.Root>
 	);
 }

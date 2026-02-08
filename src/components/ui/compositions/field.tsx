@@ -1,3 +1,5 @@
+import type { Assign } from "@ark-ui/react";
+import type { UseFieldProps } from "@ark-ui/react/field";
 import { HelpCircleIcon } from "lucide-react";
 import type { MDXComponents } from "mdx/types";
 import { type ComponentProps, forwardRef } from "react";
@@ -7,7 +9,6 @@ import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/field";
 import { css, cx } from "$:styled-system/css";
 import { HStack } from "$:styled-system/jsx";
-import { Input as BaseInput, NativeSelect as BaseSelect, Textarea as BaseTextarea } from "./input";
 import { AnchorLink } from "./link";
 import { Tooltip } from "./tooltip";
 
@@ -15,13 +16,14 @@ const FIELD_MDX_COMPONENTS: MDXComponents = {
 	a: forwardRef(({ className, ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} className={cx(css({ color: "yellow.500" }), className)} />),
 };
 
-export interface FieldProps extends Omit<ComponentProps<typeof Builder.Root>, "label"> {
-	label?: React.ReactNode;
+export interface FieldProps extends UseFieldProps {
+	label?: string;
 	cosmetic?: boolean;
-	helperText?: React.ReactNode;
-	errorText?: React.ReactNode;
+	helperText?: string;
+	errorText?: string;
 }
-export function Field({ label, cosmetic, children, helperText, errorText, ...rest }: FieldProps) {
+
+export function Field({ children, label, cosmetic, helperText, errorText, ...rest }: Assign<ComponentProps<typeof Builder.Root>, FieldProps>) {
 	const Label = useRender(Builder.Label, toPolymorphic(cosmetic ? "span" : "label"));
 
 	return (
@@ -42,14 +44,4 @@ export function Field({ label, cosmetic, children, helperText, errorText, ...res
 			<Builder.ErrorText>{errorText}</Builder.ErrorText>
 		</Builder.Root>
 	);
-}
-
-export function FieldInput({ ...rest }: ComponentProps<typeof BaseInput>) {
-	return <BaseInput as={Builder.Input} {...rest} />;
-}
-export function FieldSelect({ ...rest }: ComponentProps<typeof BaseSelect>) {
-	return <BaseSelect as={Builder.Select} {...rest} />;
-}
-export function FieldTextarea({ ...rest }: ComponentProps<typeof BaseTextarea>) {
-	return <BaseTextarea as={Builder.Textarea} {...rest} />;
 }

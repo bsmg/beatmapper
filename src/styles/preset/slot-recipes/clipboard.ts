@@ -8,15 +8,5 @@ export const clipboard = defineSlotRecipe({
 		root: {
 			position: "relative",
 		},
-		trigger: {
-			position: "absolute",
-			top: 1.5,
-			right: 1.5,
-			padding: 1,
-			colorPalette: "red",
-			layerStyle: "fill.subtle",
-			borderRadius: "md",
-			cursor: "pointer",
-		},
 	},
 });

@@ -25,8 +25,9 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 	return (
 		<Fragment>
 			<ThinStrip style={sharedStyles} />
-			<Flag
+			<Button
 				{...rest}
+				as={Flag}
 				unfocusOnPress
 				style={sharedStyles}
 				onMouseEnter={() => setIsHovering(true)}
@@ -44,7 +45,7 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 				<FlagDecoration viewBox="0 0 5 10">
 					<polygon fill={bookmark.color} points="0,0 5,5 0,10" />
 				</FlagDecoration>
-			</Flag>
+			</Button>
 		</Fragment>
 	);
 }
@@ -62,7 +63,7 @@ const ThinStrip = styled("div", {
 	},
 });
 
-const Flag = styled(Button, {
+const Flag = styled("button", {
 	base: {
 		position: "absolute",
 		zIndex: 2,

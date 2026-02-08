@@ -52,6 +52,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 					type: "loading",
 					title: unseenPrompt.title,
 					description: <MDX code={unseenPrompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
+					closable: true,
 					onStatusChange: (details) => {
 						if (details.status === "dismissing") store.dispatch(dismissPrompt({ id: unseenPrompt.id }));
 					},

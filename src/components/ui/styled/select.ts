@@ -5,10 +5,10 @@ import { Select } from "@ark-ui/react/select";
 import { createStyleContext } from "$:styled-system/jsx";
 import { select } from "$:styled-system/recipes";
 
-const { withRootProvider, withContext } = createStyleContext(select);
+const { withProvider, withContext } = createStyleContext(select);
 
-export const RootProvider = withRootProvider(Select.RootProvider);
-export const Root = withRootProvider(Select.Root);
+export const RootProvider = withProvider(Select.RootProvider, "root");
+export const Root = withProvider(Select.Root, "root");
 export const ClearTrigger = withContext(Select.ClearTrigger, "clearTrigger");
 export const Content = withContext(Select.Content, "content");
 export const Control = withContext(Select.Control, "control");

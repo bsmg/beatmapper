@@ -43,6 +43,7 @@ const updateSW = registerSW({
 			type: "loading",
 			title: "New Update Available",
 			description: "A new update is available! Click the button to reload the app and move to the new update.",
+			closable: true,
 			action: {
 				label: "Reload",
 				onClick: () => {
