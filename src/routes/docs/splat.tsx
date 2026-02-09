@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ErrorBoundary } from "$/components/app/layouts";
+import ErrorBoundary from "$/components/app/templates/error-boundary";
 import DocsPageLayout from "$/components/docs/templates/page";
 import { type Doc, docs } from "$:content";
 

@@ -6,7 +6,7 @@ import { RouterLink } from "$/components/ui/compositions";
 import { Container, styled } from "$:styled-system/jsx";
 import { flex, stack } from "$:styled-system/patterns";
 
-function EditorPageHeader() {
+function Header() {
 	return (
 		<Wrapper>
 			<InnerWrapper>
@@ -55,4 +55,4 @@ const SectionWrapper = styled("div", {
 	}),
 });
 
-export default EditorPageHeader;
+export default Header;
