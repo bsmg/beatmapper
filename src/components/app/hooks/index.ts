@@ -1,1 +1,1 @@
-export { useLocalFileQuery } from "./use-local-files";
+export { useLocalFileQuery } from "./local-file.hooks";

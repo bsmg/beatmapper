@@ -1,4 +1,3 @@
-export { CoverArtFilePreview } from "./file";
-export { LocalFileUpload, MapArchiveFileUpload } from "./file-upload";
+export { CoverArtFile } from "./local-file";
 export { default as Logo } from "./logo";
 export { Shortcut } from "./shortcut";

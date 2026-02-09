@@ -4,10 +4,11 @@ import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { PlusIcon } from "lucide-react";
 import { memo, useCallback, useMemo } from "react";
 
-import { CoverArtFilePreview } from "$/components/app/compositions";
+import { CoverArtFile } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Button, Dialog, Select } from "$/components/ui/compositions";
+import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata, selectUsername } from "$/store/selectors";
@@ -52,7 +53,7 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 
 	return (
 		<OuterWrapper gap={1.5}>
-			<CoverArtFilePreview sid={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
+			<CoverArtFile filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} boxSize={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
 			<Stack gap={1}>
 				<Stack gap={0.5}>
 					<Text color={"fg.default"} fontSize={"20px"} fontWeight={400} lineHeight={1}>

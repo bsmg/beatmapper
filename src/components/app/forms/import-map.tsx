@@ -1,22 +1,37 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import { useCallback } from "react";
+import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
 import { Fragment } from "react/jsx-runtime";
 
-import { MapArchiveFileUpload } from "$/components/app/compositions";
-import { List } from "$/components/ui/compositions";
-import { useAppSelector } from "$/store/hooks";
-import { selectProcessingImport } from "$/store/selectors";
+import { APP_TOASTER, MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { FileUpload, List } from "$/components/ui/compositions";
+import { addSongFromFile } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectProcessingImport, selectSongIds } from "$/store/selectors";
 import { Stack, Text } from "$:styled-system/jsx";
 
 interface Props {
 	dialog?: UseDialogContext;
 }
 function ImportMapForm({ dialog }: Props) {
+	const dispatch = useAppDispatch();
+	const songIds = useAppSelector(selectSongIds);
 	const isProcessingImport = useAppSelector(selectProcessingImport);
 
-	const handleFileAccept = useCallback(() => {
+	const handleFileAccept = async (details: FileUploadFileAcceptDetails) => {
+		for (const file of details.files) {
+			try {
+				await dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } }));
+			} catch (err) {
+				console.error("Could not import map:", err);
+				return APP_TOASTER.create({
+					id: "import-map-fail",
+					type: "error",
+					description: "Could not import map. See console for more info.",
+				});
+			}
+		}
 		if (dialog) dialog.setOpen(false);
-	}, [dialog]);
+	};
 
 	return (
 		<Fragment>
@@ -35,7 +50,7 @@ function ImportMapForm({ dialog }: Props) {
 				<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
 					Drag and drop (or click to select) the .zip file:
 				</Text>
-				<MapArchiveFileUpload disabled={isProcessingImport} onFileAccept={handleFileAccept} />
+				<FileUpload label="Map Archive File" disabled={isProcessingImport} accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept} />
 			</Stack>
 		</Fragment>
 	);

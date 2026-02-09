@@ -3,10 +3,11 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/re
 import { ArrowRightToLineIcon } from "lucide-react";
 import { useMemo } from "react";
 
-import { CoverArtFilePreview } from "$/components/app/compositions";
+import { CoverArtFile } from "$/components/app/compositions";
 import { createBeatmapListCollection } from "$/components/app/constants";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
 import { getBeatmapIds, getSongMetadata, isSongReadonly, resolveSongId } from "$/helpers/song.helpers";
+import { BeatmapFilestore } from "$/services/file.service";
 import { updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllSongs, selectProcessingImport, selectSelectedBeatmap } from "$/store/selectors";
@@ -24,7 +25,7 @@ const SONG_TABLE = [
 		header: () => null,
 		cell: (ctx) => {
 			const [sid] = ctx.getValue();
-			return <CoverArtFilePreview sid={sid} width={40} />;
+			return <CoverArtFile filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} boxSize={40} />;
 		},
 	}),
 	helper.accessor((data) => [getSongMetadata(data), isSongReadonly(data)] as const, {

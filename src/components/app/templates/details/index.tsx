@@ -1,15 +1,14 @@
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useParams } from "@tanstack/react-router";
 import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
-import { useCallback, useState } from "react";
 import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
 
-import { LocalFileUpload } from "$/components/app/compositions";
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
+import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
 import { useMount } from "$/components/hooks";
 import { For } from "$/components/ui/atoms";
-import { AlertDialogProvider, Field, Heading, RouterLink, useAppForm } from "$/components/ui/compositions";
+import { AlertDialogProvider, Field, FileUpload, Heading, RouterLink, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { filestore } from "$/setup";
 import { stopPlayback, updateModuleEnabled, updateSong } from "$/store/actions";
@@ -49,8 +48,25 @@ function SongDetails() {
 	const enabledCustomColors = useAppSelector((state) => selectModuleEnabled(state, sid, "customColors"));
 	const enabledMappingExtensions = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
-	const [songFile, setSongFile] = useState<File | null>(null);
-	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
+	const { data: acceptedSongFile } = useLocalFileQuery(BeatmapFilestore.resolveFilename(sid, "song", {}), {
+		queryKey: ["file-upload"],
+		transformFile: (file) => (file ? [file] : []),
+	});
+	const { data: acceptedCoverArtFile } = useLocalFileQuery(BeatmapFilestore.resolveFilename(sid, "cover", {}), {
+		queryKey: ["file-upload"],
+		transformFile: (file) => (file ? [file] : []),
+	});
+
+	const { mutate: handleAcceptSongFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "song", {}), {
+		onSuccess: () => {
+			APP_TOASTER.success({ id: "song-file-accepted", description: "Successfully updated song file!" });
+		},
+	});
+	const { mutate: handleAcceptCoverArtFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "cover", {}), {
+		onSuccess: () => {
+			APP_TOASTER.success({ id: "cover-art-file-accepted", description: "Successfully updated cover art file!" });
+		},
+	});
 
 	const Form = useAppForm({
 		defaultValues: {
@@ -73,13 +89,13 @@ function SongDetails() {
 		onSubmit: async ({ value, formApi }) => {
 			const newSongObject = { ...song, ...value };
 
-			if (coverArtFile) {
-				const { filename: coverArtFilename } = await filestore.saveCoverArtFile(sid, coverArtFile);
+			if (acceptedCoverArtFile) {
+				const { filename: coverArtFilename } = await filestore.saveCoverArtFile(sid, acceptedCoverArtFile[0]);
 				newSongObject.coverArtFilename = coverArtFilename;
 			}
 
-			if (songFile) {
-				const { filename: songFilename } = await filestore.saveSongFile(sid, songFile);
+			if (acceptedSongFile) {
+				const { filename: songFilename } = await filestore.saveSongFile(sid, acceptedSongFile[0]);
 				newSongObject.songFilename = songFilename;
 			}
 
@@ -99,34 +115,6 @@ function SongDetails() {
 		dispatch(stopPlayback({ offset: offset }));
 	});
 
-	const handleAcceptSongFile = useCallback(
-		(file: File) => {
-			setSongFile(file);
-			filestore.saveSongFile(sid, file).then(() => {
-				APP_TOASTER.create({
-					id: "song-file-accepted",
-					type: "success",
-					description: "Successfully updated song file!",
-				});
-			});
-		},
-		[sid],
-	);
-
-	const handleAcceptCoverArtFile = useCallback(
-		(file: File) => {
-			setCoverArtFile(file);
-			filestore.saveCoverArtFile(sid, file).then(() => {
-				APP_TOASTER.create({
-					id: "cover-file-accepted",
-					type: "success",
-					description: "Successfully updated cover art file!",
-				});
-			});
-		},
-		[sid],
-	);
-
 	const { proceed, reset, status } = useBlocker({
 		shouldBlockFn: () => Form.state.isDirty,
 		withResolver: true,
@@ -143,10 +131,10 @@ function SongDetails() {
 					<Form.Root>
 						<Form.Row>
 							<Field label="Song File">
-								<LocalFileUpload label="Audio File" filename={BeatmapFilestore.resolveFilename(sid, "song", {})} deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptSongFile(details.files[0])} />
+								<FileUpload label="Audio File" deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedSongFile} onFileAccept={(details) => handleAcceptSongFile(details.files[0])} />
 							</Field>
 							<Field label="Cover Art File">
-								<LocalFileUpload label="Image File" filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} />
+								<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} />
 							</Field>
 						</Form.Row>
 						<Form.Row>
