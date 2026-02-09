@@ -3,9 +3,9 @@ import type { MDXComponents } from "mdx/types";
 import { forwardRef } from "react";
 
 import { EDITOR_TOASTER } from "$/components/app/constants";
-import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
+import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
-import { AnchorLink, List, Prompter, Shortcut } from "$/components/ui/compositions";
+import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
@@ -74,7 +74,7 @@ function RouteComponent() {
 			<Wrapper>
 				<Outlet />
 			</Wrapper>
-			<EditorPrompts />
+			<Toaster toaster={EDITOR_TOASTER} />
 		</Prompter>
 	);
 }

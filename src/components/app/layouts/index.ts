@@ -1,3 +1,4 @@
+export * as ActionPanel from "./action-panel";
 export * as ActionPanelGroup from "./action-panel-group";
 export * as Page from "./page";
 export * as Sidebar from "./sidebar";

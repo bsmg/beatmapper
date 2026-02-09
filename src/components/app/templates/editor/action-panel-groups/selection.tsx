@@ -1,14 +1,13 @@
 import { useParams, useRouteContext } from "@tanstack/react-router";
-import { ArrowDownToLineIcon, ArrowUpToLineIcon, DotIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
-import { Fragment, type MouseEventHandler, useMemo } from "react";
+import { ArrowDownToLineIcon, ArrowUpToLineIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
+import { type MouseEventHandler, useMemo } from "react";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
-import { ClipboardActionPanelActionGroup, HistoryActionPanelActionGroup, ObstaclesActionPanelGroup } from "$/components/app/templates/action-panel-groups";
-import { Interleave } from "$/components/ui/atoms";
+import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip } from "$/components/ui/compositions";
 import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectGridSize } from "$/store/selectors";
+import { selectGridSize, selectSelectedBeatmapEntities } from "$/store/selectors";
 import { ObjectType } from "$/types";
 import { StrikethroughOnHover, Text } from "$:styled-system/jsx";
 
@@ -30,40 +29,25 @@ function SelectionCount({ num, label, onClick }: CountProps) {
 	);
 }
 
-interface Props {
-	numOfSelectedBlocks: number;
-	numOfSelectedMines: number;
-	numOfSelectedObstacles: number;
-}
-function SelectionActionPanel({ numOfSelectedBlocks, numOfSelectedMines, numOfSelectedObstacles }: Props) {
+function SelectionActionPanelGroup() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
+	const selectedEntities = useAppSelector((state) => selectSelectedBeatmapEntities(state, view));
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
-	const hasSelectedObstacles = useMemo(() => numOfSelectedObstacles >= 1, [numOfSelectedObstacles]);
-
-	const numbers = [];
-	if (numOfSelectedBlocks) {
-		numbers.push(<SelectionCount key="blocks" num={numOfSelectedBlocks} label="note" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.NOTE }))} />);
-	}
-	if (numOfSelectedMines) {
-		numbers.push(<SelectionCount key="mines" num={numOfSelectedMines} label="bomb" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.BOMB }))} />);
-	}
-	if (numOfSelectedObstacles) {
-		numbers.push(<SelectionCount key="obstacles" num={numOfSelectedObstacles} label="obstacle" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.OBSTACLE }))} />);
-	}
-
 	return (
-		<Fragment>
-			<ActionPanelGroup.Root label="Selection">
-				<ActionPanelGroup.ActionGroup gap="sm">
-					<Interleave separator={(index) => <DotIcon key={index} size={16} />}>{numbers}</Interleave>
-				</ActionPanelGroup.ActionGroup>
-			</ActionPanelGroup.Root>
-			{hasSelectedObstacles && <ObstaclesActionPanelGroup />}
-			<ActionPanelGroup.Root label="Actions">
+		<ActionPanelGroup.Root label="Selection">
+			<ActionPanelGroup.ActionGroup gap="md">
+				<Show when={selectedEntities.notes}>{(items) => <SelectionCount key="blocks" num={items.length} label="note" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.NOTE }))} />}</Show>
+				<Show when={selectedEntities.bombs}>{(items) => <SelectionCount key="mines" num={items.length} label="bomb" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.BOMB }))} />}</Show>
+				<Show when={selectedEntities.obstacles}>{(items) => <SelectionCount key="obstacles" num={items.length} label="obstacle" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.OBSTACLE }))} />}</Show>
+			</ActionPanelGroup.ActionGroup>
+			<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(deselectAllEntities({ view }))}>
+				Clear selection
+			</Button>
+			<ActionPanelGroup.ActionGroup gap="sm">
 				<ActionPanelGroup.ActionGroup>
 					<Tooltip render={() => "Mirror selection horizontally"}>
 						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => dispatch(mirrorSelection({ axis: "horizontal", grid }))}>
@@ -88,16 +72,9 @@ function SelectionActionPanel({ numOfSelectedBlocks, numOfSelectedMines, numOfSe
 						</Button>
 					</Tooltip>
 				</ActionPanelGroup.ActionGroup>
-				<ActionPanelGroup.ActionGroup>
-					<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(deselectAllEntities({ view }))}>
-						Clear selection
-					</Button>
-				</ActionPanelGroup.ActionGroup>
-				<HistoryActionPanelActionGroup />
-				<ClipboardActionPanelActionGroup />
-			</ActionPanelGroup.Root>
-		</Fragment>
+			</ActionPanelGroup.ActionGroup>
+		</ActionPanelGroup.Root>
 	);
 }
 
-export default SelectionActionPanel;
+export default SelectionActionPanelGroup;

@@ -14,12 +14,14 @@ function ObstaclesActionPanelGroup() {
 		title: "Update Duration for Obstacles",
 		description: "Changes the duration for all selected obstacles.",
 		validate: object({ duration: pipe(number(), gtValue(0)) }),
-		defaultValues: { duration: selectedObstacles[0].duration },
+		defaultValues: { duration: selectedObstacles?.[0]?.duration },
 		render: ({ form }) => <form.AppField name="duration">{(ctx) => <ctx.NumberInput autoFocus label="Duration" placeholder="4" />}</form.AppField>,
 		onSubmit: ({ value: { duration } }) => {
 			return dispatch(updateAllSelectedObstacles({ changes: { duration: duration } }));
 		},
 	});
+
+	if (!selectedObstacles.length) return null;
 
 	return (
 		<ActionPanelGroup.Root label="Obstacles">
