@@ -1,8 +1,8 @@
 import { PlusIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";
 
-import { Shortcut } from "$/components/app/compositions";
 import { For } from "$/components/ui/atoms";
+import { Shortcut } from "$/components/ui/compositions";
 import { styled, Text } from "$:styled-system/jsx";
 import { grid, stack, wrap } from "$:styled-system/patterns";
 

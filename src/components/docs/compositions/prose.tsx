@@ -1,10 +1,9 @@
 import type { MDXComponents } from "mdx/types";
 import { type ComponentProps, forwardRef } from "react";
 
-import { Shortcut } from "$/components/app/compositions";
 import * as ContentComponents from "$/components/docs/content";
 import { MDX } from "$/components/ui/atoms";
-import { AnchorLink } from "$/components/ui/compositions";
+import { AnchorLink, Shortcut } from "$/components/ui/compositions";
 import { styled } from "$:styled-system/jsx";
 import DocsMedia from "./media";
 

@@ -2,11 +2,10 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
 import { forwardRef } from "react";
 
-import { Shortcut } from "$/components/app/compositions";
 import { EDITOR_TOASTER } from "$/components/app/constants";
 import { EditorPrompts, EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
-import { AnchorLink, List, Prompter } from "$/components/ui/compositions";
+import { AnchorLink, List, Prompter, Shortcut } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
