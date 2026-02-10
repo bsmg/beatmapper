@@ -1,7 +1,7 @@
 import { useParams } from "@tanstack/react-router";
 import { memo, type PointerEvent, useCallback, useMemo } from "react";
 
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { Button } from "$/components/ui/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";

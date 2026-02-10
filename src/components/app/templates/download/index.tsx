@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
 import { VERSION_COLLECTION } from "$/components/app/constants";
-import { useMount } from "$/components/hooks";
+import { useMount } from "$/components/hooks/use-mount";
 import { Show } from "$/components/ui/atoms";
 import { Heading, useAppForm } from "$/components/ui/compositions";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";

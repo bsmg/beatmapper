@@ -6,7 +6,7 @@ import { gtValue, minLength, number, object, pipe, string, transform, union } fr
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { UpdateBeatmapForm } from "$/components/app/forms";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
-import { useMount } from "$/components/hooks";
+import { useMount } from "$/components/hooks/use-mount";
 import { For } from "$/components/ui/atoms";
 import { AlertDialogProvider, Field, FileUpload, Heading, RouterLink, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";

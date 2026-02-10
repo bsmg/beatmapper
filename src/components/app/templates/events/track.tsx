@@ -2,7 +2,7 @@ import { useParams } from "@tanstack/react-router";
 import { createBasicEvent, type EventType } from "bsmap";
 import { type ComponentProps, memo, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
 
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { For } from "$/components/ui/atoms";
 import { resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
 import { bulkAddBasicEvent } from "$/store/actions";

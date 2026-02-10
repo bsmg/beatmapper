@@ -3,7 +3,7 @@ import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import type { ColorRepresentation } from "three";
 
-import { useOnChange } from "$/components/hooks";
+import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
@@ -71,13 +71,13 @@ export function useRingRotation({ lastEventId, incrementBy = Math.PI * 0.5, rati
 
 	const isPlaying = useAppSelector(selectPlaying);
 
-	useOnChange(() => {
+	useUpdateEffect(() => {
 		if (!isPlaying || !lastEventId) return;
 
 		const shouldChangeDirection = Math.random() < 0.5;
 		const directionMultiple = shouldChangeDirection ? 1 : -1;
 		setRotationRatio(rotationRatio + incrementBy * directionMultiple);
-	}, lastEventId ?? null);
+	}, [lastEventId]);
 
 	return [rotationRatio];
 }
@@ -92,7 +92,7 @@ export function useRingZoom({ lastEventId, minDistance = 3, maxDistance = 12 }: 
 
 	const isPlaying = useAppSelector(selectPlaying);
 
-	useOnChange(() => {
+	useUpdateEffect(() => {
 		if (!isPlaying) {
 			return;
 		}
@@ -100,7 +100,7 @@ export function useRingZoom({ lastEventId, minDistance = 3, maxDistance = 12 }: 
 		if (lastEventId) {
 			setDistanceBetweenRings(distanceBetweenRings === maxDistance ? minDistance : maxDistance);
 		}
-	}, lastEventId ?? null);
+	}, [lastEventId]);
 
 	return [distanceBetweenRings];
 }

@@ -2,12 +2,14 @@ import { useParams } from "@tanstack/react-router";
 import type { EventType } from "bsmap";
 import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
-import { useGlobalEventListener, useMousePositionOverElement, useParentDimensions } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { useMousePositionOverElement } from "$/components/hooks/use-mouse-position-over-element";
+import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
 import { For } from "$/components/ui/atoms";
 import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
 import { bulkRemoveEvent, deselectEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectEventTracksForEnvironment, selectLoading, selectSnap } from "$/store/selectors";
+import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectEventTracksForEnvironment, selectLoading, selectPacerWait, selectSnap } from "$/store/selectors";
 import { type Accept, type App, EventEditMode, type ISelectionBoxInBeats, TrackType } from "$/types";
 import { clamp, isMetaKeyPressed, normalize, range, roundToNearest } from "$/utils";
 import { styled } from "$:styled-system/jsx";
@@ -17,9 +19,6 @@ import EventGridMarkers from "./markers";
 import EventGridSelectionBox from "./selection-box";
 import EventGridTimeline from "./timeline";
 import EventGridTrack from "./track";
-
-const PREFIX_WIDTH = 170;
-const HEADER_HEIGHT = 32;
 
 function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNums: number[], startBeat: number, snapTo?: number) {
 	const positionInBeats = normalize(x, 0, innerGridWidth, 0, beatNums.length);
@@ -36,6 +35,7 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
 
 	const dispatch = useAppDispatch();
+	const wait = useAppSelector(selectPacerWait);
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const allTracks = useMemo(() => Object.entries(tracks), [tracks]);
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
@@ -53,7 +53,8 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 
 	const beatNums = useMemo(() => Array.from(range(Math.floor(startBeat), Math.ceil(endBeat - 1))), [startBeat, endBeat]);
 
-	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
+	const [container, dimensions] = useParentDimensions<HTMLDivElement>();
+
 	const [mouseDownAt, setMouseDownAt] = useState<{ x: number; y: number } | null>(null);
 	const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
 
@@ -76,47 +77,41 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 		shouldFire: selectedEditMode === EventEditMode.SELECT,
 	});
 
-	const tracksScrollContainer = useRef<HTMLDivElement>(null);
-
-	const tracksSelectionBoxRef = useMousePositionOverElement<HTMLDivElement>(
-		tracksScrollContainer,
-		(ref, x, y, event) => {
-			const currentMousePosition = { x, y };
-			mousePositionRef.current = currentMousePosition;
-
-			const offset = {
-				x: -PREFIX_WIDTH, // prefix width
-				y: ref.scrollTop - HEADER_HEIGHT,
-			};
-
-			const hoveringOverBeatNum = convertMousePositionToBeatNum(x + offset.x, dimensions.width, beatNums, startBeat, snapTo);
-
-			if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === 0) {
-				const newSelectionBox = {
-					top: Math.min(mouseDownAt.y, currentMousePosition.y) + offset.y,
-					left: Math.min(mouseDownAt.x, currentMousePosition.x) + offset.x,
-					right: Math.max(mouseDownAt.x, currentMousePosition.x) + offset.x,
-					bottom: Math.max(mouseDownAt.y, currentMousePosition.y) + offset.y,
-				} as DOMRect;
-
-				setSelectionBox(newSelectionBox);
-
-				// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
-				setSelectionBoxInBeats({
-					startTrackIndex: Math.floor(newSelectionBox.top / rowHeight),
-					endTrackIndex: Math.floor(newSelectionBox.bottom / rowHeight),
-					startBeat: convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat),
-					endBeat: convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat),
-					// we should also track whether we want the selection box to preserve the existing selection
-					withPrevious: isMetaKeyPressed(event),
-				});
-			}
-
-			if (hoveringOverBeatNum !== selectedBeat) dispatch(updateEventsEditorCursor({ selectedBeat: hoveringOverBeatNum }));
-		},
+	const [tracksSelectionBoxRef] = useMousePositionOverElement<HTMLDivElement>(
 		{
-			boxDependencies: [rowHeight],
+			debouncerOptions: { wait },
+			onMouseMove: (event, { x, y }) => {
+				mousePositionRef.current = { x, y };
+
+				if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === 0) {
+					const newSelectionBox = {
+						left: Math.min(mouseDownAt.x, x),
+						right: Math.max(mouseDownAt.x, x),
+						top: Math.min(mouseDownAt.y, y),
+						bottom: Math.max(mouseDownAt.y, y),
+					} as DOMRect;
+
+					setSelectionBox(newSelectionBox);
+
+					// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
+					setSelectionBoxInBeats({
+						startTrackIndex: Math.floor(newSelectionBox.top / rowHeight),
+						endTrackIndex: Math.floor(newSelectionBox.bottom / rowHeight),
+						startBeat: convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat),
+						endBeat: convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat),
+						// we should also track whether we want the selection box to preserve the existing selection
+						withPrevious: isMetaKeyPressed(event),
+					});
+				}
+
+				const hoveringOverBeatNum = convertMousePositionToBeatNum(x, dimensions.width, beatNums, startBeat, snapTo);
+
+				if (hoveringOverBeatNum !== selectedBeat) {
+					dispatch(updateEventsEditorCursor({ selectedBeat: hoveringOverBeatNum }));
+				}
+			},
 		},
+		[rowHeight],
 	);
 
 	const mousePositionInPx = useMemo(() => {
@@ -215,7 +210,7 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 	);
 
 	return (
-		<Wrapper {...rest} ref={tracksScrollContainer} aria-busy={isLoading}>
+		<Wrapper {...rest} aria-busy={isLoading}>
 			<HeaderWrapper onContextMenu={(ev) => ev.preventDefault()}>
 				<ActionsWrapper />
 				<TimelineWrapper>

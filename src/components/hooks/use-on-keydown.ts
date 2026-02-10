@@ -1,18 +1,20 @@
-import { type DependencyList, useEffect } from "react";
+import { type DependencyList, useCallback, useRef } from "react";
+
+import { useGlobalEventListener } from "./use-global-event-listener";
 
 export function useOnKeydown(key: string, callback: (ev: KeyboardEvent) => void, deps: DependencyList) {
-	// biome-ignore lint/correctness/useExhaustiveDependencies: valid use case
-	useEffect(() => {
-		const handleKeydown = (ev: KeyboardEvent) => {
+	const callbackRef = useRef(callback);
+
+	callbackRef.current = callback;
+
+	const handleKeyDown = useCallback(
+		(ev: KeyboardEvent) => {
 			if (ev.code === key) {
-				callback(ev);
+				callbackRef.current(ev);
 			}
-		};
+		},
+		[key, ...deps],
+	);
 
-		window.addEventListener("keydown", handleKeydown);
-
-		return () => {
-			window.removeEventListener("keydown", handleKeydown);
-		};
-	}, [key, callback, deps]);
+	useGlobalEventListener("keydown", handleKeyDown);
 }

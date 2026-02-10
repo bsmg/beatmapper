@@ -1,7 +1,7 @@
 import { animated, type SpringConfig, useSpring } from "@react-spring/three";
 import { type ComponentProps, useMemo } from "react";
 
-import { useOnChange } from "$/components/hooks";
+import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectBloomEnabled, selectPlaying } from "$/store/selectors";
@@ -84,12 +84,12 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 	const isPlaying = useAppSelector(selectPlaying);
 	const lightSpringConfig = useSpringConfigForLight({ ...light });
 
-	useOnChange(() => {
+	useUpdateEffect(() => {
 		if (!isPlaying) return;
 
 		const statusShouldReset = light.effect === App.BasicEventEffect.FLASH || light.effect === App.BasicEventEffect.FADE;
 		lightSpringConfig.reset = statusShouldReset;
-	}, light.lastEventId ?? null);
+	}, [light.lastEventId ?? null]);
 
 	return useSpring<{ emissive: string; emissiveIntensity: number; opacity: number }>(() => lightSpringConfig, [light]);
 }

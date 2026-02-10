@@ -22,7 +22,8 @@ function EditorAudioVisualizer() {
 	const bookmarks = useAppSelector(selectAllBookmarks);
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
-	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
+
+	const [container, dimensions] = useParentDimensions<HTMLDivElement>();
 
 	// Updating this waveform is surprisingly expensive! We'll defer its rendered value and round the cursor position based on the render scale.
 	const roundedCursorPosition = useDeferredValue(roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15));

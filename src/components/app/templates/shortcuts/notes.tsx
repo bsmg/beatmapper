@@ -2,7 +2,7 @@ import { useParams, useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompter } from "$/components/ui/compositions";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";

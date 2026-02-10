@@ -1,7 +1,7 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useState } from "react";
 
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import type { ObjectPlacementMode } from "$/types";
 import type { GroupProps } from "$/types/vendor";
 import { isMetaKeyPressed } from "$/utils";

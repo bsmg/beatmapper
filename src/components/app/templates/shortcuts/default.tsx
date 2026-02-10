@@ -3,7 +3,7 @@ import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
 import { APP_TOASTER, createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import {

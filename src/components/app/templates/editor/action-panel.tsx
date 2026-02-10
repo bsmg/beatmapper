@@ -2,7 +2,8 @@ import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { ActionPanel } from "$/components/app/layouts";
-import { useOnChange, useOnKeydown } from "$/components/hooks";
+import { useOnKeydown } from "$/components/hooks/use-on-keydown";
+import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { Show } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
@@ -21,15 +22,12 @@ function EditorActionPanel() {
 
 	const [showGridConfig, setShowGridConfig] = useState(false);
 
-	useOnChange(
-		() => {
-			if (showGridConfig && isAnythingSelected) {
-				// If the user selects something while the grid panel is open, switch to the selection panel
-				setShowGridConfig(false);
-			}
-		},
-		selectedBlocks.length + selectedMines.length + selectedObstacles.length,
-	);
+	useUpdateEffect(() => {
+		if (showGridConfig && isAnythingSelected) {
+			// If the user selects something while the grid panel is open, switch to the selection panel
+			setShowGridConfig(false);
+		}
+	}, [selectedBlocks.length + selectedMines.length + selectedObstacles.length]);
 
 	useOnKeydown("KeyG", () => {
 		if (mappingMode === ObjectPlacementMode.EXTENSIONS) {

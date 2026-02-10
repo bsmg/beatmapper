@@ -1,39 +1,37 @@
-import { type DependencyList, type RefObject, useEffect } from "react";
+import { type DependencyList, type RefObject, useState } from "react";
 
 import { clamp } from "$/utils";
-import { useBoundingBox } from "./use-bounding-box";
+import { type UseElementRectOptions, useElementRect } from "./use-element-rect";
+import { useGlobalEventListener } from "./use-global-event-listener";
 
-interface Options {
-	boxDependencies: DependencyList;
-	onlyTriggerInside: boolean;
+interface Context {
+	x: number;
+	y: number;
+	isWithinRect: boolean;
 }
 
-export function useMousePositionOverElement<T extends HTMLElement>(container: RefObject<T | null>, callback: (ref: T, x: number, y: number, event: MouseEvent) => void, options: Partial<Options> = {}) {
-	const [ref, bb] = useBoundingBox<T>(container, options.boxDependencies);
+export interface UseMousePositionOverElementOptions extends UseElementRectOptions {
+	onMouseMove?: (event: MouseEvent, ctx: Context) => void;
+}
+export function useMousePositionOverElement<T extends Element>(options: UseMousePositionOverElementOptions, deps: DependencyList = []): [ref: RefObject<T>, ctx: Context] {
+	const [ref, rect] = useElementRect<T>(options, deps);
 
-	useEffect(() => {
-		function handleMouseMove(ev: MouseEvent) {
-			if (!bb) return;
-			// Check if the cursor is inside the box
-			const insideX = ev.pageX > bb.left && ev.pageX < bb.right;
-			const insideY = ev.pageY > bb.top && ev.pageY < bb.bottom;
+	const [context, setContext] = useState<Context>({ x: 0, y: 0, isWithinRect: false });
 
-			const x = clamp(ev.pageX - bb.left, 0, bb.width);
-			const y = clamp(ev.pageY - bb.top, 0, bb.height);
+	useGlobalEventListener("mousemove", (event: MouseEvent) => {
+		if (!rect || !ref.current) return;
 
-			const shouldCall = options.onlyTriggerInside ? insideX && insideY : true;
+		const isWithinX = event.pageX > rect.left && event.pageX < rect.right;
+		const isWithinY = event.pageY > rect.top && event.pageY < rect.bottom;
 
-			if (ref.current && shouldCall) {
-				callback(ref.current, x, y, ev);
-			}
-		}
+		setContext({
+			x: clamp(event.pageX - rect.left, 0, rect.width) + ref.current.scrollLeft,
+			y: clamp(event.pageY - rect.top, 0, rect.height) + ref.current.scrollTop,
+			isWithinRect: isWithinX && isWithinY,
+		});
 
-		window.addEventListener("mousemove", handleMouseMove);
+		if (options.onMouseMove) options.onMouseMove(event, context);
+	});
 
-		return () => {
-			window.removeEventListener("mousemove", handleMouseMove);
-		};
-	}, [bb, ref.current, callback, options.onlyTriggerInside, ...(options.boxDependencies ?? [])]);
-
-	return ref;
+	return [ref, context];
 }

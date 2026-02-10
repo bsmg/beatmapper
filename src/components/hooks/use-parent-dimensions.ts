@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 
-interface Dimensions {
-	width: number | null;
-	height: number | null;
-}
-export function useParentDimensions<T extends HTMLElement>(): [{ width: number; height: number }, React.RefObject<T>] {
-	const [dimensions, setDimensions] = useState<Dimensions>({ width: null, height: null });
+export function useParentDimensions<T extends Element>(): [ref: RefObject<T>, dimensions: { width: number; height: number }] {
 	const ref = useRef<T>(null);
+
+	const [dimensions, setDimensions] = useState<{ width: number | null; height: number | null }>({ width: null, height: null });
 
 	const updateDimensions = useCallback(() => {
 		if (ref.current?.parentElement) {
@@ -41,5 +38,5 @@ export function useParentDimensions<T extends HTMLElement>(): [{ width: number; 
 		};
 	}, [updateDimensions]);
 
-	return [dimensions as { width: number; height: number }, ref];
+	return [ref, dimensions as { width: number; height: number }];
 }
