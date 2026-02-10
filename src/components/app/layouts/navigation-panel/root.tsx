@@ -1,17 +1,13 @@
-import { EditorAudioVisualizer } from "$/components/app/templates/editor";
+import { Children, type PropsWithChildren } from "react";
+
+import { For } from "$/components/ui/atoms";
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import EditorNavigationControls from "./playback";
 
-function EditorNavigationPanel() {
+function NavigationPanelRoot({ children }: PropsWithChildren) {
 	return (
 		<Wrapper>
-			<SubWrapper>
-				<EditorNavigationControls />
-			</SubWrapper>
-			<SubWrapper>
-				<EditorAudioVisualizer />
-			</SubWrapper>
+			<For each={Children.toArray(children)}>{(child) => <SubWrapper>{child}</SubWrapper>}</For>
 		</Wrapper>
 	);
 }
@@ -39,4 +35,4 @@ const SubWrapper = styled("div", {
 	},
 });
 
-export default EditorNavigationPanel;
+export default NavigationPanelRoot;

@@ -9,7 +9,6 @@ import { jumpToBeat, removeBookmark, scrubVisualizer } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectLoading, selectRenderScale, selectWaveformData } from "$/store/selectors";
 import { roundToNearest } from "$/utils";
-import EditorBookmark from "./bookmark";
 
 function EditorAudioVisualizer() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
@@ -57,7 +56,7 @@ function EditorAudioVisualizer() {
 			</AudioVisualizer.Content>
 			{!isLoadingSong && durationInBeats && (
 				<AudioVisualizer.Markers duration={durationInBeats} offset={offsetInBeats} markers={bookmarks} onMarkerClick={handleMarkerClick}>
-					{(bookmark, rest) => <EditorBookmark key={resolveBookmarkId(bookmark)} bookmark={bookmark} {...rest} />}
+					{(bookmark, rest) => <AudioVisualizer.Bookmark key={resolveBookmarkId(bookmark)} bookmark={bookmark} {...rest} />}
 				</AudioVisualizer.Markers>
 			)}
 		</AudioVisualizer.Root>

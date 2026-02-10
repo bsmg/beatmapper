@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { EditorNavigationPanel, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
+import { NavigationPanel } from "$/components/app/layouts";
+import { EditorAudioVisualizer, EditorNavigationControls, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
 import { DefaultEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { View } from "$/types";
 import { styled } from "$:styled-system/jsx";
@@ -16,7 +17,10 @@ function RouteComponent() {
 		<Wrapper>
 			<EditorSongInfo showDifficultySelector={view !== View.LIGHTSHOW} />
 			<Outlet />
-			<EditorNavigationPanel />
+			<NavigationPanel.Root>
+				<EditorNavigationControls />
+				<EditorAudioVisualizer />
+			</NavigationPanel.Root>
 			<EditorStatusBar />
 			<DefaultEditorShortcuts />
 		</Wrapper>
