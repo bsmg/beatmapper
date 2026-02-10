@@ -69,8 +69,8 @@ export const Select = forwardRef<HTMLSelectElement, Assign<ComponentProps<typeof
 		<Builder.Root collection={collection} {...rest} onKeyDown={(e) => e.stopPropagation()}>
 			{label && <Builder.Label>{label}</Builder.Label>}
 			<Builder.Control onClickCapture={handlePress} onKeyDownCapture={handlePress}>
-				<ClearTrigger clearable={clearable} />
 				<Trigger placeholder={placeholder} />
+				<ClearTrigger clearable={clearable} />
 			</Builder.Control>
 			<Overlay collection={collection} portalled={portalled} portalRef={portalRef} />
 			<Builder.HiddenSelect ref={ref} />

@@ -57,6 +57,7 @@ export const select = defineSlotRecipe({
 			display: "flex",
 			alignItems: "center",
 			justifyContent: "center",
+			padding: 0.5,
 			layerStyle: "fill.ghost",
 			borderRadius: "sm",
 		},
@@ -83,11 +84,10 @@ export const select = defineSlotRecipe({
 		size: {
 			sm: {
 				trigger: { height: "24px" },
-				clearTrigger: { height: "24px" },
 			},
 			md: {
 				trigger: { height: "iconButton" },
-				clearTrigger: { height: "iconButton" },
+				clearTrigger: { marginRight: 0.5 },
 			},
 		},
 		orientation: {

@@ -39,7 +39,7 @@ export function Button({ children, className, disabled, loading, unfocusOnPress,
 export function SubmitButton({ children, ...rest }: ComponentProps<typeof Button>) {
 	const form = useFormContext();
 
-	const disabled = useStore(form.store, (state) => !state.canSubmit || state.isPristine);
+	const disabled = useStore(form.store, (state) => !state.canSubmit);
 	const loading = useStore(form.store, (state) => state.isSubmitting);
 
 	return (

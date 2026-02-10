@@ -43,8 +43,8 @@ export function Slider({ children, label, marks, unfocusOnPress, ...rest }: Assi
 	const renderControl = useComposable(children, () => (
 		<Fragment>
 			<Track />
-			<Thumb index={0} />
 			<Marks marks={marks} />
+			<Thumb index={0} />
 		</Fragment>
 	));
 

@@ -50,6 +50,8 @@ export const combobox = defineSlotRecipe({
 		content: {
 			layerStyle: "menu.content",
 			width: "100%",
+			minWidth: "fit-content",
+			maxWidth: "var(--available-width)",
 			maxHeight: "var(--available-height)",
 			zIndex: 1,
 			overflowY: "auto",
@@ -69,6 +71,7 @@ export const combobox = defineSlotRecipe({
 			display: "flex",
 			flexDirection: "row",
 			alignItems: "baseline",
+			whiteSpace: "nowrap",
 			gap: 0.5,
 		},
 	},
