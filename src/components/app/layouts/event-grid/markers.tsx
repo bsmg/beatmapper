@@ -1,9 +1,11 @@
-import { Fragment, useCallback, useMemo } from "react";
+import type { Assign } from "@ark-ui/react";
+import { type ComponentProps, Fragment, useCallback, useMemo } from "react";
 
 import { For } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
 import { selectEventsEditorBeatsPerZoomLevel } from "$/store/selectors";
 import { range } from "$/utils";
+import { styled } from "$:styled-system/jsx";
 import { token } from "$:styled-system/tokens";
 
 interface Props {
@@ -11,7 +13,7 @@ interface Props {
 	height: number;
 	primaryDivisions: number;
 }
-function EventGridMarkers({ width, height, primaryDivisions }: Props) {
+function EventGridMarkers({ width, height, primaryDivisions, ...rest }: Assign<ComponentProps<typeof Wrapper>, Props>) {
 	const numOfBeatsToShow = useAppSelector(selectEventsEditorBeatsPerZoomLevel);
 
 	const segmentWidth = useMemo(() => width / numOfBeatsToShow, [width, numOfBeatsToShow]);
@@ -35,7 +37,7 @@ function EventGridMarkers({ width, height, primaryDivisions }: Props) {
 	);
 
 	return (
-		<svg role="presentation" width={width} height={height}>
+		<Wrapper {...rest} role="presentation" width={width} height={height}>
 			<For each={Array.from(range(numOfBeatsToShow))}>
 				{(beat, index) => (
 					<Fragment key={beat}>
@@ -44,8 +46,15 @@ function EventGridMarkers({ width, height, primaryDivisions }: Props) {
 					</Fragment>
 				)}
 			</For>
-		</svg>
+		</Wrapper>
 	);
 }
+
+const Wrapper = styled("svg", {
+	base: {
+		position: "absolute",
+		inset: 0,
+	},
+});
 
 export default EventGridMarkers;

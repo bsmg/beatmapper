@@ -1,10 +1,11 @@
+import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
-import { memo, type PointerEvent, useCallback, useMemo } from "react";
+import { type ComponentProps, type PointerEvent, useCallback, useMemo } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { Button } from "$/components/ui/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
-import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
+import { isLightEvent, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment } from "$/store/selectors";
 import { App, type IEventTracks } from "$/types";
@@ -50,7 +51,7 @@ interface Props {
 	onEventPointerOut?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridEventItem({ event: data, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Props) {
+function EventGridEventItem({ children, event: data, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Assign<ComponentProps<typeof Wrapper>, Props>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
 
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
@@ -105,15 +106,14 @@ function EventGridEventItem({ event: data, trackWidth, onEventPointerDown, onEve
 	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
 
 	return (
-		<Wrapper style={styles} onClick={(ev) => ev.stopPropagation()} onContextMenu={(ev) => ev.preventDefault()} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
-			{isLightEvent(data, tracks) && <Value style={styles}>{data.value !== 0 ? data.floatValue : undefined}</Value>}
-			{isValueEvent(data, tracks) && <Value style={styles}>{data.value}</Value>}
+		<Button as={Wrapper} style={styles} onClick={(ev) => ev.stopPropagation()} onContextMenu={(ev) => ev.preventDefault()} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
+			{children && <Value style={styles}>{children}</Value>}
 			{data.selected && <SelectedGlow />}
-		</Wrapper>
+		</Button>
 	);
 }
 
-const Wrapper = styled(Button, {
+const Wrapper = styled("div", {
 	base: {
 		width: "8px",
 		height: "100%",
@@ -145,4 +145,4 @@ const SelectedGlow = styled("div", {
 	},
 });
 
-export default memo(EventGridEventItem);
+export default EventGridEventItem;

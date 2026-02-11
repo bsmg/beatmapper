@@ -1,10 +1,12 @@
+import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
 import { createBasicEvent, type EventType } from "bsmap";
-import { type ComponentProps, memo, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { type ComponentProps, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { EventGrid } from "$/components/app/layouts";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { For } from "$/components/ui/atoms";
-import { resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
+import { isLightEvent, isValueEvent, resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
 import { bulkAddBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
@@ -22,22 +24,18 @@ import {
 } from "$/store/selectors";
 import { type Accept, App, EventEditMode, TrackType } from "$/types";
 import { clamp, normalize } from "$/utils";
-import { styled } from "$:styled-system/jsx";
-import EventGridBackgroundBox from "./background-box";
-import EventGridEventItem from "./event";
 import { createBackgroundBoxes } from "./track.helpers";
 
-interface Props extends ComponentProps<typeof Wrapper> {
+interface Props {
 	trackId: Accept<EventType, number>;
 	width: number;
-	height: number;
 	disabled: boolean;
 	onEventPointerDown?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventPointerOut?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventPointerOver?: (event: PointerEvent, data: App.IBasicEvent) => void;
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function EventGridTrack({ trackId, width, height, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Props) {
+function BasicEventTrack({ trackId, width, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Assign<ComponentProps<typeof EventGrid.Track>, Props>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
 
 	const dispatch = useAppDispatch();
@@ -60,8 +58,6 @@ function EventGridTrack({ trackId, width, height, disabled, onEventPointerDown, 
 		const { color, brightness } = initialTrackLightingState;
 		return createBackgroundBoxes(events, trackId, { initialColor: color ?? null, initialBrightness: brightness ?? null, startBeat, numOfBeatsToShow, tracks });
 	}, [events, trackId, initialTrackLightingState, startBeat, numOfBeatsToShow, tracks]);
-
-	const styles = useMemo(() => ({ height }), [height]);
 
 	const handlePointerUp = useCallback(() => {
 		setMouseButtonDepressed(null);
@@ -130,22 +126,18 @@ function EventGridTrack({ trackId, width, height, disabled, onEventPointerDown, 
 	}, [dispatch, resolveEventData, cursorAtBeat, norm, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
 	return (
-		<Wrapper key={trackId} {...rest} style={styles} aria-disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
-			<For each={backgroundBoxes}>{(box) => <EventGridBackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />}</For>
-			<For each={events}>{(event) => <EventGridEventItem key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} />}</For>
-		</Wrapper>
+		<EventGrid.Track {...rest} disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
+			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />}</For>
+			<For each={events}>
+				{(event) => (
+					<EventGrid.Event key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel}>
+						{isLightEvent(event, tracks) && event.value !== 0 ? event.floatValue : undefined}
+						{isValueEvent(event, tracks) && event.value}
+					</EventGrid.Event>
+				)}
+			</For>
+		</EventGrid.Track>
 	);
 }
 
-const Wrapper = styled("div", {
-	base: {
-		position: "relative",
-		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
-		borderBlockWidth: { base: "sm", _lastOfType: 0 },
-		borderColor: "border.muted",
-		opacity: { base: 1, _disabled: "disabled" },
-		cursor: { base: undefined, _disabled: "not-allowed" },
-	},
-});
-
-export default memo(EventGridTrack);
+export default BasicEventTrack;

@@ -58,6 +58,8 @@ function EventGridTimeline({ beatNums }: Props) {
 
 const Header = styled("div", {
 	base: {
+		position: "relative",
+		width: "100%",
 		display: "flex",
 		borderBottomWidth: "sm",
 		borderColor: "border.muted",
