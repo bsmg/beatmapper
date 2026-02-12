@@ -22,10 +22,10 @@ export function FieldTextarea({ ...rest }: ComponentProps<typeof Textarea>) {
 }
 
 export function TextareaDataField({ label, helperText, ...rest }: Assign<ComponentProps<typeof Textarea>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<string>(rest);
+	const [field, { id, required, invalid, errorText }] = useFieldData<string>(rest);
 
 	return (
-		<Field id={field.name} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
 			<FieldTextarea {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);

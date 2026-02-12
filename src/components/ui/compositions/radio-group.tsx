@@ -43,10 +43,10 @@ export function RadioGroup<T extends CollectionItem>({ label, collection, ...res
 }
 
 export function RadioGroupDataField<T extends CollectionItem>({ label, helperText, ...delegated }: Assign<ComponentProps<typeof RadioGroup<T>>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<string | null>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<string | null>(delegated);
 
 	return (
-		<Field id={field.name} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
 			<RadioGroup {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);

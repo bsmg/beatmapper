@@ -1,17 +1,18 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
-import { useState } from "react";
-import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
+import { array, file, gtValue, minLength, nonEmpty, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
-import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
+import { useAppForm } from "$/components/ui/compositions";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
 
 const SCHEMA = object({
+	songFile: pipe(array(file()), nonEmpty("You must provide exactly one file.")),
+	coverArtFile: pipe(array(file()), nonEmpty("You must provide exactly one file.")),
 	name: pipe(string(), minLength(1)),
 	subName: pipe(string()),
 	artistName: pipe(string(), minLength(1)),
@@ -32,13 +33,10 @@ function CreateMapForm({ dialog }: Props) {
 	const currentSongIds = useAppSelector(selectSongIds);
 	const username = useAppSelector(selectUsername);
 
-	// These files are sent to the redux middleware.
-	// We'll store them on disk (currently in indexeddb, but that may change), and capture a reference to them by a filename, which we'll store in redux.
-	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
-	const [songFile, setSongFile] = useState<File | null>(null);
-
 	const Form = useAppForm({
 		defaultValues: {
+			songFile: [] as File[],
+			coverArtFile: [] as File[],
 			name: "",
 			subName: "",
 			artistName: "",
@@ -54,13 +52,6 @@ function CreateMapForm({ dialog }: Props) {
 		},
 		onSubmit: async ({ value }) => {
 			try {
-				if (!songFile) {
-					throw new Error("Please provide a valid song file.");
-				}
-				if (!coverArtFile) {
-					throw new Error("Please provide a valid cover art file.");
-				}
-
 				const songId = createSongId(value);
 
 				// Song IDs must be unique, and song IDs are generated from the name.
@@ -71,7 +62,22 @@ function CreateMapForm({ dialog }: Props) {
 
 				const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
 
-				dispatch(addSong({ songId, beatmapId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset ?? 0, songFile, coverArtFile, username: username, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
+				dispatch(
+					addSong({
+						songId,
+						beatmapId,
+						name: value.name,
+						subName: value.subName,
+						artistName: value.artistName,
+						bpm: value.bpm,
+						offset: value.offset ?? 0,
+						songFile: value.songFile[0],
+						coverArtFile: value.coverArtFile[0],
+						username: username,
+						selectedCharacteristic: value.characteristic,
+						selectedDifficulty: value.difficulty,
+					}),
+				);
 
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
@@ -83,15 +89,11 @@ function CreateMapForm({ dialog }: Props) {
 
 	return (
 		<Form.AppForm>
-			<Form.Row>
-				<Field label="Song File">
-					<FileUpload label="Audio File" accept={SONG_FILE_ACCEPT_TYPE} acceptedFiles={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])} />
-				</Field>
-				<Field label="Cover Art File">
-					<FileUpload label="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} acceptedFiles={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])} />
-				</Field>
-			</Form.Row>
 			<Form.Root>
+				<Form.Row>
+					<Form.AppField name="songFile">{(ctx) => <ctx.FileUpload label="Song File" maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE} />}</Form.AppField>
+					<Form.AppField name="coverArtFile">{(ctx) => <ctx.FileUpload label="Cover Art File" maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} />}</Form.AppField>
+				</Form.Row>
 				<Form.Row>
 					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>

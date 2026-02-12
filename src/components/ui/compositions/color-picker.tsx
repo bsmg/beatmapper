@@ -141,10 +141,10 @@ export const ColorPicker = forwardRef<HTMLInputElement, Assign<ComponentProps<ty
 });
 
 export function ColorPickerDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof ColorPicker>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<Color>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<Color>(delegated);
 
 	return (
-		<Field id={field.name} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
 			<ColorPicker {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);

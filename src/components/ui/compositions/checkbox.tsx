@@ -40,10 +40,10 @@ export const Checkbox = forwardRef<HTMLInputElement, Assign<ComponentProps<typeo
 });
 
 export function CheckboxDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Checkbox>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<boolean>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<boolean>(delegated);
 
 	return (
-		<Field id={field.name} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
 			<Checkbox {...delegated} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
 		</Field>
 	);

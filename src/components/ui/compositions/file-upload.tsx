@@ -110,12 +110,12 @@ export const FileUpload = forwardRef<HTMLInputElement, Assign<ComponentProps<typ
 	);
 });
 
-export function FileUploadDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof FileUpload>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<File[]>(delegated);
+export function FileUploadDataField({ label, helperText, acceptText, ...delegated }: Assign<ComponentProps<typeof FileUpload>, FieldProps & { acceptText?: string }>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<File[]>(delegated);
 
 	return (
-		<Field id={field.name} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FileUpload {...delegated} acceptedFiles={field.state.value} onFileChange={(details) => field.handleChange(details.acceptedFiles)} />
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<FileUpload {...delegated} label={acceptText} acceptedFiles={field.state.value} onFileChange={(details) => field.handleChange(details.acceptedFiles)} />
 		</Field>
 	);
 }

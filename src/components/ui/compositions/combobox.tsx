@@ -165,11 +165,11 @@ export function Combobox({ collection: original, value, onValueChange, label, pl
 }
 
 export function ComboboxDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Combobox>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<string>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<string | null>(delegated);
 
 	return (
-		<Field id={field.name} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Combobox {...delegated} defaultValue={["test"]} value={[field.state.value]} onValueChange={(details) => field.handleChange(details.value[0])} />
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Combobox {...delegated} defaultValue={["test"]} value={field.state.value ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
 		</Field>
 	);
 }

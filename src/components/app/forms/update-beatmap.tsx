@@ -4,7 +4,7 @@ import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, minValue, number, object, pipe, string, transform } from "valibot";
+import { array, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
@@ -21,7 +21,7 @@ const SCHEMA = object({
 	noteJumpSpeed: pipe(number(), minValue(0)),
 	startBeatOffset: number(),
 	environmentName: EnvironmentAllNameSchema,
-	colorSchemeName: string(),
+	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),
 	customLabel: pipe(
@@ -50,7 +50,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 			noteJumpSpeed: savedVersion.noteJumpSpeed,
 			startBeatOffset: savedVersion.startBeatOffset,
 			environmentName: savedVersion.environmentName,
-			colorSchemeName: savedVersion.colorSchemeName ?? "",
+			colorSchemeName: savedVersion.colorSchemeName,
 			mappers: savedVersion.mappers ?? [],
 			lighters: savedVersion.lighters ?? [],
 			customLabel: savedVersion.customLabel ?? "",
@@ -153,8 +153,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
 									<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
 								</Form.Row>
-								<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox id={`${bid}.${ctx.name}`} label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
-								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Color Scheme Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox id={`${bid}.${ctx.name}`} creatable label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox id={`${bid}.${ctx.name}`} clearable label="Color Scheme Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
 							</Stack>
 						)}
 					>

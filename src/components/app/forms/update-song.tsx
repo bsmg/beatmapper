@@ -1,7 +1,6 @@
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useParams } from "@tanstack/react-router";
-import { EnvironmentNameSchema, EnvironmentV3NameSchema } from "bsmap";
-import { gtValue, minLength, number, object, pipe, string, transform, union } from "valibot";
+import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileQuery } from "$/components/app/hooks";
@@ -33,7 +32,7 @@ const SCHEMA = object({
 	),
 	previewStartTime: pipe(number()),
 	previewDuration: pipe(number()),
-	environment: union([EnvironmentNameSchema, EnvironmentV3NameSchema]),
+	environment: string(),
 });
 
 function UpdateSongForm() {

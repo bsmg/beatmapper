@@ -45,10 +45,10 @@ export function FieldSelectGroup({ ...rest }: ComponentProps<typeof NativeSelect
 }
 
 export function SelectDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof NativeSelectGroup>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<string>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<string>(delegated);
 
 	return (
-		<Field id={field.name} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
 			<FieldSelectGroup {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);

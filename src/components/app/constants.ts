@@ -59,8 +59,7 @@ interface ColorSchemeListCollectionOptions {
 }
 export function createColorSchemeCollection({ colorSchemeIds }: ColorSchemeListCollectionOptions) {
 	return createListCollection({
-		items: ["", ...colorSchemeIds],
-		itemToString: (item) => (item === "" ? "Unset" : item),
+		items: colorSchemeIds,
 	});
 }
 

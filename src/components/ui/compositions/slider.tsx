@@ -61,10 +61,10 @@ export function Slider({ children, label, marks, unfocusOnPress, ...rest }: Assi
 }
 
 export function SliderDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Slider>, FieldProps>) {
-	const [field, { required, invalid, errorText }] = useFieldData<number[]>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<number[]>(delegated);
 
 	return (
-		<Field id={field.name} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
 			<Slider {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
