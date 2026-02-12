@@ -1,7 +1,7 @@
 import type { Assign } from "@ark-ui/react";
 import { ark } from "@ark-ui/react/factory";
 import { useStore } from "@tanstack/react-form";
-import { type ComponentProps, useMemo } from "react";
+import { type ComponentProps, type MouseEvent, useCallback, useMemo } from "react";
 
 import { Show } from "$/components/ui/atoms";
 import { useFormContext } from "$/components/ui/hooks/form.hooks";
@@ -36,14 +36,22 @@ export function Button({ children, className, disabled, loading, unfocusOnPress,
 	);
 }
 
-export function SubmitButton({ children, ...rest }: ComponentProps<typeof Button>) {
+export function SubmitButton({ children, onClick, disabled, loading, ...rest }: ComponentProps<typeof Button>) {
 	const form = useFormContext();
 
-	const disabled = useStore(form.store, (state) => !state.canSubmit);
-	const loading = useStore(form.store, (state) => state.isSubmitting);
+	const isDisabled = useStore(form.store, (state) => disabled || !state.canSubmit);
+	const isLoading = useStore(form.store, (state) => loading || state.isSubmitting);
+
+	const handleClick = useCallback(
+		(event: MouseEvent<HTMLButtonElement>) => {
+			form.handleSubmit();
+			if (onClick) onClick(event);
+		},
+		[onClick, form.handleSubmit],
+	);
 
 	return (
-		<Button variant="solid" size="md" {...rest} type="submit" loading={loading} disabled={disabled}>
+		<Button variant="solid" size="md" onClick={handleClick} {...rest} loading={isLoading} disabled={isDisabled}>
 			{children ?? "Submit"}
 		</Button>
 	);

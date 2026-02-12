@@ -61,19 +61,24 @@ function UpdateBeatmapForm({ bid }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			dispatch(
-				updateBeatmap({
-					songId: sid,
-					beatmapId: bid,
-					changes: {
-						...value,
-						colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
-						customLabel: value.customLabel === "" ? undefined : value.customLabel,
-					},
-				}),
-			);
+			try {
+				dispatch(
+					updateBeatmap({
+						songId: sid,
+						beatmapId: bid,
+						changes: {
+							...value,
+							colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
+							customLabel: value.customLabel === "" ? undefined : value.customLabel,
+						},
+					}),
+				);
 
-			formApi.reset(value);
+				formApi.reset(value);
+			} catch (error) {
+				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error updating beatmap: See console for more information.` });
+				console.error(error);
+			}
 		},
 	});
 
@@ -167,7 +172,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 						unmountOnExit
 						render={(ctx) => (
 							<CreateBeatmapForm dialog={ctx} onSubmit={handleCopyBeatmap}>
-								{() => "Copy beatmap"}
+								Copy beatmap
 							</CreateBeatmapForm>
 						)}
 					>

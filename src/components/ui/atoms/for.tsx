@@ -37,7 +37,7 @@ export function ForListCollection<T extends CollectionItem>({ collection, childr
 		return collection.items.map((item) => {
 			const value = collection.getItemValue(item);
 
-			if (!value) return null;
+			if (value === null) return null;
 
 			const computed: Parameters<typeof children>[1] = {
 				value,

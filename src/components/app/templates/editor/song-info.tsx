@@ -71,7 +71,7 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 							unmountOnExit
 							render={(ctx) => (
 								<CreateBeatmapForm dialog={ctx} onSubmit={handleCreate}>
-									{() => "Create beatmap"}
+									Create beatmap
 								</CreateBeatmapForm>
 							)}
 						>

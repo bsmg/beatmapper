@@ -4,33 +4,24 @@ import { Fragment } from "react/jsx-runtime";
 
 import { APP_TOASTER, MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { FileUpload, List } from "$/components/ui/compositions";
-import { addSongFromFile } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectProcessingImport, selectSongIds } from "$/store/selectors";
 import { Stack, Text } from "$:styled-system/jsx";
 
 interface Props {
 	dialog?: UseDialogContext;
+	onAccept: (file: File) => void;
 }
-function ImportMapForm({ dialog }: Props) {
-	const dispatch = useAppDispatch();
-	const songIds = useAppSelector(selectSongIds);
-	const isProcessingImport = useAppSelector(selectProcessingImport);
-
-	const handleFileAccept = async (details: FileUploadFileAcceptDetails) => {
-		for (const file of details.files) {
-			try {
-				await dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } }));
-			} catch (err) {
-				console.error("Could not import map:", err);
-				return APP_TOASTER.create({
-					id: "import-map-fail",
-					type: "error",
-					description: "Could not import map. See console for more info.",
-				});
-			}
-		}
+function ImportMapForm({ dialog, onAccept }: Props) {
+	const handleFileAccept = (details: FileUploadFileAcceptDetails) => {
 		if (dialog) dialog.setOpen(false);
+
+		try {
+			for (const file of details.files) {
+				onAccept(file);
+			}
+		} catch (error) {
+			APP_TOASTER.error({ description: error instanceof Error ? error.message : "Could not import map. See console for more info." });
+			console.error(error);
+		}
 	};
 
 	return (
@@ -50,7 +41,7 @@ function ImportMapForm({ dialog }: Props) {
 				<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
 					Drag and drop (or click to select) the .zip file:
 				</Text>
-				<FileUpload label="Map Archive File" disabled={isProcessingImport} accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept} />
+				<FileUpload label="Map Archive File" accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept} />
 			</Stack>
 		</Fragment>
 	);

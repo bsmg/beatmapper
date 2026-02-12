@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCustomColors } from "$/store/selectors";
 import { ColorSchemeKey } from "$/types";
 import { styled, VStack } from "$:styled-system/jsx";
-import { vstack, wrap } from "$:styled-system/patterns";
+import { wrap } from "$:styled-system/patterns";
 
 const BEATMAP_COLOR_KEY_RENAME = {
 	[ColorSchemeKey.SABER_LEFT]: "Left Saber",
@@ -23,7 +23,7 @@ const BEATMAP_COLOR_KEY_RENAME = {
 	[ColorSchemeKey.BOOST_WHITE]: "Boost W",
 } as const;
 
-function ElementControl({ element }: { element: ColorSchemeKey }) {
+function CustomColorSwatch({ element }: { element: ColorSchemeKey }) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
 
 	const dispatch = useAppDispatch();
@@ -40,20 +40,18 @@ function ElementControl({ element }: { element: ColorSchemeKey }) {
 	}, [active, deferredColor, dispatch, sid, element]);
 
 	return (
-		<Cell>
-			<VStack gap={2}>
-				<ColorPicker size="lg" value={parseColor(color ?? "black")} onValueChange={(x) => setColor(`#${x.value.toHexInt().toString(16)}`)} />
-				<Heading rank={3}>{BEATMAP_COLOR_KEY_RENAME[element]}</Heading>
-				<Switch checked={active} onCheckedChange={(x) => setActive(!!x.checked)} />
-			</VStack>
-		</Cell>
+		<VStack gap={2}>
+			<ColorPicker size="lg" value={parseColor(color ?? "black")} onValueChange={(x) => setColor(`#${x.value.toHexInt().toString(16)}`)} />
+			<Heading rank={3}>{BEATMAP_COLOR_KEY_RENAME[element]}</Heading>
+			<Switch checked={active} onCheckedChange={(x) => setActive(!!x.checked)} />
+		</VStack>
 	);
 }
 
 function CustomColorSettings() {
 	return (
 		<Row>
-			<For each={Object.values(ColorSchemeKey)}>{(element) => <ElementControl key={element} element={element} />}</For>
+			<For each={Object.values(ColorSchemeKey)}>{(element) => <CustomColorSwatch key={element} element={element} />}</For>
 		</Row>
 	);
 }
@@ -61,13 +59,10 @@ function CustomColorSettings() {
 const Row = styled("div", {
 	base: wrap.raw({
 		paddingBlock: 4,
-	}),
-});
-
-const Cell = styled("div", {
-	base: vstack.raw({
-		gap: 3,
-		flex: 1,
+		"& > *": {
+			width: "100%",
+			flex: 1,
+		},
 	}),
 });
 

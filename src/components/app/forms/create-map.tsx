@@ -53,42 +53,30 @@ function CreateMapForm({ dialog }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
-			if (!songFile) {
-				return APP_TOASTER.create({
-					type: "error",
-					description: "Please select a song file first",
-				});
-			}
-			if (!coverArtFile) {
-				return APP_TOASTER.create({
-					type: "error",
-					description: "Please select a cover art file first",
-				});
-			}
-
-			const songId = createSongId(value);
-			const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
-
-			// Song IDs must be unique, and song IDs are generated from the name.
-			// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
-			if (currentSongIds.some((id) => id === songId)) {
-				return APP_TOASTER.create({
-					id: "song-already-exists",
-					type: "error",
-					description: "You already have a song with this name. Please choose a unique name.",
-				});
-			}
-
 			try {
-				dispatch(addSong({ songId, beatmapId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, songFile, coverArtFile, username: username, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
+				if (!songFile) {
+					throw new Error("Please provide a valid song file.");
+				}
+				if (!coverArtFile) {
+					throw new Error("Please provide a valid cover art file.");
+				}
+
+				const songId = createSongId(value);
+
+				// Song IDs must be unique, and song IDs are generated from the name.
+				// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
+				if (currentSongIds.some((id) => id === songId)) {
+					throw new Error("You already have a song with this name. Please choose a unique name.");
+				}
+
+				const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
+
+				dispatch(addSong({ songId, beatmapId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset ?? 0, songFile, coverArtFile, username: username, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
 
 				if (dialog) dialog.setOpen(false);
-			} catch (err) {
-				console.error("Could not save files to local storage", err);
-				return APP_TOASTER.create({
-					description: "Error creating map. See console for more information.",
-					type: "error",
-				});
+			} catch (error) {
+				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error creating map: See console for more information.` });
+				console.error("Could not save files to local storage", error);
 			}
 		},
 	});
@@ -115,7 +103,7 @@ function CreateMapForm({ dialog }: Props) {
 				</Form.Row>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
 				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
-				<Form.Submit>Create</Form.Submit>
+				<Form.Submit>Create new map</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>
 	);
