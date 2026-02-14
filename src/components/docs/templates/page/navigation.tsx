@@ -3,13 +3,13 @@ import { useMemo } from "react";
 
 import { RouterLink } from "$/components/ui/compositions";
 import { docs } from "$:content";
-import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
+import { Divider, HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 interface NavProps {
 	direction: "previous" | "next";
 	item?: { id: string; title: string };
 }
-function DocsNavigationBlock({ direction, item }: NavProps) {
+function NavigationBlock({ direction, item }: NavProps) {
 	const formattedSubtitle = useMemo(() => (direction === "previous" ? "« PREVIOUS" : "NEXT »"), [direction]);
 
 	return (
@@ -38,7 +38,7 @@ interface Props {
 	prev?: string;
 	next?: string;
 }
-function PreviousNextBar({ prev: prevId, next: nextId }: Props) {
+function DocsNavigation({ prev: prevId, next: nextId }: Props) {
 	const previous = useMemo(() => docs.find((page) => page.id === prevId), [prevId]);
 	const next = useMemo(() => docs.find((page) => page.id === nextId), [nextId]);
 
@@ -46,17 +46,11 @@ function PreviousNextBar({ prev: prevId, next: nextId }: Props) {
 		<Stack gap={2}>
 			<Divider color={"border.muted"} />
 			<HStack gap={2} justify={"space-between"}>
-				<DocsNavigationBlock direction="previous" item={previous} />
-				<DocsNavigationBlock direction="next" item={next} />
+				<NavigationBlock direction="previous" item={previous} />
+				<NavigationBlock direction="next" item={next} />
 			</HStack>
 		</Stack>
 	);
 }
 
-const Divider = styled("hr", {
-	base: {
-		borderColor: "border.muted",
-	},
-});
-
-export default PreviousNextBar;
+export default DocsNavigation;

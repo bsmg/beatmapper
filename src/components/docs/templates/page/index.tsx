@@ -1,9 +1,11 @@
 import { type PropsWithChildren, useMemo } from "react";
 
-import { DocsNavigationBlock, DocsProse, DocsTableOfContents } from "$/components/docs/compositions";
 import { docs } from "$:content";
-import { Stack, styled } from "$:styled-system/jsx";
+import { Divider, Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
+import DocsTableOfContents from "../toc";
+import DocsNavigation from "./navigation";
+import DocsProse from "./prose";
 
 interface Props extends PropsWithChildren {
 	id: string;
@@ -12,6 +14,7 @@ interface Props extends PropsWithChildren {
 
 function DocsPageLayout({ id, container }: Props) {
 	const entry = useMemo(() => docs.find((x) => x.id === id), [id]);
+
 	if (!entry) {
 		throw new Error("No doc found at this route.");
 	}
@@ -24,12 +27,10 @@ function DocsPageLayout({ id, container }: Props) {
 			</Stack>
 			<Divider color={"border.muted"} />
 			<ContentWrapper>
-				<MainContent>
-					<DocsProse code={entry.code} />
-				</MainContent>
+				<DocsProse code={entry.code} />
 				<DocsTableOfContents container={container} toc={entry.tableOfContents} />
 			</ContentWrapper>
-			{(entry.prev || entry.next) && <DocsNavigationBlock prev={entry.prev} next={entry.next} />}
+			{(entry.prev || entry.next) && <DocsNavigation prev={entry.prev} next={entry.next} />}
 		</Wrapper>
 	);
 }
@@ -61,12 +62,6 @@ const Subtitle = styled("div", {
 	},
 });
 
-const Divider = styled("hr", {
-	base: {
-		borderColor: "border.muted",
-	},
-});
-
 const ContentWrapper = styled("div", {
 	base: stack.raw({
 		align: "start",
@@ -74,13 +69,6 @@ const ContentWrapper = styled("div", {
 		flex: 1,
 		direction: { base: "column-reverse", lg: "row" },
 	}),
-});
-
-const MainContent = styled("div", {
-	base: {
-		width: "100%",
-		flex: 1,
-	},
 });
 
 export default DocsPageLayout;

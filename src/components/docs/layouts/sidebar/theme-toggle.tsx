@@ -3,8 +3,7 @@ import { MoonIcon, SunIcon } from "lucide-react";
 import { useEffect } from "react";
 
 import { Switch } from "$/components/ui/compositions";
-import { styled } from "$:styled-system/jsx";
-import { hstack } from "$:styled-system/patterns";
+import { HStack, styled } from "$:styled-system/jsx";
 
 function ThemeToggle() {
 	const ctx = useSwitch({ defaultChecked: localStorage.getItem("dark") === "true" });
@@ -23,10 +22,10 @@ function ThemeToggle() {
 	);
 }
 
-const Wrapper = styled("div", {
-	base: hstack.raw({
+const Wrapper = styled(HStack, {
+	base: {
 		_icon: { cursor: "pointer" },
-	}),
+	},
 });
 
 export default ThemeToggle;

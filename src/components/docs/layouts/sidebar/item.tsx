@@ -18,7 +18,7 @@ const NavLinkWrapper = styled("a", {
 		height: "35px",
 		textStyle: "link",
 		colorPalette: "pink",
-		color: { base: "fg.muted", _hover: "fg.default", _current: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
+		color: { base: "fg.muted", _hover: "fg.default", _currentPage: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
 		fontWeight: 500,
 		fontSize: "16px",
 	},

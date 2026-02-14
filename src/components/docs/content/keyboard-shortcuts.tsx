@@ -1,5 +1,5 @@
 import { PlusIcon } from "lucide-react";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 
 import { For } from "$/components/ui/atoms";
 import { Shortcut } from "$/components/ui/compositions";
@@ -27,7 +27,9 @@ function Or({ children = "or" }) {
 	return <OrWrapper>— {children} —</OrWrapper>;
 }
 
-function Row({ row, separator }: { row?: string[]; separator?: string }) {
+function Row({ row }: { row: string[] }): ReactNode;
+function Row({ separator }: { separator: string | undefined }): ReactNode;
+function Row({ row, separator }: { row?: string[]; separator?: string | undefined }): ReactNode {
 	if (!row || separator) {
 		return (
 			<IconRow>

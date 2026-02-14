@@ -1,19 +1,19 @@
-import { ExternalLinkIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { Assign } from "@ark-ui/react";
+import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
 
-import { For } from "$/components/ui/atoms";
 import type { Member } from "$/types";
 import type { Doc } from "$:content";
-import { HStack, styled } from "$:styled-system/jsx";
-import { hstack, stack } from "$:styled-system/patterns";
+import { styled } from "$:styled-system/jsx";
+import { stack } from "$:styled-system/patterns";
+import { Provider } from "./context";
 
 type TocEntry = Member<Doc["tableOfContents"]>;
 
-// TODO: fix this container hell
-function useActiveHeading(headings: TocEntry[], containerElement: HTMLElement | null) {
+function useToc(headings: TocEntry[], containerElement: HTMLElement | null) {
 	const scrollContainerRef = useRef<HTMLElement | null>(null);
-	const [activeHeadingId, setActiveHeading] = useState<string | null>(null);
 	const headingElementsRef = useRef<{ id: string; element: HTMLElement | null }[]>([]);
+
+	const [activeHeadingId, setActiveHeading] = useState<string | null>(null);
 
 	useEffect(() => {
 		headingElementsRef.current = headings.map((entry) => ({
@@ -86,36 +86,20 @@ function useActiveHeading(headings: TocEntry[], containerElement: HTMLElement | 
 		};
 	}, [containerElement, handleScroll]);
 
-	return activeHeadingId;
+	return { activeHeadingId };
 }
 
 interface Props {
-	container: HTMLElement | null;
 	toc: TocEntry[];
+	container: HTMLElement | null;
 }
-function DocsTableOfContents({ container, toc }: Props) {
-	const activeHeadingId = useActiveHeading(toc, container);
+function DocsTocRoot({ toc, container, children }: Assign<PropsWithChildren, Props>) {
+	const tocContext = useToc(toc, container);
 
 	return (
-		<Wrapper>
-			<Title>Table of Contents</Title>
-			<HeadingLink href="#" aria-current={activeHeadingId === null} onClick={() => container?.scrollTo({ top: 0 })}>
-				Introduction
-			</HeadingLink>
-			<For each={toc}>
-				{(entry) => (
-					<HeadingLink key={entry.url} href={entry.url} aria-current={entry.url === activeHeadingId}>
-						{entry.title}
-					</HeadingLink>
-				)}
-			</For>
-			<GithubLink href={`https://github.com/bsmg/beatmapper/edit/master/src/content${location.pathname}/index.mdx`}>
-				<HStack gap={1}>
-					Suggest an edit
-					<ExternalLinkIcon size={15} />
-				</HStack>
-			</GithubLink>
-		</Wrapper>
+		<Provider value={tocContext}>
+			<Wrapper>{children}</Wrapper>
+		</Provider>
 	);
 }
 
@@ -131,35 +115,4 @@ const Wrapper = styled("div", {
 	}),
 });
 
-const Title = styled("h4", {
-	base: {
-		fontWeight: "bold",
-		borderBottomWidth: "sm",
-		borderColor: "border.default",
-		paddingBottom: 1,
-		marginBottom: 1,
-	},
-});
-
-const HeadingLink = styled("a", {
-	base: {
-		textStyle: "link",
-		colorPalette: "pink",
-		color: { base: "fg.muted", _hover: "fg.default", _current: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
-		paddingBlock: 1,
-	},
-});
-
-const GithubLink = styled("a", {
-	base: hstack.raw({
-		textStyle: "link",
-		fontWeight: "bold",
-		color: "fg.default",
-		borderTopWidth: "sm",
-		borderColor: "border.default",
-		paddingTop: 1,
-		marginTop: 1,
-	}),
-});
-
-export default DocsTableOfContents;
+export default DocsTocRoot;
