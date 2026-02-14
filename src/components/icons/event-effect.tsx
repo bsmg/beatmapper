@@ -1,3 +1,6 @@
+import type { Assign } from "@ark-ui/react";
+import type { LucideProps } from "lucide-react";
+
 import { EventTool } from "$/types";
 import { token } from "$:styled-system/tokens";
 
@@ -18,10 +21,8 @@ function getPathForTool(tool: EventTool) {
 
 interface Props {
 	tool: EventTool;
-	color?: string;
 }
-
-function EventToolIcon({ tool, color }: Props) {
+function EventToolIcon({ tool, color }: Assign<LucideProps, Props>) {
 	return (
 		<svg role="presentation" width={16} height={16} viewBox="0 0 32 32" fill="none">
 			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke={token.var("colors.border.default")} />

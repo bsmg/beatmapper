@@ -1,11 +1,7 @@
 import type { LucideProps } from "lucide-react";
 import { type CSSProperties, useMemo } from "react";
 
-interface Props extends LucideProps {
-	color?: string;
-}
-
-function ObstacleIcon({ color, size }: Props) {
+function ObstacleIcon({ color, size }: LucideProps) {
 	const style = useMemo(() => ({ "--color": color }) as CSSProperties, [color]);
 
 	const palette = useMemo(

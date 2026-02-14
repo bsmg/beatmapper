@@ -1,9 +1,7 @@
 import type { LucideProps } from "lucide-react";
 import { type CSSProperties, useMemo } from "react";
 
-interface Props extends LucideProps {}
-
-function BlockIcon({ color, size = 16 }: Props) {
+function BlockIcon({ color, size = 16 }: LucideProps) {
 	const style = useMemo(() => ({ "--color": color }) as CSSProperties, [color]);
 
 	return (
