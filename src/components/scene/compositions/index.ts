@@ -1,5 +1,4 @@
 export { default as AmbientLight } from "./ambient";
-export { default as BeatMarker } from "./beat-marker";
 export { BloomWrapper as Bloom, NoBloomWrapper as NoBloom } from "./bloom";
 export { default as Runway } from "./environment/runway";
 export { default as BombNote } from "./note/bomb-note";

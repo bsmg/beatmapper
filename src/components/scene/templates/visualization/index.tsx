@@ -13,7 +13,7 @@ import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObst
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
 import type { App } from "$/types";
-import EditorBeatMarkers from "./markers";
+import EditorBeatMarkers from "./beat-markers";
 import EditorNotes from "./notes";
 import EditorObstacles from "./obstacles";
 import EditorPlacementGrid from "./placement-grid";
@@ -136,7 +136,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	return (
 		<Fragment>
 			<animated.group position-z={trackMover.zPosition}>
-				{interactive && <EditorBeatMarkers />}
+				<EditorBeatMarkers beatDepth={beatDepth} interactive={interactive} />
 				<EditorNotes beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...notes} />
 				<EditorObstacles beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...obstacles} />
 			</animated.group>
