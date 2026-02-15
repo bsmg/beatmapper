@@ -1,12 +1,12 @@
+import { animated } from "@react-spring/three";
 import { type ThreeEvent, useThree } from "@react-three/fiber";
-import { useParams } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { Fragment, useCallback, useRef } from "react";
 import type { Object3D } from "three";
 
-import { TrackMover } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { useControls, useObjectPlacement } from "$/components/scene/hooks";
+import { useTrackMover } from "$/components/scene/hooks/use-track-mover";
 import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObstacle, selectNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
@@ -29,8 +29,6 @@ interface Props {
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
-
 	useControls();
 
 	const { raycaster, scene } = useThree((state) => state);
@@ -39,6 +37,8 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
+
+	const [trackMover] = useTrackMover({ beatDepth });
 
 	const notes = useObjectPlacement<App.IBaseNote>({
 		interactive,
@@ -135,11 +135,11 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 
 	return (
 		<Fragment>
-			<TrackMover beatDepth={beatDepth}>
+			<animated.group position-z={trackMover.zPosition}>
 				{interactive && <EditorBeatMarkers />}
 				<EditorNotes beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...notes} />
 				<EditorObstacles beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={interactive} {...obstacles} />
-			</TrackMover>
+			</animated.group>
 			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} onCellPointerDown={handleCellPointerDown} onCellWheel={handleCellWheel} />}
 		</Fragment>
 	);

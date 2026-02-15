@@ -7,4 +7,3 @@ export { default as ColorNote } from "./note/color-note";
 export * from "./note/helpers";
 export { default as Obstacle } from "./obstacle";
 export * from "./obstacle/helpers";
-export { default as TrackMover } from "./track-mover";
