@@ -3,7 +3,7 @@ import { type ComponentProps, forwardRef, useCallback } from "react";
 import { Provider, ReactReduxContext } from "react-redux";
 import { PCFSoftShadowMap } from "three";
 
-const ReduxForwardingCanvas = forwardRef<HTMLCanvasElement, ComponentProps<"div">>(({ children, ...forwarded }, ref) => {
+export const ReduxForwardingCanvas = forwardRef<HTMLCanvasElement, ComponentProps<"div">>(({ children, ...forwarded }, ref) => {
 	const handleCreated = useCallback(({ gl, camera, raycaster }: RootState) => {
 		gl.shadowMap.enabled = true;
 		gl.shadowMap.type = PCFSoftShadowMap;
@@ -17,15 +17,11 @@ const ReduxForwardingCanvas = forwardRef<HTMLCanvasElement, ComponentProps<"div"
 			{(ctx) => {
 				if (!ctx) return null;
 				return (
-					<span ref={ref}>
-						<Canvas {...forwarded} onContextMenu={(ev) => ev.preventDefault()} onCreated={handleCreated}>
-							<Provider store={ctx.store}>{children}</Provider>
-						</Canvas>
-					</span>
+					<Canvas ref={ref} {...forwarded} onContextMenu={(ev) => ev.preventDefault()} onCreated={handleCreated}>
+						<Provider store={ctx.store}>{children}</Provider>
+					</Canvas>
 				);
 			}}
 		</ReactReduxContext.Consumer>
 	);
 });
-
-export default ReduxForwardingCanvas;

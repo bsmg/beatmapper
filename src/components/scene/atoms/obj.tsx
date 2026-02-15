@@ -1,3 +1,4 @@
+import type { Assign } from "@ark-ui/react";
 import { Clone } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
 import type { ComponentProps } from "react";
@@ -11,7 +12,10 @@ export function useOBJ(path: string): Group {
 useOBJ.preload = (path: string) => useLoader.preload(OBJLoader, path);
 useOBJ.clear = (input: string | string[]) => useLoader.clear(OBJLoader, input);
 
-export function Obj({ path, ...props }: { path: Parameters<typeof useOBJ>[0] } & Omit<ComponentProps<typeof Clone>, "object">) {
+export interface ObjProps {
+	path: Parameters<typeof useOBJ>[0];
+}
+export function Obj({ path, ...props }: Assign<Omit<ComponentProps<typeof Clone>, "object">, ObjProps>) {
 	const obj = useOBJ(path);
 	const object = obj.children[0];
 	return <Clone {...props} object={object} />;
