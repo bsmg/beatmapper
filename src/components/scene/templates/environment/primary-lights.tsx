@@ -1,10 +1,11 @@
+import { animated } from "@react-spring/three";
 import { Fragment } from "react";
 
 import { TubeLight } from "$/components/scene/compositions/environment";
-import { LightMaterial } from "$/components/scene/compositions/materials";
 import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { useEventTrack, useLightProps } from "$/components/scene/hooks";
 import { convertDegreesToRadians } from "$/utils";
+import { useLightSpring } from "../../hooks/use-light-spring";
 
 const Y_POSITION = 5;
 const Z_POSITION = -85;
@@ -20,17 +21,18 @@ function PrimaryLights() {
 	const [lastEvent] = useEventTrack({ trackId: 4 });
 
 	const light = useLightProps({ lastEvent });
+	const { spring: lightSpring, ...lightProps } = useLightSpring({ light });
 
 	return (
 		<Fragment>
 			<group position-y={Y_POSITION} position-z={Z_POSITION}>
 				<mesh position-x={CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={-CHEVRON_ANGLE}>
 					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial light={light} />
+					<animated.meshLambertMaterial attach="material" {...lightSpring} {...lightProps} />
 				</mesh>
 				<mesh position-x={-CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={CHEVRON_ANGLE}>
 					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial light={light} />
+					<animated.meshLambertMaterial attach="material" {...lightSpring} {...lightProps} />
 				</mesh>
 			</group>
 			{/* Side parallel-to-platform lasers */}

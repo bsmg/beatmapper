@@ -13,7 +13,7 @@ export function useTrackMover({ beatDepth }: UseTrackMoverOptions) {
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const animateBlockMotion = useAppSelector(selectAnimateTrack);
 
-	return useSpring(() => {
+	return useSpring<{ zPosition: number }>(() => {
 		return {
 			zPosition: (cursorPositionInBeats ?? 0) * beatDepth,
 			immediate: !animateBlockMotion,

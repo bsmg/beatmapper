@@ -2,8 +2,8 @@ import { animated } from "@react-spring/three";
 import { type ComponentProps, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
-import { LightMaterial } from "$/components/scene/compositions/materials";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
+import { useLightSpring } from "$/components/scene/hooks/use-light-spring";
 
 interface ModelProps {
 	size: number;
@@ -16,6 +16,8 @@ function RingPeg({ size, thickness, color, zRotation, light }: ModelProps) {
 	const length = useMemo(() => size, [size]);
 	const width = useMemo(() => thickness * 1.5, [thickness]);
 
+	const { spring, ...lightProps } = useLightSpring({ light });
+
 	return (
 		<group rotation={[0, 0, zRotation]}>
 			<mesh position={[0, length / 2 - width / 2, 0]}>
@@ -24,7 +26,7 @@ function RingPeg({ size, thickness, color, zRotation, light }: ModelProps) {
 			</mesh>
 			<mesh position={[0, length / 2 - width / 2 - thickness - 0.1, 0]} rotation={[Math.PI * 0.5, 0, 0]}>
 				<planeGeometry attach="geometry" args={[length * 0.125, thickness * 0.375]} />
-				<LightMaterial light={light} />
+				<animated.meshLambertMaterial attach="material" {...spring} {...lightProps} />
 			</mesh>
 		</group>
 	);

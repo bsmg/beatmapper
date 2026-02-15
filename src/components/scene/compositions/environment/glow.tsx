@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { AdditiveBlending, Color, FrontSide } from "three";
 
 import { glowFragmentShader, glowVertexShader } from "$/assets";
-import { useLightSpring } from "$/components/scene/compositions/materials/light";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
+import { useLightSpring } from "$/components/scene/hooks/use-light-spring";
 import type { MeshProps } from "$/types/vendor";
 import { normalize } from "$/utils";
 
@@ -17,7 +17,7 @@ interface Props extends MeshProps {
 function Glow({ size, light, bloom: isBlooming, ...rest }: Props) {
 	const { camera } = useThree();
 
-	const [spring] = useLightSpring({ light });
+	const { spring } = useLightSpring({ light });
 
 	// When blooming, the `c` uniform makes it white and obnoxious, so tune the effect down in this case.
 	const maxCValue = useMemo(() => (isBlooming ? 0.2 : 0.001), [isBlooming]);

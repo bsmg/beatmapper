@@ -1,5 +1,4 @@
-import { animated, type SpringConfig, useSpring } from "@react-spring/three";
-import { type ComponentProps, useMemo } from "react";
+import { type SpringConfig, useSpring } from "@react-spring/three";
 
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import type { UseLightPropsReturn } from "$/components/scene/hooks";
@@ -77,28 +76,26 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 //
 // This feels hacky, but I don't know of a better way.
 
-interface UseLightSpringOptions {
+export interface UseLightSpringOptions {
 	light: UseLightPropsReturn;
 }
 export function useLightSpring({ light }: UseLightSpringOptions) {
 	const isPlaying = useAppSelector(selectPlaying);
+	const isBloomEnabled = useAppSelector(selectBloomEnabled);
+
 	const lightSpringConfig = useSpringConfigForLight({ ...light });
 
 	useUpdateEffect(() => {
 		if (!isPlaying) return;
-
 		const statusShouldReset = light.effect === App.BasicEventEffect.FLASH || light.effect === App.BasicEventEffect.FADE;
 		lightSpringConfig.reset = statusShouldReset;
 	}, [light.lastEventId ?? null]);
 
-	return useSpring<{ emissive: string; emissiveIntensity: number; opacity: number }>(() => lightSpringConfig, [light]);
-}
+	const [spring] = useSpring<{ emissive: string; emissiveIntensity: number; opacity: number }>(() => lightSpringConfig, [light, isBloomEnabled]);
 
-export function LightMaterial({ light, ...rest }: ComponentProps<typeof animated.meshLambertMaterial> & UseLightSpringOptions) {
-	const isBloomEnabled = useAppSelector(selectBloomEnabled);
-	const materialColor = useMemo(() => (isBloomEnabled ? "#ccc" : "#444"), [isBloomEnabled]);
-
-	const [spring] = useLightSpring({ light });
-
-	return <animated.meshLambertMaterial {...rest} emissive={spring.emissive} emissiveIntensity={spring.emissiveIntensity} opacity={spring.opacity} color={materialColor} attach="material" transparent={true} />;
+	return {
+		spring: spring,
+		color: isBloomEnabled ? "#ccc" : "#444",
+		transparent: true,
+	};
 }
