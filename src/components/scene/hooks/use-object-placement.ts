@@ -108,7 +108,7 @@ export function useObjectPlacement<T>({ interactive, selectItemSelected, onItemS
 	);
 
 	const handlePointerOut = useCallback(
-		(event: PointerEvent) => {
+		(event: PointerEvent, _data: T) => {
 			if (!interactive) return;
 			event.stopPropagation();
 		},

@@ -1,17 +1,14 @@
 import { useContext, useMemo } from "react";
 
-import { Obstacle, resolveDimensionsForObstacle, resolvePositionForObstacle } from "$/components/scene/compositions";
-import { FUDGE_FACTOR, SONG_OFFSET } from "$/components/scene/constants";
+import { Obstacle } from "$/components/scene/compositions";
+import { SONG_OFFSET } from "$/components/scene/constants";
+import { resolvePositionForObstacle } from "$/components/scene/helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectDefaultObstacleDuration } from "$/store/selectors";
 import type { IGrid, ObjectPlacementMode } from "$/types";
 import type { GroupProps } from "$/types/vendor";
 import { Context } from "./context";
-
-// hack: a tiny bit of fudge factor is added to the z position, so that the grid cells are still interactable while resizing the obstacle.
-// that way, you're still able to update the mouseOverAt property without the hitbox of the obstacle interfering.
-const Z_POSITION = SONG_OFFSET - FUDGE_FACTOR;
 
 interface Props extends GroupProps {
 	grid: IGrid;
@@ -37,9 +34,12 @@ function TentativeObstacle({ mode, grid, color, ...rest }: Props) {
 	if (!data) return;
 
 	const position = resolvePositionForObstacle(data, { beatDepth });
-	const dimensions = resolveDimensionsForObstacle(data, { beatDepth });
 
-	return <Obstacle {...rest} data={data} position-x={position[0]} position-y={position[1]} position-z={position[2] + Z_POSITION} dimensions={dimensions} color={color} />;
+	return (
+		<group position-z={SONG_OFFSET}>
+			<Obstacle {...rest} position={position} data={data} beatDepth={beatDepth} color={color} />
+		</group>
+	);
 }
 
 export default TentativeObstacle;

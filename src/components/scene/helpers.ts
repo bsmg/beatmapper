@@ -2,9 +2,9 @@ import { resolveNoteAngle } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import type { Vector3Tuple } from "three";
 
-import type { RequiredKeys } from "$/types";
+import type { App, RequiredKeys } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
-import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
+import { BLOCK_CELL_SIZE, FUDGE_FACTOR, SONG_OFFSET } from "./constants";
 
 export interface PositionResolverOptions {
 	beatDepth?: number;
@@ -44,4 +44,42 @@ export function resolveRotationForNote<T extends { direction: number; angleOffse
 		return convertDegreesToRadians(patchedAngle);
 	}
 	return convertDegreesToRadians(resolveNoteAngle(object.direction) + object.angleOffset);
+}
+
+export function resolvePositionForObstacle<T extends App.IObstacle>(data: T, { beatDepth }: Required<PositionResolverOptions>) {
+	const position = resolvePositionForGridObject(data, { beatDepth });
+
+	// ----------- X ------------
+	const width = data.width >= 1000 || data.width <= -1000 ? data.width / 1000 - 1 : data.width;
+	position[0] += width * (BLOCK_CELL_SIZE / 2) - BLOCK_CELL_SIZE / 2;
+	// ----------- Y ------------
+	const height = data.height >= 1000 || data.height <= -1000 ? data.height / 1000 - 1 : data.height;
+	position[1] += height * (BLOCK_CELL_SIZE / 2) - BLOCK_CELL_SIZE;
+	// ----------- Z ------------
+	position[2] -= (data.duration * beatDepth) / 2 + FUDGE_FACTOR;
+
+	return position;
+}
+
+export function resolveDimensionsForObstacle<T extends App.IObstacle>(data: T, { beatDepth }: Required<PositionResolverOptions>) {
+	const dimensions = { width: 0, height: 0, depth: 0 };
+
+	// ----------- WIDTH ------------
+	if (data.width >= 1000 || data.width <= -1000) {
+		dimensions.width = (data.width / 1000 - 1) * BLOCK_CELL_SIZE;
+	} else {
+		dimensions.width = data.width * BLOCK_CELL_SIZE;
+	}
+	// ----------- HEIGHT ------------
+	if (data.height >= 1000 || data.height <= -1000) {
+		dimensions.height = (data.height / 1000 - 1) * BLOCK_CELL_SIZE;
+	} else {
+		dimensions.height = data.height * BLOCK_CELL_SIZE;
+	}
+	// ----------- DEPTH ------------
+	dimensions.depth = data.duration * beatDepth;
+	// We don't want to allow invisible / 0-depth walls
+	if (dimensions.depth === 0) dimensions.depth = 0.01;
+
+	return { width: dimensions.width, height: dimensions.height, depth: dimensions.depth };
 }

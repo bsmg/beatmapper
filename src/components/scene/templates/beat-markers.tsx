@@ -8,9 +8,8 @@ import { selectDurationInBeats } from "$/store/selectors";
 
 interface Props {
 	beatDepth: number;
-	interactive?: boolean;
 }
-function EditorBeatMarkers({ beatDepth, interactive }: Props) {
+function EditorBeatMarkers({ beatDepth }: Props) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
 
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
@@ -19,8 +18,6 @@ function EditorBeatMarkers({ beatDepth, interactive }: Props) {
 		const subdivisions = 4;
 		return Array.from({ length: Math.ceil((durationInBeats ?? 0) * subdivisions) + 1 }, (_, i) => i / subdivisions);
 	}, [durationInBeats]);
-
-	if (!interactive) return null;
 
 	return (
 		<BeatMarkers.Root marks={marks}>

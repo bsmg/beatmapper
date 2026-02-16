@@ -11,17 +11,16 @@ interface Props {
 	mode: ObjectPlacementMode;
 	color: string;
 }
-function TentativeNote({ mode, grid: gridSize, color, ...rest }: Props) {
+function TentativeNote({ mode, grid, color, ...rest }: Props) {
 	const { cellDownAt, direction } = useContext(Context);
 
 	const data = useMemo(() => {
 		if (!cellDownAt || direction === null) return null;
 		return {
-			...createColorNoteFromMouseEvent(mode, cellDownAt, gridSize, direction),
-			time: 0,
+			...createColorNoteFromMouseEvent(mode, cellDownAt, grid, direction),
 			tentative: true,
 		};
-	}, [mode, cellDownAt, gridSize, direction]);
+	}, [mode, cellDownAt, grid, direction]);
 
 	if (!data) return null;
 
