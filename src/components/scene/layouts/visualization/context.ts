@@ -11,8 +11,8 @@ export const Context = createContext<IVisualizationContext | null>(null);
 export const Provider = Context.Provider;
 export const Consumer = Context.Consumer as ReactConsumer<IVisualizationContext>;
 
-export const useVisualizationContext = () => {
+export function useVisualizationContext() {
 	const context = useContext(Context);
 	if (!context) throw new Error("Missing provider.");
 	return context;
-};
+}

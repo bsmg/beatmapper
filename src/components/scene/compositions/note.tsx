@@ -14,17 +14,16 @@ export interface BaseNoteProps<T extends App.IBaseNote> {
 	metalness?: number;
 	roughness?: number;
 	transparent?: boolean;
-	// biome-ignore lint/suspicious/noExplicitAny: react three fiber types are wonky
-	children?: (inherited: any) => ReactNode;
+	children?: (data: T, ctx: { transparent: boolean } & Pick<ComponentProps<typeof Obj>, "onPointerDown" | "onPointerOver" | "onPointerOut" | "onWheel">) => ReactNode;
 }
 
-function BaseNote<T extends App.IBaseNote>({ path, children, data, color, metalness, roughness, transparent, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
+function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rotation, scale, color, metalness, roughness, transparent, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
 	return (
-		<group userData={data}>
-			<Obj {...rest} path={path} castShadow scale={0.5} onPointerDown={onPointerDown} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onWheel={onWheel}>
+		<group userData={data} position={position} rotation={rotation} scale={scale}>
+			<Obj castShadow scale={0.5} {...rest} path={path}>
 				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : transparent ? 0.25 : 1} />
 			</Obj>
-			{children?.({ ...rest, transparent, onPointerDown, onPointerOver, onPointerOut, onWheel })}
+			{children?.(data, { ...rest, transparent: !!transparent })}
 		</group>
 	);
 }
@@ -65,8 +64,8 @@ export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote
 	return (
 		<BaseNote {...rest} data={data} path={url} rotation-z={rotation} metalness={0.5} roughness={0.4}>
 			{/* Fake flowing light from within */}
-			{({ position, "rotation-z": rotation, transparent }) => (
-				<mesh position={position} rotation-z={rotation}>
+			{(_, { transparent, onPointerDown, onPointerOut, onPointerOver, onWheel }) => (
+				<mesh position-z={0.2} rotation-z={rotation} onPointerDown={onPointerDown} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onWheel={onWheel}>
 					<planeGeometry attach="geometry" args={[0.8, 0.8]} />
 					<meshLambertMaterial attach="material" emissive={0xffffff} transparent={true} opacity={transparent ? 0.25 : 1} />
 				</mesh>

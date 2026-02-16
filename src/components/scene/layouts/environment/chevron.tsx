@@ -2,7 +2,7 @@ import type { Assign } from "@ark-ui/react";
 import { animated } from "@react-spring/three";
 import type { ComponentProps } from "react";
 
-import { type UseLightSpringOptions, useLightSpring } from "../../hooks/use-light-spring";
+import { type UseLightSpringOptions, useLightSpring } from "$/components/scene/hooks/use-light-spring";
 
 const CHEVRON_SIDE_LENGTH = 5;
 const CHEVRON_THICKNESS = 0.5;

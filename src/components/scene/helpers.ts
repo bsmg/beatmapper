@@ -6,10 +6,11 @@ import type { App, RequiredKeys } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 import { BLOCK_CELL_SIZE, FUDGE_FACTOR, SONG_OFFSET } from "./constants";
 
-export interface PositionResolverOptions {
-	beatDepth?: number;
+export interface ObjectResolverOptions {
+	beatDepth: number;
+	zOffset?: number;
 }
-export function resolvePositionForGridObject<T extends RequiredKeys<Partial<wrapper.IWrapBaseNote>, "posX" | "posY">>(object: T, { beatDepth }: PositionResolverOptions): Vector3Tuple {
+export function resolvePositionForGridObject<T extends RequiredKeys<Partial<wrapper.IWrapBaseNote>, "posX" | "posY">>(object: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">): Vector3Tuple {
 	const position = { x: 0, y: 0, z: 0 };
 
 	// ----------- X ------------
@@ -29,7 +30,7 @@ export function resolvePositionForGridObject<T extends RequiredKeys<Partial<wrap
 		position.z += object.time * beatDepth * -1;
 	}
 
-	return [position.x, position.y, position.z];
+	return [position.x, position.y, position.z + zOffset];
 }
 
 export function resolveRotationForNote<T extends { direction: number; angleOffset: number }>(object: T) {
@@ -46,8 +47,8 @@ export function resolveRotationForNote<T extends { direction: number; angleOffse
 	return convertDegreesToRadians(resolveNoteAngle(object.direction) + object.angleOffset);
 }
 
-export function resolvePositionForObstacle<T extends App.IObstacle>(data: T, { beatDepth }: Required<PositionResolverOptions>) {
-	const position = resolvePositionForGridObject(data, { beatDepth });
+export function resolvePositionForObstacle<T extends App.IObstacle>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">) {
+	const position = resolvePositionForGridObject(data, { beatDepth, zOffset });
 
 	// ----------- X ------------
 	const width = data.width >= 1000 || data.width <= -1000 ? data.width / 1000 - 1 : data.width;
@@ -61,7 +62,7 @@ export function resolvePositionForObstacle<T extends App.IObstacle>(data: T, { b
 	return position;
 }
 
-export function resolveDimensionsForObstacle<T extends App.IObstacle>(data: T, { beatDepth }: Required<PositionResolverOptions>) {
+export function resolveDimensionsForObstacle<T extends App.IObstacle>(data: T, { beatDepth }: Pick<ObjectResolverOptions, "beatDepth">) {
 	const dimensions = { width: 0, height: 0, depth: 0 };
 
 	// ----------- WIDTH ------------

@@ -47,7 +47,7 @@ function Logo({ size = "full" }: Props) {
 			<HStack gap={1}>
 				<Canvas style={styles}>
 					<a.group rotation-y={spring.rotation}>
-						<ColorNote position={[0, 0, 2]} data={MOCK_NOTE} color={color.current} size={3} />
+						<ColorNote position={[0, 0, 2]} scale={3} data={MOCK_NOTE} color={color.current} />
 					</a.group>
 					<ambientLight intensity={1.5} />
 					<directionalLight intensity={0.5} position={[0, 30, 8]} />
@@ -81,7 +81,7 @@ const Subtitle = styled("span", {
 	base: {
 		color: "fg.muted",
 		fontFamily: "body",
-		fontWeight: "medium",
+		fontWeight: "normal",
 	},
 	variants: {
 		size: {

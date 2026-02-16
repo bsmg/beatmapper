@@ -1,15 +1,19 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
-import { Fragment, useCallback } from "react";
+import { useCallback } from "react";
 
+import { ColorNote, Obstacle } from "$/components/scene/compositions";
+import { SONG_OFFSET } from "$/components/scene/constants";
+import { resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
 import { PlacementGrid } from "$/components/scene/layouts";
+import { Match, Switch } from "$/components/ui/atoms";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addObstacle, addToCell } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
-import { ObjectTool } from "$/types";
+import { selectBeatDepth, selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
+import { type App, ObjectTool } from "$/types";
 import type { GroupProps } from "$/types/vendor";
 
 interface Props extends GroupProps {
@@ -28,6 +32,7 @@ function EditorPlacementGrid({ interactive, onCellPointerDown, onCellWheel, ...r
 	const selectedTool = useAppSelector(selectNotesEditorTool);
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
 	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
+	const beatDepth = useAppSelector(selectBeatDepth);
 
 	const handlePointerUp = useCallback(
 		(_: PointerEvent, { cellDownAt, cellOverAt, direction }: Pick<PlacementGrid.IPlacementGridContext, "cellDownAt" | "cellOverAt" | "direction">) => {
@@ -60,12 +65,18 @@ function EditorPlacementGrid({ interactive, onCellPointerDown, onCellWheel, ...r
 	return (
 		<PlacementGrid.Root {...rest} mode={mode} onCellPointerDown={onCellPointerDown} onCellPointerUp={handlePointerUp} onCellWheel={onCellWheel}>
 			<PlacementGrid.Layout grid={grid}>{({ colIndex, rowIndex, grid }) => <PlacementGrid.Cell key={`${colIndex}-${rowIndex}`} layers={!selectionMode ? 1 : 2} colIndex={colIndex} rowIndex={rowIndex} grid={grid} />}</PlacementGrid.Layout>
-			{!selectionMode && (
-				<Fragment>
-					{(selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) && <PlacementGrid.TentativeNote grid={grid} mode={mode} color={resolveColorForItem(selectedTool, { colorScheme })} />}
-					{selectedTool === ObjectTool.OBSTACLE && <PlacementGrid.TentativeObstacle grid={grid} mode={mode} color={resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })} />}
-				</Fragment>
-			)}
+			<Switch>
+				<Match when={!selectionMode && (selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE)}>
+					<PlacementGrid.TentativeObject createObject={(ctx, { mode, grid }) => createColorNoteFromMouseEvent(mode, ctx.cellDownAt, grid, ctx.direction)}>
+						{(data: App.IColorNote) => <ColorNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
+					</PlacementGrid.TentativeObject>
+				</Match>
+				<Match when={!selectionMode && selectedTool === ObjectTool.OBSTACLE}>
+					<PlacementGrid.TentativeObject createObject={(ctx, { mode, grid }) => ({ ...createObstacleFromMouseEvent(mode, ctx.cellDownAt, ctx.cellOverAt, grid), duration: defaultObstacleDuration })}>
+						{(data: App.IObstacle) => <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })} />}
+					</PlacementGrid.TentativeObject>
+				</Match>
+			</Switch>
 		</PlacementGrid.Root>
 	);
 }

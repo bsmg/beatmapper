@@ -1,11 +1,11 @@
 import type { ThreeEvent } from "@react-three/fiber";
-import { memo, useCallback, useContext, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { DoubleSide } from "three";
 
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
 import type { IGrid } from "$/types";
 import type { MeshProps } from "$/types/vendor";
-import { Context } from "./context";
+import { usePlacementGridContext } from "./context";
 
 const CELL_PADDING = 0.05;
 const VERTICAL_OFFSET = -BLOCK_CELL_SIZE;
@@ -16,7 +16,7 @@ export interface CellProps extends MeshProps {
 	colIndex: number;
 }
 function PlacementGridCell({ rowIndex, colIndex, grid, ...rest }: CellProps) {
-	const { hoveredCell, onCellPointerDown, onCellPointerOut, onCellPointerOver, onCellWheel, ...context } = useContext(Context);
+	const { cellDownAt, hoveredCell, onCellPointerDown, onCellPointerOut, onCellPointerOver, onCellWheel } = usePlacementGridContext();
 	const isHovered = useMemo(() => !!(hoveredCell && hoveredCell.rowIndex === rowIndex && hoveredCell.colIndex === colIndex), [hoveredCell, colIndex, rowIndex]);
 
 	// Our `rowHeight` is in units compared to the default, so a non-map-extension grid would have a height and width of 1. A rowHeight of 2 means it's 2x as big as that default.
@@ -42,9 +42,9 @@ function PlacementGridCell({ rowIndex, colIndex, grid, ...rest }: CellProps) {
 	const handlePointerOver = useCallback(
 		(ev: ThreeEvent<PointerEvent>) => {
 			ev.stopPropagation();
-			if (onCellPointerOver) onCellPointerOver(ev, { cellDownAt: context.cellDownAt, cellOverAt: { rowIndex, colIndex } });
+			if (onCellPointerOver) onCellPointerOver(ev, { cellDownAt, cellOverAt: { rowIndex, colIndex } });
 		},
-		[context.cellDownAt, colIndex, rowIndex, onCellPointerOver],
+		[cellDownAt, colIndex, rowIndex, onCellPointerOver],
 	);
 
 	const handlePointerOut = useCallback(

@@ -1,10 +1,10 @@
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
-import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
+import { CharacteristicRename, DifficultyRename } from "bsmap";
+import type { CharacteristicName, DifficultyName, EnvironmentAllName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
+import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
@@ -20,7 +20,7 @@ const SCHEMA = object({
 	lightshowId: string(),
 	noteJumpSpeed: pipe(number(), minValue(0)),
 	startBeatOffset: number(),
-	environmentName: EnvironmentAllNameSchema,
+	environmentName: custom<EnvironmentAllName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),
@@ -139,22 +139,22 @@ function UpdateBeatmapForm({ bid }: Props) {
 				</Stack>
 				<Stack gap={2}>
 					<Form.Row>
-						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
-						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
+						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput key={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
+						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput key={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
 					</Form.Row>
-					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
-					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
+					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput key={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
+					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput key={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
 					<Collapsible
 						open={showAdvancedControls}
 						onOpenChange={(x) => setShowAdvancedControls(x.open)}
 						render={() => (
 							<Stack gap={2}>
 								<Form.Row>
-									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
-									<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input key={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
+									<Form.AppField name="customLabel">{(ctx) => <ctx.Input key={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
 								</Form.Row>
-								<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox id={`${bid}.${ctx.name}`} creatable label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
-								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox id={`${bid}.${ctx.name}`} clearable label="Color Scheme Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox key={`${bid}.${ctx.name}`} creatable label="Environment Override" helperText={"If a newer environment is not available to select, create a new entry in the combobox."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox key={`${bid}.${ctx.name}`} clearable label="Color Scheme Override" collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
 							</Stack>
 						)}
 					>

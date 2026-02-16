@@ -1,9 +1,9 @@
 import { type PropsWithChildren, useMemo } from "react";
 
+import DocsTableOfContents from "$/components/docs/templates/toc";
 import { docs } from "$:content";
 import { Divider, Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
-import DocsTableOfContents from "../toc";
 import DocsNavigation from "./navigation";
 import DocsProse from "./prose";
 

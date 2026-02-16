@@ -1,11 +1,11 @@
 import { ExternalLinkIcon } from "lucide-react";
 import { Fragment } from "react";
 
+import { Toc } from "$/components/docs/layouts";
 import { For } from "$/components/ui/atoms";
 import { AnchorLink } from "$/components/ui/compositions";
 import type { Doc } from "$:content";
 import { HStack } from "$:styled-system/jsx";
-import { Toc } from "../layouts";
 
 interface Props {
 	toc: Doc["tableOfContents"];

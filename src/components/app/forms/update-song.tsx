@@ -1,10 +1,10 @@
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useParams } from "@tanstack/react-router";
-import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
+import type { EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import { custom, gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
-import { useLocalFileQuery } from "$/components/app/hooks";
-import { useLocalFileMutation } from "$/components/app/hooks/local-file.hooks";
+import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
 import { AlertDialogProvider, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { filestore } from "$/setup";
@@ -32,7 +32,7 @@ const SCHEMA = object({
 	),
 	previewStartTime: pipe(number()),
 	previewDuration: pipe(number()),
-	environment: string(),
+	environment: custom<EnvironmentName | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 });
 
 function UpdateSongForm() {
@@ -136,7 +136,7 @@ function UpdateSongForm() {
 					<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required placeholder="(in seconds)" />}</Form.AppField>
 				</Form.Row>
 				<Form.Row>
-					<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Environment" creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+					<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Environment" helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 				</Form.Row>
 				<Form.Submit>Update song details</Form.Submit>
 			</Form.Root>
