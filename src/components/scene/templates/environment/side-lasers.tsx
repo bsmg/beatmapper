@@ -1,7 +1,8 @@
 import { Fragment, useMemo } from "react";
 
-import { TubeLight } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
+import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
+import { useEventTrack } from "$/components/scene/hooks/use-event-track";
+import { Environment } from "$/components/scene/layouts";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
 import { convertDegreesToRadians, normalize, range } from "$/utils";
@@ -56,7 +57,7 @@ function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 	const [lastLightEvent] = useEventTrack({ trackId: side === "left" ? 2 : 3 });
 	const [lastSpeedEvent] = useEventTrack({ trackId: side === "left" ? 12 : 13 });
 
-	const light = useLightProps({ lastEvent: lastLightEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent });
 
 	const laserSpeed = useMemo(() => {
 		if (!lastSpeedEvent) return 0;
@@ -73,10 +74,10 @@ function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 		const xPosition = xOffset + index * xDistanceBetweenBeams;
 		const zPosition = Z_OFFSET + index * -Z_DISTANCE_BETWEEN_BEAMS;
 		const zRotation = convertDegreesToRadians(getSinRotationValue(side, index, secondsSinceSongStart, laserSpeed));
-		return <TubeLight key={index} light={light} radius={0.2} position-x={xPosition} position-y={Y_OFFSET} position-z={zPosition} rotation-z={zRotation} />;
+		return <Environment.TubeLight key={index} light={light} radius={0.2} position-x={xPosition} position-y={Y_OFFSET} position-z={zPosition} rotation-z={zRotation} />;
 	});
 	// Side lasers also feature a single "perspective" beam, shooting into the distance.
-	const perspectiveBeam = <TubeLight light={light} radius={0.15} position={[xOffset * 1.5, Y_OFFSET, -45]} rotation={[convertDegreesToRadians(90), 0, 0]} />;
+	const perspectiveBeam = <Environment.TubeLight light={light} radius={0.15} position={[xOffset * 1.5, Y_OFFSET, -45]} rotation={[convertDegreesToRadians(90), 0, 0]} />;
 
 	return (
 		<Fragment>

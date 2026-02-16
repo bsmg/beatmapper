@@ -1,29 +1,21 @@
-import { Fragment } from "react";
-import { Object3D } from "three";
+import { Fragment, useRef } from "react";
+import type { Object3D } from "three";
 
 import { SONG_OFFSET } from "$/components/scene/constants";
 
-const frontLightTarget = new Object3D();
-frontLightTarget.position.set(0, 0, SONG_OFFSET);
-const midLightTarget = new Object3D();
-midLightTarget.position.set(0, -20, -20);
+export function AmbientLight() {
+	const frontLightTarget = useRef<Object3D>(null);
+	const midLightTarget = useRef<Object3D>(null);
 
-function AmbientLight() {
 	return (
 		<Fragment>
-			<primitive object={midLightTarget} />
-			<primitive object={frontLightTarget} />
-
+			<object3D ref={midLightTarget} position={[0, 0, SONG_OFFSET]} />
+			<object3D ref={frontLightTarget} position={[0, -20, -20]} />
 			{/* Bright lights on the placement grid */}
-			<directionalLight castShadow intensity={0.6} position={[0, 30, SONG_OFFSET]} target={frontLightTarget} />
 			<directionalLight intensity={0.25} position={[0, 0, 20]} />
-
-			<directionalLight intensity={0.5} position={[50, 50, SONG_OFFSET - 30]} target={midLightTarget} />
-			<directionalLight intensity={0.5} position={[-50, 50, SONG_OFFSET - 30]} target={midLightTarget} />
-
+			{frontLightTarget.current && <directionalLight castShadow intensity={0.6} position={[0, 30, SONG_OFFSET]} target={frontLightTarget.current} />}
+			{midLightTarget.current && <directionalLight intensity={0.5} position={[50, 50, SONG_OFFSET - 30]} target={midLightTarget.current} />}
 			<ambientLight intensity={3} />
 		</Fragment>
 	);
 }
-
-export default AmbientLight;

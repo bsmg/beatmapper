@@ -1,4 +1,4 @@
-import { useControls } from "$/components/scene/hooks";
+import { useControls } from "$/components/scene/hooks/use-controls";
 import { Environment } from "$/components/scene/layouts";
 import BackLasers from "./back-lasers";
 import LargeRings from "./large-rings";

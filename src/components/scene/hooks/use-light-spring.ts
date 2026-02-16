@@ -1,10 +1,10 @@
-import { type SpringConfig, useSpring } from "@react-spring/three";
+import { type SpringConfig, type SpringValue, useSpring } from "@react-spring/three";
 
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
-import type { UseLightPropsReturn } from "$/components/scene/hooks";
 import { useAppSelector } from "$/store/hooks";
 import { selectBloomEnabled, selectPlaying } from "$/store/selectors";
 import { App } from "$/types";
+import type { useLightEffect } from "./environment.hooks";
 
 // todo: spring animations are always pre-computed, so there's no means of deterministically calculating the lighting state at a particular time (or when paused)
 // we'll probably need to refactor this on a different api/framework at some point
@@ -14,7 +14,7 @@ const lightSpringConfig: SpringConfig = {
 	friction: 120,
 };
 
-interface UseSpringConfigForLightOptions extends Omit<UseLightPropsReturn, "lastEventId"> {
+interface UseSpringConfigForLightOptions extends Omit<ReturnType<typeof useLightEffect>, "lastEventId"> {
 	mult?: number;
 }
 function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpringConfigForLightOptions) {
@@ -77,13 +77,13 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 // This feels hacky, but I don't know of a better way.
 
 export interface UseLightSpringOptions {
-	light: UseLightPropsReturn;
+	light: ReturnType<typeof useLightEffect>;
 }
-export function useLightSpring({ light }: UseLightSpringOptions) {
+export function useLightSpring({ light }: UseLightSpringOptions): [spring: { emissive: SpringValue<string>; emissiveIntensity: SpringValue<number>; opacity: SpringValue<number> }, props: { color: string; transparent: boolean }] {
 	const isPlaying = useAppSelector(selectPlaying);
 	const isBloomEnabled = useAppSelector(selectBloomEnabled);
 
-	const lightSpringConfig = useSpringConfigForLight({ ...light });
+	const lightSpringConfig = useSpringConfigForLight(light);
 
 	useUpdateEffect(() => {
 		if (!isPlaying) return;
@@ -93,9 +93,5 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 
 	const [spring] = useSpring<{ emissive: string; emissiveIntensity: number; opacity: number }>(() => lightSpringConfig, [light, isBloomEnabled]);
 
-	return {
-		spring: spring,
-		color: isBloomEnabled ? "#ccc" : "#444",
-		transparent: true,
-	};
+	return [spring, { color: isBloomEnabled ? "#ccc" : "#444", transparent: true }];
 }

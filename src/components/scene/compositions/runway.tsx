@@ -22,7 +22,8 @@ interface Props {
 	includeEdgeStrips?: boolean;
 	trackGridRows?: boolean;
 }
-function EnvironmentRunway({ surfaceDepth, includeEdgeStrips }: Props) {
+
+export function Runway({ surfaceDepth, includeEdgeStrips }: Props) {
 	const surfaceZCenter = useMemo(() => surfaceDepth / 2 + SONG_OFFSET - 1, [surfaceDepth]);
 	const pegDepth = useMemo(() => surfaceDepth - PEG_WIDTH * 4, [surfaceDepth]);
 	const stripZ = useMemo(() => -SONG_OFFSET - surfaceDepth / 2, [surfaceDepth]);
@@ -60,4 +61,4 @@ function EnvironmentRunway({ surfaceDepth, includeEdgeStrips }: Props) {
 	);
 }
 
-export default EnvironmentRunway;
+export default Runway;

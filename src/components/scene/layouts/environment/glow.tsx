@@ -1,28 +1,25 @@
+import type { Assign } from "@ark-ui/react";
 import { animated } from "@react-spring/three";
 import { useThree } from "@react-three/fiber";
-import { useMemo } from "react";
+import { type ComponentProps, useMemo } from "react";
 import { AdditiveBlending, Color, FrontSide } from "three";
 
 import { glowFragmentShader, glowVertexShader } from "$/assets";
-import type { UseLightPropsReturn } from "$/components/scene/hooks";
-import { useLightSpring } from "$/components/scene/hooks/use-light-spring";
-import type { MeshProps } from "$/types/vendor";
+import { type UseLightSpringOptions, useLightSpring } from "$/components/scene/hooks/use-light-spring";
 import { normalize } from "$/utils";
 
-interface Props extends MeshProps {
+interface Props {
 	size: number;
-	light: UseLightPropsReturn;
 	bloom?: boolean;
 }
-function Glow({ size, light, bloom: isBlooming, ...rest }: Props) {
+function Glow({ size, bloom, light, ...rest }: Assign<ComponentProps<"mesh">, Props & UseLightSpringOptions>) {
 	const { camera } = useThree();
 
-	const { spring } = useLightSpring({ light });
+	const [lightSpring] = useLightSpring({ light });
 
 	// When blooming, the `c` uniform makes it white and obnoxious, so tune the effect down in this case.
-	const maxCValue = useMemo(() => (isBlooming ? 0.2 : 0.001), [isBlooming]);
-
-	const PValueRange = useMemo(() => (isBlooming ? [40, 1] : [28, 7]), [isBlooming]);
+	const maxCValue = useMemo(() => (bloom ? 0.2 : 0.001), [bloom]);
+	const PValueRange = useMemo(() => (bloom ? [40, 1] : [28, 7]), [bloom]);
 
 	return (
 		<mesh {...rest}>
@@ -45,8 +42,8 @@ function Glow({ size, light, bloom: isBlooming, ...rest }: Props) {
 					},
 				]}
 				uniforms-glowColor-value={new Color(light.color)}
-				uniforms-p-value={spring.opacity.to((o) => normalize(o, 0, 1, ...PValueRange))}
-				uniforms-c-value={spring.opacity.to((o) => normalize(o, 0, 1, 0.1, maxCValue))}
+				uniforms-p-value={lightSpring.opacity.to((o) => normalize(o, 0, 1, ...PValueRange))}
+				uniforms-c-value={lightSpring.opacity.to((o) => normalize(o, 0, 1, 0.1, maxCValue))}
 			/>
 		</mesh>
 	);
