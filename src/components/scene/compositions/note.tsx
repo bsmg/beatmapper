@@ -1,6 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { NoteDirection } from "bsmap";
-import { type ComponentProps, useMemo } from "react";
+import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
 import { blockCenterUrl, blockDirectionalUrl, mineUrl } from "$/assets";
@@ -14,15 +14,17 @@ export interface BaseNoteProps<T extends App.IBaseNote> {
 	metalness?: number;
 	roughness?: number;
 	transparent?: boolean;
+	// biome-ignore lint/suspicious/noExplicitAny: react three fiber types are wonky
+	children?: (inherited: any) => ReactNode;
 }
 
-function BaseNote<T extends App.IBaseNote>({ path, children, data, position, color, metalness, roughness, transparent, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
+function BaseNote<T extends App.IBaseNote>({ path, children, data, color, metalness, roughness, transparent, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
 	return (
-		<group {...rest} userData={data} position={position}>
-			<Obj path={path} scale={0.5} castShadow layers={rest.layers} onPointerDown={onPointerDown} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onWheel={onWheel}>
-				<meshStandardMaterial attach="material" color={color} metalness={metalness} roughness={roughness} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : transparent ? 0.25 : 1} />
+		<group userData={data}>
+			<Obj {...rest} path={path} castShadow scale={0.5} onPointerDown={onPointerDown} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onWheel={onWheel}>
+				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : transparent ? 0.25 : 1} />
 			</Obj>
-			{children}
+			{children?.({ ...rest, transparent, onPointerDown, onPointerOver, onPointerOut, onWheel })}
 		</group>
 	);
 }
@@ -63,10 +65,12 @@ export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote
 	return (
 		<BaseNote {...rest} data={data} path={url} rotation-z={rotation} metalness={0.5} roughness={0.4}>
 			{/* Fake flowing light from within */}
-			<mesh rotation-z={rotation}>
-				<planeGeometry attach="geometry" args={[0.8, 0.8]} />
-				<meshLambertMaterial attach="material" emissive={0xffffff} transparent={true} opacity={rest.transparent ? 0.25 : 1} />
-			</mesh>
+			{({ position, "rotation-z": rotation, transparent }) => (
+				<mesh position={position} rotation-z={rotation}>
+					<planeGeometry attach="geometry" args={[0.8, 0.8]} />
+					<meshLambertMaterial attach="material" emissive={0xffffff} transparent={true} opacity={transparent ? 0.25 : 1} />
+				</mesh>
+			)}
 		</BaseNote>
 	);
 }
