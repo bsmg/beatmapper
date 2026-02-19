@@ -1,9 +1,9 @@
 import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { getYear, isToday, setYear } from "date-fns";
 import { Fragment } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
+import Devtools from "$/components/devtools";
 import { Toaster } from "$/components/ui/compositions";
 import { store } from "$/setup";
 import { selectInitialized } from "$/store/selectors";
@@ -34,7 +34,7 @@ function RootComponent() {
 			<HeadContent />
 			<Outlet />
 			<Toaster toaster={APP_TOASTER} />
-			{import.meta.env.DEV && <TanStackRouterDevtools position="top-right" />}
+			<Devtools position="top-right" hideUntilHover openHotkey={[`\``]} />
 		</Fragment>
 	);
 }
