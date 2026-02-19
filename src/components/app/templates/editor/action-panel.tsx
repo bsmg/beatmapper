@@ -11,7 +11,7 @@ import { ObjectPlacementMode } from "$/types";
 import { DefaultActionPanelGroup, GridActionPanelGroup, GridPresetsActionPanelGroup, NoteDirectionActionPanelGroup, NoteToolActionPanelGroup, ObstaclesActionPanelGroup, SelectionActionPanelGroup } from "./action-panel-groups";
 
 function EditorActionPanel() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const mappingMode = useAppSelector((state) => selectPlacementMode(state, sid));
 	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);

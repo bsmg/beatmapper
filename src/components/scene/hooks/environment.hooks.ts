@@ -13,7 +13,7 @@ interface UseLightEffectOptions {
 	lastEvent: App.IBasicEvent | null;
 }
 export function useLightEffect({ lastEvent }: UseLightEffectOptions) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 

@@ -12,7 +12,7 @@ import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
 
 function SongDetails() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const enabledCustomColors = useAppSelector((state) => selectModuleEnabled(state, sid, "customColors"));

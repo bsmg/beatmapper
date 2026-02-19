@@ -24,7 +24,7 @@ const BEATMAP_COLOR_KEY_RENAME = {
 } as const;
 
 function CustomColorSwatch({ element }: { element: ColorSchemeKey }) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const customColors = useAppSelector((state) => selectCustomColors(state, sid));

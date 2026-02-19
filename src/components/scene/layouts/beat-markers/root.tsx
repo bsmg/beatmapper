@@ -10,7 +10,7 @@ interface Props {
 	children: (beatNum: number, ctx: { isBeat: boolean }) => ReactNode;
 }
 function BeatMarkersRoot({ marks, children }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const beatDepth = useAppSelector(selectBeatDepth);

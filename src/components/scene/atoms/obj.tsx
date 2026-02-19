@@ -3,7 +3,7 @@ import { Clone } from "@react-three/drei";
 import { useLoader } from "@react-three/fiber";
 import type { ComponentProps } from "react";
 import type { Group } from "three";
-import { OBJLoader } from "three-stdlib";
+import { OBJLoader } from "three/addons";
 
 export function useOBJ(path: string): Group {
 	return useLoader(OBJLoader, path);

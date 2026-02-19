@@ -7,7 +7,7 @@ export function Bloom({ children }: PropsWithChildren) {
 	const { gl, camera, size } = useThree();
 
 	const scene = useRef<Scene>(null);
-	const composer = useRef<EffectComposer>();
+	const composer = useRef<EffectComposer>(null);
 
 	useEffect(() => {
 		if (!scene.current) return;

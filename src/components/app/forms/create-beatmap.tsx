@@ -24,7 +24,7 @@ interface Props {
 	onSubmit: (bid: BeatmapId, data: InferOutput<typeof SCHEMA>) => void;
 }
 function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<PropsWithChildren, Props>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const beatmaps = useAppSelector((state) => selectAllBeatmaps(state, sid));
 	const currentBeatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));

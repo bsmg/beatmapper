@@ -11,7 +11,7 @@ import { selectGridPresets } from "$/store/selectors";
 import { isObjectEmpty } from "$/utils";
 
 function GridPresetsActionPanelGroup() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const gridPresets = useAppSelector(selectGridPresets);

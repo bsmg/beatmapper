@@ -10,7 +10,7 @@ import { selectColorScheme, selectNotesEditorTool } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function NoteToolActionPanelGroup() {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));

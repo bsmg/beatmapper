@@ -26,7 +26,7 @@ function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNu
 }
 
 function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const wait = useAppSelector(selectPacerWait);

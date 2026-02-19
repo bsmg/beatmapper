@@ -11,7 +11,7 @@ interface Props<T> {
 	children: (data: T) => ReactNode;
 }
 function TentativeObject<T>({ createObject, children }: Props<T>) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const ctx = usePlacementGridContext();
 

@@ -13,7 +13,7 @@ interface Context {
 export interface UseMousePositionOverElementOptions extends UseElementRectOptions {
 	onMouseMove?: (event: MouseEvent, ctx: Context) => void;
 }
-export function useMousePositionOverElement<T extends Element>(options: UseMousePositionOverElementOptions, deps: DependencyList = []): [ref: RefObject<T>, ctx: Context] {
+export function useMousePositionOverElement<T extends Element>(options: UseMousePositionOverElementOptions, deps: DependencyList = []): [ref: RefObject<T | null>, ctx: Context] {
 	const [ref, rect] = useElementRect<T>(options, deps);
 
 	const [context, setContext] = useState<Context>({ x: 0, y: 0, isWithinRect: false });

@@ -11,7 +11,7 @@ interface Props {
 	beatDepth: number;
 }
 function EditorBeatMarkers({ beatDepth }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { theme } = useRouteContext({ from: "__root__" });
 
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));

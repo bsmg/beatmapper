@@ -17,7 +17,7 @@ interface Props<T extends wrapper.IWrapGridObject> {
 	children: (model: T, ctx: Pick<ComponentProps<"group">, "position" | "layers"> & { data: T; transparent: boolean; color?: string }) => ReactNode;
 }
 function VisualizationForGridObjects<T extends wrapper.IWrapGridObject>({ objects, resolvePosition, resolveColor, children }: Props<T>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const { beatDepth } = useVisualizationContext();
 

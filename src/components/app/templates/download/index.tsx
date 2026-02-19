@@ -11,7 +11,7 @@ import { selectDemo, selectPlaying } from "$/store/selectors";
 import { Stack, Text } from "$:styled-system/jsx";
 
 function Download() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));

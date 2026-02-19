@@ -36,7 +36,7 @@ interface Props {
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
 function BasicEventTrack({ trackId, width, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Assign<ComponentProps<typeof EventGrid.Track>, Props>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));

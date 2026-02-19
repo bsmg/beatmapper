@@ -40,7 +40,7 @@ function createEventEffectListCollection({ selectedColor, colorScheme }: EventLi
 }
 
 function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));

@@ -44,7 +44,7 @@ import { View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 function DefaultEditorShortcuts() {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();

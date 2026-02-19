@@ -13,7 +13,7 @@ interface Props {
 	handleGridConfigClick?: MouseEventHandler;
 }
 function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();

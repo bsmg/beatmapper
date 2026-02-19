@@ -10,7 +10,7 @@ interface Props {
 	width: number;
 }
 function EventGridPointer({ width }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const selectedBeat = useAppSelector(selectEventsEditorCursor);

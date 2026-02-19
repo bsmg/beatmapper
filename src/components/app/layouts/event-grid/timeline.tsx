@@ -12,7 +12,7 @@ interface Props {
 	beatNums: number[];
 }
 function EventGridTimeline({ beatNums }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const selectedBeat = useAppSelector(selectEventsEditorCursor);

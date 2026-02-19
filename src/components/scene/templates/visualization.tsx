@@ -30,7 +30,7 @@ interface Props {
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	useControls();
 

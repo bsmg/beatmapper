@@ -12,7 +12,7 @@ interface Props {
 	box: IBackgroundBox;
 }
 function EventGridBackgroundBox({ box }: Props) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));

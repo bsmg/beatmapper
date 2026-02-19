@@ -30,7 +30,7 @@ function SelectionCount({ num, label, onClick }: CountProps) {
 }
 
 function SelectionActionPanelGroup() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();

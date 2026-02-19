@@ -22,7 +22,7 @@ interface Props extends GroupProps {
 	onCellWheel?: (event: ThreeEvent<WheelEvent>) => void;
 }
 function EditorPlacementGrid({ interactive, onCellPointerDown, onCellWheel, ...rest }: Props) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);

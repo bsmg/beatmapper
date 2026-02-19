@@ -11,7 +11,7 @@ import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDuratio
 import { roundToNearest } from "$/utils";
 
 function EditorAudioVisualizer() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const waveformData = useAppSelector(selectWaveformData);

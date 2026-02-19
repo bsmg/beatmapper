@@ -7,7 +7,7 @@ import { Dialog } from "$/components/ui/compositions";
 import type { View } from "$/types";
 
 function EditorSidebar() {
-	const params = useParams({ from: "/_/edit/$sid/$bid" });
+	const params = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const matchRoute = useMatchRoute();
 
 	const isView = (to: View) => {

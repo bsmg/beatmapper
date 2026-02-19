@@ -11,7 +11,7 @@ interface Props {
 	children: (track: IEventTrack, trackId: number, ctx: { disabled: boolean; style: CSSProperties }) => ReactNode;
 }
 function ForEventTracks({ children }: Props) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));

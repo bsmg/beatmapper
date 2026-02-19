@@ -52,7 +52,7 @@ interface Props {
 	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
 function EventGridEventItem({ children, event: data, trackWidth, onEventPointerDown, onEventPointerUp, onEventPointerOver, onEventPointerOut, onEventWheel }: Assign<ComponentProps<typeof Wrapper>, Props>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));

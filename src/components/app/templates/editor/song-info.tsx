@@ -24,7 +24,7 @@ interface Props {
 	showDifficultySelector: boolean;
 }
 function EditorSongInfo({ showDifficultySelector }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();

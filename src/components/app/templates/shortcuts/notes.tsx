@@ -11,7 +11,7 @@ import { ObjectTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 function NotesEditorShortcuts() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
