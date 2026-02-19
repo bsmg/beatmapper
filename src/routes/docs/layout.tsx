@@ -7,10 +7,12 @@ import { stack } from "$:styled-system/patterns";
 export const Route = createFileRoute("/_/docs/_")({
 	component: RouteComponent,
 	onEnter: () => {
-		document.documentElement.className = localStorage.getItem("dark") === "true" ? "dark" : "light";
+		document.documentElement.classList.remove("light", "dark");
+		document.documentElement.classList.add(localStorage.getItem("dark") === "true" ? "dark" : "light");
 	},
-	onLeave: () => {
-		document.documentElement.className = "dark";
+	onLeave: ({ context }) => {
+		document.documentElement.classList.remove("light", "dark");
+		document.documentElement.classList.add(context.theme);
 	},
 });
 

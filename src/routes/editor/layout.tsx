@@ -1,3 +1,4 @@
+import { toPascalCase } from "@std/text/to-pascal-case";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
 import { forwardRef } from "react";
@@ -31,13 +32,17 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 			view: segments[segments.length - 1] as View,
 		};
 	},
-	loader: () => {
+	loader: ({ context }) => {
 		const state = store.getState();
 		const seenPrompts = selectAnnouncements(state);
 
 		return {
+			view: toPascalCase(context.view),
 			unseenPrompt: prompts.find((prompt) => !seenPrompts.includes(prompt.id)),
 		};
+	},
+	head: ({ params, loaderData }) => {
+		return { meta: [{ title: loaderData ? `${loaderData.view} ∙ ${params.sid}/${params.bid} ∙ Beatmapper Editor` : "Beatmapper Editor" }] };
 	},
 	onEnter: async ({ params, loaderData }) => {
 		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
