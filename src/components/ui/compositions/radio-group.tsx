@@ -1,44 +1,53 @@
+import type { Assign } from "@ark-ui/react";
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import { Presence } from "@ark-ui/react/presence";
-import type { ComponentProps } from "react";
+import type { RadioGroupItemBaseProps } from "@ark-ui/react/radio-group";
+import { type ComponentProps, forwardRef, type PropsWithChildren } from "react";
 
-import { ListCollectionFor } from "$/components/ui/atoms";
+import { ForListCollection } from "$/components/ui/atoms";
+import { useFieldData } from "$/components/ui/hooks/form.hooks";
 import * as Builder from "$/components/ui/styled/radio-group";
-import { css } from "$:styled-system/css";
-import { Circle } from "$:styled-system/jsx";
+import { Field, type FieldProps } from "./field";
 
-export interface RadioItem extends CollectionItem {}
+export interface RadioProps {
+	item: CollectionItem;
+}
 
-export interface RadioGroupProps<T extends CollectionItem> extends ComponentProps<typeof Builder.Root> {
+const Radio = forwardRef<HTMLInputElement, Assign<RadioGroupItemBaseProps, PropsWithChildren<RadioProps>>>(function Radio({ children, ...rest }, ref) {
+	return (
+		<Builder.Item {...rest}>
+			<Builder.ItemControl />
+			<Builder.ItemText>{children}</Builder.ItemText>
+			<Builder.ItemHiddenInput ref={ref} />
+		</Builder.Item>
+	);
+});
+
+export interface RadioGroupProps<T extends CollectionItem> {
+	label?: string;
 	collection: ListCollection<T>;
 }
-export function RadioGroup<T extends CollectionItem>({ collection, children, ...rest }: RadioGroupProps<T>) {
+
+export function RadioGroup<T extends CollectionItem>({ label, collection, ...rest }: Assign<ComponentProps<typeof Builder.Root>, RadioGroupProps<T>>) {
 	return (
 		<Builder.Root defaultValue={collection.firstValue} {...rest}>
-			{children && <Builder.Label>{children}</Builder.Label>}
-			<ListCollectionFor collection={collection}>
-				{(item) => {
-					const value = collection.getItemValue(item);
-					if (!value) return null;
-					const label = collection.stringifyItem(item);
-					const disabled = collection.getItemDisabled(item);
-					return (
-						<Builder.Item key={value} value={value} disabled={disabled}>
-							<Builder.ItemControl data-disabled={disabled}>
-								<Builder.Context>
-									{(ctx) => (
-										<Presence asChild present={ctx.value === value}>
-											<Circle size={8} className={css({ backgroundColor: "black" })} />
-										</Presence>
-									)}
-								</Builder.Context>
-							</Builder.ItemControl>
-							<Builder.ItemText data-disabled={disabled}>{label ?? value}</Builder.ItemText>
-							<Builder.ItemHiddenInput />
-						</Builder.Item>
-					);
-				}}
-			</ListCollectionFor>
+			{label && <Builder.Label>{label}</Builder.Label>}
+			<ForListCollection collection={collection}>
+				{(item, { value, label, disabled }) => (
+					<Radio key={value} item={item} value={value} disabled={disabled}>
+						{label}
+					</Radio>
+				)}
+			</ForListCollection>
 		</Builder.Root>
+	);
+}
+
+export function RadioGroupDataField<T extends CollectionItem>({ label, helperText, ...delegated }: Assign<ComponentProps<typeof RadioGroup<T>>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<string | null>(delegated);
+
+	return (
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<RadioGroup {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+		</Field>
 	);
 }

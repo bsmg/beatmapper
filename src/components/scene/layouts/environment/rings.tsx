@@ -1,7 +1,7 @@
 import { type Interpolation, useSprings, useTrail } from "@react-spring/three";
 import type { ReactNode } from "react";
 
-import { useRingRotation, useRingZoom } from "$/components/scene/hooks";
+import { useRingRotationEffect, useRingZoomEffect } from "$/components/scene/hooks/environment.hooks";
 import { resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAnimateEnvironment } from "$/store/selectors";
@@ -20,8 +20,8 @@ interface Props extends Omit<GroupProps, "children"> {
 function Rings({ count, lastRotationEvent, lastZoomEvent, minDistance, maxDistance, children, ...rest }: Props) {
 	const animateRingMotion = useAppSelector(selectAnimateEnvironment);
 
-	const [ratio] = useRingRotation({ lastEventId: lastRotationEvent ? resolveEventId(lastRotationEvent) : null });
-	const [distance] = useRingZoom({ lastEventId: lastZoomEvent ? resolveEventId(lastZoomEvent) : null, minDistance });
+	const [ratio] = useRingRotationEffect({ lastEventId: lastRotationEvent ? resolveEventId(lastRotationEvent) : null });
+	const [distance] = useRingZoomEffect({ lastEventId: lastZoomEvent ? resolveEventId(lastZoomEvent) : null, minDistance });
 
 	const [rotation] = useTrail(
 		count,

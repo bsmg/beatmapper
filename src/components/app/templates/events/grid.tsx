@@ -2,23 +2,17 @@ import { useParams } from "@tanstack/react-router";
 import type { EventType } from "bsmap";
 import { type ComponentProps, type PointerEvent, type PointerEventHandler, useCallback, useMemo, useRef, useState } from "react";
 
-import { useGlobalEventListener, useMousePositionOverElement, useParentDimensions } from "$/components/hooks";
-import { isSideTrack, resolveEventType } from "$/helpers/events.helpers";
+import { EventGrid } from "$/components/app/layouts";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { useMousePositionOverElement } from "$/components/hooks/use-mouse-position-over-element";
+import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
+import { resolveEventType } from "$/helpers/events.helpers";
 import { bulkRemoveEvent, deselectEvent, drawEventSelectionBox, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent, updateEventsEditorCursor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectEventTracksForEnvironment, selectLoading, selectSnap } from "$/store/selectors";
+import { selectDurationInBeats, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorCursor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTrackHeight, selectEventTracksForEnvironment, selectLoading, selectPacerWait, selectSnap } from "$/store/selectors";
 import { type Accept, type App, EventEditMode, type ISelectionBoxInBeats, TrackType } from "$/types";
 import { clamp, isMetaKeyPressed, normalize, range, roundToNearest } from "$/utils";
-import { styled } from "$:styled-system/jsx";
-import { center, hstack, stack } from "$:styled-system/patterns";
-import EventGridCursor from "./cursor";
-import EventGridMarkers from "./markers";
-import EventGridSelectionBox from "./selection-box";
-import EventGridTimeline from "./timeline";
-import EventGridTrack from "./track";
-
-const PREFIX_WIDTH = 170;
-const HEADER_HEIGHT = 32;
+import BasicEventTrack from "./basic-track";
 
 function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNums: number[], startBeat: number, snapTo?: number) {
 	const positionInBeats = normalize(x, 0, innerGridWidth, 0, beatNums.length);
@@ -31,12 +25,12 @@ function convertMousePositionToBeatNum(x: number, innerGridWidth: number, beatNu
 	return roundedPositionInBeats + startBeat;
 }
 
-function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid" });
+function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
+	const wait = useAppSelector(selectPacerWait);
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
-	const allTracks = useMemo(() => Object.entries(tracks), [tracks]);
 	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);
@@ -52,7 +46,8 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 
 	const beatNums = useMemo(() => Array.from(range(Math.floor(startBeat), Math.ceil(endBeat - 1))), [startBeat, endBeat]);
 
-	const [dimensions, container] = useParentDimensions<HTMLDivElement>();
+	const [container, dimensions] = useParentDimensions<SVGSVGElement>();
+
 	const [mouseDownAt, setMouseDownAt] = useState<{ x: number; y: number } | null>(null);
 	const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
 
@@ -75,77 +70,58 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 		shouldFire: selectedEditMode === EventEditMode.SELECT,
 	});
 
-	const tracksScrollContainer = useRef<HTMLDivElement>(null);
-
-	const tracksSelectionBoxRef = useMousePositionOverElement<HTMLDivElement>(
-		tracksScrollContainer,
-		(ref, x, y, event) => {
-			const currentMousePosition = { x, y };
-			mousePositionRef.current = currentMousePosition;
-
-			const offset = {
-				x: -PREFIX_WIDTH, // prefix width
-				y: ref.scrollTop - HEADER_HEIGHT,
-			};
-
-			const hoveringOverBeatNum = convertMousePositionToBeatNum(x + offset.x, dimensions.width, beatNums, startBeat, snapTo);
-
-			if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === 0) {
-				const newSelectionBox = {
-					top: Math.min(mouseDownAt.y, currentMousePosition.y) + offset.y,
-					left: Math.min(mouseDownAt.x, currentMousePosition.x) + offset.x,
-					right: Math.max(mouseDownAt.x, currentMousePosition.x) + offset.x,
-					bottom: Math.max(mouseDownAt.y, currentMousePosition.y) + offset.y,
-				} as DOMRect;
-
-				setSelectionBox(newSelectionBox);
-
-				// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
-				setSelectionBoxInBeats({
-					startTrackIndex: Math.floor(newSelectionBox.top / rowHeight),
-					endTrackIndex: Math.floor(newSelectionBox.bottom / rowHeight),
-					startBeat: convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat),
-					endBeat: convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat),
-					// we should also track whether we want the selection box to preserve the existing selection
-					withPrevious: isMetaKeyPressed(event),
-				});
-			}
-
-			if (hoveringOverBeatNum !== selectedBeat) dispatch(updateEventsEditorCursor({ selectedBeat: hoveringOverBeatNum }));
-		},
+	const [tracksSelectionBoxRef] = useMousePositionOverElement<HTMLDivElement>(
 		{
-			boxDependencies: [rowHeight],
+			debouncerOptions: { wait },
+			onMouseMove: (event, { x, y }) => {
+				mousePositionRef.current = { x, y };
+
+				if (selectedEditMode === EventEditMode.SELECT && mouseDownAt && mouseButtonDepressed.current === 0) {
+					const newSelectionBox = {
+						left: Math.min(mouseDownAt.x, x),
+						right: Math.max(mouseDownAt.x, x),
+						top: Math.min(mouseDownAt.y, y),
+						bottom: Math.max(mouseDownAt.y, y),
+					} as DOMRect;
+
+					setSelectionBox(newSelectionBox);
+
+					// Selection boxes need to include their cartesian values, in pixels, but we should also encode the values in business terms: start/end beat, and start/end track
+					setSelectionBoxInBeats({
+						startTrackIndex: Math.floor(newSelectionBox.top / rowHeight),
+						endTrackIndex: Math.floor(newSelectionBox.bottom / rowHeight),
+						startBeat: convertMousePositionToBeatNum(newSelectionBox.left, dimensions.width, beatNums, startBeat),
+						endBeat: convertMousePositionToBeatNum(newSelectionBox.right, dimensions.width, beatNums, startBeat),
+						// we should also track whether we want the selection box to preserve the existing selection
+						withPrevious: isMetaKeyPressed(event),
+					});
+				}
+
+				const hoveringOverBeatNum = convertMousePositionToBeatNum(x, dimensions.width, beatNums, startBeat, snapTo);
+
+				if (hoveringOverBeatNum !== selectedBeat) {
+					dispatch(updateEventsEditorCursor({ selectedBeat: hoveringOverBeatNum }));
+				}
+			},
 		},
+		[rowHeight],
 	);
 
-	const mousePositionInPx = useMemo(() => {
-		return selectedBeat !== null && selectedBeat - startBeat >= 0 ? normalize(selectedBeat - startBeat, 0, beatNums.length, 0, dimensions.width) : 0;
-	}, [selectedBeat, startBeat, beatNums, dimensions.width]);
-
-	const handlePointerDown = useCallback<PointerEventHandler>((ev) => {
+	const handleTriggerPointerDown = useCallback<PointerEventHandler>((ev) => {
 		mouseButtonDepressed.current = ev.button;
 		setMouseDownAt(mousePositionRef.current);
 	}, []);
-
-	const handlePointerUp = useCallback<PointerEventHandler>((_) => {
+	const handleTriggerPointerUp = useCallback<PointerEventHandler>((_) => {
 		mouseButtonDepressed.current = null;
 		setMouseDownAt(null);
 	}, []);
 
-	const handlePointerOver = useCallback((_: PointerEvent, trackId: Accept<EventType, number>) => {
+	const handleTrackPointerOver = useCallback((_event: PointerEvent, trackId: Accept<EventType, number>) => {
 		setHoveredTrack(trackId);
 	}, []);
-	const handlePointerOut = useCallback((_: PointerEvent) => {
+	const handleTrackPointerOut = useCallback((_event: PointerEvent, _trackId: Accept<EventType, number>) => {
 		setHoveredTrack(null);
 	}, []);
-
-	const isTrackDisabled = useCallback(
-		(trackId: Accept<EventType, number>) => {
-			if (!areLasersLocked) return false;
-			return isSideTrack(trackId, "right", tracks);
-		},
-		[tracks, areLasersLocked],
-	);
 
 	const handleEventPointerDown = useCallback(
 		(event: PointerEvent, data: App.IBasicEvent) => {
@@ -214,164 +190,48 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof Wrapper>) {
 	);
 
 	return (
-		<Wrapper {...rest} ref={tracksScrollContainer} data-loading={isLoading}>
-			<HeaderWrapper onContextMenu={(ev) => ev.preventDefault()}>
-				<ActionsWrapper />
-				<TimelineWrapper>
-					<EventGridTimeline beatNums={beatNums} />
-				</TimelineWrapper>
-			</HeaderWrapper>
-			<MainWrapper>
-				<PrefixWrapper onWheel={(ev) => ev.stopPropagation()}>
-					{allTracks.map(([id, { label }]) => (
-						<Prefix key={id} style={{ height: rowHeight }} data-disabled={isTrackDisabled(Number.parseInt(id, 10))} onContextMenu={(ev) => ev.preventDefault()}>
-							{label}
-						</Prefix>
-					))}
-				</PrefixWrapper>
-				<TracksWrapper editMode={selectedEditMode}>
-					<TrackMarkersWrapper ref={container}>
-						<EventGridMarkers width={dimensions.width} height={dimensions.height} primaryDivisions={4} />
-					</TrackMarkersWrapper>
-					<TrackContentsWrapper ref={tracksSelectionBoxRef} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
-						{allTracks.map(([id]) => {
-							const isDisabled = isTrackDisabled(Number.parseInt(id, 10));
-							return (
-								<EventGridTrack
+		<EventGrid.Root {...rest} aria-busy={isLoading}>
+			<EventGrid.Header onContextMenu={(ev) => ev.preventDefault()}>
+				<EventGrid.Actions />
+				<EventGrid.Timeline beatNums={beatNums} />
+			</EventGrid.Header>
+			<EventGrid.Body>
+				<EventGrid.PrefixGroup onWheel={(ev) => ev.stopPropagation()}>
+					<EventGrid.ForTracks>
+						{(track, id, { disabled, style }) => (
+							<EventGrid.Prefix key={id} style={style} aria-disabled={disabled} onContextMenu={(ev) => ev.preventDefault()}>
+								{track.label}
+							</EventGrid.Prefix>
+						)}
+					</EventGrid.ForTracks>
+				</EventGrid.PrefixGroup>
+				<EventGrid.Control editMode={selectedEditMode}>
+					<EventGrid.Markers ref={container} width={dimensions.width} height={dimensions.height} primaryDivisions={4} />
+					<EventGrid.Trigger ref={tracksSelectionBoxRef} onPointerDown={handleTriggerPointerDown} onPointerUp={handleTriggerPointerUp}>
+						<EventGrid.ForTracks>
+							{(_, id, { disabled, style }) => (
+								<BasicEventTrack
 									key={id}
-									trackId={Number.parseInt(id, 10)}
+									trackId={id}
 									width={dimensions.width}
-									height={rowHeight}
-									disabled={isDisabled}
-									onPointerOver={(ev) => handlePointerOver(ev, Number.parseInt(id, 10))}
-									onPointerOut={handlePointerOut}
+									style={style}
+									disabled={disabled}
+									onPointerOver={(ev) => handleTrackPointerOver(ev, id)}
+									onPointerOut={(ev) => handleTrackPointerOut(ev, id)}
 									onEventPointerDown={handleEventPointerDown}
 									onEventPointerOver={handleEventPointerOver}
 									onEventWheel={handleEventWheel}
 								/>
-							);
-						})}
-					</TrackContentsWrapper>
-					{selectionBox && <EventGridSelectionBox box={selectionBox} />}
-					<EventGridCursor gridWidth={dimensions.width} />
-					{typeof mousePositionInPx === "number" && <MouseCursor style={{ left: mousePositionInPx }} />}
-				</TracksWrapper>
-			</MainWrapper>
-		</Wrapper>
+							)}
+						</EventGrid.ForTracks>
+					</EventGrid.Trigger>
+					<EventGrid.SelectionBox box={selectionBox} />
+					<EventGrid.Cursor gridWidth={dimensions.width} />
+					<EventGrid.Pointer width={dimensions.width} />
+				</EventGrid.Control>
+			</EventGrid.Body>
+		</EventGrid.Root>
 	);
 }
-
-const Wrapper = styled("div", {
-	base: stack.raw({
-		gap: 0,
-		opacity: { base: 1, _loading: 0.25 },
-		pointerEvents: { base: "auto", _loading: "none" },
-		userSelect: "none",
-		overflowX: "clip",
-		overflowY: "auto",
-		_scrollbar: { display: "none" },
-	}),
-});
-
-const HeaderWrapper = styled("div", {
-	base: hstack.raw({
-		position: "sticky",
-		height: "32px",
-		top: 0,
-		gap: 0,
-		backdropFilter: "blur(4px)",
-		zIndex: 2,
-	}),
-});
-
-const MainWrapper = styled("div", {
-	base: hstack.raw({
-		gap: 0,
-		backdropFilter: "blur(4px)",
-	}),
-});
-
-const ActionsWrapper = styled("div", {
-	base: center.raw({
-		minWidth: "170px",
-		height: "100%",
-		borderBottomWidth: "sm",
-		borderColor: "border.muted",
-	}),
-});
-
-const TimelineWrapper = styled("div", {
-	base: {
-		position: "relative",
-		height: "100%",
-		flex: 1,
-	},
-});
-
-const PrefixWrapper = styled("div", {
-	base: stack.raw({
-		gap: 0,
-	}),
-});
-
-const Prefix = styled("div", {
-	base: hstack.raw({
-		width: "170px",
-		justify: "flex-end",
-		textAlign: "end",
-		paddingInline: 1,
-		position: "relative",
-		backgroundColor: { base: undefined, _disabled: "bg.disabled" },
-		borderBlockWidth: { base: "sm", _lastOfType: 0 },
-		borderRightWidth: "md",
-		borderColor: "border.muted",
-		opacity: { base: 1, _disabled: "disabled" },
-		cursor: { base: undefined, _disabled: "not-allowed" },
-		overflowX: "auto",
-		whiteSpace: "nowrap",
-		textOverflow: "ellipsis",
-		_scrollbar: { display: "none" },
-	}),
-});
-
-const TracksWrapper = styled("div", {
-	base: {
-		position: "relative",
-		flex: 1,
-	},
-	variants: {
-		editMode: {
-			place: { cursor: "pointer" },
-			select: { cursor: "crosshair" },
-		},
-	},
-});
-
-const TrackMarkersWrapper = styled("div", {
-	base: {
-		position: "absolute",
-		inset: 0,
-	},
-});
-
-const TrackContentsWrapper = styled("div", {
-	base: {
-		position: "relative",
-	},
-});
-
-const MouseCursor = styled("div", {
-	base: {
-		position: "absolute",
-		top: 0,
-		width: "3px",
-		height: "100%",
-		background: "fg.default",
-		borderWidth: "sm",
-		borderColor: "border.default",
-		pointerEvents: "none",
-		transform: "translateX(-1px)",
-	},
-});
 
 export default EventGridEditor;

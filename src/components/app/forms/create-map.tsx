@@ -1,17 +1,18 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
-import { useState } from "react";
-import { gtValue, minLength, number, object, pipe, string, transform } from "valibot";
+import { array, file, gtValue, minLength, nonEmpty, number, object, pipe, string, transform } from "valibot";
 
 import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
-import { Field, FileUpload, useAppForm } from "$/components/ui/compositions";
+import { useAppForm } from "$/components/ui/compositions";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
 
 const SCHEMA = object({
+	songFile: pipe(array(file()), nonEmpty("You must provide exactly one file.")),
+	coverArtFile: pipe(array(file()), nonEmpty("You must provide exactly one file.")),
 	name: pipe(string(), minLength(1)),
 	subName: pipe(string()),
 	artistName: pipe(string(), minLength(1)),
@@ -32,13 +33,10 @@ function CreateMapForm({ dialog }: Props) {
 	const currentSongIds = useAppSelector(selectSongIds);
 	const username = useAppSelector(selectUsername);
 
-	// These files are sent to the redux middleware.
-	// We'll store them on disk (currently in indexeddb, but that may change), and capture a reference to them by a filename, which we'll store in redux.
-	const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
-	const [songFile, setSongFile] = useState<File | null>(null);
-
 	const Form = useAppForm({
 		defaultValues: {
+			songFile: [] as File[],
+			coverArtFile: [] as File[],
 			name: "",
 			subName: "",
 			artistName: "",
@@ -53,61 +51,49 @@ function CreateMapForm({ dialog }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
-			if (!songFile) {
-				return APP_TOASTER.create({
-					type: "error",
-					description: "Please select a song file first",
-				});
-			}
-			if (!coverArtFile) {
-				return APP_TOASTER.create({
-					type: "error",
-					description: "Please select a cover art file first",
-				});
-			}
-
-			const songId = createSongId(value);
-			const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
-
-			// Song IDs must be unique, and song IDs are generated from the name.
-			// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
-			if (currentSongIds.some((id) => id === songId)) {
-				return APP_TOASTER.create({
-					id: "song-already-exists",
-					type: "error",
-					description: "You already have a song with this name. Please choose a unique name.",
-				});
-			}
-
 			try {
-				dispatch(addSong({ songId, beatmapId, name: value.name, subName: value.subName, artistName: value.artistName, bpm: value.bpm, offset: value.offset, songFile, coverArtFile, username: username, selectedCharacteristic: value.characteristic, selectedDifficulty: value.difficulty }));
+				const songId = createSongId(value);
+
+				// Song IDs must be unique, and song IDs are generated from the name.
+				// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
+				if (currentSongIds.some((id) => id === songId)) {
+					throw new Error("You already have a song with this name. Please choose a unique name.");
+				}
+
+				const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
+
+				dispatch(
+					addSong({
+						songId,
+						beatmapId,
+						name: value.name,
+						subName: value.subName,
+						artistName: value.artistName,
+						bpm: value.bpm,
+						offset: value.offset ?? 0,
+						songFile: value.songFile[0],
+						coverArtFile: value.coverArtFile[0],
+						username: username,
+						selectedCharacteristic: value.characteristic,
+						selectedDifficulty: value.difficulty,
+					}),
+				);
 
 				if (dialog) dialog.setOpen(false);
-			} catch (err) {
-				console.error("Could not save files to local storage", err);
-				return APP_TOASTER.create({
-					description: "Error creating map. See console for more information.",
-					type: "error",
-				});
+			} catch (error) {
+				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error creating map: See console for more information.` });
+				console.error("Could not save files to local storage", error);
 			}
 		},
 	});
 
 	return (
 		<Form.AppForm>
-			<Form.Row>
-				<Field label="Song File">
-					<FileUpload accept={SONG_FILE_ACCEPT_TYPE} acceptedFiles={songFile ? [songFile] : []} onFileAccept={(details) => setSongFile(details.files[0])}>
-						Audio File
-					</FileUpload>
-				</Field>
-				<Field label="Cover Art File">
-					<FileUpload accept={COVER_ART_FILE_ACCEPT_TYPE} acceptedFiles={coverArtFile ? [coverArtFile] : []} onFileAccept={(details) => setCoverArtFile(details.files[0])}>
-						Image File
-					</FileUpload>
-				</Field>
-			</Form.Row>
 			<Form.Root>
+				<Form.Row>
+					<Form.AppField name="songFile">{(ctx) => <ctx.FileUpload label="Song File" maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE} />}</Form.AppField>
+					<Form.AppField name="coverArtFile">{(ctx) => <ctx.FileUpload label="Cover Art File" maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} />}</Form.AppField>
+				</Form.Row>
 				<Form.Row>
 					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
@@ -119,7 +105,7 @@ function CreateMapForm({ dialog }: Props) {
 				</Form.Row>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
 				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
-				<Form.Submit>Create</Form.Submit>
+				<Form.Submit>Create new map</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>
 	);

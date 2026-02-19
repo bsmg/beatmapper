@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 
-interface UseGlobalEventListenerOptions {
+export interface UseGlobalEventListenerOptions {
 	shouldFire?: boolean;
 	options?: AddEventListenerOptions;
 }
-
 export function useGlobalEventListener<K extends keyof WindowEventMap>(key: K, listener: (this: Window, ev: WindowEventMap[K]) => void, options: UseGlobalEventListenerOptions = { shouldFire: true }) {
 	const savedCallback = useRef(listener);
 

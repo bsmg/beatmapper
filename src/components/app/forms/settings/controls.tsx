@@ -1,11 +1,10 @@
-import { Text } from "$/components/ui/compositions";
-import { Form } from "$/components/ui/styled";
+import { Stack, Wrap } from "$:styled-system/jsx";
 
 function AppControlsSettings() {
 	return (
-		<Form.Root size="sm">
-			<Text>Soon™</Text>
-		</Form.Root>
+		<Stack gap={4}>
+			<Wrap gap={2}>Soon™</Wrap>
+		</Stack>
 	);
 }
 

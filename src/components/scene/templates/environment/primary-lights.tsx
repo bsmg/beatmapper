@@ -1,41 +1,23 @@
 import { Fragment } from "react";
 
-import { TubeLight } from "$/components/scene/compositions/environment";
-import { LightMaterial } from "$/components/scene/compositions/materials";
 import { SURFACE_WIDTH } from "$/components/scene/constants";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
-import { convertDegreesToRadians } from "$/utils";
-
-const Y_POSITION = 5;
-const Z_POSITION = -85;
-
-const CHEVRON_SIDE_LENGTH = 5;
-const CHEVRON_THICKNESS = 0.5;
-const CHEVRON_X_OFFSET = CHEVRON_SIDE_LENGTH / 2 - CHEVRON_THICKNESS * 1.25;
-const CHEVRON_ANGLE = Math.PI * 0.2;
+import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
+import { useEventTrack } from "$/components/scene/hooks/use-event-track";
+import { Environment } from "$/components/scene/layouts";
 
 const SIDE_BEAM_LENGTH = 250;
 
 function PrimaryLights() {
 	const [lastEvent] = useEventTrack({ trackId: 4 });
 
-	const light = useLightProps({ lastEvent });
+	const light = useLightEffect({ lastEvent });
 
 	return (
 		<Fragment>
-			<group position-y={Y_POSITION} position-z={Z_POSITION}>
-				<mesh position-x={CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={-CHEVRON_ANGLE}>
-					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial light={light} />
-				</mesh>
-				<mesh position-x={-CHEVRON_X_OFFSET} position-y={CHEVRON_THICKNESS / 2} rotation-z={CHEVRON_ANGLE}>
-					<boxGeometry attach="geometry" args={[CHEVRON_SIDE_LENGTH, CHEVRON_THICKNESS, CHEVRON_THICKNESS]} />
-					<LightMaterial light={light} />
-				</mesh>
-			</group>
+			<Environment.Chevron light={light} position-y={5} position-z={-85} />
 			{/* Side parallel-to-platform lasers */}
-			<TubeLight radius={0.05} light={light} position={[SURFACE_WIDTH - 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation={[convertDegreesToRadians(90), 0, 0]} length={SIDE_BEAM_LENGTH} />
-			<TubeLight radius={0.05} light={light} position={[-SURFACE_WIDTH + 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation={[convertDegreesToRadians(90), 0, 0]} length={SIDE_BEAM_LENGTH} />
+			<Environment.TubeLight light={light} radius={0.05} position={[SURFACE_WIDTH - 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation-x={Math.PI / 2} length={SIDE_BEAM_LENGTH} />
+			<Environment.TubeLight light={light} radius={0.05} position={[-SURFACE_WIDTH + 2, -2, -SIDE_BEAM_LENGTH / 2 - 5]} rotation-x={Math.PI / 2} length={SIDE_BEAM_LENGTH} />
 			{/* TODO: laser beams for along the side and maybe along the bottom too? */}
 		</Fragment>
 	);

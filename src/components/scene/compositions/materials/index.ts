@@ -1,1 +1,0 @@
-export { LightMaterial } from "./light";

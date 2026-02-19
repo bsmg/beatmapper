@@ -4,8 +4,9 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
-import { ErrorBoundary, PendingBoundary } from "$/components/app/layouts";
 import { APP_TOASTER } from "./components/app/constants";
+import ErrorBoundary from "./components/app/templates/error-boundary";
+import PendingBoundary from "./components/app/templates/pending-boundary";
 import { routeTree } from "./routeTree.gen";
 import { store } from "./setup";
 
@@ -43,6 +44,7 @@ const updateSW = registerSW({
 			type: "loading",
 			title: "New Update Available",
 			description: "A new update is available! Click the button to reload the app and move to the new update.",
+			closable: true,
 			action: {
 				label: "Reload",
 				onClick: () => {

@@ -1,3 +1,4 @@
+import type { Assign } from "@ark-ui/react";
 import { type ComponentProps, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 
 function getScaledCanvasProps(width: number, height: number) {
@@ -19,12 +20,12 @@ function getScaledCanvasProps(width: number, height: number) {
 	};
 }
 
-interface Props extends ComponentProps<"canvas"> {
+interface CanvasProps {
 	width: number;
 	height: number;
 	draw: (ctx: CanvasRenderingContext2D, dimensions: { width: number; height: number }) => void;
 }
-export const Canvas = forwardRef<HTMLCanvasElement, Props>(function Canvas({ draw, width: initialWidth, height: initialHeight, ...rest }, ref) {
+export const Canvas = forwardRef<HTMLCanvasElement, Assign<ComponentProps<"canvas">, CanvasProps>>(function Canvas({ draw, width: initialWidth, height: initialHeight, ...rest }, ref) {
 	const { style, width, height } = useMemo(() => getScaledCanvasProps(initialWidth, initialHeight), [initialWidth, initialHeight]);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 

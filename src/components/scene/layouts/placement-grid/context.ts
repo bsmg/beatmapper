@@ -1,5 +1,5 @@
 import type { ThreeEvent } from "@react-three/fiber";
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
 export interface IPlacementGridContext {
 	cellDownAt: { rowIndex: number; colIndex: number } | null;
@@ -13,6 +13,12 @@ export interface IPlacementGridContext {
 }
 
 export const Context = createContext<IPlacementGridContext>({ cellDownAt: null, cellOverAt: null, hoveredCell: null, direction: null });
+
+export function usePlacementGridContext() {
+	const ctx = useContext(Context);
+	if (!ctx) throw new Error("Missing provider.");
+	return ctx;
+}
 
 export const Provider = Context.Provider;
 export const Consumer = Context.Consumer;

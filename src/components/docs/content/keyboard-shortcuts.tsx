@@ -1,9 +1,9 @@
 import { PlusIcon } from "lucide-react";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 
-import { Shortcut } from "$/components/app/compositions";
-import { Text } from "$/components/ui/compositions";
-import { styled } from "$:styled-system/jsx";
+import { For } from "$/components/ui/atoms";
+import { Shortcut } from "$/components/ui/compositions";
+import { styled, Text } from "$:styled-system/jsx";
 import { grid, stack, wrap } from "$:styled-system/patterns";
 
 const IconRow = styled("span", {
@@ -27,7 +27,9 @@ function Or({ children = "or" }) {
 	return <OrWrapper>— {children} —</OrWrapper>;
 }
 
-function Row({ row, separator }: { row?: string[]; separator?: string }) {
+function Row({ row }: { row: string[] }): ReactNode;
+function Row({ separator }: { separator: string | undefined }): ReactNode;
+function Row({ row, separator }: { row?: string[]; separator?: string | undefined }): ReactNode {
 	if (!row || separator) {
 		return (
 			<IconRow>
@@ -37,21 +39,13 @@ function Row({ row, separator }: { row?: string[]; separator?: string }) {
 	}
 	return (
 		<IconRow>
-			{row.map((code, index) => {
-				const separator = code === "+" ? " " : "+";
-				if (index > 0)
-					return [
-						<PlusIcon key={`${index}-${"plus"}`} size={16} />,
-						<Shortcut key={`${index}-${code}`} separator={separator}>
-							{code}
-						</Shortcut>,
-					];
-				return (
-					<Shortcut key={`${index}-${code}`} separator={separator}>
+			<For each={row} interleave={(index) => <PlusIcon key={`${index}-${"plus"}`} size={16} />}>
+				{(code, index) => (
+					<Shortcut key={`${index}-${code}`} separator={code === "+" ? " " : "+"}>
 						{code}
 					</Shortcut>
-				);
-			})}
+				)}
+			</For>
 		</IconRow>
 	);
 }
@@ -74,19 +68,15 @@ interface Props extends PropsWithChildren {
 	separator?: string;
 }
 export function ShortcutItem({ title, keys, separator, children }: Props) {
-	const rows = useMemo(
-		() =>
-			keys.map((row, index) => {
-				if (index > 0) return [<Row key={`${index}-${"separator"}`} separator={separator} />, <Row key={`${index}-${"row"}`} row={row} />];
-				return <Row key={`${index}-${"row"}`} row={row} />;
-			}),
-		[keys, separator],
-	);
 	return (
 		<ShortcutWrapper>
-			<Keys>{rows}</Keys>
+			<Keys>
+				<For each={keys} interleave={(index) => <Row key={`${index}-${"separator"}`} separator={separator} />}>
+					{(row, index) => <Row key={`${index}-${"row"}`} row={row} />}
+				</For>
+			</Keys>
 			<Children>
-				<Text color={"fg.default"} fontSize={"18px"} fontWeight={700}>
+				<Text textStyle={"paragraph"} color={"fg.default"} fontSize={"18px"} fontWeight={700}>
 					{title}
 				</Text>
 				<Sidenote>{children}</Sidenote>

@@ -1,40 +1,58 @@
+import type { Assign } from "@ark-ui/react";
 import type { CollectionItem, ListCollection } from "@ark-ui/react/collection";
-import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import type { RadioGroupItemBaseProps } from "@ark-ui/react/radio-group";
+import { type ComponentProps, type CSSProperties, forwardRef, type PropsWithChildren } from "react";
 
-import { ListCollectionFor } from "$/components/ui/atoms";
+import { ForListCollection } from "$/components/ui/atoms";
+import { useFieldData } from "$/components/ui/hooks/form.hooks";
 import * as Builder from "$/components/ui/styled/radio-button-group";
-import { Tooltip } from "./tooltip";
+import { Field, type FieldProps } from "./field";
 
-export interface RadioButtonItem extends CollectionItem {
-	value: string;
-	tooltip?: ReactNode;
+function getItemStyles(item: CollectionItem): CSSProperties {
+	return { "--current-color": typeof item === "object" && !!item && "color" in item ? item.color : undefined };
 }
 
-export interface RadioButtonGroupProps<T extends RadioButtonItem> extends ComponentProps<typeof Builder.Root> {
+export interface RadioButtonProps {
+	item: CollectionItem;
+}
+
+const RadioButton = forwardRef<HTMLInputElement, Assign<RadioGroupItemBaseProps, PropsWithChildren<RadioButtonProps>>>(function Radio({ item, children, ...rest }, ref) {
+	return (
+		<Builder.Item {...rest} style={getItemStyles(item)}>
+			<Builder.ItemText>{children}</Builder.ItemText>
+			<Builder.ItemHiddenInput ref={ref} />
+		</Builder.Item>
+	);
+});
+
+export interface RadioButtonGroupProps<T extends CollectionItem> {
+	label?: string;
 	collection: ListCollection<T>;
 }
-export function RadioButtonGroup<T extends RadioButtonItem>({ collection, children, ...rest }: RadioButtonGroupProps<T>) {
+
+export function RadioButtonGroup<T extends CollectionItem>({ label, collection, ...rest }: Assign<ComponentProps<typeof Builder.Root>, RadioButtonGroupProps<T>>) {
 	return (
 		<Builder.Root defaultValue={collection.firstValue} {...rest}>
-			{children && <Builder.Label>{children}</Builder.Label>}
+			{label && <Builder.Label>{label}</Builder.Label>}
 			<Builder.Indicator />
-			<ListCollectionFor collection={collection}>
-				{(item) => {
-					const value = collection.getItemValue(item);
-					if (!value) return null;
-					const label = collection.stringifyItem(item);
-					const disabled = collection.getItemDisabled(item);
-					const style = { "--current-color": item.color } as CSSProperties;
-					return (
-						<Tooltip key={value} disabled={!item.tooltip} render={() => item.tooltip}>
-							<Builder.Item value={value} disabled={disabled} data-disabled={disabled} style={style}>
-								<Builder.ItemText>{label}</Builder.ItemText>
-								<Builder.ItemHiddenInput />
-							</Builder.Item>
-						</Tooltip>
-					);
-				}}
-			</ListCollectionFor>
+			<ForListCollection collection={collection}>
+				{(item, { value, label, disabled }) => (
+					<RadioButton key={value} item={item} value={value} disabled={disabled}>
+						<Builder.ItemText>{label}</Builder.ItemText>
+						<Builder.ItemHiddenInput />
+					</RadioButton>
+				)}
+			</ForListCollection>
 		</Builder.Root>
+	);
+}
+
+export function RadioButtonGroupDataField<T extends CollectionItem>({ label, helperText, ...delegated }: Assign<ComponentProps<typeof RadioButtonGroup<T>>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<string | null>(delegated);
+
+	return (
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<RadioButtonGroup {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+		</Field>
 	);
 }

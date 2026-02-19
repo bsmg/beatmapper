@@ -1,8 +1,8 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, PropsWithChildren } from "react";
 
-import { Heading, Text } from "$/components/ui/compositions";
-import { styled, VStack } from "$:styled-system/jsx";
+import { Heading } from "$/components/ui/compositions";
+import { styled, Text, VStack } from "$:styled-system/jsx";
 import { vstack } from "$:styled-system/patterns";
 
 interface Props extends PropsWithChildren {
@@ -16,7 +16,7 @@ function OptionColumn({ title, description, icon: Icon, children }: Props) {
 			<VStack gap={2}>
 				<Icon size={24} />
 				<Title rank={3}>{title}</Title>
-				<Text>{description}</Text>
+				<Text textStyle={"paragraph"}>{description}</Text>
 			</VStack>
 			{children}
 		</Wrapper>

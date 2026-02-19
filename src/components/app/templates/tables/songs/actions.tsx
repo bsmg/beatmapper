@@ -1,16 +1,16 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import type { MenuSelectionDetails } from "@ark-ui/react/menu";
-import { ChevronDownIcon } from "lucide-react";
 import { Fragment, useCallback, useMemo } from "react";
 
 import { APP_TOASTER } from "$/components/app/constants";
-import { AlertDialogProvider, Button, Menu, Text } from "$/components/ui/compositions";
+import { AlertDialogProvider, Button, Menu } from "$/components/ui/compositions";
 import { isSongReadonly } from "$/helpers/song.helpers";
 import { downloadMapFiles, removeSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSongById } from "$/store/selectors";
 import type { App, SongId } from "$/types";
+import { Text } from "$:styled-system/jsx";
 
 interface SongActionListCollection {
 	song: App.ISong;
@@ -63,11 +63,13 @@ function SongsDataTableActions({ sid }: Props) {
 	return (
 		<Fragment>
 			<Menu collection={ACTION_LIST_COLLECTION} onSelect={handleActionSelect}>
-				<Button variant="subtle" size="icon">
-					<ChevronDownIcon size={16} />
-				</Button>
+				{(Indicator) => (
+					<Button variant="subtle" size="icon">
+						<Indicator size={16} />
+					</Button>
+				)}
 			</Menu>
-			<AlertDialogProvider value={deleteAlert} render={() => <Text>Are you sure? This action cannot be undone 😱</Text>} onSubmit={handleDeleteAction} />
+			<AlertDialogProvider value={deleteAlert} render={() => <Text textStyle={"paragraph"}>Are you sure? This action cannot be undone 😱</Text>} onSubmit={handleDeleteAction} />
 		</Fragment>
 	);
 }

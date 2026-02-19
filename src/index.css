@@ -26,6 +26,10 @@ option {
 	color: black;
 }
 
+svg {
+	transform: translateZ(0);
+}
+
 .expressive-code pre[data-language] {
 	width: 0;
 	min-width: 100%;

@@ -12,10 +12,9 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 	component: RouteComponent,
 	loader: ({ params }) => {
 		const state = store.getState();
-		const { sid, bid } = params;
 
-		const song = selectSongById(state, sid);
-		const beatmap = selectBeatmapById(state, sid, bid);
+		const song = selectSongById(state, params.sid);
+		const beatmap = selectBeatmapById(state, params.sid, params.bid);
 
 		const njs = NoteJumpSpeed.create(song.bpm, beatmap.noteJumpSpeed, beatmap.startBeatOffset);
 

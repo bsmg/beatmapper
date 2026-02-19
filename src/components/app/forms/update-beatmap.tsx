@@ -1,27 +1,27 @@
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
-import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
+import { CharacteristicRename, DifficultyRename } from "bsmap";
+import type { CharacteristicName, DifficultyName, EnvironmentAllName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, minValue, number, object, pipe, string, transform } from "valibot";
+import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
-import { HStack, Stack, Wrap } from "$:styled-system/jsx";
+import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	lightshowId: string(),
 	noteJumpSpeed: pipe(number(), minValue(0)),
 	startBeatOffset: number(),
-	environmentName: EnvironmentAllNameSchema,
-	colorSchemeName: string(),
+	environmentName: custom<EnvironmentAllName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
+	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),
 	customLabel: pipe(
@@ -34,7 +34,7 @@ interface Props {
 	bid: BeatmapId;
 }
 function UpdateBeatmapForm({ bid }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
@@ -50,7 +50,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 			noteJumpSpeed: savedVersion.noteJumpSpeed,
 			startBeatOffset: savedVersion.startBeatOffset,
 			environmentName: savedVersion.environmentName,
-			colorSchemeName: savedVersion.colorSchemeName ?? "",
+			colorSchemeName: savedVersion.colorSchemeName,
 			mappers: savedVersion.mappers ?? [],
 			lighters: savedVersion.lighters ?? [],
 			customLabel: savedVersion.customLabel ?? "",
@@ -61,19 +61,24 @@ function UpdateBeatmapForm({ bid }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			dispatch(
-				updateBeatmap({
-					songId: sid,
-					beatmapId: bid,
-					changes: {
-						...value,
-						colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
-						customLabel: value.customLabel === "" ? undefined : value.customLabel,
-					},
-				}),
-			);
+			try {
+				dispatch(
+					updateBeatmap({
+						songId: sid,
+						beatmapId: bid,
+						changes: {
+							...value,
+							colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
+							customLabel: value.customLabel === "" ? undefined : value.customLabel,
+						},
+					}),
+				);
 
-			formApi.reset(value);
+				formApi.reset(value);
+			} catch (error) {
+				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error updating beatmap: See console for more information.` });
+				console.error(error);
+			}
 		},
 	});
 
@@ -121,12 +126,12 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
+			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text textStyle={"paragraph"}>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
 					<HStack gap={0}>
-						<Interleave separator={({ index }) => <DotIcon key={index} size={16} />}>
+						<Interleave separator={(index) => <DotIcon key={index} size={16} />}>
 							<Heading rank={4}>{CharacteristicRename[savedVersion.characteristic]}</Heading>
 							<Heading rank={4}>{DifficultyRename[savedVersion.difficulty]}</Heading>
 						</Interleave>
@@ -134,22 +139,22 @@ function UpdateBeatmapForm({ bid }: Props) {
 				</Stack>
 				<Stack gap={2}>
 					<Form.Row>
-						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
-						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
+						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput key={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
+						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput key={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
 					</Form.Row>
-					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
-					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
+					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput key={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
+					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput key={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
 					<Collapsible
 						open={showAdvancedControls}
 						onOpenChange={(x) => setShowAdvancedControls(x.open)}
 						render={() => (
 							<Stack gap={2}>
 								<Form.Row>
-									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
-									<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input key={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
+									<Form.AppField name="customLabel">{(ctx) => <ctx.Input key={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
 								</Form.Row>
-								<Form.AppField name="environmentName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
-								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Color Scheme Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox key={`${bid}.${ctx.name}`} creatable label="Environment Override" helperText={"If a newer environment is not available to select, create a new entry in the combobox."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox key={`${bid}.${ctx.name}`} clearable label="Color Scheme Override" collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
 							</Stack>
 						)}
 					>
@@ -167,7 +172,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 						unmountOnExit
 						render={(ctx) => (
 							<CreateBeatmapForm dialog={ctx} onSubmit={handleCopyBeatmap}>
-								{() => "Copy beatmap"}
+								Copy beatmap
 							</CreateBeatmapForm>
 						)}
 					>
@@ -175,7 +180,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 							Copy
 						</Button>
 					</Dialog>
-					<AlertDialogProvider value={deleteAlert} render={() => <Text>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
+					<AlertDialogProvider value={deleteAlert} render={() => <Text textStyle={"paragraph"}>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
 						<Button variant="subtle" size="sm" colorPalette="red">
 							Delete
 						</Button>

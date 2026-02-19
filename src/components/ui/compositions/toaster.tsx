@@ -1,37 +1,41 @@
 import { Portal } from "@ark-ui/react/portal";
-import type { CreateToasterReturn } from "@ark-ui/react/toast";
 import { XIcon } from "lucide-react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, RefObject } from "react";
 
-import * as Builder from "$/components/ui/styled/toaster";
+import { Show } from "$/components/ui/atoms";
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
+import * as Builder from "$/components/ui/styled/toast";
 import { Button } from "./button";
 import { Heading } from "./heading";
 
-interface Props extends Omit<ComponentProps<typeof Builder.Toaster>, "children"> {
-	toaster: CreateToasterReturn;
+export interface ToasterProps extends Omit<ComponentProps<typeof Builder.Toaster>, "children"> {
+	portalled?: boolean;
+	portalRef?: RefObject<HTMLElement>;
 }
-export function Toaster({ toaster, ...rest }: Props) {
+
+export function Toaster({ toaster, portalled = true, portalRef, ...rest }: ToasterProps) {
+	const Title = useRender(
+		Builder.Title,
+		toPolymorphic(Heading, (Element, delegated) => <Element {...delegated} rank={2} />),
+	);
+	const ActionTrigger = useRender(
+		Builder.Title,
+		toPolymorphic(Button, (Element, delegated) => <Element {...delegated} variant="subtle" size="sm" />),
+	);
+
 	return (
-		<Portal>
+		<Portal disabled={!portalled} container={portalRef}>
 			<Builder.Toaster {...rest} toaster={toaster}>
 				{(toast) => (
 					<Builder.Root key={toast.id}>
-						{toast.title && (
-							<Builder.Title asChild>
-								<Heading rank={2}>{toast.title}</Heading>
-							</Builder.Title>
-						)}
-						{toast.description && <Builder.Description>{toast.description}</Builder.Description>}
-						{toast.action && (
-							<Builder.ActionTrigger asChild>
-								<Button variant="subtle" size="sm" onClick={toast.action.onClick}>
-									{toast.action.label}
-								</Button>
-							</Builder.ActionTrigger>
-						)}
-						<Builder.CloseTrigger>
-							<XIcon size={20} />
-						</Builder.CloseTrigger>
+						<Show when={toast.title}>{(title) => <Title>{title}</Title>}</Show>
+						<Show when={toast.description}>{(description) => <Builder.Description>{description}</Builder.Description>}</Show>
+						<Show when={toast.action}>{(action) => <ActionTrigger>{action.label}</ActionTrigger>}</Show>
+						<Show when={toast.closable}>
+							<Builder.CloseTrigger>
+								<XIcon size={20} />
+							</Builder.CloseTrigger>
+						</Show>
 					</Builder.Root>
 				)}
 			</Builder.Toaster>

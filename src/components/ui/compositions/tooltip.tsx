@@ -1,35 +1,46 @@
+import type { Assign } from "@ark-ui/react";
 import { Portal } from "@ark-ui/react/portal";
 import type { UseTooltipContext } from "@ark-ui/react/tooltip";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactNode, RefObject } from "react";
 
+import { Show } from "$/components/ui/atoms";
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/tooltip";
 
-interface Props extends ComponentProps<typeof Builder.Root> {
+export interface TooltipProps {
+	disabled?: boolean;
 	showArrow?: boolean;
 	portalled?: boolean;
-	portalRef?: React.RefObject<HTMLElement>;
+	portalRef?: RefObject<HTMLElement>;
 	render: (ctx: UseTooltipContext) => ReactNode;
-	disabled?: boolean;
 }
-export function Tooltip({ showArrow = true, portalled = true, portalRef, children, render, disabled, ...rest }: Props) {
+
+function Overlay({ showArrow, portalled = true, portalRef, render }: TooltipProps) {
+	return (
+		<Portal disabled={!portalled} container={portalRef}>
+			<Builder.Positioner>
+				<Builder.Content>
+					<Show when={showArrow}>
+						<Builder.Arrow>
+							<Builder.ArrowTip />
+						</Builder.Arrow>
+					</Show>
+					<Builder.Context>{(ctx) => render(ctx)}</Builder.Context>
+				</Builder.Content>
+			</Builder.Positioner>
+		</Portal>
+	);
+}
+
+export function Tooltip({ children, disabled, showArrow, portalled, portalRef, render, ...rest }: Assign<ComponentProps<typeof Builder.Root>, TooltipProps>) {
+	const Trigger = useRender(Builder.Trigger, toPolymorphic("div"));
+
 	if (disabled) return children;
+
 	return (
 		<Builder.Root {...rest}>
-			<Builder.Trigger asChild>
-				<span>{children}</span>
-			</Builder.Trigger>
-			<Portal disabled={!portalled} container={portalRef}>
-				<Builder.Positioner>
-					<Builder.Content>
-						{showArrow && (
-							<Builder.Arrow>
-								<Builder.ArrowTip />
-							</Builder.Arrow>
-						)}
-						<Builder.Context>{(ctx) => render(ctx)}</Builder.Context>
-					</Builder.Content>
-				</Builder.Positioner>
-			</Portal>
+			{children && <Trigger>{children}</Trigger>}
+			<Overlay showArrow={showArrow} portalled={portalled} portalRef={portalRef} render={render} />
 		</Builder.Root>
 	);
 }

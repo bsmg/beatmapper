@@ -1,13 +1,8 @@
 import type { LucideProps } from "lucide-react";
 
-interface Props extends LucideProps {
-	title?: string;
-}
-
-function BombIcon({ title, size = 16 }: Props) {
+function BombIcon({ size = 16 }: LucideProps) {
 	return (
-		<svg width={`calc(${size} * 1.25)`} viewBox="6 3 36 36" fill="none">
-			<title>{title}</title>
+		<svg role="presentation" width={`calc(${size} * 1.25)`} viewBox="6 3 36 36" fill="none">
 			<circle cx="23" cy="21" r="16" fill="#696969" />
 			<path d="M23 21L17 6L20 5H23H26L29.5 6L32.5 8L34.5 9.5L36 12L37.5 14.5L38.5 17L39 20V22.5L38.5 25.5L37 28.5L23 21Z" fill="white" fillOpacity="0.17" />
 			<path d="M38.7279 4.24264L36.0382 14.2808L28.6897 6.93237L38.7279 4.24264Z" fill="#595959" />

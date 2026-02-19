@@ -1,4 +1,6 @@
 export { Canvas } from "./canvas";
-export { For, ListCollectionFor } from "./for";
+export { For, ForListCollection } from "./for";
 export { Interleave } from "./interleave";
-export { MDXContent } from "./mdx";
+export { MDX } from "./mdx";
+export { Show } from "./show";
+export { Match, Switch } from "./switch";

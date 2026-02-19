@@ -20,7 +20,7 @@ export interface UseEventTrackOptions {
 	trackId: Accept<EventType, number>;
 }
 export function useEventTrack({ trackId }: UseEventTrackOptions) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, sid));

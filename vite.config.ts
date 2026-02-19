@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
+import { devtools, type TanStackDevtoolsViteConfig } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { default as velite } from "@velite/plugin-vite";
 import { default as react } from "@vitejs/plugin-react";
@@ -13,6 +14,15 @@ import packageJson from "./package.json" with { type: "json" };
 // https://vitejs.dev/config/
 export default defineConfig(async (ctx) => {
 	const isDev = ctx.mode === "development";
+
+	const DEVTOOLS_OPTIONS: TanStackDevtoolsViteConfig = {
+		injectSource: {
+			enabled: true,
+			ignore: {
+				files: ["node_modules", /.*\.test\.(js|ts|jsx|tsx)$/, "src/components/scene/**/*.tsx", "src/components/app/logo.tsx"],
+			},
+		},
+	};
 
 	const PWA_OPTIONS: Partial<VitePWAOptions> = {
 		registerType: "prompt",
@@ -78,7 +88,7 @@ export default defineConfig(async (ctx) => {
 	}
 
 	return {
-		plugins: [react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
+		plugins: [devtools(DEVTOOLS_OPTIONS), react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
 			version: `"${version}"`,

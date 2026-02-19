@@ -3,7 +3,9 @@ import { createToaster } from "@ark-ui/react/toast";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
 import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import { nonEmpty, number, object, pipe, regex, string, transform } from "valibot";
 
+import { createPromptFactory } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import type { App, BeatmapId } from "$/types";
 import { getMetaKeyLabel } from "$/utils";
@@ -57,8 +59,7 @@ interface ColorSchemeListCollectionOptions {
 }
 export function createColorSchemeCollection({ colorSchemeIds }: ColorSchemeListCollectionOptions) {
 	return createListCollection({
-		items: ["", ...colorSchemeIds],
-		itemToString: (item) => (item === "" ? "Unset" : item),
+		items: colorSchemeIds,
 	});
 }
 
@@ -104,3 +105,41 @@ export function createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap
 		},
 	});
 }
+
+export const createQuickSelectPrompt = createPromptFactory({
+	title: "Quick Select",
+	description: "Selects all objects within the provided range of beats.",
+	defaultValues: { range: "" },
+	validate: pipe(
+		object({
+			range: pipe(
+				string(),
+				regex(/^\d+(-\d+)?$/, (issue) => `Invalid format: Expected <number> or <number>-<number> but received "${issue.input}"`),
+			),
+		}),
+		transform(({ range }) => {
+			let [start, end] = range
+				.trim()
+				.split("-")
+				.map((x) => Number.parseFloat(x));
+			if (typeof end !== "number") {
+				end = Number.POSITIVE_INFINITY;
+			}
+			return { start, end };
+		}),
+	),
+});
+
+export const createJumpToBeatPrompt = createPromptFactory({
+	title: "Jump to Beat",
+	description: "Moves the cursor to the provided beat number.",
+	defaultValues: { beatNum: 0 },
+	validate: object({ beatNum: number() }),
+});
+
+export const createAddBookmarkPrompt = createPromptFactory({
+	title: "Add Bookmark",
+	description: "Creates a new bookmark at the current beat.",
+	defaultValues: { name: "" },
+	validate: object({ name: pipe(string(), nonEmpty()) }),
+});

@@ -1,54 +1,43 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 import { type PropsWithChildren, useEffect, useRef } from "react";
-import { type Scene, Vector2 } from "three";
-import { EffectComposer, RenderPass, UnrealBloomPass } from "three-stdlib";
+import { HalfFloatType, type Scene } from "three";
 
-interface Props extends PropsWithChildren {}
-
-export function BloomWrapper({ children }: Props) {
+export function Bloom({ children }: PropsWithChildren) {
 	const { gl, camera, size } = useThree();
+
 	const scene = useRef<Scene>(null);
-	const composer = useRef<EffectComposer>();
+	const composer = useRef<EffectComposer>(null);
 
 	useEffect(() => {
 		if (!scene.current) return;
-		composer.current = new EffectComposer(gl);
-		composer.current.addPass(new RenderPass(scene.current, camera));
-		const bloomPass = new UnrealBloomPass(new Vector2(size.width, size.height), 1.5, 0.4, 0.85);
 
-		gl.toneMappingExposure = 1;
-		bloomPass.threshold = 0;
-		bloomPass.strength = 4;
-		bloomPass.radius = 0.75;
+		composer.current = new EffectComposer(gl, {
+			frameBufferType: HalfFloatType,
+		});
 
-		composer.current.addPass(bloomPass);
-	}, [camera, size.height, size.width, gl]);
+		const renderPass = new RenderPass(scene.current, camera);
+		composer.current.addPass(renderPass);
 
-	useEffect(() => {
-		if (!composer.current) return;
+		const bloomEffect = new BloomEffect({
+			mipmapBlur: true,
+			luminanceThreshold: 0,
+			intensity: 4.0,
+			radius: 0.75,
+		});
+		const effectPass = new EffectPass(camera, bloomEffect);
+		composer.current.addPass(effectPass);
+
 		void composer.current.setSize(size.width, size.height);
-	}, [size]);
+	}, [size, camera, gl]);
 
-	useFrame(() => {
-		if (!composer.current) return;
-		composer.current.render();
-		// gl.autoClear = false;
-		// gl.clearDepth();
-		// gl.render(scene.current, camera);
-	});
-	return <scene ref={scene}>{children}</scene>;
-}
-
-export function NoBloomWrapper({ children }: Props) {
-	const scene = useRef<Scene>(null);
-	const { gl, camera } = useThree();
-	useFrame(() => {
-		if (!scene.current) return;
+	useFrame((_, delta) => {
+		if (!scene.current || !composer.current) return;
+		composer.current.render(delta);
 		gl.autoClear = false;
 		gl.clearDepth();
 		gl.render(scene.current, camera);
 	});
+
 	return <scene ref={scene}>{children}</scene>;
 }
-
-export default BloomWrapper;

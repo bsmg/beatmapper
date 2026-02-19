@@ -1,27 +1,33 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import { useCallback } from "react";
+import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
 import { Fragment } from "react/jsx-runtime";
 
-import { MapArchiveFileUpload } from "$/components/app/compositions/file-upload";
-import { List, Text } from "$/components/ui/compositions";
-import { useAppSelector } from "$/store/hooks";
-import { selectProcessingImport } from "$/store/selectors";
-import { Stack } from "$:styled-system/jsx";
+import { APP_TOASTER, MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { FileUpload, List } from "$/components/ui/compositions";
+import { Stack, Text } from "$:styled-system/jsx";
 
 interface Props {
 	dialog?: UseDialogContext;
+	onAccept: (file: File) => void;
 }
-function ImportMapForm({ dialog }: Props) {
-	const isProcessingImport = useAppSelector(selectProcessingImport);
-
-	const handleFileAccept = useCallback(() => {
+function ImportMapForm({ dialog, onAccept }: Props) {
+	const handleFileAccept = (details: FileUploadFileAcceptDetails) => {
 		if (dialog) dialog.setOpen(false);
-	}, [dialog]);
+
+		try {
+			for (const file of details.files) {
+				onAccept(file);
+			}
+		} catch (error) {
+			APP_TOASTER.error({ description: error instanceof Error ? error.message : "Could not import map. See console for more info." });
+			console.error(error);
+		}
+	};
 
 	return (
 		<Fragment>
 			<Stack gap={0}>
-				<Text textStyle={"paragraph"} fontSize={18} fontWeight={400}>
+				<Text textStyle={"paragraph"} color={"fg.default"} fontSize={"18px"} fontWeight={400}>
 					To import a map, the following conditions must be met:
 				</Text>
 				<List.Root type="unordered" variant="plain">
@@ -32,10 +38,10 @@ function ImportMapForm({ dialog }: Props) {
 				</List.Root>
 			</Stack>
 			<Stack gap={2}>
-				<Text color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
+				<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
 					Drag and drop (or click to select) the .zip file:
 				</Text>
-				<MapArchiveFileUpload disabled={isProcessingImport} onFileAccept={handleFileAccept} />
+				<FileUpload label="Map Archive File" accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept} />
 			</Stack>
 		</Fragment>
 	);

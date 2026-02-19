@@ -1,21 +1,16 @@
-import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback } from "react";
+import type { Assign } from "@ark-ui/react";
+import type { ComponentProps } from "react";
 
+import { type UseInteractableOptions, useInteractable } from "$/components/ui/hooks/use-interactable";
 import * as Builder from "$/components/ui/styled/toggle";
 
-interface Props extends ComponentProps<typeof Builder.Root> {
-	unfocusOnClick?: boolean;
-}
+export interface ToggleProps extends UseInteractableOptions {}
 
-export function Toggle({ children, unfocusOnClick, ...rest }: Props) {
-	const handleUnfocus = useCallback(
-		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-			if (unfocusOnClick) event.currentTarget.blur();
-		},
-		[unfocusOnClick],
-	);
+export function Toggle({ children, unfocusOnPress, ...rest }: Assign<ComponentProps<typeof Builder.Root>, ToggleProps>) {
+	const { handlePress } = useInteractable({ unfocusOnPress });
 
 	return (
-		<Builder.Root {...rest} onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
+		<Builder.Root {...rest} onClickCapture={handlePress} onKeyDownCapture={handlePress}>
 			{children}
 		</Builder.Root>
 	);

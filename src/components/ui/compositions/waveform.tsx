@@ -1,27 +1,28 @@
+import type { Assign } from "@ark-ui/react";
 import { type ComponentProps, forwardRef, useCallback } from "react";
 import type { JsonWaveformData } from "waveform-data";
 import WaveformData from "waveform-data";
 
 import { Canvas } from "$/components/ui/atoms";
+import { getComputedToken } from "$/styles/helpers";
 
 function getY(totalHeight: number, val: number) {
 	const amplitude = 256;
 	return totalHeight - ((val + 128) * totalHeight) / amplitude;
 }
 
-interface Props extends Omit<ComponentProps<typeof Canvas>, "dimensions" | "draw"> {
-	width: number;
-	height: number;
+export interface WaveformProps {
 	waveformData: JsonWaveformData | null;
 	duration: number | null;
 }
-export const Waveform = forwardRef<HTMLCanvasElement, Props>(({ width, height, waveformData, duration, ...rest }: Props, ref) => {
+
+export const Waveform = forwardRef<HTMLCanvasElement, Assign<Omit<ComponentProps<typeof Canvas>, "draw">, WaveformProps>>(({ width, height, waveformData, duration, ...rest }, ref) => {
 	const drawWaveform = useCallback(
 		(ctx: CanvasRenderingContext2D, { width, height }: { width: number; height: number }) => {
 			if (!waveformData) return;
 			ctx.clearRect(0, 0, width, height);
 
-			ctx.strokeStyle = "#FFF";
+			ctx.strokeStyle = getComputedToken("colors.fg.subtle");
 
 			ctx.beginPath();
 

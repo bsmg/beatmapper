@@ -1,8 +1,8 @@
 import type { LucideProps } from "lucide-react";
 import type { ComponentType, PropsWithChildren } from "react";
 
-import { Text, Tooltip } from "$/components/ui/compositions";
-import { styled } from "$:styled-system/jsx";
+import { Tooltip } from "$/components/ui/compositions";
+import { styled, Text } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
 
 interface Props extends PropsWithChildren {
@@ -14,7 +14,7 @@ function StatusBarIndicator({ label, icon: Icon, children }: Props) {
 		<Tooltip render={() => label}>
 			<Wrapper>
 				<Icon size={12} />
-				<Text fontFamily="monospace" fontSize={"14px"}>
+				<Text fontFamily={"monospace"} fontSize={"14px"}>
 					{children}
 				</Text>
 			</Wrapper>

@@ -1,1 +1,1 @@
-export { LocalFilePreview, type LocalFileProps } from "./file";
+export { LocalFile } from "./local-file";
