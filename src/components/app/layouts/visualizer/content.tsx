@@ -20,7 +20,7 @@ interface Props {
 	cursorPosition: number;
 	duration: number | null;
 	onVisualizerClick?: (event: MouseEvent<HTMLElement>, time: number) => void;
-	children: (ref: RefObject<HTMLCanvasElement>) => ReactNode;
+	children: (ref: RefObject<HTMLCanvasElement | null>) => ReactNode;
 }
 function AudioVisualizerContent({ cursorPosition, duration, onVisualizerClick, children }: Props) {
 	const wait = useAppSelector(selectPacerWait);

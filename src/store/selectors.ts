@@ -1,6 +1,6 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { calculateNps, sortObjectFn } from "bsmap";
-import type { EventType, wrapper } from "bsmap/types";
+import type { EnvironmentAllName, EventType, wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
@@ -72,7 +72,7 @@ export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, 
 
 export const selectEventTracksForEnvironment = createSelector([selectBeatmapById], (beatmap) => {
 	const environment = beatmap.environmentName;
-	return deriveEventTracksForEnvironment(environment);
+	return deriveEventTracksForEnvironment(environment as EnvironmentAllName);
 });
 
 export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
