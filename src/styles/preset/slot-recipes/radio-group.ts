@@ -27,7 +27,7 @@ export const radioGroup = defineSlotRecipe({
 			justifyContent: "center",
 			boxSize: "1em",
 			backgroundColor: { base: "white", _checked: "black" },
-			color: { base: "white", _checked: "white" },
+			color: "white",
 			borderWidth: "sm",
 			borderColor: "border.default",
 			borderRadius: "full",

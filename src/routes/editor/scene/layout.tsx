@@ -29,7 +29,7 @@ function RouteComponent() {
 
 const Wrapper = styled("div", {
 	base: {
-		backgroundColor: "black",
+		backgroundColor: "bg.contrast",
 		boxSize: "100%",
 	},
 });

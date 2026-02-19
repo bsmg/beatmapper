@@ -77,6 +77,7 @@ export const semanticTokens = defineSemanticTokens({
 			backdrop: { value: "rgba(0, 0, 0, 0.45)" },
 			canvas: { value: { _light: "{colors.slate.50}", _dark: "{colors.slate.950}" } },
 			default: { value: { _light: "white", _dark: "{colors.slate.900}" } },
+			contrast: { value: { _light: "white", _dark: "black" } },
 			solid: { value: { _light: "{colors.slate.400}", _dark: "{colors.slate.600}" } },
 			muted: { value: { _light: "{colors.slate.200}", _dark: "{colors.slate.800}" } },
 			subtle: { value: { _light: "{colors.slate.300}", _dark: "{colors.slate.700}" } },
@@ -86,6 +87,7 @@ export const semanticTokens = defineSemanticTokens({
 		},
 		fg: {
 			default: { value: { _light: "{colors.slate.950}", _dark: "{colors.slate.50}" } },
+			contrast: { value: { _light: "black", _dark: "white" } },
 			muted: { value: { _light: "{colors.slate.800}", _dark: "{colors.slate.200}" } },
 			subtle: { value: { _light: "{colors.slate.900}", _dark: "{colors.slate.100}" } },
 			disabled: { value: { _light: "{colors.slate.600}", _dark: "{colors.slate.400}" } },
@@ -189,6 +191,11 @@ export const textStyles = defineTextStyles({
 		value: {
 			fontWeight: 400,
 			textDecoration: { _hover: "underline" },
+			color: {
+				"&[target]": { _light: "colorPalette.700", _dark: "colorPalette.300" },
+				_current: { _light: "colorPalette.700", _dark: "colorPalette.300" },
+				_currentPage: { _light: "colorPalette.700", _dark: "colorPalette.300" },
+			},
 		},
 	},
 });
@@ -196,7 +203,7 @@ export const textStyles = defineTextStyles({
 export const layerStyles = defineLayerStyles({
 	"fill.solid": {
 		value: {
-			backgroundColor: { base: "colorPalette.700", _disabled: "bg.disabled" },
+			backgroundColor: { base: { _light: "colorPalette.300", _dark: "colorPalette.700" }, _disabled: "bg.disabled" },
 			"--current-color": { base: "fg.default", _disabled: "fg.disabled" },
 			color: "var(--current-color)",
 			_icon: { color: "var(--current-color)" },

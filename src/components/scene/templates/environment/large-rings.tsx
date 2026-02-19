@@ -1,3 +1,5 @@
+import { useRouteContext } from "@tanstack/react-router";
+
 import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
 import { useEventTrack } from "$/components/scene/hooks/use-event-track";
 import { useRenderScale } from "$/components/scene/hooks/use-render-scale";
@@ -8,6 +10,8 @@ const DISTANCE_BETWEEN_RINGS = 18;
 const FIRST_RING_OFFSET = -60;
 
 function LargeRings() {
+	const { theme } = useRouteContext({ from: "__root__" });
+
 	const [lastLightEvent] = useEventTrack({ trackId: 1 });
 	const [lastRotationEvent] = useEventTrack({ trackId: 8 });
 
@@ -17,7 +21,7 @@ function LargeRings() {
 
 	return (
 		<Environment.Rings count={numOfRings} lastRotationEvent={lastRotationEvent} lastZoomEvent={null} minDistance={DISTANCE_BETWEEN_RINGS} position-y={-2} position-z={FIRST_RING_OFFSET} rotation-z={INITIAL_ROTATION}>
-			{(index, { zPosition, zRotation }) => <Environment.SquareRing key={index} size={128} thickness={2.5} color="#171717" position-z={zPosition} rotation-z={zRotation} light={light} />}
+			{(index, { zPosition, zRotation }) => <Environment.SquareRing key={index} size={128} thickness={2.5} color={theme === "dark" ? "#171717" : "#E8E8E8"} position-z={zPosition} rotation-z={zRotation} light={light} />}
 		</Environment.Rings>
 	);
 }

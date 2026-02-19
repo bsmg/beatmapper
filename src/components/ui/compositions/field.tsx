@@ -7,13 +7,12 @@ import { type ComponentProps, forwardRef } from "react";
 import { MDXRemote } from "$/components/ui/atoms/mdx";
 import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/field";
-import { css, cx } from "$:styled-system/css";
 import { HStack } from "$:styled-system/jsx";
 import { AnchorLink } from "./link";
 import { Tooltip } from "./tooltip";
 
 const FIELD_MDX_COMPONENTS: MDXComponents = {
-	a: forwardRef(({ className, ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} className={cx(css({ color: "yellow.500" }), className)} />),
+	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} />),
 };
 
 export interface FieldProps extends UseFieldProps {

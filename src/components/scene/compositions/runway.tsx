@@ -1,7 +1,9 @@
+import { useRouteContext } from "@tanstack/react-router";
 import { Fragment, useMemo } from "react";
 
 import { BLOCK_CELL_SIZE, SONG_OFFSET, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/components/scene/constants";
 import { DEFAULT_NUM_ROWS } from "$/constants";
+import { getComputedToken } from "$/styles/helpers";
 
 const GRID_Y_BASE = BLOCK_CELL_SIZE * (DEFAULT_NUM_ROWS * -0.5);
 
@@ -24,6 +26,8 @@ interface Props {
 }
 
 export function Runway({ surfaceDepth, includeEdgeStrips }: Props) {
+	const { theme } = useRouteContext({ from: "__root__" });
+
 	const surfaceZCenter = useMemo(() => surfaceDepth / 2 + SONG_OFFSET - 1, [surfaceDepth]);
 	const pegDepth = useMemo(() => surfaceDepth - PEG_WIDTH * 4, [surfaceDepth]);
 	const stripZ = useMemo(() => -SONG_OFFSET - surfaceDepth / 2, [surfaceDepth]);
@@ -33,27 +37,27 @@ export function Runway({ surfaceDepth, includeEdgeStrips }: Props) {
 			{/* Surface */}
 			<mesh position={[0, GRID_Y_BASE - SURFACE_HEIGHT / 2, -surfaceZCenter]} receiveShadow>
 				<boxGeometry attach="geometry" args={[SURFACE_WIDTH, SURFACE_HEIGHT, surfaceDepth]} />
-				<meshStandardMaterial metalness={0.5} roughness={1} attach="material" color="#222222" />
+				<meshStandardMaterial metalness={0.5} roughness={1} attach="material" color={theme === "dark" ? "#222222" : "#DDDDDD"} />
 			</mesh>
 			{/* Pegs */}
 			<mesh position={[-PEG_X_OFFSET, pegY, -surfaceZCenter]}>
 				<boxGeometry attach="geometry" args={[PEG_WIDTH, PEG_HEIGHT, pegDepth]} />
-				<meshStandardMaterial metalness={0.1} roughness={0} attach="material" color="#222222" />
+				<meshStandardMaterial metalness={0.1} roughness={0} attach="material" color={theme === "dark" ? "#222222" : "#DDDDDD"} />
 			</mesh>
 			<mesh position={[PEG_X_OFFSET, pegY, -surfaceZCenter]}>
 				<boxGeometry attach="geometry" args={[PEG_WIDTH, PEG_HEIGHT, pegDepth]} />
-				<meshStandardMaterial metalness={0.1} roughness={0} attach="material" color="#222222" />
+				<meshStandardMaterial metalness={0.1} roughness={0} attach="material" color={theme === "dark" ? "#222222" : "#DDDDDD"} />
 			</mesh>
 			{/* Edge light strips */}
 			{includeEdgeStrips && (
 				<Fragment>
 					<mesh position-x={-STRIP_X} position-y={STRIP_Y} position-z={stripZ} rotation={[-Math.PI / 2, 0, 0]}>
 						<planeGeometry attach="geometry" args={[STRIP_WIDTH, surfaceDepth]} />
-						<meshStandardMaterial attach="material" color="#FFF" />
+						<meshStandardMaterial attach="material" color={getComputedToken("colors.fg.contrast")} />
 					</mesh>
 					<mesh position-x={STRIP_X} position-y={STRIP_Y} position-z={stripZ} rotation={[-Math.PI / 2, 0, 0]}>
 						<planeGeometry attach="geometry" args={[STRIP_WIDTH, surfaceDepth]} />
-						<meshStandardMaterial attach="material" color="#FFF" />
+						<meshStandardMaterial attach="material" color={getComputedToken("colors.fg.contrast")} />
 					</mesh>
 				</Fragment>
 			)}

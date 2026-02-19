@@ -5,6 +5,6 @@ export const spinner = defineRecipe({
 	base: {
 		display: "inline-block",
 		color: "currentcolor",
-		_icon: { animation: "spin" },
+		animation: "spin",
 	},
 });

@@ -16,7 +16,7 @@ import { css, cx } from "$:styled-system/css";
 import { styled, Text } from "$:styled-system/jsx";
 
 const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
-	a: forwardRef(({ className, ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} className={cx(css({ color: "yellow.500" }), className)} />),
+	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} />),
 	p: forwardRef(({ className, ...rest }, ref) => <Text as={"p"} ref={ref} {...rest} textStyle={"paragraph"} className={cx(css({ marginBlockStart: { base: 1.5, _first: 0 }, marginBlockEnd: { base: 1.5, _last: 0 } }), className)} />),
 	ul: forwardRef(({ ...rest }, ref) => <List.Root ref={ref} type="unordered" variant="marker" {...rest} />),
 	li: forwardRef(({ ...rest }, ref) => <List.Item ref={ref} {...rest} />),

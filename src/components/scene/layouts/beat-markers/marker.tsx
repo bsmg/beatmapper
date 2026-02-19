@@ -6,6 +6,7 @@ import type { ColorRepresentation } from "three";
 import { oswaldGlyphsUrl } from "$/assets";
 import { BLOCK_CELL_SIZE, SURFACE_WIDTH } from "$/components/scene/constants";
 import { DEFAULT_NUM_ROWS } from "$/constants";
+import { getComputedToken } from "$/styles/helpers";
 
 const Y_PADDING = 0.0075;
 const Y_OFFSET = BLOCK_CELL_SIZE * (DEFAULT_NUM_ROWS * -0.5) + Y_PADDING;
@@ -26,6 +27,7 @@ function Marker({ children, height, overextendBy = 0, color, ...rest }: Assign<C
 			</mesh>
 			<Text3D font={oswaldGlyphsUrl} size={0.4} height={0.025} curveSegments={2} position-x={SURFACE_WIDTH / 2 + TEXT_PADDING}>
 				{children}
+				<meshStandardMaterial attach="material" color={getComputedToken("colors.fg.default")} />
 			</Text3D>
 		</group>
 	);

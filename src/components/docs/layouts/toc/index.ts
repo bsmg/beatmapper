@@ -27,7 +27,6 @@ export const Item = styled("a", {
 	base: {
 		textStyle: "link",
 		colorPalette: "pink",
-		color: { base: "fg.muted", _hover: "fg.default", _current: { _light: "colorPalette.700", _dark: "colorPalette.300" } },
 		paddingBlock: 1,
 	},
 });

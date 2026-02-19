@@ -8,7 +8,7 @@ import { styled } from "$:styled-system/jsx";
 import DocsMedia from "./media";
 
 const PROSE_MDX_COMPONENTS: MDXComponents = {
-	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} {...rest} />),
+	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} target="_self" {...rest} />),
 	img: forwardRef(({ alt, title, ...rest }, ref) => (
 		<DocsMedia caption={alt ?? title}>
 			<img ref={ref} {...rest} alt={alt} title={title} />
@@ -52,7 +52,6 @@ const DocumentStyles = styled("div", {
 			textStyle: "link",
 			fontWeight: "bold",
 			colorPalette: "blue",
-			color: { _light: "colorPalette.700", _dark: "colorPalette.300" },
 		},
 		"& strong": {
 			fontWeight: "bold",

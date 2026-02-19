@@ -64,14 +64,14 @@ function AudioVisualizerContent({ cursorPosition, duration, onVisualizerClick, c
 	};
 
 	const progressStyles = useMemo(() => {
-		const ratioPlayed = duration ? cursorPosition / duration : 0;
-		return { transform: `scaleX(${1 - ratioPlayed})` };
+		const ratioPlayed = duration ? (cursorPosition / duration) * 100 : 0;
+		return { clipPath: `inset(0 ${100 - ratioPlayed}% 0 0)` };
 	}, [cursorPosition, duration]);
 
 	return (
 		<Wrapper onClick={handleClick} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove}>
-			{children(canvasRef)}
-			<ProgressRect style={progressStyles} />
+			<Layer overlay={true}>{children(canvasRef)}</Layer>
+			<Layer style={progressStyles}>{children(canvasRef)}</Layer>
 		</Wrapper>
 	);
 }
@@ -82,15 +82,15 @@ const Wrapper = styled("div", {
 	},
 });
 
-const ProgressRect = styled("div", {
+const Layer = styled("div", {
 	base: {
 		position: "absolute",
-		zIndex: 2,
 		inset: 0,
-		backgroundColor: "bg.translucent",
-		mixBlendMode: "darken",
-		transformOrigin: "center right",
-		pointerEvents: "none",
+	},
+	variants: {
+		overlay: {
+			true: { opacity: 0.25 },
+		},
 	},
 });
 

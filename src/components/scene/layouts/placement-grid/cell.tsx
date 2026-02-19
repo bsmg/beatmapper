@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from "react";
 import { DoubleSide } from "three";
 
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
+import { getComputedToken } from "$/styles/helpers";
 import type { IGrid } from "$/types";
 import type { MeshProps } from "$/types/vendor";
 import { usePlacementGridContext } from "./context";
@@ -66,7 +67,7 @@ function PlacementGridCell({ rowIndex, colIndex, grid, ...rest }: CellProps) {
 	return (
 		<mesh {...rest} key={`${rowIndex}-${colIndex}`} position-x={x} position-y={y} onPointerDown={handlePointerDown} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut} onWheel={handleWheel}>
 			<planeGeometry attach="geometry" args={[renderColWidth - CELL_PADDING, renderRowHeight - CELL_PADDING, 1, 1]} />
-			<meshBasicMaterial attach="material" color={0xffffff} transparent={true} opacity={isHovered ? 0.2 : 0.1} side={DoubleSide} />
+			<meshBasicMaterial attach="material" color={getComputedToken("colors.fg.contrast")} transparent={true} opacity={isHovered ? 0.2 : 0.1} side={DoubleSide} />
 		</mesh>
 	);
 }

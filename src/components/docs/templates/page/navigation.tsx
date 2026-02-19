@@ -1,9 +1,8 @@
-import { ark } from "@ark-ui/react/factory";
 import { useMemo } from "react";
 
 import { RouterLink } from "$/components/ui/compositions";
 import { docs } from "$:content";
-import { Divider, HStack, Stack, styled, Text } from "$:styled-system/jsx";
+import { Divider, HStack, LinkOverlay, Stack, styled, Text } from "$:styled-system/jsx";
 
 interface NavProps {
 	direction: "previous" | "next";
@@ -13,24 +12,25 @@ function NavigationBlock({ direction, item }: NavProps) {
 	const formattedSubtitle = useMemo(() => (direction === "previous" ? "« PREVIOUS" : "NEXT »"), [direction]);
 
 	return (
-		<Stack gap={0.5} align={direction === "previous" ? "flex-start" : "flex-end"}>
+		<Wrapper gap={0.5} align={direction === "previous" ? "flex-start" : "flex-end"}>
 			<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"14px"}>
 				{item && formattedSubtitle}
 			</Text>
-			<RouterLink as={LinkWrapper} to={"/docs/$"} params={{ _splat: item?.id }}>
+			<RouterLink as={LinkOverlay} to={"/docs/$"} params={{ _splat: item?.id }}>
 				{item?.title}
 			</RouterLink>
-		</Stack>
+		</Wrapper>
 	);
 }
 
-const LinkWrapper = styled(ark.span, {
+const Wrapper = styled(Stack, {
 	base: {
-		textStyle: "link",
+		position: "relative",
 		fontSize: "20px",
-		fontWeight: "bold",
 		colorPalette: "blue",
-		color: { _light: "colorPalette.700", _dark: "colorPalette.300" },
+		layerStyle: "fill.ghost",
+		padding: 1,
+		borderRadius: "sm",
 	},
 });
 

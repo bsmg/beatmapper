@@ -22,7 +22,7 @@ export const button = defineRecipe({
 		variant: {
 			solid: {
 				layerStyle: "fill.solid",
-				color: "white",
+				color: "fg.default",
 				borderRadius: "full",
 				_after: {
 					content: "''",

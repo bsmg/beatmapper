@@ -50,14 +50,14 @@ function SongDetails() {
 				<Stack gap={3}>
 					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings />} checked={enabledCustomColors} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}>
 						Override individual elements of a beatmap's color scheme.{" "}
-						<RouterLink to="/docs/$" params={{ _splat: "mods#custom-color-overrides" }}>
+						<RouterLink target="_self" to="/docs/$" params={{ _splat: "mods#custom-color-overrides" }}>
 							Learn more
 						</RouterLink>
 						.
 					</SongDetailsModule>
 					<SongDetailsModule label="Mapping Extensions" render={() => null} checked={enabledMappingExtensions} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "mappingExtensions" }))}>
 						Allows you to customize size and shape of the grid, to place notes outside of the typical 4×3 grid.{" "}
-						<RouterLink to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
+						<RouterLink target="_self" to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
 							Learn more
 						</RouterLink>
 						.

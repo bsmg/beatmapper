@@ -4,6 +4,7 @@ import type { JsonWaveformData } from "waveform-data";
 import WaveformData from "waveform-data";
 
 import { Canvas } from "$/components/ui/atoms";
+import { getComputedToken } from "$/styles/helpers";
 
 function getY(totalHeight: number, val: number) {
 	const amplitude = 256;
@@ -21,7 +22,7 @@ export const Waveform = forwardRef<HTMLCanvasElement, Assign<Omit<ComponentProps
 			if (!waveformData) return;
 			ctx.clearRect(0, 0, width, height);
 
-			ctx.strokeStyle = "#FFF";
+			ctx.strokeStyle = getComputedToken("colors.fg.subtle");
 
 			ctx.beginPath();
 
