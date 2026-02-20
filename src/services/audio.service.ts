@@ -1,6 +1,7 @@
 export interface AudioSampleOptions {
-	volume: 1;
-	playbackRate: 1;
+	url?: string;
+	volume?: number;
+	playbackRate?: number;
 }
 
 /**
@@ -17,9 +18,10 @@ export class AudioSample {
 	gainNode: GainNode;
 	source!: AudioBufferSourceNode;
 	buffer!: AudioBuffer;
-	constructor(options: AudioSampleOptions = { volume: 1, playbackRate: 1 }) {
-		this.gain = options.volume;
-		this.playbackRate = options.playbackRate;
+
+	constructor({ volume = 1, playbackRate = 1 }: AudioSampleOptions) {
+		this.gain = volume;
+		this.playbackRate = playbackRate;
 
 		this.context = new AudioContext();
 
@@ -38,7 +40,7 @@ export class AudioSample {
 
 		this.gainNode = this.context.createGain();
 		this.gainNode.connect(this.context.destination);
-		this.gainNode.gain.value = options.volume;
+		this.gainNode.gain.value = volume;
 	}
 
 	changeVolume(volume: number) {
@@ -104,6 +106,12 @@ export class AudioSample {
 		this.source.stop();
 		// Measure how much time passed since the last pause.
 		this.startOffset += this.context.currentTime - this.startTime;
+	}
+
+	trigger() {
+		this.pause();
+		this.setCurrentTime(0);
+		this.play();
 	}
 
 	isBufferLoaded() {

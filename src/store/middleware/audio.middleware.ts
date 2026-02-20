@@ -1,10 +1,8 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
-import { tickWoodblockSfxPath } from "$/assets";
 import { NOTE_TICK_TYPES } from "$/constants";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import { AudioSample } from "$/services/audio.service";
-import { Sfx } from "$/services/sfx.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import {
 	decrementPlaybackRate,
@@ -54,11 +52,7 @@ import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 import { clamp, floorToNearest } from "$/utils";
 
-function stopAndRewindAudio(audioSample: AudioSample, offset: number) {
-	audioSample.setCurrentTime((offset || 0) / 1000);
-}
-
-function triggerTickerIfNecessary(state: RootState, songId: SongId, currentBeat: number, lastBeat: number, ticker: Sfx) {
+function triggerTickerIfNecessary(state: RootState, songId: SongId, currentBeat: number, lastBeat: number, ticker: AudioSample) {
 	const playNoteTick = selectTickVolume(state);
 	if (playNoteTick) {
 		const delayInBeats = selectAudioProcessingDelayInBeats(state, songId);
@@ -95,8 +89,10 @@ export default function createAudioMiddleware() {
 
 	const filestore = getAppBeatmapFilestore();
 
-	const ticker = new Sfx(tickWoodblockSfxPath, { volume: 1, playbackRate: 1 });
 	const audioSample = new AudioSample({ volume: 1, playbackRate: 1 });
+	const tickSample = new AudioSample({ volume: 1, playbackRate: 1 });
+
+	tickSample.load(NOTE_TICK_TYPES[0]);
 
 	instance.startListening({
 		actionCreator: hydrateSession,
@@ -104,8 +100,8 @@ export default function createAudioMiddleware() {
 			const { "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
 			if (playbackRate !== undefined) audioSample.changePlaybackRate(playbackRate);
 			if (songVolume !== undefined) audioSample.changeVolume(songVolume);
-			if (tickVolume !== undefined) ticker.audioSample.changeVolume(tickVolume);
-			if (tickType !== undefined) ticker.audioSample.load(NOTE_TICK_TYPES[tickType]);
+			if (tickVolume !== undefined) tickSample.changeVolume(tickVolume);
+			if (tickType !== undefined) tickSample.load(NOTE_TICK_TYPES[tickType]);
 		},
 	});
 	instance.startListening({
@@ -148,7 +144,7 @@ export default function createAudioMiddleware() {
 					return api.dispatch(pausePlayback({ songId }));
 				}
 				const currentBeat = selectBeatForTime(state, songId, currentTime);
-				triggerTickerIfNecessary(state, songId, currentBeat, lastBeat, ticker);
+				triggerTickerIfNecessary(state, songId, currentBeat, lastBeat, tickSample);
 				// Normally, we just want to have one frame after another, with no overriding behavior. Sometimes, though, we want to commandeer.
 				// Specifically, this can be when the user enables the "Loop" lock in the event grid.
 				// When the time reaches the end of the current window, it's commandeered and reset to the start of that window.
@@ -313,7 +309,7 @@ export default function createAudioMiddleware() {
 			window.cancelAnimationFrame(animationFrameId);
 			if (audioSample) {
 				audioSample.pause();
-				stopAndRewindAudio(audioSample, offset);
+				audioSample.setCurrentTime(offset / 1000);
 			}
 		},
 	});
@@ -357,14 +353,14 @@ export default function createAudioMiddleware() {
 		actionCreator: updateTickVolume,
 		effect: (action) => {
 			const { value: volume } = action.payload;
-			ticker.audioSample.changeVolume(volume);
+			tickSample.changeVolume(volume);
 		},
 	});
 	instance.startListening({
 		actionCreator: updateTickType,
 		effect: (action) => {
 			const { value: type } = action.payload;
-			ticker.audioSample.load(NOTE_TICK_TYPES[type]);
+			tickSample.load(NOTE_TICK_TYPES[type]);
 		},
 	});
 
