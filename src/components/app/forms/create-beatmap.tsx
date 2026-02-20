@@ -8,9 +8,9 @@ import { type PropsWithChildren, useMemo } from "react";
 import { type InferOutput, object } from "valibot";
 
 import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
+import { useSetupContext } from "$/components/context";
 import { useAppForm } from "$/components/ui/compositions";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
-import { getAppToaster } from "$/setup";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
@@ -27,6 +27,8 @@ interface Props {
 function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<PropsWithChildren, Props>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
+	const { toaster } = useSetupContext();
+
 	const beatmaps = useAppSelector((state) => selectAllBeatmaps(state, sid));
 	const currentBeatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
@@ -41,8 +43,6 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 			onSubmit: SCHEMA,
 		},
 		onSubmit: ({ value }) => {
-			const toaster = getAppToaster();
-
 			try {
 				const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === value.characteristic);
 				if (withMatchingCharacteristic.length >= DIFFICULTY_LIST_COLLECTION.size) {
@@ -58,7 +58,7 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
-				toaster?.error({ description: error instanceof Error ? error.message : "Error creating beatmap. See console for more info." });
+				toaster?.error({ description: `Error creating beatmap. ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);
 			}
 		},

@@ -10,7 +10,7 @@ import { serializeCustomBookmark } from "$/helpers/bookmarks.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { createSongId, getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "$/helpers/song.helpers";
-import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
+import { getAppBeatmapFilestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
 import { deepAssign, yieldValue } from "$/utils";
 
@@ -42,7 +42,6 @@ interface ZipOptions {
 }
 export async function zipFiles({ version, contents, options }: ZipOptions) {
 	const filestore = getAppBeatmapFilestore();
-	const toaster = getAppToaster();
 
 	const { songId, beatmapsById, songFile, coverArtFile } = contents;
 	const encoder = new TextEncoder();
@@ -103,10 +102,7 @@ export async function zipFiles({ version, contents, options }: ZipOptions) {
 	});
 
 	if (hasMappingExtensions && version === 4) {
-		throw toaster?.error({
-			id: "incompatible-options",
-			description: "Mapping Extensions is not compatible with the v4 map format.",
-		});
+		throw new Error("Mapping Extensions is not compatible with the v4 map format.");
 	}
 
 	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>, {
@@ -145,7 +141,6 @@ export async function zipFiles({ version, contents, options }: ZipOptions) {
 
 export async function processImportedMap(zipFile: Uint8Array, options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.ISong> {
 	const filestore = getAppBeatmapFilestore();
-	const toaster = getAppToaster();
 
 	const audioContext = new AudioContext();
 	const decoder = new TextDecoder("utf-8");
@@ -163,10 +158,7 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 			return loadInfo(JSON.parse(contents));
 		},
 		(error) => {
-			console.error(error);
-			throw toaster?.error({
-				description: "The file provided is not a valid map archive.",
-			});
+			throw new Error("The file provided is not a valid map archive.", { cause: error });
 		},
 	);
 	// parse the wrapper into the editor form

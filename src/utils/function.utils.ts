@@ -3,11 +3,13 @@ export function createLazySingleton<T, TArgs extends unknown[]>(factory: (...arg
 
 	return {
 		setup(...args: TArgs): T {
-			instance = factory(...args);
+			if (instance === null) {
+				instance = factory(...args);
+			}
 			return instance;
 		},
 		get(): T {
-			if (!instance) {
+			if (instance === null) {
 				throw new Error("Cannot access instance. Ensure setup() is called at the top of the call stack.");
 			}
 			return instance;

@@ -2,9 +2,9 @@ import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { getYear, isToday, setYear } from "date-fns";
 import { Fragment } from "react";
 
+import { useSetupContext } from "$/components/context";
 import Devtools from "$/components/devtools";
 import { Toaster } from "$/components/ui/compositions";
-import { getAppToaster } from "$/setup";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -22,11 +22,13 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+	const { toaster } = useSetupContext();
+
 	return (
 		<Fragment>
 			<HeadContent />
 			<Outlet />
-			<Toaster toaster={getAppToaster()} />
+			{toaster && <Toaster toaster={toaster} />}
 			<Devtools position="top-right" hideUntilHover openHotkey={[`\``]} />
 		</Fragment>
 	);

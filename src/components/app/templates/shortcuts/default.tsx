@@ -3,10 +3,10 @@ import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
+import { useSetupContext } from "$/components/context";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { getAppToaster } from "$/setup";
 import {
 	addBookmark,
 	copySelection,
@@ -47,6 +47,8 @@ import { isMetaKeyPressed } from "$/utils";
 function DefaultEditorShortcuts() {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
+	const { toaster } = useSetupContext();
 
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
@@ -106,8 +108,6 @@ function DefaultEditorShortcuts() {
 			if (isLoading) return;
 			if (!view) return;
 			if (isPromptActive) return;
-
-			const toaster = getAppToaster();
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
@@ -239,7 +239,7 @@ function DefaultEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, view, dispatch, sid, bid, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
+		[isLoading, view, dispatch, toaster, sid, bid, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
 	);
 
 	const handleKeyUp = useCallback(

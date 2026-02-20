@@ -8,9 +8,9 @@ import { array, custom, minValue, null_, number, object, pipe, string, transform
 
 import { createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
+import { useSetupContext } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
 import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
-import { getAppToaster } from "$/setup";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
@@ -38,6 +38,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
+	const { toaster } = useSetupContext();
+
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
@@ -62,8 +64,6 @@ function UpdateBeatmapForm({ bid }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			const toaster = getAppToaster();
-
 			try {
 				dispatch(
 					updateBeatmap({
@@ -79,8 +79,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 				formApi.reset(value);
 			} catch (error) {
-				toaster?.error({ description: error instanceof Error ? error.message : `Error updating beatmap: See console for more information.` });
-				console.error(error);
+				toaster?.error({ description: `Error updating beatmap: ${error instanceof Error ? error.message : "See console for more information."}` });
+				return console.error(error);
 			}
 		},
 	});
@@ -96,8 +96,6 @@ function UpdateBeatmapForm({ bid }: Props) {
 	);
 
 	const handleDeleteBeatmap = useCallback(() => {
-		const toaster = getAppToaster();
-
 		// Delete our working state
 		const mutableDifficultiesCopy = { ...beatmaps };
 		delete mutableDifficultiesCopy[bid];
@@ -116,7 +114,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 		dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
 		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
-	}, [dispatch, navigate, sid, bid, view, beatmaps]);
+	}, [dispatch, navigate, toaster, sid, bid, view, beatmaps]);
 
 	const { proceed, reset, status } = useBlocker({
 		shouldBlockFn: () => Form.state.isDirty,

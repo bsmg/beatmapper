@@ -5,9 +5,9 @@ import { custom, gtValue, minLength, number, object, pipe, string, transform } f
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
+import { useSetupContext } from "$/components/context";
 import { AlertDialogProvider, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
-import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
 import { updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
@@ -38,6 +38,8 @@ const SCHEMA = object({
 function UpdateSongForm() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
+	const { filestore, toaster } = useSetupContext();
+
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
 
@@ -52,13 +54,11 @@ function UpdateSongForm() {
 
 	const { mutate: handleAcceptSongFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "song", {}), {
 		onSuccess: () => {
-			const toaster = getAppToaster();
 			toaster?.success({ id: "song-file-accepted", description: "Successfully updated song file!" });
 		},
 	});
 	const { mutate: handleAcceptCoverArtFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "cover", {}), {
 		onSuccess: () => {
-			const toaster = getAppToaster();
 			toaster?.success({ id: "cover-art-file-accepted", description: "Successfully updated cover art file!" });
 		},
 	});
@@ -82,9 +82,6 @@ function UpdateSongForm() {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			const filestore = getAppBeatmapFilestore();
-			const toaster = getAppToaster();
-
 			try {
 				const newSongObject = { ...song, ...value };
 
@@ -103,8 +100,8 @@ function UpdateSongForm() {
 
 				formApi.reset(value);
 			} catch (error) {
-				toaster?.error({ description: error instanceof Error ? error.message : `Error updating song: See console for more information.` });
-				console.error(error);
+				toaster?.error({ description: `Error updating song: ${error instanceof Error ? error.message : "See console for more information."}` });
+				return console.error(error);
 			}
 		},
 	});

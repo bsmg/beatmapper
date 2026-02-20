@@ -1,7 +1,7 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { zipFiles } from "$/services/packaging.service";
-import { getAppBeatmapFilestore } from "$/setup";
+import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
 import { downloadMapFiles } from "$/store/actions";
 import { selectBeatmaps } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -10,6 +10,7 @@ import { deepAssign } from "$/utils";
 export default function createPackagingMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
 	const filestore = getAppBeatmapFilestore();
+	const toaster = getAppToaster();
 
 	instance.startListening({
 		actionCreator: downloadMapFiles,
@@ -25,16 +26,21 @@ export default function createPackagingMiddleware() {
 				optimize: { purgeZeros: version === 2 ? false : options?.optimize?.purgeZeros },
 			};
 
-			await zipFiles({
-				version: version ?? null,
-				contents: {
-					songId: songId,
-					beatmapsById: beatmapsById,
-					songFile,
-					coverArtFile,
-				},
-				options: deepAssign(defaultOptions, options as typeof defaultOptions),
-			});
+			try {
+				await zipFiles({
+					version: version ?? null,
+					contents: {
+						songId: songId,
+						beatmapsById: beatmapsById,
+						songFile,
+						coverArtFile,
+					},
+					options: deepAssign(defaultOptions, options as typeof defaultOptions),
+				});
+			} catch (error) {
+				toaster?.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				return console.error(error);
+			}
 		},
 	});
 

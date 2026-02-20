@@ -4,8 +4,9 @@ import { RouterProvider } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
+import { SetupProvider } from "./components/context";
 import { getRouter, setupRouter } from "./router";
-import { getAppStore, getAppToaster, setupAppStore } from "./setup";
+import { getAppBeatmapFilestore, getAppStore, getAppToaster, setupAppStore } from "./setup";
 
 import "./index.css";
 
@@ -21,11 +22,13 @@ if (!root) {
 const store = await getAppStore();
 
 createRoot(root).render(
-	<Provider store={store}>
-		<QueryClientProvider client={new QueryClient()}>
-			<RouterProvider router={getRouter()} />
-		</QueryClientProvider>
-	</Provider>,
+	<SetupProvider value={{ filestore: getAppBeatmapFilestore(), toaster: getAppToaster() }}>
+		<Provider store={store}>
+			<QueryClientProvider client={new QueryClient()}>
+				<RouterProvider router={getRouter()} />
+			</QueryClientProvider>
+		</Provider>
+	</SetupProvider>,
 );
 
 const updateSW = registerSW({

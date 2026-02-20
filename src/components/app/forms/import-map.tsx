@@ -3,8 +3,8 @@ import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
 import { Fragment } from "react/jsx-runtime";
 
 import { MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { useSetupContext } from "$/components/context";
 import { FileUpload, List } from "$/components/ui/compositions";
-import { getAppToaster } from "$/setup";
 import { Stack, Text } from "$:styled-system/jsx";
 
 interface Props {
@@ -12,9 +12,9 @@ interface Props {
 	onAccept: (file: File) => void;
 }
 function ImportMapForm({ dialog, onAccept }: Props) {
-	const handleFileAccept = (details: FileUploadFileAcceptDetails) => {
-		const toaster = getAppToaster();
+	const { toaster } = useSetupContext();
 
+	const handleFileAccept = (details: FileUploadFileAcceptDetails) => {
 		if (dialog) dialog.setOpen(false);
 
 		try {
@@ -22,8 +22,8 @@ function ImportMapForm({ dialog, onAccept }: Props) {
 				onAccept(file);
 			}
 		} catch (error) {
-			toaster?.error({ description: error instanceof Error ? error.message : "Could not import map. See console for more info." });
-			console.error(error);
+			toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+			return console.error(error);
 		}
 	};
 
