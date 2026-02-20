@@ -7,6 +7,7 @@ import { convertMillisecondsToBeats, deriveAudioDataFromFile, deriveWaveformData
 import { type BeatmapSerializationOptions, deserializeBeatmapContents, type InfoSerializationOptions, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
+import { getAppBeatmapFilestore } from "$/setup";
 import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -28,12 +29,10 @@ export function selectBeatmapSerializationOptionsFromState(state: RootState, son
 	};
 }
 
-interface Options {
-	filestore: BeatmapFilestore;
-}
 /** This middleware manages file storage concerns. */
-export default function createFileMiddleware({ filestore }: Options) {
+export default function createFileMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
+	const filestore = getAppBeatmapFilestore();
 	const audioContext = new AudioContext();
 
 	async function createAudioDataContentsFromFile(songId: SongId, filestore: BeatmapFilestore, songFile: File, { bpm }: Pick<App.ISong, "bpm">) {

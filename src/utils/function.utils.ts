@@ -1,3 +1,23 @@
+export function createLazySingleton<T, TArgs extends unknown[]>(factory: (...args: TArgs) => T) {
+	let instance: T | null = null;
+
+	return {
+		setup(...args: TArgs): T {
+			instance = factory(...args);
+			return instance;
+		},
+		get(): T {
+			if (!instance) {
+				throw new Error("Cannot access instance. Ensure setup() is called at the top of the call stack.");
+			}
+			return instance;
+		},
+		destroy() {
+			instance = null;
+		},
+	};
+}
+
 // TODO: this will become native once the app targets ES2024
 export function withResolvers<T>() {
 	let resolve!: (value: T | PromiseLike<T>) => void;

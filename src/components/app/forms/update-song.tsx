@@ -3,11 +3,11 @@ import { useBlocker, useParams } from "@tanstack/react-router";
 import type { EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 import { custom, gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
 import { AlertDialogProvider, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
-import { filestore } from "$/setup";
+import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
 import { updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById } from "$/store/selectors";
@@ -52,12 +52,14 @@ function UpdateSongForm() {
 
 	const { mutate: handleAcceptSongFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "song", {}), {
 		onSuccess: () => {
-			APP_TOASTER.success({ id: "song-file-accepted", description: "Successfully updated song file!" });
+			const toaster = getAppToaster();
+			toaster?.success({ id: "song-file-accepted", description: "Successfully updated song file!" });
 		},
 	});
 	const { mutate: handleAcceptCoverArtFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "cover", {}), {
 		onSuccess: () => {
-			APP_TOASTER.success({ id: "cover-art-file-accepted", description: "Successfully updated cover art file!" });
+			const toaster = getAppToaster();
+			toaster?.success({ id: "cover-art-file-accepted", description: "Successfully updated cover art file!" });
 		},
 	});
 
@@ -80,6 +82,9 @@ function UpdateSongForm() {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
+			const filestore = getAppBeatmapFilestore();
+			const toaster = getAppToaster();
+
 			try {
 				const newSongObject = { ...song, ...value };
 
@@ -98,7 +103,7 @@ function UpdateSongForm() {
 
 				formApi.reset(value);
 			} catch (error) {
-				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error updating song: See console for more information.` });
+				toaster?.error({ description: error instanceof Error ? error.message : `Error updating song: See console for more information.` });
 				console.error(error);
 			}
 		},

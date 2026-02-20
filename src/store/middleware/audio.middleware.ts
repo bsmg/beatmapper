@@ -4,8 +4,8 @@ import { tickWoodblockSfxPath } from "$/assets";
 import { NOTE_TICK_TYPES } from "$/constants";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import { AudioSample } from "$/services/audio.service";
-import type { BeatmapFilestore } from "$/services/file.service";
 import { Sfx } from "$/services/sfx.service";
+import { getAppBeatmapFilestore } from "$/setup";
 import {
 	decrementPlaybackRate,
 	hydrateSession,
@@ -87,17 +87,16 @@ function calculateIfPlaybackShouldBeCommandeered(state: RootState, songId: SongI
 	}
 }
 
-interface Options {
-	filestore: BeatmapFilestore;
-}
 /** This middleware manages playback concerns. */
-export default function createAudioMiddleware({ filestore }: Options) {
+export default function createAudioMiddleware() {
+	const instance = createListenerMiddleware<RootState>();
+
 	let animationFrameId: number;
+
+	const filestore = getAppBeatmapFilestore();
 
 	const ticker = new Sfx(tickWoodblockSfxPath, { volume: 1, playbackRate: 1 });
 	const audioSample = new AudioSample({ volume: 1, playbackRate: 1 });
-
-	const instance = createListenerMiddleware<RootState>();
 
 	instance.startListening({
 		actionCreator: hydrateSession,

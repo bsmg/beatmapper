@@ -1,7 +1,6 @@
+import type { Middleware } from "@reduxjs/toolkit";
 import { createStateSyncMiddleware } from "redux-state-sync";
 
-import type { BeatmapFilestore } from "$/services/file.service";
-import type { createAutosaveWorker } from "$/workers";
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";
@@ -11,11 +10,7 @@ import createPackagingMiddleware from "./packaging.middleware";
 
 export { createStorageMiddleware, type StorageObserver } from "./storage.middleware";
 
-interface Options {
-	filestore: BeatmapFilestore;
-	autosaveWorker: ReturnType<typeof createAutosaveWorker>;
-}
-export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options) {
+export function createAllSharedMiddleware() {
 	const stateSyncMiddleware = createStateSyncMiddleware({
 		predicate: (action) => {
 			if (action.type.startsWith("@@STORAGE")) return true;
@@ -23,16 +18,16 @@ export function createAllSharedMiddleware({ filestore, autosaveWorker }: Options
 		},
 	});
 
-	const audioMiddleware = createAudioMiddleware({ filestore });
-	const fileMiddleware = createFileMiddleware({ filestore });
-	const downloadMiddleware = createPackagingMiddleware({ filestore });
-	const backupMiddleware = createBackupMiddleware({ filestore, worker: autosaveWorker });
+	const audioMiddleware = createAudioMiddleware();
+	const fileMiddleware = createFileMiddleware();
+	const downloadMiddleware = createPackagingMiddleware();
+	const backupMiddleware = createBackupMiddleware();
 	const demoMiddleware = createDemoMiddleware();
 	const historyMiddleware = createHistoryMiddleware();
 
 	return [
 		// For unknown reasons, things crash when `stateSyncMiddleware` is further down.
-		stateSyncMiddleware,
+		stateSyncMiddleware as Middleware,
 		audioMiddleware,
 		fileMiddleware,
 		downloadMiddleware,

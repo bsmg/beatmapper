@@ -3,9 +3,9 @@ import { useDialog } from "@ark-ui/react/dialog";
 import type { MenuSelectionDetails } from "@ark-ui/react/menu";
 import { Fragment, useCallback, useMemo } from "react";
 
-import { APP_TOASTER } from "$/components/app/constants";
 import { AlertDialogProvider, Button, Menu } from "$/components/ui/compositions";
 import { isSongReadonly } from "$/helpers/song.helpers";
+import { getAppToaster } from "$/setup";
 import { downloadMapFiles, removeSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapIds, selectSongById } from "$/store/selectors";
@@ -42,6 +42,8 @@ function SongsDataTableActions({ sid }: Props) {
 
 	const handleActionSelect = useCallback(
 		(details: MenuSelectionDetails) => {
+			const toaster = getAppToaster();
+
 			switch (details.value) {
 				case "delete": {
 					return deleteAlert.setOpen(true);
@@ -50,7 +52,7 @@ function SongsDataTableActions({ sid }: Props) {
 					return dispatch(downloadMapFiles({ songId: sid }));
 				}
 				default: {
-					return APP_TOASTER.create({
+					return toaster?.create({
 						id: `song-action.${details.value}`,
 						description: "This feature does not exist yet. Sorry! Coming soon.",
 					});

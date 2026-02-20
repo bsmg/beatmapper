@@ -1,13 +1,13 @@
+import { createToaster } from "@ark-ui/react/toast";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
 import { forwardRef } from "react";
 
-import { EDITOR_TOASTER } from "$/components/app/constants";
 import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
-import { store } from "$/setup";
+import { getAppStore } from "$/setup";
 import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
 import type { View } from "$/types";
@@ -15,6 +15,10 @@ import { prompts } from "$:content";
 import { css, cx } from "$:styled-system/css";
 import { styled, Text } from "$:styled-system/jsx";
 
+const EDITOR_TOASTER = createToaster({
+	placement: "top-end",
+	max: 1,
+});
 const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} />),
 	p: forwardRef(({ className, ...rest }, ref) => <Text as={"p"} ref={ref} {...rest} textStyle={"paragraph"} className={cx(css({ marginBlockStart: { base: 1.5, _first: 0 }, marginBlockEnd: { base: 1.5, _last: 0 } }), className)} />),
@@ -32,7 +36,8 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 			view: segments[segments.length - 1] as View,
 		};
 	},
-	loader: ({ context }) => {
+	loader: async ({ context }) => {
+		const store = await getAppStore();
 		const state = store.getState();
 		const seenPrompts = selectAnnouncements(state);
 
@@ -45,6 +50,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 		return { meta: [{ title: loaderData ? `${loaderData.view} ∙ ${params.sid}/${params.bid} ∙ Beatmapper Editor` : "Beatmapper Editor" }] };
 	},
 	onEnter: async ({ params, loaderData }) => {
+		const store = await getAppStore();
 		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
 
 		if (loaderData && "unseenPrompt" in loaderData) {
@@ -65,6 +71,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 		}
 	},
 	onLeave: async ({ params }) => {
+		const store = await getAppStore();
 		const state = store.getState();
 		const entities = selectBeatmapEntities(state);
 

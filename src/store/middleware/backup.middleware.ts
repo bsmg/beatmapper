@@ -1,18 +1,14 @@
 import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 
-import type { BeatmapFilestore } from "$/services/file.service";
 import { downloadMapFiles, leaveEditor, saveBeatmapContents, updateBeatmap, updateSong } from "$/store/actions";
+import { selectSelectedBeatmap } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
-import type { createAutosaveWorker } from "$/workers";
-import { selectSelectedBeatmap } from "../selectors";
+import { createAutosaveWorker } from "$/workers";
 
-interface Options {
-	filestore: BeatmapFilestore;
-	worker: ReturnType<typeof createAutosaveWorker>;
-}
-export default function createBackupMiddleware({ worker }: Options) {
+export default function createBackupMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
+	const worker = createAutosaveWorker();
 
 	instance.startListening({
 		matcher: isAnyOf(saveBeatmapContents, downloadMapFiles),

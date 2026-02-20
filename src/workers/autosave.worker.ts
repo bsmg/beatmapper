@@ -1,6 +1,5 @@
-import { APP_TOASTER } from "$/components/app/constants";
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
-import type { BeatmapFilestore } from "$/services/file.service";
+import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
 import { selectBeatmapSerializationOptionsFromState, selectInfoSerializationOptionsFromState } from "$/store/middleware/file.middleware";
 import { selectBeatmapEntities, selectBeatmapIdsWithLightshowId, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -15,7 +14,10 @@ import type { App, BeatmapId, SongId } from "$/types";
 // it's because the user can have dozens or hundreds of songs, and each song can have thousands of notes. It's too much to keep in RAM.
 // So I store non-loaded songs to disk, stored in indexeddb. It uses the same mechanism as Redux Storage, but it's treated separately.)
 
-export async function save(state: RootState, filestore: BeatmapFilestore, songId: SongId, beatmapId: BeatmapId | null, entities?: Partial<App.IBeatmapEntities>) {
+export async function save(state: RootState, songId: SongId, beatmapId: BeatmapId | null, entities?: Partial<App.IBeatmapEntities>) {
+	const filestore = getAppBeatmapFilestore();
+	const toaster = getAppToaster();
+
 	// If we have an actively-loaded song, we want to first persist that song so that we download the very latest stuff.
 	const song = selectSongById(state, songId);
 	const infoContents = serializeInfoContents(song, selectInfoSerializationOptionsFromState(state, songId));
@@ -38,14 +40,11 @@ export async function save(state: RootState, filestore: BeatmapFilestore, songId
 
 	const id = `${beatmapId ? `${songId}/${beatmapId}` : songId}`;
 
-	return APP_TOASTER.success({ id: `save/${id}`, description: `Contents for "${id}" has been saved.` });
+	return toaster?.success({ id: `save/${id}`, description: `Contents for "${id}" has been saved.` });
 }
 
-interface Options {
-	filestore: BeatmapFilestore;
-}
-export function createAutosaveWorker({ filestore }: Options) {
+export function createAutosaveWorker() {
 	return {
-		save: async (state: RootState, songId: SongId, beatmapId: BeatmapId | null, entities?: Partial<App.IBeatmapEntities>) => await save(state, filestore, songId, beatmapId, entities),
+		save: async (state: RootState, songId: SongId, beatmapId: BeatmapId | null, entities?: Partial<App.IBeatmapEntities>) => await save(state, songId, beatmapId, entities),
 	};
 }

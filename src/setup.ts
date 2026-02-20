@@ -1,16 +1,17 @@
+import { createToaster } from "@ark-ui/react/toast";
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { createBeatmap, loadDifficulty, loadInfo } from "bsmap";
-import { createStorage, type StorageValue } from "unstorage";
+import { createStorage, type Driver, type StorageValue } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
 import { createDriver, type LegacyStorageSchema } from "./services/storage.service";
 import { createAppStore } from "./store/setup";
 import type { App } from "./types";
-import { createAutosaveWorker } from "./workers";
+import { createLazySingleton } from "./utils";
 
-export const driver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
+const appFileDriver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
 	name: "beat-mapper-files",
 	version: 4,
 	async upgrade(idb, _current, next, tx) {
@@ -70,13 +71,17 @@ export const driver = createDriver<LegacyStorageSchema & { entries: { key: strin
 	},
 });
 
-export const filestore = new BeatmapFilestore({
-	storage: createStorage({
-		driver: driver({ name: "entries" }),
-	}),
+export const { get: getAppBeatmapFilestore, setup: setupAppBeatmapFilestore } = createLazySingleton((driver?: Driver) => {
+	return new BeatmapFilestore({
+		storage: createStorage({
+			driver: driver ?? appFileDriver({ name: "entries" }),
+		}),
+	});
 });
 
-// Saving is a significantly expensive operation, and it's one that is done very often, so it makes sense to do it in a web worker.
-export const autosaveWorker = createAutosaveWorker({ filestore: filestore });
+export const { get: getAppToaster, setup: setupAppToaster } = createLazySingleton((toaster?: ReturnType<typeof createToaster>): NonNullable<typeof toaster> | null => {
+	if (toaster !== undefined) return toaster ?? null;
+	return createToaster({ placement: "bottom-end", overlap: true, max: 8 });
+});
 
-export const store = await createAppStore();
+export const { get: getAppStore, setup: setupAppStore } = createLazySingleton(createAppStore);

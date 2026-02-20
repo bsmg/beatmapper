@@ -5,12 +5,13 @@ import { Fragment } from "react/jsx-runtime";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import DefaultEnvironment from "$/components/scene/templates/environment";
 import MapVisualization from "$/components/scene/templates/visualization";
-import { store } from "$/setup";
+import { getAppStore } from "$/setup";
 import { selectBeatmapById, selectSongById } from "$/store/selectors";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 	component: RouteComponent,
-	loader: ({ params }) => {
+	loader: async ({ params }) => {
+		const store = await getAppStore();
 		const state = store.getState();
 
 		const song = selectSongById(state, params.sid);

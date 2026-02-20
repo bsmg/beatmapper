@@ -1,17 +1,15 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
-import type { BeatmapFilestore } from "$/services/file.service";
 import { zipFiles } from "$/services/packaging.service";
+import { getAppBeatmapFilestore } from "$/setup";
 import { downloadMapFiles } from "$/store/actions";
 import { selectBeatmaps } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { deepAssign } from "$/utils";
 
-interface Options {
-	filestore: BeatmapFilestore;
-}
-export default function createPackagingMiddleware({ filestore }: Options) {
+export default function createPackagingMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
+	const filestore = getAppBeatmapFilestore();
 
 	instance.startListening({
 		actionCreator: downloadMapFiles,
@@ -27,7 +25,7 @@ export default function createPackagingMiddleware({ filestore }: Options) {
 				optimize: { purgeZeros: version === 2 ? false : options?.optimize?.purgeZeros },
 			};
 
-			await zipFiles(filestore, {
+			await zipFiles({
 				version: version ?? null,
 				contents: {
 					songId: songId,

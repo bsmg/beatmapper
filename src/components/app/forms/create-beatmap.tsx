@@ -7,9 +7,10 @@ import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { type PropsWithChildren, useMemo } from "react";
 import { type InferOutput, object } from "valibot";
 
-import { APP_TOASTER, createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
+import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
 import { useAppForm } from "$/components/ui/compositions";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
+import { getAppToaster } from "$/setup";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
@@ -40,6 +41,8 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 			onSubmit: SCHEMA,
 		},
 		onSubmit: ({ value }) => {
+			const toaster = getAppToaster();
+
 			try {
 				const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === value.characteristic);
 				if (withMatchingCharacteristic.length >= DIFFICULTY_LIST_COLLECTION.size) {
@@ -55,7 +58,7 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
-				APP_TOASTER.error({ description: error instanceof Error ? error.message : "Error creating beatmap. See console for more info." });
+				toaster?.error({ description: error instanceof Error ? error.message : "Error creating beatmap. See console for more info." });
 				return console.error(error);
 			}
 		},

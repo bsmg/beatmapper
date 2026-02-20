@@ -5,16 +5,14 @@ import type { BeatmapFileType, ISaveOptions, v2, v3, wrapper } from "bsmap/types
 import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 import { saveAs } from "file-saver";
 
-import { APP_TOASTER } from "$/components/app/constants";
 import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
 import { serializeCustomBookmark } from "$/helpers/bookmarks.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { createSongId, getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "$/helpers/song.helpers";
-import { filestore } from "$/setup";
+import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
 import { deepAssign, yieldValue } from "$/utils";
-import type { BeatmapFilestore } from "./file.service";
 
 function* getFileFromArchive(archive: Unzipped, ...paths: string[]) {
 	const allPathsInArchive = Object.keys(archive);
@@ -42,7 +40,10 @@ interface ZipOptions {
 	};
 	options?: Omit<ISaveOptions<BeatmapFileType, 1 | 2 | 3 | 4>, "preprocess" | "postprocess">;
 }
-export async function zipFiles(filestore: BeatmapFilestore, { version, contents, options }: ZipOptions) {
+export async function zipFiles({ version, contents, options }: ZipOptions) {
+	const filestore = getAppBeatmapFilestore();
+	const toaster = getAppToaster();
+
 	const { songId, beatmapsById, songFile, coverArtFile } = contents;
 	const encoder = new TextEncoder();
 
@@ -102,7 +103,7 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 	});
 
 	if (hasMappingExtensions && version === 4) {
-		throw APP_TOASTER.error({
+		throw toaster?.error({
 			id: "incompatible-options",
 			description: "Mapping Extensions is not compatible with the v4 map format.",
 		});
@@ -143,6 +144,9 @@ export async function zipFiles(filestore: BeatmapFilestore, { version, contents,
 }
 
 export async function processImportedMap(zipFile: Uint8Array, options: { currentSongIds?: SongId[]; readonly?: boolean }): Promise<App.ISong> {
+	const filestore = getAppBeatmapFilestore();
+	const toaster = getAppToaster();
+
 	const audioContext = new AudioContext();
 	const decoder = new TextDecoder("utf-8");
 
@@ -160,7 +164,7 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 		},
 		(error) => {
 			console.error(error);
-			throw APP_TOASTER.error({
+			throw toaster?.error({
 				description: "The file provided is not a valid map archive.",
 			});
 		},

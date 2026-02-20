@@ -2,11 +2,9 @@ import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { getYear, isToday, setYear } from "date-fns";
 import { Fragment } from "react";
 
-import { APP_TOASTER } from "$/components/app/constants";
 import Devtools from "$/components/devtools";
 import { Toaster } from "$/components/ui/compositions";
-import { store } from "$/setup";
-import { selectInitialized } from "$/store/selectors";
+import { getAppToaster } from "$/setup";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -18,11 +16,6 @@ export const Route = createRootRoute({
 
 		return { now, theme };
 	},
-	loader: async () => {
-		const state = store.getState();
-
-		await Promise.resolve(selectInitialized(state));
-	},
 	head: () => {
 		return { meta: [{ title: "Beatmapper" }] };
 	},
@@ -33,7 +26,7 @@ function RootComponent() {
 		<Fragment>
 			<HeadContent />
 			<Outlet />
-			<Toaster toaster={APP_TOASTER} />
+			<Toaster toaster={getAppToaster()} />
 			<Devtools position="top-right" hideUntilHover openHotkey={[`\``]} />
 		</Fragment>
 	);

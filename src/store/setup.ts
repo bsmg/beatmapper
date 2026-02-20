@@ -12,7 +12,7 @@ import { default as ss } from "unstorage/drivers/session-storage";
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
-import { autosaveWorker, filestore } from "$/setup";
+import { setupAppBeatmapFilestore, setupAppToaster } from "$/setup";
 import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool } from "$/types";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
 import { default as root } from "./features";
@@ -82,7 +82,7 @@ export type SessionStorageObservers = {
 	"events.mirror": StorageObserver<RootState, boolean>;
 };
 
-const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
+const appStoreDriver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 4,
 	async upgrade(idb, _current, next, tx) {
@@ -155,10 +155,10 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 });
 
 export async function createAppStore() {
-	const middleware = createAllSharedMiddleware({
-		filestore: filestore,
-		autosaveWorker: autosaveWorker,
-	});
+	setupAppBeatmapFilestore();
+	setupAppToaster();
+
+	const middleware = createAllSharedMiddleware();
 
 	const userMiddleware = createStorageMiddleware<RootState, UserStorageObservers>({
 		namespace: "user",
@@ -199,7 +199,7 @@ export async function createAppStore() {
 	});
 	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.ISong>({
 		namespace: "songs",
-		storage: createStorage({ driver: driver({ name: "songs" }) }),
+		storage: createStorage({ driver: appStoreDriver({ name: "songs" }) }),
 		observer: {
 			keys: (state) => selectSongIds(state).map((x) => x.toString()),
 			selector: selectSongById,
@@ -208,7 +208,7 @@ export async function createAppStore() {
 	});
 	const gridStorageMiddleware = createEntityStorageMiddleware<RootState, Member<IGridPresets>>({
 		namespace: "grids",
-		storage: createStorage({ driver: driver({ name: "grids" }) }),
+		storage: createStorage({ driver: appStoreDriver({ name: "grids" }) }),
 		observer: {
 			keys: selectAllGridPresetIds,
 			selector: selectGridPresetById,

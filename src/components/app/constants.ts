@@ -1,5 +1,4 @@
 import { createListCollection } from "@ark-ui/react/collection";
-import { createToaster } from "@ark-ui/react/toast";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
 import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
@@ -10,17 +9,6 @@ import { SNAPPING_INCREMENTS } from "$/constants";
 import type { App, BeatmapId } from "$/types";
 import { getMetaKeyLabel } from "$/utils";
 import { token } from "$:styled-system/tokens";
-
-export const APP_TOASTER = createToaster({
-	placement: "bottom-end",
-	overlap: true,
-	max: 8,
-});
-
-export const EDITOR_TOASTER = createToaster({
-	placement: "top-end",
-	max: 1,
-});
 
 export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg", "application/ogg"];
 export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/png"];

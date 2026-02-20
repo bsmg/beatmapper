@@ -6,10 +6,11 @@ import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
-import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Interleave } from "$/components/ui/atoms";
 import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
+import { getAppToaster } from "$/setup";
 import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
@@ -61,6 +62,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
+			const toaster = getAppToaster();
+
 			try {
 				dispatch(
 					updateBeatmap({
@@ -76,7 +79,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 				formApi.reset(value);
 			} catch (error) {
-				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error updating beatmap: See console for more information.` });
+				toaster?.error({ description: error instanceof Error ? error.message : `Error updating beatmap: See console for more information.` });
 				console.error(error);
 			}
 		},
@@ -93,6 +96,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 	);
 
 	const handleDeleteBeatmap = useCallback(() => {
+		const toaster = getAppToaster();
+
 		// Delete our working state
 		const mutableDifficultiesCopy = { ...beatmaps };
 		delete mutableDifficultiesCopy[bid];
@@ -100,9 +105,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 		// Don't let the user delete the last difficulty!
 		const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
 		if (remainingDifficultyIds.length === 0) {
-			return APP_TOASTER.create({
+			return toaster?.error({
 				id: "last-difficulty",
-				type: "error",
 				description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
 			});
 		}

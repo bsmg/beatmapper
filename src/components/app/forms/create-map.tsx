@@ -3,9 +3,10 @@ import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { array, file, gtValue, minLength, nonEmpty, number, object, pipe, string, transform } from "valibot";
 
-import { APP_TOASTER, CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useAppForm } from "$/components/ui/compositions";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
+import { getAppToaster } from "$/setup";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
@@ -51,6 +52,8 @@ function CreateMapForm({ dialog }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value }) => {
+			const toaster = getAppToaster();
+
 			try {
 				const songId = createSongId(value);
 
@@ -81,7 +84,7 @@ function CreateMapForm({ dialog }: Props) {
 
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
-				APP_TOASTER.error({ description: error instanceof Error ? error.message : `Error creating map: See console for more information.` });
+				toaster?.error({ description: error instanceof Error ? error.message : `Error creating map: See console for more information.` });
 				console.error("Could not save files to local storage", error);
 			}
 		},

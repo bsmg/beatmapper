@@ -1,9 +1,9 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { APP_TOASTER } from "$/components/app/constants";
 import { getSelectedBeatmap } from "$/helpers/song.helpers";
-import { router } from "$/index";
+import { getRouter } from "$/router";
+import { getAppToaster } from "$/setup";
 import { addSongFromFile, loadDemoMap } from "$/store/actions";
 import type { RootState } from "$/store/setup";
 
@@ -12,6 +12,8 @@ import type { RootState } from "$/store/setup";
  */
 export default function createDemoMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
+	const router = getRouter();
+	const toaster = getAppToaster();
 
 	instance.startListening({
 		actionCreator: loadDemoMap,
@@ -23,7 +25,7 @@ export default function createDemoMiddleware() {
 				router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: bid.toString() } });
 			} catch (e) {
 				if (!(e instanceof Error)) return;
-				APP_TOASTER.error({ description: `${e.message}` });
+				toaster?.error({ description: `${e.message}` });
 			}
 		},
 	});

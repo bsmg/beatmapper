@@ -2,10 +2,11 @@ import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
-import { APP_TOASTER, createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
+import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
+import { getAppToaster } from "$/setup";
 import {
 	addBookmark,
 	copySelection,
@@ -105,6 +106,8 @@ function DefaultEditorShortcuts() {
 			if (isLoading) return;
 			if (!view) return;
 			if (isPromptActive) return;
+
+			const toaster = getAppToaster();
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
@@ -218,7 +221,7 @@ function DefaultEditorShortcuts() {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
 					if (import.meta.env.PROD && isDemo) {
-						return APP_TOASTER.create({
+						return toaster?.create({
 							id: "demo-download-blocker",
 							type: "info",
 							description: "Unfortunately, the demo map is not available for download.",

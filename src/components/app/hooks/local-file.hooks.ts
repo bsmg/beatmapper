@@ -1,6 +1,6 @@
 import { type UseQueryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { filestore } from "$/setup";
+import { getAppBeatmapFilestore } from "$/setup";
 
 interface UseLocalFileQueryOptions<T> extends Omit<UseQueryOptions<T>, "queryFn"> {
 	transformFile?: (file: File) => Promise<T> | T;
@@ -10,6 +10,7 @@ export function useLocalFileQuery<T = File>(filename: string, { ...rest }: UseLo
 		...rest,
 		queryKey: [...rest.queryKey, filename],
 		queryFn: async () => {
+			const filestore = getAppBeatmapFilestore();
 			const blob = await filestore.loadFile<Blob>(filename);
 			let file = blob as unknown as File;
 			if (!(blob instanceof File)) file = new File([blob], "name" in blob && typeof blob.name === "string" ? blob.name : filename, { type: blob.type });
@@ -23,6 +24,7 @@ export function useLocalFileMutation(filename: string, options: { onSuccess: () 
 
 	return useMutation({
 		mutationFn: async (file: File) => {
+			const filestore = getAppBeatmapFilestore();
 			filestore.saveFile(filename, file);
 		},
 		onSuccess: () => {

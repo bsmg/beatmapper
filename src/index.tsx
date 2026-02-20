@@ -1,45 +1,38 @@
 import { registerSW } from "virtual:pwa-register";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { RouterProvider } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
-import { APP_TOASTER } from "./components/app/constants";
-import ErrorBoundary from "./components/app/templates/error-boundary";
-import PendingBoundary from "./components/app/templates/pending-boundary";
-import { routeTree } from "./routeTree.gen";
-import { store } from "./setup";
+import { getRouter, setupRouter } from "./router";
+import { getAppStore, getAppToaster, setupAppStore } from "./setup";
 
 import "./index.css";
 
-const root = document.getElementById("root");
-if (!root) throw new Error("No root element.");
+setupRouter();
+setupAppStore();
 
-declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router;
-	}
+const root = document.getElementById("root");
+
+if (!root) {
+	throw new Error("No root element.");
 }
 
-export const router = createRouter({
-	routeTree: routeTree,
-	defaultPendingComponent: PendingBoundary,
-	defaultErrorComponent: ErrorBoundary,
-});
-
-const queryClient = new QueryClient();
+const store = await getAppStore();
 
 createRoot(root).render(
 	<Provider store={store}>
-		<QueryClientProvider client={queryClient}>
-			<RouterProvider router={router} />
+		<QueryClientProvider client={new QueryClient()}>
+			<RouterProvider router={getRouter()} />
 		</QueryClientProvider>
 	</Provider>,
 );
 
 const updateSW = registerSW({
 	onNeedRefresh() {
-		return APP_TOASTER.create({
+		const toaster = getAppToaster();
+
+		return toaster?.create({
 			id: "pwa-update",
 			type: "loading",
 			title: "New Update Available",
@@ -54,7 +47,9 @@ const updateSW = registerSW({
 		});
 	},
 	onOfflineReady() {
-		return APP_TOASTER.create({
+		const toaster = getAppToaster();
+
+		return toaster?.create({
 			id: "offline-ready",
 			type: "info",
 			description: "Offline mode is ready! You can now use Beatmapper without an internet connection.",

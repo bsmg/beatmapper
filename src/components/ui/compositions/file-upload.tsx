@@ -4,11 +4,11 @@ import type { FileMimeType } from "@zag-js/file-utils";
 import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, type LucideProps } from "lucide-react";
 import { type ComponentProps, forwardRef, useEffect, useMemo } from "react";
 
-import { APP_TOASTER } from "$/components/app/constants";
 import { For } from "$/components/ui/atoms";
 import { useFieldData } from "$/components/ui/hooks/form.hooks";
 import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/file-upload";
+import { getAppToaster } from "$/setup";
 import { css } from "$:styled-system/css";
 import type { SystemStyleObject } from "$:styled-system/types";
 import { Button } from "./button";
@@ -54,6 +54,8 @@ function List({ accept, deletable }: FileUploadProps) {
 	);
 
 	useEffect(() => {
+		const toaster = getAppToaster();
+
 		for (const { file, errors } of api.rejectedFiles) {
 			let message = "";
 			switch (errors[0]) {
@@ -66,7 +68,7 @@ function List({ accept, deletable }: FileUploadProps) {
 					break;
 				}
 			}
-			return APP_TOASTER.error({ id: errors[0], description: message });
+			return toaster?.error({ id: errors[0], description: message });
 		}
 	}, [api.rejectedFiles, accept]);
 
