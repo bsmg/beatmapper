@@ -6,11 +6,13 @@ import { type ComponentProps, type PointerEvent, useCallback, useEffect, useMemo
 import { EventGrid } from "$/components/app/layouts";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { For } from "$/components/ui/atoms";
-import { isLightEvent, isValueEvent, resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect, resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
 import { bulkAddBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
 	selectAllBasicEventsForTrackInWindow,
+	selectColorScheme,
 	selectDurationInBeats,
 	selectEditorOffsetInBeats,
 	selectEventEditorStartAndEndBeat,
@@ -22,9 +24,37 @@ import {
 	selectEventTracksForEnvironment,
 	selectInitialStateForTrack,
 } from "$/store/selectors";
-import { type Accept, App, EventEditMode, TrackType } from "$/types";
-import { clamp, normalize } from "$/utils";
+import { type Accept, App, EventEditMode, type IEventTracks, TrackType } from "$/types";
+import { clamp, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
+
+function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { tracks?: IEventTracks }) {
+	const eventColor = resolveEventColor(event);
+	const eventEffect = resolveEventEffect(event, options.tracks);
+
+	const color = resolveColorForItem(isLightEvent(event, options.tracks) ? (eventColor ?? eventEffect) : eventEffect, options);
+
+	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
+	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
+
+	switch (eventEffect) {
+		case App.BasicEventEffect.ON: {
+			return { value: color, style: color };
+		}
+		case App.BasicEventEffect.FLASH: {
+			return { value: color, style: `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})` };
+		}
+		case App.BasicEventEffect.FADE: {
+			return { value: color, style: `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})` };
+		}
+		case App.BasicEventEffect.TRANSITION: {
+			return { value: color, style: `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})` };
+		}
+		default: {
+			return { value: color, style: `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor}, ${semiTransparentColor})` };
+		}
+	}
+}
 
 interface Props {
 	trackId: Accept<EventType, number>;
@@ -45,6 +75,7 @@ function BasicEventTrack({ trackId, width, disabled, onEventPointerDown, onEvent
 	const offsetInBeats = useAppSelector((state) => -selectEditorOffsetInBeats(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
@@ -125,12 +156,20 @@ function BasicEventTrack({ trackId, width, disabled, onEventPointerDown, onEvent
 		}
 	}, [dispatch, resolveEventData, cursorAtBeat, norm, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
 
+	const resolveEventStyle = useCallback(
+		(data: App.IBasicEvent) => {
+			const background = resolveBackgroundForEvent(data, { tracks, colorScheme });
+			return { background: background.style, color: isColorDark(background.value) ? "white" : "black" };
+		},
+		[tracks, colorScheme],
+	);
+
 	return (
 		<EventGrid.Track {...rest} disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
 			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />}</For>
 			<For each={events}>
 				{(event) => (
-					<EventGrid.Event key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel}>
+					<EventGrid.Event key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} style={resolveEventStyle(event)}>
 						{isLightEvent(event, tracks) && event.value !== 0 ? event.floatValue : undefined}
 						{isValueEvent(event, tracks) && event.value}
 					</EventGrid.Event>
