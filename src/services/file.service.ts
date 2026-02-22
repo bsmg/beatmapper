@@ -2,7 +2,7 @@ import { omit } from "@std/collections/omit";
 import { pick } from "@std/collections/pick";
 import { basename } from "@std/path/basename";
 import { createAudioData, createBeatmap, createInfo, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import type { BeatmapFileType, InferBeatmapVersion, wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
@@ -34,11 +34,10 @@ export class Filestore {
 	}
 }
 
-type BeatmapFileType = "info" | "song" | "cover" | "beatmap" | "audio";
-type BeatmapFileOptions<T extends BeatmapFileType> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
+type BeatmapFileOptions<T> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
 
 export class BeatmapFilestore extends Filestore {
-	static resolveFilename<T extends BeatmapFileType>(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
+	static resolveFilename<T extends "info" | "song" | "cover" | "beatmap" | "audio">(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
 		switch (type) {
 			case "song":
 			case "cover":
@@ -94,7 +93,7 @@ export class BeatmapFilestore extends Filestore {
 	}
 	async loadImplicitVersion(songId: SongId, beatmapId: BeatmapId) {
 		const beatmap = await this.loadBeatmapContents(songId, beatmapId);
-		return beatmap.version as 1 | 2 | 3 | 4;
+		return beatmap.version as InferBeatmapVersion<BeatmapFileType>;
 	}
 
 	async saveSongFile<T extends File>(songId: SongId, contents: T) {

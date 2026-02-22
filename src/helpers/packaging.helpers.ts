@@ -2,12 +2,21 @@ import { distinct } from "@std/collections/distinct";
 import { createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
 import type { EnvironmentAllName, v2, wrapper } from "bsmap/types";
 
-import { type Accept, type App, ColorSchemeKey, type IColorScheme, type IEntityMap } from "$/types";
+import { type Accept, type App, ColorSchemeKey, type IColorScheme, type IEntityMap, type IEventTracks } from "$/types";
 import { deepAssign, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark } from "./bookmarks.helpers";
 import { deriveColorSchemeFromEnvironment, deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
-import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
 import { getBeatmaps, getCustomColorsModule, getExtensionsModule, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
+
+type BeatmapExtensionsProvider = string;
+
+export interface BeatmapEntitySerializationOptions<T extends BeatmapExtensionsProvider> {
+	/** The provider for which to handle extended properties. If left undefined, will parse as a vanilla property. */
+	extensionsProvider?: T;
+}
+export interface LightshowEntitySerializationOptions {
+	tracks?: IEventTracks;
+}
 
 function coalesceBeatmapCollection(data: App.ISong) {
 	const beatmaps = getBeatmaps(data);
@@ -266,8 +275,8 @@ export function deserializeBeatmapContents(data: wrapper.IWrapBeatmap, { editorO
 	const obstacles = data.difficulty.obstacles;
 	const events = data.lightshow.basicEvents;
 	const bookmarks = distinct([
-		...(data.difficulty.customData?._bookmarks?.map((x) => deserializeCustomBookmark(2, x, {})) ?? []),
-		...(data.difficulty.customData?.bookmarks?.map((x) => deserializeCustomBookmark(3, x, {})) ?? []),
+		...(data.difficulty.customData?._bookmarks?.map((x) => deserializeCustomBookmark(x, 2, {})) ?? []),
+		...(data.difficulty.customData?.bookmarks?.map((x) => deserializeCustomBookmark(x, 3, {})) ?? []),
 		//
 	]);
 

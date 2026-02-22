@@ -1,9 +1,8 @@
-import type { BeatmapFileType, ISaveOptions } from "bsmap/types";
+import type { BeatmapFileType, InferBeatmapVersion, ISaveOptions } from "bsmap/types";
 import { boolean, null_, object, picklist, union } from "valibot";
 
 import { VERSION_COLLECTION } from "$/components/app/constants";
 import { Heading, useAppForm } from "$/components/ui/compositions";
-import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { Stack, styled, Text, VStack } from "$:styled-system/jsx";
 
 const SCHEMA = object({
@@ -13,7 +12,7 @@ const SCHEMA = object({
 });
 
 interface Props {
-	onSubmit: (ctx: { version: ImplicitVersion | undefined; options: ISaveOptions<BeatmapFileType, ImplicitVersion> }) => void;
+	onSubmit: (ctx: { version: InferBeatmapVersion<BeatmapFileType> | undefined; options: ISaveOptions<BeatmapFileType, InferBeatmapVersion<BeatmapFileType>> }) => void;
 }
 function ExportMapForm({ onSubmit }: Props) {
 	const Form = useAppForm({
@@ -29,7 +28,7 @@ function ExportMapForm({ onSubmit }: Props) {
 		},
 		onSubmit: ({ value }) => {
 			return onSubmit({
-				version: value.version ? (Number.parseInt(value.version, 10) as ImplicitVersion) : undefined,
+				version: value.version ? (Number.parseInt(value.version, 10) as InferBeatmapVersion<BeatmapFileType>) : undefined,
 				options: { format: value.minify ? 0 : 2, optimize: { purgeZeros: value.purgeZeros } },
 			});
 		},

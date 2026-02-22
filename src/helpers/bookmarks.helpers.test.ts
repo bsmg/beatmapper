@@ -18,10 +18,10 @@ describe("bookmark serialization", () => {
 				//
 			];
 			it("converts from wrapper to serial", () => {
-				expect(wrapper.map((x) => serializeCustomBookmark(2, x, {}))).toEqual(v2);
+				expect(wrapper.map((x) => serializeCustomBookmark(x, 2, {}))).toEqual(v2);
 			});
 			it("converts from serial to wrapper", () => {
-				expect(v2.map((x) => deserializeCustomBookmark(2, x, {}))).toEqual(wrapper);
+				expect(v2.map((x) => deserializeCustomBookmark(x, 2, {}))).toEqual(wrapper);
 			});
 		});
 		describe("v3", () => {
@@ -31,10 +31,10 @@ describe("bookmark serialization", () => {
 				//
 			];
 			it("converts from wrapper to serial", () => {
-				expect(wrapper.map((x) => serializeCustomBookmark(3, x, {}))).toEqual(v3);
+				expect(wrapper.map((x) => serializeCustomBookmark(x, 3, {}))).toEqual(v3);
 			});
 			it("converts from serial to wrapper", () => {
-				expect(v3.map((x) => deserializeCustomBookmark(3, x, {}))).toEqual(wrapper);
+				expect(v3.map((x) => deserializeCustomBookmark(x, 3, {}))).toEqual(wrapper);
 			});
 		});
 	});

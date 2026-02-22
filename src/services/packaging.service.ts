@@ -1,14 +1,13 @@
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { createAudioData, createBeatmap, hasMappingExtensionsNote, hasMappingExtensionsObstacleV3, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
-import type { BeatmapFileType, ISaveOptions, v2, v3, wrapper } from "bsmap/types";
+import type { BeatmapFileType, InferBeatmapVersion, ISaveOptions, v2, v3, wrapper } from "bsmap/types";
 import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 import { saveAs } from "file-saver";
 
 import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
 import { serializeCustomBookmark } from "$/helpers/bookmarks.helpers";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
-import type { ImplicitVersion } from "$/helpers/serialization.helpers";
 import { createSongId, getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "$/helpers/song.helpers";
 import { getAppBeatmapFilestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
@@ -31,14 +30,14 @@ function* getFileFromArchive(archive: Unzipped, ...paths: string[]) {
 }
 
 interface ZipOptions {
-	version: ImplicitVersion | null;
+	version: InferBeatmapVersion<BeatmapFileType> | null;
 	contents: {
 		songId: SongId;
 		beatmapsById: IEntityMap<App.IBeatmap>;
 		songFile: Blob;
 		coverArtFile: Blob;
 	};
-	options?: Omit<ISaveOptions<BeatmapFileType, 1 | 2 | 3 | 4>, "preprocess" | "postprocess">;
+	options?: Omit<ISaveOptions<BeatmapFileType, InferBeatmapVersion<BeatmapFileType>>, "preprocess" | "postprocess">;
 }
 export async function zipFiles({ version, contents, options }: ZipOptions) {
 	const filestore = getAppBeatmapFilestore();
@@ -64,16 +63,16 @@ export async function zipFiles({ version, contents, options }: ZipOptions) {
 	for (const beatmap of beatmapContents) {
 		const implicitBeatmapVersion = version ?? (beatmap.version >= 0 ? beatmap.version : 4);
 
-		const serialDifficulty = saveDifficulty(beatmap.difficulty, implicitBeatmapVersion as ImplicitVersion, {
+		const serialDifficulty = saveDifficulty(beatmap.difficulty, implicitBeatmapVersion as InferBeatmapVersion<"difficulty">, {
 			optimize: options?.optimize,
 			validate: { compatibility: { enabled: true, throwOn: { incompatibleObject: false } } },
 			preprocess: [
 				(data) => {
 					const customData: v2.ICustomDataDifficulty | v3.ICustomDataDifficulty = {
 						// v2 custom data
-						_bookmarks: implicitBeatmapVersion <= 2 ? beatmap.customData.bookmarks?.map((x: App.IBookmark) => serializeCustomBookmark(2, x, {})) : [],
+						_bookmarks: implicitBeatmapVersion <= 2 ? beatmap.customData.bookmarks?.map((x: App.IBookmark) => serializeCustomBookmark(x, 2, {})) : [],
 						// v3 custom data
-						bookmarks: implicitBeatmapVersion >= 3 ? beatmap.customData.bookmarks?.map((x: App.IBookmark) => serializeCustomBookmark(3, x, {})) : [],
+						bookmarks: implicitBeatmapVersion >= 3 ? beatmap.customData.bookmarks?.map((x: App.IBookmark) => serializeCustomBookmark(x, 3, {})) : [],
 					};
 					return createBeatmap({
 						difficulty: deepAssign(data, { customData: customData }),
@@ -105,7 +104,7 @@ export async function zipFiles({ version, contents, options }: ZipOptions) {
 		throw new Error("Mapping Extensions is not compatible with the v4 map format.");
 	}
 
-	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as Extract<ImplicitVersion, 1 | 2 | 4>, {
+	const info = saveInfo(wrapperInfo, (implicitInfoVersion === 3 ? 2 : implicitInfoVersion) as InferBeatmapVersion<"info">, {
 		optimize: options?.optimize,
 		preprocess: [
 			(data) => {
@@ -124,7 +123,7 @@ export async function zipFiles({ version, contents, options }: ZipOptions) {
 	if (implicitInfoVersion >= 2) {
 		const wrapperAudioData = await filestore.loadAudioDataContents(songId);
 		const implicitAudioData = version ?? (wrapperAudioData.version >= 0 ? wrapperAudioData.version : 4);
-		const serialAudioData = saveAudioData(wrapperAudioData, (implicitAudioData === 3 ? 2 : implicitAudioData) as Extract<ImplicitVersion, 2 | 4>, {
+		const serialAudioData = saveAudioData(wrapperAudioData, (implicitAudioData === 3 ? 2 : implicitAudioData) as InferBeatmapVersion<"audioData">, {
 			optimize: options?.optimize,
 		});
 		zippable["AudioData.dat"] = encoder.encode(JSON.stringify(serialAudioData, null, options?.format ?? 2));

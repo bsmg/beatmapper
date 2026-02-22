@@ -1,10 +1,11 @@
 import { renamer } from "bsmap/extensions";
 import type { EnvironmentAllName, EventType } from "bsmap/types";
+import { check, number, pipe } from "valibot";
 
 import { ALL_EVENT_TRACKS, COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
 import { type Accept, App, type IEventTracks, TrackType } from "$/types";
-import type { LightshowEntitySerializationOptions } from "./object.helpers";
-import { createPropertySerializationFactory } from "./serialization.helpers";
+import { createDataFactory } from "./factory.helpers";
+import type { LightshowEntitySerializationOptions } from "./packaging.helpers";
 
 export function resolveTrackType(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
 	const match = Object.entries(tracks).find(([id]) => trackId === Number.parseInt(id, 10));
@@ -98,45 +99,59 @@ export function isValueEvent<T extends Pick<App.IBasicEvent, "type">>(event: T, 
 	return isValueTrack(event.type, tracks);
 }
 
-export const { serialize: resolveEventValue, deserialize: resolveEventDerivedProps } = createPropertySerializationFactory<{ effect: App.BasicEventEffect; color?: App.EventColor; speed?: number }, number, LightshowEntitySerializationOptions, LightshowEntitySerializationOptions & { trackId: Accept<EventType, number> }>(
-	() => {
-		return {
-			validate: (value, { tracks, trackId }) => {
-				const type = resolveTrackType(trackId, tracks);
-				if (type === TrackType.LIGHT) return value >= 0 && value <= 12;
-				return true;
-			},
-			container: {
-				serialize: (data) => {
-					if (data.effect === App.BasicEventEffect.TRIGGER) return 0;
-					if (data.effect === App.BasicEventEffect.VALUE && data.speed) return data.speed;
-					if (!data.color || !data.effect || data.effect === App.BasicEventEffect.OFF) return 0;
-					const c = Object.values([App.EventColor.SECONDARY, App.EventColor.PRIMARY, App.EventColor.WHITE]).indexOf(data.color);
-					const e = Object.values<App.BasicEventEffect>([App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.FADE, App.BasicEventEffect.TRANSITION]).indexOf(data.effect);
-					return 4 * c + (e + 1);
-				},
-				deserialize: (value, { tracks, trackId }) => {
+interface IEventDerivedProps {
+	effect: App.BasicEventEffect;
+	color?: App.EventColor;
+	speed?: number;
+}
+export const { serialize: resolveEventValue, deserialize: resolveEventDerivedProps } = createDataFactory<
+	IEventDerivedProps,
+	number,
+	LightshowEntitySerializationOptions,
+	LightshowEntitySerializationOptions & { trackId: Accept<EventType, number> },
+	LightshowEntitySerializationOptions & { trackId: Accept<EventType, number> }
+>({
+	validator: {
+		constructor: ({ tracks, trackId }) => {
+			return pipe(
+				number(),
+				check((value) => {
 					const type = resolveTrackType(trackId, tracks);
-					const effect = resolveEventEffect({ type: trackId, value });
-					switch (type) {
-						case TrackType.LIGHT: {
-							return { effect: effect, color: resolveEventColor({ value }) };
-						}
-						case TrackType.VALUE: {
-							return { effect: App.BasicEventEffect.VALUE, speed: value };
-						}
-						case TrackType.TRIGGER: {
-							return { effect: App.BasicEventEffect.TRIGGER };
-						}
-						default: {
-							throw new Error("Invalid value.");
-						}
-					}
-				},
-			},
-		};
+					if (type === TrackType.LIGHT) return value >= 0 && value <= 12;
+					return true;
+				}),
+			);
+		},
 	},
-);
+	container: {
+		serialize: (data) => {
+			if (data.effect === App.BasicEventEffect.TRIGGER) return 0;
+			if (data.effect === App.BasicEventEffect.VALUE && data.speed) return data.speed;
+			if (!data.color || !data.effect || data.effect === App.BasicEventEffect.OFF) return 0;
+			const c = Object.values([App.EventColor.SECONDARY, App.EventColor.PRIMARY, App.EventColor.WHITE]).indexOf(data.color);
+			const e = Object.values<App.BasicEventEffect>([App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.FADE, App.BasicEventEffect.TRANSITION]).indexOf(data.effect);
+			return 4 * c + (e + 1);
+		},
+		deserialize: (value, { tracks, trackId }) => {
+			const type = resolveTrackType(trackId, tracks);
+			const effect = resolveEventEffect({ type: trackId, value });
+			switch (type) {
+				case TrackType.LIGHT: {
+					return { effect: effect, color: resolveEventColor({ value }) };
+				}
+				case TrackType.VALUE: {
+					return { effect: App.BasicEventEffect.VALUE, speed: value };
+				}
+				case TrackType.TRIGGER: {
+					return { effect: App.BasicEventEffect.TRIGGER };
+				}
+				default: {
+					throw new Error("Invalid value.");
+				}
+			}
+		},
+	},
+});
 
 export function deriveEventTracksForEnvironment(environment: EnvironmentAllName) {
 	const commonEventTracks = Object.keys(COMMON_EVENT_TRACKS);
