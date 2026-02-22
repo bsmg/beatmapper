@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ActionPanel } from "$/components/app/layouts";
 import { useOnKeydown } from "$/components/hooks/use-on-keydown";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
-import { Show } from "$/components/ui/atoms";
+import { Match, Switch } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
 import { ObjectPlacementMode } from "$/types";
@@ -37,20 +37,22 @@ function EditorActionPanel() {
 
 	return (
 		<ActionPanel.Root>
-			<Show when={!isAnythingSelected}>
-				<NoteToolActionPanelGroup />
-				<NoteDirectionActionPanelGroup />
-				<DefaultActionPanelGroup handleGridConfigClick={() => setShowGridConfig(true)} />
-			</Show>
-			<Show when={isAnythingSelected}>
-				<SelectionActionPanelGroup />
-				<ObstaclesActionPanelGroup />
-				<DefaultActionPanelGroup handleGridConfigClick={() => setShowGridConfig(true)} />
-			</Show>
-			<Show when={showGridConfig}>
-				<GridPresetsActionPanelGroup />
-				<GridActionPanelGroup finishTweakingGrid={() => setShowGridConfig(false)} />
-			</Show>
+			<Switch>
+				<Match when={showGridConfig}>
+					<GridPresetsActionPanelGroup />
+					<GridActionPanelGroup finishTweakingGrid={() => setShowGridConfig(false)} />
+				</Match>
+				<Match when={!isAnythingSelected}>
+					<NoteToolActionPanelGroup />
+					<NoteDirectionActionPanelGroup />
+					<DefaultActionPanelGroup handleGridConfigClick={() => setShowGridConfig(true)} />
+				</Match>
+				<Match when={isAnythingSelected}>
+					<SelectionActionPanelGroup />
+					<ObstaclesActionPanelGroup />
+					<DefaultActionPanelGroup handleGridConfigClick={() => setShowGridConfig(true)} />
+				</Match>
+			</Switch>
 		</ActionPanel.Root>
 	);
 }
