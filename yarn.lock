@@ -5754,6 +5754,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zag-js/anatomy@npm:^1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/anatomy@npm:1.34.1"
+  checksum: 10/64fe11f1bd8d6a4ba1a2943cc2cffd5c1e50d3163fa600730fb4a5207732f5d7b1b5021a9d92add683e5f2ee3c3da19283ae99ac67564dd2aa3cf5b8075385fc
+  languageName: node
+  linkType: hard
+
 "@zag-js/angle-slider@npm:1.33.1":
   version: 1.33.1
   resolution: "@zag-js/angle-slider@npm:1.33.1"
@@ -5941,6 +5948,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zag-js/core@npm:1.34.1, @zag-js/core@npm:^1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/core@npm:1.34.1"
+  dependencies:
+    "@zag-js/dom-query": "npm:1.34.1"
+    "@zag-js/utils": "npm:1.34.1"
+  checksum: 10/874ae3188e0be5c126ee738760efacb8dbde6ce89630c31f0bbcefe651c059a2f8dc9af4a64453abd7058fda1969b1854219998843c33f67e538c22c1cb27cf8
+  languageName: node
+  linkType: hard
+
 "@zag-js/date-picker@npm:1.33.1":
   version: 1.33.1
   resolution: "@zag-js/date-picker@npm:1.33.1"
@@ -6003,6 +6020,15 @@ __metadata:
   dependencies:
     "@zag-js/types": "npm:1.33.1"
   checksum: 10/abdd1594dc0f8680e6833ecbb708a827eddd06914ffb195b9fdc53dc7bfab151d9a8d5be5155a3a547421d72d385888bd1a8e64fa939c755f065d18ca6b72fa9
+  languageName: node
+  linkType: hard
+
+"@zag-js/dom-query@npm:1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/dom-query@npm:1.34.1"
+  dependencies:
+    "@zag-js/types": "npm:1.34.1"
+  checksum: 10/d4f9d07f43e246af83dd48d6c11217b51fb85eb9b924d00af56d46760044e1909aa5967a653943c1008b6e1d33c7701d81ba14654c8d205ec4063dff68e83412
   languageName: node
   linkType: hard
 
@@ -6367,6 +6393,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zag-js/react@npm:^1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/react@npm:1.34.1"
+  dependencies:
+    "@zag-js/core": "npm:1.34.1"
+    "@zag-js/store": "npm:1.34.1"
+    "@zag-js/types": "npm:1.34.1"
+    "@zag-js/utils": "npm:1.34.1"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  checksum: 10/5aaf20d8699028b69ee14c8436cca65b88c2a26a726f76abbdb187c85860b253e11b6eb64552d4f87c18dfc39b19df3c0e3c23d752fcdc2a0516b0dd6ad9113d
+  languageName: node
+  linkType: hard
+
 "@zag-js/rect-utils@npm:1.33.1":
   version: 1.33.1
   resolution: "@zag-js/rect-utils@npm:1.33.1"
@@ -6480,6 +6521,15 @@ __metadata:
   dependencies:
     proxy-compare: "npm:3.0.1"
   checksum: 10/8b99e0bf949bf1f96cda6db9984fa8451cf48a8aaa3a27c8e328f617fbd2d17b31254d8ad9fe939bd9384150e0ec9c613b4b0f3f0cd39b71f29d8d51d83fc159
+  languageName: node
+  linkType: hard
+
+"@zag-js/store@npm:1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/store@npm:1.34.1"
+  dependencies:
+    proxy-compare: "npm:3.0.1"
+  checksum: 10/f75ea004c2e126985aff9a40e8aeebd25fdabccc564e5652081e822bcbfff9ae9a66aa96ba5934bfeb78d566e554815782f450b125713325b25f67a3005f5f90
   languageName: node
   linkType: hard
 
@@ -6634,10 +6684,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zag-js/types@npm:1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/types@npm:1.34.1"
+  dependencies:
+    csstype: "npm:3.2.3"
+  checksum: 10/c0a048e7c75ef55e89280ae1a2f9705970569dd1003dea88f66d13c0e50dc0482a2479ce773975c13e0d9d9e5d45472e5f81c3d88a6345c67f5defbcb897c224
+  languageName: node
+  linkType: hard
+
 "@zag-js/utils@npm:1.33.1":
   version: 1.33.1
   resolution: "@zag-js/utils@npm:1.33.1"
   checksum: 10/52801f881bd9cf8de49a81604bbd82e96de271e1cc8685a7a88038a5a2b28ea9d4c779560248b18510ca02a9f37bb1e9365747d6b43bf0dcf26de3d9f8ad21a7
+  languageName: node
+  linkType: hard
+
+"@zag-js/utils@npm:1.34.1, @zag-js/utils@npm:^1.34.1":
+  version: 1.34.1
+  resolution: "@zag-js/utils@npm:1.34.1"
+  checksum: 10/f3c98bdc7da4f130dffffd0565b1b93346512880db4186aae13b4a74e57d15604bf182a743959cbb7058c152a6abaf10064fe759dc41877174335ea3a6876654
   languageName: node
   linkType: hard
 
@@ -7041,8 +7107,12 @@ __metadata:
     "@velite/plugin-vite": "npm:^0.0.1"
     "@vite-pwa/assets-generator": "npm:^1.0.1"
     "@vitejs/plugin-react": "npm:^5.1.4"
+    "@zag-js/anatomy": "npm:^1.34.1"
     "@zag-js/color-utils": "npm:^1.33.1"
+    "@zag-js/core": "npm:^1.34.1"
     "@zag-js/file-utils": "npm:^1.33.1"
+    "@zag-js/react": "npm:^1.34.1"
+    "@zag-js/utils": "npm:^1.34.1"
     bsmap: "npm:^2.2.9"
     concurrently: "npm:^9.2.1"
     date-fns: "npm:^4.1.0"

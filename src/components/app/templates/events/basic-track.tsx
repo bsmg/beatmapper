@@ -1,30 +1,16 @@
 import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
 import { createBasicEvent, type EventType } from "bsmap";
-import { type ComponentProps, type PointerEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { type ComponentProps, useCallback, useMemo } from "react";
 
 import { EventGrid } from "$/components/app/layouts";
-import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { For } from "$/components/ui/atoms";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
-import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect, resolveEventId, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
-import { bulkAddBasicEvent } from "$/store/actions";
+import { isLightEvent, isValueEvent, resolveEventColor, resolveEventEffect, resolveEventId, resolveEventType, resolveEventValue, resolveTrackType } from "$/helpers/events.helpers";
+import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, deselectEvent, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import {
-	selectAllBasicEventsForTrackInWindow,
-	selectColorScheme,
-	selectDurationInBeats,
-	selectEditorOffsetInBeats,
-	selectEventEditorStartAndEndBeat,
-	selectEventsEditorColor,
-	selectEventsEditorCursor,
-	selectEventsEditorEditMode,
-	selectEventsEditorMirrorLock,
-	selectEventsEditorTool,
-	selectEventTracksForEnvironment,
-	selectInitialStateForTrack,
-} from "$/store/selectors";
-import { type Accept, App, EventEditMode, type IEventTracks, TrackType } from "$/types";
+import { selectAllBasicEventsForTrackInWindow, selectColorScheme, selectEventEditorStartAndEndBeat, selectEventsEditorColor, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventTracksForEnvironment, selectInitialStateForTrack } from "$/store/selectors";
+import { type Accept, App, type IEventTracks, TrackType } from "$/types";
 import { clamp, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
@@ -58,46 +44,24 @@ function resolveBackgroundForEvent(event: App.IBasicEvent, options: Parameters<t
 
 interface Props {
 	trackId: Accept<EventType, number>;
-	width: number;
-	disabled: boolean;
-	onEventPointerDown?: (event: PointerEvent, data: App.IBasicEvent) => void;
-	onEventPointerOut?: (event: PointerEvent, data: App.IBasicEvent) => void;
-	onEventPointerOver?: (event: PointerEvent, data: App.IBasicEvent) => void;
-	onEventWheel?: (event: WheelEvent, data: App.IBasicEvent) => void;
 }
-function BasicEventTrack({ trackId, width, disabled, onEventPointerDown, onEventPointerOver, onEventPointerOut, onEventWheel, ...rest }: Assign<ComponentProps<typeof EventGrid.Track>, Props>) {
+function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof EventGrid.Track>, Props>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
-	const duration = useAppSelector((state) => selectDurationInBeats(state, sid));
-	const cursorAtBeat = useAppSelector(selectEventsEditorCursor);
 	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
-	const offsetInBeats = useAppSelector((state) => -selectEditorOffsetInBeats(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
-	const selectedEditMode = useAppSelector(selectEventsEditorEditMode);
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
 	const initialTrackLightingState = useAppSelector((state) => selectInitialStateForTrack(state, sid, trackId));
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
-	const [mouseButtonDepressed, setMouseButtonDepressed] = useState<"left" | "right" | null>(null);
-	const [norm, setNorm] = useState<number | null>(null);
-
 	const backgroundBoxes = useMemo(() => {
 		const { color, brightness } = initialTrackLightingState;
 		return createBackgroundBoxes(events, trackId, { initialColor: color ?? null, initialBrightness: brightness ?? null, startBeat, numOfBeatsToShow, tracks });
 	}, [events, trackId, initialTrackLightingState, startBeat, numOfBeatsToShow, tracks]);
-
-	const handlePointerUp = useCallback(() => {
-		setMouseButtonDepressed(null);
-		setNorm(null);
-	}, []);
-
-	useGlobalEventListener("pointerup", handlePointerUp, {
-		shouldFire: !!mouseButtonDepressed,
-	});
 
 	const resolveEventData = useCallback(
 		(time: number, norm: number) => {
@@ -107,71 +71,70 @@ function BasicEventTrack({ trackId, width, disabled, onEventPointerDown, onEvent
 				case TrackType.LIGHT: {
 					const value = resolveEventValue({ effect: selectedTool, color: selectedColorType }, { tracks });
 					const floatValue = Math.round(normalize(1 - (norm ?? 0), 0, 1, 0, 2)) / 2;
-					return { data: createBasicEvent({ time, type: trackId, value: value, floatValue: floatValue }), tracks, areLasersLocked };
+					return createBasicEvent({ time, type: trackId, value: value, floatValue: floatValue });
 				}
 				case TrackType.TRIGGER: {
 					const value = resolveEventValue({ effect: App.BasicEventEffect.TRIGGER }, { tracks });
-					return { data: createBasicEvent({ time, type: trackId, value: value }), tracks, areLasersLocked };
+					return createBasicEvent({ time, type: trackId, value: value });
 				}
 				case TrackType.VALUE: {
 					const value = Math.round(normalize(norm ?? 0, 0, 1, 8, 0));
-					return { data: createBasicEvent({ time, type: trackId, value: value }), tracks, areLasersLocked };
+					return createBasicEvent({ time, type: trackId, value: value });
 				}
 				default: {
 					throw new Error(`Unsupported track: ${trackId}`);
 				}
 			}
 		},
-		[tracks, areLasersLocked, selectedColorType, selectedTool, trackId],
+		[tracks, selectedColorType, selectedTool, trackId],
 	);
 
-	const handleClickTrack = useCallback(
-		(ev: PointerEvent<HTMLElement>) => {
-			if (cursorAtBeat === null) return;
-			if (disabled || selectedEditMode === EventEditMode.SELECT) return;
+	const api = EventGrid.useContext();
 
-			setNorm(ev.nativeEvent.offsetY / ev.currentTarget.clientHeight);
-
-			switch (ev.button) {
-				case 0: {
-					setMouseButtonDepressed("left");
-					break;
+	const actions = useMemo<EventGrid.IPlacementActions<App.IBasicEvent>>(() => {
+		return {
+			onCreate: resolveEventData,
+			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBasicEvent : addBasicEvent)({ data, tracks, areLasersLocked })),
+			onSelect: (data) => dispatch(selectEvent({ query: data, tracks, areLasersLocked })),
+			onDeselect: (data) => dispatch(deselectEvent({ query: data, tracks, areLasersLocked })),
+			onPick: (data) => dispatch(mirrorBasicEvent({ query: data, tracks, areLasersLocked })),
+			onDelete: (data, isBulk) => dispatch((isBulk ? bulkRemoveEvent : removeEvent)({ query: data, tracks, areLasersLocked })),
+			onWheel: (data, delta) => {
+				switch (resolveEventType(data, tracks)) {
+					case TrackType.LIGHT: {
+						const step = data.floatValue + 0.125 / delta;
+						const newFloatValue = clamp(step, 0, Number.POSITIVE_INFINITY);
+						return dispatch(updateBasicEvent({ query: data, tracks, areLasersLocked, changes: { floatValue: newFloatValue } }));
+					}
+					case TrackType.VALUE: {
+						const step = data.value + 1 / delta;
+						const newValue = clamp(step, 0, Number.POSITIVE_INFINITY);
+						return dispatch(updateBasicEvent({ query: data, tracks, areLasersLocked, changes: { value: newValue } }));
+					}
+					default: {
+						return data;
+					}
 				}
-				case 2: {
-					setMouseButtonDepressed("right");
-					break;
-				}
-			}
-		},
-		[disabled, selectedEditMode, cursorAtBeat],
-	);
-
-	useEffect(() => {
-		if (selectedEditMode !== EventEditMode.PLACE || cursorAtBeat === null) return;
-
-		if (mouseButtonDepressed === "left") {
-			const beatNum = clamp(cursorAtBeat, offsetInBeats, (duration ?? cursorAtBeat) + offsetInBeats);
-			const payload = resolveEventData(beatNum, norm ?? 0);
-			dispatch(bulkAddBasicEvent({ ...payload, overwrite: false }));
-		}
-	}, [dispatch, resolveEventData, cursorAtBeat, norm, duration, offsetInBeats, mouseButtonDepressed, selectedEditMode]);
+			},
+		};
+	}, [dispatch, resolveEventData, tracks, areLasersLocked]);
 
 	const resolveEventStyle = useCallback(
 		(data: App.IBasicEvent) => {
-			const background = resolveBackgroundForEvent(data, { tracks, colorScheme });
-			return { background: background.style, color: isColorDark(background.value) ? "white" : "black" };
+			const { style, value } = resolveBackgroundForEvent(data, { tracks, colorScheme });
+			return { "--event-color": style, background: style, color: isColorDark(value) ? "white" : "black" };
 		},
 		[tracks, colorScheme],
 	);
 
 	return (
-		<EventGrid.Track {...rest} disabled={disabled} onPointerDown={handleClickTrack} onContextMenu={(ev) => ev.preventDefault()}>
-			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} box={box} />}</For>
+		<EventGrid.Track {...api.getTrackProps(trackId, actions)} {...rest}>
+			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} {...api.getBackgroundBoxProps(box, colorScheme)} />}</For>
 			<For each={events}>
-				{(event) => (
-					<EventGrid.Event key={resolveEventId(event)} event={event} trackWidth={width} onEventPointerDown={onEventPointerDown} onEventPointerOver={onEventPointerOver} onEventPointerOut={onEventPointerOut} onEventWheel={onEventWheel} style={resolveEventStyle(event)}>
-						{isLightEvent(event, tracks) && event.value !== 0 ? event.floatValue : undefined}
-						{isValueEvent(event, tracks) && event.value}
+				{(data) => (
+					<EventGrid.Event key={resolveEventId(data)} data={data} {...api.getEventProps(data, actions, resolveEventStyle(data))}>
+						{isLightEvent(data, tracks) && data.value !== 0 ? data.floatValue : undefined}
+						{isValueEvent(data, tracks) && data.value}
 					</EventGrid.Event>
 				)}
 			</For>

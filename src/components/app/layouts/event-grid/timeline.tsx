@@ -1,30 +1,24 @@
-import { useParams } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 
 import { For } from "$/components/ui/atoms";
-import { scrubEventsHeader } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectEventsEditorCursor } from "$/store/selectors";
 import { styled } from "$:styled-system/jsx";
 import { flex } from "$:styled-system/patterns";
+import { useEventGridContext } from "./context";
 
 interface Props {
-	beatNums: number[];
+	onScrubHeader?: (details: { beat: number }) => void;
 }
-function EventGridTimeline({ beatNums }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-
-	const dispatch = useAppDispatch();
-	const selectedBeat = useAppSelector(selectEventsEditorCursor);
+function EventGridTimeline({ onScrubHeader }: Props) {
+	const { pointer: selectedBeat, beatNums } = useEventGridContext();
 
 	const [isScrubbing, setIsScrubbing] = useState(false);
 	const lastActionDispatchedFor = useRef<number | null>(null);
 
 	const handlePointerDown = useCallback(() => {
 		setIsScrubbing(true);
-		if (selectedBeat !== null) dispatch(scrubEventsHeader({ songId: sid, selectedBeat }));
+		if (onScrubHeader) onScrubHeader({ beat: selectedBeat });
 		lastActionDispatchedFor.current = selectedBeat;
-	}, [dispatch, sid, selectedBeat]);
+	}, [onScrubHeader, selectedBeat]);
 
 	const handlePointerUp = useCallback(() => {
 		setIsScrubbing(false);
@@ -38,10 +32,10 @@ function EventGridTimeline({ beatNums }: Props) {
 		const shouldDispatchAction = lastActionDispatchedFor.current !== selectedBeat;
 
 		if (shouldDispatchAction) {
-			if (selectedBeat !== null) dispatch(scrubEventsHeader({ songId: sid, selectedBeat }));
+			if (onScrubHeader) onScrubHeader({ beat: selectedBeat });
 			lastActionDispatchedFor.current = selectedBeat;
 		}
-	}, [dispatch, sid, selectedBeat, isScrubbing]);
+	}, [onScrubHeader, selectedBeat, isScrubbing]);
 
 	return (
 		<Header onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove}>
