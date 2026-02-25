@@ -1,7 +1,9 @@
-import { createBombNote, createColorNote } from "bsmap";
+import { createBombNote, createColorNote, NoteDirection } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
+import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
 import { type App, type IGrid, ObjectPlacementMode } from "$/types";
-import { convertGridColumn, convertGridRow } from "./grid.helpers";
+import { convertGridCell } from "./grid.helpers";
 
 export function resolveNoteId<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(x: T) {
 	return `${x.time}/${x.posX}/${x.posY}`;
@@ -16,11 +18,14 @@ export function isBombNote(data: unknown): data is App.IBombNote {
 	return "direction" in data;
 }
 
-export function createColorNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid, direction: number) {
+export function createColorNoteFromMouseEvent({ cellDownAt, direction }: IPlacementContext, mode: ObjectPlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data?: Partial<wrapper.IWrapColorNote>) {
+	if (!cellDownAt) return null;
+
 	const note = createColorNote({
-		posX: mouseDownAt.colIndex,
-		posY: mouseDownAt.rowIndex,
-		direction: direction,
+		posX: cellDownAt.colIndex,
+		posY: cellDownAt.rowIndex,
+		direction: direction ?? NoteDirection.ANY,
+		...data,
 	});
 
 	switch (mode) {
@@ -28,8 +33,7 @@ export function createColorNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDo
 			return note;
 		}
 		case ObjectPlacementMode.EXTENSIONS: {
-			const colIndex = convertGridColumn(mouseDownAt.colIndex, numCols, colWidth);
-			const rowIndex = convertGridRow(mouseDownAt.rowIndex, numRows, rowHeight);
+			const { colIndex, rowIndex } = convertGridCell(cellDownAt, { numCols, colWidth, numRows, rowHeight });
 
 			note.posX = colIndex >= 0 ? (colIndex + 1) * 1000 : (colIndex - 1) * 1000;
 			note.posY = rowIndex >= 0 ? (rowIndex + 1) * 1000 : (rowIndex - 1) * 1000;
@@ -38,10 +42,13 @@ export function createColorNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDo
 		}
 	}
 }
-export function createBombNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid) {
+export function createBombNoteFromMouseEvent({ cellDownAt }: IPlacementContext, mode: ObjectPlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data?: Partial<wrapper.IWrapBombNote>) {
+	if (!cellDownAt) return null;
+
 	const note = createBombNote({
-		posX: mouseDownAt.colIndex,
-		posY: mouseDownAt.rowIndex,
+		posX: cellDownAt.colIndex,
+		posY: cellDownAt.rowIndex,
+		...data,
 	});
 
 	switch (mode) {
@@ -49,8 +56,7 @@ export function createBombNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDow
 			return note;
 		}
 		case ObjectPlacementMode.EXTENSIONS: {
-			const colIndex = convertGridColumn(mouseDownAt.colIndex, numCols, colWidth);
-			const rowIndex = convertGridRow(mouseDownAt.rowIndex, numRows, rowHeight);
+			const { colIndex, rowIndex } = convertGridCell(cellDownAt, { numCols, colWidth, numRows, rowHeight });
 
 			note.posX = colIndex >= 0 ? (colIndex + 1) * 1000 : (colIndex - 1) * 1000;
 			note.posY = rowIndex >= 0 ? (rowIndex + 1) * 1000 : (rowIndex - 1) * 1000;

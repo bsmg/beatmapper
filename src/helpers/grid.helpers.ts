@@ -1,6 +1,7 @@
-import { DEFAULT_NUM_COLS } from "$/constants";
+import { DEFAULT_GRID, DEFAULT_NUM_COLS } from "$/constants";
+import type { IGrid, IGridCell } from "$/types";
 
-export function convertGridColumn(colIndex: number, numCols: number, colWidth: number) {
+export function convertGridColumn(colIndex: number, { numCols, colWidth }: Pick<IGrid, "numCols" | "colWidth">) {
 	// Getting the index is according to this formula.
 	const index = colIndex - (numCols - DEFAULT_NUM_COLS) / 2;
 
@@ -25,8 +26,7 @@ export function convertGridColumn(colIndex: number, numCols: number, colWidth: n
 	return newValue;
 }
 
-// TODO: `numRows` is unused and should be removed
-export function convertGridRow(rowIndex: number, _numRows: number, rowHeight: number) {
+export function convertGridRow(rowIndex: number, { rowHeight }: Pick<IGrid, "numRows" | "rowHeight">) {
 	return rowIndex * rowHeight;
 }
 
@@ -40,6 +40,6 @@ export function convertGridRow(rowIndex: number, _numRows: number, rowHeight: nu
  *
  * This function converts from our custom grid [0,2] to a standard grid [-2,2]
  */
-export function convertGridIndicesToNaturalGrid(colIndex: number, numCols: number, colWidth: number, rowIndex: number, numRows: number, rowHeight: number) {
-	return [convertGridColumn(colIndex, numCols, colWidth), convertGridRow(rowIndex, numRows, rowHeight)];
+export function convertGridCell({ colIndex, rowIndex }: IGridCell, grid: IGrid = DEFAULT_GRID) {
+	return { colIndex: convertGridColumn(colIndex, grid), rowIndex: convertGridRow(rowIndex, grid) };
 }

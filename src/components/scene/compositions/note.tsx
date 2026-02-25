@@ -20,7 +20,7 @@ export interface BaseNoteProps<T extends App.IBaseNote> {
 function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rotation, scale, color, metalness, roughness, transparent, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
 	return (
 		<group userData={data} position={position} rotation={rotation} scale={scale}>
-			<Obj castShadow scale={0.5} {...rest} path={path}>
+			<Obj key={path} castShadow scale={0.5} {...rest} path={path}>
 				<meshStandardMaterial attach="material" metalness={metalness} roughness={roughness} color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : transparent ? 0.25 : 1} />
 			</Obj>
 			{children?.(data, { ...rest, transparent: !!transparent })}

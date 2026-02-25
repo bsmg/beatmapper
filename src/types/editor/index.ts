@@ -45,6 +45,11 @@ export interface IGrid {
 
 export type IGridPresets = Record<string, IGrid>;
 
+export interface IGridCell {
+	colIndex: number;
+	rowIndex: number;
+}
+
 export interface ISelectionBoxInBeats {
 	startBeat: number;
 	endBeat: number;

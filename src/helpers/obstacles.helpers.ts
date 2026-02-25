@@ -1,7 +1,9 @@
 import { createObstacle } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
+import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
 import { type App, type IGrid, ObjectPlacementMode } from "$/types";
-import { convertGridColumn, convertGridRow } from "./grid.helpers";
+import { convertGridCell } from "./grid.helpers";
 
 export function resolveObstacleId<T extends Pick<App.IObstacle, "time" | "posX" | "posY" | "width" | "height">>(x: T) {
 	return `${x.time}/${x.posX}/${x.width}/${x.posY}/${x.height}`;
@@ -29,35 +31,37 @@ export function isExtendedObstacle<T extends Pick<App.IObstacle, "posY" | "heigh
 	return !isVanillaObstacle(data);
 }
 
-export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, mouseOverAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid) {
-	const rawColIndex = Math.min(mouseDownAt.colIndex, mouseOverAt.colIndex);
-	const rawRowIndex = Math.min(mouseDownAt.rowIndex, mouseOverAt.rowIndex);
+export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObjectPlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
+	if (!cellDownAt || !cellOverAt) return null;
+
+	const rawColIndex = Math.min(cellDownAt.colIndex, cellOverAt.colIndex);
+	const rawRowIndex = Math.min(cellDownAt.rowIndex, cellOverAt.rowIndex);
 
 	// Our colIndex will be a value from 0 to N-1, where N is the num of columns. Eg in an 8-column grid, the number is 0-7.
 	// The thing is, I want to store lanes as relative to a 4-column "natural" grid,
 	// so column 0 of an 8-column grid should actually be -2 (with a full range of -2 to 5, with 2 before and 2 after the standard 0-3 range).
-	const rawWidth = Math.abs(mouseDownAt.colIndex - mouseOverAt.colIndex) + 1;
-	const rawHeight = Math.abs(mouseDownAt.rowIndex - mouseOverAt.rowIndex) + 1;
+	const rawWidth = Math.abs(cellDownAt.colIndex - cellOverAt.colIndex) + 1;
+	const rawHeight = Math.abs(cellDownAt.rowIndex - cellOverAt.rowIndex) + 1;
 
-	let colIndex = convertGridColumn(rawColIndex, numCols, colWidth);
-	let rowIndex = convertGridRow(rawRowIndex, numRows, rowHeight);
+	let { colIndex, rowIndex } = convertGridCell({ colIndex: rawColIndex, rowIndex: rawRowIndex }, { numCols, colWidth, numRows, rowHeight });
 
 	// lane 0 always spans two cells from the exact center, so we'll calculate the correct serial cell if we're using an extended grid.
 	const offset = (numCols - 4) / 2;
 
 	const obstacle = createObstacle({
 		posX: colIndex - offset,
-		posY: mouseOverAt.rowIndex === 2 ? 2 : 0,
+		posY: cellOverAt.rowIndex === 2 ? 2 : 0,
 		width: rawWidth,
-		height: mouseOverAt.rowIndex === 2 ? 3 : 5,
+		height: cellOverAt.rowIndex === 2 ? 3 : 5,
+		...data,
 	});
 
 	switch (mode) {
 		case ObjectPlacementMode.NORMAL: {
 			// 'original' walls need to be clamped to not cause hazards
 			if (isFullHeightObstacle(obstacle)) {
-				const downAt = mouseDownAt.colIndex - offset;
-				const overAt = mouseOverAt.colIndex - offset;
+				const downAt = cellDownAt.colIndex - offset;
+				const overAt = cellOverAt.colIndex - offset;
 				// these values will be known since the center of the grid will always be located between lanes 1 and 2.
 				if (!((downAt < 2 && overAt > 1) || (downAt > 1 && overAt < 2))) return obstacle;
 
@@ -66,12 +70,12 @@ export function createObstacleFromMouseEvent(mode: ObjectPlacementMode, mouseDow
 				obstacle.width = rawWidth - half;
 
 				// use the delta to determine whether we're moving from left-to-right or right-to-left
-				if (mouseOverAt.colIndex >= half) {
+				if (cellOverAt.colIndex >= half) {
 					obstacle.posX = half - offset;
-					obstacle.width += mouseDownAt.colIndex;
+					obstacle.width += cellDownAt.colIndex;
 				} else {
-					obstacle.posX = mouseOverAt.colIndex - offset;
-					obstacle.width += numCols - 1 - mouseDownAt.colIndex;
+					obstacle.posX = cellOverAt.colIndex - offset;
+					obstacle.width += numCols - 1 - cellDownAt.colIndex;
 				}
 			}
 			return obstacle;

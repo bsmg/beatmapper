@@ -1,24 +1,5 @@
-import type { ThreeEvent } from "@react-three/fiber";
-import { createContext, useContext } from "react";
+import { createContext } from "@ark-ui/react/utils";
 
-export interface IPlacementGridContext {
-	cellDownAt: { rowIndex: number; colIndex: number } | null;
-	cellOverAt: { rowIndex: number; colIndex: number } | null;
-	hoveredCell: { rowIndex: number; colIndex: number } | null;
-	direction: number | null;
-	onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementGridContext, "cellDownAt">) => void;
-	onCellPointerOver?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementGridContext, "cellDownAt" | "cellOverAt">) => void;
-	onCellPointerOut?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementGridContext, "cellOverAt">) => void;
-	onCellWheel?: (event: ThreeEvent<WheelEvent>, payload: Pick<IPlacementGridContext, "cellOverAt">) => void;
-}
+import type { connect } from "./machine";
 
-export const Context = createContext<IPlacementGridContext>({ cellDownAt: null, cellOverAt: null, hoveredCell: null, direction: null });
-
-export function usePlacementGridContext() {
-	const ctx = useContext(Context);
-	if (!ctx) throw new Error("Missing provider.");
-	return ctx;
-}
-
-export const Provider = Context.Provider;
-export const Consumer = Context.Consumer;
+export const [Provider, usePlacementGridContext] = createContext<ReturnType<typeof connect>>();

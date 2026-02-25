@@ -1,18 +1,10 @@
-import { createContext, type Consumer as ReactConsumer, useContext } from "react";
+import { createContext } from "@ark-ui/react/utils";
 
 export interface IVisualizationContext {
+	cursorPositionInBeats: number;
 	beatDepth: number;
 	surfaceDepth: number;
 	interactive: boolean;
 }
 
-export const Context = createContext<IVisualizationContext | null>(null);
-
-export const Provider = Context.Provider;
-export const Consumer = Context.Consumer as ReactConsumer<IVisualizationContext>;
-
-export function useVisualizationContext() {
-	const context = useContext(Context);
-	if (!context) throw new Error("Missing provider.");
-	return context;
-}
+export const [Provider, useVisualizationContext] = createContext<IVisualizationContext>();

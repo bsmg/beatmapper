@@ -1,23 +1,19 @@
+import type { Assign } from "@ark-ui/react";
 import { animated, useSpring } from "@react-spring/three";
-import { useParams } from "@tanstack/react-router";
 import type { PropsWithChildren } from "react";
 
-import { useAppSelector } from "$/store/hooks";
-import { selectAnimateTrack, selectCursorPositionInBeats } from "$/store/selectors";
 import { useVisualizationContext } from "./context";
 
-function VisualizationMover({ children }: PropsWithChildren) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-
-	const { beatDepth } = useVisualizationContext();
-
-	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const animateBlockMotion = useAppSelector(selectAnimateTrack);
+interface Props {
+	immediate?: boolean;
+}
+function VisualizationMover({ children, immediate }: Assign<PropsWithChildren, Props>) {
+	const { cursorPositionInBeats, beatDepth } = useVisualizationContext();
 
 	const [spring] = useSpring<{ zPosition: number }>(() => {
 		return {
-			zPosition: (cursorPositionInBeats ?? 0) * beatDepth,
-			immediate: !animateBlockMotion,
+			zPosition: cursorPositionInBeats * beatDepth,
+			immediate: immediate,
 			config: { tension: 360, friction: 22, mass: 0.4 },
 		};
 	}, [cursorPositionInBeats, beatDepth]);

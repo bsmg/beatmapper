@@ -10,11 +10,12 @@ import { resolvePositionForGridObject, resolvePositionForObstacle } from "$/comp
 import { useControls } from "$/components/scene/hooks/use-controls";
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
 import { Visualization } from "$/components/scene/layouts";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObstacle, selectNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleObstacles, selectNotesEditorSelectionMode, selectSnap, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
+import { selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import EditorBeatMarkers from "./beat-markers";
 import EditorPlacementGrid from "./placement-grid";
@@ -30,7 +31,7 @@ interface Props {
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
 function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	useControls();
 
@@ -40,6 +41,8 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid) ?? 0);
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
@@ -139,14 +142,13 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	);
 
 	return (
-		<Visualization.Root beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
+		<Visualization.Root cursorPositionInBeats={cursorPositionInBeats} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
 			<Visualization.Mover>
 				{interactive && <EditorBeatMarkers beatDepth={beatDepth} />}
-				<Visualization.ForGridObjects objects={notes} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => Object.values(ObjectTool)[data.color]}>
+				<Visualization.ForGridObjects objects={notes} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
 					{(data, props) => (
 						<ColorNote
 							key={resolveNoteId(data)}
-							layers={1}
 							{...props}
 							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
 							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
@@ -155,11 +157,10 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={bombs} resolvePosition={resolvePositionForGridObject} resolveColor={() => ObjectTool.BOMB_NOTE}>
+				<Visualization.ForGridObjects objects={bombs} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
 					{(data, props) => (
 						<BombNote
 							key={resolveNoteId(data)}
-							layers={1}
 							{...props}
 							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
 							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
@@ -168,7 +169,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={obstacles} resolvePosition={resolvePositionForObstacle} resolveColor={() => ObjectTool.OBSTACLE}>
+				<Visualization.ForGridObjects objects={obstacles} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
 					{(data, props) => (
 						<Obstacle
 							key={resolveObstacleId(data)}

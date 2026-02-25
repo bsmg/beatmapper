@@ -1,27 +1,20 @@
-import { useParams } from "@tanstack/react-router";
 import { type ReactNode, useMemo } from "react";
 
-import { useAppSelector } from "$/store/hooks";
-import { selectGridSize, selectPlacementMode } from "$/store/selectors";
 import type { IGrid, ObjectPlacementMode } from "$/types";
 import { usePlacementGridContext } from "./context";
+import type { IPlacementContext } from "./machine";
 
 interface Props<T> {
-	createObject: (ctx: { cellDownAt: { rowIndex: number; colIndex: number }; cellOverAt: { rowIndex: number; colIndex: number }; direction: number }, state: { mode: ObjectPlacementMode; grid: IGrid }) => T;
-	children: (data: T) => ReactNode;
+	createObject: (ctx: IPlacementContext, mode: ObjectPlacementMode, grid: IGrid) => T | null;
+	children: (data: NonNullable<T>) => ReactNode;
 }
 function TentativeObject<T>({ createObject, children }: Props<T>) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-
-	const ctx = usePlacementGridContext();
-
-	const mode = useAppSelector((state) => selectPlacementMode(state, sid));
-	const grid = useAppSelector((state) => selectGridSize(state, sid));
+	const { mode, grid, mouseDownAt, cellDownAt, cellOverAt, direction } = usePlacementGridContext();
 
 	const data = useMemo(() => {
-		if (!ctx.cellDownAt || !ctx.cellOverAt || ctx.direction === null) return null;
-		return { ...createObject({ cellDownAt: ctx.cellDownAt, cellOverAt: ctx.cellOverAt, direction: ctx.direction }, { mode, grid }), tentative: true };
-	}, [createObject, ctx.cellDownAt, ctx.cellOverAt, ctx.direction, mode, grid]);
+		if (mouseDownAt?.button !== 0) return null;
+		return { ...createObject({ cellDownAt, cellOverAt, direction }, mode, grid), tentative: true } as T;
+	}, [createObject, mouseDownAt, cellDownAt, cellOverAt, direction, mode, grid]);
 
 	if (!data) return null;
 
