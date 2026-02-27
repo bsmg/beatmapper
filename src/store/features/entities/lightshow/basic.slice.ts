@@ -2,7 +2,7 @@ import { createDraftSafeSelector, createEntityAdapter, createSlice, type EntityI
 import { createBasicEvent, type EventType, sortObjectFn } from "bsmap";
 
 import { isLightEvent, isMirroredTrack, resolveEventDerivedProps, resolveEventId, resolveEventValue, resolveMirroredTrack } from "$/helpers/events.helpers";
-import { nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { nudgeItem } from "$/helpers/item.helpers";
 import { addSong, bulkRemoveEvent, cutSelection, deselectAllEntities, deselectEvent, drawEventSelectionBox, loadBeatmapEntities, nudgeSelection, pasteSelection, removeAllSelectedEvents, removeEvent, selectAllEntities, selectAllEntitiesInRange, selectEvent, startLoadingMap } from "$/store/actions";
 import { createEventSelector, createSelectedEntitiesSelector } from "$/store/helpers";
 import { type Accept, App, type IEventTracks, View } from "$/types";
@@ -111,7 +111,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.events.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }) as App.IBasicEvent);
+			const timeShiftedEntities = data.events.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }) as App.IBasicEvent);
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {

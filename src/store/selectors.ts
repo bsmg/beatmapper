@@ -199,7 +199,7 @@ export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 		(state) => state?.notes ?? notes.getInitialState(),
 	),
 );
-export const selectVisibleNotes = createVisibleObjectsSelector<App.IColorNote>(selectAllColorNotes);
+export const selectVisibleNotes = createVisibleObjectsSelector(selectAllColorNotes);
 
 export const selectNoteDensity = createSelector(selectAllColorNotes, selectDuration, (notes, duration) => {
 	return calculateNps({ difficulty: { colorNotes: notes } }, duration ? duration / 1000 : 0);

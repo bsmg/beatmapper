@@ -21,6 +21,10 @@ export function convertDegreesToRadians(angle: number) {
 	return (angle * Math.PI) / 180;
 }
 
+export function normalizeAngle(angle: number): number {
+	return ((angle % 360) + 360) % 360;
+}
+
 export function getQuadrantForPoint({ x, y }: Vector2Like) {
 	if (x >= 0 && y >= 0) {
 		return 1;

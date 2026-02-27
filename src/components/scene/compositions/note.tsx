@@ -1,5 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { NoteDirection } from "bsmap";
+import type { wrapper } from "bsmap/types";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
@@ -8,13 +9,13 @@ import { Obj, useOBJ } from "$/components/scene/atoms";
 import { resolveRotationForNote } from "$/components/scene/helpers";
 import type { App } from "$/types";
 
-export interface BaseNoteProps<T extends App.IBaseNote> {
-	data: T;
+export interface BaseNoteProps<T extends wrapper.IWrapBaseNote> {
+	data: App.IWrapEditorObject<T>;
 	color?: ColorRepresentation;
 	metalness?: number;
 	roughness?: number;
 	transparent?: boolean;
-	children?: (data: T, ctx: { transparent: boolean } & Pick<ComponentProps<typeof Obj>, "onPointerDown" | "onPointerOver" | "onPointerOut" | "onWheel">) => ReactNode;
+	children?: (data: App.IWrapEditorObject<T>, ctx: { transparent: boolean } & Pick<ComponentProps<typeof Obj>, "onPointerDown" | "onPointerOver" | "onPointerOut" | "onWheel">) => ReactNode;
 }
 
 function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rotation, scale, color, metalness, roughness, transparent, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
@@ -31,7 +32,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rot
 useOBJ.preload(blockCenterUrl);
 useOBJ.preload(blockDirectionalUrl);
 
-export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote<App.IColorNote>>, "path" | "children">) {
+export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote<wrapper.IWrapColorNote>>, "path" | "children">) {
 	const url = useMemo(() => {
 		// If the direction is >=1000, we'll want to use mapping extensions.
 		// - for 2000-2360 range, it should be a dot note
@@ -76,6 +77,6 @@ export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote
 
 useOBJ.preload(mineUrl);
 
-export function BombNote({ ...rest }: Omit<ComponentProps<typeof BaseNote<App.IBombNote>>, "path" | "children">) {
+export function BombNote({ ...rest }: Omit<ComponentProps<typeof BaseNote<wrapper.IWrapBombNote>>, "path" | "children">) {
 	return <BaseNote {...rest} path={mineUrl} metalness={0.75} roughness={0.4} />;
 }

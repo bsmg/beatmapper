@@ -1,7 +1,8 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, type EntityId, isAnyOf, type Update } from "@reduxjs/toolkit";
 import { createObstacle, sortObjectFn } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
-import { mirrorGridObjectProperties, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { addObstacle, addSong, cutSelection, deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, mirrorSelection, nudgeSelection, pasteSelection, removeAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
 import { createSelectedEntitiesSelector, createSlice } from "$/store/helpers";
@@ -10,23 +11,20 @@ import type { RootState } from "$/store/setup";
 import { type App, ObjectType, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
-const adapter = createEntityAdapter<App.IObstacle, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapObstacle>, EntityId>({
 	selectId: resolveObstacleId,
 	sortComparer: sortObjectFn,
 });
 const { selectAll, selectTotal } = adapter.getSelectors();
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
 
-const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<App.IObstacle> }, { songId: SongId; obstacle: Partial<App.IObstacle> }> = (args, api) => {
+const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<wrapper.IWrapObstacle> }, { songId: SongId; obstacle: Partial<wrapper.IWrapObstacle> }> = (args, api) => {
 	const state = api.getState() as RootState;
 	let cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	cursorPositionInBeats = roundAwayFloatingPointNonsense(cursorPositionInBeats);
 	return api.fulfillWithValue({
-		obstacle: {
-			...args.obstacle,
-			time: cursorPositionInBeats,
-		} as Omit<App.IObstacle, "id">,
+		obstacle: { ...args.obstacle, time: cursorPositionInBeats },
 	});
 };
 
@@ -46,7 +44,7 @@ const slice = createSlice({
 					return adapter.addOne(state, createObstacle(data));
 				},
 			}),
-			updateOne: api.reducer<Update<App.IObstacle, EntityId>>((state, action) => {
+			updateOne: api.reducer<Update<wrapper.IWrapObstacle, EntityId>>((state, action) => {
 				return adapter.updateOne(state, action.payload);
 			}),
 			selectOne: api.reducer<{ id: EntityId }>((state, action) => {
@@ -57,7 +55,7 @@ const slice = createSlice({
 				const { id } = action.payload;
 				return adapter.updateOne(state, { id, changes: { selected: false } });
 			}),
-			updateAllSelected: api.reducer<{ changes: Partial<App.IObstacle> }>((state, action) => {
+			updateAllSelected: api.reducer<{ changes: Partial<wrapper.IWrapObstacle> }>((state, action) => {
 				const { changes } = action.payload;
 				const entities = selectAllSelected(state);
 				return adapter.updateMany(
@@ -104,7 +102,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.obstacles.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }));
+			const timeShiftedEntities = data.obstacles.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }));
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {

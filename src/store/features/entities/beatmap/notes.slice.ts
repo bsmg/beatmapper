@@ -1,7 +1,8 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { createColorNote, mirrorNoteColor, sortObjectFn } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
-import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem, resolveTimeForItem } from "$/helpers/item.helpers";
+import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import {
 	addSong,
@@ -27,7 +28,7 @@ import {
 import { createActionsForNoteEntityAdapter, createGridObjectSelector, createSelectedEntitiesSelector } from "$/store/helpers";
 import { type App, ObjectTool, ObjectType, View } from "$/types";
 
-const adapter = createEntityAdapter<App.IColorNote, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapColorNote>, EntityId>({
 	selectId: resolveNoteId,
 	sortComparer: sortObjectFn,
 });
@@ -98,7 +99,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.notes.map((x) => ({ ...x, selected: true, time: resolveTimeForItem(x) + deltaBetweenPeriods }));
+			const timeShiftedEntities = data.notes.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }));
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
