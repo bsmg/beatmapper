@@ -1,30 +1,73 @@
 import { renamer } from "bsmap/extensions";
-import type { EnvironmentAllName, EventType } from "bsmap/types";
+import type { EnvironmentAllName, wrapper } from "bsmap/types";
 import { check, number, pipe } from "valibot";
 
-import { ALL_EVENT_TRACKS, COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
-import { type Accept, App, type IEventTracks, TrackType } from "$/types";
+import { COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
+import { App, type IEventTracks, TrackType } from "$/types";
 import { createDataFactory } from "./factory.helpers";
 import type { LightshowEntitySerializationOptions } from "./packaging.helpers";
 
-export function resolveTrackType(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const match = Object.entries(tracks).find(([id]) => trackId === Number.parseInt(id, 10));
-	if (!match) return TrackType.UNSUPPORTED;
-	return match[1].type;
+export function isLightTrack(trackId: number, tracks: IEventTracks) {
+	return tracks[trackId].type === TrackType.LIGHT;
+}
+export function isTriggerTrack(trackId: number, tracks: IEventTracks) {
+	return tracks[trackId].type === TrackType.TRIGGER;
+}
+export function isValueTrack(trackId: number, tracks: IEventTracks) {
+	return tracks[trackId].type === TrackType.VALUE;
 }
 
-export function resolveEventId<T extends Pick<App.IBasicEvent, "time" | "type">>(x: T) {
-	return `${x.type}/${x.time}`;
+export function isMirroredTrack(trackId: number, tracks: IEventTracks) {
+	return !!tracks[trackId].side;
 }
-export function resolveEventColor<T extends Pick<App.IBasicEvent, "value">>(data: T) {
+export function isSideTrack(trackId: number, side: "left" | "right", tracks: IEventTracks) {
+	return tracks[trackId].side === side;
+}
+export function resolveMirroredTrack(trackId: number, tracks: IEventTracks) {
+	if (!isMirroredTrack(trackId, tracks)) return trackId;
+
+	const track = tracks[trackId];
+
+	const mirroredTrack = Object.entries(tracks).find(([, t]) => {
+		return t.type === track.type && t.side === (track.side === "left" ? "right" : "left");
+	});
+
+	return mirroredTrack ? Number.parseInt(mirroredTrack[0], 10) : trackId;
+}
+
+export function isBasicEvent(data: unknown): data is wrapper.IWrapBasicEvent {
+	if (typeof data !== "object" || !data) return false;
+	return "type" in data;
+}
+export function resolveTrackIdForEvent(data: unknown) {
+	if (isBasicEvent(data)) return data.type;
+	throw new Error("Invalid event data.", { cause: data });
+}
+
+export function resolveEventId<T extends Pick<wrapper.IWrapBasicEvent, "time" | "type">>(x: T) {
+	return `${resolveTrackIdForEvent(x)}/${x.time}`;
+}
+
+export function isBasicLightEvent<T extends Pick<wrapper.IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+	return isBasicEvent(data) && isLightTrack(resolveTrackIdForEvent(data), tracks);
+}
+export function isBasicTriggerEvent<T extends Pick<wrapper.IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+	return isBasicEvent(data) && isTriggerTrack(resolveTrackIdForEvent(data), tracks);
+}
+export function isBasicValueEvent<T extends Pick<wrapper.IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+	return isBasicEvent(data) && isValueTrack(resolveTrackIdForEvent(data), tracks);
+}
+
+export function resolveBasicEventColor<T extends Pick<wrapper.IWrapBasicEvent, "value">>(data: T) {
 	if (data.value > 8) return App.EventColor.WHITE;
 	if (data.value > 4) return App.EventColor.PRIMARY;
 	if (data.value > 0) return App.EventColor.SECONDARY;
 	return undefined;
 }
-export function resolveEventEffect<T extends Pick<App.IBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const type = resolveTrackType(data.type, tracks);
-	switch (type) {
+export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
+	const trackId = resolveTrackIdForEvent(data);
+
+	switch (tracks[trackId].type) {
 		case TrackType.LIGHT: {
 			if (data.value === 0) return App.BasicEventEffect.OFF;
 			if (data.value % 4 === 1) return App.BasicEventEffect.ON;
@@ -44,80 +87,19 @@ export function resolveEventEffect<T extends Pick<App.IBasicEvent, "type" | "val
 		}
 	}
 }
-export function resolveEventType<T extends Pick<App.IBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const type = resolveTrackType(data.type, tracks);
-	return type;
-}
 
-export function isLightTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const LIGHT_TRACKS = Object.entries(tracks)
-		.filter(([, { type }]) => type === TrackType.LIGHT)
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	return LIGHT_TRACKS.includes(trackId);
-}
-export function isTriggerTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const TRIGGER_TRACKS = Object.entries(tracks)
-		.filter(([, { type }]) => type === TrackType.TRIGGER)
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	return TRIGGER_TRACKS.includes(trackId);
-}
-export function isValueTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const VALUE_TRACKS = Object.entries(tracks)
-		.filter(([, { type }]) => type === TrackType.VALUE)
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	return VALUE_TRACKS.includes(trackId);
-}
-export function isMirroredTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const mirrorTracks = Object.entries(tracks)
-		.filter(([, track]) => "side" in track && !!track.side)
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	return mirrorTracks.includes(trackId);
-}
-export function isSideTrack(trackId: Accept<EventType, number>, side: "left" | "right", tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const mirrorTracks = Object.entries(tracks)
-		.filter(([, track]) => "side" in track && track.side === side)
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	return mirrorTracks.includes(trackId);
-}
-export function resolveMirroredTrack(trackId: Accept<EventType, number>, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	const leftTracks = Object.entries(tracks)
-		.filter(([, track]) => "side" in track && track.side === "left")
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	const rightTracks = Object.entries(tracks)
-		.filter(([, track]) => "side" in track && track.side === "right")
-		.map<number>(([id]) => Number.parseInt(id, 10));
-	return leftTracks.includes(trackId) ? rightTracks[leftTracks.indexOf(trackId)] : leftTracks[rightTracks.indexOf(trackId)];
-}
-
-export function isLightEvent<T extends Pick<App.IBasicEvent, "type">>(event: T, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	return isLightTrack(event.type, tracks);
-}
-export function isTriggerEvent<T extends Pick<App.IBasicEvent, "type">>(event: T, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	return isTriggerTrack(event.type, tracks);
-}
-export function isValueEvent<T extends Pick<App.IBasicEvent, "type">>(event: T, tracks: IEventTracks = ALL_EVENT_TRACKS) {
-	return isValueTrack(event.type, tracks);
-}
-
-interface IEventDerivedProps {
+interface IBasicEventValue {
 	effect: App.BasicEventEffect;
 	color?: App.EventColor;
 	speed?: number;
 }
-export const { serialize: resolveEventValue, deserialize: resolveEventDerivedProps } = createDataFactory<
-	IEventDerivedProps,
-	number,
-	LightshowEntitySerializationOptions,
-	LightshowEntitySerializationOptions & { trackId: Accept<EventType, number> },
-	LightshowEntitySerializationOptions & { trackId: Accept<EventType, number> }
->({
+export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, LightshowEntitySerializationOptions, LightshowEntitySerializationOptions & { trackId: number }, LightshowEntitySerializationOptions & { trackId: number }>({
 	validator: {
 		constructor: ({ tracks, trackId }) => {
 			return pipe(
 				number(),
 				check((value) => {
-					const type = resolveTrackType(trackId, tracks);
-					if (type === TrackType.LIGHT) return value >= 0 && value <= 12;
+					if (isLightTrack(trackId, tracks)) return value >= 0 && value <= 12;
 					return true;
 				}),
 			);
@@ -133,11 +115,11 @@ export const { serialize: resolveEventValue, deserialize: resolveEventDerivedPro
 			return 4 * c + (e + 1);
 		},
 		deserialize: (value, { tracks, trackId }) => {
-			const type = resolveTrackType(trackId, tracks);
-			const effect = resolveEventEffect({ type: trackId, value });
-			switch (type) {
+			const effect = resolveBasicEventEffect({ type: trackId, value }, tracks);
+
+			switch (tracks[trackId].type) {
 				case TrackType.LIGHT: {
-					return { effect: effect, color: resolveEventColor({ value }) };
+					return { effect: effect, color: resolveBasicEventColor({ value }) };
 				}
 				case TrackType.VALUE: {
 					return { effect: App.BasicEventEffect.VALUE, speed: value };

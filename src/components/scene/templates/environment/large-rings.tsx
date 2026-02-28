@@ -1,7 +1,7 @@
 import { useRouteContext } from "@tanstack/react-router";
 
 import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
-import { useEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
 import { useRenderScale } from "$/components/scene/hooks/use-render-scale";
 import { Environment } from "$/components/scene/layouts";
 
@@ -12,8 +12,8 @@ const FIRST_RING_OFFSET = -60;
 function LargeRings() {
 	const { theme } = useRouteContext({ from: "__root__" });
 
-	const [lastLightEvent] = useEventTrack({ trackId: 1 });
-	const [lastRotationEvent] = useEventTrack({ trackId: 8 });
+	const [lastLightEvent] = useBasicEventTrack({ trackId: 1 });
+	const [lastRotationEvent] = useBasicEventTrack({ trackId: 8 });
 
 	const light = useLightEffect({ lastEvent: lastLightEvent });
 

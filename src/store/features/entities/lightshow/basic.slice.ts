@@ -1,14 +1,15 @@
 import { createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
-import { createBasicEvent, type EventType, sortObjectFn } from "bsmap";
+import { createBasicEvent, sortObjectFn } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
-import { isLightEvent, isMirroredTrack, resolveEventDerivedProps, resolveEventId, resolveEventValue, resolveMirroredTrack } from "$/helpers/events.helpers";
+import { deserializeBasicEventValue, isBasicLightEvent, isMirroredTrack, resolveEventId, resolveMirroredTrack, serializeBasicEventValue } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { addSong, bulkRemoveEvent, cutSelection, deselectAllEntities, deselectEvent, drawEventSelectionBox, loadBeatmapEntities, nudgeSelection, pasteSelection, removeAllSelectedEvents, removeEvent, selectAllEntities, selectAllEntitiesInRange, selectEvent, startLoadingMap } from "$/store/actions";
 import { createEventSelector, createSelectedEntitiesSelector } from "$/store/helpers";
-import { type Accept, App, type IEventTracks, View } from "$/types";
+import { App, type IEventTracks, View } from "$/types";
 import { cycle } from "$/utils";
 
-const adapter = createEntityAdapter<App.IBasicEvent, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapBasicEvent>, EntityId>({
 	selectId: resolveEventId,
 	sortComparer: sortObjectFn,
 });
@@ -16,10 +17,10 @@ const adapter = createEntityAdapter<App.IBasicEvent, EntityId>({
 const { selectAll, selectById } = adapter.getSelectors();
 const selectEventByPosition = createEventSelector(selectAll);
 const selectAllSelected = createSelectedEntitiesSelector(selectAll);
-const selectAllForTrack = createDraftSafeSelector([selectAll, (_, trackId: Accept<EventType, number>) => trackId], (state, trackId) => {
+const selectAllForTrack = createDraftSafeSelector([selectAll, (_, trackId: number) => trackId], (state, trackId) => {
 	return state.filter((x) => x.type === trackId);
 });
-const selectAllForTrackBeforeBeat = createDraftSafeSelector([selectAll, (_, query: { trackId: Accept<EventType, number>; beforeBeat: number }) => query], (state, { trackId, beforeBeat }) => {
+const selectAllForTrackBeforeBeat = createDraftSafeSelector([selectAll, (_, query: { trackId: number; beforeBeat: number }) => query], (state, { trackId, beforeBeat }) => {
 	return state.filter((x) => x.type === trackId && x.time < beforeBeat);
 });
 
@@ -43,11 +44,11 @@ const slice = createSlice({
 		}),
 	},
 	reducers: {
-		addOne: (state, action: PayloadAction<{ tracks?: IEventTracks; areLasersLocked?: boolean; data: App.IBasicEvent; overwrite?: boolean }>) => {
+		addOne: (state, action: PayloadAction<{ data: wrapper.IWrapBasicEvent; overwrite?: boolean; tracks: IEventTracks; areLasersLocked?: boolean }>) => {
 			const { tracks, areLasersLocked, data, overwrite } = action.payload;
 			const match = selectEventByPosition(state, data);
 			if (!overwrite && match) return state;
-			const newEvent = createBasicEvent({ ...data }) as App.IBasicEvent;
+			const newEvent = createBasicEvent({ ...data }) as wrapper.IWrapBasicEvent;
 			adapter.upsertOne(state, newEvent);
 			if (areLasersLocked && isMirroredTrack(newEvent.type, tracks)) {
 				// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
@@ -56,7 +57,7 @@ const slice = createSlice({
 				adapter.upsertOne(state, symmetricalEvent);
 			}
 		},
-		updateOne: (state, action: PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked?: boolean; changes: Partial<App.IBasicEvent> }>) => {
+		updateOne: (state, action: PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked?: boolean; changes: Partial<wrapper.IWrapBasicEvent> }>) => {
 			const { query, tracks, areLasersLocked, changes } = action.payload;
 			const match = selectById(state, resolveEventId(query));
 			if (!match) return state;
@@ -66,14 +67,14 @@ const slice = createSlice({
 				adapter.updateOne(state, { id: resolveEventId({ time: query.time, type: mirrorTrackId }), changes });
 			}
 		},
-		updateColor: (state, action: PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked?: boolean }>) => {
+		updateColor: (state, action: PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked?: boolean }>) => {
 			const { query, tracks, areLasersLocked } = action.payload;
 			const match = selectById(state, resolveEventId(query));
 			if (!match) return state;
-			if (!isLightEvent(match, tracks)) return state;
-			const { effect, color } = resolveEventDerivedProps(match.value, { tracks, trackId: query.type });
+			if (!isBasicLightEvent(match, tracks)) return state;
+			const { effect, color } = deserializeBasicEventValue(match.value, { tracks, trackId: query.type });
 			const newColor = color && MIRRORABLE_COLORS.includes(color) ? cycle(MIRRORABLE_COLORS, color) : color;
-			const newValue = resolveEventValue({ effect, color: newColor }, { tracks });
+			const newValue = serializeBasicEventValue({ effect, color: newColor }, { tracks });
 			adapter.updateOne(state, { id: adapter.selectId(match), changes: { value: newValue } });
 			if (areLasersLocked && isMirroredTrack(match.type, tracks)) {
 				const mirrorTrackId = resolveMirroredTrack(match.type, tracks);
@@ -111,7 +112,7 @@ const slice = createSlice({
 				state,
 				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
 			);
-			const timeShiftedEntities = data.events.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }) as App.IBasicEvent);
+			const timeShiftedEntities = data.events.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }) as wrapper.IWrapBasicEvent);
 			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {

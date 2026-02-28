@@ -1,7 +1,8 @@
 import { createBasicEvent } from "bsmap";
+import type { wrapper } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
-import { resolveEventValue } from "$/helpers/events.helpers";
+import { serializeBasicEventValue } from "$/helpers/events.helpers";
 import { App, type IBackgroundBox } from "$/types";
 import { createBackgroundBoxes } from "./track.helpers";
 
@@ -18,18 +19,18 @@ describe("BlockTrack helpers", () => {
 	describe(createBackgroundBoxes.name, () => {
 		it("exits early if it is not a lighting track", () => {
 			const trackId = 12;
-			const events: App.IBasicEvent[] = [
+			const events: wrapper.IWrapBasicEvent[] = [
 				// Technically these events are illegal; this is just testing that it doesn't even look at events when the trackId isn't lighting
 				createBasicEvent({
 					type: trackId,
 					time: 3,
-					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
 					type: trackId,
 					time: 4,
-					value: resolveEventValue({ effect: App.BasicEventEffect.OFF }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, {}),
 				}),
 			];
 			const initialTrackLightingColorType = null;
@@ -44,7 +45,7 @@ describe("BlockTrack helpers", () => {
 
 		it("handles an empty set of events without initial lighting", () => {
 			//  0  [________]
-			const events: App.IBasicEvent[] = [];
+			const events: wrapper.IWrapBasicEvent[] = [];
 			const initialTrackLightingColorType = null;
 			const startBeat = 0;
 			const numOfBeatsToShow = 8;
@@ -57,7 +58,7 @@ describe("BlockTrack helpers", () => {
 
 		it("handles an empty set of events WITH initial lighting", () => {
 			//  R  [________]
-			const events: App.IBasicEvent[] = [];
+			const events: wrapper.IWrapBasicEvent[] = [];
 			const initialTrackLightingColorType = App.EventColor.PRIMARY;
 			const startBeat = 8;
 			const numOfBeatsToShow = 8;
@@ -79,17 +80,17 @@ describe("BlockTrack helpers", () => {
 
 		it("handles a basic on-off case", () => {
 			//  0  [R___0___]
-			const events: App.IBasicEvent[] = [
+			const events: wrapper.IWrapBasicEvent[] = [
 				createBasicEvent({
 					type: 2,
 					time: 8,
-					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
 					type: 2,
 					time: 12,
-					value: resolveEventValue({ effect: App.BasicEventEffect.OFF }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, {}),
 				}),
 			];
 			const initialTrackLightingColorType = null;
@@ -113,11 +114,11 @@ describe("BlockTrack helpers", () => {
 
 		it("handles turning on when already on", () => {
 			//  R  [____R___]
-			const events: App.IBasicEvent[] = [
+			const events: wrapper.IWrapBasicEvent[] = [
 				createBasicEvent({
 					type: 2,
 					time: 12,
-					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 			];
@@ -150,23 +151,23 @@ describe("BlockTrack helpers", () => {
 
 		it("handles color changes", () => {
 			//  0  [R___B_0_]
-			const events: App.IBasicEvent[] = [
+			const events: wrapper.IWrapBasicEvent[] = [
 				createBasicEvent({
 					type: 2,
 					time: 8,
-					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
 					type: 2,
 					time: 12,
-					value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.SECONDARY }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.SECONDARY }, {}),
 					floatValue: 1,
 				}),
 				createBasicEvent({
 					type: 2,
 					time: 14,
-					value: resolveEventValue({ effect: App.BasicEventEffect.OFF }, {}),
+					value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, {}),
 				}),
 			];
 			const initialTrackLightingColorType = null;

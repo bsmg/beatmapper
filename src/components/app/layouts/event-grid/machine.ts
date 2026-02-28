@@ -193,14 +193,14 @@ export const machine = createMachine<EventGridSchema>({
 	},
 });
 
-export interface IEventPlacementActions<T extends App.IWrapEditorObject<wrapper.IWrapBaseObject>> {
-	onCreate: (time: number, norm: number) => T;
-	onPlace: (data: T, isBulk?: boolean) => void;
-	onDelete: (data: T, isBulk?: boolean) => void;
-	onSelect: (data: T) => void;
-	onDeselect: (data: T) => void;
-	onPick: (data: T) => void;
-	onWheel: (data: T, delta: number) => void;
+export interface IEventPlacementActions<T extends wrapper.IWrapBaseObject> {
+	onCreate: (time: number, norm: number) => App.IWrapEditorObject<T>;
+	onPlace: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
+	onDelete: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
+	onSelect: (data: App.IWrapEditorObject<T>) => void;
+	onDeselect: (data: App.IWrapEditorObject<T>) => void;
+	onPick: (data: App.IWrapEditorObject<T>) => void;
+	onWheel: (data: App.IWrapEditorObject<T>, delta: number) => void;
 }
 
 export function connect({ scope, send, prop, context, refs, computed }: Service<EventGridSchema>, normalize = normalizeProps) {

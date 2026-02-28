@@ -1,7 +1,7 @@
 import { Fragment, useMemo } from "react";
 
 import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
-import { useEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
 import { Environment } from "$/components/scene/layouts";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
@@ -54,8 +54,8 @@ interface Props {
 function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 
-	const [lastLightEvent] = useEventTrack({ trackId: side === "left" ? 2 : 3 });
-	const [lastSpeedEvent] = useEventTrack({ trackId: side === "left" ? 12 : 13 });
+	const [lastLightEvent] = useBasicEventTrack({ trackId: side === "left" ? 2 : 3 });
+	const [lastSpeedEvent] = useBasicEventTrack({ trackId: side === "left" ? 12 : 13 });
 
 	const light = useLightEffect({ lastEvent: lastLightEvent });
 

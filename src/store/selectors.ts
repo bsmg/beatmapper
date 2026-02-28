@@ -1,13 +1,13 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { calculateNps, sortObjectFn } from "bsmap";
-import type { EnvironmentAllName, EventType, wrapper } from "bsmap/types";
+import type { EnvironmentAllName, wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
-import { deriveEventTracksForEnvironment, resolveEventColor, resolveEventEffect } from "$/helpers/events.helpers";
+import { deriveEventTracksForEnvironment, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { getEditorOffset } from "$/helpers/song.helpers";
-import { type Accept, App, type SongId, View } from "$/types";
+import { App, type BeatmapId, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
@@ -285,16 +285,16 @@ export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 		(state) => state?.basic ?? basic.getInitialState(),
 	),
 );
-export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: Accept<EventType, number>) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat, endBeat }, events) => {
+export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat, endBeat }, events) => {
 	return events.filter((event) => event.time >= startBeat && event.time < endBeat);
 });
-export const selectInitialStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: Accept<EventType, number>) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, events) => {
+export const selectInitialStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events) => {
 	const eventsInWindow = events.filter((event) => event.time <= startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
-	const eventEffect = lastEvent ? resolveEventEffect(lastEvent) : null;
+	const eventEffect = lastEvent ? resolveBasicEventEffect(lastEvent, tracks) : null;
 	const isLastEventOn = eventEffect === App.BasicEventEffect.ON || eventEffect === App.BasicEventEffect.FLASH || eventEffect === App.BasicEventEffect.TRANSITION;
 	return {
-		color: isLastEventOn ? resolveEventColor(lastEvent) : null,
+		color: isLastEventOn ? resolveBasicEventColor(lastEvent) : null,
 		brightness: isLastEventOn ? (lastEvent?.floatValue ?? 0) : null,
 	};
 });

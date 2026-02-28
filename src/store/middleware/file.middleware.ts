@@ -9,9 +9,9 @@ import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
-import { selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectModuleEnabled, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
+import { selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectEventTracksForEnvironment, selectLightshowIdForBeatmap, selectModuleEnabled, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { App, SongId } from "$/types";
+import type { App, BeatmapId, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 export function selectInfoSerializationOptionsFromState(state: RootState, _songId: SongId): InfoSerializationOptions {
@@ -20,12 +20,14 @@ export function selectInfoSerializationOptionsFromState(state: RootState, _songI
 		songDuration: duration ? duration / 1000 : undefined,
 	};
 }
-export function selectBeatmapSerializationOptionsFromState(state: RootState, songId: SongId): BeatmapSerializationOptions {
+export function selectBeatmapSerializationOptionsFromState(state: RootState, songId: SongId, beatmapId: BeatmapId): BeatmapSerializationOptions {
 	const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 	const isExtensionsEnabled = selectModuleEnabled(state, songId, "mappingExtensions");
+	const tracks = selectEventTracksForEnvironment(state, songId, beatmapId);
 	return {
 		editorOffsetInBeats,
 		extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
+		tracks,
 	};
 }
 
@@ -116,7 +118,7 @@ export default function createFileMiddleware() {
 				beatmapContents.lightshow = sharedLightshow;
 			}
 			// deserialize the metadata into editor-compatible wrappers
-			const entities = deserializeBeatmapContents(beatmapContents, selectBeatmapSerializationOptionsFromState(state, songId));
+			const entities = deserializeBeatmapContents(beatmapContents, selectBeatmapSerializationOptionsFromState(state, songId, beatmapId));
 
 			api.dispatch(loadBeatmapEntities({ ...entities }));
 

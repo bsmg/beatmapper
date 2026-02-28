@@ -1,14 +1,14 @@
 import { useRouteContext } from "@tanstack/react-router";
 
-import { useEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
 import { useRenderScale } from "$/components/scene/hooks/use-render-scale";
 import { Environment } from "$/components/scene/layouts";
 
 function SmallRings() {
 	const { theme } = useRouteContext({ from: "__root__" });
 
-	const [lastRotationEvent] = useEventTrack({ trackId: 8 });
-	const [lastZoomEvent] = useEventTrack({ trackId: 9 });
+	const [lastRotationEvent] = useBasicEventTrack({ trackId: 8 });
+	const [lastZoomEvent] = useBasicEventTrack({ trackId: 9 });
 
 	const numOfRings = useRenderScale(12);
 

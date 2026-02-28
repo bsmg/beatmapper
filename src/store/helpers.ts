@@ -2,6 +2,7 @@ import { asyncThunkCreator, buildCreateSlice, createDraftSafeSelector, type Enti
 import { pick } from "@std/collections/pick";
 import type { StateWithHistory } from "redux-undo";
 
+import { resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { App } from "$/types";
 
@@ -40,8 +41,8 @@ export function createGridObjectSelector<State, T extends Pick<App.IBaseNote, "t
 	});
 }
 export function createEventSelector<State, T extends Pick<App.IBasicEvent, "time" | "type">>(selectAll: (state: State) => T[]) {
-	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "type">) => query], (state, { time, type }) => {
-		return state.find((x) => x.time === time && x.type === type);
+	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "type">) => query], (state, query) => {
+		return state.find((x) => x.time === query.time && resolveTrackIdForEvent(x) === resolveTrackIdForEvent(query));
 	});
 }
 

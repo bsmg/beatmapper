@@ -295,19 +295,19 @@ export const redoObjects = createAction("redoObjects", (args: { songId: SongId }
 
 export const { addOne: addBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateBasicEvent, updateColor: mirrorBasicEvent } = basicEvents.actions;
 
-export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const deselectEvent = createAction("deselectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const deselectEvent = createAction("deselectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const removeEvent = createAction("removeEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const removeEvent = createAction("removeEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const bulkRemoveEvent = createAction("bulkRemoveEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const bulkRemoveEvent = createAction("bulkRemoveEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 

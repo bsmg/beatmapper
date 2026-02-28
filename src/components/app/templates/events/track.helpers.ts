@@ -1,7 +1,8 @@
-import { type EventType, sortObjectFn } from "bsmap";
+import { sortObjectFn } from "bsmap";
+import type { wrapper } from "bsmap/types";
 
-import { isLightTrack, resolveEventColor, resolveEventEffect, resolveEventValue } from "$/helpers/events.helpers";
-import { type Accept, App, type IBackgroundBox, type IEventTracks, type Member } from "$/types";
+import { isLightTrack, resolveBasicEventColor, resolveBasicEventEffect, serializeBasicEventValue } from "$/helpers/events.helpers";
+import { App, type IBackgroundBox, type IEventTracks, type Member } from "$/types";
 
 const ON_EVENT_TYPES: App.BasicEventEffect[] = [App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.TRANSITION];
 
@@ -10,9 +11,9 @@ interface Options {
 	initialBrightness: number | null;
 	startBeat: number;
 	numOfBeatsToShow: number;
-	tracks?: IEventTracks;
+	tracks: IEventTracks;
 }
-export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept<EventType, number>, { initialColor: initialTrackLightingColorType, initialBrightness, startBeat, numOfBeatsToShow, tracks }: Options) {
+export function createBackgroundBoxes(events: wrapper.IWrapBasicEvent[], trackId: number, { initialColor: initialTrackLightingColorType, initialBrightness, startBeat, numOfBeatsToShow, tracks }: Options) {
 	// If this track isn't a lighting track, bail early.
 	if (!isLightTrack(trackId, tracks)) return [];
 
@@ -20,12 +21,12 @@ export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept
 
 	// If the initial lighting value is true, we wanna convert it into a pseudo-event.
 	// It's simpler if we treat it as an 'on' event at the very first beat of the section.
-	const workableEvents = [...events.sort(sortObjectFn)] as App.IBasicEvent[];
+	const workableEvents = [...events.sort(sortObjectFn)] as wrapper.IWrapBasicEvent[];
 	if (initialTrackLightingColorType) {
 		const pseudoInitialEvent = {
 			time: startBeat,
 			type: trackId,
-			value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: initialTrackLightingColorType }, { tracks }),
+			value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: initialTrackLightingColorType }, { tracks }),
 			floatValue: initialBrightness ?? 1,
 		} as Member<typeof workableEvents>;
 
@@ -33,7 +34,7 @@ export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept
 
 		// SPECIAL CASE: initially lit but with no events in the window
 		if (events.length === 0) {
-			const initialColorType = resolveEventColor(pseudoInitialEvent);
+			const initialColorType = resolveBasicEventColor(pseudoInitialEvent);
 			backgroundBoxes.push({
 				time: pseudoInitialEvent.time,
 				duration: numOfBeatsToShow,
@@ -50,8 +51,8 @@ export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept
 	let tentativeBox: IBackgroundBox | null = null;
 
 	for (const event of workableEvents) {
-		const eventEffect = resolveEventEffect(event, tracks);
-		const eventColor = resolveEventColor(event);
+		const eventEffect = resolveBasicEventEffect(event, tracks);
+		const eventColor = resolveBasicEventColor(event);
 
 		const isOn = ON_EVENT_TYPES.includes(eventEffect) && event.floatValue > 0;
 

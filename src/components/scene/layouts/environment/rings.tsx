@@ -1,17 +1,16 @@
 import type { Assign } from "@ark-ui/react";
 import { type Interpolation, useSprings, useTrail } from "@react-spring/three";
+import type { wrapper } from "bsmap/types";
 import type { ComponentProps, ReactNode } from "react";
 
 import { useRingRotationEffect, useRingZoomEffect } from "$/components/scene/hooks/environment.hooks";
-import { resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectAnimateEnvironment } from "$/store/selectors";
-import type { App } from "$/types";
 
 interface Props {
 	count: number;
-	lastRotationEvent: App.IBasicEvent | null | undefined;
-	lastZoomEvent: App.IBasicEvent | null | undefined;
+	lastRotationEvent: wrapper.IWrapBasicEvent | null;
+	lastZoomEvent: wrapper.IWrapBasicEvent | null;
 	ratio?: number;
 	minDistance?: number;
 	maxDistance?: number;
@@ -20,8 +19,8 @@ interface Props {
 function Rings({ count, lastRotationEvent, lastZoomEvent, minDistance, maxDistance, children, ...rest }: Assign<ComponentProps<"group">, Props>) {
 	const animateRingMotion = useAppSelector(selectAnimateEnvironment);
 
-	const [ratio] = useRingRotationEffect({ lastEventId: lastRotationEvent ? resolveEventId(lastRotationEvent) : null });
-	const [distance] = useRingZoomEffect({ lastEventId: lastZoomEvent ? resolveEventId(lastZoomEvent) : null, minDistance });
+	const [ratio] = useRingRotationEffect({ lastEvent: lastRotationEvent });
+	const [distance] = useRingZoomEffect({ lastEvent: lastZoomEvent, minDistance });
 
 	const [rotation] = useTrail(
 		count,

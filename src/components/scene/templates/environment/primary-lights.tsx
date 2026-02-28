@@ -2,13 +2,13 @@ import { Fragment } from "react";
 
 import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
-import { useEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
 import { Environment } from "$/components/scene/layouts";
 
 const SIDE_BEAM_LENGTH = 250;
 
 function PrimaryLights() {
-	const [lastEvent] = useEventTrack({ trackId: 4 });
+	const [lastEvent] = useBasicEventTrack({ trackId: 4 });
 
 	const light = useLightEffect({ lastEvent });
 

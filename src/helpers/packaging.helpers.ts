@@ -15,7 +15,7 @@ export interface BeatmapEntitySerializationOptions<T extends BeatmapExtensionsPr
 	extensionsProvider?: T;
 }
 export interface LightshowEntitySerializationOptions {
-	tracks?: IEventTracks;
+	tracks: IEventTracks;
 }
 
 function coalesceBeatmapCollection(data: App.ISong) {
