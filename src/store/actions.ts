@@ -143,14 +143,14 @@ export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; 
 	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
 	const alreadyExists = selectAllNotes(state).some((note) => note.time === adjustedCursorPosition && note.posX === args.posX && note.posY === args.posY);
 	if (alreadyExists) api.dispatch(removeFromCell(args));
-	return api.fulfillWithValue({ ...args, time: adjustedCursorPosition, direction: selectedDirection, tool: selectedTool });
+	return api.fulfillWithValue({ query: { time: adjustedCursorPosition, posX: args.posX, posY: args.posY }, direction: selectedDirection, tool: selectedTool });
 });
 
 export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api) => {
 	const state = api.getState() as RootState;
 	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	return api.fulfillWithValue({ ...args, time: cursorPositionInBeats });
+	return api.fulfillWithValue({ query: { time: cursorPositionInBeats, posX: args.posX, posY: args.posY } });
 });
 
 export const { updateZoom: zoomVisualizer } = visualizer.actions;

@@ -27,7 +27,7 @@ export function createSaveHandler() {
 		// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 		if (beatmapId) {
 			const activeEntities = entities ?? selectBeatmapEntities(state);
-			const { difficulty, lightshow, customData } = serializeBeatmapContents(activeEntities, selectBeatmapSerializationOptionsFromState(state, songId));
+			const { difficulty, lightshow, customData } = serializeBeatmapContents(activeEntities, selectBeatmapSerializationOptionsFromState(state, songId, beatmapId));
 			const { contents } = await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow, customData });
 
 			// we want to copy lightshow data across beatmaps that share the same lightshow id

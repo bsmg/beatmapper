@@ -10,7 +10,7 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBasicLightEvent, isBasicValueEvent, resolveBasicEventColor, resolveBasicEventEffect, resolveEventId, serializeBasicEventValue } from "$/helpers/events.helpers";
 import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, deselectEvent, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBasicEventsForTrackInWindow, selectColorScheme, selectEventEditorStartAndEndBeat, selectEventsEditorColor, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventTracksForEnvironment, selectInitialStateForTrack } from "$/store/selectors";
+import { selectAllBasicEventsForTrackInWindow, selectColorScheme, selectCurrentLightStateForTrack, selectEventEditorStartAndEndBeat, selectEventsEditorColor, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventTracksForEnvironment } from "$/store/selectors";
 import { App, type IEventTracks, TrackType } from "$/types";
 import { clamp, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
@@ -56,7 +56,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
-	const initialTrackLightingState = useAppSelector((state) => selectInitialStateForTrack(state, sid, bid, trackId));
+	const initialTrackLightingState = useAppSelector((state) => selectCurrentLightStateForTrack(state, sid, bid, trackId));
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
 	const backgroundBoxes = useMemo(() => {
@@ -93,7 +93,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const actions = useMemo<EventGrid.IPlacementActions<wrapper.IWrapBasicEvent>>(() => {
 		return {
 			onCreate: resolveEventData,
-			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBasicEvent : addBasicEvent)({ data, tracks, areLasersLocked })),
+			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBasicEvent : addBasicEvent)({ query: data, data: data, tracks, areLasersLocked })),
 			onSelect: (data) => dispatch(selectEvent({ query: data, tracks, areLasersLocked })),
 			onDeselect: (data) => dispatch(deselectEvent({ query: data, tracks, areLasersLocked })),
 			onPick: (data) => dispatch(mirrorBasicEvent({ query: data, tracks, areLasersLocked })),

@@ -22,7 +22,7 @@ import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
-import { createGridObjectSelector, selectHistory } from "./helpers";
+import { selectHistory } from "./helpers";
 import type { RootState } from "./setup";
 
 export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
@@ -227,7 +227,6 @@ export const { selectAll: selectFutureBombNotes } = bombs.getSelectors(
 export const selectVisibleBombs = createVisibleObjectsSelector(selectAllBombNotes);
 
 export const selectAllNotes = createDraftSafeSelector(selectAllColorNotes, selectAllBombNotes, (notes, bombs) => [...notes, ...bombs]);
-export const selectNoteByPosition = createGridObjectSelector(selectAllNotes);
 
 export const {
 	selectAll: selectAllObstacles,
@@ -268,7 +267,6 @@ export const {
 	selectAll: selectAllBasicEvents,
 	selectAllSelected: selectAllSelectedBasicEvents,
 	selectAllForTrack: selectAllBasicEventsForTrack,
-	selectForTrackAtBeat: selectBasicEventForTrackAtBeat,
 	selectValueForTrackAtBeat,
 } = basic.getSelectors((state: Pick<RootState, "entities">) => {
 	return state.entities.lightshow.present.basic;
@@ -288,11 +286,12 @@ export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat, endBeat }, events) => {
 	return events.filter((event) => event.time >= startBeat && event.time < endBeat);
 });
-export const selectInitialStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events) => {
+export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events) => {
 	const eventsInWindow = events.filter((event) => event.time <= startBeat);
 	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
 	const eventEffect = lastEvent ? resolveBasicEventEffect(lastEvent, tracks) : null;
 	const isLastEventOn = eventEffect === App.BasicEventEffect.ON || eventEffect === App.BasicEventEffect.FLASH || eventEffect === App.BasicEventEffect.TRANSITION;
+
 	return {
 		color: isLastEventOn ? resolveBasicEventColor(lastEvent) : null,
 		brightness: isLastEventOn ? (lastEvent?.floatValue ?? 0) : null,

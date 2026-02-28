@@ -5,7 +5,7 @@ import type { wrapper } from "bsmap/types";
 import { mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { addObstacle, addSong, cutSelection, deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, mirrorSelection, nudgeSelection, pasteSelection, removeAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
-import { createSelectedEntitiesSelector, createSlice } from "$/store/helpers";
+import { createEditorObjectReducers, createEditorObjectSelectors, createSlice } from "$/store/helpers";
 import { selectCursorPositionInBeats } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type App, ObjectType, type SongId, View } from "$/types";
@@ -15,18 +15,11 @@ const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapObstacle>
 	selectId: resolveObstacleId,
 	sortComparer: sortObjectFn,
 });
-const { selectAll, selectTotal } = adapter.getSelectors();
-const selectAllSelected = createSelectedEntitiesSelector(selectAll);
 
-const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<wrapper.IWrapObstacle> }, { songId: SongId; obstacle: Partial<wrapper.IWrapObstacle> }> = (args, api) => {
-	const state = api.getState() as RootState;
-	let cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
-	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	cursorPositionInBeats = roundAwayFloatingPointNonsense(cursorPositionInBeats);
-	return api.fulfillWithValue({
-		obstacle: { ...args.obstacle, time: cursorPositionInBeats },
-	});
-};
+const { selectAll, selectTotal } = adapter.getSelectors();
+const { selectAllSelected } = createEditorObjectSelectors(adapter);
+
+const { removeAllSelected, updateAll, updateAllSelected, replaceAllSelected } = createEditorObjectReducers(adapter);
 
 const slice = createSlice({
 	name: "obstacles",
@@ -37,6 +30,15 @@ const slice = createSlice({
 		selectTotal: selectTotal,
 	},
 	reducers: (api) => {
+		const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<wrapper.IWrapObstacle> }, { songId: SongId; obstacle: Partial<wrapper.IWrapObstacle> }> = (args, api) => {
+			const state = api.getState() as RootState;
+			const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
+			if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
+			return api.fulfillWithValue({
+				obstacle: { ...args.obstacle, time: roundAwayFloatingPointNonsense(cursorPositionInBeats) },
+			});
+		};
+
 		return {
 			addOne: api.asyncThunk(createFromState, {
 				fulfilled: (state, action) => {
@@ -78,92 +80,52 @@ const slice = createSlice({
 			return adapter.addOne(state, createObstacle(data));
 		});
 		builder.addCase(removeAllSelectedObjects, (state) => {
-			const entities = selectAllSelected(state);
-			return adapter.removeMany(
-				state,
-				entities.map((x) => adapter.selectId(x)),
-			);
+			return removeAllSelected(state);
 		});
 		builder.addCase(cutSelection.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAllSelected(state);
-			return adapter.removeMany(
-				state,
-				entities.map((x) => adapter.selectId(x)),
-			);
+			return removeAllSelected(state);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
 			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.BEATMAP) return state;
 			if (!data.obstacles) return state;
-			const entities = selectAll(state);
-			adapter.updateMany(
+			updateAll(state, () => ({ selected: false }));
+			return adapter.upsertMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+				data.obstacles.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 			);
-			const timeShiftedEntities = data.obstacles.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }));
-			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAll(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: true } })),
-			);
+			return updateAll(state, () => ({ selected: true }));
 		});
 		builder.addCase(deselectAllEntities, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAll(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
-			);
+			return updateAll(state, () => ({ selected: false }));
 		});
 		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			const { start, end, view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAll(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start - 0.01 && x.time < end } })),
-			);
+			return updateAll(state, (x) => ({ selected: x.time >= start - 0.01 && x.time < end }));
 		});
 		builder.addCase(mirrorSelection, (state, action) => {
 			const { axis, grid } = action.payload;
 			if (axis === "vertical") return state;
-			const entities = selectAllSelected(state);
-			adapter.removeMany(
-				state,
-				entities.map((x) => adapter.selectId(x)),
-			);
-			return adapter.addMany(
-				state,
-				entities.map((x) => {
-					return { ...x, ...mirrorGridObjectProperties(x, axis, grid, x.width) };
-				}),
-			);
+			return replaceAllSelected(state, (x) => ({ ...mirrorGridObjectProperties(x, axis, grid, 0) }));
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
 			const { view, direction, amount } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAllSelected(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
-			);
+			return updateAllSelected(state, (x) => nudgeItem(x, direction, amount));
 		});
 		builder.addCase(deselectAllEntitiesOfType, (state, action) => {
 			const { itemType } = action.payload;
 			if (itemType !== ObjectType.OBSTACLE) return state;
-			const entities = selectAllSelected(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
-			);
+			return updateAll(state, () => ({ selected: false }));
 		});
 		builder.addMatcher(isAnyOf(addSong, startLoadingMap, leaveEditor), () => adapter.getInitialState());
 		builder.addDefaultCase((state) => state);

@@ -25,16 +25,19 @@ import {
 	selectNote,
 	startLoadingMap,
 } from "$/store/actions";
-import { createActionsForNoteEntityAdapter, createGridObjectSelector, createSelectedEntitiesSelector } from "$/store/helpers";
+import { createEditorObjectReducers, createEditorObjectSelectors, createGridObjectReducerFactory } from "$/store/helpers";
 import { type App, ObjectTool, ObjectType, View } from "$/types";
 
 const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapColorNote>, EntityId>({
 	selectId: resolveNoteId,
 	sortComparer: sortObjectFn,
 });
+
 const { selectAll, selectTotal } = adapter.getSelectors();
-const selectAllSelected = createSelectedEntitiesSelector(selectAll);
-const selectByPosition = createGridObjectSelector(selectAll);
+const { selectAllSelected } = createEditorObjectSelectors(adapter);
+const { removeAllSelected, updateAll, updateAllSelected, replaceAllSelected } = createEditorObjectReducers(adapter);
+
+const createNoteReducer = createGridObjectReducerFactory(adapter);
 
 const slice = createSlice({
 	name: "notes",
@@ -44,18 +47,13 @@ const slice = createSlice({
 		selectAllSelected: selectAllSelected,
 		selectTotal: selectTotal,
 	},
-	reducers: (api) => {
-		const { updateOne } = createActionsForNoteEntityAdapter(api, adapter);
-		return {
-			updateOne: updateOne,
-			mirrorOne: api.reducer<{ query: Parameters<typeof resolveNoteId>[0] }>((state, action) => {
-				const { query } = action.payload;
-				const match = selectByPosition(state, query);
-				if (!match) return state;
-				const color = mirrorNoteColor(match.color);
-				return adapter.updateOne(state, { id: adapter.selectId(match), changes: { color } });
-			}),
-		};
+	reducers: {
+		updateOne: createNoteReducer<{ changes: Partial<wrapper.IWrapColorNote> }>((data, state, action) => {
+			return adapter.updateOne(state, { id: adapter.selectId(data), changes: action.payload.changes });
+		}),
+		mirrorOne: createNoteReducer((data, state) => {
+			return adapter.updateOne(state, { id: adapter.selectId(data), changes: { color: mirrorNoteColor(data.color) } });
+		}),
 	},
 	extraReducers: (builder) => {
 		builder.addCase(loadBeatmapEntities, (state, action) => {
@@ -63,118 +61,77 @@ const slice = createSlice({
 			return adapter.setAll(state, notes ?? []);
 		});
 		builder.addCase(addToCell.fulfilled, (state, action) => {
-			const { tool: selectedTool, time: beatNum, posX: colIndex, posY: rowIndex, direction } = action.payload;
+			const { query, tool: selectedTool, direction } = action.payload;
 			if (!selectedTool || (selectedTool !== ObjectTool.LEFT_NOTE && selectedTool !== ObjectTool.RIGHT_NOTE)) return state;
 			const color = Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1;
-			return adapter.upsertOne(state, createColorNote({ time: beatNum, posX: colIndex, posY: rowIndex, color: color, direction: direction }));
+			return adapter.upsertOne(state, createColorNote({ ...query, color: color, direction: direction }));
 		});
-		builder.addCase(removeFromCell.fulfilled, (state, action) => {
-			const { time: beatNum, posX: colIndex, posY: rowIndex } = action.payload;
-			const match = selectByPosition(state, { time: beatNum, posX: colIndex, posY: rowIndex });
-			if (!match) return state;
-			return adapter.removeOne(state, adapter.selectId(match));
-		});
+		builder.addCase(
+			removeFromCell.fulfilled,
+			createNoteReducer((match, state) => {
+				return adapter.removeOne(state, adapter.selectId(match));
+			}),
+		);
 		builder.addCase(removeAllSelectedObjects, (state) => {
-			const entities = selectAllSelected(state);
-			return adapter.removeMany(
-				state,
-				entities.map((x) => adapter.selectId(x)),
-			);
+			return removeAllSelected(state);
 		});
 		builder.addCase(cutSelection.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAllSelected(state);
-			return adapter.removeMany(
-				state,
-				entities.map((x) => adapter.selectId(x)),
-			);
+			return removeAllSelected(state);
 		});
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
 			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.BEATMAP) return state;
 			if (!data.notes) return state;
-			const entities = selectAll(state);
-			adapter.updateMany(
+			updateAll(state, () => ({ selected: false }));
+			return adapter.upsertMany(
 				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
+				data.notes.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 			);
-			const timeShiftedEntities = data.notes.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods }));
-			return adapter.upsertMany(state, timeShiftedEntities);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAll(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: true } })),
-			);
+			return updateAll(state, () => ({ selected: true }));
 		});
 		builder.addCase(deselectAllEntities, (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAll(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
-			);
+			return updateAll(state, () => ({ selected: false }));
 		});
 		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			const { start, end, view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAll(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: x.time >= start - 0.01 && x.time < end } })),
-			);
+			return updateAll(state, (x) => ({ selected: x.time >= start - 0.01 && x.time < end }));
 		});
 		builder.addCase(mirrorSelection, (state, action) => {
 			const { axis, grid } = action.payload;
-			const entities = selectAllSelected(state);
-			adapter.removeMany(
-				state,
-				entities.map((x) => adapter.selectId(x)),
-			);
-			return adapter.addMany(
-				state,
-				entities.map((x) => {
-					return { ...x, ...mirrorGridObjectProperties(x, axis, grid, 0), ...mirrorBaseNoteProperties(x, axis) };
-				}),
-			);
+			return replaceAllSelected(state, (x) => ({ ...mirrorGridObjectProperties(x, axis, grid, 0), ...mirrorBaseNoteProperties(x, axis) }));
 		});
 		builder.addCase(nudgeSelection.fulfilled, (state, action) => {
 			const { view, direction, amount } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const entities = selectAllSelected(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: nudgeItem(x, direction, amount) })),
-			);
+			return updateAllSelected(state, (x) => nudgeItem(x, direction, amount));
 		});
 		builder.addCase(deselectAllEntitiesOfType, (state, action) => {
 			const { itemType } = action.payload;
 			if (itemType !== ObjectType.NOTE) return state;
-			const entities = selectAllSelected(state);
-			return adapter.updateMany(
-				state,
-				entities.map((x) => ({ id: adapter.selectId(x), changes: { selected: false } })),
-			);
+			return updateAll(state, () => ({ selected: false }));
 		});
 		builder.addMatcher(isAnyOf(addSong, startLoadingMap, leaveEditor), () => adapter.getInitialState());
-		builder.addMatcher(isAnyOf(removeNote, bulkRemoveNote), (state, action) => {
-			const { query } = action.payload;
-			const match = selectByPosition(state, query);
-			if (!match) return state;
-			return adapter.removeOne(state, adapter.selectId(match));
-		});
-		builder.addMatcher(isAnyOf(selectNote, deselectNote), (state, action) => {
-			const { query } = action.payload;
-			const match = selectByPosition(state, query);
-			if (!match) return state;
-			const selected = selectNote.match(action);
-			return adapter.updateOne(state, { id: adapter.selectId(match), changes: { selected: selected } });
-		});
+		builder.addMatcher(
+			isAnyOf(removeNote, bulkRemoveNote),
+			createNoteReducer((match, state) => {
+				return adapter.removeOne(state, adapter.selectId(match));
+			}),
+		);
+		builder.addMatcher(
+			isAnyOf(selectNote, deselectNote),
+			createNoteReducer((match, state, action) => {
+				return adapter.updateOne(state, { id: adapter.selectId(match), changes: { selected: selectNote.match(action) } });
+			}),
+		);
 		builder.addDefaultCase((state) => state);
 	},
 });
