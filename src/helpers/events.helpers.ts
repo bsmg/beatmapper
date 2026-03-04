@@ -5,7 +5,6 @@ import { check, number, pipe } from "valibot";
 import { COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
 import { App, type IEventTracks, TrackType } from "$/types";
 import { createDataFactory } from "./factory.helpers";
-import type { LightshowEntitySerializationOptions } from "./packaging.helpers";
 
 export function isLightTrack(trackId: number, tracks: IEventTracks) {
 	return tracks[trackId].type === TrackType.LIGHT;
@@ -93,7 +92,7 @@ interface IBasicEventValue {
 	color?: App.EventColor;
 	speed?: number;
 }
-export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, LightshowEntitySerializationOptions, LightshowEntitySerializationOptions & { trackId: number }, LightshowEntitySerializationOptions & { trackId: number }>({
+export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, { tracks: IEventTracks }, { tracks: IEventTracks; trackId: number }, { tracks: IEventTracks; trackId: number }>({
 	validator: {
 		constructor: ({ tracks, trackId }) => {
 			return pipe(

@@ -4,32 +4,15 @@ import type { wrapper } from "bsmap/types";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 import { convertMillisecondsToBeats, deriveAudioDataFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
-import { type BeatmapSerializationOptions, deserializeBeatmapContents, type InfoSerializationOptions, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { resolveBeatmapId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, leaveEditor, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
-import { selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectEventTracksForEnvironment, selectLightshowIdForBeatmap, selectModuleEnabled, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
+import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { App, BeatmapId, SongId } from "$/types";
+import type { App, SongId } from "$/types";
 import { deepAssign } from "$/utils";
-
-export function selectInfoSerializationOptionsFromState(state: RootState, _songId: SongId): InfoSerializationOptions {
-	const duration = selectDuration(state);
-	return {
-		songDuration: duration ? duration / 1000 : undefined,
-	};
-}
-export function selectBeatmapSerializationOptionsFromState(state: RootState, songId: SongId, beatmapId: BeatmapId): BeatmapSerializationOptions {
-	const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
-	const isExtensionsEnabled = selectModuleEnabled(state, songId, "mappingExtensions");
-	const tracks = selectEventTracksForEnvironment(state, songId, beatmapId);
-	return {
-		editorOffsetInBeats,
-		extensionsProvider: isExtensionsEnabled ? "mapping-extensions" : undefined,
-		tracks,
-	};
-}
 
 /** This middleware manages file storage concerns. */
 export default function createFileMiddleware() {
@@ -69,9 +52,9 @@ export default function createFileMiddleware() {
 			const { duration, contents: audioDataContents } = await createAudioDataContentsFromFile(songId, filestore, songFile, { bpm: songData.bpm });
 
 			// pull the updated state from the redux layer
-			const song = selectSongById(state, songId);
-			// convert it to the serial wrapper data
-			const infoContents = serializeInfoContents(song, selectInfoSerializationOptionsFromState(state, songId));
+			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				songDuration: selectDuration(state),
+			});
 			// store the info data in the filestore
 			const { contents: newInfoContents } = await filestore.saveInfoContents(
 				songId,
@@ -118,7 +101,9 @@ export default function createFileMiddleware() {
 				beatmapContents.lightshow = sharedLightshow;
 			}
 			// deserialize the metadata into editor-compatible wrappers
-			const entities = deserializeBeatmapContents(beatmapContents, selectBeatmapSerializationOptionsFromState(state, songId, beatmapId));
+			const entities = deserializeBeatmapContents(beatmapContents, {
+				editorOffsetInBeats: selectEditorOffsetInBeats(state, songId),
+			});
 
 			api.dispatch(loadBeatmapEntities({ ...entities }));
 
@@ -143,18 +128,19 @@ export default function createFileMiddleware() {
 		effect: async (action, api) => {
 			const { songId, changes: songData } = action.payload;
 			const state = api.getState();
-			const song = selectSongById(state, songId);
 
 			// Pull that updated redux state and save it to our Info.dat
-			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				songDuration: selectDuration(state),
+			});
 			// Back up our latest data!
-			await filestore.updateInfoContents(songId, info);
+			await filestore.updateInfoContents(songId, infoContents);
 
 			// It's possible we updated the song file. We should reload it, so that the waveform is properly updated.
 			if (songData.bpm || songData.songFilename) {
 				// always update audio contents when the song file is updated, since sample count and frequency could potentially change.
 				const songFile = await filestore.loadSongFile(songId);
-				await createAudioDataContentsFromFile(songId, filestore, songFile, { bpm: songData.bpm ?? song.bpm });
+				await createAudioDataContentsFromFile(songId, filestore, songFile, { bpm: songData.bpm ?? selectBpm(state, songId) });
 
 				const [{ duration }, waveformData] = await Promise.all([deriveAudioDataFromFile(songFile, audioContext), deriveWaveformDataFromFile(songFile, audioContext)]);
 				api.dispatch(reloadVisualizer({ duration, waveformData: waveformData.toJSON() }));
@@ -191,9 +177,11 @@ export default function createFileMiddleware() {
 			);
 
 			// Pull that updated redux state and save it to our Info.dat
-			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				songDuration: selectDuration(state),
+			});
 			// Back up our latest data!
-			await filestore.updateInfoContents(songId, info);
+			await filestore.updateInfoContents(songId, infoContents);
 		},
 	});
 	instance.startListening({
@@ -223,9 +211,11 @@ export default function createFileMiddleware() {
 			);
 
 			// Pull that updated redux state and save it to our Info.dat
-			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				songDuration: selectDuration(state),
+			});
 			// Back up our latest data!
-			await filestore.updateInfoContents(songId, info);
+			await filestore.updateInfoContents(songId, infoContents);
 		},
 	});
 	instance.startListening({
@@ -248,9 +238,11 @@ export default function createFileMiddleware() {
 			}
 
 			// Pull that updated redux state and save it to our Info.dat
-			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				songDuration: selectDuration(state),
+			});
 			// Back up our latest data!
-			await filestore.updateInfoContents(songId, info);
+			await filestore.updateInfoContents(songId, infoContents);
 		},
 	});
 	instance.startListening({
@@ -263,9 +255,11 @@ export default function createFileMiddleware() {
 			await filestore.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId }));
 
 			// Pull that updated redux state and save it to our Info.dat
-			const info = serializeInfoContents(selectSongById(state, songId), selectInfoSerializationOptionsFromState(state, songId));
+			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				songDuration: selectDuration(state),
+			});
 			// Back up our latest data!
-			await filestore.updateInfoContents(songId, info);
+			await filestore.updateInfoContents(songId, infoContents);
 		},
 	});
 

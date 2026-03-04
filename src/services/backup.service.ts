@@ -1,7 +1,6 @@
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
-import { selectBeatmapSerializationOptionsFromState, selectInfoSerializationOptionsFromState } from "$/store/middleware/file.middleware";
-import { selectBeatmapEntities, selectBeatmapIdsWithLightshowId, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
+import { selectBeatmapEntities, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
 
@@ -20,14 +19,17 @@ export function createSaveHandler() {
 
 	return async function save(state: RootState, songId: SongId, beatmapId: BeatmapId | null, entities?: Partial<App.IBeatmapEntities>) {
 		// If we have an actively-loaded song, we want to first persist that song so that we download the very latest stuff.
-		const song = selectSongById(state, songId);
-		const infoContents = serializeInfoContents(song, selectInfoSerializationOptionsFromState(state, songId));
+		const infoContents = serializeInfoContents(selectSongById(state, songId), {
+			songDuration: selectDuration(state),
+		});
 		await filestore.updateInfoContents(songId, infoContents);
 
 		// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
 		if (beatmapId) {
 			const activeEntities = entities ?? selectBeatmapEntities(state);
-			const { difficulty, lightshow, customData } = serializeBeatmapContents(activeEntities, selectBeatmapSerializationOptionsFromState(state, songId, beatmapId));
+			const { difficulty, lightshow, customData } = serializeBeatmapContents(activeEntities, {
+				editorOffsetInBeats: selectEditorOffsetInBeats(state, songId),
+			});
 			const { contents } = await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow, customData });
 
 			// we want to copy lightshow data across beatmaps that share the same lightshow id
