@@ -3,14 +3,20 @@ import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocess
 import { type PropsWithChildren, useEffect, useRef } from "react";
 import { HalfFloatType, type Scene } from "three";
 
-export function Bloom({ children }: PropsWithChildren) {
+export function Bloom({ children, enabled }: PropsWithChildren & { enabled?: boolean }) {
 	const { gl, camera, size } = useThree();
 
 	const scene = useRef<Scene>(null);
 	const composer = useRef<EffectComposer>(null);
 
 	useEffect(() => {
-		if (!scene.current) return;
+		if (!scene.current || !enabled) {
+			if (composer.current) {
+				composer.current.dispose();
+				composer.current = null;
+			}
+			return;
+		}
 
 		composer.current = new EffectComposer(gl, {
 			frameBufferType: HalfFloatType,
@@ -25,18 +31,28 @@ export function Bloom({ children }: PropsWithChildren) {
 			intensity: 4.0,
 			radius: 0.75,
 		});
+
 		const effectPass = new EffectPass(camera, bloomEffect);
 		composer.current.addPass(effectPass);
+		composer.current.setSize(size.width, size.height);
 
-		void composer.current.setSize(size.width, size.height);
-	}, [size, camera, gl]);
+		return () => {
+			composer.current?.dispose();
+			composer.current = null;
+		};
+	}, [size, camera, gl, enabled]);
 
 	useFrame((_, delta) => {
 		if (!scene.current || !composer.current) return;
-		composer.current.render(delta);
+
 		gl.autoClear = false;
 		gl.clearDepth();
-		gl.render(scene.current, camera);
+
+		if (enabled) {
+			composer.current.render(delta);
+		} else {
+			gl.render(scene.current, camera);
+		}
 	});
 
 	return <scene ref={scene}>{children}</scene>;

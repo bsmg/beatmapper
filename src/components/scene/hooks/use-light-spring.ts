@@ -1,6 +1,5 @@
-import { type SpringConfig, type SpringValue, useSpring } from "@react-spring/three";
+import { type SpringConfig, useSpring } from "@react-spring/three";
 
-import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { useAppSelector } from "$/store/hooks";
 import { selectBloomEnabled, selectPlaying } from "$/store/selectors";
 import { App } from "$/types";
@@ -13,56 +12,6 @@ const lightSpringConfig: SpringConfig = {
 	tension: 270,
 	friction: 120,
 };
-
-interface UseSpringConfigForLightOptions extends Omit<ReturnType<typeof useLightEffect>, "lastEventId"> {
-	mult?: number;
-}
-function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpringConfigForLightOptions) {
-	const opacity = brightness > 0 ? 1 : 0;
-	const onEmissiveIntensity = brightness * mult;
-	const brightEmissiveIntensity = brightness * 1.25 * mult;
-
-	switch (effect) {
-		case App.BasicEventEffect.OFF: {
-			return {
-				to: { opacity: 0, emissiveIntensity: 0 },
-				immediate: true,
-				reset: false,
-				config: lightSpringConfig,
-			};
-		}
-		case App.BasicEventEffect.TRANSITION: // todo: this will be a problem for future me to figure out
-		case App.BasicEventEffect.ON: {
-			return {
-				to: { emissive: color, opacity: opacity, emissiveIntensity: onEmissiveIntensity },
-				immediate: true,
-				reset: false,
-				config: lightSpringConfig,
-			};
-		}
-		case App.BasicEventEffect.FLASH: {
-			return {
-				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
-				to: { emissive: color, opacity: opacity, emissiveIntensity: onEmissiveIntensity },
-				immediate: false,
-				reset: false,
-				config: lightSpringConfig,
-			};
-		}
-		case App.BasicEventEffect.FADE: {
-			return {
-				from: { emissive: color, opacity: opacity, emissiveIntensity: brightEmissiveIntensity },
-				to: { emissive: color, opacity: 0, emissiveIntensity: 0 },
-				immediate: false,
-				reset: false,
-				config: lightSpringConfig,
-			};
-		}
-		default: {
-			throw new Error(`Unrecognized status: ${effect}`);
-		}
-	}
-}
 
 // ~~Complicated Business~~
 // When certain statuses occur - flash, fade - we want to reset the spring, so that it does the "from" and "to" again.
@@ -79,19 +28,45 @@ function useSpringConfigForLight({ mult = 1, effect, color, brightness }: UseSpr
 export interface UseLightSpringOptions {
 	light: ReturnType<typeof useLightEffect>;
 }
-export function useLightSpring({ light }: UseLightSpringOptions): [spring: { emissive: SpringValue<string>; emissiveIntensity: SpringValue<number>; opacity: SpringValue<number> }, props: { color: string; transparent: boolean }] {
+export function useLightSpring({ light }: UseLightSpringOptions) {
 	const isPlaying = useAppSelector(selectPlaying);
 	const isBloomEnabled = useAppSelector(selectBloomEnabled);
 
-	const lightSpringConfig = useSpringConfigForLight(light);
+	const [spring] = useSpring(
+		() => ({
+			from: {
+				emissive: "black",
+				emissiveIntensity: 0,
+				opacity: 0,
+			},
+			to: async (next) => {
+				const { effect, color, brightness } = light;
 
-	useUpdateEffect(() => {
-		if (!isPlaying) return;
-		const statusShouldReset = light.effect === App.BasicEventEffect.FLASH || light.effect === App.BasicEventEffect.FADE;
-		lightSpringConfig.reset = statusShouldReset;
-	}, [light.lastEventId ?? null]);
+				switch (effect) {
+					case App.BasicEventEffect.FLASH: {
+						await next({ emissive: color, emissiveIntensity: brightness * 1.5, opacity: 1, immediate: true });
+						await next({ emissive: color, emissiveIntensity: brightness, opacity: 1, immediate: false, config: lightSpringConfig });
+						break;
+					}
+					case App.BasicEventEffect.FADE: {
+						await next({ emissive: color, emissiveIntensity: brightness * 1.5, opacity: 1, immediate: true });
+						await next({ emissive: color, emissiveIntensity: 0, opacity: 0, immediate: false, config: lightSpringConfig });
+						break;
+					}
+					case App.BasicEventEffect.TRANSITION: // todo: this will be a problem for future me to figure out
+					case App.BasicEventEffect.ON: {
+						await next({ emissive: color, emissiveIntensity: brightness, opacity: 1, immediate: true });
+						break;
+					}
+					default: {
+						await next({ emissive: color, emissiveIntensity: 0, opacity: 0, immediate: true });
+						break;
+					}
+				}
+			},
+		}),
+		[light.lastEventId, isPlaying],
+	);
 
-	const [spring] = useSpring<{ emissive: string; emissiveIntensity: number; opacity: number }>(() => lightSpringConfig, [light, isBloomEnabled]);
-
-	return [spring, { color: isBloomEnabled ? "#ccc" : "#444", transparent: true }];
+	return [spring, { color: isBloomEnabled ? "#ccc" : "#444", transparent: true }] as const;
 }

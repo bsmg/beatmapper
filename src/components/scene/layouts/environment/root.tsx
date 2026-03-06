@@ -4,11 +4,12 @@ import { AmbientLight, Bloom, Runway } from "$/components/scene/compositions";
 
 interface Props extends PropsWithChildren {
 	surfaceDepth: number;
+	isBloomEnabled?: boolean;
 }
-function EnvironmentRoot({ surfaceDepth, children }: Props) {
+function EnvironmentRoot({ surfaceDepth, isBloomEnabled, children }: Props) {
 	return (
 		<Fragment>
-			<Bloom>{children}</Bloom>
+			<Bloom enabled={isBloomEnabled}>{children}</Bloom>
 			<Runway surfaceDepth={surfaceDepth} />
 			<AmbientLight />
 		</Fragment>

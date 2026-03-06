@@ -1,5 +1,7 @@
 import { useControls } from "$/components/scene/hooks/use-controls";
 import { Environment } from "$/components/scene/layouts";
+import { useAppSelector } from "$/store/hooks";
+import { selectBloomEnabled } from "$/store/selectors";
 import BackLasers from "./back-lasers";
 import LargeRings from "./large-rings";
 import PrimaryLights from "./primary-lights";
@@ -12,8 +14,10 @@ interface Props {
 function DefaultEnvironment({ surfaceDepth }: Props) {
 	useControls();
 
+	const isBloomEnabled = useAppSelector(selectBloomEnabled);
+
 	return (
-		<Environment.Root surfaceDepth={surfaceDepth}>
+		<Environment.Root surfaceDepth={surfaceDepth} isBloomEnabled={isBloomEnabled}>
 			<SideLasers side="left" />
 			<SideLasers side="right" />
 			<BackLasers />

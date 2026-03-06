@@ -1,6 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import type { wrapper } from "bsmap/types";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
@@ -18,6 +18,25 @@ export function useLightEffect({ lastEvent }: UseLightEffectOptions) {
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
+	const deriveEffectForEvent = useCallback(
+		function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
+			if (!lastEvent) {
+				return App.BasicEventEffect.OFF;
+			}
+			return resolveBasicEventEffect(lastEvent, tracks);
+		},
+		[tracks],
+	);
+	const deriveColorForEvent = useCallback(
+		function deriveColorForEvent(lastEvent: App.IBasicEvent | null): string {
+			if (!lastEvent || deriveEffectForEvent(lastEvent) === App.BasicEventEffect.OFF) {
+				return "#000000";
+			}
+			return resolveColorForItem(resolveBasicEventColor(lastEvent), { colorScheme });
+		},
+		[deriveEffectForEvent, colorScheme],
+	);
+
 	return useMemo(() => {
 		if (!lastEvent) {
 			return { effect: App.BasicEventEffect.OFF, color: "black", brightness: 0 };
@@ -25,11 +44,11 @@ export function useLightEffect({ lastEvent }: UseLightEffectOptions) {
 
 		return {
 			lastEventId: lastEvent ? resolveEventId(lastEvent) : null,
-			effect: resolveBasicEventEffect(lastEvent, tracks),
-			color: resolveColorForItem(resolveBasicEventColor(lastEvent), { colorScheme }),
+			effect: deriveEffectForEvent(lastEvent),
+			color: deriveColorForEvent(lastEvent),
 			brightness: lastEvent.floatValue,
 		};
-	}, [lastEvent, tracks, colorScheme]);
+	}, [lastEvent, deriveEffectForEvent, deriveColorForEvent]);
 }
 
 interface UseRingRotationEffectOptions {
