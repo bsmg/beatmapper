@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 import { type AsEventObject, createMachineAnatomy } from "$/components/helpers";
 import type { UseMousePositionOverElementOptions } from "$/components/hooks/use-mouse-position-over-element";
 import { type App, EventEditMode, type IBackgroundBox, type ISelectionBoxInBeats } from "$/types";
-import { clamp, normalize as interpolate, range, roundToNearest } from "$/utils";
+import { clamp, normalize as interpolate, isMetaKeyPressed, range, roundToNearest } from "$/utils";
 
 const { getElement, getProps } = createMachineAnatomy("event-grid", {
 	parts: ["root", "timeline", "prefix", "content", "trigger", "track", "event", "backgroundBox", "selectionBox", "cursor", "pointer"],
@@ -46,8 +46,8 @@ export interface EventGridSchema extends MachineSchema {
 	action: "setMouseDownAt" | "updatePointer" | "updateSelection" | "commitSelection";
 	effect: "trackDimensions";
 	event: AsEventObject<{
-		"trigger/down": [{ x: number; y: number; button: number; ctrlKey: boolean }];
-		"trigger/up": [];
+		"trigger/down": [{ x: number; y: number; button: number }];
+		"trigger/up": [{ ctrlKey: boolean }];
 		"trigger/move": [{ x: number; y: number }];
 		"track/enter": [{ trackId: number }];
 		"track/leave": [{ trackId: number }];
@@ -57,14 +57,13 @@ export interface EventGridSchema extends MachineSchema {
 function convertMousePositionToBeatNum(x: number, params: Pick<Params<EventGridSchema>, "prop" | "context" | "computed">, snapTo?: number) {
 	const { width } = params.context.get("dimensions");
 
-	const positionInBeats = interpolate(x, 0, width, 0, params.computed("beatNums").length);
+	let positionInBeats = interpolate(x, 0, width, 0, params.computed("beatNums").length);
 
-	let roundedPositionInBeats = positionInBeats;
 	if (typeof snapTo === "number") {
-		roundedPositionInBeats = roundToNearest(positionInBeats, snapTo);
+		positionInBeats = roundToNearest(positionInBeats, snapTo);
 	}
 
-	return roundedPositionInBeats + params.prop("startBeat");
+	return positionInBeats + params.prop("startBeat");
 }
 
 export const machine = createMachine<EventGridSchema>({
@@ -115,7 +114,7 @@ export const machine = createMachine<EventGridSchema>({
 			on: {
 				"trigger/down": [
 					{ guard: "isPlaceMode", target: "placing", actions: ["setMouseDownAt"] },
-					{ guard: "isSelectMode", target: "selecting", actions: ["setMouseDownAt"] },
+					{ guard: "isSelectMode", target: "selecting", actions: ["setMouseDownAt", "updateSelection"] },
 				],
 				"trigger/move": [{ actions: ["updatePointer"] }],
 			},
@@ -164,7 +163,7 @@ export const machine = createMachine<EventGridSchema>({
 			updateSelection: ({ refs, context, event }) => {
 				const origin = refs.get("mouseDownAt");
 
-				if (!origin || event.type !== "trigger/move") {
+				if (!origin || origin.button !== 0) {
 					return context.set("selectionBox", null);
 				}
 
@@ -243,10 +242,10 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				...getProps(scope, "trigger"),
 				onPointerDown: (event) => {
 					const rect = event.currentTarget.getBoundingClientRect();
-					return send({ type: "trigger/down", x: event.clientX - rect.left, y: event.clientY - rect.top, button: event.button, ctrlKey: event.ctrlKey });
+					return send({ type: "trigger/down", x: event.clientX - rect.left, y: event.clientY - rect.top, button: event.button });
 				},
-				onPointerUp: () => {
-					return send({ type: "trigger/up" });
+				onPointerUp: (event) => {
+					return send({ type: "trigger/up", ctrlKey: isMetaKeyPressed(event.nativeEvent) });
 				},
 				onPointerMove: (event) => {
 					return send({ type: "trigger/move", x: event.nativeEvent.offsetX, y: event.nativeEvent.offsetY });
@@ -308,23 +307,21 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				style: { ...style, transform: `translateX(${centeredOffset}px)` },
 				onContextMenu: (e) => e.preventDefault(),
 				onPointerDown: (ev) => {
-					if (isPlaceMode) {
-						switch (ev.button) {
-							case 0: {
-								return data.selected ? actions.onDeselect?.(data) : actions.onSelect?.(data);
-							}
-							case 1: {
-								ev.preventDefault();
-								return actions.onPick?.(data);
-							}
-							case 2: {
-								return actions.onDelete?.(data, false);
-							}
+					switch (ev.button) {
+						case 0: {
+							return data.selected ? actions.onDeselect?.(data) : actions.onSelect?.(data);
+						}
+						case 1: {
+							ev.preventDefault();
+							return actions.onPick?.(data);
+						}
+						case 2: {
+							return actions.onDelete?.(data, false);
 						}
 					}
 				},
 				onPointerOver: () => {
-					if (isPlaceMode && activeButton === 2) {
+					if (activeButton === 2) {
 						actions.onDelete?.(data, true);
 					}
 				},
