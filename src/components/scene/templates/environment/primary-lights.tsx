@@ -8,9 +8,9 @@ import { Environment } from "$/components/scene/layouts";
 const SIDE_BEAM_LENGTH = 250;
 
 function PrimaryLights() {
-	const [lastEvent] = useBasicEventTrack({ trackId: 4 });
+	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 4 });
 
-	const light = useLightEffect({ lastEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
 
 	return (
 		<Fragment>

@@ -5,8 +5,7 @@ import type { CSSProperties } from "react";
 
 import { type AsEventObject, createMachineAnatomy } from "$/components/helpers";
 import type { UseMousePositionOverElementOptions } from "$/components/hooks/use-mouse-position-over-element";
-import { resolveColorForItem } from "$/helpers/colors.helpers";
-import { type App, EventEditMode, type IBackgroundBox, type IColorScheme, type ISelectionBoxInBeats } from "$/types";
+import { type App, EventEditMode, type IBackgroundBox, type ISelectionBoxInBeats } from "$/types";
 import { clamp, normalize as interpolate, range, roundToNearest } from "$/utils";
 
 const { getElement, getProps } = createMachineAnatomy("event-grid", {
@@ -337,11 +336,9 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				},
 			});
 		},
-		getBackgroundBoxProps: (box: IBackgroundBox, colorScheme: IColorScheme) => {
-			const startOffset = interpolate(box.time, startBeat, endBeat, 0, 100);
-			const width = interpolate(box.duration ?? 0, 0, endBeat - startBeat, 0, 100);
-			const startColor = resolveColorForItem(box.startColor, { colorScheme });
-			const endColor = resolveColorForItem(box.endColor, { colorScheme });
+		getBackgroundBoxProps: ({ time, duration, startState, endState }: IBackgroundBox) => {
+			const startOffset = interpolate(time, startBeat, endBeat, 0, 100);
+			const width = interpolate(duration ?? 0, 0, endBeat - startBeat, 0, 100);
 
 			const toPercent = (value: number) => clamp(1 - value, 0, 1) * 100;
 
@@ -350,7 +347,7 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				style: {
 					left: `${startOffset}%`,
 					width: `${width}%`,
-					background: `linear-gradient(to right, color-mix(in srgb, ${startColor}, transparent ${toPercent(box.startBrightness ?? 0)}%), color-mix(in srgb, ${endColor ?? startColor}, transparent ${toPercent(box.endBrightness ?? 0)}%))`,
+					background: `linear-gradient(to right, color-mix(in srgb, ${startState.color}, transparent ${toPercent(startState.brightness)}%), color-mix(in srgb, ${endState.color}, transparent ${toPercent(endState.brightness ?? 0)}%))`,
 				},
 			});
 		},

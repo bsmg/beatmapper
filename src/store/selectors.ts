@@ -5,9 +5,9 @@ import { shallowEqual } from "react-redux";
 
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
-import { deriveEventTracksForEnvironment, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
+import { deriveEventTracksForEnvironment, isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { getEditorOffset } from "$/helpers/song.helpers";
-import { App, type BeatmapId, type SongId, View } from "$/types";
+import { type App, type BeatmapId, type ILightState, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
@@ -283,18 +283,29 @@ export const { selectAll: selectFutureBasicEvents } = basic.getSelectors(
 		(state) => state?.basic ?? basic.getInitialState(),
 	),
 );
-export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector([selectEventEditorStartAndEndBeat, (state: RootState, _songId: SongId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat, endBeat }, events) => {
-	return events.filter((event) => event.time >= startBeat && event.time < endBeat);
-});
-export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events) => {
-	const eventsInWindow = events.filter((event) => event.time <= startBeat);
-	const lastEvent = eventsInWindow[eventsInWindow.length - 1];
-	const eventEffect = lastEvent ? resolveBasicEventEffect(lastEvent, tracks) : null;
-	const isLastEventOn = eventEffect === App.BasicEventEffect.ON || eventEffect === App.BasicEventEffect.FLASH || eventEffect === App.BasicEventEffect.TRANSITION;
+export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector(
+	[selectEventEditorStartAndEndBeat, (state: RootState, _: SongId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)],
+	({ startBeat, endBeat }, basicEvents) => {
+		const beforeIdx = basicEvents.findIndex((e) => e.time >= startBeat);
+		const afterIdx = basicEvents.findIndex((e) => e.time >= endBeat);
+
+		const inWindow = beforeIdx === -1 ? [] : basicEvents.slice(beforeIdx, afterIdx === -1 ? basicEvents.length : afterIdx);
+
+		return inWindow.concat(beforeIdx > 0 ? [basicEvents[beforeIdx - 1]] : [], afterIdx !== -1 ? [basicEvents[afterIdx]] : []).sort(sortObjectFn);
+	},
+	{ memoizeOptions: { resultEqualityCheck: shallowEqual } },
+);
+
+export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events): ILightState => {
+	const basicEventsInWindow = events.filter((event) => event.time <= startBeat);
+	const lastBasicEvent = basicEventsInWindow[basicEventsInWindow.length - 1];
+
+	const effect = lastBasicEvent ? resolveBasicEventEffect(lastBasicEvent, tracks) : null;
+	const isActive = effect && isLightEffectActive(effect);
 
 	return {
-		color: isLastEventOn ? resolveBasicEventColor(lastEvent) : null,
-		brightness: isLastEventOn ? (lastEvent?.floatValue ?? 0) : null,
+		color: isActive ? resolveBasicEventColor(lastBasicEvent) : null,
+		brightness: isActive ? (lastBasicEvent?.floatValue ?? 0) : null,
 	};
 });
 

@@ -54,10 +54,10 @@ interface Props {
 function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 
-	const [lastLightEvent] = useBasicEventTrack({ trackId: side === "left" ? 2 : 3 });
+	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: side === "left" ? 2 : 3 });
 	const [lastSpeedEvent] = useBasicEventTrack({ trackId: side === "left" ? 12 : 13 });
 
-	const light = useLightEffect({ lastEvent: lastLightEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
 
 	const laserSpeed = useMemo(() => {
 		if (!lastSpeedEvent) return 0;

@@ -43,7 +43,7 @@ Beatmapper opts for a special UI for editing events, described in our ["Lightsho
 - For high-energy songs, it's common to want to "strobe" lights, having on/off moving quickly (as fast as 1/32 beat!). With chunky blocks, it's impossible to understand information presented this quickly. Beatmapper displays it clearly no matter how quickly you want events to hit
 - Unlike the notes themselves, which exist and move in 3D space, events can easily be represented as 2D data. By having a "grid" representing lighting, you get all kinds of UX wins, such as the ability to quickly select subsets of the data, not having perspective getting in the way, etc. I've taken inspiration from MIDI piano rolls.
 - Two tracks are unlike the others: left laser speed, and right laser speed. These don't trigger new events, they change the speed of other events. I've come up with a custom UI that shows how laser speed changes in a visually significant way. With numbered blocks, a lot more processing is involved to understand how the speed changes over time.
-- Lights are not always single moments in time; "on" and "flash" leave the light on, while "off" and "fade" turn it off. By using colored backgrounds, I'm able to convey at a glance whether the track is on or off at any moment in time.
+- Lights are not always single moments in time; "on", "flash", and "transition" leave the light on, while "off" and "fade" turn it off. By using colored backgrounds, I'm able to convey at a glance whether the track is on or off at any moment in time.
 
 The TL:DR; of this is that while the events view may seem foreign, I strongly believe that it offers a lot of compelling advantages.
 

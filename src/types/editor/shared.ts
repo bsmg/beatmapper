@@ -42,6 +42,7 @@ export const EventTool = {
 	OFF: "off",
 	FLASH: "flash",
 	FADE: "fade",
+	TRANSITION: "transition",
 } as const;
 export type EventTool = Member<typeof EventTool>;
 

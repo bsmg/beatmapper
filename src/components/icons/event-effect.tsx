@@ -14,6 +14,8 @@ function getPathForTool(tool: EventTool) {
 			return "M24.5 0C31.5 -9.68242e-05 32 8.5 32 8.5V32H0C0 32 17.5 9.68259e-05 24.5 0Z";
 		case EventTool.FADE:
 			return "M7.49998 0C0.499969 -9.68242e-05 -1.52588e-05 8.5 -1.52588e-05 8.5V32H32C32 32 14.5 9.68259e-05 7.49998 0Z";
+		case EventTool.TRANSITION:
+			return "M0 32C0 32 6 0 16 0C26 0 32 32 32 32H0Z";
 		default:
 			throw new Error(`Unrecognized tool: ${tool}`);
 	}

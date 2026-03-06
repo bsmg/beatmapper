@@ -1,6 +1,5 @@
 import type { EntityId } from "@reduxjs/toolkit";
 
-import type { App } from "$/types/beatmap";
 import type { ColorSchemeKey, TrackType } from "./shared";
 
 export * from "./shared";
@@ -19,13 +18,15 @@ export type IColorScheme = {
 	[ColorSchemeKey.BOOST_WHITE]?: string;
 };
 
+export interface ILightState {
+	color: string | null;
+	brightness: number | null;
+}
 export interface IBackgroundBox {
 	time: number;
-	duration?: number | null;
-	startColor?: App.EventColor;
-	endColor?: App.EventColor;
-	startBrightness?: number;
-	endBrightness?: number;
+	duration: number | null;
+	startState: { [key in keyof ILightState]: NonNullable<ILightState[key]> };
+	endState: { [key in keyof ILightState]: NonNullable<ILightState[key]> };
 }
 
 export interface IEventTrack {

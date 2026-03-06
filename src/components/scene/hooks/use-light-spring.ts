@@ -1,17 +1,14 @@
-import { type SpringConfig, useSpring } from "@react-spring/three";
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: controlled updates */
+import { config, useSpring } from "@react-spring/three";
+import { useFrame } from "@react-three/fiber";
+import { useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { selectBloomEnabled, selectPlaying } from "$/store/selectors";
+import { selectBloomEnabled, selectCursorPositionInBeats, selectPlaying } from "$/store/selectors";
 import { App } from "$/types";
+import { lerp, lerpColor } from "$/utils";
 import type { useLightEffect } from "./environment.hooks";
-
-// todo: spring animations are always pre-computed, so there's no means of deterministically calculating the lighting state at a particular time (or when paused)
-// we'll probably need to refactor this on a different api/framework at some point
-
-const lightSpringConfig: SpringConfig = {
-	tension: 270,
-	friction: 120,
-};
 
 // ~~Complicated Business~~
 // When certain statuses occur - flash, fade - we want to reset the spring, so that it does the "from" and "to" again.
@@ -29,44 +26,75 @@ export interface UseLightSpringOptions {
 	light: ReturnType<typeof useLightEffect>;
 }
 export function useLightSpring({ light }: UseLightSpringOptions) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
 	const isPlaying = useAppSelector(selectPlaying);
 	const isBloomEnabled = useAppSelector(selectBloomEnabled);
 
-	const [spring] = useSpring(
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid) ?? 0);
+
+	const [spring, api] = useSpring(
 		() => ({
 			from: {
-				emissive: "black",
+				emissive: light.prevState.color,
 				emissiveIntensity: 0,
 				opacity: 0,
 			},
-			to: async (next) => {
-				const { effect, color, brightness } = light;
-
-				switch (effect) {
-					case App.BasicEventEffect.FLASH: {
-						await next({ emissive: color, emissiveIntensity: brightness * 1.5, opacity: 1, immediate: true });
-						await next({ emissive: color, emissiveIntensity: brightness, opacity: 1, immediate: false, config: lightSpringConfig });
-						break;
-					}
-					case App.BasicEventEffect.FADE: {
-						await next({ emissive: color, emissiveIntensity: brightness * 1.5, opacity: 1, immediate: true });
-						await next({ emissive: color, emissiveIntensity: 0, opacity: 0, immediate: false, config: lightSpringConfig });
-						break;
-					}
-					case App.BasicEventEffect.TRANSITION: // todo: this will be a problem for future me to figure out
-					case App.BasicEventEffect.ON: {
-						await next({ emissive: color, emissiveIntensity: brightness, opacity: 1, immediate: true });
-						break;
-					}
-					default: {
-						await next({ emissive: color, emissiveIntensity: 0, opacity: 0, immediate: true });
-						break;
-					}
-				}
-			},
 		}),
-		[light.lastEventId, isPlaying],
+		[isPlaying],
 	);
+
+	useEffect(() => {
+		const { lastEffect, prevState } = light;
+
+		switch (lastEffect) {
+			case App.BasicEventEffect.FLASH: {
+				api.start({
+					from: { emissive: prevState.color, emissiveIntensity: prevState.brightness * 1.5, opacity: 1 },
+					to: { emissive: prevState.color, emissiveIntensity: prevState.brightness, opacity: 1 },
+					config: config.molasses,
+					reset: true,
+				});
+				break;
+			}
+			case App.BasicEventEffect.FADE: {
+				api.start({
+					from: { emissive: prevState.color, emissiveIntensity: prevState.brightness * 1.5, opacity: 1 },
+					to: { emissive: prevState.color, emissiveIntensity: 0, opacity: 0 },
+					config: config.molasses,
+					reset: true,
+				});
+				break;
+			}
+			case App.BasicEventEffect.OFF: {
+				api.start({ emissive: prevState.color, emissiveIntensity: 0, opacity: 0, immediate: true });
+				break;
+			}
+			case App.BasicEventEffect.ON:
+			case App.BasicEventEffect.TRANSITION: {
+				api.start({ emissive: prevState.color, emissiveIntensity: prevState.brightness, opacity: prevState.brightness > 0 ? 1 : 0, immediate: true });
+				break;
+			}
+		}
+	}, [light.lastEventId]);
+
+	useFrame(() => {
+		const { time, duration, nextEffect, prevState, nextState } = light;
+
+		if (nextEffect === App.BasicEventEffect.TRANSITION && duration > 0) {
+			const ratio = Math.max(0, Math.min(1, (cursorPositionInBeats - time) / duration));
+
+			const startOpacity = prevState.brightness > 0 ? 1 : 0;
+			const endOpacity = nextState.brightness > 0 ? 1 : 0;
+
+			api.start({
+				emissive: lerpColor(prevState.color, nextState.color, ratio),
+				emissiveIntensity: lerp(prevState.brightness, nextState.brightness, ratio),
+				opacity: lerp(startOpacity, endOpacity, ratio),
+				immediate: true,
+			});
+		}
+	});
 
 	return [spring, { color: isBloomEnabled ? "#ccc" : "#444", transparent: true }] as const;
 }

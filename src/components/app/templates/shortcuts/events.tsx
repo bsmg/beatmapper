@@ -69,6 +69,9 @@ function EventsEditorShortcuts() {
 				case "Digit4": {
 					return dispatch(updateEventsEditorTool({ tool: EventTool.FADE }));
 				}
+				case "Digit5": {
+					return dispatch(updateEventsEditorTool({ tool: EventTool.TRANSITION }));
+				}
 				case "KeyR": {
 					if (ev.shiftKey) return;
 					return dispatch(updateEventsEditorColor({ color: EventColor.PRIMARY }));

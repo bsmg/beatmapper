@@ -7,48 +7,78 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveBasicEventColor, resolveBasicEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventTracksForEnvironment, selectPlaying } from "$/store/selectors";
-import { App } from "$/types";
+import { App, type ILightState } from "$/types";
 
 interface UseLightEffectOptions {
 	lastEvent: wrapper.IWrapBasicEvent | null;
+	nextEvent: wrapper.IWrapBasicEvent | null;
 }
-export function useLightEffect({ lastEvent }: UseLightEffectOptions) {
+export function useLightEffect({ lastEvent, nextEvent }: UseLightEffectOptions) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const deriveEffectForEvent = useCallback(
-		function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
-			if (!lastEvent) {
+		(event: App.IBasicEvent | null): App.BasicEventEffect => {
+			if (!event) {
 				return App.BasicEventEffect.OFF;
 			}
-			return resolveBasicEventEffect(lastEvent, tracks);
+			return resolveBasicEventEffect(event, tracks);
 		},
 		[tracks],
 	);
 	const deriveColorForEvent = useCallback(
-		function deriveColorForEvent(lastEvent: App.IBasicEvent | null): string {
-			if (!lastEvent || deriveEffectForEvent(lastEvent) === App.BasicEventEffect.OFF) {
-				return "#000000";
+		(event: App.IBasicEvent | null): App.EventColor | null => {
+			const effect = deriveEffectForEvent(event);
+
+			if (!event || effect === App.BasicEventEffect.OFF) {
+				return null;
 			}
-			return resolveColorForItem(resolveBasicEventColor(lastEvent), { colorScheme });
+			return resolveBasicEventColor(event);
 		},
-		[deriveEffectForEvent, colorScheme],
+		[deriveEffectForEvent],
+	);
+	const deriveBrightnessForEvent = useCallback(
+		(event: App.IBasicEvent | null): number => {
+			const effect = deriveEffectForEvent(event);
+
+			if (!event || effect === App.BasicEventEffect.OFF) {
+				return 0;
+			}
+			return event.floatValue;
+		},
+		[deriveEffectForEvent],
+	);
+
+	const deriveStateForEvent = useCallback(
+		(event: App.IBasicEvent | null): { [key in keyof ILightState]: NonNullable<ILightState[key]> } => {
+			if (!event) {
+				return { color: "black", brightness: 0 };
+			}
+
+			const color = deriveColorForEvent(event);
+			const brightness = deriveBrightnessForEvent(event);
+
+			return {
+				color: color ? resolveColorForItem(color, { colorScheme }) : "black",
+				brightness: brightness,
+			};
+		},
+		[deriveColorForEvent, deriveBrightnessForEvent, colorScheme],
 	);
 
 	return useMemo(() => {
-		if (!lastEvent) {
-			return { effect: App.BasicEventEffect.OFF, color: "black", brightness: 0 };
-		}
-
 		return {
 			lastEventId: lastEvent ? resolveEventId(lastEvent) : null,
-			effect: deriveEffectForEvent(lastEvent),
-			color: deriveColorForEvent(lastEvent),
-			brightness: lastEvent.floatValue,
+			time: lastEvent?.time ?? 0,
+			duration: (nextEvent?.time ?? 0) - (lastEvent?.time ?? 0),
+			lastEffect: deriveEffectForEvent(lastEvent),
+			nextEffect: deriveEffectForEvent(nextEvent),
+			prevState: deriveStateForEvent(lastEvent),
+			nextState: deriveStateForEvent(nextEvent),
 		};
-	}, [lastEvent, deriveEffectForEvent, deriveColorForEvent]);
+	}, [lastEvent, nextEvent, deriveEffectForEvent, deriveStateForEvent]);
 }
 
 interface UseRingRotationEffectOptions {

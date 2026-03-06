@@ -9,9 +9,9 @@ const NUM_OF_BEAMS_PER_SIDE = 5;
 const DISTANCE_BETWEEN_BEAMS = 25;
 
 function BackLasers() {
-	const [lastEvent] = useBasicEventTrack({ trackId: 0 });
+	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 0 });
 
-	const light = useLightEffect({ lastEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
 
 	return sides.map((side) => {
 		return Array.from(range(0, NUM_OF_BEAMS_PER_SIDE)).map((index) => {

@@ -57,11 +57,15 @@ export function isBasicValueEvent<T extends Pick<wrapper.IWrapBasicEvent, "type"
 	return isBasicEvent(data) && isValueTrack(resolveTrackIdForEvent(data), tracks);
 }
 
+export function isLightEffectActive(effect: App.BasicEventEffect) {
+	return effect === App.BasicEventEffect.ON || effect === App.BasicEventEffect.FLASH || effect === App.BasicEventEffect.TRANSITION;
+}
+
 export function resolveBasicEventColor<T extends Pick<wrapper.IWrapBasicEvent, "value">>(data: T) {
 	if (data.value > 8) return App.EventColor.WHITE;
 	if (data.value > 4) return App.EventColor.PRIMARY;
 	if (data.value > 0) return App.EventColor.SECONDARY;
-	return undefined;
+	return null;
 }
 export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
 	const trackId = resolveTrackIdForEvent(data);
@@ -89,7 +93,7 @@ export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, 
 
 interface IBasicEventValue {
 	effect: App.BasicEventEffect;
-	color?: App.EventColor;
+	color?: App.EventColor | null;
 	speed?: number;
 }
 export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, { tracks: IEventTracks }, { tracks: IEventTracks; trackId: number }, { tracks: IEventTracks; trackId: number }>({

@@ -10,7 +10,7 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBasicLightEvent, isBasicValueEvent, resolveBasicEventColor, resolveBasicEventEffect, resolveEventId, serializeBasicEventValue } from "$/helpers/events.helpers";
 import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, deselectEvent, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBasicEventsForTrackInWindow, selectColorScheme, selectCurrentLightStateForTrack, selectEventEditorStartAndEndBeat, selectEventsEditorColor, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventTracksForEnvironment } from "$/store/selectors";
+import { selectAllBasicEventsForTrackInWindow, selectColorScheme, selectCurrentLightStateForTrack, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorColor, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventTracksForEnvironment } from "$/store/selectors";
 import { App, type IEventTracks, TrackType } from "$/types";
 import { clamp, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
@@ -50,19 +50,19 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
-	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
-	const events = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
+	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
-	const initialTrackLightingState = useAppSelector((state) => selectCurrentLightStateForTrack(state, sid, bid, trackId));
+	const initialLightState = useAppSelector((state) => selectCurrentLightStateForTrack(state, sid, bid, trackId));
+	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
 	const backgroundBoxes = useMemo(() => {
-		const { color, brightness } = initialTrackLightingState;
-		return createBackgroundBoxes(events, trackId, { initialColor: color ?? null, initialBrightness: brightness ?? null, startBeat, numOfBeatsToShow, tracks });
-	}, [events, trackId, initialTrackLightingState, startBeat, numOfBeatsToShow, tracks]);
+		return createBackgroundBoxes(trackId, { tracks, colorScheme, offsetInBeats, basicEvents, initialLightState, startBeat, endBeat });
+	}, [initialLightState, trackId, tracks, colorScheme, offsetInBeats, basicEvents, startBeat, endBeat]);
 
 	const resolveEventData = useCallback(
 		(time: number, norm: number) => {
@@ -128,8 +128,8 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 
 	return (
 		<EventGrid.Track {...api.getTrackProps(trackId, actions)} {...rest}>
-			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} {...api.getBackgroundBoxProps(box, colorScheme)} />}</For>
-			<For each={events}>
+			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} {...api.getBackgroundBoxProps(box)} />}</For>
+			<For each={basicEvents.filter((x) => x.time >= startBeat && x.time < endBeat)}>
 				{(data) => (
 					<EventGrid.Event key={resolveEventId(data)} data={data} {...api.getEventProps(data, actions, resolveEventStyle(data))}>
 						{isBasicLightEvent(data, tracks) && data.value !== 0 ? data.floatValue : undefined}

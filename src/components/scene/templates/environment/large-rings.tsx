@@ -12,10 +12,10 @@ const FIRST_RING_OFFSET = -60;
 function LargeRings() {
 	const { theme } = useRouteContext({ from: "__root__" });
 
-	const [lastLightEvent] = useBasicEventTrack({ trackId: 1 });
+	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 1 });
 	const [lastRotationEvent] = useBasicEventTrack({ trackId: 8 });
 
-	const light = useLightEffect({ lastEvent: lastLightEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
 
 	const numOfRings = useRenderScale(16);
 

@@ -3,198 +3,187 @@ import type { wrapper } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
 import { serializeBasicEventValue } from "$/helpers/events.helpers";
-import { App, type IBackgroundBox } from "$/types";
+import { App, ColorSchemeKey, type IBackgroundBox, type IColorScheme, type IEventTracks } from "$/types";
 import { createBackgroundBoxes } from "./track.helpers";
 
-const LIGHTING_TRACK_ID = 4;
+describe(createBackgroundBoxes.name, () => {
+	// These tests have comments to quickly explain the situation they're testing:
+	//   R [__0_B___]
+	// To read this:
+	// - The "array" holds 8 beats, representing the event-grid for a given frame.
+	// - The frame can have `R` events (Red light on), `B` events (Blue light on), or `0` (light off)
+	// - The letter to the left of the array represents the initial light value, the value it held before the current frame started
 
-// These tests have comments to quickly explain the situation they're testing:
-//   R [__0_B___]
-// To read this:
-// - The "array" holds 8 beats, representing the event-grid for a given frame.
-// - The frame can have `R` events (Red light on), `B` events (Blue light on), or `0` (light off)
-// - The letter to the left of the array represents the initial light value, the value it held before the current frame started
+	const tracks = {
+		2: { type: "blocks" },
+		12: { type: "speed" },
+	} as IEventTracks;
 
-describe("BlockTrack helpers", () => {
-	describe(createBackgroundBoxes.name, () => {
-		it("exits early if it is not a lighting track", () => {
-			const trackId = 12;
-			const events: wrapper.IWrapBasicEvent[] = [
-				// Technically these events are illegal; this is just testing that it doesn't even look at events when the trackId isn't lighting
-				createBasicEvent({
-					type: trackId,
-					time: 3,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
-					floatValue: 1,
-				}),
-				createBasicEvent({
-					type: trackId,
-					time: 4,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, {}),
-				}),
-			];
-			const initialTrackLightingColorType = null;
-			const startBeat = 0;
-			const numOfBeatsToShow = 8;
+	const colorScheme = {
+		[ColorSchemeKey.ENV_LEFT]: "#cc0000",
+		[ColorSchemeKey.ENV_RIGHT]: "#0000cc",
+		[ColorSchemeKey.BOOST_LEFT]: "#ff4444",
+		[ColorSchemeKey.BOOST_RIGHT]: "#4444ff",
+	} as IColorScheme;
 
-			const expectedResult: IBackgroundBox[] = [];
-			const actualResult = createBackgroundBoxes(events, trackId, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
+	it("exits early if it is not a lighting track", () => {
+		const startBeat = 0;
+		const numOfBeatsToShow = 8;
+		// Technically these events are illegal; this is just testing that it doesn't even look at events when the trackId isn't lighting
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 12,
+				time: 3,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
+			createBasicEvent({
+				type: 12,
+				time: 4,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, { tracks }),
+			}),
+		];
 
-			expect(actualResult).toEqual(expectedResult);
-		});
+		const expectedResult: IBackgroundBox[] = [];
+		const actualResult = createBackgroundBoxes(12, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
-		it("handles an empty set of events without initial lighting", () => {
-			//  0  [________]
-			const events: wrapper.IWrapBasicEvent[] = [];
-			const initialTrackLightingColorType = null;
-			const startBeat = 0;
-			const numOfBeatsToShow = 8;
+		expect(actualResult).toEqual(expectedResult);
+	});
 
-			const expectedResult: IBackgroundBox[] = [];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
+	it("handles an empty set of events without initial lighting", () => {
+		//  0  [________]
+		const startBeat = 0;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [];
 
-			expect(actualResult).toEqual(expectedResult);
-		});
+		const expectedResult: IBackgroundBox[] = [];
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
-		it("handles an empty set of events WITH initial lighting", () => {
-			//  R  [________]
-			const events: wrapper.IWrapBasicEvent[] = [];
-			const initialTrackLightingColorType = App.EventColor.PRIMARY;
-			const startBeat = 8;
-			const numOfBeatsToShow = 8;
+		expect(actualResult).toEqual(expectedResult);
+	});
 
-			const expectedResult: IBackgroundBox[] = [
-				{
-					time: 8,
-					duration: 8,
-					startColor: App.EventColor.PRIMARY,
-					endColor: App.EventColor.PRIMARY,
-					startBrightness: 1,
-					endBrightness: 1,
-				},
-			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: 1, startBeat, numOfBeatsToShow });
+	it("handles an empty set of events WITH initial lighting", () => {
+		//  R  [________]
+		const startBeat = 8;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [];
 
-			expect(actualResult).toEqual(expectedResult);
-		});
+		const expectedResult: IBackgroundBox[] = [
+			{
+				time: 8,
+				duration: 8,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+		];
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: colorScheme.envColorLeft, brightness: 1 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
-		it("handles a basic on-off case", () => {
-			//  0  [R___0___]
-			const events: wrapper.IWrapBasicEvent[] = [
-				createBasicEvent({
-					type: 2,
-					time: 8,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
-					floatValue: 1,
-				}),
-				createBasicEvent({
-					type: 2,
-					time: 12,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, {}),
-				}),
-			];
-			const initialTrackLightingColorType = null;
-			const startBeat = 8;
-			const numOfBeatsToShow = 8;
+		expect(actualResult).toEqual(expectedResult);
+	});
 
-			const expectedResult: IBackgroundBox[] = [
-				{
-					time: 8,
-					duration: 4,
-					startColor: App.EventColor.PRIMARY,
-					endColor: App.EventColor.PRIMARY,
-					startBrightness: 1,
-					endBrightness: 1,
-				},
-			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
+	it("handles a basic on-off case", () => {
+		//  0  [R___0___]
+		const startBeat = 8;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 8,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
+			createBasicEvent({
+				type: 2,
+				time: 12,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, { tracks }),
+			}),
+		];
 
-			expect(actualResult).toEqual(expectedResult);
-		});
+		const expectedResult: IBackgroundBox[] = [
+			{
+				time: 8,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+		];
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
-		it("handles turning on when already on", () => {
-			//  R  [____R___]
-			const events: wrapper.IWrapBasicEvent[] = [
-				createBasicEvent({
-					type: 2,
-					time: 12,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
-					floatValue: 1,
-				}),
-			];
-			const initialTrackLightingColorType = App.EventColor.PRIMARY;
-			const startBeat = 8;
-			const numOfBeatsToShow = 8;
+		expect(actualResult).toEqual(expectedResult);
+	});
 
-			const expectedResult: IBackgroundBox[] = [
-				{
-					time: 8,
-					duration: 4,
-					startColor: App.EventColor.PRIMARY,
-					endColor: App.EventColor.PRIMARY,
-					startBrightness: 1,
-					endBrightness: 1,
-				},
-				{
-					time: 12,
-					duration: 4,
-					startColor: App.EventColor.PRIMARY,
-					endColor: App.EventColor.PRIMARY,
-					startBrightness: 1,
-					endBrightness: 1,
-				},
-			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: 1, startBeat, numOfBeatsToShow });
+	it("handles turning on when already on", () => {
+		//  R  [____R___]
+		const startBeat = 8;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 12,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
+		];
 
-			expect(actualResult).toEqual(expectedResult);
-		});
+		const expectedResult: IBackgroundBox[] = [
+			{
+				time: 8,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+			{
+				time: 12,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+		];
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: colorScheme.envColorLeft, brightness: 1 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
-		it("handles color changes", () => {
-			//  0  [R___B_0_]
-			const events: wrapper.IWrapBasicEvent[] = [
-				createBasicEvent({
-					type: 2,
-					time: 8,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, {}),
-					floatValue: 1,
-				}),
-				createBasicEvent({
-					type: 2,
-					time: 12,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.SECONDARY }, {}),
-					floatValue: 1,
-				}),
-				createBasicEvent({
-					type: 2,
-					time: 14,
-					value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, {}),
-				}),
-			];
-			const initialTrackLightingColorType = null;
-			const startBeat = 8;
-			const numOfBeatsToShow = 8;
+		expect(actualResult).toEqual(expectedResult);
+	});
 
-			const expectedResult: IBackgroundBox[] = [
-				{
-					time: 8,
-					duration: 4,
-					startColor: App.EventColor.PRIMARY,
-					endColor: App.EventColor.PRIMARY,
-					startBrightness: 1,
-					endBrightness: 1,
-				},
-				{
-					time: 12,
-					duration: 2,
-					startColor: App.EventColor.SECONDARY,
-					endColor: App.EventColor.SECONDARY,
-					startBrightness: 1,
-					endBrightness: 1,
-				},
-			];
-			const actualResult = createBackgroundBoxes(events, LIGHTING_TRACK_ID, { initialColor: initialTrackLightingColorType, initialBrightness: null, startBeat, numOfBeatsToShow });
+	it("handles color changes", () => {
+		//  0  [R___B_0_]
+		const startBeat = 8;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 8,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
+			createBasicEvent({
+				type: 2,
+				time: 12,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.SECONDARY }, { tracks }),
+				floatValue: 1,
+			}),
+			createBasicEvent({
+				type: 2,
+				time: 14,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, { tracks }),
+			}),
+		];
 
-			expect(actualResult).toEqual(expectedResult);
-		});
+		const expectedResult: IBackgroundBox[] = [
+			{
+				time: 8,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+			{
+				time: 12,
+				duration: 2,
+				startState: { color: colorScheme.envColorRight, brightness: 1 },
+				endState: { color: colorScheme.envColorRight, brightness: 1 },
+			},
+		];
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+
+		expect(actualResult).toEqual(expectedResult);
 	});
 });
