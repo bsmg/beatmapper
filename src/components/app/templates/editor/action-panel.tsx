@@ -6,17 +6,16 @@ import { useOnKeydown } from "$/components/hooks/use-on-keydown";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { Match, Switch } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
-import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectPlacementMode } from "$/store/selectors";
-import { ObjectPlacementMode } from "$/types";
+import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectModuleEnabled } from "$/store/selectors";
 import { DefaultActionPanelGroup, GridActionPanelGroup, GridPresetsActionPanelGroup, NoteDirectionActionPanelGroup, NoteToolActionPanelGroup, ObstaclesActionPanelGroup, SelectionActionPanelGroup } from "./action-panel-groups";
 
 function EditorActionPanel() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
-	const mappingMode = useAppSelector((state) => selectPlacementMode(state, sid));
 	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);
 	const selectedMines = useAppSelector(selectAllSelectedBombNotes);
 	const selectedObstacles = useAppSelector(selectAllSelectedObstacles);
+	const isMappingExtensionsEnabled = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
 	const isAnythingSelected = useMemo(() => selectedBlocks.length > 0 || selectedObstacles.length > 0 || selectedMines.length > 0, [selectedBlocks, selectedObstacles, selectedMines]);
 
@@ -30,10 +29,10 @@ function EditorActionPanel() {
 	}, [selectedBlocks.length + selectedMines.length + selectedObstacles.length]);
 
 	useOnKeydown("KeyG", () => {
-		if (mappingMode === ObjectPlacementMode.EXTENSIONS) {
+		if (isMappingExtensionsEnabled) {
 			setShowGridConfig((currentVal) => !currentVal);
 		}
-	}, [mappingMode]);
+	}, [isMappingExtensionsEnabled]);
 
 	return (
 		<ActionPanel.Root>

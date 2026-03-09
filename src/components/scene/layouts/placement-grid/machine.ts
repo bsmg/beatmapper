@@ -110,8 +110,7 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 						mouseDownAt,
 						{ x: event.pageX, y: event.pageY },
 						{
-							mappingMode: prop("mode"),
-							precisionPlacement: isMetaKeyPressed(event),
+							usePrecisionPlacement: isMetaKeyPressed(event),
 						},
 					);
 
