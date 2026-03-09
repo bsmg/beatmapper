@@ -20,7 +20,7 @@ function AppControlsSettings() {
 	return (
 		<Stack gap={4}>
 			<Wrap gap={2}>
-				<Field label="Obstacle Placement Mode" helperText="Determines the behavior of how obstacles are placed along the grid.">
+				<Field label="Obstacle Placement Mode" helperText="Determines the behavior of how obstacles are placed along the grid. [Learn more](/docs/manual/notes#obstacle-placement-modes)">
 					<RadioGroup collection={OBSTACLE_PLACEMENT_MODE_COLLECTION} value={obstaclePlacementMode} onValueChange={(x) => dispatch(updateObstaclePlacementMode({ value: x.value as ObstaclePlacementMode }))} />
 				</Field>
 			</Wrap>
