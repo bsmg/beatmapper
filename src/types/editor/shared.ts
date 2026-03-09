@@ -24,18 +24,24 @@ export const ObjectTool = {
 } as const;
 export type ObjectTool = Member<typeof ObjectTool>;
 
-export const ObjectPlacementMode = {
-	NORMAL: "original",
-	EXTENSIONS: "mapping-extensions",
-} as const;
-export type ObjectPlacementMode = Member<typeof ObjectPlacementMode>;
-
 export const ObjectSelectionMode = {
 	SELECT: "select",
 	DESELECT: "deselect",
 	DELETE: "delete",
 } as const;
 export type ObjectSelectionMode = Member<typeof ObjectSelectionMode>;
+
+export const NotePlacementMode = {
+	NORMAL: "normal",
+	EXTENSIONS: "mapping-extensions",
+} as const;
+export type NotePlacementMode = Member<typeof NotePlacementMode>;
+
+export const ObstaclePlacementMode = {
+	NORMAL: "normal",
+	EXTENSIONS: "mapping-extensions",
+} as const;
+export type ObstaclePlacementMode = Member<typeof ObstaclePlacementMode>;
 
 export const EventTool = {
 	ON: "on",

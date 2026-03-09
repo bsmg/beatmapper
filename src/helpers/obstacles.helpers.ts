@@ -2,7 +2,7 @@ import { createObstacle } from "bsmap";
 import type { wrapper } from "bsmap/types";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
-import { type IGrid, ObjectPlacementMode } from "$/types";
+import { type IGrid, ObstaclePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
 
@@ -22,7 +22,7 @@ export function isFastObstacle<T extends Pick<wrapper.IWrapObstacle, "duration">
 	return duration < 0;
 }
 
-export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObjectPlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
+export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
 	if (!cellDownAt || !cellOverAt) return null;
 
 	// 1. Determine the raw bounding box from the mouse event
@@ -45,7 +45,7 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacem
 	});
 
 	switch (mode) {
-		case ObjectPlacementMode.NORMAL: {
+		case ObstaclePlacementMode.NORMAL: {
 			if (isDodgeObstacle(obstacle)) {
 				const offset = (numCols - 4) / 2;
 
@@ -69,7 +69,7 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacem
 			return obstacle;
 		}
 
-		case ObjectPlacementMode.EXTENSIONS: {
+		case ObstaclePlacementMode.EXTENSIONS: {
 			const isExtended = true;
 
 			obstacle.posX = serializeCoordinate(colIndex, isExtended);

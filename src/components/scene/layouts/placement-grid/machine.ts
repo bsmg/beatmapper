@@ -1,7 +1,7 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { createMachine, type MachineSchema, type Service } from "@zag-js/core";
 
-import type { IGrid, IGridCell, ObjectPlacementMode } from "$/types";
+import type { IGrid, IGridCell, NotePlacementMode, ObstaclePlacementMode } from "$/types";
 import type { ThreeProps } from "$/types/vendor";
 import { isMetaKeyPressed } from "$/utils";
 import { BLOCK_CELL_SIZE } from "../../constants";
@@ -15,7 +15,8 @@ export interface IPlacementContext {
 
 export interface PlacementGridSchema extends MachineSchema {
 	props: {
-		mode: ObjectPlacementMode;
+		notePlacementMode: NotePlacementMode;
+		obstaclePlacementMode: ObstaclePlacementMode;
 		grid: IGrid;
 		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "direction">) => void;
 		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "cellDownAt">) => void;
@@ -48,14 +49,16 @@ export const machine = createMachine<PlacementGridSchema>({
 });
 
 export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
-	const mode = prop("mode");
+	const notePlacementMode = prop("notePlacementMode");
+	const obstaclePlacementMode = prop("obstaclePlacementMode");
 	const grid = prop("grid");
 	const mouseDownAt = refs.get("mouseDownAt");
 
 	const scaleIndex = (value: number) => value * BLOCK_CELL_SIZE;
 
 	return {
-		mode,
+		notePlacementMode,
+		obstaclePlacementMode,
 		grid,
 		mouseDownAt,
 		cellDownAt: context.get("cellDownAt"),
@@ -110,6 +113,7 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 						mouseDownAt,
 						{ x: event.pageX, y: event.pageY },
 						{
+							mode: notePlacementMode,
 							usePrecisionPlacement: isMetaKeyPressed(event),
 						},
 					);

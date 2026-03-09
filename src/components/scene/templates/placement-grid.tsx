@@ -13,7 +13,7 @@ import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/h
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addObstacle, addToCell } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectPlacementMode } from "$/store/selectors";
+import { selectBeatDepth, selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {
@@ -21,7 +21,8 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
-	const mode = useAppSelector((state) => selectPlacementMode(state, sid));
+	const notePlacementMode = useAppSelector((state) => selectNotePlacementMode(state, sid));
+	const obstaclePlacementMode = useAppSelector((state) => selectObstaclePlacementMode(state, sid));
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectNotesEditorTool);
@@ -30,7 +31,8 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 	const beatDepth = useAppSelector(selectBeatDepth);
 
 	const service = useMachine(PlacementGrid.machine, {
-		mode,
+		notePlacementMode,
+		obstaclePlacementMode,
 		grid,
 		onCellPointerDown,
 		onCellWheel,
@@ -40,17 +42,17 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
-					const note = createColorNoteFromMouseEvent(ctx, mode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) });
+					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) });
 					if (note) return dispatch(addToCell({ songId: sid, tool: selectedTool, posX: note.posX, posY: note.posY, direction: note.direction }));
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
-					const note = createBombNoteFromMouseEvent(ctx, mode, grid);
+					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid);
 					if (note) return dispatch(addToCell({ songId: sid, tool: selectedTool, posX: note.posX, posY: note.posY }));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
-					const obstacle = createObstacleFromMouseEvent(ctx, mode, grid, { duration: defaultObstacleDuration });
+					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, { duration: defaultObstacleDuration });
 					if (obstacle) return dispatch(addObstacle({ songId: sid, obstacle }));
 					break;
 				}
@@ -63,17 +65,17 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 			<PlacementGrid.Layout>{(cell) => <PlacementGrid.Cell key={`${cell.colIndex}-${cell.rowIndex}`} data={cell} layers={!selectionMode ? 1 : 2} />}</PlacementGrid.Layout>
 			<Switch>
 				<Match when={!selectionMode && (selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE)}>
-					<PlacementGrid.TentativeObject createObject={(ctx, mode, grid) => createColorNoteFromMouseEvent(ctx, mode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) })}>
+					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createColorNoteFromMouseEvent(ctx, mode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) })}>
 						{(data) => <ColorNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && selectedTool === ObjectTool.BOMB_NOTE}>
-					<PlacementGrid.TentativeObject createObject={(ctx, mode, grid) => createBombNoteFromMouseEvent(ctx, mode, grid)}>
+					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createBombNoteFromMouseEvent(ctx, mode, grid)}>
 						{(data) => <BombNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && selectedTool === ObjectTool.OBSTACLE}>
-					<PlacementGrid.TentativeObject createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid, { duration: defaultObstacleDuration })}>
+					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid, { duration: defaultObstacleDuration })}>
 						{(data) => <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>

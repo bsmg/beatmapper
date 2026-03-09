@@ -2,7 +2,7 @@ import { createBombNote, createColorNote } from "bsmap";
 import type { wrapper } from "bsmap/types";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
-import { type IGrid, ObjectPlacementMode } from "$/types";
+import { type IGrid, NotePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
 
@@ -20,10 +20,10 @@ export function resolveNoteId<T extends Pick<wrapper.IWrapBaseNote, "time" | "po
 }
 
 function createNotePlacementFactory<T extends wrapper.IWrapBaseNote>(createNote: (data: Partial<T>) => T) {
-	return ({ cellDownAt }: IPlacementContext, mode: ObjectPlacementMode, grid: IGrid, data: Partial<T> = {}) => {
+	return ({ cellDownAt }: IPlacementContext, mode: NotePlacementMode, grid: IGrid, data: Partial<T> = {}) => {
 		if (!cellDownAt) return null;
 
-		const isExtended = mode === ObjectPlacementMode.EXTENSIONS;
+		const isExtended = mode === NotePlacementMode.EXTENSIONS;
 
 		const { colIndex, rowIndex } = convertGridCell(cellDownAt, grid);
 

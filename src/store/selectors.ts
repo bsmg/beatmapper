@@ -60,7 +60,8 @@ export const {
 	selectModuleEnabled,
 	selectCustomColors,
 	selectGridSize,
-	selectPlacementMode,
+	selectNotePlacementMode,
+	selectObstaclePlacementMode,
 } = songs.getSelectors((state: Pick<RootState, "songs">) => {
 	return state.songs;
 });

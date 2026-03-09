@@ -1,15 +1,16 @@
 import { type ReactNode, useMemo } from "react";
 
-import type { IGrid, ObjectPlacementMode } from "$/types";
+import type { IGrid, NotePlacementMode, ObstaclePlacementMode } from "$/types";
 import { usePlacementGridContext } from "./context";
 import type { IPlacementContext } from "./machine";
 
-interface Props<T> {
-	createObject: (ctx: IPlacementContext, mode: ObjectPlacementMode, grid: IGrid) => T | null;
+interface Props<T, TMode extends NotePlacementMode | ObstaclePlacementMode> {
+	mode: TMode;
+	createObject: (ctx: IPlacementContext, mode: TMode, grid: IGrid) => T | null;
 	children: (data: NonNullable<T>) => ReactNode;
 }
-function TentativeObject<T>({ createObject, children }: Props<T>) {
-	const { mode, grid, mouseDownAt, cellDownAt, cellOverAt, direction } = usePlacementGridContext();
+function TentativeObject<T, TMode extends NotePlacementMode | ObstaclePlacementMode>({ mode, createObject, children }: Props<T, TMode>) {
+	const { grid, mouseDownAt, cellDownAt, cellOverAt, direction } = usePlacementGridContext();
 
 	const data = useMemo(() => {
 		if (mouseDownAt?.button !== 0) return null;
