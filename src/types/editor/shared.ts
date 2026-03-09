@@ -38,7 +38,8 @@ export const NotePlacementMode = {
 export type NotePlacementMode = Member<typeof NotePlacementMode>;
 
 export const ObstaclePlacementMode = {
-	NORMAL: "normal",
+	LEGACY: "legacy",
+	MODERN: "modern",
 	EXTENSIONS: "mapping-extensions",
 } as const;
 export type ObstaclePlacementMode = Member<typeof ObstaclePlacementMode>;

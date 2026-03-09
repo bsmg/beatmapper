@@ -7,7 +7,7 @@ import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, getGri
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import { type App, type BeatmapId, type ColorSchemeKey, type IColorScheme, type IGrid, NotePlacementMode, ObstaclePlacementMode, type SongId } from "$/types";
+import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
@@ -102,14 +102,6 @@ const slice = createSlice({
 		}),
 		selectGridSize: createSelector(selectById, (song) => {
 			return getGridSize(song);
-		}),
-		selectNotePlacementMode: createSelector(selectById, (song) => {
-			if (song.modSettings.mappingExtensions?.isEnabled) return NotePlacementMode.EXTENSIONS;
-			return NotePlacementMode.NORMAL;
-		}),
-		selectObstaclePlacementMode: createSelector(selectById, (song) => {
-			if (song.modSettings.mappingExtensions?.isEnabled) return ObstaclePlacementMode.EXTENSIONS;
-			return ObstaclePlacementMode.NORMAL;
 		}),
 	},
 	reducers: (api) => {

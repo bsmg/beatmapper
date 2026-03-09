@@ -22,6 +22,32 @@ export function isFastObstacle<T extends Pick<wrapper.IWrapObstacle, "duration">
 	return duration < 0;
 }
 
+function clampObstacle<T extends Pick<wrapper.IWrapObstacle, "posX" | "posY" | "width" | "height">>(obstacle: T, rawWidth: number, { cellDownAt, cellOverAt }: Required<Pick<{ [key in keyof IPlacementContext]: NonNullable<IPlacementContext[key]> }, "cellDownAt" | "cellOverAt">>, { numCols }: Pick<IGrid, "numCols">) {
+	const offset = (numCols - 4) / 2;
+	const half = Math.round(numCols / 2);
+
+	if (isDodgeObstacle(obstacle)) {
+		const downAt = cellDownAt.colIndex - offset;
+		const overAt = cellOverAt.colIndex - offset;
+
+		if (!((downAt < 2 && overAt > 1) || (downAt > 1 && overAt < 2))) {
+			return obstacle;
+		}
+
+		obstacle.width = rawWidth - half;
+
+		if (cellOverAt.colIndex >= half) {
+			obstacle.posX = half - offset;
+			obstacle.width += cellDownAt.colIndex;
+		} else {
+			obstacle.posX = cellOverAt.colIndex - offset;
+			obstacle.width += numCols - 1 - cellDownAt.colIndex;
+		}
+	}
+
+	return obstacle;
+}
+
 export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
 	if (!cellDownAt || !cellOverAt) return null;
 
@@ -36,39 +62,19 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacem
 	const rawWidth = maxColIndex - minColIndex + 1;
 	const rawHeight = maxRowIndex - minRowIndex + 1;
 
-	const obstacle = createObstacle({
-		posX: colIndex,
-		width: rawWidth,
-		posY: cellOverAt.rowIndex === 2 ? 2 : 0,
-		height: cellOverAt.rowIndex === 2 ? 3 : 5,
-		...data,
-	});
+	const obstacle = createObstacle({ posX: colIndex, width: rawWidth, ...data });
 
 	switch (mode) {
-		case ObstaclePlacementMode.NORMAL: {
-			if (isDodgeObstacle(obstacle)) {
-				const offset = (numCols - 4) / 2;
-
-				const downAt = cellDownAt.colIndex - offset;
-				const overAt = cellOverAt.colIndex - offset;
-
-				if (!((downAt < 2 && overAt > 1) || (downAt > 1 && overAt < 2))) return obstacle;
-
-				const half = Math.round(numCols / 2);
-				obstacle.width = rawWidth - half;
-
-				if (cellOverAt.colIndex >= half) {
-					obstacle.posX = half - offset;
-					obstacle.width += cellDownAt.colIndex;
-				} else {
-					obstacle.posX = cellOverAt.colIndex - offset;
-					obstacle.width += numCols - 1 - cellDownAt.colIndex;
-				}
-			}
-
-			return obstacle;
+		case ObstaclePlacementMode.LEGACY: {
+			obstacle.posY = cellOverAt.rowIndex === 2 ? 2 : 0;
+			obstacle.height = cellOverAt.rowIndex === 2 ? 3 : 5;
+			return clampObstacle(obstacle, rawWidth, { cellDownAt, cellOverAt }, { numCols });
 		}
-
+		case ObstaclePlacementMode.MODERN: {
+			obstacle.posY = 2 * minRowIndex;
+			obstacle.height = 2 * rawHeight - 1;
+			return clampObstacle(obstacle, rawWidth, { cellDownAt, cellOverAt }, { numCols });
+		}
 		case ObstaclePlacementMode.EXTENSIONS: {
 			const isExtended = true;
 
