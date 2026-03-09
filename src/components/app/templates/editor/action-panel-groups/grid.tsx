@@ -16,7 +16,7 @@ function GridActionPanelGroup({ finishTweakingGrid }: Props) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
-	const { numRows, numCols, colWidth, rowHeight } = useAppSelector((state) => selectGridSize(state, sid));
+	const { numRows, numCols, colWidth, rowHeight, colOffset, rowOffset } = useAppSelector((state) => selectGridSize(state, sid));
 
 	const { trigger: triggerSaveGridPreset } = usePrompt({
 		title: "Save Grid Preset",
@@ -44,6 +44,12 @@ function GridActionPanelGroup({ finishTweakingGrid }: Props) {
 				</Field>
 				<Field label="Cell Height">
 					<FieldInput type="number" min={0.1} step={0.1} value={rowHeight} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { rowHeight: details.valueAsNumber } }))} />
+				</Field>
+				<Field label="X Offset">
+					<FieldInput type="number" step={0.25} value={colOffset} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { colOffset: details.valueAsNumber } }))} />
+				</Field>
+				<Field label="Y Offset">
+					<FieldInput type="number" step={0.25} value={rowOffset} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { rowOffset: details.valueAsNumber } }))} />
 				</Field>
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>

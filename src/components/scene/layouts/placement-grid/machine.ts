@@ -68,8 +68,8 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 		getCellProps: ({ colIndex, rowIndex }: IGridCell): ThreeProps<"group"> => {
 			const currentCell = { colIndex, rowIndex };
 
-			const x = scaleIndex((grid.numCols * -0.5 + 0.5 + colIndex) * grid.colWidth);
-			const y = scaleIndex(rowIndex * grid.rowHeight - 1);
+			const x = scaleIndex((grid.numCols * -0.5 + 0.5 + colIndex + grid.colOffset) * grid.colWidth);
+			const y = scaleIndex(rowIndex * grid.rowHeight - 1 + grid.rowOffset);
 
 			return {
 				"position-x": x,

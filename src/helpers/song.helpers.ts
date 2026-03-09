@@ -91,16 +91,19 @@ export function getColorScheme<T extends Pick<App.ISong, "environment" | "colorS
 		envColorWhiteBoost: resolveColor("envColorWhiteBoost"),
 	};
 }
-export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T): IGrid {
+
+export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, grid: IGrid = DEFAULT_GRID): IGrid {
 	const mappingExtensions = song.modSettings.mappingExtensions;
-	// In legacy states, `mappingExtensions` was a boolean, and it was possible to not have the key at all.
-	const isLegacy = typeof mappingExtensions === "boolean" || !mappingExtensions;
-	const isDisabled = mappingExtensions?.isEnabled === false;
-	if (isLegacy || isDisabled) return DEFAULT_GRID;
-	return deepAssign<IGrid>(DEFAULT_GRID, {
+
+	if (!mappingExtensions?.isEnabled) {
+		return grid;
+	}
+	return deepAssign<IGrid>(grid, {
 		numRows: mappingExtensions.numRows,
 		numCols: mappingExtensions.numCols,
 		colWidth: mappingExtensions.colWidth,
 		rowHeight: mappingExtensions.rowHeight,
+		colOffset: mappingExtensions.colOffset,
+		rowOffset: mappingExtensions.rowOffset,
 	});
 }

@@ -42,6 +42,8 @@ export interface IGrid {
 	numRows: number;
 	colWidth: number;
 	rowHeight: number;
+	colOffset: number;
+	rowOffset: number;
 }
 
 export type IGridPresets = Record<string, IGrid>;

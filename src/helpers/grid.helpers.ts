@@ -7,15 +7,15 @@ import type { IGrid, IGridCell } from "$/types";
 // For example, in an 8x3 grid (2 extra columns on each side), the top-left corner would have a position of [0,2] in our custom grid,
 // but that translates to a position of [-2,2] in our natural game grid.
 
-function transformIndex(index: number, scale: number, pivot: number, shift: number = 0) {
-	return (index - shift - pivot) * scale + pivot;
+function transformIndex(index: number, scale: number, pivot: number, shift: number = 0, offset = 0) {
+	return (index - shift - pivot) * scale + pivot + offset;
 }
 
-export function convertGridColumn(colIndex: number, { numCols, colWidth }: Pick<IGrid, "numCols" | "colWidth">) {
-	return transformIndex(colIndex, colWidth, (DEFAULT_NUM_COLS - 1) / 2, (numCols - DEFAULT_NUM_COLS) / 2);
+export function convertGridColumn(colIndex: number, { numCols, colWidth, colOffset }: Pick<IGrid, "numCols" | "colWidth" | "colOffset">) {
+	return transformIndex(colIndex, colWidth, (DEFAULT_NUM_COLS - 1) / 2, (numCols - DEFAULT_NUM_COLS) / 2, colOffset);
 }
-export function convertGridRow(rowIndex: number, { rowHeight }: Pick<IGrid, "numRows" | "rowHeight">) {
-	return transformIndex(rowIndex, rowHeight, 0, 0);
+export function convertGridRow(rowIndex: number, { rowHeight, rowOffset }: Pick<IGrid, "numRows" | "rowHeight" | "rowOffset">) {
+	return transformIndex(rowIndex, rowHeight, 0, 0, rowOffset);
 }
 
 export function convertGridCell({ colIndex, rowIndex }: IGridCell, grid: IGrid = DEFAULT_GRID) {
