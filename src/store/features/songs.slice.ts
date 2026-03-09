@@ -3,7 +3,7 @@ import { distinct } from "@std/collections/distinct";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
-import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, getGridSize, resolveSongId } from "$/helpers/song.helpers";
+import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
@@ -99,9 +99,6 @@ const slice = createSlice({
 		}),
 		selectEventTracksForEnvironment: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return deriveEventTracksForEnvironment(getEnvironment(song, beatmapId));
-		}),
-		selectGridSize: createSelector(selectById, (song) => {
-			return getGridSize(song);
 		}),
 	},
 	reducers: (api) => {

@@ -9,7 +9,7 @@ import { ObstaclePlacementMode } from "$/types";
 import { Stack, Wrap } from "$:styled-system/jsx";
 
 const OBSTACLE_PLACEMENT_MODE_COLLECTION = createListCollection({
-	items: [ObstaclePlacementMode.LEGACY, ObstaclePlacementMode.MODERN],
+	items: [ObstaclePlacementMode.LEGACY, ObstaclePlacementMode.MODERN, ObstaclePlacementMode.VISUAL],
 	itemToString: toPascalCase,
 });
 

@@ -3,10 +3,12 @@ import { calculateNps, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
+import { DEFAULT_GRID } from "$/constants";
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
-import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObstaclePlacementMode, type SongId, View } from "$/types";
+import { getGridSize } from "$/helpers/song.helpers";
+import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
@@ -59,7 +61,6 @@ export const {
 	selectDemo,
 	selectModuleEnabled,
 	selectCustomColors,
-	selectGridSize,
 } = songs.getSelectors((state: Pick<RootState, "songs">) => {
 	return state.songs;
 });
@@ -136,6 +137,19 @@ export const {
 	selectGridPresetById,
 } = beatmap.getSelectors((state: RootState) => {
 	return state.editor.notes;
+});
+
+export const selectGridSize = createSelector(selectSongById, selectNotesEditorTool, selectObstaclePlacementMode, (song, tool, obstaclePlacementMode) => {
+	switch (tool) {
+		case ObjectTool.OBSTACLE: {
+			const visualGridSize = { ...DEFAULT_GRID, numCols: 8, numRows: 5, rowOffset: -0.5 };
+			if (obstaclePlacementMode === ObstaclePlacementMode.VISUAL) return getGridSize(song, visualGridSize);
+			return getGridSize(song);
+		}
+		default: {
+			return getGridSize(song);
+		}
+	}
 });
 
 export const {

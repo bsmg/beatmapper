@@ -48,7 +48,7 @@ function clampObstacle<T extends Pick<wrapper.IWrapObstacle, "posX" | "posY" | "
 	return obstacle;
 }
 
-export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
+export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
 	if (!cellDownAt || !cellOverAt) return null;
 
 	// 1. Determine the raw bounding box from the mouse event
@@ -57,7 +57,7 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacem
 	const minRowIndex = Math.min(cellDownAt.rowIndex, cellOverAt.rowIndex);
 	const maxRowIndex = Math.max(cellDownAt.rowIndex, cellOverAt.rowIndex);
 
-	const { colIndex, rowIndex } = convertGridCell({ colIndex: minColIndex, rowIndex: minRowIndex }, { numCols, numRows, colWidth, rowHeight });
+	const { colIndex, rowIndex } = convertGridCell({ colIndex: minColIndex, rowIndex: minRowIndex }, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset });
 
 	const rawWidth = maxColIndex - minColIndex + 1;
 	const rawHeight = maxRowIndex - minRowIndex + 1;
@@ -73,6 +73,11 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacem
 		case ObstaclePlacementMode.MODERN: {
 			obstacle.posY = 2 * minRowIndex;
 			obstacle.height = 2 * rawHeight - 1;
+			return clampObstacle(obstacle, rawWidth, { cellDownAt, cellOverAt }, { numCols });
+		}
+		case ObstaclePlacementMode.VISUAL: {
+			obstacle.posY = minRowIndex;
+			obstacle.height = rawHeight;
 			return clampObstacle(obstacle, rawWidth, { cellDownAt, cellOverAt }, { numCols });
 		}
 		case ObstaclePlacementMode.EXTENSIONS: {
