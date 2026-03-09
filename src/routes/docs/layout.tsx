@@ -6,12 +6,12 @@ import { stack } from "$:styled-system/patterns";
 
 export const Route = createFileRoute("/_/docs/_")({
 	component: RouteComponent,
-	onEnter: () => {
-		document.documentElement.classList.remove("light", "dark");
+	onEnter: ({ context }) => {
+		document.documentElement.classList.remove(context.theme);
 		document.documentElement.classList.add(localStorage.getItem("dark") === "true" ? "dark" : "light");
 	},
 	onLeave: ({ context }) => {
-		document.documentElement.classList.remove("light", "dark");
+		document.documentElement.classList.remove(localStorage.getItem("dark") === "true" ? "dark" : "light");
 		document.documentElement.classList.add(context.theme);
 	},
 });

@@ -10,14 +10,13 @@ export const Route = createRootRoute({
 	component: RootComponent,
 	beforeLoad: () => {
 		const now = Date.now();
-		const theme = isToday(setYear("04/01", getYear(now))) ? "light" : "dark";
-
-		document.documentElement.classList.add(theme);
-
-		return { now, theme };
+		return { now, theme: isToday(setYear("04/01", getYear(now))) ? "light" : "dark" };
 	},
 	head: () => {
 		return { meta: [{ title: "Beatmapper" }] };
+	},
+	onEnter: ({ context }) => {
+		document.documentElement.classList.add(context.theme);
 	},
 });
 
