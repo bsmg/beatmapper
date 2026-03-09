@@ -27,7 +27,7 @@ const processSelection: CaseReducer<typeof initialState, PayloadAction<typeof in
 			notes: data.notes?.sort(sortObjectFn),
 			bombs: data.bombs?.sort(sortObjectFn),
 			obstacles: data.obstacles?.sort(sortObjectFn),
-			events: data.events?.sort(sortObjectFn),
+			basicEvents: data.basicEvents?.sort(sortObjectFn),
 		},
 	};
 };
@@ -43,10 +43,10 @@ const slice = createSlice({
 			if (state.data.obstacles) return state.data.obstacles.length > 0;
 		},
 		selectHasEvents: (state) => {
-			if (state.data.events) return state.data.events.length > 0;
+			if (state.data.basicEvents) return state.data.basicEvents.length > 0;
 		},
 		selectEarliestBeat: (state) => {
-			return [...(state.data.notes ?? []), ...(state.data.bombs ?? []), ...(state.data.obstacles ?? []), ...(state.data.events ?? [])].sort(sortObjectFn)[0].time;
+			return [...(state.data.notes ?? []), ...(state.data.bombs ?? []), ...(state.data.obstacles ?? []), ...(state.data.basicEvents ?? [])].sort(sortObjectFn)[0].time;
 		},
 	},
 	reducers: (api) => {

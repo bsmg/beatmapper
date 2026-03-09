@@ -256,8 +256,8 @@ export const toggleSelectAllEntities = createAsyncThunk("toggleSelectAllEntities
 		const obstacles = selectAllObstacles(state);
 		anythingSelected = [...notes, ...bombs, ...obstacles].some((x) => !!x.selected);
 	} else if (args.view === View.LIGHTSHOW) {
-		const events = selectAllBasicEvents(state);
-		anythingSelected = [...events].some((x) => x.selected);
+		const basicEvents = selectAllBasicEvents(state);
+		anythingSelected = [...basicEvents].some((x) => x.selected);
 	}
 
 	if (anythingSelected) {

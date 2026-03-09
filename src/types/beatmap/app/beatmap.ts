@@ -20,6 +20,6 @@ export interface IBeatmapEntities {
 	notes: IColorNote[];
 	bombs: IBombNote[];
 	obstacles: IObstacle[];
-	events: IBasicEvent[];
+	basicEvents: IBasicEvent[];
 	bookmarks: IBookmark[];
 }

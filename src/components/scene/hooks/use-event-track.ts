@@ -23,10 +23,10 @@ export function useBasicEventTrack({ trackId }: UseBasicEventTrackOptions) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const events = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));
+	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));
 
 	return useMemo((): [lastEvent: wrapper.IWrapBasicEvent | null, nextEvent: wrapper.IWrapBasicEvent | null] => {
 		if (!sid || currentBeat === null) return [null, null] as const;
-		return findLastEventInTrack(events, currentBeat);
-	}, [sid, events, currentBeat]);
+		return findLastEventInTrack(basicEvents, currentBeat);
+	}, [sid, basicEvents, currentBeat]);
 }

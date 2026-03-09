@@ -2,7 +2,7 @@ import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@redux
 import { createBasicEvent, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 
-import { deserializeBasicEventValue, isBasicLightEvent, resolveEventId, serializeBasicEventValue } from "$/helpers/events.helpers";
+import { deserializeBasicEventValue, isBasicLightEvent, resolveEventId, resolveTrackIdForEvent, serializeBasicEventValue } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { addSong, bulkRemoveEvent, cutSelection, deselectAllEntities, deselectEvent, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, nudgeSelection, pasteSelection, removeAllSelectedEvents, removeEvent, selectAllEntities, selectAllEntitiesInRange, selectEvent, startLoadingMap } from "$/store/actions";
 import { createEditorObjectReducers, createEditorObjectSelectors, createEventReducerFactory, createEventSelectors } from "$/store/helpers";
@@ -55,8 +55,8 @@ const slice = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder.addCase(loadBeatmapEntities, (state, action) => {
-			const { events } = action.payload;
-			return adapter.setAll(state, events ?? []);
+			const { basicEvents } = action.payload;
+			return adapter.setAll(state, basicEvents ?? []);
 		});
 		builder.addCase(removeAllSelectedEvents, (state) => {
 			return removeAllSelected(state);
@@ -69,11 +69,11 @@ const slice = createSlice({
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
 			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.LIGHTSHOW) return state;
-			if (!data.events) return state;
+			if (!data.basicEvents) return state;
 			updateAll(state, () => ({ selected: false }));
 			return adapter.upsertMany(
 				state,
-				data.events.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
+				data.basicEvents.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 			);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -108,7 +108,7 @@ const slice = createSlice({
 				return isInWindow && isInVisibleTracks;
 			});
 			for (const event of allVisible) {
-				const eventTrackIndex = allTracks.findIndex((id) => Number.parseInt(id, 10) === event.type);
+				const eventTrackIndex = allTracks.findIndex((id) => Number.parseInt(id, 10) === resolveTrackIdForEvent(event));
 				const isInSelectionBox = eventTrackIndex >= selectionBoxInBeats.startTrackIndex && eventTrackIndex <= selectionBoxInBeats.endTrackIndex;
 				adapter.updateOne(state, { id: adapter.selectId(event), changes: { selected: isInSelectionBox || (selectionBoxInBeats.withPrevious && event.selected) } });
 			}

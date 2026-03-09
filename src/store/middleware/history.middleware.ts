@@ -21,8 +21,8 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, Dispatch>, songI
 	api.dispatch(jumpToBeat({ songId, beatNum: earliestBeat, pauseTrack: true, animateJump: true }));
 }
 
-function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "events"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
-	const relevantEvents = difference(args.events.before, args.events.after, resolveEventId);
+function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "basicEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+	const relevantEvents = difference(args.basicEvents.before, args.basicEvents.after, resolveEventId);
 
 	const relevantEntities = [...relevantEvents].sort(sortObjectFn);
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
@@ -68,7 +68,7 @@ export default function createHistoryMiddleware() {
 			const state = api.getState();
 			const { songId } = action.payload;
 			jumpToEarliestEvent(api, songId, {
-				events: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
+				basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
 			});
 		},
 	});
@@ -78,7 +78,7 @@ export default function createHistoryMiddleware() {
 			const state = api.getState();
 			const { songId } = action.payload;
 			jumpToEarliestEvent(api, songId, {
-				events: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
+				basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
 			});
 		},
 	});
