@@ -4,7 +4,6 @@ import type { ColorArray, EnvironmentAllName, IColor, Vector3, Vector4, v2 } fro
 
 import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "$/types";
 import { token } from "$:styled-system/tokens";
-import { patchEnvironmentName } from "./packaging.helpers";
 
 export const DEFAULT_COLOR_SCHEME: Required<v2.IColorScheme> = {
 	_colorLeft: { r: 0.7529412, g: 0.1882353, b: 0.1882353 },
@@ -139,7 +138,7 @@ export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName
 	let envScheme = DEFAULT_COLOR_SCHEME;
 
 	if (environment in EnvironmentSchemeName) {
-		envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+		envScheme = ColorScheme[EnvironmentSchemeName[environment]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
 	}
 
 	return {

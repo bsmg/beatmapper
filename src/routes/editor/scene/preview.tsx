@@ -6,7 +6,7 @@ import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import DefaultEnvironment from "$/components/scene/templates/environment";
 import MapVisualization from "$/components/scene/templates/visualization";
 import { getAppStore } from "$/setup";
-import { selectBeatmapById, selectSongById } from "$/store/selectors";
+import { selectBpm, selectJumpOffset, selectJumpSpeed } from "$/store/selectors";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 	component: RouteComponent,
@@ -14,26 +14,24 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 		const store = await getAppStore();
 		const state = store.getState();
 
-		const song = selectSongById(state, params.sid);
-		const beatmap = selectBeatmapById(state, params.sid, params.bid);
+		const bpm = selectBpm(state, params.sid);
+		const jumpSpeed = selectJumpSpeed(state, params.sid, params.bid);
+		const jumpOffset = selectJumpOffset(state, params.sid, params.bid);
 
-		const njs = NoteJumpSpeed.create(song.bpm, beatmap.noteJumpSpeed, beatmap.startBeatOffset);
+		const njs = NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset);
 
-		const jumpSpeed = beatmap.noteJumpSpeed;
-		const jumpOffset = beatmap.noteJumpSpeed * njs.calcHjd();
-
-		return { jumpSpeed, jumpOffset };
+		return { beatDepth: jumpSpeed, surfaceDepth: njs.calcDistance(njs.hjd) };
 	},
 });
 
 function RouteComponent() {
-	const { jumpSpeed, jumpOffset } = Route.useLoaderData();
+	const { beatDepth, surfaceDepth } = Route.useLoaderData();
 
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<MapVisualization beatDepth={jumpSpeed} surfaceDepth={jumpOffset} interactive={false} />
-				<DefaultEnvironment surfaceDepth={jumpOffset} />
+				<MapVisualization beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={false} />
+				<DefaultEnvironment surfaceDepth={surfaceDepth} />
 			</ReduxForwardingCanvas>
 		</Fragment>
 	);

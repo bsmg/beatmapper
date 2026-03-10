@@ -1,28 +1,15 @@
-import { createListCollection } from "@ark-ui/react/collection";
+import { useListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import type { MenuSelectionDetails } from "@ark-ui/react/menu";
-import { Fragment, useCallback, useMemo } from "react";
+import { Fragment, useCallback } from "react";
 
 import { useSetupContext } from "$/components/context";
 import { AlertDialogProvider, Button, Menu } from "$/components/ui/compositions";
-import { isSongReadonly } from "$/helpers/song.helpers";
 import { downloadMapFiles, removeSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectSongById } from "$/store/selectors";
-import type { App, SongId } from "$/types";
+import { selectBeatmapIds, selectDemo } from "$/store/selectors";
+import type { SongId } from "$/types";
 import { Text } from "$:styled-system/jsx";
-
-interface SongActionListCollection {
-	song: App.ISong;
-}
-function createSongActionListCollection({ song }: SongActionListCollection) {
-	return createListCollection({
-		items: ["copy", "delete", "download"].map((value, index) => {
-			return { value, label: ["Copy", "Delete", "Download"][index] };
-		}),
-		isItemDisabled: (item) => import.meta.env.PROD && isSongReadonly(song) && !["delete"].includes(item.value),
-	});
-}
 
 interface Props {
 	sid: SongId;
@@ -30,11 +17,16 @@ interface Props {
 function SongsDataTableActions({ sid }: Props) {
 	const { toaster } = useSetupContext();
 
-	const song = useAppSelector((state) => selectSongById(state, sid));
+	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
 	const dispatch = useAppDispatch();
 
-	const ACTION_LIST_COLLECTION = useMemo(() => createSongActionListCollection({ song }), [song]);
+	const { collection: ACTION_LIST_COLLECTION } = useListCollection({
+		initialItems: ["copy", "delete", "download"].map((value, index) => {
+			return { value, label: ["Copy", "Delete", "Download"][index] };
+		}),
+		isItemDisabled: (item) => import.meta.env.PROD && isDemo && !["delete"].includes(item.value),
+	});
 
 	const deleteAlert = useDialog({ role: "alertdialog" });
 

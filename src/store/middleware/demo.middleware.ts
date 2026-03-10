@@ -1,7 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { getSelectedBeatmap } from "$/helpers/song.helpers";
 import { getRouter } from "$/router";
 import { getAppToaster } from "$/setup";
 import { addSongFromFile, loadDemoMap } from "$/store/actions";
@@ -21,7 +20,7 @@ export default function createDemoMiddleware() {
 			try {
 				const blob = await fetch(demoFileUrl).then((response) => response.blob());
 				const { songId: sid, songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();
-				const bid = getSelectedBeatmap(songData);
+				const bid = songData.selectedDifficulty ?? Object.keys(songData.difficultiesById)[0];
 				router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: bid.toString() } });
 			} catch (e) {
 				if (!(e instanceof Error)) return;

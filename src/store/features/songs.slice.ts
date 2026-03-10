@@ -3,8 +3,10 @@ import { NoteJumpSpeed } from "bsmap";
 import { type CharacteristicName, type DifficultyName, EnvironmentName } from "bsmap/types";
 
 import { DEFAULT_GRID } from "$/constants";
+import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
-import { getAllBeatmaps, getBeatmapById, getBeatmapIds, getBeatmaps, getColorScheme, getCustomColorsModule, getGridSize, getSelectedBeatmap, getSongLastOpenedAt, getSongMetadata, isModuleEnabled, isSongReadonly, resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
+import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
+import { getColorScheme, getEnvironment, getGridSize, resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
 import { processImportedMap } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
@@ -13,7 +15,7 @@ import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
-	sortComparer: (a, b) => getSongLastOpenedAt(b) - getSongLastOpenedAt(a),
+	sortComparer: (a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0),
 });
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
 
@@ -38,51 +40,68 @@ const slice = createSlice({
 		selectIds: selectIds,
 		selectById: selectById,
 		selectSongMetadata: createSelector(selectById, (song) => {
-			return getSongMetadata(song);
+			return { title: song.name, subtitle: song.subName, artist: song.artistName };
+		}),
+		selectBpm: createSelector(selectById, (song) => {
+			return song.bpm;
+		}),
+		selectEditorOffset: createSelector(selectById, (song) => {
+			return song.offset;
+		}),
+		selectEditorOffsetInBeats: createSelector(selectById, (song) => {
+			return convertMillisecondsToBeats(song.offset, song.bpm);
 		}),
 		selectBeatmaps: createSelector(selectById, (song) => {
-			return getBeatmaps(song);
+			return song.difficultiesById;
 		}),
 		selectAllBeatmaps: createSelector(selectById, (song) => {
-			return getAllBeatmaps(song);
+			return Object.values(song.difficultiesById);
 		}),
 		selectBeatmapIds: createSelector(selectById, (song) => {
-			return getBeatmapIds(song);
+			return Object.keys(song.difficultiesById);
 		}),
 		selectBeatmapById: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
-			return getBeatmapById(song, beatmapId);
+			return song.difficultiesById[beatmapId];
+		}),
+		selectJumpSpeed: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].noteJumpSpeed;
+		}),
+		selectJumpOffset: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].startBeatOffset;
 		}),
 		selectLightshowIdForBeatmap: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
-			const beatmap = getBeatmapById(song, beatmapId);
-			return beatmap.lightshowId;
+			return song.difficultiesById[beatmapId].lightshowId;
 		}),
 		selectBeatmapIdsWithLightshowId: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, lightshowId: BeatmapId) => lightshowId], (song, lightshowId) => {
-			const beatmaps = Object.entries(getBeatmaps(song)).filter(([_, x]) => x.lightshowId === lightshowId);
+			const beatmaps = Object.entries(song.difficultiesById).filter(([_, x]) => x.lightshowId === lightshowId);
 			return beatmaps.map(([id]) => id);
 		}),
 		selectColorSchemeIds: createSelector(selectById, (song) => {
 			return Object.keys(song.colorSchemesById);
 		}),
+		selectSelectedBeatmap: createSelector(selectById, (song) => {
+			return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
+		}),
+		selectDemo: createSelector(selectById, (song) => {
+			return !!song.demo;
+		}),
+		selectModuleEnabled: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: keyof App.IModSettings) => key], (song, key) => {
+			return !!song.modSettings[key]?.isEnabled;
+		}),
+		selectCustomColors: createSelector(selectById, (song) => {
+			return song.modSettings.customColors;
+		}),
 		selectColorScheme: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return getColorScheme(song, beatmapId);
 		}),
-		selectSelectedBeatmap: createSelector(selectById, (song) => {
-			return getSelectedBeatmap(song);
-		}),
-		selectDemo: createSelector(selectById, (song) => {
-			return isSongReadonly(song);
-		}),
-		selectModuleEnabled: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: keyof App.IModSettings) => key], (song, key) => {
-			return isModuleEnabled(song, key);
-		}),
-		selectCustomColors: createSelector(selectById, (song) => {
-			return getCustomColorsModule(song);
+		selectEventTracksForEnvironment: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return deriveEventTracksForEnvironment(getEnvironment(song, beatmapId));
 		}),
 		selectGridSize: createSelector(selectById, (song) => {
 			return getGridSize(song);
 		}),
 		selectPlacementMode: createSelector(selectById, (song) => {
-			return isModuleEnabled(song, "mappingExtensions") ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
+			return song.modSettings.mappingExtensions?.isEnabled ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
 		}),
 	},
 	reducers: (api) => {
@@ -178,7 +197,7 @@ const slice = createSlice({
 					id: songId,
 					changes: deepAssign(song, {
 						difficultiesById: {
-							[targetBeatmapId]: { ...getBeatmapById(song, sourceBeatmapId), ...changes },
+							[targetBeatmapId]: { ...song.difficultiesById[sourceBeatmapId], ...changes },
 						},
 					}),
 				});
@@ -198,7 +217,7 @@ const slice = createSlice({
 			removeBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId }>((state, action) => {
 				const { songId, beatmapId } = action.payload;
 				const song = selectById(state, songId);
-				const difficultiesById = Object.entries(getBeatmaps(song)).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
+				const difficultiesById = Object.entries(song.difficultiesById).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
 					if (bid === beatmapId) return acc;
 					acc[bid] = beatmap;
 					return acc;

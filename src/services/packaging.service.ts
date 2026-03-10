@@ -7,8 +7,8 @@ import { saveAs } from "file-saver";
 
 import { convertMillisecondsToBeats, deriveAudioDataFromFile } from "$/helpers/audio.helpers";
 import { serializeCustomBookmark } from "$/helpers/bookmarks.helpers";
-import { deserializeInfoContents } from "$/helpers/packaging.helpers";
-import { createSongId, getSelectedBeatmap, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "$/helpers/song.helpers";
+import { deserializeInfoContents, resolveBeatmapIdFromFilename } from "$/helpers/packaging.helpers";
+import { createSongId } from "$/helpers/song.helpers";
 import { getAppBeatmapFilestore } from "$/setup";
 import type { App, IEntityMap, SongId } from "$/types";
 import { deepAssign, yieldValue } from "$/utils";
@@ -215,7 +215,7 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 	// we don't need to load the beatmaps into redux; we'll just write each of them to the filestore so that they can be loaded like any other song from the list.
 	for (const beatmap of info.difficulties) {
 		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
-		const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
+		const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
 
 		const [{ version, difficulty, lightshow }, { lightshow: derivedLightshow }] = await Promise.all([
 			await yieldValue(getFileFromArchive(archive, beatmap.filename), async ({ data }) => {
@@ -253,7 +253,6 @@ export async function processImportedMap(zipFile: Uint8Array, options: { current
 	return {
 		...song,
 		id: songId,
-		selectedDifficulty: getSelectedBeatmap(song),
 		createdAt: Date.now(),
 	};
 }

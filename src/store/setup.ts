@@ -10,10 +10,9 @@ import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
 
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
-import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
 import { setupAppBeatmapFilestore, setupAppToaster } from "$/setup";
-import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool } from "$/types";
+import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool } from "$/types";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
 import { default as root } from "./features";
 import { createAllSharedMiddleware, createStorageMiddleware, type StorageObserver } from "./middleware";
@@ -82,6 +81,13 @@ export type SessionStorageObservers = {
 	"events.mirror": StorageObserver<RootState, boolean>;
 };
 
+/** @deprecated this is really only used during migration flow, don't use this elsewhere */
+function resolveDifficultyFromBeatmapId(bid: BeatmapId) {
+	for (const difficulty of ["ExpertPlus", "Expert", "Hard", "Normal", "Easy"].reverse()) {
+		if (difficulty === bid.toString()) return difficulty.substring(0, difficulty.length);
+	}
+	throw new Error(`Could not resolve difficulty from id: ${bid}`);
+}
 const appStoreDriver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 4,

@@ -1,12 +1,11 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { calculateNps, sortObjectFn } from "bsmap";
-import type { EnvironmentAllName, wrapper } from "bsmap/types";
+import type { wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
-import { deriveEventTracksForEnvironment, isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
-import { getEditorOffset } from "$/helpers/song.helpers";
+import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { type App, type BeatmapId, type ILightState, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
@@ -36,13 +35,19 @@ export const {
 	selectAll: selectAllSongs,
 	selectById: selectSongById,
 	selectSongMetadata,
+	selectBpm,
+	selectEditorOffset,
+	selectEditorOffsetInBeats,
 	selectBeatmaps,
 	selectBeatmapIds,
 	selectAllBeatmaps,
 	selectBeatmapById,
+	selectJumpSpeed,
+	selectJumpOffset,
 	selectLightshowIdForBeatmap,
 	selectBeatmapIdsWithLightshowId,
 	selectColorScheme,
+	selectEventTracksForEnvironment,
 	selectColorSchemeIds,
 	selectSelectedBeatmap,
 	selectDemo,
@@ -54,12 +59,6 @@ export const {
 	return state.songs;
 });
 
-export const selectBpm = createSelector(selectSongById, (s) => s.bpm);
-export const selectEditorOffset = createSelector(selectSongById, getEditorOffset);
-export const selectEditorOffsetInBeats = createSelector(selectBpm, selectEditorOffset, (bpm, offset) => {
-	return convertMillisecondsToBeats(offset, bpm);
-});
-
 export const selectBeatForTime = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options], (bpm, offset, time, { withOffset }) => {
 	return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
 });
@@ -68,11 +67,6 @@ export const selectNearestBeatForTime = createSelector([selectBpm, selectEditorO
 });
 export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options], (bpm, offset, beat, { withOffset }) => {
 	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
-});
-
-export const selectEventTracksForEnvironment = createSelector([selectBeatmapById], (beatmap) => {
-	const environment = beatmap.environmentName;
-	return deriveEventTracksForEnvironment(environment as EnvironmentAllName);
 });
 
 export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {

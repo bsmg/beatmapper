@@ -7,63 +7,27 @@ import { deepAssign, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark } from "./bookmarks.helpers";
 import { deriveColorSchemeFromEnvironment, deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
 import { createDataFactory } from "./factory.helpers";
-import { getBeatmaps, getCustomColorsModule, getExtensionsModule, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
 
-function deriveEditorDataFromInfo(data: Omit<App.ISong, "id">): App.IEditorData["editorSettings"] {
-	return {
-		modSettings: ensureObject({
-			mappingExtensions: isModuleEnabled(data, "mappingExtensions") ? getExtensionsModule(data) : undefined,
-		}),
-	};
-}
-
-export function patchEnvironmentName(environment: string): EnvironmentAllName {
-	if (environment === "Origins") {
-		return "OriginsEnvironment" as EnvironmentAllName;
+export function resolveBeatmapIdFromFilename(filename: string): string {
+	let fn = filename;
+	for (const ext of [".json", ".dat", ".beatmap", ".lightshow"]) {
+		fn = fn.replace(ext, "");
 	}
-	return environment as EnvironmentAllName;
+	return fn;
 }
-
-export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): Partial<App.IModSettings> {
-	const activeCustomColors = Object.values(ColorSchemeKey).reduce(
-		(acc, key) => {
-			const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
-			acc[key as ColorSchemeKey] = color ? deserializeColorToHex(color).slice(0, 7) : undefined;
-			return acc;
-		},
-		{} as { [key in ColorSchemeKey]?: string },
-	);
-
-	const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
-		return hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor");
-	});
-
-	const customColors = ensureObject({
-		isEnabled: isCustomColorsEnabled,
-		colorLeft: activeCustomColors.colorLeft ?? undefined,
-		colorRight: activeCustomColors.colorRight ?? undefined,
-		envColorLeft: activeCustomColors.envColorLeft ?? undefined,
-		envColorRight: activeCustomColors.envColorRight ?? undefined,
-		envColorWhite: activeCustomColors.envColorWhite ?? undefined,
-		envColorLeftBoost: activeCustomColors.envColorLeftBoost ?? undefined,
-		envColorRightBoost: activeCustomColors.envColorRightBoost ?? undefined,
-		envColorWhiteBoost: activeCustomColors.envColorWhiteBoost ?? undefined,
-		obstacleColor: activeCustomColors.obstacleColor ?? undefined,
-	});
-
-	const baseModSettings = {
-		customColors: isCustomColorsEnabled ? customColors : undefined,
-	};
-
-	return deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings });
+export function patchEnvironmentName<T extends EnvironmentAllName>(environment: string): T {
+	if (environment === "Origins") {
+		return "OriginsEnvironment" as T;
+	}
+	return environment as T;
 }
 
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createDataFactory({
 	container: {
 		serialize: function serializeInfoContents(data: Omit<App.ISong, "id">, options: { songDuration?: number | null }) {
-			const beatmaps = getBeatmaps(data);
+			const beatmaps = data.difficultiesById;
 
-			const envColorScheme = deriveColorSchemeFromEnvironment(patchEnvironmentName(data.environment));
+			const envColorScheme = deriveColorSchemeFromEnvironment(data.environment);
 
 			const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): wrapper.IWrapInfoColorScheme => {
 				return {
@@ -84,7 +48,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 
 			const allEnvironments = distinct(Object.values(beatmaps).map((x) => x.environmentName));
 
-			const customColors = isModuleEnabled(data, "customColors") ? getCustomColorsModule(data) : undefined;
+			const customColors = data.modSettings.customColors?.isEnabled ? data.modSettings.customColors : undefined;
 
 			return createInfo({
 				song: {
@@ -141,7 +105,11 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						_lastEditedBy: "Beatmapper",
 						Beatmapper: {
 							version: version,
-							editorSettings: deriveEditorDataFromInfo(data),
+							editorSettings: {
+								modSettings: ensureObject({
+									mappingExtensions: data.modSettings.mappingExtensions?.isEnabled ? data.modSettings.mappingExtensions : undefined,
+								}),
+							},
 						},
 					},
 				},
@@ -165,14 +133,14 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 
 			const beatmapsById = data.difficulties.reduce((acc: IEntityMap<App.IBeatmap>, beatmap) => {
 				const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
-				const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
+				const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
 				acc[beatmapId] = {
 					lightshowId: lightshowId,
 					characteristic: beatmap.characteristic,
 					difficulty: beatmap.difficulty,
 					noteJumpSpeed: beatmap.njs,
 					startBeatOffset: beatmap.njsOffset,
-					environmentName: data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal,
+					environmentName: patchEnvironmentName(data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal ?? "DefaultEnvironment"),
 					colorSchemeName: beatmap.colorSchemeId >= 0 ? data.colorSchemes.map((x) => x.name)[beatmap.colorSchemeId] : null,
 					mappers: beatmap.authors.mappers.filter((x) => x.length > 0),
 					lighters: beatmap.authors.lighters.filter((x) => x.length > 0),
@@ -180,6 +148,36 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				};
 				return acc;
 			}, {});
+
+			const activeCustomColors = Object.values(ColorSchemeKey).reduce(
+				(acc, key) => {
+					const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
+					acc[key as ColorSchemeKey] = color ? deserializeColorToHex(color).slice(0, 7) : undefined;
+					return acc;
+				},
+				{} as { [key in ColorSchemeKey]?: string },
+			);
+
+			const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
+				return hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor");
+			});
+
+			const customColors = ensureObject({
+				isEnabled: isCustomColorsEnabled,
+				colorLeft: activeCustomColors.colorLeft ?? undefined,
+				colorRight: activeCustomColors.colorRight ?? undefined,
+				envColorLeft: activeCustomColors.envColorLeft ?? undefined,
+				envColorRight: activeCustomColors.envColorRight ?? undefined,
+				envColorWhite: activeCustomColors.envColorWhite ?? undefined,
+				envColorLeftBoost: activeCustomColors.envColorLeftBoost ?? undefined,
+				envColorRightBoost: activeCustomColors.envColorRightBoost ?? undefined,
+				envColorWhiteBoost: activeCustomColors.envColorWhiteBoost ?? undefined,
+				obstacleColor: activeCustomColors.obstacleColor ?? undefined,
+			});
+
+			const baseModSettings = {
+				customColors: isCustomColorsEnabled ? customColors : undefined,
+			};
 
 			return {
 				name: data.song.title,
@@ -189,13 +187,13 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				offset: data.difficulties[0].customData._editorOffset ?? 0,
 				previewStartTime: data.audio.previewStartTime,
 				previewDuration: data.audio.previewDuration,
-				environment: data.environmentBase.normal ?? "DefaultEnvironment",
+				environment: patchEnvironmentName(data.environmentBase.normal ?? "DefaultEnvironment"),
 				songFilename: data.audio.filename,
 				coverArtFilename: data.coverImageFilename,
 				difficultiesById: beatmapsById,
 				colorSchemesById: colorSchemesById,
 				demo: options.readonly,
-				modSettings: deriveModSettingsFromInfo(data),
+				modSettings: deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings }),
 			};
 		},
 	},
