@@ -16,6 +16,7 @@ import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
 import bookmarks from "./features/entities/editor/bookmarks.slice";
 import basicEvents from "./features/entities/lightshow/basic.slice";
+import boostEvents from "./features/entities/lightshow/boost.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
@@ -295,6 +296,38 @@ export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector(
 	{ memoizeOptions: { resultEqualityCheck: shallowEqual } },
 );
 
+export const {
+	selectAll: selectAllBoostEvents,
+	selectAllSelected: selectAllSelectedBoostEvents,
+	selectToggleAtBeat,
+} = boostEvents.getSelectors((state: Pick<RootState, "entities">) => {
+	return state.entities.lightshow.present.boostEvents;
+});
+export const { selectAll: selectPastBoostEvents } = boostEvents.getSelectors(
+	selectHistory(
+		(state: Pick<RootState, "entities">) => state.entities.lightshow.past,
+		(state) => state?.boostEvents ?? boostEvents.getInitialState(),
+	),
+);
+export const { selectAll: selectFutureBoostEvents } = boostEvents.getSelectors(
+	selectHistory(
+		(state: Pick<RootState, "entities">) => state.entities.lightshow.future,
+		(state) => state?.boostEvents ?? boostEvents.getInitialState(),
+	),
+);
+export const selectAllBoostEventsInWindow = createDraftSafeSelector(
+	[selectEventEditorStartAndEndBeat, selectAllBoostEvents],
+	({ startBeat, endBeat }, boostEvents) => {
+		const beforeIdx = boostEvents.findIndex((e) => e.time >= startBeat);
+		const afterIdx = boostEvents.findIndex((e) => e.time >= endBeat);
+
+		const inWindow = beforeIdx === -1 ? [] : boostEvents.slice(beforeIdx, afterIdx === -1 ? boostEvents.length : afterIdx);
+
+		return inWindow.concat(beforeIdx > 0 ? [boostEvents[beforeIdx - 1]] : [], afterIdx !== -1 ? [boostEvents[afterIdx]] : []).sort(sortObjectFn);
+	},
+	{ memoizeOptions: { resultEqualityCheck: shallowEqual } },
+);
+
 export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events): ILightState => {
 	const basicEventsInWindow = events.filter((event) => event.time <= startBeat);
 	const lastBasicEvent = basicEventsInWindow[basicEventsInWindow.length - 1];
@@ -308,13 +341,14 @@ export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEv
 	};
 });
 
-export const selectSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basicEvents) => {
+export const selectSelectedEvents = createSelector(selectAllSelectedBasicEvents, selectAllSelectedBoostEvents, (basicEvents, boostEvents) => {
 	return {
 		basicEvents: basicEvents.length > 0 ? basicEvents : undefined,
+		boostEvents: boostEvents.length > 0 ? boostEvents : undefined,
 	};
 });
-export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, (basicEvents) => {
-	return [...basicEvents].sort(sortObjectFn);
+export const selectAllSelectedEvents = createSelector(selectAllSelectedBasicEvents, selectAllSelectedBoostEvents, (basicEvents, boostEvents) => {
+	return [...basicEvents, ...boostEvents].sort(sortObjectFn);
 });
 export const selectAnySelectedEvents = createSelector(selectAllSelectedEvents, (events) => {
 	return events.length > 0;
@@ -326,6 +360,7 @@ export const selectSelectedBeatmapEntities = createSelector([selectSelectedObjec
 		bombs: view === View.BEATMAP ? objects.bombs : undefined,
 		obstacles: view === View.BEATMAP ? objects.obstacles : undefined,
 		basicEvents: view === View.LIGHTSHOW ? events.basicEvents : undefined,
+		boostEvents: view === View.LIGHTSHOW ? events.boostEvents : undefined,
 	};
 });
 export const selectAllSelectedBeatmapEntities = createSelector([selectAllSelectedObjects, selectAllSelectedEvents], (objects, events) => {
@@ -336,8 +371,8 @@ export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: 
 	return state.entities.editor.bookmarks;
 });
 
-export const selectBeatmapEntities = createSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBookmarks], (notes, bombs, obstacles, basicEvents, bookmarks): App.IBeatmapEntities => {
-	return { notes, bombs, obstacles, basicEvents, bookmarks };
+export const selectBeatmapEntities = createSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
+	return { notes, bombs, obstacles, basicEvents, boostEvents, bookmarks };
 });
 
 export const {

@@ -38,12 +38,17 @@ export function isBasicEvent(data: unknown): data is wrapper.IWrapBasicEvent {
 	if (typeof data !== "object" || !data) return false;
 	return "type" in data;
 }
+export function isBoostEvent(data: unknown): data is wrapper.IWrapColorBoostEvent {
+	if (typeof data !== "object" || !data) return false;
+	return "toggle" in data;
+}
 export function resolveTrackIdForEvent(data: unknown) {
 	if (isBasicEvent(data)) return data.type;
+	if (isBoostEvent(data)) return 5;
 	throw new Error("Invalid event data.", { cause: data });
 }
 
-export function resolveEventId<T extends Pick<wrapper.IWrapBasicEvent, "time" | "type">>(x: T) {
+export function resolveEventId<T extends Pick<wrapper.IWrapBasicEvent, "time" | "type"> | Pick<wrapper.IWrapColorBoostEvent, "time" | "toggle">>(x: T) {
 	return `${resolveTrackIdForEvent(x)}/${x.time}`;
 }
 
