@@ -2,8 +2,8 @@ import { useParams } from "@tanstack/react-router";
 import type { wrapper } from "bsmap/types";
 import { useCallback, useMemo, useState } from "react";
 
+import { resolveColorForLightState } from "$/components/app/templates/events/track.helpers";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
-import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveBasicEventColor, resolveBasicEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventTracksForEnvironment, selectPlaying } from "$/store/selectors";
@@ -12,8 +12,9 @@ import { App, type ILightState } from "$/types";
 interface UseLightEffectOptions {
 	lastEvent: wrapper.IWrapBasicEvent | null;
 	nextEvent: wrapper.IWrapBasicEvent | null;
+	lastBoostEvent: wrapper.IWrapColorBoostEvent | null;
 }
-export function useLightEffect({ lastEvent, nextEvent }: UseLightEffectOptions) {
+export function useLightEffect({ lastEvent, nextEvent, lastBoostEvent }: UseLightEffectOptions) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
@@ -61,11 +62,11 @@ export function useLightEffect({ lastEvent, nextEvent }: UseLightEffectOptions) 
 			const brightness = deriveBrightnessForEvent(event);
 
 			return {
-				color: color ? resolveColorForItem(color, { colorScheme }) : "black",
+				color: color ? (resolveColorForLightState({ color, isBoosted: !!lastBoostEvent?.toggle }, { colorScheme }) ?? "black") : "black",
 				brightness: brightness,
 			};
 		},
-		[deriveColorForEvent, deriveBrightnessForEvent, colorScheme],
+		[deriveColorForEvent, deriveBrightnessForEvent, lastBoostEvent, colorScheme],
 	);
 
 	return useMemo(() => {

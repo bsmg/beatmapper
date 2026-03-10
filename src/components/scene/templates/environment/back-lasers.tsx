@@ -1,5 +1,5 @@
 import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
-import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useBasicEventTrack, useBoostEventTrack } from "$/components/scene/hooks/use-event-track";
 import { Environment } from "$/components/scene/layouts";
 import { range } from "$/utils";
 
@@ -10,8 +10,9 @@ const DISTANCE_BETWEEN_BEAMS = 25;
 
 function BackLasers() {
 	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 0 });
+	const [lastBoostEvent] = useBoostEventTrack();
 
-	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent, lastBoostEvent });
 
 	return sides.map((side) => {
 		return Array.from(range(0, NUM_OF_BEAMS_PER_SIDE)).map((index) => {
