@@ -93,7 +93,7 @@ export function createEventSelectors<T extends Pick<App.IBasicEvent, "time">, Id
 		}),
 		createEventSelector: <Value>(selector: (data: T) => Value | undefined, fallback: Value) => {
 			return createDraftSafeSelector(selectAllForTrackBeforeBeat, (state) => {
-				return selector(state[0]) ?? fallback;
+				return state[0] ? (selector(state[0]) ?? fallback) : fallback;
 			});
 		},
 	};

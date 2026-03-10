@@ -10,16 +10,28 @@ import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBasicLightEvent, isBasicValueEvent, resolveBasicEventColor, resolveBasicEventEffect, resolveEventId, serializeBasicEventValue } from "$/helpers/events.helpers";
 import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, deselectEvent, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBasicEventsForTrackInWindow, selectColorScheme, selectCurrentLightStateForTrack, selectEditorOffsetInBeats, selectEventEditorStartAndEndBeat, selectEventsEditorColor, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventTracksForEnvironment } from "$/store/selectors";
+import {
+	selectAllBasicEventsForTrackInWindow,
+	selectAllBoostEventsInWindow,
+	selectColorScheme,
+	selectCurrentLightStateForTrack,
+	selectEditorOffsetInBeats,
+	selectEventEditorStartAndEndBeat,
+	selectEventsEditorColor,
+	selectEventsEditorMirrorLock,
+	selectEventsEditorTool,
+	selectEventTracksForEnvironment,
+	selectToggleAtBeat,
+} from "$/store/selectors";
 import { App, type IEventTracks, TrackType } from "$/types";
 import { clamp, isColorDark, normalize } from "$/utils";
-import { createBackgroundBoxes } from "./track.helpers";
+import { createBackgroundBoxes, resolveColorForLightState } from "./track.helpers";
 
-function resolveBackgroundForEvent(data: wrapper.IWrapBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { tracks: IEventTracks }) {
-	const eventColor = resolveBasicEventColor(data);
+function resolveBackgroundForEvent(data: wrapper.IWrapBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { isBoosted: boolean; tracks: IEventTracks }) {
 	const eventEffect = resolveBasicEventEffect(data, options.tracks);
 
-	const color = resolveColorForItem(isBasicLightEvent(data, options.tracks) ? (eventColor ?? eventEffect) : eventEffect, options);
+	const key = resolveColorForLightState({ color: resolveBasicEventColor(data), isBoosted: options.isBoosted }, options);
+	const color = isBasicLightEvent(data, options.tracks) ? (key ?? resolveColorForItem(eventEffect, options)) : resolveColorForItem(eventEffect, options);
 
 	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
 	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
@@ -53,6 +65,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
+	const boostEvents = useAppSelector((state) => selectAllBoostEventsInWindow(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
@@ -61,8 +74,8 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
 	const backgroundBoxes = useMemo(() => {
-		return createBackgroundBoxes(trackId, { tracks, colorScheme, offsetInBeats, basicEvents, initialLightState, startBeat, endBeat });
-	}, [initialLightState, trackId, tracks, colorScheme, offsetInBeats, basicEvents, startBeat, endBeat]);
+		return createBackgroundBoxes(trackId, { tracks, colorScheme, offsetInBeats, basicEvents, boostEvents, initialLightState, startBeat, endBeat });
+	}, [initialLightState, trackId, tracks, colorScheme, offsetInBeats, basicEvents, boostEvents, startBeat, endBeat]);
 
 	const resolveEventData = useCallback(
 		(time: number, norm: number) => {
@@ -118,12 +131,18 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 		};
 	}, [dispatch, resolveEventData, trackId, tracks, areLasersLocked]);
 
+	const isEventBoosted = useAppSelector((state) => {
+		return (data: wrapper.IWrapBasicEvent) => {
+			return selectToggleAtBeat(state, { trackId: 5, beforeBeat: data.time + 0.001 });
+		};
+	});
+
 	const resolveEventStyle = useCallback(
 		(data: wrapper.IWrapBasicEvent) => {
-			const { style, value } = resolveBackgroundForEvent(data, { tracks, colorScheme });
+			const { style, value } = resolveBackgroundForEvent(data, { tracks, colorScheme, isBoosted: isEventBoosted(data) });
 			return { "--event-color": style, background: style, color: isColorDark(value) ? "white" : "black" };
 		},
-		[tracks, colorScheme],
+		[tracks, colorScheme, isEventBoosted],
 	);
 
 	return (

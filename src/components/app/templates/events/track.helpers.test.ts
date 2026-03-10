@@ -45,7 +45,7 @@ describe(createBackgroundBoxes.name, () => {
 		];
 
 		const expectedResult: IBackgroundBox[] = [];
-		const actualResult = createBackgroundBoxes(12, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+		const actualResult = createBackgroundBoxes(12, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
 	});
@@ -57,7 +57,7 @@ describe(createBackgroundBoxes.name, () => {
 		const basicEvents: wrapper.IWrapBasicEvent[] = [];
 
 		const expectedResult: IBackgroundBox[] = [];
-		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
 	});
@@ -76,7 +76,7 @@ describe(createBackgroundBoxes.name, () => {
 				endState: { color: colorScheme.envColorLeft, brightness: 1 },
 			},
 		];
-		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: colorScheme.envColorLeft, brightness: 1 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: colorScheme.envColorLeft, brightness: 1 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
 	});
@@ -107,7 +107,7 @@ describe(createBackgroundBoxes.name, () => {
 				endState: { color: colorScheme.envColorLeft, brightness: 1 },
 			},
 		];
-		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
 	});
@@ -139,7 +139,7 @@ describe(createBackgroundBoxes.name, () => {
 				endState: { color: colorScheme.envColorLeft, brightness: 1 },
 			},
 		];
-		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: colorScheme.envColorLeft, brightness: 1 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: colorScheme.envColorLeft, brightness: 1 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
 	});
@@ -182,7 +182,7 @@ describe(createBackgroundBoxes.name, () => {
 				endState: { color: colorScheme.envColorRight, brightness: 1 },
 			},
 		];
-		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
 	});
