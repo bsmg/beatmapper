@@ -1,10 +1,11 @@
 import { createListenerMiddleware, type Dispatch, type ListenerEffectAPI } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
+import { ActionCreators } from "redux-undo";
 
 import { resolveEventId } from "$/helpers/events.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { jumpToBeat, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
+import { jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
 import { selectAllBasicEvents, selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectFutureBasicEvents, selectFutureBombNotes, selectFutureColorNotes, selectFutureObstacles, selectPastBasicEvents, selectPastBombNotes, selectPastColorNotes, selectPastObstacles } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types/beatmap";
@@ -38,6 +39,12 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId
 export default function createHistoryMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
 
+	instance.startListening({
+		actionCreator: leaveEditor,
+		effect: (_, api) => {
+			api.dispatch(ActionCreators.clearHistory());
+		},
+	});
 	instance.startListening({
 		actionCreator: undoObjects,
 		effect: (action, api) => {

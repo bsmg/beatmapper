@@ -1,4 +1,6 @@
-import { type JsonWaveformData, default as WaveformData } from "waveform-data";
+import { createAudioData } from "bsmap";
+import type { wrapper } from "bsmap/types";
+import { default as WaveformData } from "waveform-data";
 
 import { roundToNearest } from "$/utils";
 import { convertFileToArrayBuffer } from "./file.helpers";
@@ -36,12 +38,18 @@ export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audio
 	);
 }
 
-export function deriveDurationFromWaveformData<T extends Pick<JsonWaveformData, "length" | "samples_per_pixel" | "sample_rate">>(waveform: T) {
-	return (waveform.length * waveform.samples_per_pixel) / waveform.sample_rate;
-}
-export function deriveSampleCountFromWaveformData<T extends Pick<JsonWaveformData, "length" | "samples_per_pixel" | "sample_rate">>(waveform: T) {
-	const duration = deriveDurationFromWaveformData(waveform);
-	return waveform.sample_rate * duration;
+export async function createAudioDataContentsFromFile(songFile: File, audioContext: AudioContext, bpm: number): Promise<wrapper.IWrapAudioData> {
+	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
+
+	// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
+	const region: wrapper.IWrapAudioDataBPM = {
+		startSampleIndex: 0,
+		endSampleIndex: sampleCount,
+		startBeat: 0,
+		endBeat: convertMillisecondsToBeats(duration * 1000, bpm),
+	};
+
+	return createAudioData({ frequency, sampleCount, bpmData: [region] });
 }
 
 export function snapToNearestBeat(cursorPosition: number, bpm: number, offset: number) {

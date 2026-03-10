@@ -59,7 +59,7 @@ export const startLoadingMap = createAction("startLoadingMap", (args: { songId: 
 	return { payload: { ...args } };
 });
 
-export const finishLoadingMap = createAction("finishLoadingMap", (args: { songId: SongId; songData: App.ISong; duration: number; waveformData: JsonWaveformData }) => {
+export const finishLoadingMap = createAction("finishLoadingMap", (args: { songId: SongId; songData: App.ISong }) => {
 	return { payload: { ...args, songData: { ...args.songData, lastOpenedAt: Date.now() } } };
 });
 

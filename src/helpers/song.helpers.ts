@@ -1,7 +1,9 @@
 import { toPascalCase } from "@std/text/to-pascal-case";
+import { NoteJumpSpeed } from "bsmap";
+import { EnvironmentName } from "bsmap/types";
 
 import { DEFAULT_GRID } from "$/constants";
-import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid } from "$/types";
+import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, RequiredKeys } from "$/types";
 import { deepAssign } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 
@@ -14,6 +16,50 @@ export function resolveSongId(x: Pick<App.ISong, "id">): string {
 export function resolveBeatmapId(x: Pick<App.IBeatmap, "characteristic" | "difficulty">): string {
 	if (x.characteristic !== "Standard") return `${x.difficulty}${x.characteristic}`;
 	return `${x.difficulty}`;
+}
+
+export function createAppSong(data: RequiredKeys<Partial<App.ISong>, "name" | "bpm" | "songFilename" | "coverArtFilename">): App.ISong {
+	const songId = createSongId(data);
+
+	return {
+		id: data.id ?? songId,
+		name: data.name,
+		subName: data.subName ?? "",
+		artistName: data.artistName ?? "",
+		bpm: data.bpm,
+		offset: data.offset ?? 0,
+		previewStartTime: data.previewStartTime ?? 12,
+		previewDuration: data.previewDuration ?? 10,
+		environment: data.environment ?? EnvironmentName[0],
+		songFilename: data.songFilename,
+		coverArtFilename: data.coverArtFilename,
+		colorSchemesById: data.colorSchemesById ?? {},
+		difficultiesById: data.difficultiesById ?? {},
+		selectedDifficulty: data.selectedDifficulty,
+		createdAt: data.createdAt ?? Date.now(),
+		lastOpenedAt: data.lastOpenedAt,
+		demo: data.demo,
+		modSettings: data.modSettings ?? {
+			customColors: { isEnabled: false },
+			mappingExtensions: { isEnabled: false },
+		},
+	} as App.ISong;
+}
+export function createAppBeatmap(data: RequiredKeys<Partial<App.IBeatmap>, "characteristic" | "difficulty">): App.IBeatmap {
+	const beatmapId = resolveBeatmapId(data);
+
+	return {
+		lightshowId: data.lightshowId ?? beatmapId,
+		characteristic: data.characteristic,
+		difficulty: data.difficulty,
+		noteJumpSpeed: data.noteJumpSpeed ?? NoteJumpSpeed.FallbackNJS[data.difficulty],
+		startBeatOffset: data.startBeatOffset ?? 0,
+		environmentName: data.environmentName ?? EnvironmentName[0],
+		colorSchemeName: data.colorSchemeName ?? null,
+		mappers: data.mappers ?? [],
+		lighters: data.lighters ?? [],
+		customLabel: data.customLabel,
+	} as App.IBeatmap;
 }
 
 export function getEnvironment<T extends Pick<App.ISong, "environment" | "difficultiesById">>(song: T, beatmapId?: BeatmapId) {

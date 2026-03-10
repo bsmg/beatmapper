@@ -1,6 +1,6 @@
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
-import { selectBeatmapEntities, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
+import { selectBeatmapEntities, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
 
@@ -25,19 +25,19 @@ export function createSaveHandler() {
 		await filestore.updateInfoContents(songId, infoContents);
 
 		// Note that we can also download files from the homescreen, so there will be no selected difficulty in this case.
-		if (beatmapId) {
+		if (beatmapId === selectSelectedBeatmap(state, songId)) {
 			const activeEntities = entities ?? selectBeatmapEntities(state);
+
 			const { difficulty, lightshow, customData } = serializeBeatmapContents(activeEntities, {
 				editorOffsetInBeats: selectEditorOffsetInBeats(state, songId),
 			});
-			const { contents } = await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow, customData });
+			await filestore.updateBeatmapContents(songId, beatmapId, { difficulty, lightshow, customData });
 
 			// we want to copy lightshow data across beatmaps that share the same lightshow id
-			const lightshowId = selectLightshowIdForBeatmap(state, songId, beatmapId);
-			const beatmapIds = selectBeatmapIdsWithLightshowId(state, songId, lightshowId);
+			const beatmapIds = selectBeatmapIdsWithLightshowId(state, songId, selectLightshowIdForBeatmap(state, songId, beatmapId));
 
-			for (const targetBeatmapId of beatmapIds.filter((x) => x !== beatmapId)) {
-				await filestore.updateBeatmapContents(songId, targetBeatmapId, { lightshow: contents.lightshow, customData });
+			for (const targetBeatmapId of beatmapIds) {
+				await filestore.updateBeatmapContents(songId, targetBeatmapId, { lightshow, customData });
 			}
 		}
 

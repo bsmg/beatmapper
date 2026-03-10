@@ -96,7 +96,7 @@ function UpdateSongForm() {
 				}
 
 				// Update our redux state
-				dispatch(updateSong({ songId: sid, changes: newSongObject }));
+				dispatch(updateSong({ songId: sid, songFile: acceptedSongFile?.[0], changes: newSongObject }));
 
 				formApi.reset(value);
 			} catch (error) {

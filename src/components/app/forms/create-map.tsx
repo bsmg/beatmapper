@@ -65,20 +65,32 @@ function CreateMapForm({ dialog }: Props) {
 
 				const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
 
+				const songFile = value.songFile[0];
+				const coverArtFile = value.coverArtFile[0];
+				const mappers = username !== "" ? [username] : [];
+
 				dispatch(
 					addSong({
 						songId,
 						beatmapId,
-						name: value.name,
-						subName: value.subName,
-						artistName: value.artistName,
-						bpm: value.bpm,
-						offset: value.offset ?? 0,
-						songFile: value.songFile[0],
-						coverArtFile: value.coverArtFile[0],
-						username: username,
-						selectedCharacteristic: value.characteristic,
-						selectedDifficulty: value.difficulty,
+						songFile,
+						coverArtFile,
+						songData: {
+							id: songId,
+							name: value.name,
+							subName: value.subName,
+							artistName: value.artistName,
+							bpm: value.bpm,
+							offset: value.offset ?? 0,
+							songFilename: songFile.name,
+							coverArtFilename: coverArtFile.name,
+						},
+						beatmapData: {
+							characteristic: value.characteristic,
+							difficulty: value.difficulty,
+							mappers: mappers,
+							lighters: mappers,
+						},
 					}),
 				);
 

@@ -1,4 +1,4 @@
-import { type AsyncThunkPayloadCreator, isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
+import type { AsyncThunkPayloadCreator, ReducerCreators } from "@reduxjs/toolkit";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { finishLoadingMap, hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
@@ -165,7 +165,7 @@ const slice = createSlice({
 		builder.addCase(leaveEditor, (state) => {
 			return { ...state, cursorPosition: 0, isPlaying: false, duration: null };
 		});
-		builder.addMatcher(isAnyOf(finishLoadingMap, reloadVisualizer), (state, action) => {
+		builder.addCase(reloadVisualizer, (state, action) => {
 			const { duration } = action.payload;
 			const durationInMs = duration * 1000;
 			return { ...state, duration: durationInMs };

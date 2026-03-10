@@ -46,7 +46,8 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 
 	const handleCreate = useCallback(
 		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: data, username }));
+			const mappers = username ? [username] : [];
+			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id, mappers: mappers, lighters: mappers } }));
 		},
 		[dispatch, sid, username],
 	);

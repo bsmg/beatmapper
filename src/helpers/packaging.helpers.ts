@@ -1,12 +1,13 @@
 import { distinct } from "@std/collections/distinct";
 import { createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
-import type { EnvironmentAllName, v2, wrapper } from "bsmap/types";
+import { type EnvironmentAllName, EnvironmentName, type v2, type wrapper } from "bsmap/types";
 
 import { type App, ColorSchemeKey, type IColorScheme, type IEntityMap } from "$/types";
 import { deepAssign, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark } from "./bookmarks.helpers";
 import { deriveColorSchemeFromEnvironment, deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
 import { createDataFactory } from "./factory.helpers";
+import { createAppBeatmap, createAppSong } from "./song.helpers";
 
 export function resolveBeatmapIdFromFilename(filename: string): string {
 	let fn = filename;
@@ -133,19 +134,19 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 
 			const beatmapsById = data.difficulties.reduce((acc: IEntityMap<App.IBeatmap>, beatmap) => {
 				const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
-				const lightshowId = resolveBeatmapIdFromFilename(beatmap.lightshowFilename);
-				acc[beatmapId] = {
-					lightshowId: lightshowId,
+
+				acc[beatmapId] = createAppBeatmap({
+					lightshowId: resolveBeatmapIdFromFilename(beatmap.lightshowFilename),
 					characteristic: beatmap.characteristic,
 					difficulty: beatmap.difficulty,
 					noteJumpSpeed: beatmap.njs,
 					startBeatOffset: beatmap.njsOffset,
-					environmentName: patchEnvironmentName(data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal ?? "DefaultEnvironment"),
+					environmentName: patchEnvironmentName(data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal ?? EnvironmentName[0]),
 					colorSchemeName: beatmap.colorSchemeId >= 0 ? data.colorSchemes.map((x) => x.name)[beatmap.colorSchemeId] : null,
 					mappers: beatmap.authors.mappers.filter((x) => x.length > 0),
 					lighters: beatmap.authors.lighters.filter((x) => x.length > 0),
 					customLabel: beatmap.customData?._difficultyLabel,
-				};
+				});
 				return acc;
 			}, {});
 
@@ -179,7 +180,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				customColors: isCustomColorsEnabled ? customColors : undefined,
 			};
 
-			return {
+			return createAppSong({
 				name: data.song.title,
 				subName: data.song.subTitle,
 				artistName: data.song.author,
@@ -187,14 +188,14 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				offset: data.difficulties[0].customData._editorOffset ?? 0,
 				previewStartTime: data.audio.previewStartTime,
 				previewDuration: data.audio.previewDuration,
-				environment: patchEnvironmentName(data.environmentBase.normal ?? "DefaultEnvironment"),
+				environment: patchEnvironmentName(data.environmentBase.normal ?? EnvironmentName[0]),
 				songFilename: data.audio.filename,
 				coverArtFilename: data.coverImageFilename,
 				difficultiesById: beatmapsById,
 				colorSchemesById: colorSchemesById,
 				demo: options.readonly,
 				modSettings: deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings }),
-			};
+			});
 		},
 	},
 });

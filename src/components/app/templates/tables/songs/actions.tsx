@@ -31,7 +31,7 @@ function SongsDataTableActions({ sid }: Props) {
 	const deleteAlert = useDialog({ role: "alertdialog" });
 
 	const handleDeleteAction = useCallback(() => {
-		return dispatch(removeSong({ id: sid, beatmapIds: beatmapIds }));
+		return dispatch(removeSong({ songId: sid, beatmapIds: beatmapIds }));
 	}, [dispatch, sid, beatmapIds]);
 
 	const handleActionSelect = useCallback(

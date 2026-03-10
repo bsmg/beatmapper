@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { addSongFromFile, finishLoadingMap, reloadVisualizer, startLoadingMap } from "$/store/actions";
+import { addSongFromFile, reloadVisualizer, startLoadingMap } from "$/store/actions";
 
 const initialState = {
 	initialized: false,
@@ -25,7 +25,7 @@ const slice = createSlice({
 		builder.addMatcher(isAnyOf(startLoadingMap), (state) => {
 			return { ...state, isLoading: true };
 		});
-		builder.addMatcher(isAnyOf(finishLoadingMap, reloadVisualizer), (state) => {
+		builder.addMatcher(isAnyOf(reloadVisualizer), (state) => {
 			return { ...state, isLoading: false };
 		});
 		builder.addMatcher(isAnyOf(addSongFromFile.pending), (state) => {
