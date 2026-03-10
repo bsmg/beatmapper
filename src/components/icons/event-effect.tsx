@@ -1,5 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import type { LucideProps } from "lucide-react";
+import { useId } from "react";
 
 import { EventTool } from "$/types";
 import { token } from "$:styled-system/tokens";
@@ -23,12 +24,21 @@ function getPathForTool(tool: EventTool) {
 
 interface Props {
 	tool: EventTool;
+	boostColor?: string;
 }
-function EventToolIcon({ tool, color }: Assign<LucideProps, Props>) {
+function EventToolIcon({ tool, color, boostColor }: Assign<LucideProps, Props>) {
+	const gradient = useId();
+
 	return (
 		<svg role="presentation" width={16} height={16} viewBox="0 0 32 32" fill="none">
 			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke={token.var("colors.border.default")} />
-			<path d={getPathForTool(tool)} fill={color} stroke="none" />
+			<defs>
+				<linearGradient id={gradient} x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" stopColor={color} />
+					<stop offset="100%" stopColor={boostColor ?? color} />
+				</linearGradient>
+			</defs>
+			<path d={getPathForTool(tool)} fill={`url(#${gradient})`} stroke={"none"} />
 		</svg>
 	);
 }

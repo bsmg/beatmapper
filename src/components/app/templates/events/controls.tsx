@@ -6,13 +6,14 @@ import { type ComponentProps, type CSSProperties, useMemo } from "react";
 import { EventEffectIcon } from "$/components/icons";
 import { Button, Field, Toggle, ToggleGroup, Tooltip } from "$/components/ui/compositions";
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
-import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
+import type { ColorResolverOptions } from "$/helpers/colors.helpers";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
 import { HStack, styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
+import { resolveColorForLightState } from "./track.helpers";
 
 const EDIT_MODE_LIST_COLLECTION = createListCollection({
 	items: Object.values(EventEditMode).map((value, index) => {
@@ -21,20 +22,23 @@ const EDIT_MODE_LIST_COLLECTION = createListCollection({
 	}),
 });
 
-interface EventListCollection extends ColorResolverOptions {
-	selectedColor?: EventColor;
-}
-function createEventColorListCollection({ colorScheme }: EventListCollection) {
+function createEventColorListCollection({ colorScheme }: ColorResolverOptions) {
 	return createListCollection({
 		items: Object.values(EventColor).map((value) => {
-			return { value, label: <Box style={{ "--color": resolveColorForItem(value, { colorScheme }) } as CSSProperties} /> };
+			const color = resolveColorForLightState({ color: value, isBoosted: false }, { colorScheme });
+			const boostColor = resolveColorForLightState({ color: value, isBoosted: true }, { colorScheme });
+			if (!color || !boostColor) return null;
+			return { value, label: <Box style={{ background: `linear-gradient(135deg, ${color}, ${boostColor})` } as CSSProperties} /> };
 		}),
 	});
 }
-function createEventEffectListCollection({ selectedColor, colorScheme }: EventListCollection) {
+function createEventEffectListCollection({ selectedColor, colorScheme }: ColorResolverOptions & { selectedColor: EventColor | null }) {
 	return createListCollection({
 		items: Object.values(EventTool).map((value) => {
-			return { value, label: <EventEffectIcon tool={value} color={resolveColorForItem(selectedColor, { colorScheme })} /> };
+			const color = resolveColorForLightState({ color: selectedColor, isBoosted: false }, { colorScheme });
+			const boostColor = resolveColorForLightState({ color: selectedColor, isBoosted: true }, { colorScheme });
+			if (!color || !boostColor) return null;
+			return { value, label: <EventEffectIcon tool={value} color={color} boostColor={boostColor} /> };
 		}),
 	});
 }
