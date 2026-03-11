@@ -41,7 +41,7 @@ function SongsDataTableActions({ sid }: Props) {
 					return deleteAlert.setOpen(true);
 				}
 				case "download": {
-					return dispatch(downloadMapFiles({ songId: sid }));
+					return dispatch(downloadMapFiles({ songId: sid, version: null }));
 				}
 				default: {
 					return toaster?.create({

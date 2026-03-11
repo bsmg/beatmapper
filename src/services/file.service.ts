@@ -2,7 +2,7 @@ import { omit } from "@std/collections/omit";
 import { pick } from "@std/collections/pick";
 import { basename } from "@std/path/basename";
 import { createAudioData, createBeatmap, createInfo, sortObjectFn } from "bsmap";
-import type { BeatmapFileType, InferBeatmapVersion, wrapper } from "bsmap/types";
+import type { BeatmapFileType, DeepPartial, InferBeatmapVersion, wrapper } from "bsmap/types";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
@@ -115,35 +115,28 @@ export class BeatmapFilestore extends Filestore {
 	}
 	async saveBeatmapContents<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
-		return this.saveFile<T>(filename, contents);
+		return this.saveFile<T>(filename, {
+			...contents,
+			// for difficulty data, we should remove all unsupported collections since those objects can cause issues the user would be unable to fix.
+			difficulty: pick({ ...contents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "customData"]),
+			// we can supply our own wrappers for editor-specific collections.
+			customData: ensureObject({
+				bookmarks: ensureArray<App.IBookmark>(contents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
+			}),
+		});
 	}
 
-	async updateInfoContents(songId: SongId, newContents: Partial<wrapper.IWrapInfo>) {
+	async updateInfoContents(songId: SongId, newContents: DeepPartial<wrapper.IWrapInfo>) {
 		const savedContents = await this.loadInfoContents(songId).catch(() => createInfo({ ...newContents }));
 		return await this.saveInfoContents(songId, createInfo(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
-	async updateAudioDataContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
+	async updateAudioDataContents(songId: SongId, newContents: DeepPartial<wrapper.IWrapAudioData>) {
 		const savedContents = await this.loadAudioDataContents(songId).catch(() => createAudioData({ ...newContents }));
 		return await this.saveAudioDataContents(songId, createAudioData(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: Partial<wrapper.IWrapBeatmap>) {
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: DeepPartial<wrapper.IWrapBeatmap>) {
 		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
-		return await this.saveBeatmapContents(
-			songId,
-			beatmapId,
-			createBeatmap(
-				deepAssign(savedContents, omit(newContents, ["version", "filename"]), {
-					// for difficulty, we'll remove all unsupported collections since those objects can cause issues the user would be unable to fix.
-					difficulty: deepAssign(savedContents.difficulty, { ...newContents.difficulty }),
-					// for lightshow, we'll merge the contents and only replace collections that are directly supported.
-					lightshow: deepAssign(savedContents.lightshow, pick({ ...newContents.lightshow }, ["basicEvents"])),
-					// we'll supply our own wrappers for editor-specific collections.
-					customData: ensureObject({
-						bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
-					}),
-				}),
-			),
-		);
+		return await this.saveBeatmapContents(songId, beatmapId, createBeatmap(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
 
 	async removeAllFilesForSong(songId: SongId, beatmapIds: BeatmapId[]) {

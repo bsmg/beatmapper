@@ -236,7 +236,7 @@ function DefaultEditorShortcuts() {
 							description: "Unfortunately, the demo map is not available for download.",
 						});
 					}
-					if (sid) return dispatch(downloadMapFiles({ songId: sid }));
+					if (sid) return dispatch(downloadMapFiles({ songId: sid, version: null }));
 					return;
 				}
 				case "KeyQ": {

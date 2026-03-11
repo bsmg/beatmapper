@@ -1,10 +1,11 @@
 import { distinct } from "@std/collections/distinct";
-import { createBeatmap, createInfo, createInfoBeatmap } from "bsmap";
+import { distinctBy } from "@std/collections/distinct-by";
+import { createBeatmap, createInfo, createInfoBeatmap, sortV2ObjectFn, sortV3ObjectFn } from "bsmap";
 import { type EnvironmentAllName, EnvironmentName, type v2, type wrapper } from "bsmap/types";
 
 import { type App, ColorSchemeKey, type IColorScheme, type IEntityMap } from "$/types";
-import { deepAssign, ensureObject, hasKeys } from "$/utils";
-import { deserializeCustomBookmark } from "./bookmarks.helpers";
+import { deepAssign, ensureArray, ensureObject, hasKeys } from "$/utils";
+import { deserializeCustomBookmark, resolveBookmarkId, serializeCustomBookmark } from "./bookmarks.helpers";
 import { deriveColorSchemeFromEnvironment, deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
 import { createDataFactory } from "./factory.helpers";
 import { createAppBeatmap, createAppSong } from "./song.helpers";
@@ -206,7 +207,7 @@ function shiftByOffset<T extends { time: number }>(options: { editorOffsetInBeat
 
 export const { serialize: serializeBeatmapContents, deserialize: deserializeBeatmapContents } = createDataFactory({
 	container: {
-		serialize: function serializeBeatmapContents(data: Partial<App.IBeatmapEntities>, { editorOffsetInBeats }: { editorOffsetInBeats: number }) {
+		serialize: function serializeBeatmapContents(data: Partial<App.IBeatmapEntities>, { version, editorOffsetInBeats }: { version: number; editorOffsetInBeats: number }) {
 			const notes = data.notes?.map(shiftByOffset({ editorOffsetInBeats }));
 			const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats }));
 			const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats }));
@@ -218,9 +219,17 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 					colorNotes: notes,
 					bombNotes: bombs,
 					obstacles: obstacles,
+					customData: ensureObject<v2.ICustomDataDifficulty>({
+						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
+						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
+					}),
 				},
 				lightshow: {
 					basicEvents: basicEvents,
+					customData: ensureObject<v2.ICustomDataDifficulty>({
+						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
+						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
+					}),
 				},
 				customData: {
 					bookmarks: bookmarks,
@@ -233,18 +242,22 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const obstacles = data.difficulty.obstacles;
 			const basicEvents = data.lightshow.basicEvents;
 
-			const bookmarks = distinct([
-				...(data.difficulty.customData?._bookmarks?.map((x) => deserializeCustomBookmark(x, 2, {})) ?? []),
-				...(data.difficulty.customData?.bookmarks?.map((x) => deserializeCustomBookmark(x, 3, {})) ?? []),
-				//
-			]);
+			const bookmarks = distinctBy(
+				[
+					...(data.customData?.bookmarks ?? []),
+					...distinct([...(data.difficulty.customData._bookmarks ?? []), ...(data.difficulty.customData.bookmarks ?? []), ...(data.lightshow.customData?._bookmarks ?? []), ...(data.lightshow.customData?.bookmarks ?? [])]).map((x) => {
+						return deserializeCustomBookmark(x, null, {});
+					}),
+				],
+				resolveBookmarkId,
+			);
 
 			return {
 				notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				basicEvents: basicEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-				bookmarks: data.customData.bookmarks ?? bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				bookmarks: bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 			};
 		},
 	},

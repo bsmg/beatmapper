@@ -1,12 +1,10 @@
-// biome-ignore-all assist/source/organizeImports: circular dependencies
-
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
-import type { BeatmapFileType, ISaveOptions, InferBeatmapVersion } from "bsmap/types";
 import type { JsonWaveformData } from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
+import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import { type App, type BeatmapId, type IEventTracks, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
 import { roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
@@ -29,6 +27,8 @@ import {
 } from "./selectors";
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
+// biome-ignore-start assist/source/organizeImports: circular dependencies
+
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
@@ -41,6 +41,8 @@ import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
+
+// biome-ignore-end assist/source/organizeImports: circular dependencies
 
 export const { init } = global.actions;
 
@@ -71,7 +73,7 @@ export const saveBeatmapContents = createAction("saveBeatmapContents", (args: { 
 	return { payload: { ...args } };
 });
 
-export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId; version?: InferBeatmapVersion<BeatmapFileType>; options?: Omit<ISaveOptions<BeatmapFileType, InferBeatmapVersion<BeatmapFileType>>, "preprocess" | "postprocess"> }) => {
+export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId } & ExportMapArchiveOptions) => {
 	return { payload: { ...args } };
 });
 

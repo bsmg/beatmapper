@@ -3,7 +3,7 @@ import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, isA
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, getGridSize, resolveSongId } from "$/helpers/song.helpers";
-import { processImportedMap } from "$/services/packaging.service";
+import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import { type App, type BeatmapId, type ColorSchemeKey, type IGrid, ObjectPlacementMode, type SongId } from "$/types";
@@ -90,12 +90,11 @@ const slice = createSlice({
 		}),
 	},
 	reducers: (api) => {
-		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof processImportedMap>[1] }> = async (args, api) => {
+		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[1] }> = async (args, api) => {
 			try {
-				const { readonly } = args.options;
 				const archive = await args.file.arrayBuffer();
-				const songData = await processImportedMap(new Uint8Array(archive), args.options);
-				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: readonly } });
+				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), args.options);
+				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: args.options.readonly } });
 			} catch (e) {
 				return api.rejectWithValue(e);
 			}
