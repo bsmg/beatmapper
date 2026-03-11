@@ -58,7 +58,16 @@ function DefaultEditorShortcuts() {
 	const { trigger: triggerQuickSelect } = usePrompt(
 		createQuickSelectPrompt({
 			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
-			onSubmit: ({ value: { start, end } }) => dispatch(selectAllEntitiesInRange({ songId: sid, view: view, start, end })),
+			onSubmit: ({ value: { range } }) => {
+				let [startBeat, endBeat] = range
+					.trim()
+					.split("-")
+					.map((x) => Number.parseFloat(x));
+				if (typeof endBeat !== "number") {
+					endBeat = Number.POSITIVE_INFINITY;
+				}
+				return dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+			},
 		}),
 	);
 	const { trigger: triggerJumpToBeat } = usePrompt(
@@ -131,7 +140,7 @@ function DefaultEditorShortcuts() {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
 					if (keysDepressed.current.space) return;
 					keysDepressed.current.space = true;
-					return dispatch(togglePlaying({ songId: sid, view }));
+					return dispatch(togglePlaying({ songId: sid }));
 				}
 				case "Escape": {
 					return dispatch(deselectAllEntities({ view }));
@@ -149,10 +158,10 @@ function DefaultEditorShortcuts() {
 					return handleScroll("backwards", ev);
 				}
 				case "PageUp": {
-					return dispatch(seekForwards({ songId: sid, view }));
+					return dispatch(seekForwards({ songId: sid }));
 				}
 				case "PageDown": {
-					return dispatch(seekBackwards({ songId: sid, view }));
+					return dispatch(seekBackwards({ songId: sid }));
 				}
 				case "Home": {
 					return dispatch(jumpToStart({ songId: sid }));

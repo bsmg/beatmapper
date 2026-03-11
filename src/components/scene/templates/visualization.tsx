@@ -16,7 +16,7 @@ import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers"
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObstacle, selectNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
+import { selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import EditorBeatMarkers from "./beat-markers";
 import EditorPlacementGrid from "./placement-grid";
@@ -42,6 +42,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
+	const animateTrack = useAppSelector(selectAnimateTrack);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid) ?? 0);
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
@@ -144,7 +145,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 
 	return (
 		<Visualization.Root cursorPositionInBeats={cursorPositionInBeats} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
-			<Visualization.Mover>
+			<Visualization.Mover immediate={!animateTrack}>
 				{interactive && <EditorBeatMarkers beatDepth={beatDepth} />}
 				<Visualization.ForGridObjects objects={notes} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
 					{(data, props) => (

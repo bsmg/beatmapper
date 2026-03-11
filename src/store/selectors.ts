@@ -59,26 +59,27 @@ export const {
 	return state.songs;
 });
 
-export const selectBeatForTime = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options], (bpm, offset, time, { withOffset }) => {
-	return convertMillisecondsToBeats(time - (withOffset ? offset : 0), bpm);
+export const selectBeatForTime = createDraftSafeSelector([selectBpm, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (bpm, time) => {
+	return convertMillisecondsToBeats(time, bpm);
 });
-export const selectNearestBeatForTime = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (bpm, offset, time) => {
-	return snapToNearestBeat(time, bpm, offset);
-});
-export const selectTimeForBeat = createSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, _3: number, options = { withOffset: true }) => options], (bpm, offset, beat, { withOffset }) => {
-	return convertBeatsToMilliseconds(beat, bpm) + (withOffset ? offset : 0);
+export const selectTimeForBeat = createDraftSafeSelector([selectBpm, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (bpm, beat) => {
+	return convertBeatsToMilliseconds(beat, bpm);
 });
 
 export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
 export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
-	if (cursorPosition === null) return null;
+	if (cursorPosition === null) return 0;
 	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
 });
 export const selectDurationInBeats = createSelector(selectDuration, selectBpm, (duration, bpm) => {
-	if (duration === null) return null;
+	if (duration === null) return 0;
 	return convertMillisecondsToBeats(duration, bpm);
+});
+
+export const selectNearestBeat = createDraftSafeSelector([selectSnap, selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (snapTo, bpm, offset, time) => {
+	return snapToNearestBeat(time, snapTo, bpm, offset);
 });
 
 export const {

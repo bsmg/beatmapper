@@ -26,7 +26,16 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	const { trigger: triggerQuickSelect } = usePrompt(
 		createQuickSelectPrompt({
 			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
-			onSubmit: ({ value: { start, end } }) => dispatch(selectAllEntitiesInRange({ songId: sid, view: view, start, end })),
+			onSubmit: ({ value: { range } }) => {
+				let [startBeat, endBeat] = range
+					.trim()
+					.split("-")
+					.map((x) => Number.parseFloat(x));
+				if (typeof endBeat !== "number") {
+					endBeat = Number.POSITIVE_INFINITY;
+				}
+				return dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+			},
 		}),
 	);
 	const { trigger: triggerJumpToBeat } = usePrompt(

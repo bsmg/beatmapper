@@ -1,11 +1,10 @@
-import type { AsyncThunkPayloadCreator, ReducerCreators } from "@reduxjs/toolkit";
+import type { ReducerCreators } from "@reduxjs/toolkit";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { finishLoadingMap, hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
+import { hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import { selectEditorOffset } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
-import type { SongId, View } from "$/types";
+import type { SongId } from "$/types";
+import { clamp } from "$/utils";
 
 const initialState = {
 	isPlaying: false,
@@ -20,25 +19,6 @@ const initialState = {
 	tickType: 0,
 	playbackRate: 1,
 };
-
-const fetchOffset: AsyncThunkPayloadCreator<{ offset: number }, { songId: SongId }> = (args, api) => {
-	const state = api.getState() as RootState;
-	const offset = selectEditorOffset(state, args.songId);
-	return api.fulfillWithValue({ offset });
-};
-
-function nextSnappingIncrement(api: ReducerCreators<typeof initialState>, options: { delta: number }) {
-	return api.reducer((state) => {
-		const currentSnappingIncrementIndex = SNAPPING_INCREMENTS.findIndex((increment) => increment.value === state.snapTo);
-		// This shouldn't be possible, but if somehow we don't have a recognized interval, just reset to 1.
-		if (currentSnappingIncrementIndex === -1) return { ...state, snapTo: 1 };
-		const nextSnappingIndex = currentSnappingIncrementIndex + options.delta;
-		const nextSnappingIncrement = SNAPPING_INCREMENTS[nextSnappingIndex];
-		// If we're at one end of the scale and we try to push beyond it, we'll hit an undefined. Do nothing in those cases (no wrapping around desired).
-		if (!nextSnappingIncrement) return state;
-		return { ...state, snapTo: nextSnappingIncrement.value };
-	});
-}
 
 const slice = createSlice({
 	name: "navigation",
@@ -57,16 +37,32 @@ const slice = createSlice({
 		selectTickType: (state) => state.tickType,
 	},
 	reducers: (api) => {
+		function nextSnappingIncrement(api: ReducerCreators<typeof initialState>, options: { delta: number }) {
+			return api.reducer((state) => {
+				const currentSnappingIncrementIndex = SNAPPING_INCREMENTS.findIndex((increment) => increment.value === state.snapTo);
+				// This shouldn't be possible, but if somehow we don't have a recognized interval, just reset to 1.
+				if (currentSnappingIncrementIndex === -1) return { ...state, snapTo: 1 };
+				const nextSnappingIndex = currentSnappingIncrementIndex + options.delta;
+				const nextSnappingIncrement = SNAPPING_INCREMENTS[nextSnappingIndex];
+				// If we're at one end of the scale and we try to push beyond it, we'll hit an undefined. Do nothing in those cases (no wrapping around desired).
+				if (!nextSnappingIncrement) return state;
+				return { ...state, snapTo: nextSnappingIncrement.value };
+			});
+		}
+
 		return {
-			startPlayback: api.reducer<{ songId: SongId; view: View }>((state) => {
+			startPlayback: api.reducer<{ songId: SongId }>((state) => {
 				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
 			}),
 			pausePlayback: api.reducer<{ songId: SongId }>((state) => {
 				return { ...state, isPlaying: false, animateBlockMotion: true, animateRingMotion: false };
 			}),
-			stopPlayback: api.reducer<{ offset: number }>((state, action) => {
-				const { offset } = action.payload;
-				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: false, cursorPosition: Math.max(offset, 0) };
+			stopPlayback: api.reducer<{ songId: SongId }>((state) => {
+				return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false };
+			}),
+			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
+				const { value } = action.payload;
+				return { ...state, cursorPosition: clamp(value, 0, state.duration ?? value) };
 			}),
 			jumpToBeat: api.reducer<{ songId: SongId; beatNum: number; pauseTrack?: boolean; animateJump?: boolean }>((state, action) => {
 				const { pauseTrack, animateJump } = action.payload;
@@ -75,24 +71,17 @@ const slice = createSlice({
 				const isPlaying = pauseTrack ? false : state.isPlaying;
 				return { ...state, isPlaying, animateBlockMotion: !!animateJump, animateRingMotion: false };
 			}),
-			jumpToStart: api.asyncThunk(fetchOffset, {
-				fulfilled: (state, action) => {
-					const { offset } = action.payload;
-					return { ...state, animateBlockMotion: false, animateRingMotion: false, cursorPosition: Math.max(offset, 0) };
-				},
+			jumpToStart: api.reducer<{ songId: SongId }>((state) => {
+				return { ...state, animateBlockMotion: true, animateRingMotion: false };
 			}),
 			jumpToEnd: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: false, animateRingMotion: false, cursorPosition: state.duration ?? 0 };
+				return { ...state, animateBlockMotion: true, animateRingMotion: false };
 			}),
-			jumpForwards: api.reducer<{ songId: SongId; view: View }>((state) => {
-				return { ...state, animateBlockMotion: false, animateRingMotion: false };
+			jumpForwards: api.reducer<{ songId: SongId }>((state) => {
+				return { ...state, animateBlockMotion: true, animateRingMotion: false };
 			}),
-			jumpBackwards: api.reducer<{ songId: SongId; view: View }>((state) => {
-				return { ...state, animateBlockMotion: false, animateRingMotion: false };
-			}),
-			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
-				const { value: newCursorPosition } = action.payload;
-				return { ...state, cursorPosition: newCursorPosition };
+			jumpBackwards: api.reducer<{ songId: SongId }>((state) => {
+				return { ...state, animateBlockMotion: true, animateRingMotion: false };
 			}),
 			updateSnap: api.reducer<{ value: number }>((state, action) => {
 				const { value: newSnapTo } = action.payload;
@@ -102,7 +91,7 @@ const slice = createSlice({
 			decrementSnap: nextSnappingIncrement(api, { delta: -1 }),
 			updateTrackScale: api.reducer<{ value: number }>((state, action) => {
 				const { value: beatDepth } = action.payload;
-				return { ...state, beatDepth: beatDepth, animateBlockMotion: false };
+				return { ...state, beatDepth: beatDepth };
 			}),
 			updatePlaybackRate: api.reducer<{ value: number }>((state, action) => {
 				const { value: playbackRate } = action.payload;
@@ -138,37 +127,30 @@ const slice = createSlice({
 			if (tickVolume !== undefined) state.tickVolume = tickVolume;
 			if (tickType !== undefined) state.tickType = tickType;
 		});
-		builder.addCase(finishLoadingMap, (state, action) => {
-			const {
-				songData: { offset },
-			} = action.payload;
-			return { ...state, cursorPosition: Math.max(offset, 0) };
-		});
-		builder.addCase(updateSong, (state, action) => {
-			const { changes: songData } = action.payload;
-			return { ...state, cursorPosition: Math.max(songData.offset ?? 0, 0) };
-		});
 		builder.addCase(tick, (state, action) => {
 			const { timeElapsed } = action.payload;
-			return { ...state, cursorPosition: timeElapsed, animateRingMotion: true };
+			return { ...state, cursorPosition: timeElapsed, animateBlockMotion: true, animateRingMotion: true };
 		});
-		builder.addCase(scrubVisualizer, (state, action) => {
-			const { newOffset } = action.payload;
-			return { ...state, cursorPosition: newOffset, animateBlockMotion: false, animateRingMotion: false };
+		builder.addCase(scrubVisualizer, (state) => {
+			return { ...state, animateBlockMotion: false, animateRingMotion: false };
 		});
 		builder.addCase(selectAllEntitiesInRange, (state) => {
-			return { ...state, isPlaying: false, animateBlockMotion: false };
+			return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false };
 		});
 		builder.addCase(scrollThroughSong, (state) => {
 			return { ...state, animateBlockMotion: true, animateRingMotion: false };
 		});
 		builder.addCase(leaveEditor, (state) => {
-			return { ...state, cursorPosition: 0, isPlaying: false, duration: null };
+			return { ...state, duration: null };
 		});
 		builder.addCase(reloadVisualizer, (state, action) => {
 			const { duration } = action.payload;
-			const durationInMs = duration * 1000;
-			return { ...state, duration: durationInMs };
+			return { ...state, duration: duration * 1000 };
+		});
+		builder.addCase(updateSong, (state, action) => {
+			const { changes } = action.payload;
+			if (!changes.offset) return state;
+			return { ...state, cursorPosition: Math.max(changes.offset, 0) };
 		});
 		builder.addDefaultCase((state) => state);
 	},

@@ -87,9 +87,9 @@ const slice = createSlice({
 			return updateAll(state, () => ({ selected: false }));
 		});
 		builder.addCase(selectAllEntitiesInRange, (state, action) => {
-			const { start, end, view } = action.payload;
+			const { startBeat, endBeat, view } = action.payload;
 			if (view !== View.LIGHTSHOW) return state;
-			return updateAll(state, (x) => ({ selected: x.time >= start - 0.01 && x.time < end }));
+			return updateAll(state, (x) => ({ selected: x.time >= startBeat - 0.01 && x.time < endBeat }));
 		});
 		builder.addCase(drawEventSelectionBox.fulfilled, (state, action) => {
 			const { tracks, selectionBoxInBeats, metadata } = action.payload;

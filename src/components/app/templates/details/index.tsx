@@ -1,12 +1,11 @@
 import { useParams } from "@tanstack/react-router";
 
 import { UpdateBeatmapForm, UpdateSongForm } from "$/components/app/forms";
-import { useMount } from "$/components/hooks/use-mount";
 import { For } from "$/components/ui/atoms";
 import { Heading, RouterLink } from "$/components/ui/compositions";
-import { stopPlayback, updateModuleEnabled } from "$/store/actions";
+import { updateModuleEnabled } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectEditorOffset, selectModuleEnabled } from "$/store/selectors";
+import { selectBeatmapIds, selectModuleEnabled } from "$/store/selectors";
 import { Stack, styled, Wrap } from "$:styled-system/jsx";
 import CustomColorSettings from "./custom-colors";
 import SongDetailsModule from "./module";
@@ -19,13 +18,6 @@ function SongDetails() {
 	const enabledMappingExtensions = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
-	const offset = useAppSelector((state) => selectEditorOffset(state, sid));
-
-	useMount(() => {
-		// We want to stop & reset the song when the user goes to edit it.
-		// In addition to seeming like a reasonable idea, it helps prevent any weirdness around editing the audio file when it's in a non-zero position.
-		dispatch(stopPlayback({ offset: offset }));
-	});
 
 	return (
 		<Stack gap={8}>

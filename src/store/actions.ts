@@ -87,12 +87,12 @@ export const {
 	startPlayback,
 	pausePlayback,
 	stopPlayback,
+	updateCursorPosition,
 	jumpToBeat,
 	jumpToStart,
 	jumpToEnd,
 	jumpForwards: seekForwards,
 	jumpBackwards: seekBackwards,
-	updateCursorPosition,
 	updateTrackScale: updateBeatDepth,
 	updatePlaybackRate,
 	incrementPlaybackRate,
@@ -109,7 +109,7 @@ export const reloadVisualizer = createAction("reloadVisualizer", (args: { durati
 	return { payload: { ...args } };
 });
 
-export const togglePlaying = createAction("togglePlaying", (args: { songId: SongId; view: View }) => {
+export const togglePlaying = createAction("togglePlaying", (args: { songId: SongId }) => {
 	return { payload: { ...args } };
 });
 
@@ -271,7 +271,7 @@ export const deselectAllEntitiesOfType = createAction("deselectAllEntitiesOfType
 	return { payload: { ...args } };
 });
 
-export const selectAllEntitiesInRange = createAction("selectAllEntitiesInRange", (args: { songId: SongId; view: View; start: number; end: number }) => {
+export const selectAllEntitiesInRange = createAction("selectAllEntitiesInRange", (args: { songId: SongId; view: View; startBeat: number; endBeat: number }) => {
 	return { payload: { ...args } };
 });
 

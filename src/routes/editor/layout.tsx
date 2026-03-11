@@ -8,8 +8,8 @@ import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
 import { getAppStore } from "$/setup";
-import { dismissPrompt, leaveEditor, startLoadingMap } from "$/store/actions";
-import { selectAnnouncements, selectBeatmapEntities } from "$/store/selectors";
+import { dismissPrompt, leaveEditor, startLoadingMap, updateCursorPosition } from "$/store/actions";
+import { selectAnnouncements, selectBeatmapEntities, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
 import { prompts } from "$:content";
 import { css, cx } from "$:styled-system/css";
@@ -49,9 +49,14 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	head: ({ params, loaderData }) => {
 		return { meta: [{ title: loaderData ? `${loaderData.view} ∙ ${params.sid}/${params.bid} ∙ Beatmapper Editor` : "Beatmapper Editor" }] };
 	},
-	onEnter: async ({ params, loaderData }) => {
+	onEnter: async ({ cause, params, loaderData }) => {
 		const store = await getAppStore();
+
 		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
+
+		if (cause !== "stay") {
+			store.dispatch(updateCursorPosition({ value: selectEditorOffset(store.getState(), params.sid) }));
+		}
 
 		if (loaderData && "unseenPrompt" in loaderData) {
 			const { unseenPrompt } = loaderData;

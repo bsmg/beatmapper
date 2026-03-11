@@ -2,7 +2,7 @@ import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
 import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
-import { nonEmpty, number, object, pipe, regex, string, transform } from "valibot";
+import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
@@ -98,24 +98,12 @@ export const createQuickSelectPrompt = createPromptFactory({
 	title: "Quick Select",
 	description: "Selects all objects within the provided range of beats.",
 	defaultValues: { range: "" },
-	validate: pipe(
-		object({
-			range: pipe(
-				string(),
-				regex(/^\d+(-\d+)?$/, (issue) => `Invalid format: Expected <number> or <number>-<number> but received "${issue.input}"`),
-			),
-		}),
-		transform(({ range }) => {
-			let [start, end] = range
-				.trim()
-				.split("-")
-				.map((x) => Number.parseFloat(x));
-			if (typeof end !== "number") {
-				end = Number.POSITIVE_INFINITY;
-			}
-			return { start, end };
-		}),
-	),
+	validate: object({
+		range: pipe(
+			string(),
+			regex(/^\d+(-\d+)?$/, (issue) => `Invalid format: Expected <number> or <number>-<number> but received "${issue.input}"`),
+		),
+	}),
 });
 
 export const createJumpToBeatPrompt = createPromptFactory({

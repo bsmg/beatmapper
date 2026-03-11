@@ -1,4 +1,4 @@
-import { useParams, useRouteContext } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
 import { SNAPPING_INCREMENT_LIST_COLLECTION } from "$/components/app/constants";
@@ -12,7 +12,6 @@ import { roundToNearest } from "$/utils";
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const isPlaying = useAppSelector(selectPlaying);
@@ -45,13 +44,13 @@ function EditorNavigationControls() {
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpToStart({ songId: sid }))}>
 					<SkipBackIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(seekBackwards({ songId: sid, view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(seekBackwards({ songId: sid }))}>
 					<RewindIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(togglePlaying({ songId: sid, view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(togglePlaying({ songId: sid }))}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(seekForwards({ songId: sid, view }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(seekForwards({ songId: sid }))}>
 					<FastForwardIcon />
 				</Button>
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpToEnd({ songId: sid }))}>
