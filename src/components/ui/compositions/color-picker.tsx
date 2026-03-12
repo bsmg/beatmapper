@@ -1,6 +1,7 @@
 import type { Assign } from "@ark-ui/react";
-import { type Color, type ColorPickerChannelInputBaseProps, type ColorPickerChannelSliderBaseProps, useColorPickerContext } from "@ark-ui/react/color-picker";
+import { type ColorPickerChannelInputBaseProps, type ColorPickerChannelSliderBaseProps, parseColor, useColorPickerContext } from "@ark-ui/react/color-picker";
 import { Portal } from "@ark-ui/react/portal";
+import type { ColorStringFormat } from "@zag-js/color-utils";
 import { PipetteIcon } from "lucide-react";
 import { type ComponentProps, forwardRef, type RefObject } from "react";
 
@@ -140,12 +141,12 @@ export const ColorPicker = forwardRef<HTMLInputElement, Assign<ComponentProps<ty
 	);
 });
 
-export function ColorPickerDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof ColorPicker>, FieldProps>) {
-	const [field, { id, required, invalid, errorText }] = useFieldData<Color>(delegated);
+export function ColorPickerDataField({ label, helperText, stringFormat = "hex", ...delegated }: Assign<ComponentProps<typeof ColorPicker>, FieldProps & { stringFormat?: ColorStringFormat }>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<string>(delegated);
 
 	return (
 		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<ColorPicker {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+			<ColorPicker {...delegated} value={parseColor(field.state.value)} onValueChange={(details) => field.handleChange(details.value.toString(stringFormat))} />
 		</Field>
 	);
 }

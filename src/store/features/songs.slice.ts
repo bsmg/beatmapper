@@ -73,8 +73,8 @@ const slice = createSlice({
 		selectModuleEnabled: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: keyof App.IModSettings) => key], (song, key) => {
 			return !!song.modSettings[key]?.isEnabled;
 		}),
-		selectCustomColors: createSelector(selectById, (song) => {
-			return song.modSettings.customColors;
+		selectCustomColor: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: ColorSchemeKey) => key], (song, key) => {
+			return song.modSettings.customColors?.[key];
 		}),
 		selectColorScheme: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return getColorScheme(song, beatmapId);

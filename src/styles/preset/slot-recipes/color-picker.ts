@@ -1,6 +1,8 @@
 import { colorPickerAnatomy } from "@ark-ui/react/color-picker";
 import { defineSlotRecipe } from "@pandacss/dev";
 
+import { input } from "../recipes";
+
 export const colorPicker = defineSlotRecipe({
 	className: "color-picker",
 	slots: colorPickerAnatomy.keys(),
@@ -63,9 +65,9 @@ export const colorPicker = defineSlotRecipe({
 			transform: "translate(-6px, -6px)",
 		},
 		channelInput: {
-			paddingInline: 0.5,
-			flex: 1,
-			layerStyle: "fill.subtle",
+			...input.base,
+			...input.variants?.size?.md,
+			colorPalette: "pink",
 		},
 		swatch: {
 			boxSize: "1.25em",

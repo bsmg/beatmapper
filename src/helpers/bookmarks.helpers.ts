@@ -1,40 +1,20 @@
-import { randomIntegerBetween } from "@std/random/integer-between";
 import type { v2 as v2t, v3 as v3t } from "bsmap/types";
+import { colorToHex, hexToRgba } from "bsmap/utils";
 
 import type { App } from "$/types";
-import { deserializeColorToHex, serializeColorToArray } from "./colors.helpers";
+import { hashCode } from "$/utils";
 import { createEntityFactory } from "./factory.helpers";
 
 export function resolveBookmarkId<T extends Pick<App.IBookmark, "time">>(x: T) {
 	return `${x.time}`;
 }
 
-export const BOOKMARK_COLORS = [
-	"#F50057", // pink
-	"#FFEA00", // yellow
-	"#D500F9", // purple
-	"#64DD17", // green
-	"#0091EA", // blue
-	"#FF9100", // orange
-] as const;
-
-export function getNewBookmarkColor(bookmarks: Pick<App.IBookmark, "color">[]) {
-	// I have 6 unique colors, and it's important that these are the first-used colors.
-	// Beyond that, we can be a little less careful, since most songs won't get up this high anyway.
-	if (bookmarks.length >= 6) {
-		return BOOKMARK_COLORS[bookmarks.length % BOOKMARK_COLORS.length];
-	}
-
-	const firstUnusedColor = BOOKMARK_COLORS.find((color) => {
-		const isColorUnused = bookmarks.every((bookmark) => bookmark.color !== color);
-
-		return isColorUnused;
-	});
-
-	return firstUnusedColor ?? BOOKMARK_COLORS[0];
+export function resolveColorForBookmark(name: string) {
+	const hash = hashCode(name);
+	return `hsl(${Math.abs(hash) % 360}, ${70}%, ${50}%)`;
 }
 
-export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createEntityFactory<App.IBookmark, { 1: Omit<v2t.IBookmark, "_color">; 2: v2t.IBookmark; 3: v3t.IBookmark }, never, { index?: number }>({
+export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createEntityFactory<App.IBookmark, { 1: Omit<v2t.IBookmark, "_color">; 2: v2t.IBookmark; 3: v3t.IBookmark }>({
 	resolveKey: (data) => {
 		if ("c" in data) return 3;
 		if ("_color" in data) return 2;
@@ -48,11 +28,11 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 					_name: data.name,
 				};
 			},
-			deserialize: (data, { index = randomIntegerBetween(0, 5) }) => {
+			deserialize: (data) => {
 				return {
 					time: data._time,
 					name: data._name,
-					color: BOOKMARK_COLORS[index % BOOKMARK_COLORS.length],
+					color: resolveColorForBookmark(data._name),
 				};
 			},
 		},
@@ -61,15 +41,14 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 				return {
 					_time: data.time,
 					_name: data.name,
-					_color: serializeColorToArray(data.color),
+					_color: hexToRgba(data.color),
 				};
 			},
-			deserialize: (data, { index = randomIntegerBetween(0, 5) }) => {
-				const color = data._color ? deserializeColorToHex(data._color) : undefined;
+			deserialize: (data) => {
 				return {
 					time: data._time,
 					name: data._name,
-					color: color ?? BOOKMARK_COLORS[index % BOOKMARK_COLORS.length],
+					color: data._color ? colorToHex(data._color) : resolveColorForBookmark(data._name),
 				};
 			},
 		},
@@ -78,15 +57,14 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 				return {
 					b: data.time,
 					n: data.name,
-					c: serializeColorToArray(data.color),
+					c: hexToRgba(data.color),
 				};
 			},
-			deserialize: (data, { index = randomIntegerBetween(0, 5) }) => {
-				const color = data.c ? deserializeColorToHex(data.c) : undefined;
+			deserialize: (data) => {
 				return {
 					time: data.b,
 					name: data.n,
-					color: color ?? BOOKMARK_COLORS[index % BOOKMARK_COLORS.length],
+					color: data.c ? colorToHex(data.c) : resolveColorForBookmark(data.n),
 				};
 			},
 		},

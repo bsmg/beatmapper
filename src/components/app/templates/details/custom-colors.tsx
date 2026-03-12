@@ -1,12 +1,12 @@
 import { parseColor } from "@ark-ui/react/color-picker";
 import { useParams } from "@tanstack/react-router";
-import { useDeferredValue, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { For } from "$/components/ui/atoms";
 import { ColorPicker, Heading, Switch } from "$/components/ui/compositions";
 import { updateCustomColor } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectCustomColors } from "$/store/selectors";
+import { selectColorScheme, selectCustomColor } from "$/store/selectors";
 import { ColorSchemeKey } from "$/types";
 import { styled, VStack } from "$:styled-system/jsx";
 import { wrap } from "$:styled-system/patterns";
@@ -27,21 +27,22 @@ function CustomColorSwatch({ element }: { element: ColorSchemeKey }) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
-	const customColors = useAppSelector((state) => selectCustomColors(state, sid));
+	const customColor = useAppSelector((state) => selectCustomColor(state, sid, element));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid));
 
-	const [color, setColor] = useState(customColors?.[element] ?? colorScheme[element]);
-	const [active, setActive] = useState(!!customColors?.[element]);
+	const [color, setColor] = useState(customColor ?? colorScheme[element]);
+	const [active, setActive] = useState(!!customColor);
 
-	const deferredColor = useDeferredValue(color);
-
-	useEffect(() => {
-		dispatch(updateCustomColor({ songId: sid, key: element, value: active ? deferredColor : undefined }));
-	}, [active, deferredColor, dispatch, sid, element]);
+	const handleUpdate = useCallback(
+		(value: string | undefined) => {
+			dispatch(updateCustomColor({ songId: sid, key: element, value: active ? value : undefined }));
+		},
+		[active, dispatch, sid, element],
+	);
 
 	return (
 		<VStack gap={2}>
-			<ColorPicker size="lg" value={parseColor(color ?? "black")} onValueChange={(x) => setColor(`#${x.value.toHexInt().toString(16)}`)} />
+			<ColorPicker size="lg" value={parseColor(color ?? "black")} onValueChange={(x) => setColor(x.value.toString("hex"))} onValueChangeEnd={(x) => handleUpdate(x.value.toString("hex"))} />
 			<Heading rank={3}>{BEATMAP_COLOR_KEY_RENAME[element]}</Heading>
 			<Switch checked={active} onCheckedChange={(x) => setActive(!!x.checked)} />
 		</VStack>
