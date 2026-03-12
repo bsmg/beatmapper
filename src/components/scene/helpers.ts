@@ -1,9 +1,11 @@
-import { resolveNoteAngle } from "bsmap";
+import { isInline, resolveNoteAngle } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import type { Vector3Tuple } from "three";
 
+import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import { deserializeCoordinate, isExtendedCoordinate } from "$/helpers/item.helpers";
-import { isColorNote } from "$/helpers/notes.helpers";
+import { isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
+import type { App } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
 
@@ -60,4 +62,51 @@ export function resolveDimensionsForObstacle<T extends wrapper.IWrapObstacle>(da
 	dimensions[2] = Math.max(dimensions[2], 0.01);
 
 	return dimensions;
+}
+
+export function calculateInlineRotations<T extends App.IColorNote>(notes: T[], lapping: number = Math.hypot(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS), tolerance: number = Math.PI / 2): Map<string, number> {
+	const overrides = new Map<string, number>();
+
+	const processedIds = new Set<string>();
+
+	for (let i = 0; i < notes.length; i++) {
+		const n1 = notes[i];
+		const id1 = resolveNoteId(n1);
+		if (processedIds.has(id1)) continue;
+
+		for (let j = i + 1; j < notes.length; j++) {
+			const n2 = notes[j];
+			const id2 = resolveNoteId(n2);
+			if (processedIds.has(id2)) continue;
+
+			if (Math.abs(n1.time - n2.time) < Number.EPSILON && n1.color === n2.color && n1.direction === n2.direction && isInline(n1, n2, lapping)) {
+				const nativeAngle = resolveRotationForNote(n1);
+
+				const dx = n2.posX - n1.posX;
+				const dy = n2.posY - n1.posY;
+
+				const angleA = Math.atan2(dy, dx) - Math.PI / 2;
+				const angleB = Math.atan2(-dy, -dx) - Math.PI / 2;
+
+				const getDiff = (a: number) => Math.abs(Math.atan2(Math.sin(a - nativeAngle), Math.cos(a - nativeAngle)));
+
+				const diffA = getDiff(angleA);
+				const diffB = getDiff(angleB);
+
+				const bestAngle = diffA < diffB ? angleA : angleB;
+
+				if (Math.min(diffA, diffB) <= tolerance - Number.EPSILON) {
+					overrides.set(id1, bestAngle);
+					overrides.set(id2, bestAngle);
+
+					processedIds.add(id1);
+					processedIds.add(id2);
+
+					break;
+				}
+			}
+		}
+	}
+
+	return overrides;
 }

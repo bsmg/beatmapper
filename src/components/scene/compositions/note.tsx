@@ -32,7 +32,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rot
 useOBJ.preload(blockCenterUrl);
 useOBJ.preload(blockDirectionalUrl);
 
-export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote<wrapper.IWrapColorNote>>, "path" | "children">) {
+export function ColorNote({ data, rotationOffset, ...rest }: Omit<ComponentProps<typeof BaseNote<wrapper.IWrapColorNote>>, "path" | "children"> & { rotationOffset?: number }) {
 	const url = useMemo(() => {
 		// If the direction is >=1000, we'll want to use mapping extensions.
 		// - for 2000-2360 range, it should be a dot note
@@ -60,7 +60,7 @@ export function ColorNote({ data, ...rest }: Omit<ComponentProps<typeof BaseNote
 		}
 	}, [data.direction]);
 
-	const rotation = useMemo(() => resolveRotationForNote(data), [data]);
+	const rotation = useMemo(() => rotationOffset ?? resolveRotationForNote(data), [data, rotationOffset]);
 
 	return (
 		<BaseNote {...rest} data={data} path={url} rotation-z={rotation} metalness={0.5} roughness={0.4}>

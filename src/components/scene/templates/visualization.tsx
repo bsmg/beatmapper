@@ -2,12 +2,12 @@ import { type ThreeEvent, useThree } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import type { wrapper } from "bsmap/types";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { Object3D } from "three";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
-import { resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
+import { calculateInlineRotations, resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
 import { useControls } from "$/components/scene/hooks/use-controls";
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
 import { Visualization } from "$/components/scene/layouts";
@@ -143,6 +143,13 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, obstacleActions.handleWheel],
 	);
 
+	const rotationOverrides = useMemo(() => {
+		if (interactive) {
+			return new Map<string, number>();
+		}
+		return calculateInlineRotations(notes);
+	}, [notes, interactive]);
+
 	return (
 		<Visualization.Root cursorPositionInBeats={cursorPositionInBeats} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
 			<Visualization.Mover immediate={!animateTrack}>
@@ -152,6 +159,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 						<ColorNote
 							key={resolveNoteId(data)}
 							{...props}
+							rotationOffset={rotationOverrides.get(resolveNoteId(data))}
 							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
 							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
 							onPointerOut={(e) => noteActions.handlePointerOut(e.nativeEvent, data)}
