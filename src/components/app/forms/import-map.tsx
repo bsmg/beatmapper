@@ -1,5 +1,7 @@
+import type { Assign } from "@ark-ui/react";
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import type { FileUploadFileAcceptDetails } from "@ark-ui/react/file-upload";
+import type { FileUploadFileChangeDetails } from "@ark-ui/react/file-upload";
+import { type ComponentProps, useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
 import { MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
@@ -9,23 +11,24 @@ import { Stack, Text } from "$:styled-system/jsx";
 
 interface Props {
 	dialog?: UseDialogContext;
-	onAccept: (file: File) => void;
+	onAccept: (files: File[]) => void;
 }
-function ImportMapForm({ dialog, onAccept }: Props) {
+function ImportMapForm({ dialog, onAccept, ...rest }: Assign<ComponentProps<typeof FileUpload>, Props>) {
 	const { toaster } = useSetupContext();
 
-	const handleFileAccept = (details: FileUploadFileAcceptDetails) => {
-		if (dialog) dialog.setOpen(false);
+	const handleFileChange = useCallback(
+		(details: FileUploadFileChangeDetails) => {
+			if (dialog) dialog.setOpen(false);
 
-		try {
-			for (const file of details.files) {
-				onAccept(file);
+			try {
+				onAccept(details.acceptedFiles);
+			} catch (error) {
+				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				return console.error(error);
 			}
-		} catch (error) {
-			toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
-			return console.error(error);
-		}
-	};
+		},
+		[dialog, toaster, onAccept],
+	);
 
 	return (
 		<Fragment>
@@ -44,7 +47,7 @@ function ImportMapForm({ dialog, onAccept }: Props) {
 				<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"18px"} fontWeight={300}>
 					Drag and drop (or click to select) the .zip file:
 				</Text>
-				<FileUpload label="Map Archive File" accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileAccept={handleFileAccept} />
+				<FileUpload {...rest} label="Map Archive File" accept={MAP_ARCHIVE_FILE_ACCEPT_TYPE} onFileChange={handleFileChange} />
 			</Stack>
 		</Fragment>
 	);

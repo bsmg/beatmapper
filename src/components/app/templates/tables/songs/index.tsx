@@ -2,6 +2,7 @@ import { useListCollection } from "@ark-ui/react/collection";
 import { Link } from "@tanstack/react-router";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { ArrowRightToLineIcon } from "lucide-react";
+import { useMemo } from "react";
 
 import { CoverArtFile } from "$/components/app/compositions";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
@@ -64,7 +65,7 @@ const SONG_TABLE = [
 				initialItems: beatmapIds,
 			});
 
-			return <Select collection={collection} value={[selectedBeatmapId.toString()]} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId: songId, beatmapId: details.value[0] }))} />;
+			return <Select key={songId} collection={collection} value={[selectedBeatmapId.toString()]} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId: songId, beatmapId: details.value[0] }))} />;
 		},
 	}),
 	helper.accessor((data) => resolveSongId(data), {
@@ -94,8 +95,11 @@ function SongsDataTable() {
 	const songs = useAppSelector(selectAllSongs);
 	const isProcessingImport = useAppSelector(selectProcessingImport);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: force rerender when songs change
+	const columns = useMemo(() => SONG_TABLE, [songs]);
+
 	const table = useReactTable({
-		columns: SONG_TABLE,
+		columns: columns,
 		data: songs,
 		getCoreRowModel: getCoreRowModel(),
 	});

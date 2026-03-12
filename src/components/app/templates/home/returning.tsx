@@ -24,7 +24,8 @@ function ReturningHome() {
 							Create new map
 						</Button>
 					</Dialog>
-					<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(file) => dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } }))} />}>
+					{/** biome-ignore lint/suspicious/useIterableCallbackReturn: doesn't matter */}
+					<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
 						<Button variant="solid" size="md">
 							Import existing map
 						</Button>

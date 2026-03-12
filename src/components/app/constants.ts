@@ -30,12 +30,6 @@ export const ENVIRONMENT_COLLECTION = createListCollection({
 	itemToString: (item) => EnvironmentRename[item],
 });
 
-export const VERSION_COLLECTION = createListCollection({
-	items: ["4", "3", "2", "1"].map((x, i) => ({ value: x, index: i })),
-	itemToString: (item) => ["v4", "v3", "v2", "v1"][item.index],
-	isItemDisabled: (item) => item.value === "1",
-});
-
 export const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
 	items: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
 	itemToValue: (item) => item.value,

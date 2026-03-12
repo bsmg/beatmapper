@@ -4,7 +4,9 @@ export const link = defineRecipe({
 	className: "link",
 	base: {
 		textStyle: "link",
-		colorPalette: "yellow",
+		colorPalette: {
+			"&[target]": "yellow",
+		},
 		cursor: "pointer",
 	},
 });

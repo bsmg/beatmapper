@@ -43,7 +43,8 @@ function FirstTimeHome() {
 						</Dialog>
 					</OptionColumn>
 					<OptionColumn icon={DownloadIcon} title="Import existing map" description="Edit an existing map by selecting it from your computer">
-						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(file) => dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } }))} />}>
+						{/** biome-ignore lint/suspicious/useIterableCallbackReturn: doesn't matter */}
+						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
 							<Button variant="solid" size="md">
 								Import map
 							</Button>

@@ -1,7 +1,7 @@
 import type { Assign } from "@ark-ui/react";
 import { type UseFileUploadProps, useFileUploadContext } from "@ark-ui/react/file-upload";
 import type { FileMimeType } from "@zag-js/file-utils";
-import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, type LucideProps } from "lucide-react";
+import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, type LucideProps, TrashIcon } from "lucide-react";
 import { type ComponentProps, forwardRef, useEffect, useMemo } from "react";
 
 import { useSetupContext } from "$/components/context";
@@ -82,7 +82,11 @@ function List({ accept, deletable }: FileUploadProps) {
 						</Builder.ItemPreview>
 						<Builder.ItemName />
 						<Builder.ItemSizeText />
-						{deletable && <ItemDeleteTrigger />}
+						{deletable && (
+							<ItemDeleteTrigger>
+								<TrashIcon />
+							</ItemDeleteTrigger>
+						)}
 					</Builder.Item>
 				)}
 			</For>

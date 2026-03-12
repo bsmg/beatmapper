@@ -3,7 +3,7 @@ import { DotIcon } from "lucide-react";
 import { Logo } from "$/components/app/compositions";
 import { Interleave } from "$/components/ui/atoms";
 import { RouterLink } from "$/components/ui/compositions";
-import { Container, styled } from "$:styled-system/jsx";
+import { Container, HStack, styled } from "$:styled-system/jsx";
 import { flex, stack } from "$:styled-system/patterns";
 
 function Header() {
@@ -14,11 +14,14 @@ function Header() {
 					<Logo />
 				</SectionWrapper>
 				<SectionWrapper>
-					<Interleave separator={(index) => <DotIcon key={index} />}>
-						<RouterLink to="/docs/$" params={{ _splat: "welcome" }}>
-							Documentation
-						</RouterLink>
-					</Interleave>
+					<HStack gap={0}>
+						<Interleave separator={(index) => <DotIcon key={index} />}>
+							<RouterLink to="/convert">Converter</RouterLink>
+							<RouterLink to="/docs/$" params={{ _splat: "welcome" }}>
+								Documentation
+							</RouterLink>
+						</Interleave>
+					</HStack>
 				</SectionWrapper>
 			</InnerWrapper>
 		</Wrapper>

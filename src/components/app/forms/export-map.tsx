@@ -1,8 +1,12 @@
+import type { Assign } from "@ark-ui/react";
+import { useListCollection } from "@ark-ui/react/collection";
 import type { BeatmapFileType, InferBeatmapVersion } from "bsmap/types";
+import type { ComponentProps } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
-import { VERSION_COLLECTION } from "$/components/app/constants";
+import { useSetupContext } from "$/components/context";
 import { Heading, useAppForm } from "$/components/ui/compositions";
+import type { SubmitButton } from "$/components/ui/compositions/button";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import { Stack, styled, Text, VStack } from "$:styled-system/jsx";
 
@@ -15,7 +19,15 @@ const SCHEMA = object({
 interface Props {
 	onSubmit: (ctx: ExportMapArchiveOptions) => void;
 }
-function ExportMapForm({ onSubmit }: Props) {
+function ExportMapForm({ onSubmit, ...rest }: Assign<ComponentProps<typeof SubmitButton>, Props>) {
+	const { toaster } = useSetupContext();
+
+	const { collection: serialVersionCollection } = useListCollection({
+		initialItems: ["4", "3", "2", "1"],
+		itemToString: (item) => `v${item}`,
+		isItemDisabled: (item) => item === "1",
+	});
+
 	const Form = useAppForm({
 		defaultValues: {
 			version: null as "1" | "2" | "3" | "4" | null,
@@ -28,10 +40,15 @@ function ExportMapForm({ onSubmit }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: ({ value }) => {
-			return onSubmit({
-				version: value.version ? (Number.parseInt(value.version, 10) as InferBeatmapVersion<BeatmapFileType>) : null,
-				saveOptions: { format: value.minify ? 0 : 2, optimize: { purgeZeros: value.purgeZeros } },
-			});
+			try {
+				return onSubmit({
+					version: value.version ? (Number.parseInt(value.version, 10) as InferBeatmapVersion<BeatmapFileType>) : null,
+					saveOptions: { format: value.minify ? 0 : 2, optimize: { purgeZeros: value.purgeZeros } },
+				});
+			} catch (error) {
+				toaster?.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				return console.error(error);
+			}
 		},
 	});
 
@@ -41,7 +58,7 @@ function ExportMapForm({ onSubmit }: Props) {
 				<Panel gap={6}>
 					<VStack gap={2}>
 						<Text textStyle={"paragraph"}>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Text>
-						<Form.Submit variant="solid" size="md">
+						<Form.Submit variant="solid" size="md" {...rest}>
 							Download map files
 						</Form.Submit>
 					</VStack>
@@ -53,7 +70,7 @@ function ExportMapForm({ onSubmit }: Props) {
 					<Form.AppField name="version">
 						{(ctx) => (
 							<Stack>
-								<ctx.RadioGroup label="Serial Version" helperText={"The [serial format](https://bsmg.wiki/mapping/map-format#schemas) to export your map contents to. Generally, higher versions will offer better compatibility."} collection={VERSION_COLLECTION} />
+								<ctx.RadioGroup collection={serialVersionCollection} label="Serial Version" helperText={"The [serial format](https://bsmg.wiki/mapping/map-format#schemas) to export your map contents to. Generally, higher versions will offer better compatibility."} />
 								<Text textStyle={"paragraph"} color={"fg.muted"} fontSize={"0.875em"}>
 									{ctx.state.value !== null ? null : "NOTE: If the version is left unset, the implicit version of your map will be used (derived from when the map was originally created/imported in the editor)."}
 								</Text>
