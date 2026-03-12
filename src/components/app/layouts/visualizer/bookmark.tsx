@@ -25,19 +25,7 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 	return (
 		<Fragment>
 			<ThinStrip style={sharedStyles} />
-			<Button
-				{...rest}
-				as={Flag}
-				unfocusOnPress
-				style={sharedStyles}
-				onMouseEnter={() => setIsHovering(true)}
-				onMouseLeave={() => setIsHovering(false)}
-				onMouseUp={(ev) => onMarkerClick(ev, bookmark.time)}
-				onContextMenu={(ev) => {
-					// Don't allow context menu to pop on right click.
-					ev.preventDefault();
-				}}
-			>
+			<Button {...rest} as={Flag} unfocusOnPress style={sharedStyles} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)} onMouseUp={(ev) => onMarkerClick(ev, bookmark.time)} onContextMenu={(ev) => ev.preventDefault()}>
 				<HStack gap={1}>
 					<BeatNum>{bookmark.time} </BeatNum>
 					<Name data-hover={isHovering ? "true" : undefined}>{bookmark.name}</Name>
@@ -86,8 +74,7 @@ const FlagDecoration = styled("svg", {
 	base: {
 		position: "absolute",
 		insetBlock: 0,
-		insetInlineEnd: 0,
-		transform: "translateX(100%)",
+		right: "-10px",
 		height: "100%",
 	},
 });

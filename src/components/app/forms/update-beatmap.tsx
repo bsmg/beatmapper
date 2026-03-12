@@ -1,12 +1,13 @@
+import { useListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename } from "bsmap";
 import type { CharacteristicName, DifficultyName, EnvironmentAllName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
-import { createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { useSetupContext } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
@@ -44,6 +45,11 @@ function UpdateBeatmapForm({ bid }: Props) {
 	const navigate = useNavigate();
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
+	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
+
+	const { collection: COLOR_SCHEME_COLLECTION } = useListCollection({
+		initialItems: colorSchemeIds,
+	});
 
 	const [showAdvancedControls, setShowAdvancedControls] = useState(false);
 
@@ -122,9 +128,6 @@ function UpdateBeatmapForm({ bid }: Props) {
 	});
 
 	const isDirtyAlert = useDialog({ role: "alertdialog", open: status === "blocked" });
-
-	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
-	const COLOR_SCHEME_COLLECTION = useMemo(() => createColorSchemeCollection({ colorSchemeIds }), [colorSchemeIds]);
 
 	return (
 		<Form.AppForm>

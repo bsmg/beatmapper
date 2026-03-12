@@ -4,7 +4,7 @@ import { useStore } from "@tanstack/react-form";
 import { useParams } from "@tanstack/react-router";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 import { type InferOutput, object } from "valibot";
 
 import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
@@ -44,21 +44,11 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 		},
 		onSubmit: ({ value }) => {
 			try {
-				const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === value.characteristic);
-				if (withMatchingCharacteristic.length >= DIFFICULTY_LIST_COLLECTION.size) {
-					throw new Error("All difficulties currently exist for this characteristic. Please choose a different characteristic.");
-				}
-
-				const withMatchingDifficulty = withMatchingCharacteristic.some((beatmap) => beatmap.difficulty === value.difficulty);
-				if (withMatchingDifficulty) {
-					throw new Error("The selected difficulty already exists for this characteristic. Please choose a different difficulty.");
-				}
-
-				onSubmit(resolveBeatmapId(value), value);
-
+				const beatmapId = resolveBeatmapId(value);
+				onSubmit(beatmapId, value);
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
-				toaster?.error({ description: `Error creating beatmap. ${error instanceof Error ? error.message : "See console for more info."}` });
+				toaster?.error({ description: `Could not create beatmap: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);
 			}
 		},
@@ -66,14 +56,11 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 
 	const selectedCharacteristic = useStore(Form.store, (state) => state.values.characteristic);
 
-	const CHARACTERISTIC_LIST_COLLECTION = useMemo(() => createBeatmapCharacteristicListCollection({ beatmaps }), [beatmaps]);
-	const DIFFICULTY_LIST_COLLECTION = useMemo(() => createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic: selectedCharacteristic }), [beatmaps, currentBeatmap, selectedCharacteristic]);
-
 	return (
 		<Form.AppForm>
 			<Form.Root>
-				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_LIST_COLLECTION} />}</Form.AppField>
-				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_LIST_COLLECTION} />}</Form.AppField>
+				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={createBeatmapCharacteristicListCollection({ beatmaps })} onChange={() => Form.resetField("difficulty")} />}</Form.AppField>
+				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic })} />}</Form.AppField>
 				<Form.Submit>{children}</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>

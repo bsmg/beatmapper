@@ -6,7 +6,7 @@ import { stack } from "$:styled-system/patterns";
 
 function NavigationPanelRoot({ children }: PropsWithChildren) {
 	return (
-		<Wrapper>
+		<Wrapper onContextMenu={(ev) => ev.preventDefault()}>
 			<For each={Children.toArray(children)}>{(child) => <SubWrapper>{child}</SubWrapper>}</For>
 		</Wrapper>
 	);

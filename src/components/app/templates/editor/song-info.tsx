@@ -1,11 +1,11 @@
+import { useListCollection } from "@ark-ui/react/collection";
 import type { SelectValueChangeDetails } from "@ark-ui/react/select";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { PlusIcon } from "lucide-react";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
 
 import { CoverArtFile } from "$/components/app/compositions";
-import { createBeatmapListCollection } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { Button, Dialog, Select } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
@@ -34,7 +34,9 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
 
-	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ beatmapIds }), [beatmapIds]);
+	const { collection: BEATMAP_LIST_COLLECTION } = useListCollection({
+		initialItems: beatmapIds,
+	});
 
 	const handleBeatmapSelect = useCallback(
 		(details: SelectValueChangeDetails) => {

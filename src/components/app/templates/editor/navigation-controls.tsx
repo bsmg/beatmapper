@@ -1,14 +1,15 @@
+import { useListCollection } from "@ark-ui/react/collection";
 import { useParams } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
-import { SNAPPING_INCREMENT_LIST_COLLECTION } from "$/components/app/constants";
 import { NavigationPanel } from "$/components/app/layouts";
 import { Button, Select, Stat } from "$/components/ui/compositions";
+import { SNAPPING_INCREMENTS } from "$/constants";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { jumpToEnd, jumpToStart, seekBackwards, seekForwards, togglePlaying, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
-import { roundToNearest } from "$/utils";
+import { getMetaKeyLabel, roundToNearest } from "$/utils";
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -33,6 +34,12 @@ function EditorNavigationControls() {
 		const roundedCursorPosition = isPlaying ? roundToNearest(cursorPositionInBeats, 0.5) : cursorPositionInBeats;
 
 		return formatCursorPositionInBeats(roundedCursorPosition);
+	});
+
+	const { collection: SNAPPING_INCREMENT_LIST_COLLECTION } = useListCollection({
+		initialItems: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
+		itemToValue: (item) => item.value,
+		itemToString: (item) => (item.shortcutKey ? `${item.label} (${getMetaKeyLabel()}+${item.shortcutKey})` : item.label),
 	});
 
 	return (

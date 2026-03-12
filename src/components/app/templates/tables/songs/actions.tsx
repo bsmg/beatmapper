@@ -1,6 +1,7 @@
 import { useListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import type { MenuSelectionDetails } from "@ark-ui/react/menu";
+import { toPascalCase } from "@std/text/to-pascal-case";
 import { Fragment, useCallback } from "react";
 
 import { useSetupContext } from "$/components/context";
@@ -22,10 +23,9 @@ function SongsDataTableActions({ sid }: Props) {
 	const dispatch = useAppDispatch();
 
 	const { collection: ACTION_LIST_COLLECTION } = useListCollection({
-		initialItems: ["copy", "delete", "download"].map((value, index) => {
-			return { value, label: ["Copy", "Delete", "Download"][index] };
-		}),
-		isItemDisabled: (item) => import.meta.env.PROD && isDemo && !["delete"].includes(item.value),
+		initialItems: ["download", "delete"],
+		itemToString: toPascalCase,
+		isItemDisabled: (item) => import.meta.env.PROD && isDemo && !["delete"].includes(item),
 	});
 
 	const deleteAlert = useDialog({ role: "alertdialog" });

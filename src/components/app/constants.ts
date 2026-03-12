@@ -5,9 +5,7 @@ import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsm
 import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
-import { SNAPPING_INCREMENTS } from "$/constants";
-import type { App, BeatmapId } from "$/types";
-import { getMetaKeyLabel } from "$/utils";
+import type { App } from "$/types";
 import { token } from "$:styled-system/tokens";
 
 export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg", "application/ogg"];
@@ -24,35 +22,10 @@ export const DIFFICULTY_COLLECTION = createListCollection({
 	itemToValue: (item) => item.value,
 	itemToString: (item) => DifficultyRename[item.value],
 });
-
 export const ENVIRONMENT_COLLECTION = createListCollection({
 	items: [...EnvironmentName, ...EnvironmentV3Name],
 	itemToString: (item) => EnvironmentRename[item],
 });
-
-export const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
-	items: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
-	itemToValue: (item) => item.value,
-	itemToString: (item) => (item.shortcutKey ? `${item.label} (${getMetaKeyLabel()}+${item.shortcutKey})` : item.label),
-});
-
-interface ColorSchemeListCollectionOptions {
-	colorSchemeIds: string[];
-}
-export function createColorSchemeCollection({ colorSchemeIds }: ColorSchemeListCollectionOptions) {
-	return createListCollection({
-		items: colorSchemeIds,
-	});
-}
-
-interface BeatmapListCollectionOptions {
-	beatmapIds: BeatmapId[];
-}
-export function createBeatmapListCollection({ beatmapIds }: BeatmapListCollectionOptions) {
-	return createListCollection({
-		items: beatmapIds,
-	});
-}
 
 interface BeatmapCharacteristicListCollection {
 	beatmaps: App.IBeatmap[];
