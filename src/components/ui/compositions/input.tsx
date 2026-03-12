@@ -26,7 +26,7 @@ export function InputDataField({ label, helperText, ...delegated }: Assign<Compo
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldInput {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
+			<FieldInput {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);
 }
@@ -35,7 +35,7 @@ export function NumberInputDataField({ label, helperText, ...delegated }: Assign
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldInput {...delegated} type="number" value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
+			<FieldInput {...delegated} id={id} type="number" value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
 		</Field>
 	);
 }

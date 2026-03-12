@@ -26,7 +26,7 @@ export function TextareaDataField({ label, helperText, ...rest }: Assign<Compone
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldTextarea {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
+			<FieldTextarea {...rest} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);
 }

@@ -52,7 +52,7 @@ export function RadioButtonGroupDataField<T extends CollectionItem>({ label, hel
 
 	return (
 		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<RadioButtonGroup {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+			<RadioButtonGroup {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
 }

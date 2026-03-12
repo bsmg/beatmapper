@@ -39,7 +39,7 @@ export function SwitchDataField({ label, helperText, ...delegated }: Assign<Comp
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Switch {...delegated} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
+			<Switch {...delegated} id={id} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
 		</Field>
 	);
 }

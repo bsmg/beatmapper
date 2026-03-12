@@ -121,7 +121,7 @@ export function FileUploadDataField({ label, helperText, acceptText, ...delegate
 
 	return (
 		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FileUpload {...delegated} label={acceptText} acceptedFiles={field.state.value} onFileChange={(details) => field.handleChange(details.acceptedFiles)} />
+			<FileUpload {...delegated} id={id} label={acceptText} acceptedFiles={field.state.value} onFileChange={(details) => field.handleChange(details.acceptedFiles)} />
 		</Field>
 	);
 }

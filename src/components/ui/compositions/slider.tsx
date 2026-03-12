@@ -65,7 +65,7 @@ export function SliderDataField({ label, helperText, ...delegated }: Assign<Comp
 
 	return (
 		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Slider {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+			<Slider {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
 }

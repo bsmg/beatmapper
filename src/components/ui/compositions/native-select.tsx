@@ -49,7 +49,7 @@ export function SelectDataField({ label, helperText, ...delegated }: Assign<Comp
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldSelectGroup {...delegated} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
+			<FieldSelectGroup {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);
 }

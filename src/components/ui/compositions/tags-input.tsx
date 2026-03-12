@@ -56,7 +56,7 @@ export function TagsInputDataField({ label, helperText, ...rest }: Assign<Compon
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<TagsInput {...rest} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+			<TagsInput {...rest} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
 		</Field>
 	);
 }

@@ -146,7 +146,7 @@ export function ColorPickerDataField({ label, helperText, stringFormat = "hex", 
 
 	return (
 		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<ColorPicker {...delegated} value={parseColor(field.state.value)} onValueChange={(details) => field.handleChange(details.value.toString(stringFormat))} />
+			<ColorPicker {...delegated} id={id} value={parseColor(field.state.value)} onValueChange={(details) => field.handleChange(details.value.toString(stringFormat))} />
 		</Field>
 	);
 }

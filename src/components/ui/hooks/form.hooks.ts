@@ -10,5 +10,5 @@ export function useFieldData<TData>({ ...rest }: FieldProps): [ReturnType<typeof
 	const invalid = useStore(field.store, (state) => !state.meta.isValid);
 	const errorText = useStore(field.store, (state) => state.meta.errors[0]?.message);
 
-	return [field, { ...rest, id: rest.id ?? field.name, invalid, errorText }];
+	return [field, { ...rest, invalid, errorText }];
 }

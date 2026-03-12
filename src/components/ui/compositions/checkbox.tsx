@@ -44,7 +44,7 @@ export function CheckboxDataField({ label, helperText, ...delegated }: Assign<Co
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Checkbox {...delegated} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
+			<Checkbox {...delegated} id={id} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
 		</Field>
 	);
 }
