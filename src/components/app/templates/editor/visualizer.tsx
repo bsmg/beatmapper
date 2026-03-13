@@ -5,7 +5,7 @@ import { AudioVisualizer } from "$/components/app/layouts";
 import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
 import { Waveform } from "$/components/ui/compositions";
 import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
-import { jumpToBeat, removeBookmark, scrubVisualizer } from "$/store/actions";
+import { jumpToBeat, jumpToTime, removeBookmark } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectLoading, selectRenderScale, selectWaveformData } from "$/store/selectors";
 import { roundToNearest } from "$/utils";
@@ -30,7 +30,7 @@ function EditorAudioVisualizer() {
 
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {
-			dispatch(scrubVisualizer({ songId: sid, newOffset: offset }));
+			dispatch(jumpToTime({ songId: sid, value: offset }));
 		},
 		[dispatch, sid],
 	);
@@ -43,7 +43,7 @@ function EditorAudioVisualizer() {
 					return dispatch(removeBookmark({ beatNum: time }));
 				}
 				default: {
-					return dispatch(jumpToBeat({ songId: sid, beatNum: time }));
+					return dispatch(jumpToBeat({ songId: sid, value: time }));
 				}
 			}
 		},
@@ -55,7 +55,7 @@ function EditorAudioVisualizer() {
 			<AudioVisualizer.Content duration={duration} cursorPosition={roundedCursorPosition} onVisualizerClick={handleVisualizerClick}>
 				{(ref) => <Waveform ref={ref} width={dimensions.width} height={dimensions.height} waveformData={waveformData} duration={duration} />}
 			</AudioVisualizer.Content>
-			{!isLoadingSong && durationInBeats && (
+			{durationInBeats !== null && (
 				<AudioVisualizer.Markers duration={durationInBeats} offset={offsetInBeats} markers={bookmarks} onMarkerClick={handleMarkerClick}>
 					{(bookmark, rest) => <AudioVisualizer.Bookmark key={resolveBookmarkId(bookmark)} bookmark={bookmark} {...rest} />}
 				</AudioVisualizer.Markers>

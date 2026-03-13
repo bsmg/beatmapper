@@ -34,7 +34,7 @@ import {
 	seekBackwards,
 	seekForwards,
 	selectAllEntitiesInRange,
-	togglePlaying,
+	togglePlayback,
 	undoEvents,
 	undoObjects,
 	updateSnap,
@@ -66,14 +66,15 @@ function DefaultEditorShortcuts() {
 				if (typeof endBeat !== "number") {
 					endBeat = Number.POSITIVE_INFINITY;
 				}
-				return dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+				dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+				dispatch(jumpToBeat({ songId: sid, value: startBeat }));
 			},
 		}),
 	);
 	const { trigger: triggerJumpToBeat } = usePrompt(
 		createJumpToBeatPrompt({
 			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
-			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ songId: sid, pauseTrack: true, beatNum: beatNum })),
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ songId: sid, pauseTrack: true, value: beatNum })),
 		}),
 	);
 	const { trigger: triggerAddBookmark } = usePrompt(
@@ -140,7 +141,7 @@ function DefaultEditorShortcuts() {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
 					if (keysDepressed.current.space) return;
 					keysDepressed.current.space = true;
-					return dispatch(togglePlaying({ songId: sid }));
+					return dispatch(togglePlayback({ songId: sid }));
 				}
 				case "Escape": {
 					return dispatch(deselectAllEntities({ view }));

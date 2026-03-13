@@ -5,7 +5,7 @@ import { type ComponentProps, useCallback } from "react";
 import { EventGrid } from "$/components/app/layouts";
 import { useMousePositionOverElement } from "$/components/hooks/use-mouse-position-over-element";
 import { isMirroredTrack } from "$/helpers/events.helpers";
-import { drawEventSelectionBox, scrubEventsHeader, updateEventsEditorCursor, updateEventsEditorTrackHeight } from "$/store/actions";
+import { drawEventSelectionBox, jumpToBeat, updateEventsEditorCursor, updateEventsEditorTrackHeight } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
 	selectCursorPositionInBeats,
@@ -81,7 +81,7 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 		<EventGrid.Root {...api.getRootProps()} {...rest} service={service}>
 			<EventGrid.Header>
 				<EventGrid.Actions />
-				<EventGrid.Timeline onScrubHeader={({ beat }) => dispatch(scrubEventsHeader({ songId: sid, selectedBeat: beat }))} />
+				<EventGrid.Timeline onScrubHeader={({ beat }) => dispatch(jumpToBeat({ songId: sid, value: beat }))} />
 			</EventGrid.Header>
 			<EventGrid.Body>
 				<EventGrid.PrefixGroup onWheel={(ev) => ev.stopPropagation()}>

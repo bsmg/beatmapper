@@ -6,7 +6,7 @@ import { NavigationPanel } from "$/components/app/layouts";
 import { Button, Select, Stat } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
-import { jumpToEnd, jumpToStart, seekBackwards, seekForwards, togglePlaying, updateSnap } from "$/store/actions";
+import { jumpToEnd, jumpToStart, seekBackwards, seekForwards, togglePlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
 import { getMetaKeyLabel, roundToNearest } from "$/utils";
@@ -54,7 +54,7 @@ function EditorNavigationControls() {
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(seekBackwards({ songId: sid }))}>
 					<RewindIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(togglePlaying({ songId: sid }))}>
+				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(togglePlayback({ songId: sid }))}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(seekForwards({ songId: sid }))}>

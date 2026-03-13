@@ -13,17 +13,15 @@ import {
 	jumpToBeat,
 	jumpToEnd,
 	jumpToStart,
+	jumpToTime,
 	pausePlayback,
 	scrollThroughSong,
-	scrubEventsHeader,
-	scrubVisualizer,
 	seekBackwards,
 	seekForwards,
-	selectAllEntitiesInRange,
 	startPlayback,
 	stopPlayback,
 	tick,
-	togglePlaying,
+	togglePlayback,
 	updateCursorPosition,
 	updatePlaybackRate,
 	updateSong,
@@ -207,11 +205,11 @@ export default function createAudioMiddleware() {
 		},
 	});
 	instance.startListening({
-		actionCreator: togglePlaying,
+		actionCreator: togglePlayback,
 		effect: (action, api) => {
 			const { songId } = action.payload;
 
-			if (selectPlaying(api.getState())) {
+			if (selectPlaying(api.getOriginalState())) {
 				api.dispatch(pausePlayback({ songId }));
 			} else {
 				api.dispatch(startPlayback({ songId }));
@@ -219,42 +217,24 @@ export default function createAudioMiddleware() {
 		},
 	});
 	instance.startListening({
-		actionCreator: scrubVisualizer,
+		actionCreator: jumpToTime,
 		effect: (action, api) => {
-			const { songId, newOffset } = action.payload;
+			const { songId, value: time, pauseTrack } = action.payload;
 
 			const state = api.getState();
 			// When the song is playing, `cursorPosition` is fluid, moving every 16 milliseconds to a new fractional value.
 			// Once we stop, we want to snap to the nearest beat.
-			api.dispatch(updateCursorPosition({ value: selectNearestBeat(state, songId, newOffset) }));
-		},
-	});
-	instance.startListening({
-		actionCreator: scrubEventsHeader,
-		effect: (action, api) => {
-			const { songId, selectedBeat } = action.payload;
-			const state = api.getState();
-			const offsetInBeats = selectEditorOffsetInBeats(state, songId);
+			api.dispatch(updateCursorPosition({ value: selectNearestBeat(state, songId, time) }));
 
-			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, selectedBeat + offsetInBeats) }));
-		},
-	});
-	instance.startListening({
-		actionCreator: selectAllEntitiesInRange,
-		effect: (action, api) => {
-			const { songId, startBeat } = action.payload;
-			const state = api.getState();
-			const offsetInBeats = selectEditorOffsetInBeats(state, songId);
-
-			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(api.getState(), songId, startBeat + offsetInBeats) }));
-
-			api.dispatch(pausePlayback({ songId }));
+			if (pauseTrack) {
+				api.dispatch(pausePlayback({ songId }));
+			}
 		},
 	});
 	instance.startListening({
 		actionCreator: jumpToBeat,
 		effect: (action, api) => {
-			const { songId, beatNum, pauseTrack } = action.payload;
+			const { songId, value: beatNum, pauseTrack } = action.payload;
 			const state = api.getState();
 			const offsetInBeats = selectEditorOffsetInBeats(state, songId);
 
@@ -271,6 +251,7 @@ export default function createAudioMiddleware() {
 			const { songId } = action.payload;
 			const state = api.getState();
 			const durationInBeats = selectDurationInBeats(state, songId);
+			if (durationInBeats === null) return;
 			const offsetInBeats = selectEditorOffsetInBeats(state, songId);
 			// if we're jumping to the end, round to the last beat.
 			const newValue = Math.round(jumpToStart.match(action) ? 0 : Math.floor(durationInBeats - offsetInBeats));
@@ -283,6 +264,7 @@ export default function createAudioMiddleware() {
 			const { songId } = action.payload;
 			const state = api.getState();
 			const durationInBeats = selectDurationInBeats(state, songId);
+			if (durationInBeats === null) return;
 			const cursorPositionInBeats = selectCursorPositionInBeats(state, songId);
 			const offsetInBeats = selectEditorOffsetInBeats(state, songId);
 

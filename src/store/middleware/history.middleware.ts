@@ -19,7 +19,7 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, Dispatch>, songI
 	const relevantEntities = [...relevantNotes, ...relevantBombs, ...relevantObstacles].sort(sortObjectFn);
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
-	api.dispatch(jumpToBeat({ songId, beatNum: earliestBeat, pauseTrack: true, animateJump: true }));
+	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
 }
 
 function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "basicEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
@@ -28,7 +28,7 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId
 	const relevantEntities = [...relevantEvents].sort(sortObjectFn);
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
-	api.dispatch(jumpToBeat({ songId, beatNum: earliestBeat, pauseTrack: true, animateJump: true }));
+	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
 }
 
 /**

@@ -1,7 +1,7 @@
-import type { ReducerCreators } from "@reduxjs/toolkit";
+import { isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, scrubVisualizer, selectAllEntitiesInRange, tick, updateSong } from "$/store/actions";
+import { hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import type { SongId } from "$/types";
 import { clamp } from "$/utils";
@@ -51,6 +51,14 @@ const slice = createSlice({
 		}
 
 		return {
+			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
+				const { value } = action.payload;
+				return { ...state, cursorPosition: clamp(value, 0, state.duration ?? value) };
+			}),
+			tick: api.reducer<{ timeElapsed: number }>((state, action) => {
+				const { timeElapsed } = action.payload;
+				return { ...state, cursorPosition: timeElapsed };
+			}),
 			startPlayback: api.reducer<{ songId: SongId }>((state) => {
 				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
 			}),
@@ -60,28 +68,31 @@ const slice = createSlice({
 			stopPlayback: api.reducer<{ songId: SongId }>((state) => {
 				return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false };
 			}),
-			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, cursorPosition: clamp(value, 0, state.duration ?? value) };
+			togglePlayback: api.reducer<{ songId: SongId }>((state) => {
+				return { ...state, isPlaying: !state.isPlaying };
 			}),
-			jumpToBeat: api.reducer<{ songId: SongId; beatNum: number; pauseTrack?: boolean; animateJump?: boolean }>((state, action) => {
-				const { pauseTrack, animateJump } = action.payload;
-				// In some cases, we want to pause the track when jumping.
-				// In others, we inherit whatever the current value is.
-				const isPlaying = pauseTrack ? false : state.isPlaying;
-				return { ...state, isPlaying, animateBlockMotion: !!animateJump, animateRingMotion: false };
+			jumpToTime: api.reducer<{ songId: SongId; value: number; pauseTrack?: boolean; animateJump?: boolean }>((state, action) => {
+				const { animateJump } = action.payload;
+				return { ...state, animateBlockMotion: !!animateJump };
+			}),
+			jumpToBeat: api.reducer<{ songId: SongId; value: number; pauseTrack?: boolean; animateJump?: boolean }>((state, action) => {
+				const { animateJump } = action.payload;
+				return { ...state, animateBlockMotion: !!animateJump };
 			}),
 			jumpToStart: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true, animateRingMotion: false };
+				return { ...state, animateBlockMotion: true };
 			}),
 			jumpToEnd: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true, animateRingMotion: false };
+				return { ...state, animateBlockMotion: true };
 			}),
 			jumpForwards: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true, animateRingMotion: false };
+				return { ...state, animateBlockMotion: true };
 			}),
 			jumpBackwards: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true, animateRingMotion: false };
+				return { ...state, animateBlockMotion: true };
+			}),
+			scrollThroughSong: api.reducer<{ songId: SongId; direction: "forwards" | "backwards" }>((state) => {
+				return { ...state, animateBlockMotion: true };
 			}),
 			updateSnap: api.reducer<{ value: number }>((state, action) => {
 				const { value: newSnapTo } = action.payload;
@@ -127,30 +138,23 @@ const slice = createSlice({
 			if (tickVolume !== undefined) state.tickVolume = tickVolume;
 			if (tickType !== undefined) state.tickType = tickType;
 		});
-		builder.addCase(tick, (state, action) => {
-			const { timeElapsed } = action.payload;
-			return { ...state, cursorPosition: timeElapsed, animateBlockMotion: true, animateRingMotion: true };
-		});
-		builder.addCase(scrubVisualizer, (state) => {
-			return { ...state, animateBlockMotion: false, animateRingMotion: false };
-		});
-		builder.addCase(selectAllEntitiesInRange, (state) => {
-			return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false };
-		});
-		builder.addCase(scrollThroughSong, (state) => {
-			return { ...state, animateBlockMotion: true, animateRingMotion: false };
-		});
-		builder.addCase(leaveEditor, (state) => {
-			return { ...state, duration: null };
-		});
 		builder.addCase(reloadVisualizer, (state, action) => {
 			const { duration } = action.payload;
 			return { ...state, duration: duration * 1000 };
+		});
+		builder.addCase(leaveEditor, (state) => {
+			return { ...state, duration: null };
 		});
 		builder.addCase(updateSong, (state, action) => {
 			const { changes } = action.payload;
 			if (!changes.offset) return state;
 			return { ...state, cursorPosition: Math.max(changes.offset, 0) };
+		});
+		builder.addMatcher(isAnyOf(scrollThroughSong), (state) => {
+			return { ...state, animateBlockMotion: true };
+		});
+		builder.addMatcher(isAnyOf(selectAllEntitiesInRange), (state) => {
+			return { ...state, animateBlockMotion: false };
 		});
 		builder.addDefaultCase((state) => state);
 	},

@@ -73,11 +73,10 @@ export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, 
 	return state.navigation;
 });
 export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
-	if (cursorPosition === null) return 0;
 	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
 });
 export const selectDurationInBeats = createSelector(selectDuration, selectBpm, (duration, bpm) => {
-	if (duration === null) return 0;
+	if (duration === null) return null;
 	return convertMillisecondsToBeats(duration, bpm);
 });
 

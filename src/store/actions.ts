@@ -1,5 +1,4 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
-import type { JsonWaveformData } from "waveform-data";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
@@ -105,12 +104,16 @@ export const {
 	startPlayback,
 	pausePlayback,
 	stopPlayback,
+	togglePlayback,
 	updateCursorPosition,
+	tick,
 	jumpToBeat,
+	jumpToTime,
 	jumpToStart,
 	jumpToEnd,
 	jumpForwards: seekForwards,
 	jumpBackwards: seekBackwards,
+	scrollThroughSong,
 	updateTrackScale: updateBeatDepth,
 	updatePlaybackRate,
 	incrementPlaybackRate,
@@ -123,67 +126,7 @@ export const {
 	decrementSnap,
 } = navigation.actions;
 
-export const reloadVisualizer = createAction("reloadVisualizer", (args: { duration: number; waveformData: JsonWaveformData }) => {
-	return { payload: { ...args } };
-});
-
-export const togglePlaying = createAction("togglePlaying", (args: { songId: SongId }) => {
-	return { payload: { ...args } };
-});
-
-export const tick = createAction("tick", (args: { timeElapsed: number }) => {
-	return { payload: { ...args } };
-});
-
-export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; posX: number; posY: number; direction?: number; tool: ObjectTool }, api) => {
-	const state = api.getState() as RootState;
-	const selectedDirection = args.direction ?? selectNotesEditorDirection(state);
-	const selectedTool = selectNotesEditorTool(state);
-	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
-	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	const duration = selectDurationInBeats(state, args.songId);
-	if (cursorPositionInBeats < 0 || (duration && cursorPositionInBeats > duration)) return api.rejectWithValue("Cannot place objects out-of-bounds.");
-
-	function adjustNoteCursorPosition(cursorPositionInBeats: number, state: RootState) {
-		const isPlaying = selectPlaying(state);
-
-		if (isPlaying) {
-			// If the user tries to place blocks while the song is playing, we want to snap to the nearest snapping interval.
-			// eg. if they're set to snap to 1/2 beats, and they click when the song is 3.476 beats in, we should round up to 3.5.
-			const snapTo = selectSnap(state);
-			return roundToNearest(cursorPositionInBeats, snapTo);
-		}
-		// If the song isn't playing, we want to snap to the highest precision we have.
-		// Note that this will mean a slight tweak for notes that are a multiple of 3 (eg. a note at 1.333 beats will be rounded to 1.328125)
-		return roundToNearest(cursorPositionInBeats, HIGHEST_PRECISION);
-	}
-
-	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
-	const alreadyExists = selectAllNotes(state).some((note) => note.time === adjustedCursorPosition && note.posX === args.posX && note.posY === args.posY);
-	if (alreadyExists) api.dispatch(removeFromCell(args));
-	return api.fulfillWithValue({ query: { time: adjustedCursorPosition, posX: args.posX, posY: args.posY }, direction: selectedDirection, tool: selectedTool });
-});
-
-export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api) => {
-	const state = api.getState() as RootState;
-	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
-	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	return api.fulfillWithValue({ query: { time: cursorPositionInBeats, posX: args.posX, posY: args.posY } });
-});
-
-export const { updateZoom: zoomVisualizer } = visualizer.actions;
-
-export const scrollThroughSong = createAction("scrollThroughSong", (args: { songId: SongId; direction: "forwards" | "backwards" }) => {
-	return { payload: { ...args } };
-});
-
-export const scrubVisualizer = createAction("scrubVisualizer", (args: { songId: SongId; newOffset: number }) => {
-	return { payload: { ...args } };
-});
-
-export const scrubEventsHeader = createAction("scrubEventsHeader", (args: { songId: SongId; selectedBeat: number }) => {
-	return { payload: { ...args } };
-});
+export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
 
 export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, upsertGridPreset: saveGridPreset, removeGridPreset } = beatmap.actions;
 
@@ -218,6 +161,43 @@ export const cycleToNextTool = createAction("cycleToNextTool", (args: { view: Vi
 
 export const cycleToPrevTool = createAction("cycleToPrevTool", (args: { view: View }) => {
 	return { payload: { ...args } };
+});
+
+export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; posX: number; posY: number; direction?: number; tool: ObjectTool }, api) => {
+	const state = api.getState() as RootState;
+	const selectedDirection = args.direction ?? selectNotesEditorDirection(state);
+	const selectedTool = selectNotesEditorTool(state);
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
+	const durationInBeats = selectDurationInBeats(state, args.songId);
+	if (cursorPositionInBeats < 0 || (durationInBeats !== null && cursorPositionInBeats > durationInBeats)) {
+		return api.rejectWithValue("Cannot place objects out-of-bounds.");
+	}
+
+	function adjustNoteCursorPosition(cursorPositionInBeats: number, state: RootState) {
+		const isPlaying = selectPlaying(state);
+
+		if (isPlaying) {
+			// If the user tries to place blocks while the song is playing, we want to snap to the nearest snapping interval.
+			// eg. if they're set to snap to 1/2 beats, and they click when the song is 3.476 beats in, we should round up to 3.5.
+			const snapTo = selectSnap(state);
+			return roundToNearest(cursorPositionInBeats, snapTo);
+		}
+		// If the song isn't playing, we want to snap to the highest precision we have.
+		// Note that this will mean a slight tweak for notes that are a multiple of 3 (eg. a note at 1.333 beats will be rounded to 1.328125)
+		return roundToNearest(cursorPositionInBeats, HIGHEST_PRECISION);
+	}
+
+	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
+	const alreadyExists = selectAllNotes(state).some((note) => note.time === adjustedCursorPosition && note.posX === args.posX && note.posY === args.posY);
+	if (alreadyExists) api.dispatch(removeFromCell(args));
+	return api.fulfillWithValue({ query: { time: adjustedCursorPosition, posX: args.posX, posY: args.posY }, direction: selectedDirection, tool: selectedTool });
+});
+
+export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api) => {
+	const state = api.getState() as RootState;
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
+	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
+	return api.fulfillWithValue({ query: { time: cursorPositionInBeats, posX: args.posX, posY: args.posY } });
 });
 
 export const { updateOne: updateColorNote, mirrorOne: mirrorColorNote } = notes.actions;
