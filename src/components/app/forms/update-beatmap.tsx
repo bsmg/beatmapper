@@ -2,7 +2,7 @@ import { useListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename } from "bsmap";
-import type { CharacteristicName, DifficultyName, EnvironmentAllName } from "bsmap/types";
+import type { EnvironmentAllName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
@@ -93,14 +93,6 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 	const deleteAlert = useDialog({ role: "alertdialog" });
 
-	const handleCopyBeatmap = useCallback(
-		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }));
-			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: id.toString() } });
-		},
-		[dispatch, navigate, sid, bid, view],
-	);
-
 	const handleDeleteBeatmap = useCallback(() => {
 		// Delete our working state
 		const mutableDifficultiesCopy = { ...beatmaps };
@@ -174,9 +166,10 @@ function UpdateBeatmapForm({ bid }: Props) {
 					</Form.Submit>
 					<Dialog
 						title="Copy Beatmap"
+						lazyMount
 						unmountOnExit
 						render={(ctx) => (
-							<CreateBeatmapForm dialog={ctx} onSubmit={handleCopyBeatmap}>
+							<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))}>
 								Copy beatmap
 							</CreateBeatmapForm>
 						)}

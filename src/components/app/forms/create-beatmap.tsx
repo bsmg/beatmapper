@@ -1,18 +1,18 @@
 import type { Assign } from "@ark-ui/react";
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import type { PropsWithChildren } from "react";
-import { type InferOutput, object } from "valibot";
+import { object } from "valibot";
 
 import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
 import { useAppForm } from "$/components/ui/compositions";
-import { resolveBeatmapId } from "$/helpers/song.helpers";
+import { type createAppBeatmap, resolveBeatmapId } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectAllBeatmaps, selectBeatmapById } from "$/store/selectors";
+import { selectAllBeatmaps, selectBeatmapById, selectUsername } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
 
 const SCHEMA = object({
@@ -22,13 +22,17 @@ const SCHEMA = object({
 
 interface Props {
 	dialog?: UseDialogContext;
-	onSubmit: (bid: BeatmapId, data: InferOutput<typeof SCHEMA>) => void;
+	onSubmit: (bid: BeatmapId, data: Parameters<typeof createAppBeatmap>[0]) => void;
 }
 function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<PropsWithChildren, Props>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
+	const navigate = useNavigate();
 
 	const { toaster } = useSetupContext();
 
+	const username = useAppSelector(selectUsername);
 	const beatmaps = useAppSelector((state) => selectAllBeatmaps(state, sid));
 	const currentBeatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
@@ -45,8 +49,10 @@ function CreateBeatmapForm({ children = "Create", dialog, onSubmit }: Assign<Pro
 		onSubmit: ({ value }) => {
 			try {
 				const beatmapId = resolveBeatmapId(value);
-				onSubmit(beatmapId, value);
+				const mappers = username ? [username] : [];
+				onSubmit(beatmapId, { ...value, mappers: mappers, lighters: mappers });
 				if (dialog) dialog.setOpen(false);
+				navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: beatmapId } });
 			} catch (error) {
 				toaster?.error({ description: `Could not create beatmap: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);

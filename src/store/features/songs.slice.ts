@@ -73,8 +73,8 @@ const slice = createSlice({
 		selectModuleEnabled: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: keyof App.IModSettings) => key], (song, key) => {
 			return !!song.modSettings[key]?.isEnabled;
 		}),
-		selectCustomColor: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: ColorSchemeKey) => key], (song, key) => {
-			return song.modSettings.customColors?.[key];
+		selectCustomColors: createSelector(selectById, (song) => {
+			return { ...song.modSettings.customColors };
 		}),
 		selectColorScheme: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return getColorScheme(song, beatmapId);
@@ -169,7 +169,7 @@ const slice = createSlice({
 					changes: deepAssign(song, { modSettings: { [key]: { isEnabled: !song.modSettings[key]?.isEnabled } } }),
 				});
 			}),
-			updateCustomColor: api.reducer<{ songId: SongId; key: ColorSchemeKey; value?: string }>((state, action) => {
+			updateCustomColor: api.reducer<{ songId: SongId; key: ColorSchemeKey; value: string | null }>((state, action) => {
 				const { songId, key: element, value: color } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {

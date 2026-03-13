@@ -92,18 +92,20 @@ export const colorPicker = defineSlotRecipe({
 		size: {
 			sm: {
 				root: { fontSize: "12px" },
-				label: { fontSize: "0.75rem" },
+				label: { fontSize: "0.75em" },
 			},
 			md: {
 				root: { fontSize: "16px" },
+				label: { fontSize: "0.75em" },
 			},
 			lg: {
 				root: { fontSize: "20px" },
+				label: { fontSize: "0.75em" },
 			},
 		},
 		orientation: {
 			horizontal: { root: { flexDirection: "row" } },
-			vertical: { root: { flexDirection: "column-reverse" } },
+			vertical: { root: { flexDirection: "column-reverse", alignItems: "center" } },
 		},
 	},
 	defaultVariants: {

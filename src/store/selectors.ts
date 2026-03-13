@@ -52,7 +52,7 @@ export const {
 	selectSelectedBeatmap,
 	selectDemo,
 	selectModuleEnabled,
-	selectCustomColor,
+	selectCustomColors,
 	selectGridSize,
 	selectPlacementMode,
 } = songs.getSelectors((state: Pick<RootState, "songs">) => {

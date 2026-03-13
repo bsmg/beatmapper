@@ -1,7 +1,6 @@
 import { useListCollection } from "@ark-ui/react/collection";
 import type { SelectValueChangeDetails } from "@ark-ui/react/select";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import { PlusIcon } from "lucide-react";
 import { memo, useCallback } from "react";
 
@@ -11,8 +10,7 @@ import { Button, Dialog, Select } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata, selectUsername } from "$/store/selectors";
-import type { BeatmapId } from "$/types";
+import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 const COVER_ART_SIZES = {
@@ -29,7 +27,6 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-	const username = useAppSelector(selectUsername);
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
@@ -44,14 +41,6 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: details.value[0] } });
 		},
 		[dispatch, navigate, sid, view],
-	);
-
-	const handleCreate = useCallback(
-		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			const mappers = username ? [username] : [];
-			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id, mappers: mappers, lighters: mappers } }));
-		},
-		[dispatch, sid, username],
 	);
 
 	return (
@@ -71,9 +60,10 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
 						<Dialog
 							title="Create New Beatmap"
+							lazyMount
 							unmountOnExit
 							render={(ctx) => (
-								<CreateBeatmapForm dialog={ctx} onSubmit={handleCreate}>
+								<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
 									Create beatmap
 								</CreateBeatmapForm>
 							)}

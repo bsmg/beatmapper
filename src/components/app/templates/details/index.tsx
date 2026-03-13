@@ -1,73 +1,70 @@
+import { useListCollection } from "@ark-ui/react/collection";
 import { useParams } from "@tanstack/react-router";
+import { PlusIcon } from "lucide-react";
+import { useCallback } from "react";
 
-import { UpdateBeatmapForm, UpdateSongForm } from "$/components/app/forms";
-import { For } from "$/components/ui/atoms";
-import { Heading, RouterLink } from "$/components/ui/compositions";
-import { updateModuleEnabled } from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectModuleEnabled } from "$/store/selectors";
-import { Stack, styled, Wrap } from "$:styled-system/jsx";
-import CustomColorSettings from "./custom-colors";
-import SongDetailsModule from "./module";
+import { CreateBeatmapForm, UpdateSongForm } from "$/components/app/forms";
+import { Match, Switch } from "$/components/ui/atoms";
+import { Button, Dialog, Heading, Tabs } from "$/components/ui/compositions";
+import { addBeatmap } from "$/store/actions";
+import { useAppDispatch } from "$/store/hooks";
+import { HStack, Stack } from "$:styled-system/jsx";
+import AdvancedSettingsDetails from "./advanced-settings";
+import BeatmapDetails from "./beatmaps";
 
 function SongDetails() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
-	const enabledCustomColors = useAppSelector((state) => selectModuleEnabled(state, sid, "customColors"));
-	const enabledMappingExtensions = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
-	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const { collection } = useListCollection({
+		initialItems: ["Song", "Beatmaps", "Mod Settings"],
+	});
+
+	const renderItem = useCallback(
+		(item: string) => (
+			<Switch>
+				<Stack gap={3}>
+					<Match when={item === "Song"}>
+						<Heading rank={2}>Song Details</Heading>
+						<UpdateSongForm />
+					</Match>
+					<Match when={item === "Beatmaps"}>
+						<HStack gap={2}>
+							<Heading rank={2}>Beatmaps</Heading>
+							<Dialog
+								title="Create beatmap"
+								lazyMount
+								unmountOnExit
+								render={(ctx) => (
+									<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
+										Create beatmap
+									</CreateBeatmapForm>
+								)}
+							>
+								<Button variant={"subtle"} size={"sm"}>
+									<PlusIcon size={16} />
+								</Button>
+							</Dialog>
+						</HStack>
+						<BeatmapDetails />
+					</Match>
+					<Match when={item === "Mod Settings"}>
+						<Heading rank={2}>Mod Settings</Heading>
+						<AdvancedSettingsDetails />
+					</Match>
+				</Stack>
+			</Switch>
+		),
+		[dispatch, sid],
+	);
 
 	return (
-		<Stack gap={8}>
-			<Stack gap={6}>
-				<Heading rank={1}>Song Details</Heading>
-				<UpdateSongForm />
-			</Stack>
-			<Stack gap={6}>
-				<Heading rank={1}>Beatmaps</Heading>
-				<Wrap gap={2} justify={"center"}>
-					<For each={beatmapIds}>
-						{(beatmapId) => (
-							<BeatmapWrapper key={beatmapId}>
-								<UpdateBeatmapForm bid={beatmapId} />
-							</BeatmapWrapper>
-						)}
-					</For>
-				</Wrap>
-			</Stack>
-			<Stack gap={6}>
-				<Heading rank={1}>Advanced Settings</Heading>
-				<Stack gap={3}>
-					<SongDetailsModule label="Custom Colors" render={() => <CustomColorSettings />} checked={enabledCustomColors} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}>
-						Override individual elements of a beatmap's color scheme.{" "}
-						<RouterLink target="_self" to="/docs/$" params={{ _splat: "mods#custom-color-overrides" }}>
-							Learn more
-						</RouterLink>
-						.
-					</SongDetailsModule>
-					<SongDetailsModule label="Mapping Extensions" render={() => null} checked={enabledMappingExtensions} onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "mappingExtensions" }))}>
-						Allows you to customize size and shape of the grid, to place notes outside of the typical 4×3 grid.{" "}
-						<RouterLink target="_self" to="/docs/$" params={{ _splat: "mods#mapping-extensions" }}>
-							Learn more
-						</RouterLink>
-						.
-					</SongDetailsModule>
-				</Stack>
-			</Stack>
+		<Stack gap={3}>
+			<Heading rank={1}>Map Details</Heading>
+			<Tabs lazyMount unmountOnExit collection={collection} renderItem={renderItem} />
 		</Stack>
 	);
 }
-
-const BeatmapWrapper = styled("div", {
-	base: {
-		colorPalette: "slate",
-		layerStyle: "fill.surface",
-		padding: 3,
-		width: "250px",
-		height: "fit-content",
-	},
-});
 
 export default SongDetails;

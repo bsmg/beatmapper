@@ -25,21 +25,19 @@ function SongDetailsModule({ label, render, checked: initialOpen, onCheckedChang
 
 	return (
 		<Collapsible open={open} lazyMount unmountOnExit render={render}>
-			<Heading rank={3}>
-				<HStack gap={2}>
-					<Switch checked={open} onCheckedChange={handleOpenChange} />
-					<HStack gap={1}>
-						{label}
-						{children && (
-							<Tooltip interactive render={() => children}>
-								<IconWrapper>
-									<HelpCircleIcon size={16} />
-								</IconWrapper>
-							</Tooltip>
-						)}
-					</HStack>
+			<HStack gap={2}>
+				<Switch checked={open} onCheckedChange={handleOpenChange} />
+				<HStack gap={1}>
+					<Heading rank={3}>{label}</Heading>
+					{children && (
+						<Tooltip interactive render={() => children}>
+							<IconWrapper>
+								<HelpCircleIcon size={16} />
+							</IconWrapper>
+						</Tooltip>
+					)}
 				</HStack>
-			</Heading>
+			</HStack>
 		</Collapsible>
 	);
 }

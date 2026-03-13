@@ -155,10 +155,10 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 			const activeCustomColors = Object.values(ColorSchemeKey).reduce(
 				(acc, key) => {
 					const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
-					acc[key as ColorSchemeKey] = color ? colorToHex(color) : undefined;
+					acc[key as ColorSchemeKey] = color ? colorToHex(color) : null;
 					return acc;
 				},
-				{} as { [key in ColorSchemeKey]?: string },
+				{} as { [key in ColorSchemeKey]: string | null },
 			);
 
 			const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
