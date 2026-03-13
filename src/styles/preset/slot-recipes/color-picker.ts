@@ -14,6 +14,15 @@ export const colorPicker = defineSlotRecipe({
 		label: {
 			userSelect: "none",
 		},
+		control: {
+			...input.base,
+			...input.variants?.size?.md,
+			display: "flex",
+			flex: 1,
+			flexWrap: "wrap",
+			columnGap: 1,
+			alignItems: "center",
+		},
 		content: {
 			minWidth: "200px",
 			display: "flex",
@@ -65,9 +74,12 @@ export const colorPicker = defineSlotRecipe({
 			transform: "translate(-6px, -6px)",
 		},
 		channelInput: {
-			...input.base,
-			...input.variants?.size?.md,
-			colorPalette: "pink",
+			width: 0,
+			minWidth: "48px",
+			flex: 1,
+			color: { _placeholder: "fg.muted" },
+			outline: "none",
+			userSelect: "none",
 		},
 		swatch: {
 			boxSize: "1.25em",

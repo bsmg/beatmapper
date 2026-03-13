@@ -29,7 +29,11 @@ function ChannelSlider({ showAlpha, ...rest }: Assign<ColorPickerChannelSliderBa
 	);
 }
 function ChannelInput({ channel, ...rest }: Assign<ColorPickerChannelInputBaseProps, ColorPickerProps>) {
-	return <Builder.ChannelInput channel={channel} {...rest} />;
+	return (
+		<Builder.Control>
+			<Builder.ChannelInput channel={channel} {...rest} />
+		</Builder.Control>
+	);
 }
 
 function Sliders({ showAlpha }: ColorPickerProps) {
@@ -100,6 +104,7 @@ function Overlay({ showAlpha, portalled = true, portalRef }: ColorPickerProps) {
 						<Builder.AreaBackground />
 						<Builder.AreaThumb />
 					</Builder.Area>
+					<ChannelInput channel="hex" />
 					<Flex>
 						<Builder.FormatTrigger>{api.format}</Builder.FormatTrigger>
 						<Builder.EyeDropperTrigger>
@@ -129,12 +134,12 @@ interface ColorPickerComposableProps extends ColorPickerProps {
 	children?: ComposableFn<[controls: { SwatchTrigger: typeof SwatchTrigger }]>;
 }
 export const ColorPicker = forwardRef<HTMLInputElement, Assign<ComponentProps<typeof Builder.Root>, ColorPickerComposableProps>>(function ColorPicker({ label, showAlpha, portalled, portalRef, children, ...rest }, ref) {
-	const renderControl = useComposable(children, ({ SwatchTrigger }) => <SwatchTrigger showAlpha={showAlpha} />);
+	const render = useComposable(children, ({ SwatchTrigger }) => <SwatchTrigger showAlpha={showAlpha} />);
 
 	return (
 		<Builder.Root {...rest}>
 			{label && <Builder.Label>{label}</Builder.Label>}
-			<Builder.Control>{renderControl({ SwatchTrigger })}</Builder.Control>
+			{render({ SwatchTrigger })}
 			<Overlay showAlpha={showAlpha} portalled={portalled} portalRef={portalRef} />
 			<Builder.HiddenInput ref={ref} />
 		</Builder.Root>
