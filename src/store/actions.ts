@@ -81,7 +81,23 @@ export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; 
 	return { payload: { ...args } };
 });
 
-export const { addOne: addSong, addOneFromFile: addSongFromFile, updateOne: updateSong, updateSelectedBeatmap, removeOne: removeSong, addBeatmap, cloneBeatmap: copyBeatmap, updateBeatmap, removeBeatmap, updateModuleEnabled, updateCustomColor, updateGridSize } = songs.actions;
+export const {
+	addOne: addSong,
+	addOneFromFile: addSongFromFile,
+	updateOne: updateSong,
+	updateSelectedBeatmap,
+	removeOne: removeSong,
+	addBeatmap,
+	cloneBeatmap: copyBeatmap,
+	updateBeatmap,
+	removeBeatmap,
+	addColorScheme,
+	updateColorScheme,
+	removeColorScheme,
+	updateModuleEnabled,
+	updateCustomColor,
+	updateGridSize,
+} = songs.actions;
 
 export const loadDemoMap = createAction("loadDemoMap");
 

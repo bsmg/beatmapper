@@ -1,4 +1,4 @@
-import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
@@ -6,7 +6,7 @@ import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, getGri
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import { type App, type BeatmapId, type ColorSchemeKey, type IGrid, ObjectPlacementMode, type SongId } from "$/types";
+import { type App, type BeatmapId, type ColorSchemeKey, type IColorScheme, type IGrid, ObjectPlacementMode, type SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
@@ -61,8 +61,19 @@ const slice = createSlice({
 			const beatmaps = Object.entries(song.difficultiesById).filter(([_, x]) => x.lightshowId === lightshowId);
 			return beatmaps.map(([id]) => id);
 		}),
+		selectColorSchemes: createSelector(selectById, (song) => {
+			return song.colorSchemesById;
+		}),
 		selectColorSchemeIds: createSelector(selectById, (song) => {
 			return Object.keys(song.colorSchemesById);
+		}),
+		selectColorSchemeId: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].colorSchemeName;
+		}),
+		selectColorSchemeOverrides: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			const colorSchemeName = song.difficultiesById[beatmapId].colorSchemeName;
+			if (!colorSchemeName) return null;
+			return song.colorSchemesById[colorSchemeName];
 		}),
 		selectSelectedBeatmap: createSelector(selectById, (song) => {
 			return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
@@ -156,6 +167,44 @@ const slice = createSlice({
 						difficultiesById: Object.entries(song.difficultiesById).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
 							if (bid === beatmapId) return acc;
 							acc[bid] = beatmap;
+							return acc;
+						}, {}),
+					},
+				});
+			}),
+			addColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId }>((state, action) => {
+				const { songId, colorSchemeId } = action.payload;
+				const song = selectById(state, songId);
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: deepAssign(song, { colorSchemesById: { [colorSchemeId]: getColorScheme(song) } }),
+				});
+			}),
+			updateColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId; changes: Partial<IColorScheme> }>((state, action) => {
+				const { songId, colorSchemeId, changes } = action.payload;
+				const song = selectById(state, songId);
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: deepAssign(song, { colorSchemesById: { [colorSchemeId]: { ...changes } } }),
+				});
+			}),
+			removeColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId }>((state, action) => {
+				const { songId, colorSchemeId } = action.payload;
+				const song = selectById(state, songId);
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: {
+						difficultiesById: Object.entries(song.difficultiesById).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
+							if (beatmap.colorSchemeName !== colorSchemeId) {
+								acc[bid] = beatmap;
+							} else {
+								acc[bid] = { ...beatmap, colorSchemeName: null };
+							}
+							return acc;
+						}, {}),
+						colorSchemesById: Object.entries(song.colorSchemesById).reduce((acc: App.ISong["colorSchemesById"], [bid, colorScheme]) => {
+							if (bid === colorSchemeId) return acc;
+							acc[bid] = colorScheme;
 							return acc;
 						}, {}),
 					},

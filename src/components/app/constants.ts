@@ -86,3 +86,9 @@ export const createAddBookmarkPrompt = createPromptFactory({
 	defaultValues: { name: "" },
 	validate: object({ name: pipe(string(), nonEmpty()) }),
 });
+
+export const createAddColorSchemePrompt = createPromptFactory({
+	title: "Add Color Scheme",
+	defaultValues: { name: "" },
+	validate: object({ name: pipe(string(), nonEmpty()) }),
+});
