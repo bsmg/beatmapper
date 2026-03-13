@@ -42,12 +42,13 @@ function SongDetails() {
 						<HStack gap={2}>
 							<Heading rank={2}>Beatmaps</Heading>
 							<Dialog
-								title="Create beatmap"
+								title="Create New Beatmap"
+								description="Add a new beatmap file to the map."
 								lazyMount
 								unmountOnExit
 								render={(ctx) => (
 									<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
-										Create beatmap
+										{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 									</CreateBeatmapForm>
 								)}
 							>

@@ -44,6 +44,7 @@ export const {
 	selectBeatmapById,
 	selectJumpSpeed,
 	selectJumpOffset,
+	selectLightshowIds,
 	selectLightshowIdForBeatmap,
 	selectBeatmapIdsWithLightshowId,
 	selectColorScheme,

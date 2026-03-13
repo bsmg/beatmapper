@@ -21,6 +21,7 @@ export interface ComboboxProps extends Pick<SystemStyleObject, "colorPalette"> {
 	label?: string;
 	placeholder?: string;
 	creatable?: boolean;
+	onValueCreate?: (value: string) => void;
 	clearable?: boolean;
 	portalled?: boolean;
 	portalRef?: RefObject<HTMLElement>;
@@ -78,7 +79,7 @@ function ClearTrigger({ clearable }: ComboboxProps) {
 	);
 }
 
-export function Combobox({ collection: original, value, onValueChange, label, placeholder, creatable, clearable, colorPalette = "pink", ...rest }: Assign<ComponentProps<typeof Builder.Root>, ComboboxProps & { collection: ListCollection }>) {
+export function Combobox({ collection: original, value, onValueCreate, onValueChange, label, placeholder, creatable, clearable, colorPalette = "pink", ...rest }: Assign<ComponentProps<typeof Builder.Root>, ComboboxProps & { collection: ListCollection }>) {
 	const { contains } = useFilter({ sensitivity: "base" });
 
 	const { collection, filter, upsert, update, remove } = useListCollection({
@@ -143,10 +144,11 @@ export function Combobox({ collection: original, value, onValueChange, label, pl
 			setSelectedValue(value);
 			if (creatable && details.value.includes(NEW_OPTION_VALUE)) {
 				update(NEW_OPTION_VALUE, getNewOptionData(inputValue));
+				if (onValueCreate) onValueCreate(inputValue);
 			}
 			if (onValueChange) onValueChange({ ...details, value });
 		},
-		[creatable, onValueChange, inputValue, update],
+		[creatable, onValueCreate, onValueChange, inputValue, update],
 	);
 
 	return (

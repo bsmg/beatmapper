@@ -63,7 +63,7 @@ export function createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap
 
 export const createQuickSelectPrompt = createPromptFactory({
 	title: "Quick Select",
-	description: "Selects all objects within the provided range of beats.",
+	description: "Select all objects within the provided range of beats.",
 	defaultValues: { range: "" },
 	validate: object({
 		range: pipe(
@@ -75,20 +75,21 @@ export const createQuickSelectPrompt = createPromptFactory({
 
 export const createJumpToBeatPrompt = createPromptFactory({
 	title: "Jump to Beat",
-	description: "Moves the cursor to the provided beat number.",
+	description: "Move the cursor to the provided beat number.",
 	defaultValues: { beatNum: 0 },
 	validate: object({ beatNum: number() }),
 });
 
 export const createAddBookmarkPrompt = createPromptFactory({
 	title: "Add Bookmark",
-	description: "Creates a new bookmark at the current beat.",
+	description: "Create a new bookmark at the current beat.",
 	defaultValues: { name: "" },
 	validate: object({ name: pipe(string(), nonEmpty()) }),
 });
 
 export const createAddColorSchemePrompt = createPromptFactory({
 	title: "Add Color Scheme",
+	description: "Create a new color scheme that may be used as an override for any beatmaps within the mapset.",
 	defaultValues: { name: "" },
 	validate: object({ name: pipe(string(), nonEmpty()) }),
 });

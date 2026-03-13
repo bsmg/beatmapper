@@ -43,9 +43,6 @@ export const dialog = defineSlotRecipe({
 			layerStyle: "fill.surface",
 			animationStyle: { _open: "slide-fade-in", _closed: "slide-fade-out" },
 			zIndex: 5,
-			'& > :not[data-role="alertdialog"]:first-child': {
-				marginRight: 6,
-			},
 		},
 		title: {
 			textStyle: "heading",

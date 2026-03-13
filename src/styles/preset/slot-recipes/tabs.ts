@@ -16,6 +16,7 @@ export const tabs = defineSlotRecipe({
 			paddingInline: 0.25,
 			paddingBlock: 0.5,
 			overflowX: "auto",
+			whiteSpace: "nowrap",
 		},
 		content: {
 			marginBlock: 2,

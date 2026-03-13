@@ -60,11 +60,12 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
 						<Dialog
 							title="Create New Beatmap"
+							description="Add a new beatmap file to the map."
 							lazyMount
 							unmountOnExit
 							render={(ctx) => (
 								<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
-									Create beatmap
+									{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 								</CreateBeatmapForm>
 							)}
 						>

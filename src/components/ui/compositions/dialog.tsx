@@ -31,9 +31,6 @@ function Overlay({ children, title, description, portalled = true, portalRef, re
 					)}
 					<Builder.Context>{(ctx) => render(ctx)}</Builder.Context>
 					{children}
-					<Builder.CloseTrigger>
-						<XIcon />
-					</Builder.CloseTrigger>
 				</Builder.Content>
 			</Builder.Positioner>
 		</Portal>
@@ -46,7 +43,11 @@ export function Dialog({ children, title, description, portalled, portalRef, ren
 	return (
 		<Builder.Root modal={false} {...rest}>
 			{children && <Trigger>{children}</Trigger>}
-			<Overlay title={title} description={description} portalled={portalled} portalRef={portalRef} render={render} />
+			<Overlay title={title} description={description} portalled={portalled} portalRef={portalRef} render={render}>
+				<Builder.CloseTrigger>
+					<XIcon />
+				</Builder.CloseTrigger>
+			</Overlay>
 		</Builder.Root>
 	);
 }
@@ -57,7 +58,11 @@ export function DialogProvider({ children, title, description, portalled, portal
 	return (
 		<Builder.RootProvider {...rest}>
 			{children && <Trigger>{children}</Trigger>}
-			<Overlay title={title} description={description} portalled={portalled} portalRef={portalRef} render={render} />
+			<Overlay title={title} description={description} portalled={portalled} portalRef={portalRef} render={render}>
+				<Builder.CloseTrigger>
+					<XIcon />
+				</Builder.CloseTrigger>
+			</Overlay>
 		</Builder.RootProvider>
 	);
 }

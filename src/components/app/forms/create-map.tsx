@@ -1,7 +1,7 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { CharacteristicName, DifficultyName } from "bsmap/types";
-import { array, file, gtValue, minLength, nonEmpty, number, object, pipe, string, transform } from "valibot";
+import { array, file, gtValue, length, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
@@ -12,8 +12,8 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectUsername } from "$/store/selectors";
 
 const SCHEMA = object({
-	songFile: pipe(array(file()), nonEmpty("You must provide exactly one file.")),
-	coverArtFile: pipe(array(file()), nonEmpty("You must provide exactly one file.")),
+	songFile: pipe(array(file()), length(1, "You must provide exactly one file.")),
+	coverArtFile: pipe(array(file()), length(1, "You must provide exactly one file.")),
 	name: pipe(string(), minLength(1)),
 	subName: pipe(string()),
 	artistName: pipe(string(), minLength(1)),
@@ -96,7 +96,7 @@ function CreateMapForm({ dialog }: Props) {
 
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
-				toaster?.error({ description: `Error creating map: ${error instanceof Error ? error.message : "See console for more information."}` });
+				toaster?.error({ description: `Could not create map: ${error instanceof Error ? error.message : "See console for more information."}` });
 				return console.error(error);
 			}
 		},
@@ -112,7 +112,7 @@ function CreateMapForm({ dialog }: Props) {
 				<Form.Row>
 					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
-					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Artist Name" required />}</Form.AppField>
+					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Song Artist(s)" required />}</Form.AppField>
 				</Form.Row>
 				<Form.Row>
 					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>

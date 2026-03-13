@@ -1,4 +1,5 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { distinct } from "@std/collections/distinct";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
@@ -53,6 +54,9 @@ const slice = createSlice({
 		}),
 		selectJumpOffset: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return song.difficultiesById[beatmapId].startBeatOffset;
+		}),
+		selectLightshowIds: createSelector([selectById], (song) => {
+			return distinct(Object.values(song.difficultiesById).map((beatmap) => beatmap.lightshowId));
 		}),
 		selectLightshowIdForBeatmap: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return song.difficultiesById[beatmapId].lightshowId;

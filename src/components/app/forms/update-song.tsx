@@ -100,7 +100,7 @@ function UpdateSongForm() {
 
 				formApi.reset(value);
 			} catch (error) {
-				toaster?.error({ description: `Error updating song: ${error instanceof Error ? error.message : "See console for more information."}` });
+				toaster?.error({ description: `Could not update song: ${error instanceof Error ? error.message : "See console for more information."}` });
 				return console.error(error);
 			}
 		},
@@ -118,18 +118,18 @@ function UpdateSongForm() {
 			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text textStyle={"paragraph"}>You have unsaved changes! Are you sure you want to leave this page?</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root>
 				<Form.Row>
-					<Field label="Song File">
+					<Field label="Song File" required>
 						<FileUpload label="Audio File" deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedSongFile} onFileAccept={(details) => handleAcceptSongFile(details.files[0])} />
 					</Field>
-					<Field label="Cover Art File">
+					<Field label="Cover Art File" required>
 						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} />
 					</Field>
 				</Form.Row>
 				<Form.Row>
 					{/* @ts-ignore */}
-					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song name" required />}</Form.AppField>
-					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song sub-name" />}</Form.AppField>
-					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Artist name" required />}</Form.AppField>
+					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
+					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
+					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Song Artist(s)" required />}</Form.AppField>
 				</Form.Row>
 				<Form.Row>
 					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
@@ -138,7 +138,7 @@ function UpdateSongForm() {
 					<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required placeholder="(in seconds)" />}</Form.AppField>
 				</Form.Row>
 				<Form.Row>
-					<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Environment" helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+					<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Base Environment" required helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 				</Form.Row>
 				<Form.Submit>Update song details</Form.Submit>
 			</Form.Root>

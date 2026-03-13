@@ -1,21 +1,23 @@
-import { useListCollection } from "@ark-ui/react/collection";
+import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
+import { useStore } from "@tanstack/react-form";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
-import { CharacteristicRename, DifficultyRename } from "bsmap";
+import { CharacteristicRename, DifficultyRename, NoteJumpSpeed } from "bsmap";
 import type { EnvironmentAllName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { useSetupContext } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, useAppForm } from "$/components/ui/compositions";
-import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Stat, useAppForm } from "$/components/ui/compositions";
+import { addColorScheme, copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
+import { selectBeatmapById, selectBeatmaps, selectBpm, selectColorSchemeIds, selectLightshowIds } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
+import { roundTo } from "$/utils";
 import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
@@ -43,13 +45,14 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
+	const bpm = useAppSelector((state) => selectBpm(state, sid));
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
-	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
+	const lightshowIds = useAppSelector((state) => selectLightshowIds(state, sid));
 	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
+	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
-	const { collection: COLOR_SCHEME_COLLECTION } = useListCollection({
-		initialItems: colorSchemeIds,
-	});
+	const LIGHTSHOW_COLLECTION = useMemo(() => createListCollection({ items: lightshowIds }), [lightshowIds]);
+	const COLOR_SCHEME_COLLECTION = useMemo(() => createListCollection({ items: colorSchemeIds }), [colorSchemeIds]);
 
 	const [showAdvancedControls, setShowAdvancedControls] = useState(false);
 
@@ -77,7 +80,6 @@ function UpdateBeatmapForm({ bid }: Props) {
 						beatmapId: bid,
 						changes: {
 							...value,
-							colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
 							customLabel: value.customLabel === "" ? undefined : value.customLabel,
 						},
 					}),
@@ -85,11 +87,16 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 				formApi.reset(value);
 			} catch (error) {
-				toaster?.error({ description: `Error updating beatmap: ${error instanceof Error ? error.message : "See console for more information."}` });
+				toaster?.error({ description: `Could not update beatmap: ${error instanceof Error ? error.message : "See console for more information."}` });
 				return console.error(error);
 			}
 		},
 	});
+
+	const jumpSpeed = useStore(Form.store, (state) => state.values.noteJumpSpeed);
+	const jumpOffset = useStore(Form.store, (state) => state.values.startBeatOffset);
+
+	const njs = useMemo(() => NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset), [bpm, jumpSpeed, jumpOffset]);
 
 	const deleteAlert = useDialog({ role: "alertdialog" });
 
@@ -136,22 +143,28 @@ function UpdateBeatmapForm({ bid }: Props) {
 				</Stack>
 				<Stack gap={2}>
 					<Form.Row>
-						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput key={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
-						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput key={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
+						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput label="Jump speed" />}</Form.AppField>
+						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput label="Jump offset" step={0.25} />}</Form.AppField>
 					</Form.Row>
-					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput key={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
-					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput key={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
+					<Form.Row>
+						<Stat label="Half-Jump Duration">{njs.hjd}</Stat>
+						<Stat label="Jump Distance">{roundTo(njs.jd, 3)}</Stat>
+					</Form.Row>
+					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput label="Mapper(s)" />}</Form.AppField>
+					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput label="Lighter(s)" />}</Form.AppField>
 					<Collapsible
 						open={showAdvancedControls}
 						onOpenChange={(x) => setShowAdvancedControls(x.open)}
 						render={() => (
 							<Stack gap={2}>
 								<Form.Row>
-									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input key={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
-									<Form.AppField name="customLabel">{(ctx) => <ctx.Input key={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Combobox key={JSON.stringify(lightshowIds)} label="Lightshow ID" creatable collection={LIGHTSHOW_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="customLabel">{(ctx) => <ctx.Input label="Custom label" />}</Form.AppField>
 								</Form.Row>
-								<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox key={`${bid}.${ctx.name}`} creatable label="Environment Override" helperText={"If a newer environment is not available to select, create a new entry in the combobox."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
-								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox key={`${bid}.${ctx.name}`} clearable label="Color Scheme Override" collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
+								<Form.Row>
+									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox creatable label="Environment Override" helperText={"If a newer environment is not available to select, create a new entry in the combobox."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox key={JSON.stringify(colorSchemeIds)} creatable clearable label="Color Scheme Override" collection={COLOR_SCHEME_COLLECTION} onValueCreate={(value) => dispatch(addColorScheme({ songId: sid, colorSchemeId: value }))} />}</Form.AppField>
+								</Form.Row>
 							</Stack>
 						)}
 					>
@@ -166,11 +179,12 @@ function UpdateBeatmapForm({ bid }: Props) {
 					</Form.Submit>
 					<Dialog
 						title="Copy Beatmap"
+						description={`Clone the contents of the "${bid}" beatmap to a new beatmap file.`}
 						lazyMount
 						unmountOnExit
 						render={(ctx) => (
 							<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))}>
-								Copy beatmap
+								{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 							</CreateBeatmapForm>
 						)}
 					>
