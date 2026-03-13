@@ -5,7 +5,7 @@ import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
 import { Environment } from "$/components/scene/layouts";
 import { useAppSelector } from "$/store/hooks";
 import { selectCursorPosition } from "$/store/selectors";
-import { convertDegreesToRadians, normalize, range } from "$/utils";
+import { convertDegreesToRadians, mulberry32, normalize, range } from "$/utils";
 
 const NUM_OF_HORIZONTAL_BEAMS = 4;
 const X_OFFSET = 40;
@@ -16,42 +16,30 @@ const Z_DISTANCE_BETWEEN_BEAMS = 20;
 
 const laserIndices = Array.from(range(0, NUM_OF_HORIZONTAL_BEAMS));
 
-function scaleToSeconds(x: number) {
-	return x / 1000;
-}
-
 // We want to use a sin curve to control laser rotation.
 // Math.sin produces a value between -1 and 1, and resets after 2PI, which means if we use the number of seconds since the start of the song, it will complete 1 full rotation every 6.28 seconds.
 // I haven't taken the time to work out what the actual speed in-game is, but by approximating,
 // it looks like Laser Speed 1 takes about 30 seconds to complete a cycle, whereas Laser Speed 8 (fastest) takes about 6 seconds.
-function getSinRotationValue(side: "left" | "right", beamIndex: number, time: number, laserSpeed: number) {
+
+function resolveLaserRotation(side: "left" | "right", beamIndex: number, currentTime: number, laserSpeed: number, eventTime: number) {
 	const defaultRotation = side === "left" ? -55 : 55;
+	if (laserSpeed === 0) return defaultRotation;
+	// seed rotations based on event time so that same values produce different orbits
+	const random = mulberry32(eventTime);
 
-	if (laserSpeed === 0) {
-		return defaultRotation;
+	let randomOffset = 0;
+	for (let i = 0; i <= beamIndex; i++) {
+		randomOffset = random() * Math.PI * 2;
 	}
 
-	// I don't want every beam to sit at exactly the same spot in the sin cycle.
-	// In the game, the first 2 lasers follow each other closely, while the remaining ones swivel at seemingly random offsets.
-	let beamIndexOffset: number;
-	if (beamIndex === 0) {
-		beamIndexOffset = 0;
-	} else if (beamIndex === 1) {
-		beamIndexOffset = 0.1;
-	} else {
-		beamIndexOffset = beamIndex;
-	}
-
-	const sinValue = Math.sin(time * laserSpeed * 0.35 + beamIndexOffset);
-
-	return normalize(sinValue, -1, 1, defaultRotation, defaultRotation * -1);
+	const angle = (currentTime / 1000) * laserSpeed * 0.35 + randomOffset;
+	return normalize(Math.sin(angle), -1, 1, defaultRotation, defaultRotation * -1);
 }
 
 interface Props {
 	side: "left" | "right";
-	timescale?: (cursorPosition: number) => number;
 }
-function SideLasers({ side, timescale = scaleToSeconds }: Props) {
+function SideLasers({ side }: Props) {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 
 	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: side === "left" ? 2 : 3 });
@@ -59,12 +47,6 @@ function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 
 	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
 
-	const laserSpeed = useMemo(() => {
-		if (!lastSpeedEvent) return 0;
-		return lastSpeedEvent.value;
-	}, [lastSpeedEvent]);
-
-	const secondsSinceSongStart = useMemo(() => timescale(cursorPosition), [timescale, cursorPosition]);
 	const factor = useMemo(() => (side === "left" ? -1 : 1), [side]);
 
 	const xDistanceBetweenBeams = useMemo(() => X_DISTANCE_BETWEEN_BEAMS * factor, [factor]);
@@ -73,7 +55,7 @@ function SideLasers({ side, timescale = scaleToSeconds }: Props) {
 	const horizontalBeams = laserIndices.map((index) => {
 		const xPosition = xOffset + index * xDistanceBetweenBeams;
 		const zPosition = Z_OFFSET + index * -Z_DISTANCE_BETWEEN_BEAMS;
-		const zRotation = convertDegreesToRadians(getSinRotationValue(side, index, secondsSinceSongStart, laserSpeed));
+		const zRotation = convertDegreesToRadians(resolveLaserRotation(side, index, cursorPosition, lastSpeedEvent?.value ?? 0, lastSpeedEvent?.time ?? 0));
 		return <Environment.TubeLight key={index} light={light} radius={0.2} position-x={xPosition} position-y={Y_OFFSET} position-z={zPosition} rotation-z={zRotation} />;
 	});
 	// Side lasers also feature a single "perspective" beam, shooting into the distance.
