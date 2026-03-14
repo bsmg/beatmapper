@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 
 		const njs = NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset);
 
-		return { beatDepth: jumpSpeed, surfaceDepth: njs.calcDistance(njs.hjd) };
+		return { beatDepth: jumpSpeed, surfaceDepth: jumpSpeed * njs.hjd };
 	},
 });
 
