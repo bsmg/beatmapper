@@ -9,6 +9,7 @@ export type IBombNote = IWrapEditorObject<wrapper.IWrapBombNote>;
 export type IObstacle = IWrapEditorObject<wrapper.IWrapObstacle>;
 
 export type IBasicEvent = IWrapEditorObject<wrapper.IWrapBasicEvent>;
+export type IBoostEvent = IWrapEditorObject<wrapper.IWrapColorBoostEvent>;
 
 export interface IBookmark {
 	time: number;
@@ -21,5 +22,6 @@ export interface IBeatmapEntities {
 	bombs: IBombNote[];
 	obstacles: IObstacle[];
 	basicEvents: IBasicEvent[];
+	boostEvents: IBoostEvent[];
 	bookmarks: IBookmark[];
 }

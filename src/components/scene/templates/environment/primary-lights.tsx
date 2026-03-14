@@ -2,15 +2,16 @@ import { Fragment } from "react";
 
 import { SURFACE_WIDTH } from "$/components/scene/constants";
 import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
-import { useBasicEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useBasicEventTrack, useBoostEventTrack } from "$/components/scene/hooks/use-event-track";
 import { Environment } from "$/components/scene/layouts";
 
 const SIDE_BEAM_LENGTH = 250;
 
 function PrimaryLights() {
 	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 4 });
+	const [lastBoostEvent] = useBoostEventTrack();
 
-	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent, lastBoostEvent });
 
 	return (
 		<Fragment>

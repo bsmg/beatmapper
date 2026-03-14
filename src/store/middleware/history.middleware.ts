@@ -6,7 +6,23 @@ import { resolveEventId } from "$/helpers/events.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
-import { selectAllBasicEvents, selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectFutureBasicEvents, selectFutureBombNotes, selectFutureColorNotes, selectFutureObstacles, selectPastBasicEvents, selectPastBombNotes, selectPastColorNotes, selectPastObstacles } from "$/store/selectors";
+import {
+	selectAllBasicEvents,
+	selectAllBombNotes,
+	selectAllBoostEvents,
+	selectAllColorNotes,
+	selectAllObstacles,
+	selectFutureBasicEvents,
+	selectFutureBombNotes,
+	selectFutureBoostEvents,
+	selectFutureColorNotes,
+	selectFutureObstacles,
+	selectPastBasicEvents,
+	selectPastBombNotes,
+	selectPastBoostEvents,
+	selectPastColorNotes,
+	selectPastObstacles,
+} from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, SongId } from "$/types/beatmap";
 import { difference } from "$/utils";
@@ -22,10 +38,11 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, Dispatch>, songI
 	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
 }
 
-function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "basicEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
-	const relevantEvents = difference(args.basicEvents.before, args.basicEvents.after, resolveEventId);
+function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+	const relevantBasicEvents = difference(args.basicEvents.before, args.basicEvents.after, resolveEventId);
+	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after, resolveEventId);
 
-	const relevantEntities = [...relevantEvents].sort(sortObjectFn);
+	const relevantEntities = [...relevantBasicEvents, ...relevantBoostEvents].sort(sortObjectFn);
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
 	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
@@ -76,6 +93,7 @@ export default function createHistoryMiddleware() {
 			const { songId } = action.payload;
 			jumpToEarliestEvent(api, songId, {
 				basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
+				boostEvents: { before: selectFutureBoostEvents(state), after: selectAllBoostEvents(state) },
 			});
 		},
 	});
@@ -86,6 +104,7 @@ export default function createHistoryMiddleware() {
 			const { songId } = action.payload;
 			jumpToEarliestEvent(api, songId, {
 				basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
+				boostEvents: { before: selectPastBoostEvents(state), after: selectAllBoostEvents(state) },
 			});
 		},
 	});

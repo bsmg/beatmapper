@@ -213,6 +213,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats }));
 			const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats }));
 			const basicEvents = data.basicEvents?.map(shiftByOffset({ editorOffsetInBeats }));
+			const boostEvents = data.boostEvents?.map(shiftByOffset({ editorOffsetInBeats }));
 			const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
 
 			return createBeatmap({
@@ -227,6 +228,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 				},
 				lightshow: {
 					basicEvents: basicEvents,
+					colorBoostEvents: boostEvents,
 					customData: ensureObject<v2.ICustomDataDifficulty>({
 						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
 						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
@@ -242,6 +244,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const bombs = data.difficulty.bombNotes;
 			const obstacles = data.difficulty.obstacles;
 			const basicEvents = data.lightshow.basicEvents;
+			const boostEvents = data.lightshow.colorBoostEvents;
 
 			const bookmarks = distinctBy(
 				[
@@ -258,6 +261,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 				bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				basicEvents: basicEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				boostEvents: boostEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				bookmarks: bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 			};
 		},

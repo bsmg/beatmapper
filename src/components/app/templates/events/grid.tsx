@@ -29,6 +29,7 @@ import { type IEventTrack, type IEventTracks, TrackType } from "$/types";
 import { clamp } from "$/utils";
 import { Stack, Wrap } from "$:styled-system/jsx";
 import BasicEventTrack from "./basic-track";
+import BoostEventTrack from "./boost-track";
 
 function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -168,11 +169,13 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 							</EventGrid.Prefix>
 						)}
 					</EventGrid.ForTracks>
+					<EventGrid.Prefix {...api.getPrefixProps()}>Color Boost</EventGrid.Prefix>
 				</EventGrid.PrefixGroup>
 				<EventGrid.Content {...api.getContentProps()} editMode={selectedEditMode}>
 					<EventGrid.Markers />
 					<EventGrid.Trigger ref={selectionBoxRef} {...api.getTriggerProps()}>
 						<EventGrid.ForTracks tracks={filteredTracks}>{(_, id) => <BasicEventTrack key={id} trackId={id} data-highlighted={isTrackDisabled(id)} />}</EventGrid.ForTracks>
+						<BoostEventTrack trackId={5} />
 					</EventGrid.Trigger>
 					<EventGrid.SelectionBox {...api.getSelectionBoxProps()} />
 					<EventGrid.Cursor {...api.getCursorProps(cursorPositionInBeats)} />

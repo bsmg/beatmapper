@@ -3,7 +3,7 @@ import type { wrapper } from "bsmap/types";
 import { useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { selectAllBasicEventsForTrack, selectCursorPositionInBeats } from "$/store/selectors";
+import { selectAllBasicEventsForTrack, selectAllBoostEvents, selectCursorPositionInBeats } from "$/store/selectors";
 
 function findLastEventInTrack<T extends wrapper.IWrapBaseObject>(events: T[], currentBeat: number): [T | null, T | null] {
 	for (let i = events.length - 1; i >= 0; i--) {
@@ -29,4 +29,16 @@ export function useBasicEventTrack({ trackId }: UseBasicEventTrackOptions) {
 		if (!sid || currentBeat === null) return [null, null] as const;
 		return findLastEventInTrack(basicEvents, currentBeat);
 	}, [sid, basicEvents, currentBeat]);
+}
+
+export function useBoostEventTrack() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const boostEvents = useAppSelector((state) => selectAllBoostEvents(state));
+
+	return useMemo((): [lastEvent: wrapper.IWrapColorBoostEvent | null, nextEvent: wrapper.IWrapColorBoostEvent | null] => {
+		if (!sid || currentBeat === null) return [null, null] as const;
+		return findLastEventInTrack(boostEvents, currentBeat);
+	}, [sid, boostEvents, currentBeat]);
 }

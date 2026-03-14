@@ -38,12 +38,17 @@ export function isBasicEvent(data: unknown): data is wrapper.IWrapBasicEvent {
 	if (typeof data !== "object" || !data) return false;
 	return "type" in data;
 }
+export function isBoostEvent(data: unknown): data is wrapper.IWrapColorBoostEvent {
+	if (typeof data !== "object" || !data) return false;
+	return "toggle" in data;
+}
 export function resolveTrackIdForEvent(data: unknown) {
 	if (isBasicEvent(data)) return data.type;
+	if (isBoostEvent(data)) return 5;
 	throw new Error("Invalid event data.", { cause: data });
 }
 
-export function resolveEventId<T extends Pick<wrapper.IWrapBasicEvent, "time" | "type">>(x: T) {
+export function resolveEventId<T extends Pick<wrapper.IWrapBasicEvent, "time" | "type"> | Pick<wrapper.IWrapColorBoostEvent, "time" | "toggle">>(x: T) {
 	return `${resolveTrackIdForEvent(x)}/${x.time}`;
 }
 
@@ -70,7 +75,7 @@ export function resolveBasicEventColor<T extends Pick<wrapper.IWrapBasicEvent, "
 export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
 	const trackId = resolveTrackIdForEvent(data);
 
-	switch (tracks[trackId].type) {
+	switch (tracks[trackId]?.type) {
 		case TrackType.LIGHT: {
 			if (data.value === 0) return App.BasicEventEffect.OFF;
 			if (data.value % 4 === 1) return App.BasicEventEffect.ON;
@@ -86,7 +91,7 @@ export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, 
 			return App.BasicEventEffect.TRIGGER;
 		}
 		default: {
-			throw new Error("Invalid value.");
+			return "none";
 		}
 	}
 }

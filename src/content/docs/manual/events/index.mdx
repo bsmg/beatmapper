@@ -83,7 +83,7 @@ You can use the keyboard shortcuts <Shortcut separator="&">- & +</Shortcut>.
 
 ## Event Tracks
 
-Beatmapper supports 3 types of event tracks, and they're a little distinct in how they function.
+Beatmapper supports a variety of event types, and they're a little distinct in how they function.
 
 ### Light Tracks
 
@@ -123,6 +123,21 @@ Lasers with a speed of 0 won't move at all, and increasing the value will subseq
 
 > Decimals are not supported for value events; the value defined for an event must be an integer starting from 0.
 
+### Color Boost Tracks
+
+![](../../../media/images/boost-event-track.png)
+
+**Color Boost** tracks will allow you to swap between two distinct sets of light colors, each of which are derived from your active color scheme.
+
+A value of 1 will enable the color boost effect, whereas a value of 0 will disable it.
+
+When the color boost effect is active, any light events placed after that point will change into their respective boost colors. 
+This effect will also be reflected in the interpolations for background boxes.
+
+> [!tip]
+> For environments that do not support boost colors (or simply do not have them defined in their color scheme), these events will not produce a noticeable effect.
+> However, players will still be able to experience any color boost effects for your map if they override the map's chosen environment or color scheme with one that has defined boost colors.
+
 ## Placing and Modifying Events
 
 Clicking on a track will place an event at the current cursor position (the white vertical line that follows the mouse and snaps to the nearest increment).
@@ -131,6 +146,7 @@ The height at where you click relative to the track will determine the values as
 
 - For Light tracks, the height will determine the brightness of the event, from a range of 0 to 1 with a step of 0.5.
 - For Value tracks, the height will determine the value of the event, from a range of 0 to 8 with a step of 1.
+- For Color Boost tracks, the height will determine whether the color boost effect is enabled.
 
 You can also adjust the value for both of these event types by hovering over an event, holding <Shortcut>option</Shortcut>, and scrolling forwards/backwards.
 Updating the value in this manner will allow you to set values above the upper limit or at greater precision (in the case of Light events).

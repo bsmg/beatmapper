@@ -35,6 +35,7 @@ import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
 import bookmarks from "./features/entities/editor/bookmarks.slice";
 import basicEvents from "./features/entities/lightshow/basic.slice";
+import boostEvents from "./features/entities/lightshow/boost.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
@@ -292,6 +293,8 @@ export const redoObjects = createAction("redoObjects", (args: { songId: SongId }
 });
 
 export const { addOne: addBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateBasicEvent, updateColor: mirrorBasicEvent } = basicEvents.actions;
+
+export const { addOne: addBoostEvent, addOne: bulkAddBoostEvent, updateOne: updateBoostEvent } = boostEvents.actions;
 
 export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };

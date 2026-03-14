@@ -1,22 +1,21 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
-import { createBasicEvent, sortObjectFn } from "bsmap";
+import { createColorBoostEvent, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 
-import { deserializeBasicEventValue, isBasicLightEvent, resolveEventId, resolveTrackIdForEvent, serializeBasicEventValue } from "$/helpers/events.helpers";
+import { isBoostEvent, resolveEventId, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { addSong, bulkRemoveEvent, cutSelection, deselectAllEntities, deselectEvent, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, nudgeSelection, pasteSelection, removeAllSelectedEvents, removeEvent, selectAllEntities, selectAllEntitiesInRange, selectEvent, startLoadingMap } from "$/store/actions";
 import { createEditorObjectReducers, createEditorObjectSelectors, createEventReducerFactory, createEventSelectors } from "$/store/helpers";
-import { App, View } from "$/types";
-import { cycle } from "$/utils";
+import { type App, View } from "$/types";
 
-const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapBasicEvent>, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapColorBoostEvent>, EntityId>({
 	selectId: resolveEventId,
 	sortComparer: sortObjectFn,
 });
 
 const { selectAll } = adapter.getSelectors();
 const { selectAllSelected } = createEditorObjectSelectors(adapter);
-const { selectAllForTrack, createEventSelector } = createEventSelectors(adapter);
+const { createEventSelector } = createEventSelectors(adapter);
 const { removeAllSelected, updateAll, updateAllSelected } = createEditorObjectReducers(adapter);
 
 const createEventReducer = createEventReducerFactory(adapter);
@@ -27,36 +26,26 @@ const slice = createSlice({
 	selectors: {
 		selectAll: selectAll,
 		selectAllSelected: selectAllSelected,
-		selectAllForTrack: selectAllForTrack,
-		selectValueForTrackAtBeat: createEventSelector((data) => data.value, 0),
+		selectToggleAtBeat: createEventSelector((data) => data.toggle, false),
 	},
 	reducers: () => {
-		const MIRRORABLE_COLORS = Object.values(App.EventColor).slice(0, -1);
-
 		return {
-			addOne: createEventReducer<{ data: wrapper.IWrapBasicEvent; overwrite?: boolean }>(({ match, trackId }, state, action) => {
+			addOne: createEventReducer<{ data: wrapper.IWrapColorBoostEvent; overwrite?: boolean }>(({ match }, state, action) => {
 				const { data, overwrite } = action.payload;
 				if (!overwrite && match) return state;
-				return adapter.upsertOne(state, createBasicEvent({ ...data, type: trackId }));
+				if (!isBoostEvent(data)) return state;
+				return adapter.upsertOne(state, createColorBoostEvent({ ...data }));
 			}),
-			updateOne: createEventReducer<{ changes: Partial<wrapper.IWrapBasicEvent> }>(({ match, trackId }, state, action) => {
+			updateOne: createEventReducer<{ changes: Partial<wrapper.IWrapColorBoostEvent> }>(({ match }, state, action) => {
 				if (!match) return state;
-				return adapter.updateOne(state, { id: adapter.selectId({ ...match, type: trackId }), changes: action.payload.changes });
-			}),
-			updateColor: createEventReducer(({ match, trackId }, state, action) => {
-				const { tracks } = action.payload;
-				if (!match || !isBasicLightEvent(match, tracks)) return state;
-				const { effect, color } = deserializeBasicEventValue(match.value, { tracks, trackId });
-				const newColor = color && MIRRORABLE_COLORS.includes(color) ? cycle(MIRRORABLE_COLORS, color) : color;
-				const newValue = serializeBasicEventValue({ effect, color: newColor }, { tracks });
-				return adapter.updateOne(state, { id: adapter.selectId({ ...match, type: trackId }), changes: { value: newValue } });
+				return adapter.updateOne(state, { id: adapter.selectId({ ...match }), changes: action.payload.changes });
 			}),
 		};
 	},
 	extraReducers: (builder) => {
 		builder.addCase(loadBeatmapEntities, (state, action) => {
-			const { basicEvents } = action.payload;
-			return adapter.setAll(state, basicEvents ?? []);
+			const { boostEvents } = action.payload;
+			return adapter.setAll(state, boostEvents ?? []);
 		});
 		builder.addCase(removeAllSelectedEvents, (state) => {
 			return removeAllSelected(state);
@@ -69,11 +58,11 @@ const slice = createSlice({
 		builder.addCase(pasteSelection.fulfilled, (state, action) => {
 			const { view, data, deltaBetweenPeriods } = action.payload;
 			if (view !== View.LIGHTSHOW) return state;
-			if (!data.basicEvents) return state;
+			if (!data.boostEvents) return state;
 			updateAll(state, () => ({ selected: false }));
 			return adapter.upsertMany(
 				state,
-				data.basicEvents.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
+				data.boostEvents.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 			);
 		});
 		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
@@ -121,16 +110,16 @@ const slice = createSlice({
 		builder.addMatcher(isAnyOf(addSong, startLoadingMap, leaveEditor), () => adapter.getInitialState());
 		builder.addMatcher(
 			isAnyOf(removeEvent, bulkRemoveEvent),
-			createEventReducer(({ match, trackId }, state) => {
+			createEventReducer(({ match }, state) => {
 				if (!match) return state;
-				return adapter.removeOne(state, adapter.selectId({ ...match, type: trackId }));
+				return adapter.removeOne(state, adapter.selectId({ ...match }));
 			}),
 		);
 		builder.addMatcher(
 			isAnyOf(selectEvent, deselectEvent),
-			createEventReducer(({ match, trackId }, state, action) => {
+			createEventReducer(({ match }, state, action) => {
 				if (!match) return state;
-				return adapter.updateOne(state, { id: adapter.selectId({ ...match, type: trackId }), changes: { selected: selectEvent.match(action) } });
+				return adapter.updateOne(state, { id: adapter.selectId({ ...match }), changes: { selected: selectEvent.match(action) } });
 			}),
 		);
 		builder.addDefaultCase((state) => state);
