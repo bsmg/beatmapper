@@ -1,5 +1,6 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
+import { EnvironmentName } from "bsmap/types";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
@@ -118,7 +119,7 @@ const slice = createSlice({
 		return {
 			addOne: api.reducer<{ songId: SongId; beatmapId: BeatmapId; songFile: File; coverArtFile: File; songData: Parameters<typeof createAppSong>[0]; beatmapData: Parameters<typeof createAppBeatmap>[0] }>((state, action) => {
 				const { songData, beatmapId, beatmapData } = action.payload;
-				return adapter.addOne(state, createAppSong({ ...songData, difficultiesById: { [beatmapId]: createAppBeatmap(beatmapData) } }));
+				return adapter.addOne(state, createAppSong({ ...songData, difficultiesById: { [beatmapId]: createAppBeatmap({ ...beatmapData, environmentName: beatmapData.environmentName ?? songData.environment ?? EnvironmentName[0] }) } }));
 			}),
 			addOneFromFile: api.asyncThunk(fetchContentsFromFile, {
 				fulfilled: (state, action) => {

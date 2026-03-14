@@ -1,9 +1,9 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
-import { array, file, gtValue, length, minLength, number, object, pipe, string, transform } from "valibot";
+import { type CharacteristicName, type DifficultyName, EnvironmentName, type EnvironmentV3Name } from "bsmap/types";
+import { array, custom, file, gtValue, length, minLength, number, object, pipe, string, transform } from "valibot";
 
-import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
+import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
 import { useAppForm } from "$/components/ui/compositions";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
@@ -22,6 +22,7 @@ const SCHEMA = object({
 		number(),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
+	environment: custom<EnvironmentName | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 	characteristic: CharacteristicNameSchema,
 	difficulty: DifficultyNameSchema,
 });
@@ -45,6 +46,7 @@ function CreateMapForm({ dialog }: Props) {
 			artistName: "",
 			bpm: 120,
 			offset: 0,
+			environment: EnvironmentName[0] as EnvironmentName | EnvironmentV3Name,
 			characteristic: "Standard" as CharacteristicName,
 			difficulty: "Easy" as DifficultyName,
 		},
@@ -111,13 +113,10 @@ function CreateMapForm({ dialog }: Props) {
 				</Form.Row>
 				<Form.Row>
 					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
-					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
-					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Song Artist(s)" required />}</Form.AppField>
-				</Form.Row>
-				<Form.Row>
 					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
 					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
 				</Form.Row>
+				<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Base Environment" required helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
 				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
 				<Form.Submit>Create new map</Form.Submit>
