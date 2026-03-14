@@ -3,11 +3,11 @@ import { distinct } from "@std/collections/distinct";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
-import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, getGridSize, resolveSongId } from "$/helpers/song.helpers";
+import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import { type App, type BeatmapId, type ColorSchemeKey, type IColorScheme, type IGrid, ObjectPlacementMode, type SongId } from "$/types";
+import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
@@ -99,12 +99,6 @@ const slice = createSlice({
 		}),
 		selectEventTracksForEnvironment: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return deriveEventTracksForEnvironment(getEnvironment(song, beatmapId));
-		}),
-		selectGridSize: createSelector(selectById, (song) => {
-			return getGridSize(song);
-		}),
-		selectPlacementMode: createSelector(selectById, (song) => {
-			return song.modSettings.mappingExtensions?.isEnabled ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
 		}),
 	},
 	reducers: (api) => {

@@ -3,10 +3,12 @@ import { calculateNps, sortObjectFn } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import { shallowEqual } from "react-redux";
 
+import { DEFAULT_GRID } from "$/constants";
 import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
-import { type App, type BeatmapId, type ILightState, type SongId, View } from "$/types";
+import { getGridSize } from "$/helpers/song.helpers";
+import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
@@ -59,8 +61,6 @@ export const {
 	selectDemo,
 	selectModuleEnabled,
 	selectCustomColors,
-	selectGridSize,
-	selectPlacementMode,
 } = songs.getSelectors((state: Pick<RootState, "songs">) => {
 	return state.songs;
 });
@@ -94,10 +94,12 @@ export const {
 	selectProcessingDelay: selectAudioProcessingDelay,
 	selectRenderScale,
 	selectBloomEnabled,
+	selectObstaclePlacementMode: selectUserObstaclePlacementMode,
 	selectPacerWait,
 } = user.getSelectors((state: Pick<RootState, "user">) => {
 	return state.user;
 });
+
 export const selectAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelay, selectBpm, (processingDelay, bpm) => {
 	return convertMillisecondsToBeats(processingDelay, bpm);
 });
@@ -110,6 +112,15 @@ export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudi
 });
 export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
 	return Math.max(renderScale * 75, 25);
+});
+
+export const selectNotePlacementMode = createSelector(selectSongById, (song) => {
+	if (song.modSettings.mappingExtensions?.isEnabled) return NotePlacementMode.EXTENSIONS;
+	return NotePlacementMode.NORMAL;
+});
+export const selectObstaclePlacementMode = createSelector(selectSongById, selectUserObstaclePlacementMode, (song, userPlacementMode) => {
+	if (song.modSettings.mappingExtensions?.isEnabled) return ObstaclePlacementMode.EXTENSIONS;
+	return userPlacementMode;
 });
 
 export const { selectWaveformData } = visualizer.getSelectors((state: RootState) => {
@@ -126,6 +137,19 @@ export const {
 	selectGridPresetById,
 } = beatmap.getSelectors((state: RootState) => {
 	return state.editor.notes;
+});
+
+export const selectGridSize = createSelector(selectSongById, selectNotesEditorTool, selectObstaclePlacementMode, (song, tool, obstaclePlacementMode) => {
+	switch (tool) {
+		case ObjectTool.OBSTACLE: {
+			const visualGridSize = { ...DEFAULT_GRID, numCols: 8, numRows: 5, rowOffset: -0.5 };
+			if (obstaclePlacementMode === ObstaclePlacementMode.VISUAL) return getGridSize(song, visualGridSize);
+			return getGridSize(song);
+		}
+		default: {
+			return getGridSize(song);
+		}
+	}
 });
 
 export const {

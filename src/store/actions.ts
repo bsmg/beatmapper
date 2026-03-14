@@ -55,7 +55,7 @@ export const rehydrate = createAction("@@STORAGE/rehydrate", (args: { songId: So
 	return { payload: { ...args } };
 });
 
-export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updatePacerWait } = user.actions;
+export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
 
 export const startLoadingMap = createAction("startLoadingMap", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };

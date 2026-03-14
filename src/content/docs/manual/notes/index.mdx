@@ -59,20 +59,29 @@ You can also cycle through tools with <Shortcut>tab</Shortcut> and <Shortcut>shi
 
 ## Placing Obstacles
 
-Obstacles are a bit different - they take up multiple cells at the same time, and come in two variants: **full-height** and **crouch** walls.
+Obstacles are a bit different - they deplete your health when your head collides with them, 
+encouraging the player to physically dodge or crouch in order to avoid them.
 
 ![](../../../media/images/obstacle.png)
 
-To place a full-height wall, click and drag across the _bottom 2 rows_ in the placement grid.
-
-Crouch walls are placed the same way, but by clicking on the top row of squares. You can flip between ceilings and walls by moving the mouse up and down, before releasing:
+To create an obstacle, simply click and drag across the cells of the placement grid.
 
 ![](../../../media/images/place-obstacle.gif)
 
+### Obstacle Placement Modes
+
+Three unique placement behaviors are available for obstacles, which you can swap between via the Controls tab of the [Settings](/docs/manual/navigation#app-settings) menu:
+
+![](../../../media/images/free-obstacle-placement.gif)
+
+- For "Legacy" placement mode, you will be restricted to placement of full-height and crouch-height walls (as shown above). Useful if you're targeting legacy map formats.
+- For "Modern" placement mode, obstacles may be placed freely *within the constraints of the default placement grid*. If you're coming from the official editor, this mode should feel right at home.
+- For "Visual" placement mode, the placement grid will be re-adjusted to match the vanilla boundaries for obstacle placement. 
+  This mode also adds two additional columns to each side, just for good measure.
+
 > [!note]
-> You'll notice that for full-height walls, you're limited to placing walls that are 1 or 2 columns wide, no wider. 
-> This is a safety precaution; 3-column-thick walls can be hazardous, as folks try to leap out of the way. 
-> If you really want to place a super-wide wall, you'll need to do it in another editor.
+> For all placement modes, you may notice the inability to create a "dodge" obstacle that obstructs line of sight across the two center lanes. 
+> This is an intentional design choice, which primarily serves as a safety precaution for players. 
 
 ### Tweaking Duration
 

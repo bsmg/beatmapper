@@ -10,6 +10,8 @@ export const DEFAULT_GRID = {
 	numCols: DEFAULT_NUM_COLS,
 	colWidth: DEFAULT_COL_WIDTH,
 	rowHeight: DEFAULT_ROW_HEIGHT,
+	colOffset: 0,
+	rowOffset: 0,
 } as const;
 
 export const SNAPPING_INCREMENTS = [

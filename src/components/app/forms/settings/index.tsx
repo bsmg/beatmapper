@@ -17,7 +17,6 @@ const collection = createListCollection({
 		{ value: "advanced", label: "Advanced", render: () => <AppAdvancedSettings /> },
 		//
 	],
-	isItemDisabled: (item) => !["user", "graphics", "audio", "advanced"].includes(item.value),
 });
 
 function AppSettings() {
