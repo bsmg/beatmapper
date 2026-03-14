@@ -1,19 +1,13 @@
-import { useParams } from "@tanstack/react-router";
 import { type ReactNode, useMemo } from "react";
 
 import { For } from "$/components/ui/atoms";
-import { useAppSelector } from "$/store/hooks";
-import { selectEventTracksForEnvironment } from "$/store/selectors";
-import type { IEventTrack } from "$/types";
+import type { IEventTrack, IEventTracks } from "$/types";
 
 interface Props {
+	tracks: IEventTracks;
 	children: (track: IEventTrack, trackId: number) => ReactNode;
 }
-function ForEventTracks({ children }: Props) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-
-	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
-
+function ForEventTracks({ tracks, children }: Props) {
 	const items = useMemo(() => {
 		return Object.entries(tracks).map(([id, track]) => {
 			const trackId = Number.parseInt(id, 10);

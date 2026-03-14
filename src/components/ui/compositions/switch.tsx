@@ -34,12 +34,12 @@ export const Switch = forwardRef<HTMLInputElement, Assign<ComponentProps<typeof 
 	);
 });
 
-export function SwitchDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Switch>, FieldProps>) {
+export function SwitchDataField({ label, switchLabel, helperText, ...delegated }: Assign<ComponentProps<typeof Switch>, FieldProps & { switchLabel?: string }>) {
 	const [field, { id, required, invalid, errorText }] = useFieldData<boolean>(delegated);
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Switch {...delegated} id={id} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
+			<Switch {...delegated} id={id} label={switchLabel} checked={field.state.value} onCheckedChange={(details) => field.handleChange(!!details.checked)} />
 		</Field>
 	);
 }

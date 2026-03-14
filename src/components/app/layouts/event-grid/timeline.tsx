@@ -55,8 +55,6 @@ const Header = styled("div", {
 		position: "relative",
 		width: "100%",
 		display: "flex",
-		borderBottomWidth: "sm",
-		borderColor: "border.muted",
 		cursor: "col-resize",
 	},
 });

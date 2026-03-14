@@ -17,6 +17,8 @@ export const Header = styled("div", {
 		gap: 0,
 		backdropFilter: "blur(4px)",
 		zIndex: 2,
+		borderBottomWidth: "sm",
+		borderColor: "border.muted",
 	}),
 });
 
@@ -31,8 +33,6 @@ export const Actions = styled("div", {
 	base: center.raw({
 		minWidth: "170px",
 		height: "100%",
-		borderBottomWidth: "sm",
-		borderColor: "border.muted",
 	}),
 });
 

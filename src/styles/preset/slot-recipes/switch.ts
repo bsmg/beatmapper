@@ -8,6 +8,7 @@ export const switchRecipe = defineSlotRecipe({
 	base: {
 		root: {
 			display: "flex",
+			alignItems: "center",
 			gap: 1,
 		},
 		label: {

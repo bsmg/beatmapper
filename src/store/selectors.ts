@@ -47,6 +47,7 @@ export const {
 	selectLightshowIds,
 	selectLightshowIdForBeatmap,
 	selectBeatmapIdsWithLightshowId,
+	selectEnvironment,
 	selectColorScheme,
 	selectEventTracksForEnvironment,
 	selectColorSchemes,
