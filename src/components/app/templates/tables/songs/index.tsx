@@ -10,7 +10,7 @@ import { resolveSongId } from "$/helpers/song.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllSongs, selectBeatmapIds, selectDemo, selectProcessingImport, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import { selectAllSongs, selectBeatmaps, selectDemo, selectProcessingImport, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import type { App, SongId } from "$/types";
 import { HStack, Stack, styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
@@ -37,14 +37,15 @@ function Metadata({ songId }: Props) {
 }
 function Beatmaps({ songId }: Props) {
 	const dispatch = useAppDispatch();
-	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, songId));
-	const selectedBeatmapId = useAppSelector((state) => selectSelectedBeatmap(state, songId));
+	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, songId));
+	const beatmaps = useAppSelector((state) => selectBeatmaps(state, songId));
 
 	const { collection } = useListCollection({
-		initialItems: beatmapIds,
+		initialItems: Object.keys(beatmaps),
+		itemToString: (beatmapId) => beatmaps[beatmapId].customLabel ?? beatmapId,
 	});
 
-	return <Select collection={collection} value={[selectedBeatmapId.toString()]} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId, beatmapId: details.value[0] }))} />;
+	return <Select collection={collection} value={[selectedBeatmap.toString()]} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId, beatmapId: details.value[0] }))} />;
 }
 function Actions({ songId }: Props) {
 	const selectedBeatmapId = useAppSelector((state) => selectSelectedBeatmap(state, songId));

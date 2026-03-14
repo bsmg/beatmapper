@@ -55,6 +55,9 @@ const slice = createSlice({
 		selectJumpOffset: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return song.difficultiesById[beatmapId].startBeatOffset;
 		}),
+		selectLabelForBeatmap: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].customLabel ?? beatmapId;
+		}),
 		selectLightshowIds: createSelector([selectById], (song) => {
 			return distinct(Object.values(song.difficultiesById).map((beatmap) => beatmap.lightshowId));
 		}),

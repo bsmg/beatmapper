@@ -31,7 +31,7 @@ export default function createFileMiddleware() {
 			const state = api.getState();
 
 			// fetch the metadata for this beatmap from our local store
-			const beatmap = await filestore.loadBeatmapContents(songId, beatmapId);
+			const beatmap = await filestore.loadBeatmapContents(songId, beatmapId).then((data) => createBeatmap(data));
 			// pull the lightshow data from any beatmap with a matching lightshow id
 			const derivedBeatmapId = selectBeatmapIdsWithLightshowId(state, songId, selectLightshowIdForBeatmap(state, songId, beatmapId)).find((x) => x !== beatmapId);
 

@@ -10,7 +10,7 @@ import { Button, Dialog, Select } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import { selectBeatmaps, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 const COVER_ART_SIZES = {
@@ -29,10 +29,11 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 	const navigate = useNavigate();
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
-	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 
 	const { collection: BEATMAP_LIST_COLLECTION } = useListCollection({
-		initialItems: beatmapIds,
+		initialItems: Object.keys(beatmaps),
+		itemToString: (beatmapId) => beatmaps[beatmapId].customLabel ?? beatmapId,
 	});
 
 	const handleBeatmapSelect = useCallback(
