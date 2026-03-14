@@ -283,18 +283,6 @@ export const { selectAll: selectFutureBasicEvents } = basicEvents.getSelectors(
 		(state) => state?.basicEvents ?? basicEvents.getInitialState(),
 	),
 );
-export const selectAllBasicEventsForTrackInWindow = createDraftSafeSelector(
-	[selectEventEditorStartAndEndBeat, (state: RootState, _: SongId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)],
-	({ startBeat, endBeat }, basicEvents) => {
-		const beforeIdx = basicEvents.findIndex((e) => e.time >= startBeat);
-		const afterIdx = basicEvents.findIndex((e) => e.time >= endBeat);
-
-		const inWindow = beforeIdx === -1 ? [] : basicEvents.slice(beforeIdx, afterIdx === -1 ? basicEvents.length : afterIdx);
-
-		return inWindow.concat(beforeIdx > 0 ? [basicEvents[beforeIdx - 1]] : [], afterIdx !== -1 ? [basicEvents[afterIdx]] : []).sort(sortObjectFn);
-	},
-	{ memoizeOptions: { resultEqualityCheck: shallowEqual } },
-);
 
 export const {
 	selectAll: selectAllBoostEvents,
@@ -314,18 +302,6 @@ export const { selectAll: selectFutureBoostEvents } = boostEvents.getSelectors(
 		(state: Pick<RootState, "entities">) => state.entities.lightshow.future,
 		(state) => state?.boostEvents ?? boostEvents.getInitialState(),
 	),
-);
-export const selectAllBoostEventsInWindow = createDraftSafeSelector(
-	[selectEventEditorStartAndEndBeat, selectAllBoostEvents],
-	({ startBeat, endBeat }, boostEvents) => {
-		const beforeIdx = boostEvents.findIndex((e) => e.time >= startBeat);
-		const afterIdx = boostEvents.findIndex((e) => e.time >= endBeat);
-
-		const inWindow = beforeIdx === -1 ? [] : boostEvents.slice(beforeIdx, afterIdx === -1 ? boostEvents.length : afterIdx);
-
-		return inWindow.concat(beforeIdx > 0 ? [boostEvents[beforeIdx - 1]] : [], afterIdx !== -1 ? [boostEvents[afterIdx]] : []).sort(sortObjectFn);
-	},
-	{ memoizeOptions: { resultEqualityCheck: shallowEqual } },
 );
 
 export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events): ILightState => {

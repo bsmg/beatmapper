@@ -80,7 +80,7 @@ export function createBackgroundBoxes(trackId: number, { tracks, basicEvents, bo
 		color: resolveBasicEventColor(data),
 	}));
 
-	const timeline = Array.from(new Set([offsetInBeats ?? 0, startBeat, ...sortedEvents.map((e) => e.data.time).filter((t) => t >= startBeat && t < endBeat), ...boostEvents.map((e) => e.time).filter((t) => t >= startBeat && t < endBeat), endBeat])).sort((a, b) => a - b);
+	const timeline = Array.from(new Set([startBeat, ...sortedEvents.map((e) => e.data.time).filter((t) => t >= startBeat && t < endBeat), ...boostEvents.map((e) => e.time).filter((t) => t >= startBeat && t < endBeat), endBeat])).sort((a, b) => a - b);
 
 	const backgroundBoxes: IBackgroundBox[] = [];
 

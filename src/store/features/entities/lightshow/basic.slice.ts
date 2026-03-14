@@ -94,7 +94,7 @@ const slice = createSlice({
 		builder.addCase(drawEventSelectionBox.fulfilled, (state, action) => {
 			const { tracks, selectionBoxInBeats, metadata } = action.payload;
 			const allEntities = selectAll(state);
-			const allTracks = Object.keys(tracks);
+			const allTracks = Object.keys(tracks).concat("5");
 			if (!selectionBoxInBeats.withPrevious) {
 				const allSelected = allEntities.filter((x) => x.selected);
 				adapter.updateMany(

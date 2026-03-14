@@ -11,8 +11,8 @@ import { isBasicLightEvent, isBasicValueEvent, resolveBasicEventColor, resolveBa
 import { addBasicEvent, bulkAddBasicEvent, bulkRemoveEvent, deselectEvent, mirrorBasicEvent, removeEvent, selectEvent, updateBasicEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
-	selectAllBasicEventsForTrackInWindow,
-	selectAllBoostEventsInWindow,
+	selectAllBasicEventsForTrack,
+	selectAllBoostEvents,
 	selectColorScheme,
 	selectCurrentLightStateForTrack,
 	selectEditorOffsetInBeats,
@@ -28,31 +28,57 @@ import { clamp, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes, resolveColorForLightState } from "./track.helpers";
 
 function resolveBackgroundForEvent(data: wrapper.IWrapBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { isBoosted: boolean; tracks: IEventTracks }) {
-	const eventEffect = resolveBasicEventEffect(data, options.tracks);
+	const effect = resolveBasicEventEffect(data, options.tracks);
 
 	const key = resolveColorForLightState({ color: resolveBasicEventColor(data), isBoosted: options.isBoosted }, options);
-	const color = isBasicLightEvent(data, options.tracks) ? (key ?? resolveColorForItem(eventEffect, options)) : resolveColorForItem(eventEffect, options);
+	const color = isBasicLightEvent(data, options.tracks) ? (key ?? resolveColorForItem(effect, options)) : resolveColorForItem(effect, options);
 
-	const brightColor = `color-mix(in srgb, ${color}, white 30%)`;
-	const semiTransparentColor = `color-mix(in srgb, ${color}, black 30%)`;
+	const toWhite = `color-mix(in srgb, ${color}, white 30%)`;
+	const toBlack = `color-mix(in srgb, ${color}, black 30%)`;
 
-	switch (eventEffect) {
+	switch (effect) {
 		case App.BasicEventEffect.ON: {
 			return { value: color, style: color };
 		}
 		case App.BasicEventEffect.FLASH: {
-			return { value: color, style: `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor})` };
+			return { value: color, style: `linear-gradient(90deg, ${toBlack}, ${toWhite})` };
 		}
 		case App.BasicEventEffect.FADE: {
-			return { value: color, style: `linear-gradient(-90deg, ${semiTransparentColor}, ${brightColor})` };
+			return { value: color, style: `linear-gradient(-90deg, ${toBlack}, ${toWhite})` };
 		}
 		case App.BasicEventEffect.TRANSITION: {
-			return { value: color, style: `linear-gradient(0deg, ${semiTransparentColor}, ${brightColor})` };
+			return { value: color, style: `linear-gradient(0deg, ${toBlack}, ${toWhite})` };
 		}
 		default: {
-			return { value: color, style: `linear-gradient(90deg, ${semiTransparentColor}, ${brightColor}, ${semiTransparentColor})` };
+			return { value: color, style: `linear-gradient(90deg, ${toBlack}, ${toWhite}, ${toBlack})` };
 		}
 	}
+}
+
+function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGrid.IPlacementActions<wrapper.IWrapBasicEvent> }) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
+	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
+
+	const api = EventGrid.useContext();
+
+	const isEventBoosted = useAppSelector((state) => selectToggleAtBeat(state, { trackId: 5, beforeBeat: data.time + 0.001 }));
+
+	const resolveEventStyle = useCallback(
+		(data: wrapper.IWrapBasicEvent) => {
+			const { style, value } = resolveBackgroundForEvent(data, { tracks, colorScheme, isBoosted: isEventBoosted });
+			return { "--event-color": style, background: style, color: isColorDark(value) ? "white" : "black" };
+		},
+		[tracks, colorScheme, isEventBoosted],
+	);
+
+	return (
+		<EventGrid.Event key={resolveEventId(data)} data={data} {...api.getEventProps(data, actions, resolveEventStyle(data))}>
+			{isBasicLightEvent(data, tracks) && data.value !== 0 ? data.floatValue : undefined}
+			{isBasicValueEvent(data, tracks) && data.value}
+		</EventGrid.Event>
+	);
 }
 
 interface Props {
@@ -62,20 +88,22 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
-	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
-	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
-	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrackInWindow(state, sid, trackId));
-	const boostEvents = useAppSelector((state) => selectAllBoostEventsInWindow(state, sid));
-	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
+	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
+	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
+	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));
+	const boostEvents = useAppSelector((state) => selectAllBoostEvents(state));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const initialLightState = useAppSelector((state) => selectCurrentLightStateForTrack(state, sid, bid, trackId));
 	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
-	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 
 	const backgroundBoxes = useMemo(() => {
 		return createBackgroundBoxes(trackId, { tracks, colorScheme, offsetInBeats, basicEvents, boostEvents, initialLightState, startBeat, endBeat });
 	}, [initialLightState, trackId, tracks, colorScheme, offsetInBeats, basicEvents, boostEvents, startBeat, endBeat]);
+
+	const api = EventGrid.useContext();
 
 	const resolveEventData = useCallback(
 		(time: number, norm: number) => {
@@ -100,8 +128,6 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 		},
 		[tracks, selectedColorType, selectedTool, trackId],
 	);
-
-	const api = EventGrid.useContext();
 
 	const actions = useMemo<EventGrid.IPlacementActions<wrapper.IWrapBasicEvent>>(() => {
 		return {
@@ -131,31 +157,10 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 		};
 	}, [dispatch, resolveEventData, trackId, tracks, areLasersLocked]);
 
-	const isEventBoosted = useAppSelector((state) => {
-		return (data: wrapper.IWrapBasicEvent) => {
-			return selectToggleAtBeat(state, { trackId: 5, beforeBeat: data.time + 0.001 });
-		};
-	});
-
-	const resolveEventStyle = useCallback(
-		(data: wrapper.IWrapBasicEvent) => {
-			const { style, value } = resolveBackgroundForEvent(data, { tracks, colorScheme, isBoosted: isEventBoosted(data) });
-			return { "--event-color": style, background: style, color: isColorDark(value) ? "white" : "black" };
-		},
-		[tracks, colorScheme, isEventBoosted],
-	);
-
 	return (
 		<EventGrid.Track {...api.getTrackProps(trackId, actions)} {...rest}>
 			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} {...api.getBackgroundBoxProps(box)} />}</For>
-			<For each={basicEvents.filter((x) => x.time >= startBeat && x.time < endBeat)}>
-				{(data) => (
-					<EventGrid.Event key={resolveEventId(data)} data={data} {...api.getEventProps(data, actions, resolveEventStyle(data))}>
-						{isBasicLightEvent(data, tracks) && data.value !== 0 ? data.floatValue : undefined}
-						{isBasicValueEvent(data, tracks) && data.value}
-					</EventGrid.Event>
-				)}
-			</For>
+			<For each={basicEvents.filter((x) => x.time >= startBeat && x.time < endBeat)}>{(data) => <BasicEvent data={data} actions={actions} />}</For>
 		</EventGrid.Track>
 	);
 }

@@ -1,9 +1,10 @@
-import { createBasicEvent } from "bsmap";
+import { createBasicEvent, createColorBoostEvent } from "bsmap";
 import type { wrapper } from "bsmap/types";
 import { describe, expect, it } from "vitest";
 
 import { serializeBasicEventValue } from "$/helpers/events.helpers";
 import { App, ColorSchemeKey, type IBackgroundBox, type IColorScheme, type IEventTracks } from "$/types";
+import { lerp, lerpColor } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
 describe(createBackgroundBoxes.name, () => {
@@ -66,7 +67,14 @@ describe(createBackgroundBoxes.name, () => {
 		//  R  [________]
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [];
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 0,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
+		];
 
 		const expectedResult: IBackgroundBox[] = [
 			{
@@ -117,6 +125,12 @@ describe(createBackgroundBoxes.name, () => {
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
 		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 0,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
 			createBasicEvent({
 				type: 2,
 				time: 12,
@@ -185,5 +199,164 @@ describe(createBackgroundBoxes.name, () => {
 		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 
 		expect(actualResult).toEqual(expectedResult);
+	});
+
+	it("handles brightness changes", () => {
+		// 0  [R---R___]
+		const startBeat = 0;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 0,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 0.5,
+			}),
+			createBasicEvent({
+				type: 2,
+				time: 4,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 0.25,
+			}),
+		];
+
+		const expectedResult: IBackgroundBox[] = [
+			{
+				time: 0,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeft, brightness: 0.5 },
+				endState: { color: colorScheme.envColorLeft, brightness: 0.5 },
+			},
+			{
+				time: 4,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeft, brightness: 0.25 },
+				endState: { color: colorScheme.envColorLeft, brightness: 0.25 },
+			},
+		];
+
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+
+		expect(actualResult).toEqual(expectedResult);
+	});
+
+	it("handles interpolation for transitions", () => {
+		// R  [\\\b___]
+		const startBeat = 8;
+		const numOfBeatsToShow = 8;
+
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 16,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.TRANSITION, color: App.EventColor.SECONDARY }, { tracks }),
+				floatValue: 1.0,
+			}),
+		];
+
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: colorScheme.envColorLeft, brightness: 0 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+
+		expect(actualResult[0]).toEqual({
+			time: 8,
+			duration: 8,
+			startState: {
+				color: lerpColor(colorScheme.envColorLeft, colorScheme.envColorRight, 0.5),
+				brightness: lerp(0, 1.0, 0.5),
+			},
+			endState: {
+				color: lerpColor(colorScheme.envColorLeft, colorScheme.envColorRight, 1),
+				brightness: lerp(0, 1.0, 1),
+			},
+		});
+	});
+
+	it("handles color boost", () => {
+		//  0  [R_!___._]
+		const startBeat = 8;
+		const numOfBeatsToShow = 8;
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 8,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 1,
+			}),
+		];
+		const boostEvents: wrapper.IWrapColorBoostEvent[] = [{ time: 10, toggle: true } as wrapper.IWrapColorBoostEvent, { time: 14, toggle: false } as wrapper.IWrapColorBoostEvent];
+
+		const expectedResult: IBackgroundBox[] = [
+			{
+				time: 8,
+				duration: 2,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+			{
+				time: 10,
+				duration: 4,
+				startState: { color: colorScheme.envColorLeftBoost, brightness: 1 },
+				endState: { color: colorScheme.envColorLeftBoost, brightness: 1 },
+			},
+			{
+				time: 14,
+				duration: 2,
+				startState: { color: colorScheme.envColorLeft, brightness: 1 },
+				endState: { color: colorScheme.envColorLeft, brightness: 1 },
+			},
+		];
+
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents, initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+
+		expect(actualResult).toEqual(expectedResult);
+	});
+
+	it("handles color boost during a transition", () => {
+		// 0  [\\\!\\\]
+		const startBeat = 0;
+		const numOfBeatsToShow = 8;
+		const initialColor = colorScheme.envColorLeft;
+
+		const basicEvents: wrapper.IWrapBasicEvent[] = [
+			createBasicEvent({
+				type: 2,
+				time: 0,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				floatValue: 0.0,
+			}),
+			createBasicEvent({
+				type: 2,
+				time: 8,
+				value: serializeBasicEventValue({ effect: App.BasicEventEffect.TRANSITION, color: App.EventColor.SECONDARY }, { tracks }),
+				floatValue: 1.0,
+			}),
+		];
+		const boostEvents: wrapper.IWrapColorBoostEvent[] = [createColorBoostEvent({ time: 4, toggle: true })];
+
+		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents, initialLightState: { color: initialColor, brightness: 0 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
+
+		expect(actualResult[0]).toEqual({
+			time: 0,
+			duration: 4,
+			startState: {
+				color: colorScheme.envColorLeft,
+				brightness: 0,
+			},
+			endState: {
+				color: lerpColor(colorScheme.envColorLeft, colorScheme.envColorRight, 0.5),
+				brightness: 0.5,
+			},
+		});
+		expect(actualResult[1]).toEqual({
+			time: 4,
+			duration: 4,
+			startState: {
+				color: lerpColor(colorScheme.envColorLeftBoost, colorScheme.envColorRightBoost, 0.5),
+				brightness: 0.5,
+			},
+			endState: {
+				color: colorScheme.envColorRightBoost,
+				brightness: 1,
+			},
+		});
 	});
 });

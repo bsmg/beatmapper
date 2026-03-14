@@ -75,7 +75,7 @@ export function resolveBasicEventColor<T extends Pick<wrapper.IWrapBasicEvent, "
 export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
 	const trackId = resolveTrackIdForEvent(data);
 
-	switch (tracks[trackId].type) {
+	switch (tracks[trackId]?.type) {
 		case TrackType.LIGHT: {
 			if (data.value === 0) return App.BasicEventEffect.OFF;
 			if (data.value % 4 === 1) return App.BasicEventEffect.ON;
@@ -91,7 +91,7 @@ export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, 
 			return App.BasicEventEffect.TRIGGER;
 		}
 		default: {
-			throw new Error("Invalid value.");
+			return "none";
 		}
 	}
 }
