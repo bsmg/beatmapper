@@ -121,15 +121,15 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 		deserialize: function deserializeInfoContents(data: wrapper.IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {
 			const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<IColorScheme>, scheme) => {
 				acc[scheme.name] = {
-					colorLeft: colorToHex(scheme.saberLeftColor),
-					colorRight: colorToHex(scheme.saberRightColor),
-					obstacleColor: colorToHex(scheme.obstaclesColor),
-					envColorLeft: colorToHex(scheme.environment0Color),
-					envColorRight: colorToHex(scheme.environment1Color),
-					envColorWhite: scheme.environmentWColor ? colorToHex(scheme.environmentWColor) : undefined,
-					envColorLeftBoost: colorToHex(scheme.environment0ColorBoost),
-					envColorRightBoost: colorToHex(scheme.environment1ColorBoost),
-					envColorWhiteBoost: scheme.environmentWColorBoost ? colorToHex(scheme.environmentWColorBoost) : undefined,
+					colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
+					colorRight: colorToHex(scheme.saberRightColor).slice(0, 7),
+					obstacleColor: colorToHex(scheme.obstaclesColor).slice(0, 7),
+					envColorLeft: colorToHex(scheme.environment0Color).slice(0, 7),
+					envColorRight: colorToHex(scheme.environment1Color).slice(0, 7),
+					envColorWhite: scheme.environmentWColor ? colorToHex(scheme.environmentWColor).slice(0, 7) : undefined,
+					envColorLeftBoost: colorToHex(scheme.environment0ColorBoost).slice(0, 7),
+					envColorRightBoost: colorToHex(scheme.environment1ColorBoost).slice(0, 7),
+					envColorWhiteBoost: scheme.environmentWColorBoost ? colorToHex(scheme.environmentWColorBoost).slice(0, 7) : undefined,
 				};
 				return acc;
 			}, {});
@@ -155,7 +155,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 			const activeCustomColors = Object.values(ColorSchemeKey).reduce(
 				(acc, key) => {
 					const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
-					acc[key as ColorSchemeKey] = color ? colorToHex(color) : null;
+					acc[key as ColorSchemeKey] = color ? colorToHex(color).slice(0, 7) : null;
 					return acc;
 				},
 				{} as { [key in ColorSchemeKey]: string | null },
