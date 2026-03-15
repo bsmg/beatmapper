@@ -11,7 +11,7 @@ export function Prompter({ children }: PropsWithChildren) {
 	const [active, setActive] = useState<(IPrompt & { id: string }) | null>(null);
 	const [registry] = useState(() => new Map<string, IPrompt & { id: string }>());
 
-	const dialog = useDialog({ role: "alertdialog", trapFocus: false });
+	const dialog = useDialog({ role: "alertdialog", modal: false });
 
 	const register = useCallback(
 		(state: IPrompt & { id: string }) => {
