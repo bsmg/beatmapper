@@ -1,6 +1,5 @@
 import { toPascalCase } from "@std/text/to-pascal-case";
-import { NoteJumpSpeed } from "bsmap";
-import { EnvironmentName } from "bsmap/types";
+import { EnvironmentName, NoteJumpSpeed } from "bsmap";
 
 import { DEFAULT_GRID } from "$/constants";
 import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, RequiredKeys } from "$/types";

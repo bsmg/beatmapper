@@ -1,6 +1,5 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, type EntityId, isAnyOf, type Update } from "@reduxjs/toolkit";
-import { createObstacle, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createObstacle, type IWrapObstacle, sortObjectFn } from "bsmap";
 
 import { mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
@@ -11,7 +10,7 @@ import type { RootState } from "$/store/setup";
 import { type App, ObjectType, type SongId, View } from "$/types";
 import { roundAwayFloatingPointNonsense } from "$/utils";
 
-const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapObstacle>, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<IWrapObstacle>, EntityId>({
 	selectId: resolveObstacleId,
 	sortComparer: sortObjectFn,
 });
@@ -30,7 +29,7 @@ const slice = createSlice({
 		selectTotal: selectTotal,
 	},
 	reducers: (api) => {
-		const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<wrapper.IWrapObstacle> }, { songId: SongId; obstacle: Partial<wrapper.IWrapObstacle> }> = (args, api) => {
+		const createFromState: AsyncThunkPayloadCreator<{ obstacle: Partial<IWrapObstacle> }, { songId: SongId; obstacle: Partial<IWrapObstacle> }> = (args, api) => {
 			const state = api.getState() as RootState;
 			const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
 			if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
@@ -46,7 +45,7 @@ const slice = createSlice({
 					return adapter.addOne(state, createObstacle(data));
 				},
 			}),
-			updateOne: api.reducer<Update<wrapper.IWrapObstacle, EntityId>>((state, action) => {
+			updateOne: api.reducer<Update<IWrapObstacle, EntityId>>((state, action) => {
 				return adapter.updateOne(state, action.payload);
 			}),
 			selectOne: api.reducer<{ id: EntityId }>((state, action) => {
@@ -57,7 +56,7 @@ const slice = createSlice({
 				const { id } = action.payload;
 				return adapter.updateOne(state, { id, changes: { selected: false } });
 			}),
-			updateAllSelected: api.reducer<{ changes: Partial<wrapper.IWrapObstacle> }>((state, action) => {
+			updateAllSelected: api.reducer<{ changes: Partial<IWrapObstacle> }>((state, action) => {
 				const { changes } = action.payload;
 				const entities = selectAllSelected(state);
 				return adapter.updateMany(

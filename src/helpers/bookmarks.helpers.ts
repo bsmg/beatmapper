@@ -1,5 +1,4 @@
-import type { v2 as v2t, v3 as v3t } from "bsmap/types";
-import { colorToHex, hexToRgba } from "bsmap/utils";
+import { colorToHex, hexToRgba, type IV2Bookmark, type IV3Bookmark } from "bsmap";
 
 import type { App } from "$/types";
 import { hashCode } from "$/utils";
@@ -14,7 +13,7 @@ export function resolveColorForBookmark(name: string) {
 	return `hsl(${Math.abs(hash) % 360}, ${70}%, ${50}%)`;
 }
 
-export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createEntityFactory<App.IBookmark, { 1: Omit<v2t.IBookmark, "_color">; 2: v2t.IBookmark; 3: v3t.IBookmark }>({
+export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createEntityFactory<App.IBookmark, { 1: Omit<IV2Bookmark, "_color">; 2: IV2Bookmark; 3: IV3Bookmark }>({
 	resolveKey: (data) => {
 		if ("c" in data) return 3;
 		if ("_color" in data) return 2;

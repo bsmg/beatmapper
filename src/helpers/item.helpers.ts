@@ -1,5 +1,4 @@
-import { mirrorNoteColor, mirrorNoteDirectionHorizontally, mirrorNoteDirectionVertically } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { type IWrapBaseNote, type IWrapGridObject, mirrorNoteColor, mirrorNoteDirectionHorizontally, mirrorNoteDirectionVertically } from "bsmap";
 
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import type { IGrid } from "$/types";
@@ -24,13 +23,13 @@ function mirrorCoordinate(coordinate: number, count: number, offset?: number) {
 	const mirrored = axis - value + axis + (offset ? 1 - deserializeCoordinate(offset ?? 0) : 0);
 	return serializeCoordinate(mirrored, isExtendedCoordinate(coordinate));
 }
-export function mirrorGridObjectProperties<T extends wrapper.IWrapGridObject>(item: T, axis: "horizontal" | "vertical", grid?: IGrid, offset?: number): Partial<T> {
+export function mirrorGridObjectProperties<T extends IWrapGridObject>(item: T, axis: "horizontal" | "vertical", grid?: IGrid, offset?: number): Partial<T> {
 	return {
 		posX: axis === "horizontal" ? mirrorCoordinate(item.posX, DEFAULT_NUM_COLS, offset) : item.posX,
 		posY: axis === "vertical" ? mirrorCoordinate(item.posY, grid?.numRows ?? DEFAULT_NUM_ROWS, offset) : item.posY,
 	} as Partial<T>;
 }
-export function mirrorBaseNoteProperties<T extends wrapper.IWrapBaseNote>(item: T, axis: "horizontal" | "vertical"): Partial<T> {
+export function mirrorBaseNoteProperties<T extends IWrapBaseNote>(item: T, axis: "horizontal" | "vertical"): Partial<T> {
 	const resolveDirection = axis === "horizontal" ? mirrorNoteDirectionHorizontally : mirrorNoteDirectionVertically;
 	return {
 		color: axis === "horizontal" ? mirrorNoteColor(item.color) : item.color,

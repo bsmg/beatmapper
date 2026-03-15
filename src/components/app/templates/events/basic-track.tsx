@@ -1,7 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
-import { createBasicEvent } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createBasicEvent, type IWrapBasicEvent } from "bsmap";
 import { type ComponentProps, useCallback, useMemo } from "react";
 
 import { EventGrid } from "$/components/app/layouts";
@@ -27,7 +26,7 @@ import { App, type IEventTracks, TrackType } from "$/types";
 import { clamp, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes, resolveColorForLightState } from "./track.helpers";
 
-function resolveBackgroundForEvent(data: wrapper.IWrapBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { isBoosted: boolean; tracks: IEventTracks }) {
+function resolveBackgroundForEvent(data: IWrapBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { isBoosted: boolean; tracks: IEventTracks }) {
 	const effect = resolveBasicEventEffect(data, options.tracks);
 
 	const key = resolveColorForLightState({ color: resolveBasicEventColor(data), isBoosted: options.isBoosted }, options);
@@ -55,7 +54,7 @@ function resolveBackgroundForEvent(data: wrapper.IWrapBasicEvent, options: Param
 	}
 }
 
-function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGrid.IPlacementActions<wrapper.IWrapBasicEvent> }) {
+function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGrid.IPlacementActions<IWrapBasicEvent> }) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
@@ -66,7 +65,7 @@ function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGr
 	const isEventBoosted = useAppSelector((state) => selectToggleAtBeat(state, { trackId: 5, beforeBeat: data.time + 0.001 }));
 
 	const resolveEventStyle = useCallback(
-		(data: wrapper.IWrapBasicEvent) => {
+		(data: IWrapBasicEvent) => {
 			const { style, value } = resolveBackgroundForEvent(data, { tracks, colorScheme, isBoosted: isEventBoosted });
 			return { "--event-color": style, background: style, color: isColorDark(value) ? "white" : "black" };
 		},
@@ -129,7 +128,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 		[tracks, selectedColorType, selectedTool, trackId],
 	);
 
-	const actions = useMemo<EventGrid.IPlacementActions<wrapper.IWrapBasicEvent>>(() => {
+	const actions = useMemo<EventGrid.IPlacementActions<IWrapBasicEvent>>(() => {
 		return {
 			onCreate: resolveEventData,
 			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBasicEvent : addBasicEvent)({ query: data, data: data, tracks, areLasersLocked })),

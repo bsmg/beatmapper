@@ -2,8 +2,8 @@ import type { Assign } from "@ark-ui/react";
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
+import type { CharacteristicName, DifficultyName } from "bsmap";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
 import type { PropsWithChildren, ReactNode } from "react";
 import { object } from "valibot";
 

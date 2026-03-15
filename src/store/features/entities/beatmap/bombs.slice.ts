@@ -1,6 +1,5 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
-import { createBombNote, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createBombNote, type IWrapBombNote, sortObjectFn } from "bsmap";
 
 import { mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
@@ -28,7 +27,7 @@ import {
 import { createEditorObjectReducers, createEditorObjectSelectors, createGridObjectReducerFactory } from "$/store/helpers";
 import { type App, ObjectTool, ObjectType, View } from "$/types";
 
-const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapBombNote>, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<IWrapBombNote>, EntityId>({
 	selectId: resolveNoteId,
 	sortComparer: sortObjectFn,
 });
@@ -48,7 +47,7 @@ const slice = createSlice({
 		selectTotal: selectTotal,
 	},
 	reducers: {
-		updateOne: createNoteReducer<{ changes: Partial<wrapper.IWrapColorNote> }>((data, state, action) => {
+		updateOne: createNoteReducer<{ changes: Partial<IWrapBombNote> }>((data, state, action) => {
 			return adapter.updateOne(state, { id: adapter.selectId(data), changes: action.payload.changes });
 		}),
 	},

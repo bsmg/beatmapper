@@ -1,7 +1,7 @@
 import { useDialog } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { useBlocker, useParams } from "@tanstack/react-router";
-import type { EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import type { EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 import { custom, gtValue, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
@@ -33,7 +33,7 @@ const SCHEMA = object({
 	),
 	previewStartTime: pipe(number()),
 	previewDuration: pipe(number()),
-	environment: custom<EnvironmentName | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
+	environment: custom<EnvironmentV2Name | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 });
 
 function UpdateSongForm() {

@@ -1,4 +1,4 @@
-import type { ICustomDataBase } from "bsmap/types";
+import type { ICustomDataBase } from "bsmap";
 
 import type { Accept, Member } from "$/types/utils";
 

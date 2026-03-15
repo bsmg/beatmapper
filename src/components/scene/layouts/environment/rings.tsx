@@ -1,6 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { type Interpolation, useSprings, useTrail } from "@react-spring/three";
-import type { wrapper } from "bsmap/types";
+import type { IWrapBasicEvent } from "bsmap";
 import type { ComponentProps, ReactNode } from "react";
 
 import { useRingRotationEffect, useRingZoomEffect } from "$/components/scene/hooks/environment.hooks";
@@ -9,8 +9,8 @@ import { selectAnimateEnvironment } from "$/store/selectors";
 
 interface Props {
 	count: number;
-	lastRotationEvent: wrapper.IWrapBasicEvent | null;
-	lastZoomEvent: wrapper.IWrapBasicEvent | null;
+	lastRotationEvent: IWrapBasicEvent | null;
+	lastZoomEvent: IWrapBasicEvent | null;
 	ratio?: number;
 	minDistance?: number;
 	maxDistance?: number;

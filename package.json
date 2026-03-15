@@ -42,7 +42,7 @@
 		"@zag-js/file-utils": "^1.33.1",
 		"@zag-js/react": "^1.34.1",
 		"@zag-js/utils": "^1.34.1",
-		"bsmap": "^2.2.9",
+		"bsmap": "patch:bsmap@npm%3A2.3.2#~/.yarn/patches/bsmap-npm-2.3.2-23d72a3a83.patch",
 		"date-fns": "^4.1.0",
 		"fflate": "^0.8.2",
 		"file-saver": "^2.0.5",

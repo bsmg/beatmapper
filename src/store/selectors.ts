@@ -1,6 +1,5 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
-import { calculateNps, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { calculateNps, type IWrapBaseObject, sortObjectFn } from "bsmap";
 import { shallowEqual } from "react-redux";
 
 import { DEFAULT_GRID } from "$/constants";
@@ -188,7 +187,7 @@ export const selectObjectsCanRedo = createSelector(
 	},
 );
 
-export function createVisibleObjectsSelector<T extends wrapper.IWrapBaseObject>(selector: (state: RootState) => T[]) {
+export function createVisibleObjectsSelector<T extends IWrapBaseObject>(selector: (state: RootState) => T[]) {
 	return createSelector(
 		[selector, (_1, _2, options: { beatDepth: number; surfaceDepth: number; includeSpaceBeforeGrid?: boolean }) => options, selectCursorPositionInBeats],
 		(objects, { beatDepth, surfaceDepth, includeSpaceBeforeGrid }, cursorPositionInBeats) => {

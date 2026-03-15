@@ -1,6 +1,5 @@
 import type { Assign } from "@ark-ui/react";
-import { NoteDirection } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { type IWrapBaseNote, type IWrapBombNote, type IWrapColorNote, NoteDirection } from "bsmap";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
@@ -9,7 +8,7 @@ import { Obj, useOBJ } from "$/components/scene/atoms";
 import { resolveRotationForNote } from "$/components/scene/helpers";
 import type { App } from "$/types";
 
-export interface BaseNoteProps<T extends wrapper.IWrapBaseNote> {
+export interface BaseNoteProps<T extends IWrapBaseNote> {
 	data: App.IWrapEditorObject<T>;
 	color?: ColorRepresentation;
 	metalness?: number;
@@ -32,7 +31,7 @@ function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rot
 useOBJ.preload(blockCenterUrl);
 useOBJ.preload(blockDirectionalUrl);
 
-export function ColorNote({ data, rotationOffset, ...rest }: Omit<ComponentProps<typeof BaseNote<wrapper.IWrapColorNote>>, "path" | "children"> & { rotationOffset?: number }) {
+export function ColorNote({ data, rotationOffset, ...rest }: Omit<ComponentProps<typeof BaseNote<IWrapColorNote>>, "path" | "children"> & { rotationOffset?: number }) {
 	const url = useMemo(() => {
 		// If the direction is >=1000, we'll want to use mapping extensions.
 		// - for 2000-2360 range, it should be a dot note
@@ -77,6 +76,6 @@ export function ColorNote({ data, rotationOffset, ...rest }: Omit<ComponentProps
 
 useOBJ.preload(mineUrl);
 
-export function BombNote({ ...rest }: Omit<ComponentProps<typeof BaseNote<wrapper.IWrapBombNote>>, "path" | "children">) {
+export function BombNote({ ...rest }: Omit<ComponentProps<typeof BaseNote<IWrapBombNote>>, "path" | "children">) {
 	return <BaseNote {...rest} path={mineUrl} metalness={0.75} roughness={0.4} />;
 }

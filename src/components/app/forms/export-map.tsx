@@ -1,6 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { useListCollection } from "@ark-ui/react/collection";
-import type { BeatmapFileType, InferBeatmapVersion } from "bsmap/types";
+import type { InferBeatmapVersion } from "bsmap";
 import type { ComponentProps } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
@@ -42,7 +42,7 @@ function ExportMapForm({ onSubmit, ...rest }: Assign<ComponentProps<typeof Submi
 		onSubmit: ({ value }) => {
 			try {
 				return onSubmit({
-					version: value.version ? (Number.parseInt(value.version, 10) as InferBeatmapVersion<BeatmapFileType>) : null,
+					version: value.version ? (Number.parseInt(value.version, 10) as InferBeatmapVersion) : null,
 					saveOptions: { format: value.minify ? 0 : 2, optimize: { purgeZeros: value.purgeZeros } },
 				});
 			} catch (error) {

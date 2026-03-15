@@ -1,5 +1,5 @@
 import { defineAnimationStyles, defineKeyframes, defineLayerStyles, defineSemanticTokens, defineTextStyles, defineTokens } from "@pandacss/dev";
-import { DifficultyName } from "bsmap/types";
+import { DifficultyName } from "bsmap";
 
 export const tokens = defineTokens({
 	colors: {

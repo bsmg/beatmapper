@@ -1,5 +1,4 @@
-import { sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEffectActive, isLightTrack, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
@@ -29,8 +28,8 @@ interface StateResolverContext extends ColorResolverOptions {
 }
 export function deriveLightStateAtBeat(
 	targetBeat: number,
-	currentEvent: { data: wrapper.IWrapBasicEvent; effect: App.BasicEventEffect; color: EventColor | null } | undefined,
-	nextEvent: { data: wrapper.IWrapBasicEvent; effect: App.BasicEventEffect; color: EventColor | null } | undefined,
+	currentEvent: { data: IWrapBasicEvent; effect: App.BasicEventEffect; color: EventColor | null } | undefined,
+	nextEvent: { data: IWrapBasicEvent; effect: App.BasicEventEffect; color: EventColor | null } | undefined,
 	{ initialLightState, offsetInBeats = 0, isBoosted, ...options }: StateResolverContext & { isBoosted: boolean },
 ): IBackgroundBox["startState" | "endState"] {
 	const isActive = currentEvent ? isLightEffectActive(currentEvent.effect) : false;
@@ -55,7 +54,7 @@ export function deriveLightStateAtBeat(
 	};
 }
 
-function deriveBoostStateAtBeat(targetBeat: number, boostEvents: wrapper.IWrapColorBoostEvent[], initialBoostState: boolean): boolean {
+function deriveBoostStateAtBeat(targetBeat: number, boostEvents: IWrapColorBoostEvent[], initialBoostState: boolean): boolean {
 	let activeBoost = initialBoostState;
 	for (const event of boostEvents) {
 		if (event.time > targetBeat) break;
@@ -66,8 +65,8 @@ function deriveBoostStateAtBeat(targetBeat: number, boostEvents: wrapper.IWrapCo
 
 interface CreateBackgroundBoxesOptions extends StateResolverContext {
 	tracks: IEventTracks;
-	basicEvents: wrapper.IWrapBasicEvent[];
-	boostEvents: wrapper.IWrapColorBoostEvent[];
+	basicEvents: IWrapBasicEvent[];
+	boostEvents: IWrapColorBoostEvent[];
 	startBeat: number;
 	endBeat: number;
 }

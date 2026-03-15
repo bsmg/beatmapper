@@ -1,11 +1,9 @@
-import { isInline, resolveNoteAngle } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { type IWrapBaseNote, type IWrapColorNote, type IWrapGridObject, type IWrapObstacle, isInline, resolveNoteAngle } from "bsmap";
 import type { Vector3Tuple } from "three";
 
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import { deserializeCoordinate, isExtendedCoordinate } from "$/helpers/item.helpers";
 import { isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
-import type { App } from "$/types";
 import { convertDegreesToRadians } from "$/utils";
 import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
 
@@ -13,7 +11,7 @@ export interface ObjectResolverOptions {
 	beatDepth: number;
 	zOffset?: number;
 }
-export function resolvePositionForGridObject<T extends wrapper.IWrapGridObject>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">): Vector3Tuple {
+export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">): Vector3Tuple {
 	const position: Vector3Tuple = [0, 0, 0];
 
 	// ----------- X ------------
@@ -28,7 +26,7 @@ export function resolvePositionForGridObject<T extends wrapper.IWrapGridObject>(
 	return position;
 }
 
-export function resolveRotationForNote<T extends wrapper.IWrapBaseNote>(data: T) {
+export function resolveRotationForNote<T extends IWrapBaseNote>(data: T) {
 	if (isExtendedCoordinate(data.direction)) {
 		return convertDegreesToRadians(180 - (data.direction % 1000));
 	}
@@ -36,7 +34,7 @@ export function resolveRotationForNote<T extends wrapper.IWrapBaseNote>(data: T)
 	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
 }
 
-export function resolvePositionForObstacle<T extends wrapper.IWrapObstacle>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">) {
+export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">) {
 	const position = resolvePositionForGridObject(data, { beatDepth, zOffset });
 
 	// ----------- X ------------
@@ -49,7 +47,7 @@ export function resolvePositionForObstacle<T extends wrapper.IWrapObstacle>(data
 	return position;
 }
 
-export function resolveDimensionsForObstacle<T extends wrapper.IWrapObstacle>(data: T, { beatDepth }: Pick<ObjectResolverOptions, "beatDepth">) {
+export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, { beatDepth }: Pick<ObjectResolverOptions, "beatDepth">) {
 	const dimensions: Vector3Tuple = [0, 0, 0];
 
 	// ----------- WIDTH ------------
@@ -64,7 +62,7 @@ export function resolveDimensionsForObstacle<T extends wrapper.IWrapObstacle>(da
 	return dimensions;
 }
 
-export function calculateInlineRotations<T extends App.IColorNote>(notes: T[], lapping: number = Math.hypot(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS), tolerance: number = Math.PI / 2): Map<string, number> {
+export function calculateInlineRotations<T extends IWrapColorNote>(notes: T[], lapping: number = Math.hypot(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS), tolerance: number = Math.PI / 2): Map<string, number> {
 	const overrides = new Map<string, number>();
 
 	const processedIds = new Set<string>();

@@ -1,28 +1,27 @@
-import { createObstacle } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createObstacle, type IWrapObstacle } from "bsmap";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
 import { type IGrid, ObstaclePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
 
-export function isObstacle(data: unknown): data is wrapper.IWrapObstacle {
+export function isObstacle(data: unknown): data is IWrapObstacle {
 	if (typeof data !== "object" || !data) return false;
 	return "duration" in data;
 }
 
-export function resolveObstacleId<T extends Pick<wrapper.IWrapObstacle, "time" | "posX" | "posY" | "width" | "height">>(x: T) {
+export function resolveObstacleId<T extends Pick<IWrapObstacle, "time" | "posX" | "posY" | "width" | "height">>(x: T) {
 	return `${x.time}/${x.posX}/${x.width}/${x.posY}/${x.height}`;
 }
 
-export function isDodgeObstacle<T extends Pick<wrapper.IWrapObstacle, "posY" | "height">>({ posY, height }: T) {
+export function isDodgeObstacle<T extends Pick<IWrapObstacle, "posY" | "height">>({ posY, height }: T) {
 	return posY < 2 && posY + height > 1;
 }
-export function isFastObstacle<T extends Pick<wrapper.IWrapObstacle, "duration">>({ duration }: T) {
+export function isFastObstacle<T extends Pick<IWrapObstacle, "duration">>({ duration }: T) {
 	return duration < 0;
 }
 
-function clampObstacle<T extends Pick<wrapper.IWrapObstacle, "posX" | "posY" | "width" | "height">>(obstacle: T, rawWidth: number, { cellDownAt, cellOverAt }: Required<Pick<{ [key in keyof IPlacementContext]: NonNullable<IPlacementContext[key]> }, "cellDownAt" | "cellOverAt">>, { numCols }: Pick<IGrid, "numCols">) {
+function clampObstacle<T extends Pick<IWrapObstacle, "posX" | "posY" | "width" | "height">>(obstacle: T, rawWidth: number, { cellDownAt, cellOverAt }: Required<Pick<{ [key in keyof IPlacementContext]: NonNullable<IPlacementContext[key]> }, "cellDownAt" | "cellOverAt">>, { numCols }: Pick<IGrid, "numCols">) {
 	const offset = (numCols - 4) / 2;
 	const half = Math.round(numCols / 2);
 
@@ -48,7 +47,7 @@ function clampObstacle<T extends Pick<wrapper.IWrapObstacle, "posX" | "posY" | "
 	return obstacle;
 }
 
-export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid, data: Partial<wrapper.IWrapObstacle>) {
+export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid, data: Partial<IWrapObstacle>) {
 	if (!cellDownAt || !cellOverAt) return null;
 
 	// 1. Determine the raw bounding box from the mouse event

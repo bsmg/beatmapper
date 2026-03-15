@@ -1,6 +1,6 @@
 import { createMachine, type MachineSchema, type Params, type Service } from "@zag-js/core";
 import { normalizeProps } from "@zag-js/react";
-import type { wrapper } from "bsmap/types";
+import type { IWrapBaseObject } from "bsmap";
 import type { CSSProperties } from "react";
 
 import { type AsEventObject, createMachineAnatomy } from "$/components/helpers";
@@ -191,7 +191,7 @@ export const machine = createMachine<EventGridSchema>({
 	},
 });
 
-export interface IEventPlacementActions<T extends wrapper.IWrapBaseObject> {
+export interface IEventPlacementActions<T extends IWrapBaseObject> {
 	onCreate: (time: number, norm: number) => App.IWrapEditorObject<T>;
 	onPlace: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
 	onDelete: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
@@ -264,7 +264,7 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				...getProps(scope, "content"),
 			});
 		},
-		getTrackProps: <T extends App.IWrapEditorObject<wrapper.IWrapBaseObject>>(trackId: number, actions: IEventPlacementActions<T>) => {
+		getTrackProps: <T extends App.IWrapEditorObject<IWrapBaseObject>>(trackId: number, actions: IEventPlacementActions<T>) => {
 			return normalize.element({
 				...getProps(scope, "track"),
 				"aria-disabled": disabled,
@@ -297,7 +297,7 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				},
 			});
 		},
-		getEventProps: <T extends App.IWrapEditorObject<wrapper.IWrapBaseObject>>(data: T, actions: IEventPlacementActions<T>, style?: CSSProperties) => {
+		getEventProps: <T extends App.IWrapEditorObject<IWrapBaseObject>>(data: T, actions: IEventPlacementActions<T>, style?: CSSProperties) => {
 			const dimensions = context.get("dimensions");
 			const offset = interpolate(data.time, startBeat, endBeat, 0, dimensions.width);
 			const centeredOffset = offset - eventWidth / 2;

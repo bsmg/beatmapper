@@ -1,7 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
-import { createColorBoostEvent } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createColorBoostEvent, type IWrapColorBoostEvent } from "bsmap";
 import { type ComponentProps, useCallback, useMemo } from "react";
 
 import { EventGrid } from "$/components/app/layouts";
@@ -14,13 +13,13 @@ import type { App } from "$/types";
 import { isColorDark } from "$/utils";
 import { token } from "$:styled-system/tokens";
 
-function BoostEvent({ data, actions }: { data: App.IBoostEvent; actions: EventGrid.IPlacementActions<wrapper.IWrapColorBoostEvent> }) {
+function BoostEvent({ data, actions }: { data: App.IBoostEvent; actions: EventGrid.IPlacementActions<IWrapColorBoostEvent> }) {
 	const api = EventGrid.useContext();
 
 	const color = token("colors.pink.500");
 
 	const resolveEventStyle = useCallback(
-		(_: wrapper.IWrapColorBoostEvent) => {
+		(_: IWrapColorBoostEvent) => {
 			const toWhite = `color-mix(in srgb, ${color}, white 30%)`;
 			const toBlack = `color-mix(in srgb, ${color}, black 30%)`;
 
@@ -54,7 +53,7 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 
 	const resolveEventData = useCallback((time: number, norm: number) => createColorBoostEvent({ time, toggle: norm <= 0.5 }), []);
 
-	const actions = useMemo<EventGrid.IPlacementActions<wrapper.IWrapColorBoostEvent>>(() => {
+	const actions = useMemo<EventGrid.IPlacementActions<IWrapColorBoostEvent>>(() => {
 		return {
 			onCreate: resolveEventData,
 			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBoostEvent : addBoostEvent)({ query: data, data: data, tracks, areLasersLocked })),

@@ -2,8 +2,8 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
+import type { EnvironmentName } from "bsmap";
 import { CharacteristicRename, DifficultyRename, NoteJumpSpeed } from "bsmap";
-import type { EnvironmentAllName } from "bsmap/types";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
@@ -24,7 +24,7 @@ const SCHEMA = object({
 	lightshowId: string(),
 	noteJumpSpeed: pipe(number(), minValue(0)),
 	startBeatOffset: number(),
-	environmentName: custom<EnvironmentAllName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
+	environmentName: custom<EnvironmentName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),

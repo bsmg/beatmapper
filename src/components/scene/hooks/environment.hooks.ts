@@ -1,5 +1,5 @@
 import { useParams } from "@tanstack/react-router";
-import type { wrapper } from "bsmap/types";
+import type { IWrapBasicEvent, IWrapColorBoostEvent } from "bsmap";
 import { useCallback, useMemo, useState } from "react";
 
 import { resolveColorForLightState } from "$/components/app/templates/events/track.helpers";
@@ -10,9 +10,9 @@ import { selectColorScheme, selectEventTracksForEnvironment, selectPlaying } fro
 import { App, type ILightState } from "$/types";
 
 interface UseLightEffectOptions {
-	lastEvent: wrapper.IWrapBasicEvent | null;
-	nextEvent: wrapper.IWrapBasicEvent | null;
-	lastBoostEvent: wrapper.IWrapColorBoostEvent | null;
+	lastEvent: IWrapBasicEvent | null;
+	nextEvent: IWrapBasicEvent | null;
+	lastBoostEvent: IWrapColorBoostEvent | null;
 }
 export function useLightEffect({ lastEvent, nextEvent, lastBoostEvent }: UseLightEffectOptions) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -83,7 +83,7 @@ export function useLightEffect({ lastEvent, nextEvent, lastBoostEvent }: UseLigh
 }
 
 interface UseRingRotationEffectOptions {
-	lastEvent: wrapper.IWrapBasicEvent | null;
+	lastEvent: IWrapBasicEvent | null;
 	incrementBy?: number;
 	ratio?: number;
 }
@@ -107,7 +107,7 @@ export function useRingRotationEffect({ lastEvent, incrementBy = Math.PI * 0.5, 
 }
 
 interface UseRingZoomEffectOptions {
-	lastEvent: wrapper.IWrapBasicEvent | null;
+	lastEvent: IWrapBasicEvent | null;
 	minDistance?: number;
 	maxDistance?: number;
 }

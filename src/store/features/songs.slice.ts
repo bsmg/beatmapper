@@ -1,6 +1,6 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
-import { EnvironmentName } from "bsmap/types";
+import { EnvironmentName } from "bsmap";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";

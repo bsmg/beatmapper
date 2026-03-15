@@ -1,8 +1,8 @@
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { toPascalCase } from "@std/text/to-pascal-case";
-import { compatibilityCheck, createBeatmap, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
-import type { BeatmapFileType, ILoadOptions, InferBeatmapVersion, ISaveOptions, ModRequirements, wrapper } from "bsmap/types";
+import type { BeatmapFileType, ILoadOptions, InferBeatmapVersion, ISaveOptions, ModRequirements } from "bsmap";
+import { compatibilityCheck, createBeatmap, type IWrapAudioData, type IWrapBeatmap, type IWrapInfo, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
 import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 
 import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
@@ -38,20 +38,20 @@ function* getFileFromArchive(archive: Unzipped, paths: string[]) {
 	throw new Error(`Missing required files, looking for one of type: ${paths.toString()}`);
 }
 
-function resolveImplicitVersion<T extends BeatmapFileType>(data: { version: number }, override: number | null, resolver = (version: InferBeatmapVersion<BeatmapFileType>) => version as InferBeatmapVersion<T>): InferBeatmapVersion<T> {
-	return resolver((override as InferBeatmapVersion<BeatmapFileType>) ?? (data.version >= 0 ? data.version : 4));
+function resolveImplicitVersion<T extends BeatmapFileType>(data: { version: number }, override: number | null, resolver = (version: InferBeatmapVersion) => version as InferBeatmapVersion<T>): InferBeatmapVersion<T> {
+	return resolver((override as InferBeatmapVersion) ?? (data.version >= 0 ? data.version : 4));
 }
 
 export interface MapArchiveContents {
 	songFile: File;
 	coverArtFile: File;
-	info: wrapper.IWrapInfo;
-	audioData: wrapper.IWrapAudioData;
-	beatmaps: wrapper.IWrapBeatmap[];
+	info: IWrapInfo;
+	audioData: IWrapAudioData;
+	beatmaps: IWrapBeatmap[];
 }
 
 export interface ImportMapArchiveOptions {
-	loadOptions?: Omit<ILoadOptions<BeatmapFileType, InferBeatmapVersion<BeatmapFileType>>, "preprocess" | "postprocess">;
+	loadOptions?: Omit<ILoadOptions<BeatmapFileType, InferBeatmapVersion>, "preprocess" | "postprocess">;
 }
 
 export async function importMapArchive(archive: Uint8Array, { loadOptions }: ImportMapArchiveOptions): Promise<MapArchiveContents> {
@@ -131,7 +131,7 @@ export async function importMapArchiveToFilestore(archive: Uint8Array, { current
 		throw new Error("You already have a song with this name. Please choose a unique name.");
 	}
 
-	const beatmapCache = beatmaps.reduce((acc: Record<string, wrapper.IWrapBeatmap>, beatmap) => {
+	const beatmapCache = beatmaps.reduce((acc: Record<string, IWrapBeatmap>, beatmap) => {
 		acc[resolveBeatmapIdFromFilename(beatmap.filename)] = beatmap;
 		return acc;
 	}, {});
@@ -154,8 +154,8 @@ export async function importMapArchiveToFilestore(archive: Uint8Array, { current
 }
 
 export interface ExportMapArchiveOptions {
-	version: InferBeatmapVersion<BeatmapFileType> | null;
-	saveOptions?: Omit<ISaveOptions<BeatmapFileType, InferBeatmapVersion<BeatmapFileType>>, "preprocess" | "postprocess">;
+	version: InferBeatmapVersion | null;
+	saveOptions?: Omit<ISaveOptions<BeatmapFileType, InferBeatmapVersion>, "preprocess" | "postprocess">;
 }
 
 export async function exportMapArchive({ songFile, coverArtFile, info, audioData, beatmaps }: MapArchiveContents, { version, saveOptions }: ExportMapArchiveOptions): Promise<File> {

@@ -1,4 +1,4 @@
-import type { DeepPartial } from "bsmap/types";
+import type { DeepPartial } from "bsmap";
 
 export function isObjectEmpty<T extends object>(obj: T) {
 	for (const key in obj) {

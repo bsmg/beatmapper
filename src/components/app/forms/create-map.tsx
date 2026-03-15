@@ -1,7 +1,6 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
-import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
-import { type CharacteristicName, type DifficultyName, EnvironmentName, type EnvironmentV3Name } from "bsmap/types";
+import { type CharacteristicName, CharacteristicNameSchema, type DifficultyName, DifficultyNameSchema, EnvironmentName, type EnvironmentV2Name, type EnvironmentV3Name } from "bsmap";
 import { useState } from "react";
 import { array, custom, file, gtValue, length, minLength, number, object, pipe, string, transform } from "valibot";
 
@@ -27,7 +26,7 @@ const SCHEMA = object({
 	),
 	previewStartTime: pipe(number()),
 	previewDuration: pipe(number()),
-	environment: custom<EnvironmentName | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
+	environment: custom<EnvironmentV2Name | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 	characteristic: CharacteristicNameSchema,
 	difficulty: DifficultyNameSchema,
 });
@@ -54,7 +53,7 @@ function CreateMapForm({ dialog }: Props) {
 			offset: 0,
 			previewStartTime: 12,
 			previewDuration: 10,
-			environment: EnvironmentName[0] as EnvironmentName | EnvironmentV3Name,
+			environment: EnvironmentName[0] as EnvironmentV2Name | EnvironmentV3Name,
 			characteristic: "Standard" as CharacteristicName,
 			difficulty: "Easy" as DifficultyName,
 		},

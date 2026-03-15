@@ -1,8 +1,6 @@
 import { distinct } from "@std/collections/distinct";
 import { distinctBy } from "@std/collections/distinct-by";
-import { createBeatmap, createInfo, createInfoBeatmap, sortV2ObjectFn, sortV3ObjectFn } from "bsmap";
-import { type EnvironmentAllName, EnvironmentName, type v2, type wrapper } from "bsmap/types";
-import { colorToHex, toColorObject } from "bsmap/utils";
+import { colorToHex, createBeatmap, createInfo, createInfoBeatmap, EnvironmentName, type IV2CustomDataDifficulty, type IV2CustomDataInfoDifficulty, type IWrapBeatmap, type IWrapInfo, type IWrapInfoColorScheme, sortV2ObjectFn, sortV3ObjectFn, toColorObject } from "bsmap";
 
 import { type App, ColorSchemeKey, type IColorScheme, type IEntityMap } from "$/types";
 import { deepAssign, ensureArray, ensureObject, hasKeys } from "$/utils";
@@ -18,7 +16,7 @@ export function resolveBeatmapIdFromFilename(filename: string): string {
 	}
 	return fn;
 }
-export function patchEnvironmentName<T extends EnvironmentAllName>(environment: string): T {
+export function patchEnvironmentName<T extends EnvironmentName>(environment: string): T {
 	if (environment === "Origins") {
 		return "OriginsEnvironment" as T;
 	}
@@ -32,7 +30,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 
 			const envColorScheme = deriveColorSchemeFromEnvironment(data.environment);
 
-			const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): wrapper.IWrapInfoColorScheme => {
+			const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): IWrapInfoColorScheme => {
 				return {
 					name: name,
 					overrideNotes: true,
@@ -88,7 +86,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 							mappers: beatmap.mappers.filter((x) => x.length > 0),
 							lighters: beatmap.lighters.filter((x) => x.length > 0),
 						},
-						customData: ensureObject<v2.ICustomDataInfoDifficulty>({
+						customData: ensureObject<IV2CustomDataInfoDifficulty>({
 							_colorLeft: customColors?.colorLeft ? toColorObject(customColors.colorLeft) : undefined,
 							_colorRight: customColors?.colorRight ? toColorObject(customColors.colorRight) : undefined,
 							_obstacleColor: customColors?.obstacleColor ? toColorObject(customColors.obstacleColor) : undefined,
@@ -118,7 +116,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				},
 			});
 		},
-		deserialize: function deserializeInfoContents(data: wrapper.IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {
+		deserialize: function deserializeInfoContents(data: IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {
 			const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<IColorScheme>, scheme) => {
 				acc[scheme.name] = {
 					colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
@@ -221,7 +219,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 					colorNotes: notes,
 					bombNotes: bombs,
 					obstacles: obstacles,
-					customData: ensureObject<v2.ICustomDataDifficulty>({
+					customData: ensureObject<IV2CustomDataDifficulty>({
 						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
 						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
 					}),
@@ -229,7 +227,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 				lightshow: {
 					basicEvents: basicEvents,
 					colorBoostEvents: boostEvents,
-					customData: ensureObject<v2.ICustomDataDifficulty>({
+					customData: ensureObject<IV2CustomDataDifficulty>({
 						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
 						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
 					}),
@@ -239,7 +237,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 				},
 			});
 		},
-		deserialize: function deserializeBeatmapContents(data: wrapper.IWrapBeatmap, { editorOffsetInBeats }: { editorOffsetInBeats: number }): Partial<App.IBeatmapEntities> {
+		deserialize: function deserializeBeatmapContents(data: IWrapBeatmap, { editorOffsetInBeats }: { editorOffsetInBeats: number }): Partial<App.IBeatmapEntities> {
 			const notes = data.difficulty.colorNotes;
 			const bombs = data.difficulty.bombNotes;
 			const obstacles = data.difficulty.obstacles;

@@ -1,5 +1,4 @@
-import { createBasicEvent, createColorBoostEvent } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createBasicEvent, createColorBoostEvent, type IWrapBasicEvent, type IWrapColorBoostEvent } from "bsmap";
 import { describe, expect, it } from "vitest";
 
 import { serializeBasicEventValue } from "$/helpers/events.helpers";
@@ -31,7 +30,7 @@ describe(createBackgroundBoxes.name, () => {
 		const startBeat = 0;
 		const numOfBeatsToShow = 8;
 		// Technically these events are illegal; this is just testing that it doesn't even look at events when the trackId isn't lighting
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 12,
 				time: 3,
@@ -55,7 +54,7 @@ describe(createBackgroundBoxes.name, () => {
 		//  0  [________]
 		const startBeat = 0;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [];
+		const basicEvents: IWrapBasicEvent[] = [];
 
 		const expectedResult: IBackgroundBox[] = [];
 		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents: [], initialLightState: { color: null, brightness: null }, startBeat, endBeat: startBeat + numOfBeatsToShow });
@@ -67,7 +66,7 @@ describe(createBackgroundBoxes.name, () => {
 		//  R  [________]
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 0,
@@ -93,7 +92,7 @@ describe(createBackgroundBoxes.name, () => {
 		//  0  [R___0___]
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 8,
@@ -124,7 +123,7 @@ describe(createBackgroundBoxes.name, () => {
 		//  R  [____R___]
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 0,
@@ -162,7 +161,7 @@ describe(createBackgroundBoxes.name, () => {
 		//  0  [R___B_0_]
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 8,
@@ -205,7 +204,7 @@ describe(createBackgroundBoxes.name, () => {
 		// 0  [R---R___]
 		const startBeat = 0;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 0,
@@ -245,7 +244,7 @@ describe(createBackgroundBoxes.name, () => {
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
 
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 16,
@@ -274,7 +273,7 @@ describe(createBackgroundBoxes.name, () => {
 		//  0  [R_!___._]
 		const startBeat = 8;
 		const numOfBeatsToShow = 8;
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 8,
@@ -282,7 +281,7 @@ describe(createBackgroundBoxes.name, () => {
 				floatValue: 1,
 			}),
 		];
-		const boostEvents: wrapper.IWrapColorBoostEvent[] = [{ time: 10, toggle: true } as wrapper.IWrapColorBoostEvent, { time: 14, toggle: false } as wrapper.IWrapColorBoostEvent];
+		const boostEvents: IWrapColorBoostEvent[] = [createColorBoostEvent({ time: 10, toggle: true }), createColorBoostEvent({ time: 14, toggle: false })];
 
 		const expectedResult: IBackgroundBox[] = [
 			{
@@ -316,7 +315,7 @@ describe(createBackgroundBoxes.name, () => {
 		const numOfBeatsToShow = 8;
 		const initialColor = colorScheme.envColorLeft;
 
-		const basicEvents: wrapper.IWrapBasicEvent[] = [
+		const basicEvents: IWrapBasicEvent[] = [
 			createBasicEvent({
 				type: 2,
 				time: 0,
@@ -330,7 +329,7 @@ describe(createBackgroundBoxes.name, () => {
 				floatValue: 1.0,
 			}),
 		];
-		const boostEvents: wrapper.IWrapColorBoostEvent[] = [createColorBoostEvent({ time: 4, toggle: true })];
+		const boostEvents: IWrapColorBoostEvent[] = [createColorBoostEvent({ time: 4, toggle: true })];
 
 		const actualResult = createBackgroundBoxes(2, { tracks, colorScheme, basicEvents, boostEvents, initialLightState: { color: initialColor, brightness: 0 }, startBeat, endBeat: startBeat + numOfBeatsToShow });
 

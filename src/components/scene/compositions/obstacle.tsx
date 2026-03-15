@@ -1,5 +1,5 @@
 import type { Assign } from "@ark-ui/react";
-import type { wrapper } from "bsmap/types";
+import type { IWrapObstacle } from "bsmap";
 import { type ComponentProps, useMemo } from "react";
 import { BoxGeometry, type ColorRepresentation, DoubleSide } from "three";
 
@@ -8,13 +8,13 @@ import { isFastObstacle } from "$/helpers/obstacles.helpers";
 import type { App } from "$/types";
 import { token } from "$:styled-system/tokens";
 
-export interface ObstacleProps<T extends wrapper.IWrapObstacle> {
+export interface ObstacleProps<T extends IWrapObstacle> {
 	data: App.IWrapEditorObject<T>;
 	beatDepth: number;
 	color?: ColorRepresentation;
 }
 
-export function Obstacle<T extends wrapper.IWrapObstacle>({ data, beatDepth, position, color, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<"group">, ObstacleProps<T>>) {
+export function Obstacle<T extends IWrapObstacle>({ data, beatDepth, position, color, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<"group">, ObstacleProps<T>>) {
 	const dimensions = useMemo(() => resolveDimensionsForObstacle(data, { beatDepth }), [data, beatDepth]);
 
 	const boxGeometry = useMemo(() => new BoxGeometry(...dimensions), [dimensions]);

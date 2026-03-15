@@ -1,15 +1,15 @@
-import type { wrapper } from "bsmap/types";
+import type { IWrapBaseNote, IWrapBasicEvent, IWrapBombNote, IWrapColorBoostEvent, IWrapColorNote, IWrapObstacle } from "bsmap";
 
 import type { IWrapEditorObject } from "./shared";
 
-export type IBaseNote = IWrapEditorObject<wrapper.IWrapBaseNote>;
+export type IBaseNote = IWrapEditorObject<IWrapBaseNote>;
 
-export type IColorNote = IWrapEditorObject<wrapper.IWrapColorNote>;
-export type IBombNote = IWrapEditorObject<wrapper.IWrapBombNote>;
-export type IObstacle = IWrapEditorObject<wrapper.IWrapObstacle>;
+export type IColorNote = IWrapEditorObject<IWrapColorNote>;
+export type IBombNote = IWrapEditorObject<IWrapBombNote>;
+export type IObstacle = IWrapEditorObject<IWrapObstacle>;
 
-export type IBasicEvent = IWrapEditorObject<wrapper.IWrapBasicEvent>;
-export type IBoostEvent = IWrapEditorObject<wrapper.IWrapColorBoostEvent>;
+export type IBasicEvent = IWrapEditorObject<IWrapBasicEvent>;
+export type IBoostEvent = IWrapEditorObject<IWrapColorBoostEvent>;
 
 export interface IBookmark {
 	time: number;

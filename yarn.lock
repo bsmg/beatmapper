@@ -7113,7 +7113,7 @@ __metadata:
     "@zag-js/file-utils": "npm:^1.33.1"
     "@zag-js/react": "npm:^1.34.1"
     "@zag-js/utils": "npm:^1.34.1"
-    bsmap: "npm:^2.2.9"
+    bsmap: "patch:bsmap@npm%3A2.3.2#~/.yarn/patches/bsmap-npm-2.3.2-23d72a3a83.patch"
     concurrently: "npm:^9.2.1"
     date-fns: "npm:^4.1.0"
     fflate: "npm:^0.8.2"
@@ -7322,13 +7322,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bsmap@npm:^2.2.9":
-  version: 2.2.9
-  resolution: "bsmap@npm:2.2.9"
+"bsmap@npm:2.3.2":
+  version: 2.3.2
+  resolution: "bsmap@npm:2.3.2"
   dependencies:
     "@standard-schema/spec": "npm:^1.0.0"
-    valibot: "npm:valibot@^1.0.0"
-  checksum: 10/b40252d1d27e55c6d311354eaec31a4b4b70e98cb43578dfdb38f3fa67338aa3b93d327eacfe500ab502c3c2dd4ca8ce6457f16368dd0dbcd18aa470929b9aec
+    valibot: "npm:^1.2.0"
+  checksum: 10/12966572833a4f40539ba06d68535c29b6ec3aec75a80d8276ef40d60b80d9e17c5624b288b9ef2ed9700e331164cc8da64c8db070daf393b27b983fb0a125ea
+  languageName: node
+  linkType: hard
+
+"bsmap@patch:bsmap@npm%3A2.3.2#~/.yarn/patches/bsmap-npm-2.3.2-23d72a3a83.patch":
+  version: 2.3.2
+  resolution: "bsmap@patch:bsmap@npm%3A2.3.2#~/.yarn/patches/bsmap-npm-2.3.2-23d72a3a83.patch::version=2.3.2&hash=f0175f"
+  dependencies:
+    "@standard-schema/spec": "npm:^1.0.0"
+    valibot: "npm:^1.2.0"
+  checksum: 10/fa634ec65eee758d910925bd7d83a31bcab174f828041ec5473420f6b5e731dc5f3c775e726bab2a71b41cda2ac3489edd6cda571018ec9820b39bdc873affe3
   languageName: node
   linkType: hard
 
@@ -15546,15 +15556,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"valibot@npm:valibot@^1.0.0":
-  version: 1.0.0
-  resolution: "valibot@npm:1.0.0"
+"valibot@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "valibot@npm:1.2.0"
   peerDependencies:
     typescript: ">=5"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10/3a46878a7cfb41e4538d7ae4b3ee255ca27b717f428f46bff00fa242ac6176b91ecb491200bb092ac24cba8bae96d852799b1c504eb566ee9e01987a18c498f7
+  checksum: 10/5f9c15e6f5a2b8eae75332a3317e46e995a1763efe1b91e57bc5064e36f0feba734367c88013d53255bdf09fb9204bf3598d2ca0c3f468c8726095b1c3551926
   languageName: node
   linkType: hard
 

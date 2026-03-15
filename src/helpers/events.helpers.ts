@@ -1,5 +1,5 @@
-import { renamer } from "bsmap/extensions";
-import type { EnvironmentAllName, wrapper } from "bsmap/types";
+import type { EnvironmentName, IWrapBasicEvent, IWrapColorBoostEvent } from "bsmap";
+import { environmentTypeMap, eventTypeRename } from "bsmap/extensions/renamer";
 import { check, number, pipe } from "valibot";
 
 import { COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
@@ -34,11 +34,11 @@ export function resolveMirroredTrack(trackId: number, tracks: IEventTracks) {
 	return mirroredTrack ? Number.parseInt(mirroredTrack[0], 10) : trackId;
 }
 
-export function isBasicEvent(data: unknown): data is wrapper.IWrapBasicEvent {
+export function isBasicEvent(data: unknown): data is IWrapBasicEvent {
 	if (typeof data !== "object" || !data) return false;
 	return "type" in data;
 }
-export function isBoostEvent(data: unknown): data is wrapper.IWrapColorBoostEvent {
+export function isBoostEvent(data: unknown): data is IWrapColorBoostEvent {
 	if (typeof data !== "object" || !data) return false;
 	return "toggle" in data;
 }
@@ -48,17 +48,17 @@ export function resolveTrackIdForEvent(data: unknown) {
 	throw new Error("Invalid event data.", { cause: data });
 }
 
-export function resolveEventId<T extends Pick<wrapper.IWrapBasicEvent, "time" | "type"> | Pick<wrapper.IWrapColorBoostEvent, "time" | "toggle">>(x: T) {
+export function resolveEventId<T extends Pick<IWrapBasicEvent, "time" | "type"> | Pick<IWrapColorBoostEvent, "time" | "toggle">>(x: T) {
 	return `${resolveTrackIdForEvent(x)}/${x.time}`;
 }
 
-export function isBasicLightEvent<T extends Pick<wrapper.IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+export function isBasicLightEvent<T extends Pick<IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
 	return isBasicEvent(data) && isLightTrack(resolveTrackIdForEvent(data), tracks);
 }
-export function isBasicTriggerEvent<T extends Pick<wrapper.IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+export function isBasicTriggerEvent<T extends Pick<IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
 	return isBasicEvent(data) && isTriggerTrack(resolveTrackIdForEvent(data), tracks);
 }
-export function isBasicValueEvent<T extends Pick<wrapper.IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+export function isBasicValueEvent<T extends Pick<IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
 	return isBasicEvent(data) && isValueTrack(resolveTrackIdForEvent(data), tracks);
 }
 
@@ -66,13 +66,13 @@ export function isLightEffectActive(effect: App.BasicEventEffect) {
 	return effect === App.BasicEventEffect.ON || effect === App.BasicEventEffect.FLASH || effect === App.BasicEventEffect.TRANSITION;
 }
 
-export function resolveBasicEventColor<T extends Pick<wrapper.IWrapBasicEvent, "value">>(data: T) {
+export function resolveBasicEventColor<T extends Pick<IWrapBasicEvent, "value">>(data: T) {
 	if (data.value > 8) return App.EventColor.WHITE;
 	if (data.value > 4) return App.EventColor.PRIMARY;
 	if (data.value > 0) return App.EventColor.SECONDARY;
 	return null;
 }
-export function resolveBasicEventEffect<T extends Pick<wrapper.IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
+export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
 	const trackId = resolveTrackIdForEvent(data);
 
 	switch (tracks[trackId]?.type) {
@@ -143,19 +143,19 @@ export const { serialize: serializeBasicEventValue, deserialize: deserializeBasi
 	},
 });
 
-export function deriveEventTracksForEnvironment(environment: EnvironmentAllName) {
+export function deriveEventTracksForEnvironment(environment: EnvironmentName) {
 	const commonEventTracks = Object.keys(COMMON_EVENT_TRACKS);
 
-	const environmentTypeMap = renamer.environmentTypeMap[environment];
-	const environmentTrackIds = environmentTypeMap ? Object.keys(environmentTypeMap) : [];
+	const environmentTypes = environmentTypeMap[environment];
+	const environmentTrackIds = environmentTypes ? Object.keys(environmentTypes) : [];
 
-	const legacyEnvironmentNames = Object.keys(renamer.environmentTypeMap).filter((_, i) => i <= 22);
+	const legacyEnvironmentNames = Object.keys(environmentTypeMap).filter((_, i) => i <= 22);
 
 	const filtered = Object.entries(SUPPORTED_EVENT_TRACKS).filter(([id]) => {
-		if (environmentTypeMap && legacyEnvironmentNames.includes(environment)) {
+		if (environmentTypes && legacyEnvironmentNames.includes(environment)) {
 			return environmentTrackIds.includes(id) || commonEventTracks.includes(id);
 		}
-		if (environmentTypeMap) {
+		if (environmentTypes) {
 			return environmentTrackIds.includes(id);
 		}
 		if (commonEventTracks.includes(id)) return true;
@@ -164,7 +164,7 @@ export function deriveEventTracksForEnvironment(environment: EnvironmentAllName)
 
 	const processed = filtered.map(([id, track]) => {
 		const trackId = Number.parseInt(id, 10);
-		const label = renamer.eventTypeRename(trackId, environment);
+		const label = eventTypeRename(trackId, environment);
 		let type = track.type;
 		switch (environment) {
 			case "InterscopeEnvironment": {

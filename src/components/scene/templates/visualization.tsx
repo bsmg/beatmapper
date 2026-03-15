@@ -1,7 +1,6 @@
 import { type ThreeEvent, useThree } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
-import { NoteDirection } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { type IWrapBaseNote, type IWrapObstacle, NoteDirection } from "bsmap";
 import { useCallback, useMemo, useRef } from "react";
 import type { Object3D } from "three";
 
@@ -50,7 +49,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 
-	const noteActions = useObjectPlacement<App.IWrapEditorObject<wrapper.IWrapBaseNote>>({
+	const noteActions = useObjectPlacement<App.IWrapEditorObject<IWrapBaseNote>>({
 		interactive,
 		selectId: resolveNoteId,
 		selectItemSelected: (x) => !!x.selected,
@@ -67,7 +66,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 		},
 	});
 
-	const obstacleActions = useObjectPlacement<App.IWrapEditorObject<wrapper.IWrapObstacle>>({
+	const obstacleActions = useObjectPlacement<App.IWrapEditorObject<IWrapObstacle>>({
 		interactive,
 		selectId: resolveObstacleId,
 		selectItemSelected: (x) => !!x.selected,

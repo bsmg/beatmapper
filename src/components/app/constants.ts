@@ -1,7 +1,6 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
-import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
-import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, isV2Environment, isV3Environment } from "bsmap";
 import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
@@ -13,17 +12,18 @@ export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/
 export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/zip", "application/x-zip-compressed", "application/octet-stream"];
 
 export const CHARACTERISTIC_COLLECTION = createListCollection({
-	items: (["Standard", "NoArrows", "OneSaber", "Legacy", "Lawless"] as const).map((value) => ({ value })),
+	items: CharacteristicName.map((value) => ({ value })),
 	itemToValue: (item) => item.value,
 	itemToString: (item) => CharacteristicRename[item.value],
+	isItemDisabled: (item) => item.value === "360Degree" || item.value === "90Degree" || item.value === "Lightshow",
 });
 export const DIFFICULTY_COLLECTION = createListCollection({
-	items: (["Easy", "Normal", "Hard", "Expert", "ExpertPlus"] as const).map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
+	items: DifficultyName.map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
 	itemToValue: (item) => item.value,
 	itemToString: (item) => DifficultyRename[item.value],
 });
 export const ENVIRONMENT_COLLECTION = createListCollection({
-	items: [...EnvironmentName, ...EnvironmentV3Name],
+	items: EnvironmentName.filter((x) => isV2Environment(x) || isV3Environment(x)),
 	itemToString: (item) => EnvironmentRename[item],
 });
 

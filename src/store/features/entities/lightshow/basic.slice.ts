@@ -1,6 +1,5 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
-import { createBasicEvent, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createBasicEvent, type IWrapBasicEvent, sortObjectFn } from "bsmap";
 
 import { deserializeBasicEventValue, isBasicLightEvent, resolveEventId, resolveTrackIdForEvent, serializeBasicEventValue } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
@@ -9,7 +8,7 @@ import { createEditorObjectReducers, createEditorObjectSelectors, createEventRed
 import { App, View } from "$/types";
 import { cycle } from "$/utils";
 
-const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapBasicEvent>, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<IWrapBasicEvent>, EntityId>({
 	selectId: resolveEventId,
 	sortComparer: sortObjectFn,
 });
@@ -34,12 +33,12 @@ const slice = createSlice({
 		const MIRRORABLE_COLORS = Object.values(App.EventColor).slice(0, -1);
 
 		return {
-			addOne: createEventReducer<{ data: wrapper.IWrapBasicEvent; overwrite?: boolean }>(({ match, trackId }, state, action) => {
+			addOne: createEventReducer<{ data: IWrapBasicEvent; overwrite?: boolean }>(({ match, trackId }, state, action) => {
 				const { data, overwrite } = action.payload;
 				if (!overwrite && match) return state;
 				return adapter.upsertOne(state, createBasicEvent({ ...data, type: trackId }));
 			}),
-			updateOne: createEventReducer<{ changes: Partial<wrapper.IWrapBasicEvent> }>(({ match, trackId }, state, action) => {
+			updateOne: createEventReducer<{ changes: Partial<IWrapBasicEvent> }>(({ match, trackId }, state, action) => {
 				if (!match) return state;
 				return adapter.updateOne(state, { id: adapter.selectId({ ...match, type: trackId }), changes: action.payload.changes });
 			}),

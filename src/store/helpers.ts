@@ -1,6 +1,6 @@
 import { asyncThunkCreator, buildCreateSlice, type CaseReducer, createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type WritableDraft } from "@reduxjs/toolkit";
 import { pick } from "@std/collections/pick";
-import type { wrapper } from "bsmap/types";
+import type { IWrapBaseNote, IWrapBaseObject } from "bsmap";
 import type { StateWithHistory } from "redux-undo";
 
 import { isMirroredTrack, type resolveEventId, resolveMirroredTrack, resolveTrackIdForEvent } from "$/helpers/events.helpers";
@@ -99,7 +99,7 @@ export function createEventSelectors<T extends Pick<App.IBasicEvent, "time">, Id
 	};
 }
 
-export function createGridObjectReducerFactory<T extends Pick<wrapper.IWrapBaseNote, "time" | "posX" | "posY">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
+export function createGridObjectReducerFactory<T extends Pick<IWrapBaseNote, "time" | "posX" | "posY">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
 	const selectors = adapter.getSelectors();
 
 	const selectByQuery = createDraftSafeSelector([selectors.selectAll, (_, query: Pick<T, "time" | "posX" | "posY">) => query], (state, { time, posX, posY }) => {
@@ -115,7 +115,7 @@ export function createGridObjectReducerFactory<T extends Pick<wrapper.IWrapBaseN
 		};
 	};
 }
-export function createEventReducerFactory<T extends Pick<wrapper.IWrapBaseObject, "time">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
+export function createEventReducerFactory<T extends Pick<IWrapBaseObject, "time">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
 	const selectors = adapter.getSelectors();
 
 	const selectByQuery = createDraftSafeSelector([selectors.selectAll, (_, query: Pick<T, "time">) => query], (state, query) => {

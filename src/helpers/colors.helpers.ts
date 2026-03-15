@@ -1,11 +1,10 @@
-import { ColorScheme, EnvironmentSchemeName } from "bsmap";
-import type { EnvironmentAllName, IColor, v2 } from "bsmap/types";
-import { colorToHex } from "bsmap/utils";
+import type { EnvironmentName, IColor } from "bsmap";
+import { ColorScheme, colorToHex, EnvironmentSchemeName, type IV2ColorScheme } from "bsmap";
 
 import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "$/types";
 import { token } from "$:styled-system/tokens";
 
-export const DEFAULT_COLOR_SCHEME: Required<v2.IColorScheme> = {
+export const DEFAULT_COLOR_SCHEME: Required<IV2ColorScheme> = {
 	_colorLeft: { r: 0.7529412, g: 0.1882353, b: 0.1882353 },
 	_colorRight: { r: 0.1254902, g: 0.3921569, b: 0.6588235 },
 	_envColorLeft: { r: 0.7529412, g: 0.1882353, b: 0.1882353 },
@@ -73,11 +72,11 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 	}
 }
 
-export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
+export function deriveColorSchemeFromEnvironment(environment: EnvironmentName) {
 	let envScheme = DEFAULT_COLOR_SCHEME;
 
 	if (environment in EnvironmentSchemeName) {
-		envScheme = ColorScheme[EnvironmentSchemeName[environment]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
+		envScheme = ColorScheme[EnvironmentSchemeName[environment]] as Required<{ [key in keyof IV2ColorScheme]: Required<IColor> }>;
 	}
 
 	return {

@@ -1,8 +1,8 @@
 import { omit } from "@std/collections/omit";
 import { pick } from "@std/collections/pick";
 import { basename } from "@std/path/basename";
-import { createAudioData, createBeatmap, createInfo, sortObjectFn } from "bsmap";
-import type { BeatmapFileType, DeepPartial, InferBeatmapVersion, wrapper } from "bsmap/types";
+import type { DeepPartial, InferBeatmapVersion } from "bsmap";
+import { createAudioData, createBeatmap, createInfo, type IWrapAudioData, type IWrapBeatmap, type IWrapInfo, sortObjectFn } from "bsmap";
 import type { Storage, StorageValue } from "unstorage";
 
 import { defaultCoverArtPath } from "$/assets";
@@ -81,19 +81,19 @@ export class BeatmapFilestore extends Filestore {
 	}
 	async loadInfoContents(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
-		return this.loadFile<wrapper.IWrapInfo>(filename);
+		return this.loadFile<IWrapInfo>(filename);
 	}
 	async loadAudioDataContents(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
-		return this.loadFile<wrapper.IWrapAudioData>(filename);
+		return this.loadFile<IWrapAudioData>(filename);
 	}
 	async loadBeatmapContents(songId: SongId, beatmapId: BeatmapId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
-		return this.loadFile<wrapper.IWrapBeatmap>(filename);
+		return this.loadFile<IWrapBeatmap>(filename);
 	}
 	async loadImplicitVersion(songId: SongId, beatmapId: BeatmapId) {
 		const beatmap = await this.loadBeatmapContents(songId, beatmapId);
-		return beatmap.version as InferBeatmapVersion<BeatmapFileType>;
+		return beatmap.version as InferBeatmapVersion;
 	}
 
 	async saveSongFile<T extends File>(songId: SongId, contents: T) {
@@ -105,15 +105,15 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveInfoContents<T extends wrapper.IWrapInfo>(songId: SongId, contents: T) {
+	async saveInfoContents<T extends IWrapInfo>(songId: SongId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveAudioDataContents<T extends wrapper.IWrapAudioData>(songId: SongId, contents: T) {
+	async saveAudioDataContents<T extends IWrapAudioData>(songId: SongId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveBeatmapContents<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+	async saveBeatmapContents<T extends IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.saveFile<T>(filename, {
 			...contents,
@@ -126,15 +126,15 @@ export class BeatmapFilestore extends Filestore {
 		});
 	}
 
-	async updateInfoContents(songId: SongId, newContents: DeepPartial<wrapper.IWrapInfo>) {
+	async updateInfoContents(songId: SongId, newContents: DeepPartial<IWrapInfo>) {
 		const savedContents = await this.loadInfoContents(songId).catch(() => createInfo({ ...newContents }));
 		return await this.saveInfoContents(songId, createInfo(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
-	async updateAudioDataContents(songId: SongId, newContents: DeepPartial<wrapper.IWrapAudioData>) {
+	async updateAudioDataContents(songId: SongId, newContents: DeepPartial<IWrapAudioData>) {
 		const savedContents = await this.loadAudioDataContents(songId).catch(() => createAudioData({ ...newContents }));
 		return await this.saveAudioDataContents(songId, createAudioData(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: DeepPartial<wrapper.IWrapBeatmap>) {
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: DeepPartial<IWrapBeatmap>) {
 		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
 		return await this.saveBeatmapContents(songId, beatmapId, createBeatmap(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}

@@ -1,5 +1,5 @@
 import type { EntityId } from "@reduxjs/toolkit";
-import type { CharacteristicName, DifficultyName, EnvironmentAllName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import type { CharacteristicName, DifficultyName, EnvironmentName, EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 
 import type { IColorScheme, IEntityMap, IGrid } from "$/types/editor";
 
@@ -23,7 +23,7 @@ export interface IBeatmap {
 	difficulty: DifficultyName;
 	noteJumpSpeed: number;
 	startBeatOffset: number;
-	environmentName: EnvironmentAllName;
+	environmentName: EnvironmentName;
 	colorSchemeName: string | null;
 	mappers: string[];
 	lighters: string[];
@@ -45,7 +45,7 @@ export interface ISong {
 	swingPeriod?: number;
 	previewStartTime: number;
 	previewDuration: number;
-	environment: EnvironmentName | EnvironmentV3Name;
+	environment: EnvironmentV2Name | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
 	colorSchemesById: IEntityMap<IColorScheme>;

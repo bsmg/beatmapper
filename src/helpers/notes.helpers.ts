@@ -1,25 +1,24 @@
-import { createBombNote, createColorNote } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createBombNote, createColorNote, type IWrapBaseNote, type IWrapBombNote, type IWrapColorNote } from "bsmap";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
 import { type IGrid, NotePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
 
-export function isColorNote(data: unknown): data is wrapper.IWrapColorNote {
+export function isColorNote(data: unknown): data is IWrapColorNote {
 	if (typeof data !== "object" || !data) return false;
 	return "direction" in data && "angleOffset" in data;
 }
-export function isBombNote(data: unknown): data is wrapper.IWrapColorNote {
+export function isBombNote(data: unknown): data is IWrapBombNote {
 	if (typeof data !== "object" || !data) return false;
 	return "direction" in data;
 }
 
-export function resolveNoteId<T extends Pick<wrapper.IWrapBaseNote, "time" | "posX" | "posY">>(x: T) {
+export function resolveNoteId<T extends Pick<IWrapBaseNote, "time" | "posX" | "posY">>(x: T) {
 	return `${x.time}/${x.posX}/${x.posY}`;
 }
 
-function createNotePlacementFactory<T extends wrapper.IWrapBaseNote>(createNote: (data: Partial<T>) => T) {
+function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: Partial<T>) => T) {
 	return ({ cellDownAt }: IPlacementContext, mode: NotePlacementMode, grid: IGrid, data: Partial<T> = {}) => {
 		if (!cellDownAt) return null;
 

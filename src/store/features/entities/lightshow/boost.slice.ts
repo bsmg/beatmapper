@@ -1,6 +1,5 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
-import { createColorBoostEvent, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { createColorBoostEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 
 import { isBoostEvent, resolveEventId, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
@@ -8,7 +7,7 @@ import { addSong, bulkRemoveEvent, cutSelection, deselectAllEntities, deselectEv
 import { createEditorObjectReducers, createEditorObjectSelectors, createEventReducerFactory, createEventSelectors } from "$/store/helpers";
 import { type App, View } from "$/types";
 
-const adapter = createEntityAdapter<App.IWrapEditorObject<wrapper.IWrapColorBoostEvent>, EntityId>({
+const adapter = createEntityAdapter<App.IWrapEditorObject<IWrapColorBoostEvent>, EntityId>({
 	selectId: resolveEventId,
 	sortComparer: sortObjectFn,
 });
@@ -30,13 +29,13 @@ const slice = createSlice({
 	},
 	reducers: () => {
 		return {
-			addOne: createEventReducer<{ data: wrapper.IWrapColorBoostEvent; overwrite?: boolean }>(({ match }, state, action) => {
+			addOne: createEventReducer<{ data: IWrapColorBoostEvent; overwrite?: boolean }>(({ match }, state, action) => {
 				const { data, overwrite } = action.payload;
 				if (!overwrite && match) return state;
 				if (!isBoostEvent(data)) return state;
 				return adapter.upsertOne(state, createColorBoostEvent({ ...data }));
 			}),
-			updateOne: createEventReducer<{ changes: Partial<wrapper.IWrapColorBoostEvent> }>(({ match }, state, action) => {
+			updateOne: createEventReducer<{ changes: Partial<IWrapColorBoostEvent> }>(({ match }, state, action) => {
 				if (!match) return state;
 				return adapter.updateOne(state, { id: adapter.selectId({ ...match }), changes: action.payload.changes });
 			}),

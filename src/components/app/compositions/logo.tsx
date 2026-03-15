@@ -1,8 +1,8 @@
 import { animated as a, useSpring } from "@react-spring/three";
 import { Canvas } from "@react-three/fiber";
 import { Link, useRouteContext } from "@tanstack/react-router";
+import type { EnvironmentName } from "bsmap";
 import { createColorNote, NoteDirection } from "bsmap";
-import type { EnvironmentAllName } from "bsmap/types";
 import { getYear, isThisMonth, isThisWeek, setYear } from "date-fns";
 import { useMemo, useRef, useState } from "react";
 
@@ -13,7 +13,7 @@ import { HStack, Stack, styled } from "$:styled-system/jsx";
 const MOCK_NOTE = createColorNote({ direction: NoteDirection.DOWN });
 
 function deriveNoteColor(now: number) {
-	let environment: EnvironmentAllName = "DefaultEnvironment" as const;
+	let environment: EnvironmentName = "DefaultEnvironment" as const;
 
 	if (isThisMonth(setYear("06/01", getYear(now)))) {
 		environment = "GagaEnvironment";
