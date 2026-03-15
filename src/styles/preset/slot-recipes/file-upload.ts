@@ -63,6 +63,11 @@ export const fileUpload = defineSlotRecipe({
 			justifyContent: "center",
 			gridArea: "preview",
 		},
+		itemPreviewImage: {
+			width: "32px",
+			objectFit: "cover",
+			aspectRatio: "square",
+		},
 		itemName: {
 			gridArea: "name",
 			whiteSpace: "nowrap",

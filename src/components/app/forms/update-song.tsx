@@ -1,4 +1,5 @@
 import { useDialog } from "@ark-ui/react/dialog";
+import { useStore } from "@tanstack/react-form";
 import { useBlocker, useParams } from "@tanstack/react-router";
 import type { EnvironmentName, EnvironmentV3Name } from "bsmap/types";
 import { custom, gtValue, minLength, number, object, pipe, string, transform } from "valibot";
@@ -6,11 +7,11 @@ import { custom, gtValue, minLength, number, object, pipe, string, transform } f
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
 import { useSetupContext } from "$/components/context";
-import { AlertDialogProvider, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
+import { AlertDialogProvider, Audio, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectSongById } from "$/store/selectors";
+import { selectSongById, selectSongVolume } from "$/store/selectors";
 import { Text } from "$:styled-system/jsx";
 
 const SCHEMA = object({
@@ -42,6 +43,7 @@ function UpdateSongForm() {
 
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
+	const volume = useAppSelector(selectSongVolume);
 
 	const { data: acceptedSongFile } = useLocalFileQuery(BeatmapFilestore.resolveFilename(sid, "song", {}), {
 		queryKey: ["file-upload"],
@@ -106,6 +108,9 @@ function UpdateSongForm() {
 		},
 	});
 
+	const previewStartTime = useStore(Form.store, (state) => state.values.previewStartTime);
+	const previewDuration = useStore(Form.store, (state) => state.values.previewDuration);
+
 	const { proceed, reset, status } = useBlocker({
 		shouldBlockFn: () => Form.state.isDirty,
 		withResolver: true,
@@ -119,14 +124,17 @@ function UpdateSongForm() {
 			<Form.Root>
 				<Form.Row>
 					<Field label="Song File" required>
-						<FileUpload label="Audio File" deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedSongFile} onFileAccept={(details) => handleAcceptSongFile(details.files[0])} />
+						<FileUpload label="Audio File" deletable={false} accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedSongFile} onFileAccept={(details) => handleAcceptSongFile(details.files[0])}>
+							{(file) => <Audio file={file} startTime={previewStartTime} duration={previewDuration} volume={volume} />}
+						</FileUpload>
 					</Field>
 					<Field label="Cover Art File" required>
-						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} />
+						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])}>
+							{() => null}
+						</FileUpload>
 					</Field>
 				</Form.Row>
 				<Form.Row>
-					{/* @ts-ignore */}
 					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 					<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
 					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Song Artist(s)" required />}</Form.AppField>

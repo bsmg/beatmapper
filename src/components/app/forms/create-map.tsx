@@ -1,27 +1,32 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
+import { useStore } from "@tanstack/react-form";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import { type CharacteristicName, type DifficultyName, EnvironmentName, type EnvironmentV3Name } from "bsmap/types";
+import { useState } from "react";
 import { array, custom, file, gtValue, length, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
-import { useAppForm } from "$/components/ui/compositions";
+import { Show } from "$/components/ui/atoms";
+import { Audio, Switch, useAppForm } from "$/components/ui/compositions";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectSongIds, selectUsername } from "$/store/selectors";
+import { selectSongIds, selectSongVolume, selectUsername } from "$/store/selectors";
 
 const SCHEMA = object({
 	songFile: pipe(array(file()), length(1, "You must provide exactly one file.")),
 	coverArtFile: pipe(array(file()), length(1, "You must provide exactly one file.")),
 	name: pipe(string(), minLength(1)),
 	subName: pipe(string()),
-	artistName: pipe(string(), minLength(1)),
+	artistName: pipe(string()),
 	bpm: pipe(number(), gtValue(0)),
 	offset: pipe(
 		number(),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
+	previewStartTime: pipe(number()),
+	previewDuration: pipe(number()),
 	environment: custom<EnvironmentName | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
 	characteristic: CharacteristicNameSchema,
 	difficulty: DifficultyNameSchema,
@@ -34,6 +39,7 @@ function CreateMapForm({ dialog }: Props) {
 	const dispatch = useAppDispatch();
 	const currentSongIds = useAppSelector(selectSongIds);
 	const username = useAppSelector(selectUsername);
+	const volume = useAppSelector(selectSongVolume);
 
 	const { toaster } = useSetupContext();
 
@@ -44,8 +50,10 @@ function CreateMapForm({ dialog }: Props) {
 			name: "",
 			subName: "",
 			artistName: "",
-			bpm: 120,
+			bpm: 0,
 			offset: 0,
+			previewStartTime: 12,
+			previewDuration: 10,
 			environment: EnvironmentName[0] as EnvironmentName | EnvironmentV3Name,
 			characteristic: "Standard" as CharacteristicName,
 			difficulty: "Easy" as DifficultyName,
@@ -84,6 +92,9 @@ function CreateMapForm({ dialog }: Props) {
 							artistName: value.artistName,
 							bpm: value.bpm,
 							offset: value.offset ?? 0,
+							previewStartTime: value.previewStartTime,
+							previewDuration: value.previewDuration,
+							environment: value.environment,
 							songFilename: songFile.name,
 							coverArtFilename: coverArtFile.name,
 						},
@@ -104,19 +115,53 @@ function CreateMapForm({ dialog }: Props) {
 		},
 	});
 
+	const previewStartTime = useStore(Form.store, (state) => state.values.previewStartTime);
+	const previewDuration = useStore(Form.store, (state) => state.values.previewDuration);
+
+	const [showOptionalFields, setShowOptionalFields] = useState(false);
+
 	return (
 		<Form.AppForm>
 			<Form.Root>
+				<Switch label="Show Optional Fields" checked={showOptionalFields} onCheckedChange={(x) => setShowOptionalFields(!!x.checked)} />
 				<Form.Row>
-					<Form.AppField name="songFile">{(ctx) => <ctx.FileUpload label="Song File" maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE} />}</Form.AppField>
-					<Form.AppField name="coverArtFile">{(ctx) => <ctx.FileUpload label="Cover Art File" maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} />}</Form.AppField>
+					<Form.AppField name="songFile">
+						{(ctx) => (
+							<ctx.FileUpload label="Song File" required maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE}>
+								{(file) => <Audio file={file} startTime={previewStartTime} duration={previewDuration} volume={volume} />}
+							</ctx.FileUpload>
+						)}
+					</Form.AppField>
+					<Form.AppField name="coverArtFile">
+						{(ctx) => (
+							<ctx.FileUpload label="Cover Art File" required maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE}>
+								{() => null}
+							</ctx.FileUpload>
+						)}
+					</Form.AppField>
 				</Form.Row>
-				<Form.Row>
-					<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
-					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
-					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
-				</Form.Row>
-				<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Base Environment" required helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+				<Show when={!showOptionalFields}>
+					<Form.Row>
+						<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
+						<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
+					</Form.Row>
+				</Show>
+				<Show when={showOptionalFields}>
+					<Form.Row>
+						<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
+						<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>
+						<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Song Artist(s)" />}</Form.AppField>
+					</Form.Row>
+					<Form.Row>
+						<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
+						<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
+						<Form.AppField name="previewStartTime">{(ctx) => <ctx.NumberInput label="Preview start time" placeholder="(in seconds)" />}</Form.AppField>
+						<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" placeholder="(in seconds)" />}</Form.AppField>
+					</Form.Row>
+					<Form.Row>
+						<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Base Environment" helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+					</Form.Row>
+				</Show>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={CHARACTERISTIC_COLLECTION} />}</Form.AppField>
 				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={DIFFICULTY_COLLECTION} />}</Form.AppField>
 				<Form.Submit>Create new map</Form.Submit>

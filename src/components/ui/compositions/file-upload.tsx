@@ -2,15 +2,17 @@ import type { Assign } from "@ark-ui/react";
 import { type UseFileUploadProps, useFileUploadContext } from "@ark-ui/react/file-upload";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, type LucideProps, TrashIcon } from "lucide-react";
-import { type ComponentProps, forwardRef, useEffect, useMemo } from "react";
+import { type ComponentProps, Fragment, forwardRef, useEffect, useMemo } from "react";
 
 import { useSetupContext } from "$/components/context";
-import { For } from "$/components/ui/atoms";
+import { For, Show } from "$/components/ui/atoms";
 import { useFieldData } from "$/components/ui/hooks/form.hooks";
+import { type ComposableFn, useComposable } from "$/components/ui/hooks/use-composable";
 import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/file-upload";
 import { css } from "$:styled-system/css";
 import type { SystemStyleObject } from "$:styled-system/types";
+import { AudioPreview } from "./audio";
 import { Button } from "./button";
 import { Field, type FieldProps } from "./field";
 
@@ -45,7 +47,11 @@ function Indicator({ accept, ...rest }: Assign<LucideProps, FileUploadProps>) {
 	return <Icon {...rest} />;
 }
 
-function List({ accept, deletable }: FileUploadProps) {
+interface ListComposableProps {
+	children?: ComposableFn<[file: File, builder: { Indicator: typeof Indicator }]>;
+}
+
+function List({ accept, deletable, children }: FileUploadProps & ListComposableProps) {
 	const { toaster } = useSetupContext();
 
 	const api = useFileUploadContext();
@@ -54,6 +60,8 @@ function List({ accept, deletable }: FileUploadProps) {
 		Builder.ItemDeleteTrigger,
 		toPolymorphic(Button, (Element, delegated) => <Element {...delegated} variant="ghost" size="icon" />),
 	);
+
+	const renderPreview = useComposable(children, (_, { Indicator }) => <Indicator accept={accept} />);
 
 	useEffect(() => {
 		for (const { file, errors } of api.rejectedFiles) {
@@ -77,9 +85,21 @@ function List({ accept, deletable }: FileUploadProps) {
 			<For each={api.acceptedFiles}>
 				{(file) => (
 					<Builder.Item key={file.name} file={file}>
-						<Builder.ItemPreview>
-							<Indicator accept={accept} />
-						</Builder.ItemPreview>
+						<Show
+							when={renderPreview(file, { Indicator })}
+							fallback={
+								<Fragment>
+									<Builder.ItemPreview type="image/*">
+										<Builder.ItemPreviewImage />
+									</Builder.ItemPreview>
+									<Builder.ItemPreview type="audio/*">
+										<AudioPreview file={file} />
+									</Builder.ItemPreview>
+								</Fragment>
+							}
+						>
+							{(renderable) => <Builder.ItemPreview type=".*">{renderable}</Builder.ItemPreview>}
+						</Show>
 						<Builder.ItemName />
 						<Builder.ItemSizeText />
 						{deletable && (
@@ -106,11 +126,13 @@ function Dropzone({ accept, label, colorPalette }: FileUploadProps) {
 	);
 }
 
-export const FileUpload = forwardRef<HTMLInputElement, Assign<ComponentProps<typeof Builder.Root>, FileUploadProps>>(function FileUpload({ label, deletable = true, colorPalette = "pink", ...rest }, ref) {
+export const FileUpload = forwardRef<HTMLInputElement, Assign<ComponentProps<typeof Builder.Root>, FileUploadProps & ListComposableProps>>(function FileUpload({ label, deletable = true, colorPalette = "pink", children, ...rest }, ref) {
 	return (
 		<Builder.Root {...rest}>
 			<Dropzone accept={rest.accept} label={label} colorPalette={colorPalette} />
-			<List {...rest} deletable={deletable} />
+			<List {...rest} deletable={deletable}>
+				{children}
+			</List>
 			<Builder.HiddenInput ref={ref} />
 		</Builder.Root>
 	);
