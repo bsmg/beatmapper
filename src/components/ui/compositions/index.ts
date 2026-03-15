@@ -1,4 +1,5 @@
 export { Accordion } from "./accordion";
+export { AudioPreview as Audio } from "./audio";
 export { Button } from "./button";
 export { Checkbox } from "./checkbox";
 export { Clipboard } from "./clipboard";
