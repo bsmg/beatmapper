@@ -1,6 +1,6 @@
 import type { EntityId } from "@reduxjs/toolkit";
 
-import type { ColorSchemeKey, TrackType } from "./shared";
+import type { ColorSchemeKey } from "./shared";
 
 export * from "./shared";
 
@@ -28,14 +28,6 @@ export interface IBackgroundBox {
 	startState: { [key in keyof ILightState]: NonNullable<ILightState[key]> };
 	endState: { [key in keyof ILightState]: NonNullable<ILightState[key]> };
 }
-
-export interface IEventTrack {
-	type: TrackType;
-	label?: string;
-	side?: "left" | "right";
-}
-
-export type IEventTracks = Record<PropertyKey, IEventTrack>;
 
 export interface IGrid {
 	numCols: number;

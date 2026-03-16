@@ -1,11 +1,11 @@
 import { asyncThunkCreator, buildCreateSlice, type CaseReducer, createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type WritableDraft } from "@reduxjs/toolkit";
 import { pick } from "@std/collections/pick";
-import type { IWrapBaseNote, IWrapBaseObject } from "bsmap";
+import type { EnvironmentName, IWrapBaseNote, IWrapBaseObject } from "bsmap";
 import type { StateWithHistory } from "redux-undo";
 
-import { isMirroredTrack, type resolveEventId, resolveMirroredTrack, resolveTrackIdForEvent } from "$/helpers/events.helpers";
+import { isTrackGroupable, type resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
-import type { App, IEventTracks } from "$/types";
+import type { App } from "$/types";
 
 export const createSlice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } });
 
@@ -123,16 +123,19 @@ export function createEventReducerFactory<T extends Pick<IWrapBaseObject, "time"
 	});
 
 	return <P>(
-		callback: (data: { match: T | undefined; trackId: number }, state: WritableDraft<EntityState<T, Id>>, action: PayloadAction<P & { tracks: IEventTracks }>) => EntityState<T, Id>,
-	): CaseReducer<EntityState<T, Id>, PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked?: boolean } & P>> => {
+		callback: (data: { match: T | undefined; trackId: number }, state: WritableDraft<EntityState<T, Id>>, action: PayloadAction<P & { environment: EnvironmentName }>) => EntityState<T, Id>,
+	): CaseReducer<EntityState<T, Id>, PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked?: boolean } & P>> => {
 		return (state, action) => {
-			const { query, tracks, areLasersLocked } = action.payload;
+			const { query, environment, areLasersLocked } = action.payload;
 			const match = selectByQuery(state, query);
 			const trackId = resolveTrackIdForEvent(query);
 			callback({ match, trackId }, state, action);
-			if (areLasersLocked && isMirroredTrack(trackId, tracks)) {
-				// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
-				callback({ match, trackId: resolveMirroredTrack(trackId, tracks) }, state, action);
+			if (areLasersLocked && isTrackGroupable(trackId, environment)) {
+				const groupTrackIds = resolveGroupTrackIds(trackId, environment);
+				for (const mirrorTrackId of groupTrackIds) {
+					// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
+					callback({ match, trackId: mirrorTrackId }, state, action);
+				}
 			}
 		};
 	};

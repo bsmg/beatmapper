@@ -3,7 +3,6 @@ import { center, hstack, stack } from "$:styled-system/patterns";
 
 export { useEventGridContext as useContext } from "./context";
 export { default as Event } from "./event";
-export { default as ForTracks } from "./for";
 export { connect, type EventGridSchema as Schema, type IEventPlacementActions as IPlacementActions, machine } from "./machine";
 export { default as Markers } from "./markers";
 export { default as Root } from "./root";
@@ -49,7 +48,7 @@ export const Prefix = styled("div", {
 		textAlign: "end",
 		paddingInline: 1,
 		position: "relative",
-		backgroundColor: { base: undefined, _highlighted: "bg.subtle/50", _disabled: "bg.disabled" },
+		background: { base: undefined, _highlighted: "linear-gradient(var(--track-color) 0%, transparent 25%, transparent 75%, var(--track-color) 100%)", _disabled: "bg.disabled" },
 		borderBlockWidth: { base: "sm", _lastOfType: 0 },
 		borderRightWidth: "md",
 		borderColor: "border.muted",
@@ -84,7 +83,7 @@ export const Trigger = styled("div", {
 export const Track = styled("div", {
 	base: {
 		position: "relative",
-		backgroundColor: { base: undefined, _highlighted: "bg.subtle/50", _disabled: "bg.disabled" },
+		background: { base: undefined, _highlighted: "linear-gradient(var(--track-color) 0%, transparent 25%, transparent 75%, var(--track-color) 100%)", _disabled: "bg.disabled" },
 		borderBlockWidth: { base: "sm", _lastOfType: 0 },
 		borderColor: "border.muted",
 		opacity: { base: 1, _disabled: "disabled" },

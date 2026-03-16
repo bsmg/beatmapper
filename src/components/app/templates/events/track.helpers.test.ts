@@ -1,8 +1,9 @@
-import { createBasicEvent, createColorBoostEvent, type IWrapBasicEvent, type IWrapColorBoostEvent } from "bsmap";
+import { createBasicEvent, createColorBoostEvent, getBasicTracksForEnvironment, type IWrapBasicEvent, type IWrapColorBoostEvent } from "bsmap";
 import { describe, expect, it } from "vitest";
 
+import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 import { serializeBasicEventValue } from "$/helpers/events.helpers";
-import { App, ColorSchemeKey, type IBackgroundBox, type IColorScheme, type IEventTracks } from "$/types";
+import { App, type IBackgroundBox } from "$/types";
 import { lerp, lerpColor } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
@@ -14,17 +15,8 @@ describe(createBackgroundBoxes.name, () => {
 	// - The frame can have `R` events (Red light on), `B` events (Blue light on), or `0` (light off)
 	// - The letter to the left of the array represents the initial light value, the value it held before the current frame started
 
-	const tracks = {
-		2: { type: "blocks" },
-		12: { type: "speed" },
-	} as IEventTracks;
-
-	const colorScheme = {
-		[ColorSchemeKey.ENV_LEFT]: "#cc0000",
-		[ColorSchemeKey.ENV_RIGHT]: "#0000cc",
-		[ColorSchemeKey.BOOST_LEFT]: "#ff4444",
-		[ColorSchemeKey.BOOST_RIGHT]: "#4444ff",
-	} as IColorScheme;
+	const tracks = getBasicTracksForEnvironment("DefaultEnvironment");
+	const colorScheme = deriveColorSchemeFromEnvironment("DefaultEnvironment");
 
 	it("exits early if it is not a lighting track", () => {
 		const startBeat = 0;

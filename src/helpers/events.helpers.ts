@@ -1,37 +1,30 @@
-import type { EnvironmentName, IWrapBasicEvent, IWrapColorBoostEvent } from "bsmap";
-import { environmentTypeMap, eventTypeRename } from "bsmap/extensions/renamer";
+import { type EnvironmentName, type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, isBasicBtsTrack, isBasicCarTrack, isBasicFloatValueTrack, isBasicIntValueTrack, isBasicLightTrack, isBasicNoneTrack, isBasicToggleTrack } from "bsmap";
 import { check, number, pipe } from "valibot";
 
-import { COMMON_EVENT_TRACKS, SUPPORTED_EVENT_TRACKS } from "$/constants";
-import { App, type IEventTracks, TrackType } from "$/types";
+import { BasicTrackMirror, BasicTrackOrder } from "$/constants";
+import { App } from "$/types";
 import { createDataFactory } from "./factory.helpers";
 
-export function isLightTrack(trackId: number, tracks: IEventTracks) {
-	return tracks[trackId].type === TrackType.LIGHT;
+export function isLightTrack<Track extends IBasicTrack>(trackId: number, tracks: ITrackDefinitions<Track>) {
+	return isBasicLightTrack(trackId, tracks);
 }
-export function isTriggerTrack(trackId: number, tracks: IEventTracks) {
-	return tracks[trackId].type === TrackType.TRIGGER;
+export function isTriggerTrack<Track extends IBasicTrack>(trackId: number, tracks: ITrackDefinitions<Track>) {
+	return isBasicNoneTrack(trackId, tracks);
 }
-export function isValueTrack(trackId: number, tracks: IEventTracks) {
-	return tracks[trackId].type === TrackType.VALUE;
+export function isValueTrack<Track extends IBasicTrack>(trackId: number, tracks: ITrackDefinitions<Track>) {
+	return isBasicToggleTrack(trackId, tracks) || isBasicFloatValueTrack(trackId, tracks) || isBasicIntValueTrack(trackId, tracks) || isBasicBtsTrack(trackId, tracks) || isBasicCarTrack(trackId, tracks);
 }
 
-export function isMirroredTrack(trackId: number, tracks: IEventTracks) {
-	return !!tracks[trackId].side;
+export function isTrackGroupable(trackId: number, environment: EnvironmentName) {
+	return Object.values({ ...BasicTrackMirror[environment] }).some((ids) => ids.includes(trackId));
 }
-export function isSideTrack(trackId: number, side: "left" | "right", tracks: IEventTracks) {
-	return tracks[trackId].side === side;
+export function resolveGroupIdForTrack(trackId: number, environment: EnvironmentName) {
+	return Object.entries({ ...BasicTrackMirror[environment] }).find(([_, ids]) => ids.includes(trackId))?.[0];
 }
-export function resolveMirroredTrack(trackId: number, tracks: IEventTracks) {
-	if (!isMirroredTrack(trackId, tracks)) return trackId;
-
-	const track = tracks[trackId];
-
-	const mirroredTrack = Object.entries(tracks).find(([, t]) => {
-		return t.type === track.type && t.side === (track.side === "left" ? "right" : "left");
-	});
-
-	return mirroredTrack ? Number.parseInt(mirroredTrack[0], 10) : trackId;
+export function resolveGroupTrackIds(trackId: number, environment: EnvironmentName) {
+	const group = Object.values({ ...BasicTrackMirror[environment] }).find((ids) => ids.includes(trackId));
+	if (!group) return [];
+	return group.filter((id) => id !== trackId);
 }
 
 export function isBasicEvent(data: unknown): data is IWrapBasicEvent {
@@ -52,13 +45,13 @@ export function resolveEventId<T extends Pick<IWrapBasicEvent, "time" | "type"> 
 	return `${resolveTrackIdForEvent(x)}/${x.time}`;
 }
 
-export function isBasicLightEvent<T extends Pick<IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+export function isBasicLightEvent<T extends Pick<IWrapBasicEvent, "type">, Track extends IBasicTrack>(data: T, tracks: ITrackDefinitions<Track>) {
 	return isBasicEvent(data) && isLightTrack(resolveTrackIdForEvent(data), tracks);
 }
-export function isBasicTriggerEvent<T extends Pick<IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+export function isBasicTriggerEvent<T extends Pick<IWrapBasicEvent, "type">, Track extends IBasicTrack>(data: T, tracks: ITrackDefinitions<Track>) {
 	return isBasicEvent(data) && isTriggerTrack(resolveTrackIdForEvent(data), tracks);
 }
-export function isBasicValueEvent<T extends Pick<IWrapBasicEvent, "type">>(data: T, tracks: IEventTracks) {
+export function isBasicValueEvent<T extends Pick<IWrapBasicEvent, "type">, Track extends IBasicTrack>(data: T, tracks: ITrackDefinitions<Track>) {
 	return isBasicEvent(data) && isValueTrack(resolveTrackIdForEvent(data), tracks);
 }
 
@@ -72,11 +65,14 @@ export function resolveBasicEventColor<T extends Pick<IWrapBasicEvent, "value">>
 	if (data.value > 0) return App.EventColor.SECONDARY;
 	return null;
 }
-export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" | "value">>(data: T, tracks: IEventTracks) {
+export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" | "value">, Track extends IBasicTrack>(data: T, tracks: ITrackDefinitions<Track>) {
 	const trackId = resolveTrackIdForEvent(data);
 
 	switch (tracks[trackId]?.type) {
-		case TrackType.LIGHT: {
+		case -1: {
+			return App.BasicEventEffect.TRIGGER;
+		}
+		case 0: {
 			if (data.value === 0) return App.BasicEventEffect.OFF;
 			if (data.value % 4 === 1) return App.BasicEventEffect.ON;
 			if (data.value % 4 === 2) return App.BasicEventEffect.FLASH;
@@ -84,14 +80,8 @@ export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" |
 			if (data.value % 4 === 0) return App.BasicEventEffect.TRANSITION;
 			return App.BasicEventEffect.OFF;
 		}
-		case TrackType.VALUE: {
-			return App.BasicEventEffect.VALUE;
-		}
-		case TrackType.TRIGGER: {
-			return App.BasicEventEffect.TRIGGER;
-		}
 		default: {
-			return "none";
+			return App.BasicEventEffect.VALUE;
 		}
 	}
 }
@@ -99,9 +89,9 @@ export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" |
 interface IBasicEventValue {
 	effect: App.BasicEventEffect;
 	color?: App.EventColor | null;
-	speed?: number;
+	value?: number;
 }
-export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, { tracks: IEventTracks }, { tracks: IEventTracks; trackId: number }, { tracks: IEventTracks; trackId: number }>({
+export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, { tracks: ITrackDefinitions<IBasicTrack> }, { tracks: ITrackDefinitions<IBasicTrack>; trackId: number }, { tracks: ITrackDefinitions<IBasicTrack>; trackId: number }>({
 	validator: {
 		constructor: ({ tracks, trackId }) => {
 			return pipe(
@@ -116,96 +106,40 @@ export const { serialize: serializeBasicEventValue, deserialize: deserializeBasi
 	container: {
 		serialize: (data) => {
 			if (data.effect === App.BasicEventEffect.TRIGGER) return 0;
-			if (data.effect === App.BasicEventEffect.VALUE && data.speed) return data.speed;
+			if (data.effect === App.BasicEventEffect.VALUE && data.value) return data.value;
 			if (!data.color || !data.effect || data.effect === App.BasicEventEffect.OFF) return 0;
 			const c = Object.values([App.EventColor.SECONDARY, App.EventColor.PRIMARY, App.EventColor.WHITE]).indexOf(data.color);
 			const e = Object.values<App.BasicEventEffect>([App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.FADE, App.BasicEventEffect.TRANSITION]).indexOf(data.effect);
 			return 4 * c + (e + 1);
 		},
 		deserialize: (value, { tracks, trackId }) => {
-			const effect = resolveBasicEventEffect({ type: trackId, value }, tracks);
-
 			switch (tracks[trackId].type) {
-				case TrackType.LIGHT: {
-					return { effect: effect, color: resolveBasicEventColor({ value }) };
-				}
-				case TrackType.VALUE: {
-					return { effect: App.BasicEventEffect.VALUE, speed: value };
-				}
-				case TrackType.TRIGGER: {
+				case -1: {
 					return { effect: App.BasicEventEffect.TRIGGER };
 				}
+				case 0: {
+					return { effect: resolveBasicEventEffect({ type: trackId, value }, tracks), color: resolveBasicEventColor({ value }) };
+				}
 				default: {
-					throw new Error("Invalid value.");
+					return { effect: App.BasicEventEffect.VALUE, value };
 				}
 			}
 		},
 	},
 });
 
-export function deriveEventTracksForEnvironment(environment: EnvironmentName) {
-	const commonEventTracks = Object.keys(COMMON_EVENT_TRACKS);
+export function sortBasicTracks<T extends { id: number }>(environment: EnvironmentName) {
+	const order = BasicTrackOrder[environment];
 
-	const environmentTypes = environmentTypeMap[environment];
-	const environmentTrackIds = environmentTypes ? Object.keys(environmentTypes) : [];
+	if (!order) return () => 0;
 
-	const legacyEnvironmentNames = Object.keys(environmentTypeMap).filter((_, i) => i <= 22);
+	return (a: T, b: T) => {
+		const indexA = order.indexOf(a.id);
+		const indexB = order.indexOf(b.id);
 
-	const filtered = Object.entries(SUPPORTED_EVENT_TRACKS).filter(([id]) => {
-		if (environmentTypes && legacyEnvironmentNames.includes(environment)) {
-			return environmentTrackIds.includes(id) || commonEventTracks.includes(id);
-		}
-		if (environmentTypes) {
-			return environmentTrackIds.includes(id);
-		}
-		if (commonEventTracks.includes(id)) return true;
-		return false;
-	});
+		const priorityA = indexA === -1 ? Infinity : indexA;
+		const priorityB = indexB === -1 ? Infinity : indexB;
 
-	const processed = filtered.map(([id, track]) => {
-		const trackId = Number.parseInt(id, 10);
-		const label = eventTypeRename(trackId, environment);
-		let type = track.type;
-		switch (environment) {
-			case "InterscopeEnvironment": {
-				if (trackId === 8) type = TrackType.VALUE;
-				break;
-			}
-			case "BillieEnvironment": {
-				if (trackId === 8) type = TrackType.VALUE;
-				break;
-			}
-			case "LizzoEnvironment": {
-				if (trackId === 8) type = TrackType.LIGHT;
-				if (trackId === 9) type = TrackType.LIGHT;
-				if (trackId === 12) type = TrackType.LIGHT;
-				if (trackId === 16) type = TrackType.TRIGGER;
-				if (trackId === 17) type = TrackType.TRIGGER;
-				break;
-			}
-			case "TheSecondEnvironment": {
-				if (trackId === 9) type = TrackType.VALUE;
-				break;
-			}
-			case "BritneyEnvironment": {
-				if (trackId === 8) type = TrackType.LIGHT;
-				if (trackId === 9) type = TrackType.LIGHT;
-				break;
-			}
-			case "Monstercat2Environment": {
-				if (trackId === 8) type = TrackType.LIGHT;
-				break;
-			}
-			case "MetallicaEnvironment": {
-				if (trackId === 8) type = TrackType.LIGHT;
-				break;
-			}
-		}
-		return [id, { ...track, type, label: label }] as const;
-	});
-
-	return processed.reduce((acc: IEventTracks, [id, track]) => {
-		acc[id] = track;
-		return acc;
-	}, {});
+		return priorityA - priorityB;
+	};
 }

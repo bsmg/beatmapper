@@ -1,12 +1,15 @@
+import { shuffle } from "@std/random/shuffle";
 import { createMachine, type MachineSchema, type Params, type Service } from "@zag-js/core";
 import { normalizeProps } from "@zag-js/react";
-import type { IWrapBaseObject } from "bsmap";
+import type { EnvironmentName, IWrapBaseObject } from "bsmap";
 import type { CSSProperties } from "react";
 
 import { type AsEventObject, createMachineAnatomy } from "$/components/helpers";
 import type { UseMousePositionOverElementOptions } from "$/components/hooks/use-mouse-position-over-element";
+import { BasicTrackMirror } from "$/constants";
+import { resolveGroupIdForTrack } from "$/helpers/events.helpers";
 import { type App, EventEditMode, type IBackgroundBox, type ISelectionBoxInBeats } from "$/types";
-import { clamp, normalize as interpolate, isMetaKeyPressed, range, roundToNearest } from "$/utils";
+import { clamp, hashCode, normalize as interpolate, isMetaKeyPressed, mulberry32, range, roundToNearest } from "$/utils";
 
 const { getElement, getProps } = createMachineAnatomy("event-grid", {
 	parts: ["root", "timeline", "prefix", "content", "trigger", "track", "event", "backgroundBox", "selectionBox", "cursor", "pointer"],
@@ -197,8 +200,8 @@ export interface IEventPlacementActions<T extends IWrapBaseObject> {
 	onDelete: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
 	onSelect: (data: App.IWrapEditorObject<T>) => void;
 	onDeselect: (data: App.IWrapEditorObject<T>) => void;
-	onPick: (data: App.IWrapEditorObject<T>) => void;
-	onWheel: (data: App.IWrapEditorObject<T>, delta: number) => void;
+	onPick?: (data: App.IWrapEditorObject<T>) => void;
+	onWheel?: (data: App.IWrapEditorObject<T>, delta: number) => void;
 }
 
 export function connect({ scope, send, prop, context, refs, computed }: Service<EventGridSchema>, normalize = normalizeProps) {
@@ -215,6 +218,27 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 	const activeButton = refs.get("mouseDownAt")?.button ?? null;
 
 	const isHoveringTrack = (trackId: number) => refs.get("hoveredTrackId") === trackId;
+
+	const TRACK_COLOR_CACHE = Object.entries(BasicTrackMirror).reduce((acc: Record<string, Map<string, string>>, [env, tracks]) => {
+		const keys = Object.keys(tracks);
+		const len = keys.length;
+		const factor = 360 / len;
+
+		const shuffled = shuffle(
+			Array.from({ length: len }, (_, i) => i),
+			{ prng: mulberry32(hashCode(env)) },
+		);
+
+		acc[env] = new Map(keys.map((key, i) => [key, `hsla(${shuffled[i] * factor}, 100%, 50%, 0.25)`]));
+
+		return acc;
+	}, {});
+
+	const resolveColor = (trackId: number, environment: EnvironmentName) => {
+		const str = resolveGroupIdForTrack(trackId, environment);
+		if (!str) return undefined;
+		return TRACK_COLOR_CACHE[environment]?.get(str);
+	};
 
 	return {
 		startBeat,
@@ -252,11 +276,11 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				},
 			});
 		},
-		getPrefixProps: () => {
+		getPrefixProps: (trackId: number, environment: EnvironmentName) => {
 			return normalize.element({
 				...getProps(scope, "prefix"),
 				"aria-disabled": disabled,
-				style: { height: trackHeight },
+				style: { height: trackHeight, "--track-color": resolveColor(trackId, environment) },
 			});
 		},
 		getContentProps: () => {
@@ -264,11 +288,11 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				...getProps(scope, "content"),
 			});
 		},
-		getTrackProps: <T extends App.IWrapEditorObject<IWrapBaseObject>>(trackId: number, actions: IEventPlacementActions<T>) => {
+		getTrackProps: <T extends App.IWrapEditorObject<IWrapBaseObject>>(trackId: number, environment: EnvironmentName, actions: IEventPlacementActions<T>) => {
 			return normalize.element({
 				...getProps(scope, "track"),
 				"aria-disabled": disabled,
-				style: { height: trackHeight },
+				style: { height: trackHeight, "--track-color": resolveColor(trackId, environment) },
 				onContextMenu: (event) => event.preventDefault(),
 				onPointerDown: (event) => {
 					refs.set("norm", event.nativeEvent.offsetY / event.currentTarget.clientHeight);

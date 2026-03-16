@@ -1,13 +1,16 @@
 import type { AnyFormApi } from "@tanstack/react-form";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
+import type { IBasicTrack, ITrackDefinitions } from "bsmap";
 import { type ComponentProps, useCallback, useMemo, useState } from "react";
 import { boolean, record, string } from "valibot";
 
 import { EventGrid } from "$/components/app/layouts";
 import { useMousePositionOverElement } from "$/components/hooks/use-mouse-position-over-element";
+import { For, Show } from "$/components/ui/atoms";
 import { Button, usePrompt } from "$/components/ui/compositions";
-import { deriveEventTracksForEnvironment, isMirroredTrack } from "$/helpers/events.helpers";
+import { BasicTrackGroups } from "$/constants";
+import { isLightTrack, isTrackGroupable, isTriggerTrack, isValueTrack, sortBasicTracks } from "$/helpers/events.helpers";
 import { drawEventSelectionBox, jumpToBeat, updateEventsEditorCursor, updateEventsEditorTrackHeight } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import {
@@ -25,9 +28,8 @@ import {
 	selectPacerWait,
 	selectSnap,
 } from "$/store/selectors";
-import { type IEventTrack, type IEventTracks, TrackType } from "$/types";
-import { clamp } from "$/utils";
-import { Stack, Wrap } from "$:styled-system/jsx";
+import { clamp, isObjectEmpty } from "$/utils";
+import { Stack, Text, Wrap } from "$:styled-system/jsx";
 import BasicEventTrack from "./basic-track";
 import BoostEventTrack from "./boost-track";
 
@@ -52,17 +54,17 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 		return selectedBeat !== null ? clamp(selectedBeat, offsetInBeats, (duration ?? selectedBeat) + offsetInBeats) : null;
 	});
 
+	const allTracks = useMemo(() => {
+		return Object.values(tracks).sort(sortBasicTracks(environment));
+	}, [tracks, environment]);
+
 	const [filter, setFilter] = useState<string[]>(Object.keys(tracks));
 
-	const filteredTracks = useMemo(
-		() =>
-			Object.entries(deriveEventTracksForEnvironment(environment)).reduce((acc: IEventTracks, [id, track]) => {
-				if (!filter.includes(id)) return acc;
-				acc[id] = track;
-				return acc;
-			}, {}),
-		[filter, environment],
-	);
+	const allFilteredTracks = useMemo<(IBasicTrack & { id: number; name?: string })[]>(() => {
+		return allTracks.filter(({ id }) => filter.includes(id.toString()));
+	}, [allTracks, filter]);
+
+	const trackGroups = useMemo(() => ({ ...BasicTrackGroups[environment] }), [environment]);
 
 	const service = useMachine(EventGrid.machine, {
 		mode: selectedEditMode,
@@ -79,6 +81,10 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 			return dispatch(updateEventsEditorTrackHeight({ newHeight }));
 		},
 		onSelectionCommit: ({ selectionBoxInBeats }) => {
+			const filteredTracks = allFilteredTracks.reduce((acc: ITrackDefinitions<{ id: number }>, track) => {
+				acc[track.id] = track;
+				return acc;
+			}, {});
 			return dispatch(drawEventSelectionBox({ songId: sid, tracks: filteredTracks, selectionBoxInBeats: selectionBoxInBeats }));
 		},
 	});
@@ -92,13 +98,13 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 
 	const isTrackDisabled = useCallback(
 		(trackId: number) => {
-			return areLasersLocked && isMirroredTrack(trackId, filteredTracks) ? true : undefined;
+			return areLasersLocked && isTrackGroupable(trackId, environment) ? true : undefined;
 		},
-		[areLasersLocked, filteredTracks],
+		[environment, areLasersLocked],
 	);
 
-	const toggleFilterAll = useCallback(
-		(form: AnyFormApi, filter = (_: IEventTrack) => true as boolean) => {
+	const handleFilterUpdate = useCallback(
+		(form: AnyFormApi, filter = (_: IBasicTrack & { id: number }) => true as boolean) => {
 			const trackEntries = Object.entries(tracks);
 			const isOnlyCategoryActive = trackEntries.every(([id, track]) => (filter(track) ? form.getFieldValue(id) : !form.getFieldValue(id)));
 
@@ -110,35 +116,48 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 		[tracks],
 	);
 
-	const { trigger: triggerTrackFilters } = usePrompt({
+	const { trigger: triggerTrackVisibilityPrompt } = usePrompt({
 		title: "Track Visibility",
 		description: "Toggle the visibility of basic event tracks within the editor.",
 		validate: record(string(), boolean()),
-		defaultValues: Object.keys(tracks).reduce((acc: { [key: keyof IEventTracks]: boolean }, id) => {
+		defaultValues: Object.keys(tracks).reduce((acc: { [key: string]: boolean }, id) => {
 			acc[id] = filter.includes(id);
 			return acc;
 		}, {}),
 		render: ({ form }) => (
 			<Stack gap={2}>
 				<Wrap gap={1} align={"center"}>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => toggleFilterAll(form)}>
-						All Tracks
+					<Text textStyle="heading">Types: </Text>
+					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form)}>
+						All
 					</Button>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => toggleFilterAll(form, (x) => x.type === TrackType.LIGHT)}>
-						Light Tracks
+					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isLightTrack(x.id, tracks))}>
+						Light
 					</Button>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => toggleFilterAll(form, (x) => x.type === TrackType.TRIGGER)}>
-						Trigger Tracks
+					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isTriggerTrack(x.id, tracks))}>
+						Trigger
 					</Button>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => toggleFilterAll(form, (x) => x.type === TrackType.VALUE)}>
-						Value Tracks
+					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isValueTrack(x.id, tracks))}>
+						Value
 					</Button>
 				</Wrap>
-				<EventGrid.ForTracks tracks={tracks}>
-					{(track, trackId) => {
-						return <form.AppField name={trackId.toString()}>{(ctx) => <ctx.Checkbox checkboxLabel={track.label ?? `Track ${trackId}`} orientation={"horizontal"} />}</form.AppField>;
+				<Show when={!isObjectEmpty(trackGroups)}>
+					<Wrap gap={1} align={"center"}>
+						<Text textStyle="heading">Groups: </Text>
+						<For each={Object.keys(trackGroups)}>
+							{(group) => (
+								<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => trackGroups[group].some((id) => x.id === id))}>
+									{group}
+								</Button>
+							)}
+						</For>
+					</Wrap>
+				</Show>
+				<For each={allTracks}>
+					{(track) => {
+						return <form.AppField name={track.id.toString()}>{(ctx) => <ctx.Checkbox checkboxLabel={track.name} orientation={"horizontal"} />}</form.AppField>;
 					}}
-				</EventGrid.ForTracks>
+				</For>
 			</Stack>
 		),
 		onSubmit: ({ value }) =>
@@ -154,7 +173,7 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 		<EventGrid.Root {...api.getRootProps()} {...rest} service={service}>
 			<EventGrid.Header>
 				<EventGrid.Actions>
-					<Button variant={"subtle"} size={"sm"} onClick={triggerTrackFilters}>
+					<Button variant={"subtle"} size={"sm"} onClick={triggerTrackVisibilityPrompt}>
 						Track Visibility
 					</Button>
 				</EventGrid.Actions>
@@ -162,19 +181,19 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 			</EventGrid.Header>
 			<EventGrid.Body>
 				<EventGrid.PrefixGroup onWheel={(ev) => ev.stopPropagation()}>
-					<EventGrid.ForTracks tracks={filteredTracks}>
-						{(track, id) => (
-							<EventGrid.Prefix key={id} {...api.getPrefixProps()} data-highlighted={isTrackDisabled(id)}>
-								{track.label}
+					<For each={allFilteredTracks}>
+						{(track) => (
+							<EventGrid.Prefix key={track.id} {...api.getPrefixProps(track.id, environment)} data-highlighted={isTrackDisabled(track.id)}>
+								{track.name}
 							</EventGrid.Prefix>
 						)}
-					</EventGrid.ForTracks>
-					<EventGrid.Prefix {...api.getPrefixProps()}>Color Boost</EventGrid.Prefix>
+					</For>
+					<EventGrid.Prefix {...api.getPrefixProps(5, environment)}>Color Boost</EventGrid.Prefix>
 				</EventGrid.PrefixGroup>
 				<EventGrid.Content {...api.getContentProps()} editMode={selectedEditMode}>
 					<EventGrid.Markers />
 					<EventGrid.Trigger ref={selectionBoxRef} {...api.getTriggerProps()}>
-						<EventGrid.ForTracks tracks={filteredTracks}>{(_, id) => <BasicEventTrack key={id} trackId={id} data-highlighted={isTrackDisabled(id)} />}</EventGrid.ForTracks>
+						<For each={allFilteredTracks}>{(track) => <BasicEventTrack key={track.id} trackId={track.id} data-highlighted={isTrackDisabled(track.id)} />}</For>
 						<BoostEventTrack trackId={5} />
 					</EventGrid.Trigger>
 					<EventGrid.SelectionBox {...api.getSelectionBoxProps()} />

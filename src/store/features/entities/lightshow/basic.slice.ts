@@ -1,12 +1,11 @@
 import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { createBasicEvent, type IWrapBasicEvent, sortObjectFn } from "bsmap";
 
-import { deserializeBasicEventValue, isBasicLightEvent, resolveEventId, resolveTrackIdForEvent, serializeBasicEventValue } from "$/helpers/events.helpers";
+import { resolveEventId, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { addSong, bulkRemoveEvent, cutSelection, deselectAllEntities, deselectEvent, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, nudgeSelection, pasteSelection, removeAllSelectedEvents, removeEvent, selectAllEntities, selectAllEntitiesInRange, selectEvent, startLoadingMap } from "$/store/actions";
 import { createEditorObjectReducers, createEditorObjectSelectors, createEventReducerFactory, createEventSelectors } from "$/store/helpers";
-import { App, View } from "$/types";
-import { cycle } from "$/utils";
+import { type App, View } from "$/types";
 
 const adapter = createEntityAdapter<App.IWrapEditorObject<IWrapBasicEvent>, EntityId>({
 	selectId: resolveEventId,
@@ -30,8 +29,6 @@ const slice = createSlice({
 		selectValueForTrackAtBeat: createEventSelector((data) => data.value, 0),
 	},
 	reducers: () => {
-		const MIRRORABLE_COLORS = Object.values(App.EventColor).slice(0, -1);
-
 		return {
 			addOne: createEventReducer<{ data: IWrapBasicEvent; overwrite?: boolean }>(({ match, trackId }, state, action) => {
 				const { data, overwrite } = action.payload;
@@ -41,14 +38,6 @@ const slice = createSlice({
 			updateOne: createEventReducer<{ changes: Partial<IWrapBasicEvent> }>(({ match, trackId }, state, action) => {
 				if (!match) return state;
 				return adapter.updateOne(state, { id: adapter.selectId({ ...match, type: trackId }), changes: action.payload.changes });
-			}),
-			updateColor: createEventReducer(({ match, trackId }, state, action) => {
-				const { tracks } = action.payload;
-				if (!match || !isBasicLightEvent(match, tracks)) return state;
-				const { effect, color } = deserializeBasicEventValue(match.value, { tracks, trackId });
-				const newColor = color && MIRRORABLE_COLORS.includes(color) ? cycle(MIRRORABLE_COLORS, color) : color;
-				const newValue = serializeBasicEventValue({ effect, color: newColor }, { tracks });
-				return adapter.updateOne(state, { id: adapter.selectId({ ...match, type: trackId }), changes: { value: newValue } });
 			}),
 		};
 	},

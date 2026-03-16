@@ -1,9 +1,9 @@
-import { type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
+import { type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEffectActive, isLightTrack, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { App } from "$/types";
-import { ColorSchemeKey, EventColor, type IBackgroundBox, type IEventTracks, type ILightState } from "$/types/editor";
+import { ColorSchemeKey, EventColor, type IBackgroundBox, type ILightState } from "$/types/editor";
 import { clamp, lerp, lerpColor } from "$/utils";
 
 const COLOR_KEY_MAP = {
@@ -64,7 +64,7 @@ function deriveBoostStateAtBeat(targetBeat: number, boostEvents: IWrapColorBoost
 }
 
 interface CreateBackgroundBoxesOptions extends StateResolverContext {
-	tracks: IEventTracks;
+	tracks: ITrackDefinitions<IBasicTrack>;
 	basicEvents: IWrapBasicEvent[];
 	boostEvents: IWrapColorBoostEvent[];
 	startBeat: number;

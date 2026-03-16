@@ -1,9 +1,9 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
-import { EnvironmentName } from "bsmap";
+import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
+import { eventTypeRename } from "bsmap/extensions/renamer";
 
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
-import { deriveEventTracksForEnvironment } from "$/helpers/events.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
@@ -102,7 +102,7 @@ const slice = createSlice({
 			return getColorScheme(song, beatmapId);
 		}),
 		selectEventTracksForEnvironment: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
-			return deriveEventTracksForEnvironment(getEnvironment(song, beatmapId));
+			return getBasicTracksForEnvironment(getEnvironment(song, beatmapId), eventTypeRename);
 		}),
 	},
 	reducers: (api) => {

@@ -72,12 +72,12 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 				</Field>
 				<Field cosmetic size="sm" label="Locks">
 					<HStack gap={1}>
-						<Tooltip render={() => "Loop playback within the current event window (L)"}>
+						<Tooltip render={() => "Loop playback within the current event window"}>
 							<Toggle unfocusOnPress pressed={isLockedToCurrentWindow} onPressedChange={() => dispatch(updateEventsEditorWindowLock())}>
 								<RepeatIcon size={16} />
 							</Toggle>
 						</Tooltip>
-						<Tooltip render={() => "Pair side lasers for symmetrical left/right events"}>
+						<Tooltip render={() => "Clone event placements for symmetrical tracks"}>
 							<Toggle unfocusOnPress pressed={areLasersLocked} onPressedChange={() => dispatch(updateEventsEditorMirrorLock())}>
 								<LockIcon size={16} />
 							</Toggle>

@@ -8,7 +8,7 @@ import { For } from "$/components/ui/atoms";
 import { resolveEventId } from "$/helpers/events.helpers";
 import { addBoostEvent, bulkAddBoostEvent, bulkRemoveEvent, deselectEvent, removeEvent, selectEvent, updateBoostEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBoostEvents, selectEventEditorStartAndEndBeat, selectEventsEditorMirrorLock, selectEventTracksForEnvironment } from "$/store/selectors";
+import { selectAllBoostEvents, selectEnvironment, selectEventEditorStartAndEndBeat, selectEventsEditorMirrorLock } from "$/store/selectors";
 import type { App } from "$/types";
 import { isColorDark } from "$/utils";
 import { token } from "$:styled-system/tokens";
@@ -46,7 +46,7 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const dispatch = useAppDispatch();
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
-	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
+	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const boostEvents = useAppSelector((state) => selectAllBoostEvents(state));
 
 	const api = EventGrid.useContext();
@@ -56,19 +56,16 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const actions = useMemo<EventGrid.IPlacementActions<IWrapColorBoostEvent>>(() => {
 		return {
 			onCreate: resolveEventData,
-			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBoostEvent : addBoostEvent)({ query: data, data: data, tracks, areLasersLocked })),
-			onSelect: (data) => dispatch(selectEvent({ query: data, tracks, areLasersLocked })),
-			onDeselect: (data) => dispatch(deselectEvent({ query: data, tracks, areLasersLocked })),
-			onPick: () => {},
-			onDelete: (data, isBulk) => dispatch((isBulk ? bulkRemoveEvent : removeEvent)({ query: data, tracks, areLasersLocked })),
-			onWheel: (data, delta) => {
-				return dispatch(updateBoostEvent({ query: data, tracks, areLasersLocked, changes: { toggle: delta > 0 } }));
-			},
+			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBoostEvent : addBoostEvent)({ query: data, data: data, environment, areLasersLocked })),
+			onDelete: (data, isBulk) => dispatch((isBulk ? bulkRemoveEvent : removeEvent)({ query: data, environment, areLasersLocked })),
+			onSelect: (data) => dispatch(selectEvent({ query: data, environment, areLasersLocked })),
+			onDeselect: (data) => dispatch(deselectEvent({ query: data, environment, areLasersLocked })),
+			onWheel: (data, delta) => dispatch(updateBoostEvent({ query: data, environment, areLasersLocked, changes: { toggle: delta > 0 } })),
 		};
-	}, [dispatch, resolveEventData, tracks, areLasersLocked]);
+	}, [dispatch, resolveEventData, environment, areLasersLocked]);
 
 	return (
-		<EventGrid.Track {...api.getTrackProps(trackId, actions)} {...rest}>
+		<EventGrid.Track {...api.getTrackProps(trackId, environment, actions)} {...rest}>
 			<For each={boostEvents.filter((x) => x.time >= startBeat && x.time < endBeat)}>{(data) => <BoostEvent data={data} actions={actions} />}</For>
 		</EventGrid.Track>
 	);

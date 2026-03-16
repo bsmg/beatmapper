@@ -4,7 +4,7 @@ import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
-import { type App, type BeatmapId, type IEventTracks, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
+import { type App, type BeatmapId, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
 import { roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
@@ -27,6 +27,8 @@ import {
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
+
+import type { EnvironmentName, ITrackDefinitions } from "bsmap";
 
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
@@ -149,7 +151,7 @@ export const {
 	updateMirrorLock: updateEventsEditorMirrorLock,
 } = lightshow.actions;
 
-export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: IEventTracks; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
+export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
 	const state = api.getState() as RootState;
 	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, args.songId);
 	const metadata = { window: { startBeat, endBeat } };
@@ -292,23 +294,23 @@ export const redoObjects = createAction("redoObjects", (args: { songId: SongId }
 	return { payload: { ...args } };
 });
 
-export const { addOne: addBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateBasicEvent, updateColor: mirrorBasicEvent } = basicEvents.actions;
+export const { addOne: addBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateBasicEvent } = basicEvents.actions;
 
 export const { addOne: addBoostEvent, addOne: bulkAddBoostEvent, updateOne: updateBoostEvent } = boostEvents.actions;
 
-export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
+export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const deselectEvent = createAction("deselectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
+export const deselectEvent = createAction("deselectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const removeEvent = createAction("removeEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
+export const removeEvent = createAction("removeEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const bulkRemoveEvent = createAction("bulkRemoveEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks: IEventTracks; areLasersLocked: boolean }) => {
+export const bulkRemoveEvent = createAction("bulkRemoveEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
