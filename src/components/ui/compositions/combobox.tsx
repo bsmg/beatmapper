@@ -171,7 +171,7 @@ export function ComboboxDataField({ label, helperText, ...delegated }: Assign<Co
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Combobox {...delegated} id={id} defaultValue={["test"]} value={field.state.value ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
+			<Combobox {...delegated} id={id} inputValue={field.state.value ?? ""} value={field.state.value ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
 		</Field>
 	);
 }
