@@ -1,5 +1,5 @@
 import { useParams } from "@tanstack/react-router";
-import { type MouseEvent, useCallback, useDeferredValue } from "react";
+import { type MouseEvent, useCallback } from "react";
 
 import { AudioVisualizer } from "$/components/app/layouts";
 import { useParentDimensions } from "$/components/hooks/use-parent-dimensions";
@@ -25,9 +25,6 @@ function EditorAudioVisualizer() {
 
 	const [container, dimensions] = useParentDimensions<HTMLDivElement>();
 
-	// Updating this waveform is surprisingly expensive! We'll defer its rendered value and round the cursor position based on the render scale.
-	const roundedCursorPosition = useDeferredValue(roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15));
-
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {
 			dispatch(jumpToTime({ songId: sid, value: offset }));
@@ -52,7 +49,7 @@ function EditorAudioVisualizer() {
 
 	return (
 		<AudioVisualizer.Root ref={container} isLoading={isLoadingSong}>
-			<AudioVisualizer.Content duration={duration} cursorPosition={roundedCursorPosition} onVisualizerClick={handleVisualizerClick}>
+			<AudioVisualizer.Content duration={duration} cursorPosition={roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15)} onVisualizerClick={handleVisualizerClick}>
 				{(ref) => <Waveform ref={ref} width={dimensions.width} height={dimensions.height} waveformData={waveformData} duration={duration} />}
 			</AudioVisualizer.Content>
 			{durationInBeats !== null && (
