@@ -17,7 +17,6 @@ import { addColorScheme, copyBeatmap, removeBeatmap, updateBeatmap } from "$/sto
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectBpm, selectColorSchemeIds, selectLightshowIds } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
-import { roundTo } from "$/utils";
 import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
@@ -148,8 +147,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 					</Form.Row>
 					<Form.Row>
 						<Stat label="HJD (beats)">{njs.hjd}</Stat>
-						<Stat label="JD (meters)">{roundTo(njs.jd, 3)}</Stat>
-						<Stat label="RT (ms)">{Math.round(njs.reactionTime * 1000)}</Stat>
+						<Stat label="JD (meters)">{njs.jd.toFixed(1)}</Stat>
+						<Stat label="RT (ms)">{(njs.reactionTime * 1000).toFixed(0)}</Stat>
 					</Form.Row>
 					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput label="Mapper(s)" />}</Form.AppField>
 					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput label="Lighter(s)" />}</Form.AppField>
