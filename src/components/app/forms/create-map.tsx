@@ -2,12 +2,13 @@ import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { type CharacteristicName, CharacteristicNameSchema, type DifficultyName, DifficultyNameSchema, EnvironmentName, type EnvironmentV2Name, type EnvironmentV3Name } from "bsmap";
 import { useState } from "react";
-import { array, custom, file, gtValue, length, minLength, number, object, pipe, string, transform } from "valibot";
+import { array, custom, file, gtValue, length, maxLength, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
 import { Show } from "$/components/ui/atoms";
 import { Audio, Switch, useAppForm } from "$/components/ui/compositions";
+import { createPlaceholderImageFile } from "$/helpers/file.helpers";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -15,7 +16,7 @@ import { selectSongIds, selectSongVolume, selectUsername } from "$/store/selecto
 
 const SCHEMA = object({
 	songFile: pipe(array(file()), length(1, "You must provide exactly one file.")),
-	coverArtFile: pipe(array(file()), length(1, "You must provide exactly one file.")),
+	coverArtFile: pipe(array(file()), maxLength(1, "You can't supply more than one file.")),
 	name: pipe(string(), minLength(1)),
 	subName: pipe(string()),
 	artistName: pipe(string()),
@@ -64,18 +65,12 @@ function CreateMapForm({ dialog }: Props) {
 		},
 		onSubmit: async ({ value }) => {
 			try {
-				const songId = createSongId(value);
-
-				// Song IDs must be unique, and song IDs are generated from the name.
-				// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
-				if (currentSongIds.some((id) => id === songId)) {
-					throw new Error("You already have a song with this name. Please choose a unique name.");
-				}
-
+				const songId = createSongId(value, currentSongIds);
 				const beatmapId = resolveBeatmapId({ characteristic: value.characteristic, difficulty: value.difficulty });
 
 				const songFile = value.songFile[0];
-				const coverArtFile = value.coverArtFile[0];
+				const coverArtFile = value.coverArtFile[0] ?? createPlaceholderImageFile();
+
 				const mappers = username !== "" ? [username] : [];
 
 				dispatch(
@@ -123,7 +118,7 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Root>
 				<Switch label="Show Optional Fields" checked={showOptionalFields} onCheckedChange={(x) => setShowOptionalFields(!!x.checked)} />
-				<Form.Row>
+				<Show when={!showOptionalFields}>
 					<Form.AppField name="songFile">
 						{(ctx) => (
 							<ctx.FileUpload label="Song File" required maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE}>
@@ -131,21 +126,28 @@ function CreateMapForm({ dialog }: Props) {
 							</ctx.FileUpload>
 						)}
 					</Form.AppField>
-					<Form.AppField name="coverArtFile">
-						{(ctx) => (
-							<ctx.FileUpload label="Cover Art File" required maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE}>
-								{() => null}
-							</ctx.FileUpload>
-						)}
-					</Form.AppField>
-				</Form.Row>
-				<Show when={!showOptionalFields}>
 					<Form.Row>
 						<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 						<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
 					</Form.Row>
 				</Show>
 				<Show when={showOptionalFields}>
+					<Form.Row>
+						<Form.AppField name="songFile">
+							{(ctx) => (
+								<ctx.FileUpload label="Song File" required maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE}>
+									{(file) => <Audio file={file} startTime={previewStartTime} duration={previewDuration} volume={volume} />}
+								</ctx.FileUpload>
+							)}
+						</Form.AppField>
+						<Form.AppField name="coverArtFile">
+							{(ctx) => (
+								<ctx.FileUpload label="Cover Art File" maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE}>
+									{() => null}
+								</ctx.FileUpload>
+							)}
+						</Form.AppField>
+					</Form.Row>
 					<Form.Row>
 						<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 						<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>

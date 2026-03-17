@@ -6,6 +6,7 @@ import { compatibilityCheck, createBeatmap, type IWrapAudioData, type IWrapBeatm
 import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 
 import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
+import { createPlaceholderImageFile } from "$/helpers/file.helpers";
 import { deserializeInfoContents, resolveBeatmapIdFromFilename } from "$/helpers/packaging.helpers";
 import { createSongId, resolveSongId } from "$/helpers/song.helpers";
 import { getAppBeatmapFilestore } from "$/setup";
@@ -70,9 +71,11 @@ export async function importMapArchive(archive: Uint8Array, { loadOptions }: Imp
 		await yieldValue(getFileFromArchive(unzipped, [info.audio.filename])).then(({ data, name, type }) => {
 			return new File([data as BlobPart], name, { type: type ?? "application/octet-stream" });
 		}),
-		await yieldValue(getFileFromArchive(unzipped, [info.coverImageFilename])).then(({ data, name, type }) => {
-			return new File([data as BlobPart], name, { type: type ?? "application/octet-stream" });
-		}),
+		await yieldValue(getFileFromArchive(unzipped, [info.coverImageFilename]))
+			.then(({ data, name, type }) => {
+				return new File([data as BlobPart], name, { type: type ?? "application/octet-stream" });
+			})
+			.catch(() => createPlaceholderImageFile()),
 	]);
 
 	const audioData = await yieldValue(getFileFromArchive(unzipped, [info.audio.audioDataFilename, "BPMInfo.dat"]))
@@ -123,13 +126,7 @@ export async function importMapArchiveToFilestore(archive: Uint8Array, { current
 
 	const song = deserializeInfoContents(info, { readonly });
 
-	const songId = createSongId(song);
-
-	// Song IDs must be unique, and song IDs are generated from the name.
-	// TODO: I could probably just append a `-2` or something, if this constraint turns out to be annoying in some cases
-	if (currentSongIds.some((id) => id === songId)) {
-		throw new Error("You already have a song with this name. Please choose a unique name.");
-	}
+	const songId = createSongId(song, currentSongIds);
 
 	const beatmapCache = beatmaps.reduce((acc: Record<string, IWrapBeatmap>, beatmap) => {
 		acc[resolveBeatmapIdFromFilename(beatmap.filename)] = beatmap;

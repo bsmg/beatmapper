@@ -6,6 +6,7 @@ import { eventTypeRename } from "bsmap/extensions/renamer";
 import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
+import { getAppToaster } from "$/setup";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, SongId } from "$/types";
@@ -107,12 +108,16 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[1] }> = async (args, api) => {
+			const toaster = getAppToaster();
+
 			try {
 				const archive = await args.file.arrayBuffer();
 				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), args.options);
 				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: args.options.readonly } });
-			} catch (e) {
-				return api.rejectWithValue(e);
+			} catch (error) {
+				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				console.error(error);
+				return api.rejectWithValue(error);
 			}
 		};
 

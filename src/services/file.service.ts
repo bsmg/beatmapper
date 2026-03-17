@@ -1,11 +1,9 @@
 import { omit } from "@std/collections/omit";
 import { pick } from "@std/collections/pick";
-import { basename } from "@std/path/basename";
 import type { DeepPartial, InferBeatmapVersion } from "bsmap";
 import { createAudioData, createBeatmap, createInfo, type IWrapAudioData, type IWrapBeatmap, type IWrapInfo, sortObjectFn } from "bsmap";
 import type { Storage, StorageValue } from "unstorage";
 
-import { defaultCoverArtPath } from "$/assets";
 import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
 import { deepAssign, ensureArray, ensureObject } from "$/utils";
 
@@ -56,21 +54,6 @@ export class BeatmapFilestore extends Filestore {
 		}
 	}
 
-	private async saveBackupCoverFile() {
-		// If the user doesn't have a cover image yet, we'll supply a default.
-		// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
-		const coverArtFilename = basename(defaultCoverArtPath);
-		// I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
-		if (await this.storage.hasItem(coverArtFilename)) {
-			const file = this.loadFile<File>(coverArtFilename);
-			return { filename: coverArtFilename, contents: file };
-		}
-		// I need to convert the file URL I have into a Blob, and then save that to indexedDB.
-		const res = await window.fetch(defaultCoverArtPath);
-		const blob = await res.blob();
-		return await this.saveFile(coverArtFilename, blob);
-	}
-
 	async loadSongFile(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
 		return this.loadFile<File>(filename);
@@ -101,7 +84,6 @@ export class BeatmapFilestore extends Filestore {
 		return this.saveFile<T>(filename, contents);
 	}
 	async saveCoverArtFile<T extends File>(songId: SongId, contents: T) {
-		if (!contents) return this.saveBackupCoverFile();
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
 		return this.saveFile<T>(filename, contents);
 	}

@@ -1,13 +1,19 @@
+import { randomIntegerBetween } from "@std/random/integer-between";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { EnvironmentName, NoteJumpSpeed } from "bsmap";
 
 import { DEFAULT_GRID } from "$/constants";
-import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, RequiredKeys } from "$/types";
+import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, RequiredKeys, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 
-export function createSongId(x: Pick<App.ISong, "name">): string {
-	return toPascalCase(x.name);
+export function createSongId(x: Pick<App.ISong, "name">, currentIds?: SongId[]): string {
+	let songId = toPascalCase(x.name);
+
+	if (currentIds?.some((id) => id === songId)) {
+		songId += `-${Math.round(randomIntegerBetween(0, 9999)).toPrecision(4)}`;
+	}
+	return songId;
 }
 export function resolveSongId(x: Pick<App.ISong, "id">): string {
 	return x.id.toString();
