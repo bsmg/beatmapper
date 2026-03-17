@@ -67,6 +67,7 @@ export const fileUpload = defineSlotRecipe({
 			width: "32px",
 			objectFit: "cover",
 			aspectRatio: "square",
+			flexShrink: 0,
 		},
 		itemName: {
 			gridArea: "name",
