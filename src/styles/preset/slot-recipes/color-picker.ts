@@ -77,7 +77,7 @@ export const colorPicker = defineSlotRecipe({
 			width: 0,
 			minWidth: "48px",
 			flex: 1,
-			color: { _placeholder: "fg.muted" },
+			color: { _placeholder: "fg.muted/75" },
 			outline: "none",
 			userSelect: "none",
 		},

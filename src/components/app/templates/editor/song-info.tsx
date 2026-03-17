@@ -61,7 +61,7 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
 						<Dialog
 							title="Create New Beatmap"
-							description="Add a new beatmap file to the map."
+							description="Add a new beatmap file to the mapset."
 							lazyMount
 							unmountOnExit
 							render={(ctx) => (

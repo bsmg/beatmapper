@@ -5,19 +5,19 @@ import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router"
 import type { CharacteristicName, DifficultyName } from "bsmap";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { PropsWithChildren, ReactNode } from "react";
-import { object } from "valibot";
+import { message, object } from "valibot";
 
 import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
 import { useAppForm } from "$/components/ui/compositions";
 import { type createAppBeatmap, resolveBeatmapId } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectAllBeatmaps, selectBeatmapById, selectUsername } from "$/store/selectors";
+import { selectAllBeatmaps, selectUsername } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
 
 const SCHEMA = object({
-	characteristic: CharacteristicNameSchema,
-	difficulty: DifficultyNameSchema,
+	characteristic: message(CharacteristicNameSchema, "You must select a characteristic"),
+	difficulty: message(DifficultyNameSchema, "You must select a difficulty"),
 });
 
 interface Props {
@@ -26,7 +26,7 @@ interface Props {
 	children: (bid: BeatmapId | null) => ReactNode;
 }
 function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChildren, Props>) {
-	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const navigate = useNavigate();
@@ -35,7 +35,6 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 
 	const username = useAppSelector(selectUsername);
 	const beatmaps = useAppSelector((state) => selectAllBeatmaps(state, sid));
-	const currentBeatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
 	const Form = useAppForm({
 		defaultValues: {
@@ -71,7 +70,7 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 		<Form.AppForm>
 			<Form.Root>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={createBeatmapCharacteristicListCollection({ beatmaps })} onChange={() => Form.resetField("difficulty")} />}</Form.AppField>
-				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic })} />}</Form.AppField>
+				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={createBeatmapDifficultyListCollection({ beatmaps, selectedCharacteristic })} />}</Form.AppField>
 				<Form.Submit>{children(beatmapId)}</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>

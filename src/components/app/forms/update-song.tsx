@@ -2,7 +2,7 @@ import { useDialog } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { useBlocker, useParams } from "@tanstack/react-router";
 import type { EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
-import { custom, gtValue, minLength, number, object, pipe, string, transform } from "valibot";
+import { custom, gtValue, number, object, pipe, string, transform } from "valibot";
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
@@ -15,10 +15,10 @@ import { selectSongById, selectSongVolume } from "$/store/selectors";
 import { Text } from "$:styled-system/jsx";
 
 const SCHEMA = object({
-	name: pipe(string(), minLength(1)),
+	name: pipe(string()),
 	subName: pipe(string()),
-	artistName: pipe(string(), minLength(1)),
-	bpm: pipe(number(), gtValue(0)),
+	artistName: pipe(string()),
+	bpm: pipe(number(), gtValue(0, "Value must be greater than 0")),
 	offset: pipe(
 		number(),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
@@ -31,9 +31,9 @@ const SCHEMA = object({
 		number(),
 		transform(() => 0),
 	),
-	previewStartTime: pipe(number()),
-	previewDuration: pipe(number()),
-	environment: custom<EnvironmentV2Name | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
+	previewStartTime: pipe(number(), gtValue(0, "Value must be greater than 0")),
+	previewDuration: pipe(number(), gtValue(0, "Value must be greater than 0")),
+	environment: custom<EnvironmentV2Name | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Value must end with "Environment"'),
 });
 
 function UpdateSongForm() {
@@ -140,13 +140,13 @@ function UpdateSongForm() {
 					<Form.AppField name="artistName">{(ctx) => <ctx.Input label="Song Artist(s)" required />}</Form.AppField>
 				</Form.Row>
 				<Form.Row>
-					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required />}</Form.AppField>
-					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" placeholder="0" />}</Form.AppField>
-					<Form.AppField name="previewStartTime">{(ctx) => <ctx.NumberInput label="Preview start time" required placeholder="(in seconds)" />}</Form.AppField>
-					<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required placeholder="(in seconds)" />}</Form.AppField>
+					<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" required min={0} />}</Form.AppField>
+					<Form.AppField name="offset">{(ctx) => <ctx.NumberInput label="Editor Offset" required placeholder="0" />}</Form.AppField>
+					<Form.AppField name="previewStartTime">{(ctx) => <ctx.NumberInput label="Preview start time" required min={0} />}</Form.AppField>
+					<Form.AppField name="previewDuration">{(ctx) => <ctx.NumberInput label="Preview duration" required min={0} />}</Form.AppField>
 				</Form.Row>
 				<Form.Row>
-					<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Base Environment" required helperText={"If a newer environment is not available to select, simply create a new entry in the combobox."} creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+					<Form.AppField name="environment">{(ctx) => <ctx.Combobox label="Base Environment" required creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 				</Form.Row>
 				<Form.Submit>Update song details</Form.Submit>
 			</Form.Root>

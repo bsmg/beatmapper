@@ -7,7 +7,7 @@ export const input = defineRecipe({
 		lineHeight: 1.5,
 		padding: 0,
 		marginBlockStart: -1,
-		color: { _placeholder: "fg.muted" },
+		color: { _placeholder: "fg.muted/75" },
 		borderBottomWidth: "md",
 		borderColor: { base: "border.default", _focus: "colorPalette.500", _invalid: "fg.error" },
 		outline: "none",

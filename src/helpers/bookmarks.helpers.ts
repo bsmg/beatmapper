@@ -9,8 +9,7 @@ export function resolveBookmarkId<T extends Pick<App.IBookmark, "time">>(x: T) {
 }
 
 export function resolveColorForBookmark(name: string) {
-	const hash = hashCode(name);
-	return `hsl(${Math.abs(hash) % 360}, ${70}%, ${50}%)`;
+	return `hsl(${Math.abs(hashCode(name)) % 360}, 70%, 50%)`;
 }
 
 export const { serialize: serializeCustomBookmark, deserialize: deserializeCustomBookmark } = createEntityFactory<App.IBookmark, { 1: Omit<IV2Bookmark, "_color">; 2: IV2Bookmark; 3: IV3Bookmark }>({

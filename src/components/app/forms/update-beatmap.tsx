@@ -6,7 +6,7 @@ import type { EnvironmentName } from "bsmap";
 import { CharacteristicRename, DifficultyRename, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, custom, minValue, null_, number, object, pipe, string, transform, union } from "valibot";
+import { array, custom, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
@@ -21,9 +21,9 @@ import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	lightshowId: string(),
-	noteJumpSpeed: pipe(number(), minValue(0)),
+	noteJumpSpeed: pipe(number(), gtValue(0, "Value must be greater than 0")),
 	startBeatOffset: number(),
-	environmentName: custom<EnvironmentName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Invalid environment name: Must end with "Environment" as the suffix.'),
+	environmentName: custom<EnvironmentName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Value must end with "Environment"'),
 	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),
@@ -142,28 +142,30 @@ function UpdateBeatmapForm({ bid }: Props) {
 				</Stack>
 				<Stack gap={2}>
 					<Form.Row>
-						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput label="Jump speed" />}</Form.AppField>
-						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput label="Jump offset" step={0.25} />}</Form.AppField>
+						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput label="Jump speed" required min={0} />}</Form.AppField>
+						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput label="Jump offset" required step={0.25} />}</Form.AppField>
 					</Form.Row>
 					<Form.Row>
 						<Stat label="HJD (beats)">{njs.hjd}</Stat>
 						<Stat label="JD (meters)">{njs.jd.toFixed(1)}</Stat>
 						<Stat label="RT (ms)">{(njs.reactionTime * 1000).toFixed(0)}</Stat>
 					</Form.Row>
-					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput label="Mapper(s)" />}</Form.AppField>
-					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput label="Lighter(s)" />}</Form.AppField>
+					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput label="Mapper(s)" required />}</Form.AppField>
+					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput label="Lighter(s)" required />}</Form.AppField>
 					<Collapsible
 						open={showAdvancedControls}
 						onOpenChange={(x) => setShowAdvancedControls(x.open)}
 						render={() => (
 							<Stack gap={2}>
 								<Form.Row>
-									<Form.AppField name="lightshowId">{(ctx) => <ctx.Combobox key={JSON.stringify(lightshowIds)} label="Lightshow ID" creatable collection={LIGHTSHOW_COLLECTION} />}</Form.AppField>
-									<Form.AppField name="customLabel">{(ctx) => <ctx.Input label="Custom label" />}</Form.AppField>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Combobox key={JSON.stringify(lightshowIds)} label="Lightshow" required creatable collection={LIGHTSHOW_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="customLabel">{(ctx) => <ctx.Input label="Custom Label" />}</Form.AppField>
 								</Form.Row>
 								<Form.Row>
-									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox creatable label="Environment Override" helperText={"If a newer environment is not available to select, create a new entry in the combobox."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
-									<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Combobox key={JSON.stringify(colorSchemeIds)} creatable clearable label="Color Scheme Override" collection={COLOR_SCHEME_COLLECTION} onValueCreate={(value) => dispatch(addColorScheme({ songId: sid, colorSchemeId: value }))} />}</Form.AppField>
+									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox label="Environment Override" required creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="colorSchemeName">
+										{(ctx) => <ctx.Combobox key={JSON.stringify(colorSchemeIds)} label="Color Scheme Override" required placeholder="Unset" clearable creatable collection={COLOR_SCHEME_COLLECTION} onValueCreate={(value) => dispatch(addColorScheme({ songId: sid, colorSchemeId: value }))} />}
+									</Form.AppField>
 								</Form.Row>
 							</Stack>
 						)}

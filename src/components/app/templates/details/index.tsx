@@ -43,7 +43,7 @@ function SongDetails() {
 							<Heading rank={2}>Beatmaps</Heading>
 							<Dialog
 								title="Create New Beatmap"
-								description="Add a new beatmap file to the map."
+								description="Add a new beatmap file to the mapset."
 								lazyMount
 								unmountOnExit
 								render={(ctx) => (

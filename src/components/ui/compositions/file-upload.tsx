@@ -80,6 +80,8 @@ function List({ accept, deletable, children }: FileUploadProps & ListComposableP
 		}
 	}, [toaster, api.rejectedFiles, accept]);
 
+	if (!api.acceptedFiles.length) return null;
+
 	return (
 		<Builder.ItemGroup>
 			<For each={api.acceptedFiles}>

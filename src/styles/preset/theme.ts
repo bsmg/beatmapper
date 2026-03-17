@@ -1,5 +1,4 @@
 import { defineAnimationStyles, defineKeyframes, defineLayerStyles, defineSemanticTokens, defineTextStyles, defineTokens } from "@pandacss/dev";
-import { DifficultyName } from "bsmap";
 
 export const tokens = defineTokens({
 	colors: {
@@ -100,13 +99,6 @@ export const semanticTokens = defineSemanticTokens({
 			subtle: { value: { _light: "{colors.slate.300}", _dark: "{colors.slate.700}" } },
 			disabled: { value: { _light: "{colors.slate.400}", _dark: "{colors.slate.600}" } },
 			error: { value: { _light: "{colors.red.500}", _dark: "{colors.red.500}" } },
-		},
-		difficulty: {
-			[DifficultyName[0]]: { value: "#4AFFBE" },
-			[DifficultyName[1]]: { value: "#FCFF6A" },
-			[DifficultyName[2]]: { value: "#4AE9FF" },
-			[DifficultyName[3]]: { value: "#FF4A6B" },
-			[DifficultyName[4]]: { value: "#FF5FF9" },
 		},
 	},
 	fonts: {
