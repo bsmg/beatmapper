@@ -188,7 +188,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				offset: data.difficulties[0].customData._editorOffset ?? 0,
 				previewStartTime: data.audio.previewStartTime,
 				previewDuration: data.audio.previewDuration,
-				environment: patchEnvironmentName(data.environmentBase.normal ?? EnvironmentName[0]),
+				environment: patchEnvironmentName(data.environmentNames[0] ?? data.environmentBase.normal ?? EnvironmentName[0]),
 				songFilename: data.audio.filename,
 				coverArtFilename: data.coverImageFilename,
 				difficultiesById: beatmapsById,
