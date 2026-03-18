@@ -31,10 +31,10 @@ In Beat Saber, every component of an environment is controlled by a unique event
 - Some components have behaviors that can be controlled with a provided "value", like the speed of the side lasers.
 - Some components have premade effects that can be "triggered" on-demand, like the rotation and zoom effects for cascading ring trails.
 
-In Beatmapper's events view, every event type gets its own **track**. A track is a horizontal row that displays the events over a given period of time. 
-For example, the "Large ring" track shows every "ring rotation" event, represented as a green vertical bar.
+In Beatmapper's "Lightshow" view, every event type gets its own **track**. A track is a horizontal row that displays the events over a given period of time. 
+For example, the "Ring Rotation" track represents every event as a green vertical bar.
 
-The events view collects all environments tracks in a **table**. The table shows a specific **window** of time, measured in beats. 
+The "Lightshow" view collects all environments tracks in a **table**. The table shows a specific **window** of time, measured in beats. 
 In the screenshot above, we see beats 0 through 8, since we're editing the very first section of the song.
 
 A thick vertical yellow bar represents the song's current position. 
@@ -239,13 +239,13 @@ You can toggle it on or off with the <Shortcut>z</Shortcut> key.
 
 ### Mirror Lock
 
-Certain environments feature symmetrical components, such as left and right lasers, where each element has its own respective event tracks. 
-Often this flexibility is awesome, and allows for some great lighting effects, but sometimes you want to operate on these elements at the same time. 
-It can be tedious recreating laser events and speeds twice for each side.
+Certain environments feature symmetrical components, such as left and right lasers, where you may want to operate on these tracks at the same time. 
+After all, it can be tedious recreating laser events and speeds twice for each side.
 
-The "laser lock" disables the "right-side" tracks, and copies all actions you make in the left-side tracks to the corresponding right-side ones:
+The "laser lock" will colorize every track based on whether it has an associated symmetrical neighbor, 
+and any actions you make in one track will be copied to its corresponding symmetrical track.
 
-![](../../../media/images/event-mirror-lock.gif)
+![](../../../media/images/event-mirror-lock.png)
 
 You can toggle it on or off with the <Shortcut>x</Shortcut> key.
 
