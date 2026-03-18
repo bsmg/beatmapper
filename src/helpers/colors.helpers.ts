@@ -1,7 +1,7 @@
 import type { EnvironmentName, IColor } from "bsmap";
 import { ColorScheme, colorToHex, EnvironmentSchemeName, type IV2ColorScheme } from "bsmap";
 
-import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "$/types";
+import { BasicEventEffect, ColorSchemeKey, type IColorScheme, ObjectTool } from "$/types";
 import { token } from "$:styled-system/tokens";
 
 export const DEFAULT_COLOR_SCHEME: Required<IV2ColorScheme> = {
@@ -33,18 +33,12 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 		case ObjectTool.OBSTACLE: {
 			return colorScheme.obstacleColor ?? colorToHex(DEFAULT_COLOR_SCHEME._obstacleColor).slice(0, 7);
 		}
-		case App.EventColor.PRIMARY:
-		case EventColor.PRIMARY:
 		case ColorSchemeKey.ENV_LEFT: {
 			return colorScheme.envColorLeft ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorLeft).slice(0, 7);
 		}
-		case App.EventColor.SECONDARY:
-		case EventColor.SECONDARY:
 		case ColorSchemeKey.ENV_RIGHT: {
 			return colorScheme.envColorRight ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorRight).slice(0, 7);
 		}
-		case App.EventColor.WHITE:
-		case EventColor.WHITE:
 		case ColorSchemeKey.ENV_WHITE: {
 			return colorScheme.envColorWhite ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorWhite).slice(0, 7);
 		}
@@ -57,13 +51,13 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 		case ColorSchemeKey.BOOST_WHITE: {
 			return colorScheme.envColorWhiteBoost ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorWhiteBoost).slice(0, 7);
 		}
-		case App.BasicEventEffect.TRIGGER: {
+		case BasicEventEffect.TRIGGER: {
 			return token("colors.green.500");
 		}
-		case App.BasicEventEffect.VALUE: {
+		case BasicEventEffect.VALUE: {
 			return token("colors.blue.500");
 		}
-		case App.BasicEventEffect.OFF: {
+		case BasicEventEffect.OFF: {
 			return token("colors.slate.400");
 		}
 		default: {

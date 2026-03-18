@@ -23,7 +23,7 @@ import {
 	selectEventTracksForEnvironment,
 	selectToggleAtBeat,
 } from "$/store/selectors";
-import { App } from "$/types";
+import { type App, BasicEventEffect, EventColor } from "$/types";
 import { clamp, cycle, floorToNearest, isColorDark, normalize } from "$/utils";
 import { createBackgroundBoxes, resolveColorForLightState } from "./track.helpers";
 
@@ -37,16 +37,16 @@ function resolveBackgroundForEvent(data: IWrapBasicEvent, options: Parameters<ty
 	const toBlack = `color-mix(in srgb, ${color}, black 30%)`;
 
 	switch (effect) {
-		case App.BasicEventEffect.ON: {
+		case BasicEventEffect.ON: {
 			return { value: color, style: color };
 		}
-		case App.BasicEventEffect.FLASH: {
+		case BasicEventEffect.FLASH: {
 			return { value: color, style: `linear-gradient(90deg, ${toBlack}, ${toWhite})` };
 		}
-		case App.BasicEventEffect.FADE: {
+		case BasicEventEffect.FADE: {
 			return { value: color, style: `linear-gradient(-90deg, ${toBlack}, ${toWhite})` };
 		}
-		case App.BasicEventEffect.TRANSITION: {
+		case BasicEventEffect.TRANSITION: {
 			return { value: color, style: `linear-gradient(0deg, ${toBlack}, ${toWhite})` };
 		}
 		default: {
@@ -135,7 +135,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 					return createBasicEvent({ time, type: trackId, value: value });
 				}
 				default: {
-					const value = serializeBasicEventValue({ effect: App.BasicEventEffect.TRIGGER }, { tracks });
+					const value = serializeBasicEventValue({ effect: BasicEventEffect.TRIGGER }, { tracks });
 					return createBasicEvent({ time, type: trackId, value: value });
 				}
 			}
@@ -151,7 +151,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 			onSelect: (data) => dispatch(selectEvent({ query: data, environment, areLasersLocked })),
 			onDeselect: (data) => dispatch(deselectEvent({ query: data, environment, areLasersLocked })),
 			onPick: (data) => {
-				const MIRRORABLE_COLORS = Object.values(App.EventColor).slice(0, -1);
+				const MIRRORABLE_COLORS = Object.values(EventColor).slice(0, -1);
 
 				switch (tracks[trackId].type) {
 					case 0: {

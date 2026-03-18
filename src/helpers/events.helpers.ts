@@ -2,7 +2,7 @@ import { type EnvironmentName, type IBasicTrack, type ITrackDefinitions, type IW
 import { check, number, pipe } from "valibot";
 
 import { BasicTrackMirror, BasicTrackOrder } from "$/constants";
-import { App } from "$/types";
+import { BasicEventEffect, EventColor } from "$/types";
 import { createDataFactory } from "./factory.helpers";
 
 export function isLightTrack<Track extends IBasicTrack>(trackId: number, tracks: ITrackDefinitions<Track>) {
@@ -55,14 +55,14 @@ export function isBasicValueEvent<T extends Pick<IWrapBasicEvent, "type">, Track
 	return isBasicEvent(data) && isValueTrack(resolveTrackIdForEvent(data), tracks);
 }
 
-export function isLightEffectActive(effect: App.BasicEventEffect) {
-	return effect === App.BasicEventEffect.ON || effect === App.BasicEventEffect.FLASH || effect === App.BasicEventEffect.TRANSITION;
+export function isLightEffectActive(effect: BasicEventEffect) {
+	return effect === BasicEventEffect.ON || effect === BasicEventEffect.FLASH || effect === BasicEventEffect.TRANSITION;
 }
 
 export function resolveBasicEventColor<T extends Pick<IWrapBasicEvent, "value">>(data: T) {
-	if (data.value > 8) return App.EventColor.WHITE;
-	if (data.value > 4) return App.EventColor.PRIMARY;
-	if (data.value > 0) return App.EventColor.SECONDARY;
+	if (data.value > 8) return EventColor.WHITE;
+	if (data.value > 4) return EventColor.PRIMARY;
+	if (data.value > 0) return EventColor.SECONDARY;
 	return null;
 }
 export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" | "value">, Track extends IBasicTrack>(data: T, tracks: ITrackDefinitions<Track>) {
@@ -70,25 +70,25 @@ export function resolveBasicEventEffect<T extends Pick<IWrapBasicEvent, "type" |
 
 	switch (tracks[trackId]?.type) {
 		case -1: {
-			return App.BasicEventEffect.TRIGGER;
+			return BasicEventEffect.TRIGGER;
 		}
 		case 0: {
-			if (data.value === 0) return App.BasicEventEffect.OFF;
-			if (data.value % 4 === 1) return App.BasicEventEffect.ON;
-			if (data.value % 4 === 2) return App.BasicEventEffect.FLASH;
-			if (data.value % 4 === 3) return App.BasicEventEffect.FADE;
-			if (data.value % 4 === 0) return App.BasicEventEffect.TRANSITION;
-			return App.BasicEventEffect.OFF;
+			if (data.value === 0) return BasicEventEffect.OFF;
+			if (data.value % 4 === 1) return BasicEventEffect.ON;
+			if (data.value % 4 === 2) return BasicEventEffect.FLASH;
+			if (data.value % 4 === 3) return BasicEventEffect.FADE;
+			if (data.value % 4 === 0) return BasicEventEffect.TRANSITION;
+			return BasicEventEffect.OFF;
 		}
 		default: {
-			return App.BasicEventEffect.VALUE;
+			return BasicEventEffect.VALUE;
 		}
 	}
 }
 
 interface IBasicEventValue {
-	effect: App.BasicEventEffect;
-	color?: App.EventColor | null;
+	effect: BasicEventEffect;
+	color?: EventColor | null;
 	value?: number;
 }
 export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, { tracks: ITrackDefinitions<IBasicTrack> }, { tracks: ITrackDefinitions<IBasicTrack>; trackId: number }, { tracks: ITrackDefinitions<IBasicTrack>; trackId: number }>({
@@ -105,23 +105,23 @@ export const { serialize: serializeBasicEventValue, deserialize: deserializeBasi
 	},
 	container: {
 		serialize: (data) => {
-			if (data.effect === App.BasicEventEffect.TRIGGER) return 0;
-			if (data.effect === App.BasicEventEffect.VALUE && data.value) return data.value;
-			if (!data.color || !data.effect || data.effect === App.BasicEventEffect.OFF) return 0;
-			const c = Object.values([App.EventColor.SECONDARY, App.EventColor.PRIMARY, App.EventColor.WHITE]).indexOf(data.color);
-			const e = Object.values<App.BasicEventEffect>([App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.FADE, App.BasicEventEffect.TRANSITION]).indexOf(data.effect);
+			if (data.effect === BasicEventEffect.TRIGGER) return 0;
+			if (data.effect === BasicEventEffect.VALUE && data.value) return data.value;
+			if (!data.color || !data.effect || data.effect === BasicEventEffect.OFF) return 0;
+			const c = Object.values([EventColor.SECONDARY, EventColor.PRIMARY, EventColor.WHITE]).indexOf(data.color);
+			const e = Object.values<BasicEventEffect>([BasicEventEffect.ON, BasicEventEffect.FLASH, BasicEventEffect.FADE, BasicEventEffect.TRANSITION]).indexOf(data.effect);
 			return 4 * c + (e + 1);
 		},
 		deserialize: (value, { tracks, trackId }) => {
 			switch (tracks[trackId].type) {
 				case -1: {
-					return { effect: App.BasicEventEffect.TRIGGER };
+					return { effect: BasicEventEffect.TRIGGER };
 				}
 				case 0: {
 					return { effect: resolveBasicEventEffect({ type: trackId, value }, tracks), color: resolveBasicEventColor({ value }) };
 				}
 				default: {
-					return { effect: App.BasicEventEffect.VALUE, value };
+					return { effect: BasicEventEffect.VALUE, value };
 				}
 			}
 		},

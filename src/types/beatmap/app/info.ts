@@ -1,16 +1,8 @@
-import type { EntityId } from "@reduxjs/toolkit";
 import type { CharacteristicName, DifficultyName, EnvironmentName, EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 
-import type { IColorScheme, IEntityMap, IGrid } from "$/types/editor";
+import type { BeatmapId, IColorScheme, IEntityMap, IGrid, SongId } from "$/types/editor";
 
-export type SongId = EntityId;
-export type BeatmapId = EntityId;
-
-export interface IModule {
-	isEnabled: boolean;
-}
-
-type IWrapModule<T> = IModule & T;
+type IWrapModule<T> = { isEnabled: boolean } & T;
 
 export interface IModSettings {
 	mappingExtensions: IWrapModule<Partial<IGrid>>;
@@ -31,7 +23,7 @@ export interface IBeatmap {
 }
 
 export interface ISong {
-	id: EntityId;
+	id: SongId;
 	name: string;
 	subName: string;
 	artistName: string;

@@ -17,7 +17,7 @@ export interface BaseNoteProps<T extends IWrapBaseNote> {
 	children?: (data: App.IWrapEditorObject<T>, ctx: { transparent: boolean } & Pick<ComponentProps<typeof Obj>, "onPointerDown" | "onPointerOver" | "onPointerOut" | "onWheel">) => ReactNode;
 }
 
-function BaseNote<T extends App.IBaseNote>({ path, children, data, position, rotation, scale, color, metalness, roughness, transparent, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
+function BaseNote<T extends IWrapBaseNote>({ path, children, data, position, rotation, scale, color, metalness, roughness, transparent, ...rest }: Assign<ComponentProps<typeof Obj>, BaseNoteProps<T>>) {
 	return (
 		<group userData={data} position={position} rotation={rotation} scale={scale}>
 			<Obj key={path} castShadow scale={0.5} {...rest} path={path}>

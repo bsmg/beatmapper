@@ -31,7 +31,7 @@ function Glow({ size, bloom, light, ...rest }: Assign<ComponentProps<"mesh">, Pr
 						uniforms: {
 							c: { value: maxCValue },
 							p: { value: undefined },
-							glowColor: { value: new Color(light.color) },
+							glowColor: { value: new Color(light.prevState.color) },
 							viewVector: { value: camera.position },
 						},
 						vertexShader: glowVertexShader,
@@ -41,7 +41,7 @@ function Glow({ size, bloom, light, ...rest }: Assign<ComponentProps<"mesh">, Pr
 						transparent: true,
 					},
 				]}
-				uniforms-glowColor-value={new Color(light.color)}
+				uniforms-glowColor-value={new Color(light.prevState.color)}
 				uniforms-p-value={lightSpring.opacity.to((o) => normalize(o, 0, 1, ...PValueRange))}
 				uniforms-c-value={lightSpring.opacity.to((o) => normalize(o, 0, 1, 0.1, maxCValue))}
 			/>

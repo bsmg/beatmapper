@@ -2,7 +2,7 @@ import { distinct } from "@std/collections/distinct";
 import { distinctBy } from "@std/collections/distinct-by";
 import { colorToHex, createBeatmap, createInfo, createInfoBeatmap, EnvironmentName, type IV2CustomDataDifficulty, type IV2CustomDataInfoDifficulty, type IWrapBeatmap, type IWrapInfo, type IWrapInfoColorScheme, sortV2ObjectFn, sortV3ObjectFn, toColorObject } from "bsmap";
 
-import { type App, ColorSchemeKey, type IColorScheme, type IEntityMap } from "$/types";
+import { type App, ColorSchemeKey } from "$/types";
 import { deepAssign, ensureArray, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark, resolveBookmarkId, serializeCustomBookmark } from "./bookmarks.helpers";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
@@ -117,7 +117,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 			});
 		},
 		deserialize: function deserializeInfoContents(data: IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {
-			const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<IColorScheme>, scheme) => {
+			const colorSchemesById = data.colorSchemes.reduce((acc: App.ISong["colorSchemesById"], scheme) => {
 				acc[scheme.name] = {
 					colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
 					colorRight: colorToHex(scheme.saberRightColor).slice(0, 7),
@@ -132,7 +132,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				return acc;
 			}, {});
 
-			const beatmapsById = data.difficulties.reduce((acc: IEntityMap<App.IBeatmap>, beatmap) => {
+			const beatmapsById = data.difficulties.reduce((acc: App.ISong["difficultiesById"], beatmap) => {
 				const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
 
 				acc[beatmapId] = createAppBeatmap({

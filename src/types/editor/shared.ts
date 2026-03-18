@@ -1,4 +1,9 @@
+import type { EntityId } from "@reduxjs/toolkit";
+
 import type { Member } from "$/types/utils";
+
+export type SongId = EntityId;
+export type BeatmapId = EntityId;
 
 export const View = {
 	DETAILS: "details",
@@ -8,72 +13,6 @@ export const View = {
 	DOWNLOAD: "download",
 } as const;
 export type View = Member<typeof View>;
-
-export const ObjectType = {
-	NOTE: "block",
-	BOMB: "mine",
-	OBSTACLE: "obstacle",
-} as const;
-export type ObjectType = Member<typeof ObjectType>;
-
-export const ObjectTool = {
-	LEFT_NOTE: "left-block",
-	RIGHT_NOTE: "right-block",
-	BOMB_NOTE: "mine",
-	OBSTACLE: "obstacle",
-} as const;
-export type ObjectTool = Member<typeof ObjectTool>;
-
-export const ObjectSelectionMode = {
-	SELECT: "select",
-	DESELECT: "deselect",
-	DELETE: "delete",
-} as const;
-export type ObjectSelectionMode = Member<typeof ObjectSelectionMode>;
-
-export const NotePlacementMode = {
-	NORMAL: "normal",
-	EXTENSIONS: "mapping-extensions",
-} as const;
-export type NotePlacementMode = Member<typeof NotePlacementMode>;
-
-export const ObstaclePlacementMode = {
-	LEGACY: "legacy",
-	MODERN: "modern",
-	VISUAL: "visual",
-	EXTENSIONS: "mapping-extensions",
-} as const;
-export type ObstaclePlacementMode = Member<typeof ObstaclePlacementMode>;
-
-export const EventTool = {
-	ON: "on",
-	OFF: "off",
-	FLASH: "flash",
-	FADE: "fade",
-	TRANSITION: "transition",
-} as const;
-export type EventTool = Member<typeof EventTool>;
-
-export const EventColor = {
-	PRIMARY: "red",
-	SECONDARY: "blue",
-	WHITE: "white",
-} as const;
-export type EventColor = Member<typeof EventColor>;
-
-export const EventEditMode = {
-	PLACE: "place",
-	SELECT: "select",
-} as const;
-export type EventEditMode = Member<typeof EventEditMode>;
-
-export const TrackType = {
-	LIGHT: "blocks",
-	TRIGGER: "trigger",
-	VALUE: "speed",
-	UNSUPPORTED: "unknown",
-} as const;
-export type TrackType = Member<typeof TrackType>;
 
 export const ColorSchemeKey = {
 	SABER_LEFT: "colorLeft",
@@ -87,3 +26,15 @@ export const ColorSchemeKey = {
 	BOOST_WHITE: "envColorWhiteBoost",
 } as const;
 export type ColorSchemeKey = Member<typeof ColorSchemeKey>;
+
+export type IColorScheme = {
+	[ColorSchemeKey.SABER_LEFT]: string;
+	[ColorSchemeKey.SABER_RIGHT]: string;
+	[ColorSchemeKey.OBSTACLE]: string;
+	[ColorSchemeKey.ENV_LEFT]: string;
+	[ColorSchemeKey.ENV_RIGHT]: string;
+	[ColorSchemeKey.ENV_WHITE]?: string;
+	[ColorSchemeKey.BOOST_LEFT]: string;
+	[ColorSchemeKey.BOOST_RIGHT]: string;
+	[ColorSchemeKey.BOOST_WHITE]?: string;
+};

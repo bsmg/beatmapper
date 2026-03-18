@@ -7,3 +7,6 @@ type SwizzledTransforms = {
 };
 
 export type ThreeProps<T extends keyof ThreeElements> = Expand<ThreeElements[T] & SwizzledTransforms>;
+
+// biome-ignore lint/suspicious/noExplicitAny: vendored from unstorage
+export type MaybeDefined<T> = T extends any ? T : any;

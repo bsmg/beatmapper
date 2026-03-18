@@ -3,7 +3,7 @@ import { distinct } from "@std/collections/distinct";
 import type { Storage, StorageValue } from "unstorage";
 
 import { rehydrate } from "$/store/actions";
-import type { MaybeDefined } from "$/types";
+import type { MaybeDefined } from "$/types/vendor";
 
 // the common architecture other packages use for persisting redux state is to clone the entire state object into storage and then hydrate the redux store all at once.
 // this is a really bad means of persistence for many reasons:

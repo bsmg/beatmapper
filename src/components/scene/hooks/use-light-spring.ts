@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 import { useAppSelector } from "$/store/hooks";
 import { selectBloomEnabled, selectCursorPositionInBeats, selectPlaying } from "$/store/selectors";
-import { App } from "$/types";
+import { BasicEventEffect } from "$/types";
 import { lerp, lerpColor } from "$/utils";
 import type { useLightEffect } from "./environment.hooks";
 
@@ -48,7 +48,7 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 		const { lastEffect, prevState } = light;
 
 		switch (lastEffect) {
-			case App.BasicEventEffect.FLASH: {
+			case BasicEventEffect.FLASH: {
 				api.start({
 					from: { emissive: prevState.color, emissiveIntensity: prevState.brightness * 1.5, opacity: 1 },
 					to: { emissive: prevState.color, emissiveIntensity: prevState.brightness, opacity: 1 },
@@ -57,7 +57,7 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 				});
 				break;
 			}
-			case App.BasicEventEffect.FADE: {
+			case BasicEventEffect.FADE: {
 				api.start({
 					from: { emissive: prevState.color, emissiveIntensity: prevState.brightness * 1.5, opacity: 1 },
 					to: { emissive: prevState.color, emissiveIntensity: 0, opacity: 0 },
@@ -66,12 +66,12 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 				});
 				break;
 			}
-			case App.BasicEventEffect.OFF: {
+			case BasicEventEffect.OFF: {
 				api.start({ emissive: prevState.color, emissiveIntensity: 0, opacity: 0, immediate: true });
 				break;
 			}
-			case App.BasicEventEffect.ON:
-			case App.BasicEventEffect.TRANSITION: {
+			case BasicEventEffect.ON:
+			case BasicEventEffect.TRANSITION: {
 				api.start({ emissive: prevState.color, emissiveIntensity: prevState.brightness, opacity: prevState.brightness > 0 ? 1 : 0, immediate: true });
 				break;
 			}
@@ -81,7 +81,7 @@ export function useLightSpring({ light }: UseLightSpringOptions) {
 	useFrame(() => {
 		const { time, duration, nextEffect, prevState, nextState } = light;
 
-		if (nextEffect === App.BasicEventEffect.TRANSITION && duration > 0) {
+		if (nextEffect === BasicEventEffect.TRANSITION && duration > 0) {
 			const ratio = Math.max(0, Math.min(1, (cursorPositionInBeats - time) / duration));
 
 			const startOpacity = prevState.brightness > 0 ? 1 : 0;

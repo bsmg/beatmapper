@@ -91,8 +91,8 @@ describe("Grid helpers", () => {
 		const colIndex = 2;
 		const numCols = 5;
 
-		const narrowX = convertGridColumn(colIndex, { numCols, colWidth: 0.5 });
-		const wideX = convertGridColumn(colIndex, { numCols, colWidth: 2.5 });
+		const narrowX = convertGridColumn(colIndex, { numCols, colWidth: 0.5, colOffset: 0 });
+		const wideX = convertGridColumn(colIndex, { numCols, colWidth: 2.5, colOffset: 0 });
 
 		expect(narrowX).toEqual(wideX);
 	});
@@ -100,8 +100,8 @@ describe("Grid helpers", () => {
 		const rowIndex = 0;
 		const numRows = 3;
 
-		const narrowY = convertGridRow(rowIndex, { numRows, rowHeight: 0.5 });
-		const wideY = convertGridRow(rowIndex, { numRows, rowHeight: 3 });
+		const narrowY = convertGridRow(rowIndex, { numRows, rowHeight: 0.5, rowOffset: 0 });
+		const wideY = convertGridRow(rowIndex, { numRows, rowHeight: 3, rowOffset: 0 });
 
 		expect(narrowY).toEqual(wideY);
 	});

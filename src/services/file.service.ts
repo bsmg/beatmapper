@@ -4,7 +4,8 @@ import type { DeepPartial, InferBeatmapVersion } from "bsmap";
 import { createAudioData, createBeatmap, createInfo, type IWrapAudioData, type IWrapBeatmap, type IWrapInfo, sortObjectFn } from "bsmap";
 import type { Storage, StorageValue } from "unstorage";
 
-import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
+import type { App, BeatmapId, SongId } from "$/types";
+import type { MaybeDefined } from "$/types/vendor";
 import { deepAssign, ensureArray, ensureObject } from "$/utils";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;

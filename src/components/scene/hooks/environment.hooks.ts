@@ -7,7 +7,7 @@ import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { resolveBasicEventColor, resolveBasicEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventTracksForEnvironment, selectPlaying } from "$/store/selectors";
-import { App, type ILightState } from "$/types";
+import { type App, BasicEventEffect, type EventColor, type ILightState } from "$/types";
 
 interface UseLightEffectOptions {
 	lastEvent: IWrapBasicEvent | null;
@@ -21,19 +21,19 @@ export function useLightEffect({ lastEvent, nextEvent, lastBoostEvent }: UseLigh
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
 	const deriveEffectForEvent = useCallback(
-		(event: App.IBasicEvent | null): App.BasicEventEffect => {
+		(event: App.IBasicEvent | null): BasicEventEffect => {
 			if (!event) {
-				return App.BasicEventEffect.OFF;
+				return BasicEventEffect.OFF;
 			}
 			return resolveBasicEventEffect(event, tracks);
 		},
 		[tracks],
 	);
 	const deriveColorForEvent = useCallback(
-		(event: App.IBasicEvent | null): App.EventColor | null => {
+		(event: App.IBasicEvent | null): EventColor | null => {
 			const effect = deriveEffectForEvent(event);
 
-			if (!event || effect === App.BasicEventEffect.OFF) {
+			if (!event || effect === BasicEventEffect.OFF) {
 				return null;
 			}
 			return resolveBasicEventColor(event);
@@ -44,7 +44,7 @@ export function useLightEffect({ lastEvent, nextEvent, lastBoostEvent }: UseLigh
 		(event: App.IBasicEvent | null): number => {
 			const effect = deriveEffectForEvent(event);
 
-			if (!event || effect === App.BasicEventEffect.OFF) {
+			if (!event || effect === BasicEventEffect.OFF) {
 				return 0;
 			}
 			return event.floatValue;

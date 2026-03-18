@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
 import { serializeBasicEventValue } from "$/helpers/events.helpers";
-import { App, type IBackgroundBox } from "$/types";
+import { BasicEventEffect, EventColor, type IBackgroundBox } from "$/types";
 import { lerp, lerpColor } from "$/utils";
 import { createBackgroundBoxes } from "./track.helpers";
 
@@ -26,13 +26,13 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 12,
 				time: 3,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 			createBasicEvent({
 				type: 12,
 				time: 4,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.OFF }, { tracks }),
 			}),
 		];
 
@@ -62,7 +62,7 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 0,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 		];
@@ -88,13 +88,13 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 8,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 			createBasicEvent({
 				type: 2,
 				time: 12,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.OFF }, { tracks }),
 			}),
 		];
 
@@ -119,13 +119,13 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 0,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 			createBasicEvent({
 				type: 2,
 				time: 12,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 		];
@@ -157,19 +157,19 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 8,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 			createBasicEvent({
 				type: 2,
 				time: 12,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.SECONDARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.SECONDARY }, { tracks }),
 				floatValue: 1,
 			}),
 			createBasicEvent({
 				type: 2,
 				time: 14,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.OFF }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.OFF }, { tracks }),
 			}),
 		];
 
@@ -200,13 +200,13 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 0,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 0.5,
 			}),
 			createBasicEvent({
 				type: 2,
 				time: 4,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 0.25,
 			}),
 		];
@@ -240,7 +240,7 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 16,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.TRANSITION, color: App.EventColor.SECONDARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.TRANSITION, color: EventColor.SECONDARY }, { tracks }),
 				floatValue: 1.0,
 			}),
 		];
@@ -269,7 +269,7 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 8,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 1,
 			}),
 		];
@@ -311,13 +311,13 @@ describe(createBackgroundBoxes.name, () => {
 			createBasicEvent({
 				type: 2,
 				time: 0,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.ON, color: App.EventColor.PRIMARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.ON, color: EventColor.PRIMARY }, { tracks }),
 				floatValue: 0.0,
 			}),
 			createBasicEvent({
 				type: 2,
 				time: 8,
-				value: serializeBasicEventValue({ effect: App.BasicEventEffect.TRANSITION, color: App.EventColor.SECONDARY }, { tracks }),
+				value: serializeBasicEventValue({ effect: BasicEventEffect.TRANSITION, color: EventColor.SECONDARY }, { tracks }),
 				floatValue: 1.0,
 			}),
 		];

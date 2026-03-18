@@ -2,7 +2,7 @@ import { type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IW
 
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEffectActive, isLightTrack, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
-import { App } from "$/types";
+import { BasicEventEffect } from "$/types";
 import { ColorSchemeKey, EventColor, type IBackgroundBox, type ILightState } from "$/types/editor";
 import { clamp, lerp, lerpColor } from "$/utils";
 
@@ -16,7 +16,7 @@ const BOOST_COLOR_KEY_MAP = {
 	[EventColor.SECONDARY]: [ColorSchemeKey.BOOST_RIGHT],
 	[EventColor.WHITE]: [ColorSchemeKey.BOOST_WHITE],
 };
-export function resolveColorForLightState({ color, isBoosted }: { color: App.EventColor | null; isBoosted: boolean }, options: ColorResolverOptions): string | null {
+export function resolveColorForLightState({ color, isBoosted }: { color: EventColor | null; isBoosted: boolean }, options: ColorResolverOptions): string | null {
 	const key = color !== null ? (isBoosted ? BOOST_COLOR_KEY_MAP : COLOR_KEY_MAP)[color][0] : null;
 	if (!key) return null;
 	return resolveColorForItem(key, options);
@@ -28,8 +28,8 @@ interface StateResolverContext extends ColorResolverOptions {
 }
 export function deriveLightStateAtBeat(
 	targetBeat: number,
-	currentEvent: { data: IWrapBasicEvent; effect: App.BasicEventEffect; color: EventColor | null } | undefined,
-	nextEvent: { data: IWrapBasicEvent; effect: App.BasicEventEffect; color: EventColor | null } | undefined,
+	currentEvent: { data: IWrapBasicEvent; effect: BasicEventEffect; color: EventColor | null } | undefined,
+	nextEvent: { data: IWrapBasicEvent; effect: BasicEventEffect; color: EventColor | null } | undefined,
 	{ initialLightState, offsetInBeats = 0, isBoosted, ...options }: StateResolverContext & { isBoosted: boolean },
 ): IBackgroundBox["startState" | "endState"] {
 	const isActive = currentEvent ? isLightEffectActive(currentEvent.effect) : false;
@@ -38,7 +38,7 @@ export function deriveLightStateAtBeat(
 	const startBrightness = isActive ? (currentEvent?.data.floatValue ?? initialLightState.brightness ?? 0) : 0;
 	const startColor = currentEvent?.color ? resolveColorForLightState({ color: currentEvent.color, isBoosted }, options) : initialLightState.color;
 
-	if (nextEvent?.effect === App.BasicEventEffect.TRANSITION) {
+	if (nextEvent?.effect === BasicEventEffect.TRANSITION) {
 		const duration = nextEvent.data.time - startTime;
 		const ratio = duration > 0 ? clamp((targetBeat - startTime) / duration, 0, 1) : 1;
 
@@ -89,7 +89,7 @@ export function createBackgroundBoxes(trackId: number, { tracks, basicEvents, bo
 
 		const currentEvent = [...sortedEvents].reverse().find((e) => e.data.time <= startPoint);
 		const nextEvent = sortedEvents.find((e) => e.data.time > startPoint);
-		const isTransition = nextEvent?.effect === App.BasicEventEffect.TRANSITION;
+		const isTransition = nextEvent?.effect === BasicEventEffect.TRANSITION;
 
 		const isBoosted = deriveBoostStateAtBeat(startPoint, boostEvents, false);
 
