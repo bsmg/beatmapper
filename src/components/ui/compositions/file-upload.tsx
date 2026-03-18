@@ -102,7 +102,7 @@ function List({ accept, deletable, children }: FileUploadProps & ListComposableP
 						>
 							{(renderable) => <Builder.ItemPreview type=".*">{renderable}</Builder.ItemPreview>}
 						</Show>
-						<Builder.ItemName />
+						<Builder.ItemName title={file.name} />
 						<Builder.ItemSizeText />
 						{deletable && (
 							<ItemDeleteTrigger>

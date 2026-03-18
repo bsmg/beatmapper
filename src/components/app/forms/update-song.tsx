@@ -8,6 +8,7 @@ import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TY
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
 import { useSetupContext } from "$/components/context";
 import { AlertDialogProvider, Audio, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
+import { remuxImageToSquare } from "$/helpers/file.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -129,7 +130,7 @@ function UpdateSongForm() {
 						</FileUpload>
 					</Field>
 					<Field label="Cover Art File" required>
-						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])}>
+						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} transformFiles={(files) => Promise.all(files.map(remuxImageToSquare))}>
 							{() => null}
 						</FileUpload>
 					</Field>

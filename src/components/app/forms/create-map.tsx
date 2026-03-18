@@ -8,7 +8,7 @@ import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLE
 import { useSetupContext } from "$/components/context";
 import { Show } from "$/components/ui/atoms";
 import { Audio, Switch, useAppForm } from "$/components/ui/compositions";
-import { createPlaceholderImageFile } from "$/helpers/file.helpers";
+import { createPlaceholderImageFile, remuxImageToSquare } from "$/helpers/file.helpers";
 import { createSongId, resolveBeatmapId } from "$/helpers/song.helpers";
 import { addSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -118,29 +118,38 @@ function CreateMapForm({ dialog }: Props) {
 		<Form.AppForm>
 			<Form.Root>
 				<Switch label="Show Optional Fields" checked={showOptionalFields} onCheckedChange={(x) => setShowOptionalFields(!!x.checked)} />
-				<Form.Row>
+				<Show when={!showOptionalFields}>
 					<Form.AppField name="songFile">
 						{(ctx) => (
-							<ctx.FileUpload label="Song File" required maxFiles={1} acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE}>
+							<ctx.FileUpload label="Song File" required acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1}>
 								{(file) => <Audio file={file} startTime={previewStartTime} duration={previewDuration} volume={volume} />}
 							</ctx.FileUpload>
 						)}
 					</Form.AppField>
-					<Form.AppField name="coverArtFile">
-						{(ctx) => (
-							<ctx.FileUpload label="Cover Art File" maxFiles={1} acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE}>
-								{() => null}
-							</ctx.FileUpload>
-						)}
-					</Form.AppField>
-				</Form.Row>
-				<Show when={!showOptionalFields}>
+
 					<Form.Row>
 						<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 						<Form.AppField name="bpm">{(ctx) => <ctx.NumberInput label="BPM (Beats per Minute)" min={0} required />}</Form.AppField>
 					</Form.Row>
 				</Show>
 				<Show when={showOptionalFields}>
+					<Form.Row>
+						<Form.AppField name="songFile">
+							{(ctx) => (
+								<ctx.FileUpload label="Song File" required acceptText="Audio File" accept={SONG_FILE_ACCEPT_TYPE} maxFiles={1}>
+									{(file) => <Audio file={file} startTime={previewStartTime} duration={previewDuration} volume={volume} />}
+								</ctx.FileUpload>
+							)}
+						</Form.AppField>
+						<Form.AppField name="coverArtFile">
+							{(ctx) => (
+								<ctx.FileUpload label="Cover Art File" acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} transformFiles={(files) => Promise.all(files.map(remuxImageToSquare))}>
+									{() => null}
+								</ctx.FileUpload>
+							)}
+						</Form.AppField>
+					</Form.Row>
+
 					<Form.Row>
 						<Form.AppField name="name">{(ctx) => <ctx.Input label="Song Title" required />}</Form.AppField>
 						<Form.AppField name="subName">{(ctx) => <ctx.Input label="Song Subtitle" />}</Form.AppField>

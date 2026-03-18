@@ -73,6 +73,8 @@ export const fileUpload = defineSlotRecipe({
 			gridArea: "name",
 			whiteSpace: "nowrap",
 			textOverflow: "ellipsis",
+			overflow: "hidden",
+			minWidth: 0,
 		},
 		itemSizeText: {
 			gridArea: "size",
