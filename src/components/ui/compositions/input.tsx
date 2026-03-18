@@ -35,7 +35,7 @@ export function NumberInputDataField({ label, helperText, ...delegated }: Assign
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldInput {...delegated} id={id} type="number" value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
+			<FieldInput {...delegated} id={id} type="number" step={delegated.step ?? "any"} value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
 		</Field>
 	);
 }
