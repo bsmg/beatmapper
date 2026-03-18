@@ -65,7 +65,7 @@ export function ColorNote({ data, rotationOffset, ...rest }: Omit<ComponentProps
 		<BaseNote {...rest} data={data} path={url} rotation-z={rotation} metalness={0.5} roughness={0.4}>
 			{/* Fake flowing light from within */}
 			{(_, { transparent, onPointerDown, onPointerOut, onPointerOver, onWheel }) => (
-				<mesh position-z={0.2} rotation-z={rotation} onPointerDown={onPointerDown} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onWheel={onWheel}>
+				<mesh layers={rest.layers} position-z={0.2} rotation-z={rotation} onPointerDown={onPointerDown} onPointerOver={onPointerOver} onPointerOut={onPointerOut} onWheel={onWheel}>
 					<planeGeometry attach="geometry" args={[0.8, 0.8]} />
 					<meshLambertMaterial attach="material" emissive={0xffffff} transparent={true} opacity={transparent ? 0.25 : 1} />
 				</mesh>

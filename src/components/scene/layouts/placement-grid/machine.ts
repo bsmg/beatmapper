@@ -79,6 +79,7 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 					context.set("cellDownAt", currentCell);
 
 					if (event.button === 0) {
+						event.stopPropagation();
 						prop("onCellPointerDown")?.(event, { cellDownAt: currentCell });
 					}
 				},

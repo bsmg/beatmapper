@@ -92,7 +92,6 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	}, []);
 
 	// pointer events should pass through when we're not in bulk selection mode.
-	// todo: this logic should probably be deduplicated at a higher level, but that's for future me to worry about.
 	const handleCellPointerDown = useCallback(
 		(event: ThreeEvent<PointerEvent>) => {
 			if (selectionMode) return;
