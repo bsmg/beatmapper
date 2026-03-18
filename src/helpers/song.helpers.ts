@@ -1,4 +1,3 @@
-import { randomIntegerBetween } from "@std/random/integer-between";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { EnvironmentName, NoteJumpSpeed } from "bsmap";
 
@@ -11,7 +10,17 @@ export function createSongId(x: Pick<App.ISong, "name">, currentIds?: SongId[]):
 	let songId = toPascalCase(x.name);
 
 	if (currentIds?.some((id) => id === songId)) {
-		songId += `-${Math.round(randomIntegerBetween(0, 9999)).toPrecision(4)}`;
+		if ("prompt" in window) {
+			const override = window.prompt("Your map was flagged as a duplicate.\n\nIf you don't want to override the contents of your pre-existing map, please enter a unique identifier:", songId);
+
+			if (override) {
+				songId = override;
+			} else {
+				songId = `${songId}-${Date.now().toString(16).slice(-3)}`;
+			}
+		} else {
+			songId = `${songId}-${Date.now().toString(16).slice(-3)}`;
+		}
 	}
 	return songId;
 }
