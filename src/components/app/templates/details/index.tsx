@@ -3,13 +3,13 @@ import { useParams } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { useCallback } from "react";
 
+import { createAddColorSchemePrompt } from "$/components/app/constants";
 import { CreateBeatmapForm, UpdateSongForm } from "$/components/app/forms";
 import { Match, Switch } from "$/components/ui/atoms";
 import { Button, Dialog, Heading, Tabs, usePrompt } from "$/components/ui/compositions";
 import { addBeatmap, addColorScheme } from "$/store/actions";
 import { useAppDispatch } from "$/store/hooks";
 import { HStack, Stack } from "$:styled-system/jsx";
-import { createAddColorSchemePrompt } from "../../constants";
 import AdvancedSettingsDetails from "./advanced-settings";
 import BeatmapDetails from "./beatmaps";
 import ColorSchemeDetails from "./color-schemes";

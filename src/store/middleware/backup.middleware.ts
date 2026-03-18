@@ -1,7 +1,7 @@
 import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 
 import { createSaveHandler } from "$/services/backup.service";
-import { downloadMapFiles, leaveEditor, saveBeatmapContents, updateBeatmap, updateSong } from "$/store/actions";
+import { leaveEditor, saveBeatmapContents, updateBeatmap, updateSong } from "$/store/actions";
 import { selectSelectedBeatmap } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
@@ -11,7 +11,7 @@ export default function createBackupMiddleware() {
 	const save = createSaveHandler();
 
 	instance.startListening({
-		matcher: isAnyOf(saveBeatmapContents, downloadMapFiles),
+		matcher: isAnyOf(saveBeatmapContents),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			const { songId } = action.payload;
 			const state = api.getState();

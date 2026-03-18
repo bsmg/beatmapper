@@ -88,25 +88,28 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveInfoContents<T extends IWrapInfo>(songId: SongId, contents: T) {
+	async saveInfoContents(songId: SongId, contents: IWrapInfo) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
-		return this.saveFile<T>(filename, contents);
+		return this.saveFile(filename, createInfo(contents));
 	}
-	async saveAudioDataContents<T extends IWrapAudioData>(songId: SongId, contents: T) {
+	async saveAudioDataContents(songId: SongId, contents: IWrapAudioData) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
-		return this.saveFile<T>(filename, contents);
+		return this.saveFile(filename, createAudioData(contents));
 	}
-	async saveBeatmapContents<T extends IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+	async saveBeatmapContents(songId: SongId, beatmapId: BeatmapId, contents: IWrapBeatmap) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
-		return this.saveFile<T>(filename, {
-			...contents,
-			// for difficulty data, we should remove all unsupported collections since those objects can cause issues the user would be unable to fix.
-			difficulty: pick({ ...contents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "customData"]),
-			// we can supply our own wrappers for editor-specific collections.
-			customData: ensureObject({
-				bookmarks: ensureArray<App.IBookmark>(contents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
+		return this.saveFile(
+			filename,
+			createBeatmap({
+				...contents,
+				// for difficulty data, we should remove all unsupported collections since those objects can cause issues the user would be unable to fix.
+				difficulty: pick({ ...contents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "customData"]),
+				// we can supply our own wrappers for editor-specific collections.
+				customData: ensureObject({
+					bookmarks: ensureArray<App.IBookmark>(contents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
+				}),
 			}),
-		});
+		);
 	}
 
 	async updateInfoContents(songId: SongId, newContents: DeepPartial<IWrapInfo>) {

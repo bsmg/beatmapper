@@ -105,9 +105,12 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						Beatmapper: {
 							version: version,
 							editorSettings: {
-								modSettings: ensureObject({
-									mappingExtensions: data.modSettings.mappingExtensions?.isEnabled ? data.modSettings.mappingExtensions : undefined,
-								}),
+								modSettings: {
+									mappingExtensions: ensureObject({
+										...data.modSettings.mappingExtensions,
+										isEnabled: !!data.modSettings.mappingExtensions?.isEnabled,
+									}),
+								},
 							},
 						},
 					},

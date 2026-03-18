@@ -2,7 +2,7 @@ import { createToaster } from "@ark-ui/react/toast";
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { toPascalCase } from "@std/text/to-pascal-case";
-import { createBeatmap, loadDifficulty, loadInfo } from "bsmap";
+import { createBeatmap, loadDifficulty, loadInfo, setupLogger } from "bsmap";
 import { createStorage, type Driver, type StorageValue } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
@@ -10,6 +10,10 @@ import { createDriver, type LegacyStorageSchema } from "./services/storage.servi
 import { createAppStore } from "./store/setup";
 import type { App } from "./types";
 import { createLazySingleton } from "./utils";
+
+if (import.meta.env.DEV) {
+	setupLogger();
+}
 
 const appFileDriver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
 	name: "beat-mapper-files",

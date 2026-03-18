@@ -1,6 +1,6 @@
 import type { CharacteristicName, DifficultyName, EnvironmentName, EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 
-import type { BeatmapId, IColorScheme, IEntityMap, IGrid, SongId } from "$/types/editor";
+import type { BeatmapId, IColorScheme, IEntityMap, IGrid, SongId } from "$/types";
 
 type IWrapModule<T> = { isEnabled: boolean } & T;
 

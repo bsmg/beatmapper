@@ -1,8 +1,26 @@
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { toPascalCase } from "@std/text/to-pascal-case";
-import type { BeatmapFileType, ILoadOptions, InferBeatmapVersion, ISaveOptions, ModRequirements } from "bsmap";
-import { compatibilityCheck, createBeatmap, type IWrapAudioData, type IWrapBeatmap, type IWrapInfo, loadAudioData, loadDifficulty, loadInfo, loadLightshow, saveAudioData, saveDifficulty, saveInfo, saveLightshow } from "bsmap";
+import {
+	type BeatmapFileType,
+	compatibilityCheck,
+	createBeatmap,
+	type ILoadOptions,
+	type InferBeatmapVersion,
+	type ISaveOptions,
+	type IWrapAudioData,
+	type IWrapBeatmap,
+	type IWrapInfo,
+	loadAudioData,
+	loadDifficulty,
+	loadInfo,
+	loadLightshow,
+	type ModRequirements,
+	saveAudioData,
+	saveDifficulty,
+	saveInfo,
+	saveLightshow,
+} from "bsmap";
 import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 
 import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
@@ -83,7 +101,7 @@ export async function importMapArchive(archive: Uint8Array, { loadOptions }: Imp
 			return loadAudioData(JSON.parse(decoder.decode(data)), null, loadOptions);
 		})
 		.catch(async () => {
-			return createAudioDataContentsFromFile(songFile, audioContext, info.audio.bpm);
+			return createAudioDataContentsFromFile(songFile, audioContext, { version: info.version, bpm: info.audio.bpm });
 		});
 
 	const beatmaps = await Promise.all(
@@ -172,7 +190,7 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 		requirements[beatmap.filename] = [];
 
 		try {
-			compatibilityCheck("difficulty", beatmap, beatmapVersion, { throwOn: { incompatibleObject: false, mappingExtensions: true } });
+			compatibilityCheck("difficulty", createBeatmap(beatmap), beatmapVersion, { throwOn: { incompatibleObject: false, mappingExtensions: true } });
 		} catch {
 			requirements[beatmap.filename].push("Mapping Extensions");
 		}

@@ -1,3 +1,4 @@
+import { parseColor } from "@zag-js/color-utils";
 import { colorToHex, hexToRgba, type IV2Bookmark, type IV3Bookmark } from "bsmap";
 
 import type { App } from "$/types";
@@ -36,10 +37,12 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 		},
 		2: {
 			serialize: (data) => {
+				const color = parseColor(data.color).toString("hex");
+
 				return {
 					_time: data.time,
 					_name: data.name,
-					_color: hexToRgba(data.color),
+					_color: hexToRgba(color),
 				};
 			},
 			deserialize: (data) => {
@@ -52,10 +55,12 @@ export const { serialize: serializeCustomBookmark, deserialize: deserializeCusto
 		},
 		3: {
 			serialize: (data) => {
+				const color = parseColor(data.color).toString("hex");
+
 				return {
 					b: data.time,
 					n: data.name,
-					c: hexToRgba(data.color),
+					c: hexToRgba(color),
 				};
 			},
 			deserialize: (data) => {

@@ -1,6 +1,6 @@
 import type { EntityId } from "@reduxjs/toolkit";
 
-import type { Member } from "$/types/utils";
+import type { Member } from "$/types";
 
 export type SongId = EntityId;
 export type BeatmapId = EntityId;

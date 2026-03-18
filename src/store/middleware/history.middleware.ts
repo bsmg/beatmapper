@@ -24,7 +24,7 @@ import {
 	selectPastObstacles,
 } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
-import type { App, SongId } from "$/types/beatmap";
+import type { App, SongId } from "$/types";
 import { difference } from "$/utils";
 
 function jumpToEarliestObject(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {

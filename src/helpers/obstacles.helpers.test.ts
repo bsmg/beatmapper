@@ -1,7 +1,7 @@
 import { randomIntegerBetween } from "@std/random/integer-between";
 import { describe, expect, it } from "vitest";
 
-import { type IGrid, ObstaclePlacementMode } from "$/types/editor";
+import { type IGrid, ObstaclePlacementMode } from "$/types";
 import { clampObstacle, createObstacleFromMouseEvent } from "./obstacles.helpers";
 
 describe(createObstacleFromMouseEvent.name, () => {

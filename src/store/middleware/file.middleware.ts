@@ -58,7 +58,7 @@ export default function createFileMiddleware() {
 				const songFile = await filestore.loadSongFile(songId);
 
 				await Promise.all([
-					createAudioDataContentsFromFile(songFile, audioContext, selectBpm(state, songId)).then(({ frequency, sampleCount, bpmData }) => {
+					createAudioDataContentsFromFile(songFile, audioContext, { bpm: selectBpm(state, songId) }).then(({ frequency, sampleCount, bpmData }) => {
 						return filestore.updateAudioDataContents(songId, { frequency, sampleCount, bpmData });
 					}),
 					deriveWaveformDataFromFile(songFile, audioContext).then((waveformData) => {
@@ -77,7 +77,7 @@ export default function createFileMiddleware() {
 			const infoContents = serializeInfoContents(selectSongById(state, songId), {
 				songDuration: selectDuration(state),
 			});
-			const audioDataContents = await createAudioDataContentsFromFile(songFile, audioContext, selectBpm(state, songId));
+			const audioDataContents = await createAudioDataContentsFromFile(songFile, audioContext, { bpm: selectBpm(state, songId) });
 
 			await Promise.all([
 				filestore.saveSongFile(songId, songFile),

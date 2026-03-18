@@ -1,4 +1,4 @@
-import type { Accept, Member } from "../utils";
+import type { Accept, Member } from "$/types/utils";
 
 export const EventEditMode = {
 	PLACE: "place",

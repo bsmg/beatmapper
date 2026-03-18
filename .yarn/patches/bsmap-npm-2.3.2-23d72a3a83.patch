@@ -1,3 +1,70 @@
+diff --git a/esm/beatmap/schema/v1/obstacle.js b/esm/beatmap/schema/v1/obstacle.js
+index 14a5b50f5aaec77a17428fa1dd0a57404d25fe22..10467a18824ed76fbb15be8d252d84d244853b2e 100644
+--- a/esm/beatmap/schema/v1/obstacle.js
++++ b/esm/beatmap/schema/v1/obstacle.js
+@@ -1,5 +1,5 @@
+ import { createObstacle } from '../wrapper/obstacle.js';
+-import { isBoundedObstacle, isCrouchHeightObstacle, isFullHeightObstacle, } from '../../helpers/core/obstacle.js';
++import { isCrouchHeightObstacle, isFullHeightObstacle, } from '../../helpers/core/obstacle.js';
+ function fixPosYForExtendedType(type) {
+     if (type < 1000 || type > 4005000)
+         return 0;
+@@ -18,7 +18,9 @@ function fixHeightForExtendedType(type) {
+ export const obstacle = {
+     serialize(data) {
+         let type = 0;
+-        if (data.height >= 0 && data.posY >= 0) {
++        if (Math.abs(data.height) < 1000 && Math.abs(data.posY) < 1000) {
++            type = Math.floor((data.height * 200000) + (data.posY * 200) + 4001);
++        } else {
+             const posY = data.posY >= 1000 ? data.posY - 1000 : data.posY / 1000;
+             const height = data.height >= 1000 ? data.height - 1000 : data.height / 1000;
+             type = Math.floor((height / 5) * 1000 + (posY / 5) + 4001);
+@@ -27,9 +31,7 @@ export const obstacle = {
+             ? 0
+             : isCrouchHeightObstacle(data)
+                 ? 1
+-                : isBoundedObstacle(data)
+-                    ? data.posY >= 2 ? 1 : 0
+-                    : type;
++                : type;
+         return {
+             _time: data.time,
+             _type: type,
+diff --git a/esm/beatmap/schema/v2/obstacle.js b/esm/beatmap/schema/v2/obstacle.js
+index e679f089803fe31d53297bef3a1ca617ab5e0dbe..377966a90b428db02a0d67b665067c9deb0eafdd 100644
+--- a/esm/beatmap/schema/v2/obstacle.js
++++ b/esm/beatmap/schema/v2/obstacle.js
+@@ -1,6 +1,6 @@
+ import { deepCopy } from '../../../utils/misc/json.js';
+ import { createObstacle } from '../wrapper/obstacle.js';
+-import { isBoundedObstacle, isCrouchHeightObstacle, isFullHeightObstacle, } from '../../helpers/core/obstacle.js';
++import { isCrouchHeightObstacle, isFullHeightObstacle, } from '../../helpers/core/obstacle.js';
+ function fixPosYForExtendedType(type) {
+     if (type < 1000 || type > 4005000)
+         return 0;
+@@ -19,7 +19,9 @@ function fixHeightForExtendedType(type) {
+ export const obstacle = {
+     serialize(data) {
+         let type = 0;
+-        if (data.height >= 0 && data.posY >= 0) {
++        if (Math.abs(data.height) < 1000 && Math.abs(data.posY) < 1000) {
++            type = Math.floor((data.height * 200000) + (data.posY * 200) + 4001);
++        } else {
+             const posY = data.posY >= 1000 ? data.posY - 1000 : data.posY / 1000;
+             const height = data.height >= 1000 ? data.height - 1000 : data.height / 1000;
+             type = Math.floor((height / 5) * 1000 + (posY / 5) + 4001);
+@@ -28,9 +32,7 @@ export const obstacle = {
+             ? 0
+             : isCrouchHeightObstacle(data)
+                 ? 1
+-                : isBoundedObstacle(data)
+-                    ? data.posY >= 2 ? 1 : 0
+-                    : type;
++                : type
+         return {
+             _time: data.time,
+             _type: type,
 diff --git a/esm/beatmap/core/basicEvent.js b/esm/beatmap/core/basicEvent.js
 index abb4e60739c76c503d6aaae69efa57707f01300c..f0bf7ec57d51150f803e890ebe0bd4cbef34499a 100644
 --- a/esm/beatmap/core/basicEvent.js

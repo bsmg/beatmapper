@@ -35,7 +35,7 @@ export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audio
 	);
 }
 
-export async function createAudioDataContentsFromFile(songFile: File, audioContext: AudioContext, bpm: number): Promise<IWrapAudioData> {
+export async function createAudioDataContentsFromFile(songFile: File, audioContext: AudioContext, options: { bpm: number; version?: number }): Promise<IWrapAudioData> {
 	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
 
 	// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
@@ -43,10 +43,10 @@ export async function createAudioDataContentsFromFile(songFile: File, audioConte
 		startSampleIndex: 0,
 		endSampleIndex: sampleCount,
 		startBeat: 0,
-		endBeat: convertMillisecondsToBeats(duration * 1000, bpm),
+		endBeat: convertMillisecondsToBeats(duration * 1000, options.bpm),
 	};
 
-	return createAudioData({ frequency, sampleCount, bpmData: [region] });
+	return createAudioData({ version: options.version, frequency, sampleCount, bpmData: [region] });
 }
 
 export function snapToNearestBeat(cursorPosition: number, snapTo: number, bpm: number, offset: number) {

@@ -24,7 +24,7 @@ import {
 	selectToggleAtBeat,
 } from "$/store/selectors";
 import { type App, BasicEventEffect, EventColor } from "$/types";
-import { clamp, cycle, floorToNearest, isColorDark, normalize } from "$/utils";
+import { clamp, cycle, isColorDark, normalize, roundToNearest } from "$/utils";
 import { createBackgroundBoxes, resolveColorForLightState } from "./track.helpers";
 
 function resolveBackgroundForEvent(data: IWrapBasicEvent, options: Parameters<typeof resolveColorForItem>[1] & { isBoosted: boolean; tracks: ITrackDefinitions<IBasicTrack> }) {
@@ -111,7 +111,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 			switch (tracks[trackId].type) {
 				case 0: {
 					const value = serializeBasicEventValue({ effect: selectedTool, color: selectedColorType }, { tracks });
-					const floatValue = floorToNearest(normalize(norm ?? 0, 0, 1, 1.5, 0), 0.5);
+					const floatValue = roundToNearest(normalize(norm ?? 0, 0, 1, 1, 0), 0.5);
 					return createBasicEvent({ time, type: trackId, value: value, floatValue: floatValue });
 				}
 				case 1: {

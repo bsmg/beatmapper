@@ -2,8 +2,7 @@ import { type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IW
 
 import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
 import { isLightEffectActive, isLightTrack, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
-import { BasicEventEffect } from "$/types";
-import { ColorSchemeKey, EventColor, type IBackgroundBox, type ILightState } from "$/types/editor";
+import { BasicEventEffect, ColorSchemeKey, EventColor, type IBackgroundBox, type ILightState } from "$/types";
 import { clamp, lerp, lerpColor } from "$/utils";
 
 const COLOR_KEY_MAP = {
