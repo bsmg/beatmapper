@@ -1,5 +1,4 @@
 import { type EnvironmentName, type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, isBasicBtsTrack, isBasicCarTrack, isBasicFloatValueTrack, isBasicIntValueTrack, isBasicLightTrack, isBasicNoneTrack, isBasicToggleTrack } from "bsmap";
-import { check, number, pipe } from "valibot";
 
 import { BasicTrackMirror, BasicTrackOrder } from "$/constants";
 import { BasicEventEffect, EventColor } from "$/types";
@@ -92,22 +91,17 @@ interface IBasicEventValue {
 	value?: number;
 }
 export const { serialize: serializeBasicEventValue, deserialize: deserializeBasicEventValue } = createDataFactory<IBasicEventValue, number, { tracks: ITrackDefinitions<IBasicTrack> }, { tracks: ITrackDefinitions<IBasicTrack>; trackId: number }, { tracks: ITrackDefinitions<IBasicTrack>; trackId: number }>({
-	validator: {
-		constructor: ({ tracks, trackId }) => {
-			return pipe(
-				number(),
-				check((value) => {
-					if (isLightTrack(trackId, tracks)) return value >= 0 && value <= 12;
-					return true;
-				}),
-			);
-		},
-	},
 	container: {
 		serialize: (data) => {
-			if (data.effect === BasicEventEffect.TRIGGER) return 0;
-			if (data.effect === BasicEventEffect.VALUE && data.value) return data.value;
-			if (!data.color || !data.effect || data.effect === BasicEventEffect.OFF) return 0;
+			if (data.effect === BasicEventEffect.TRIGGER) {
+				return 0;
+			}
+			if (data.effect === BasicEventEffect.VALUE) {
+				return Math.round(data.value ?? 0);
+			}
+			if (data.effect === BasicEventEffect.OFF || !data.color) {
+				return 0;
+			}
 			const c = Object.values([EventColor.SECONDARY, EventColor.PRIMARY, EventColor.WHITE]).indexOf(data.color);
 			const e = Object.values<BasicEventEffect>([BasicEventEffect.ON, BasicEventEffect.FLASH, BasicEventEffect.FADE, BasicEventEffect.TRANSITION]).indexOf(data.effect);
 			return 4 * c + (e + 1);

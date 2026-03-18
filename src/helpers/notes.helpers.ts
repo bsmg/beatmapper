@@ -1,6 +1,7 @@
 import { createBombNote, createColorNote, type IWrapBaseNote, type IWrapBombNote, type IWrapColorNote } from "bsmap";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
+import { DEFAULT_GRID } from "$/constants";
 import { type IGrid, NotePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
@@ -18,8 +19,8 @@ export function resolveNoteId<T extends Pick<IWrapBaseNote, "time" | "posX" | "p
 	return `${x.time}/${x.posX}/${x.posY}`;
 }
 
-function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: Partial<T>) => T) {
-	return ({ cellDownAt }: IPlacementContext, mode: NotePlacementMode, grid: IGrid, data: Partial<T> = {}) => {
+export function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: Partial<IWrapBaseNote>) => T) {
+	return ({ cellDownAt }: Pick<IPlacementContext, "cellDownAt">, mode: NotePlacementMode, grid: IGrid = DEFAULT_GRID, data: Partial<T> = {}) => {
 		if (!cellDownAt) return null;
 
 		const isExtended = mode === NotePlacementMode.EXTENSIONS;
@@ -34,5 +35,9 @@ function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: 
 	};
 }
 
-export const createColorNoteFromMouseEvent = createNotePlacementFactory(createColorNote);
-export const createBombNoteFromMouseEvent = createNotePlacementFactory(createBombNote);
+export const createColorNoteFromMouseEvent = createNotePlacementFactory((data) => {
+	return createColorNote(data);
+});
+export const createBombNoteFromMouseEvent = createNotePlacementFactory((data) => {
+	return createBombNote(data);
+});

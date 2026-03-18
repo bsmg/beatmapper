@@ -1,6 +1,6 @@
 import { distinct } from "@std/collections/distinct";
 import { distinctBy } from "@std/collections/distinct-by";
-import { colorToHex, createBeatmap, createInfo, createInfoBeatmap, EnvironmentName, type IV2CustomDataDifficulty, type IV2CustomDataInfoDifficulty, type IWrapBeatmap, type IWrapInfo, type IWrapInfoColorScheme, sortV2ObjectFn, sortV3ObjectFn, toColorObject } from "bsmap";
+import { colorToHex, createBeatmap, createInfo, createInfoBeatmap, EnvironmentName, type IV2CustomDataDifficulty, type IV2CustomDataInfoDifficulty, type IWrapBeatmap, type IWrapInfo, type IWrapInfoColorScheme, sortObjectFn, sortV2ObjectFn, sortV3ObjectFn, toColorObject } from "bsmap";
 
 import { type App, ColorSchemeKey } from "$/types";
 import { deepAssign, ensureArray, ensureObject, hasKeys } from "$/utils";
@@ -26,8 +26,6 @@ export function patchEnvironmentName<T extends EnvironmentName>(environment: str
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createDataFactory({
 	container: {
 		serialize: function serializeInfoContents(data: Omit<App.ISong, "id">, options: { songDuration?: number | null }) {
-			const beatmaps = data.difficultiesById;
-
 			const envColorScheme = deriveColorSchemeFromEnvironment(data.environment);
 
 			const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): IWrapInfoColorScheme => {
@@ -47,7 +45,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				};
 			});
 
-			const allEnvironments = distinct(Object.values(beatmaps).map((x) => x.environmentName));
+			const allEnvironments = distinct(Object.values(data.difficultiesById).map((x) => x.environmentName));
 
 			const customColors = data.modSettings.customColors?.isEnabled ? data.modSettings.customColors : undefined;
 
@@ -72,10 +70,10 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				colorSchemes: allColorSchemes,
 				songPreviewFilename: data.songFilename,
 				coverImageFilename: data.coverArtFilename,
-				difficulties: Object.entries(beatmaps).map(([beatmapId, beatmap]) => {
+				difficulties: Object.entries(data.difficultiesById).map(([beatmapId, beatmap]) => {
 					return createInfoBeatmap({
 						filename: `${beatmapId}.beatmap.dat`,
-						lightshowFilename: `${beatmap.lightshowId && beatmap.lightshowId !== "Unnamed" ? beatmap.lightshowId : beatmapId}.lightshow.dat`,
+						lightshowFilename: `${beatmap.lightshowId}.lightshow.dat`,
 						characteristic: beatmap.characteristic,
 						difficulty: beatmap.difficulty,
 						njs: beatmap.noteJumpSpeed,
@@ -185,7 +183,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				subName: data.song.subTitle,
 				artistName: data.song.author,
 				bpm: data.audio.bpm,
-				offset: data.difficulties[0].customData._editorOffset ?? 0,
+				offset: data.difficulties[0]?.customData._editorOffset,
 				previewStartTime: data.audio.previewStartTime,
 				previewDuration: data.audio.previewDuration,
 				environment: patchEnvironmentName(data.environmentNames[0] ?? data.environmentBase.normal ?? EnvironmentName[0]),
@@ -252,7 +250,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 					}),
 				],
 				resolveBookmarkId,
-			);
+			).sort(sortObjectFn);
 
 			return {
 				notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),

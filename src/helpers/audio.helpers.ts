@@ -6,9 +6,7 @@ import { convertFileToArrayBuffer } from "./file.helpers";
 
 export function convertMillisecondsToBeats(ms: number, bpm: number) {
 	const bps = bpm / 60;
-
 	const beats = (ms / 1000) * bps;
-
 	// To avoid floating-point issues like 2.999999997, let's round. We'll choose
 	// the lowest-common-multiple to "snap" to any possible value.
 	return roundToNearest(beats, 1 / 96);
@@ -52,19 +50,18 @@ export async function createAudioDataContentsFromFile(songFile: File, audioConte
 }
 
 export function snapToNearestBeat(cursorPosition: number, snapTo: number, bpm: number, offset: number) {
+	const cursorPositionInBeats = convertMillisecondsToBeats(cursorPosition - offset, bpm);
 	// cursorPosition will be a fluid value in ms, like 65.29. I need to snap to the nearest bar.
 	// So if my BPM is 60, there is a bar every 4 seconds, so I'd round to 64ms.
 	// Note that BPMs can be any value, even fractions, so I can't rely on a decimal rounding solution :/
-	const cursorPositionInBeats = convertMillisecondsToBeats(cursorPosition - offset, bpm);
-
 	return convertBeatsToMilliseconds(roundToNearest(cursorPositionInBeats, snapTo), bpm) + offset;
 }
 
 export function formatCursorPosition(cursorPosition: number) {
-	const seconds = String(Math.floor((cursorPosition / 1000) % 60)).padStart(2, "0");
-	const minutes = String(Math.floor((cursorPosition / (1000 * 60)) % 60)).padStart(2, "0");
+	const seconds = Math.floor((cursorPosition / 1000) % 60).toString();
+	const minutes = Math.floor((cursorPosition / (1000 * 60)) % 60).toString();
 
-	return `${minutes}:${seconds}`;
+	return `${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
 }
 
 export function formatCursorPositionInBeats(cursorPositionInBeats: number) {

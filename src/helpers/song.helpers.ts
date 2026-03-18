@@ -78,9 +78,9 @@ export function createAppBeatmap(data: RequiredKeys<Partial<App.IBeatmap>, "char
 
 export function getEnvironment<T extends Pick<App.ISong, "environment" | "difficultiesById">>(song: T, beatmapId?: BeatmapId) {
 	const beatmap = beatmapId ? song.difficultiesById[beatmapId] : null;
-	return beatmap ? beatmap.environmentName : song.environment;
+	return beatmap ? (beatmap.environmentName ?? song.environment) : song.environment;
 }
-export function getColorScheme<T extends Pick<App.ISong, "environment" | "colorSchemesById" | "difficultiesById" | "modSettings">>(song: T, beatmapId?: BeatmapId): IColorScheme {
+export function getColorScheme<T extends Pick<App.ISong, "environment" | "difficultiesById" | "colorSchemesById" | "modSettings">>(song: T, beatmapId?: BeatmapId): IColorScheme {
 	const customOverrideScheme = song.modSettings.customColors;
 	const beatmap = beatmapId ? song.difficultiesById[beatmapId] : null;
 	const vanillaOverrideScheme = beatmap?.colorSchemeName ? song.colorSchemesById[beatmap.colorSchemeName] : null;
@@ -105,8 +105,7 @@ export function getColorScheme<T extends Pick<App.ISong, "environment" | "colorS
 		envColorWhiteBoost: resolveColor("envColorWhiteBoost"),
 	};
 }
-
-export function getGridSize<T extends Pick<App.ISong, "modSettings" | "difficultiesById" | "environment" | "colorSchemesById">>(song: T, grid: IGrid = DEFAULT_GRID): IGrid {
+export function getGridSize<T extends Pick<App.ISong, "modSettings">>(song: T, grid: IGrid = DEFAULT_GRID): IGrid {
 	const mappingExtensions = song.modSettings.mappingExtensions;
 
 	if (!mappingExtensions?.isEnabled) {

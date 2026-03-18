@@ -17,12 +17,13 @@ export function serializeCoordinate(x: number, toExtended?: boolean) {
 	return toExtended ? (x >= 0 ? x + 1 : x - 1) * 1000 : x;
 }
 
-function mirrorCoordinate(coordinate: number, count: number, offset?: number) {
+export function mirrorCoordinate(coordinate: number, count: number, offset?: number) {
 	const value = deserializeCoordinate(coordinate);
 	const axis = (count - 1) / 2;
 	const mirrored = axis - value + axis + (offset ? 1 - deserializeCoordinate(offset ?? 0) : 0);
 	return serializeCoordinate(mirrored, isExtendedCoordinate(coordinate));
 }
+
 export function mirrorGridObjectProperties<T extends IWrapGridObject>(item: T, axis: "horizontal" | "vertical", grid?: IGrid, offset?: number): Partial<T> {
 	return {
 		posX: axis === "horizontal" ? mirrorCoordinate(item.posX, DEFAULT_NUM_COLS, offset) : item.posX,

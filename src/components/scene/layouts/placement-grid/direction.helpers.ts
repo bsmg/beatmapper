@@ -1,19 +1,17 @@
 import { NoteDirection } from "bsmap";
 import type { Vector2Like } from "three";
 
-import type { NotePlacementMode } from "$/types";
 import { convertCartesianToPolar, convertRadiansToDegrees, normalizeAngle } from "$/utils";
 
 const CHUNK_SIZE = 45; // We have 8 possible directions in a 360-degree circle, so each direction gets a 45-degree wedge.
 const CHUNK_DIRECTIONS = [NoteDirection.RIGHT, NoteDirection.DOWN_RIGHT, NoteDirection.DOWN, NoteDirection.DOWN_LEFT, NoteDirection.LEFT, NoteDirection.UP_LEFT, NoteDirection.UP, NoteDirection.UP_RIGHT];
 
-interface Options {
-	mode: NotePlacementMode;
+export interface NoteDirectionOptions {
 	usePrecisionPlacement: boolean;
 	threshold?: number;
 	selectedDirection?: NoteDirection;
 }
-export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, { threshold = 25, usePrecisionPlacement, selectedDirection }: Options): number | null {
+export function resolveNoteDirectionForPlacementMode(initialPosition: Vector2Like, currentPosition: Vector2Like, { threshold = 25, usePrecisionPlacement, selectedDirection }: NoteDirectionOptions): number | null {
 	const deltaX = currentPosition.x - initialPosition.x;
 	const deltaY = currentPosition.y - initialPosition.y;
 

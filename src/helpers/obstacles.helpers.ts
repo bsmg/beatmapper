@@ -1,6 +1,7 @@
 import { createObstacle, type IWrapObstacle } from "bsmap";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
+import { DEFAULT_GRID } from "$/constants";
 import { type IGrid, ObstaclePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
@@ -21,7 +22,7 @@ export function isFastObstacle<T extends Pick<IWrapObstacle, "duration">>({ dura
 	return duration < 0;
 }
 
-function clampObstacle<T extends Pick<IWrapObstacle, "posX" | "posY" | "width" | "height">>(obstacle: T, rawWidth: number, { cellDownAt, cellOverAt }: Required<Pick<{ [key in keyof IPlacementContext]: NonNullable<IPlacementContext[key]> }, "cellDownAt" | "cellOverAt">>, { numCols }: Pick<IGrid, "numCols">) {
+export function clampObstacle<T extends Pick<IWrapObstacle, "posX" | "posY" | "width" | "height">>(obstacle: T, rawWidth: number, { cellDownAt, cellOverAt }: Required<Pick<{ [key in keyof IPlacementContext]: NonNullable<IPlacementContext[key]> }, "cellDownAt" | "cellOverAt">>, { numCols }: Pick<IGrid, "numCols">) {
 	const offset = (numCols - 4) / 2;
 	const half = Math.round(numCols / 2);
 
@@ -47,10 +48,9 @@ function clampObstacle<T extends Pick<IWrapObstacle, "posX" | "posY" | "width" |
 	return obstacle;
 }
 
-export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: IPlacementContext, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid, data: Partial<IWrapObstacle>) {
+export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: Pick<IPlacementContext, "cellDownAt" | "cellOverAt">, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid = DEFAULT_GRID, data: Partial<IWrapObstacle> = {}) {
 	if (!cellDownAt || !cellOverAt) return null;
 
-	// 1. Determine the raw bounding box from the mouse event
 	const minColIndex = Math.min(cellDownAt.colIndex, cellOverAt.colIndex);
 	const maxColIndex = Math.max(cellDownAt.colIndex, cellOverAt.colIndex);
 	const minRowIndex = Math.min(cellDownAt.rowIndex, cellOverAt.rowIndex);

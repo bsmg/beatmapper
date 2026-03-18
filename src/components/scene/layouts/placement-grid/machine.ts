@@ -1,11 +1,11 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { createMachine, type MachineSchema, type Service } from "@zag-js/core";
 
-import type { IGrid, IGridCell, NotePlacementMode, ObstaclePlacementMode } from "$/types";
+import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
+import { type IGrid, type IGridCell, NotePlacementMode, type ObstaclePlacementMode } from "$/types";
 import type { ThreeProps } from "$/types/vendor";
 import { isMetaKeyPressed } from "$/utils";
-import { BLOCK_CELL_SIZE } from "../../constants";
-import { resolveNoteDirectionForPlacementMode } from "./helpers";
+import { resolveNoteDirectionForPlacementMode } from "./direction.helpers";
 
 export interface IPlacementContext {
 	cellDownAt: IGridCell | null;
@@ -110,14 +110,8 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 				onPointerMove: (event: PointerEvent) => {
 					if (!mouseDownAt) return;
 
-					const currentDir = resolveNoteDirectionForPlacementMode(
-						mouseDownAt,
-						{ x: event.pageX, y: event.pageY },
-						{
-							mode: notePlacementMode,
-							usePrecisionPlacement: isMetaKeyPressed(event),
-						},
-					);
+					const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isMetaKeyPressed(event);
+					const currentDir = resolveNoteDirectionForPlacementMode(mouseDownAt, { x: event.pageX, y: event.pageY }, { usePrecisionPlacement });
 
 					if (currentDir !== context.get("direction")) {
 						context.set("direction", currentDir);
