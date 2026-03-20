@@ -5,7 +5,7 @@ import { createAudioDataContentsFromFile, deriveWaveformDataFromFile } from "$/h
 import { deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { getAppBeatmapFilestore } from "$/setup";
-import { addBeatmap, addColorScheme, addSong, copyBeatmap, finishLoadingMap, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeColorScheme, removeSong, startLoadingMap, updateBeatmap, updateColorScheme, updateCustomColor, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
+import { addBeatmap, addColorScheme, addSong, copyBeatmap, finishLoadingMap, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeColorScheme, removeSong, startLoadingMap, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { SongId } from "$/types";
@@ -179,7 +179,7 @@ export default function createFileMiddleware() {
 		},
 	});
 	instance.startListening({
-		matcher: isAnyOf(updateSong, addBeatmap, copyBeatmap, updateBeatmap, removeBeatmap, addColorScheme, updateColorScheme, removeColorScheme, updateModuleEnabled, updateCustomColor, updateGridSize),
+		matcher: isAnyOf(updateSong, addBeatmap, copyBeatmap, updateBeatmap, removeBeatmap, addColorScheme, updateColorScheme, removeColorScheme, updateModuleEnabled, updateCustomColors, updateGridSize),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			const { songId } = action.payload;
 

@@ -8,8 +8,7 @@ import { ColorPicker, Switch } from "$/components/ui/compositions";
 import { useAppSelector } from "$/store/hooks";
 import { selectColorScheme } from "$/store/selectors";
 import { ColorSchemeKey, type IColorScheme } from "$/types";
-import { styled, VStack } from "$:styled-system/jsx";
-import { wrap } from "$:styled-system/patterns";
+import { styled, VStack, Wrap } from "$:styled-system/jsx";
 
 const BEATMAP_COLOR_KEY_RENAME = {
 	[ColorSchemeKey.SABER_LEFT]: "Left Saber",
@@ -68,14 +67,16 @@ function ColorScheme({ toggleable, colorScheme, onColorChange }: Omit<Props, "el
 	);
 }
 
-const Row = styled("div", {
-	base: wrap.raw({
-		paddingBlock: 2,
+const Row = styled(Wrap, {
+	base: {
+		paddingBlock: 1,
 		"& > *": {
 			width: "100%",
+			minWidth: "72px",
+			paddingBlock: 1,
 			flex: 1,
 		},
-	}),
+	},
 });
 
 export default ColorScheme;

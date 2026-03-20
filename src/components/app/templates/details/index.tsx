@@ -1,5 +1,6 @@
 import { useListCollection } from "@ark-ui/react/collection";
 import { useParams } from "@tanstack/react-router";
+import { EnvironmentSchemeName } from "bsmap";
 import { PlusIcon } from "lucide-react";
 import { useCallback } from "react";
 
@@ -7,26 +8,37 @@ import { createAddColorSchemePrompt } from "$/components/app/constants";
 import { CreateBeatmapForm, UpdateSongForm } from "$/components/app/forms";
 import { Match, Switch } from "$/components/ui/atoms";
 import { Button, Dialog, Heading, Tabs, usePrompt } from "$/components/ui/compositions";
+import { getColorSchemePresets } from "$/helpers/colors.helpers";
 import { addBeatmap, addColorScheme } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectEnvironment } from "$/store/selectors";
 import { HStack, Stack } from "$:styled-system/jsx";
 import AdvancedSettingsDetails from "./advanced-settings";
 import BeatmapDetails from "./beatmaps";
 import ColorSchemeDetails from "./color-schemes";
 
 function SongDetails() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
+	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 
-	const { collection } = useListCollection({
+	const { collection: TABS_COLLECTION } = useListCollection({
 		initialItems: ["Song", "Beatmaps", "Color Schemes", "Mod Settings"],
+	});
+	const { collection: COLOR_SCHEME_PRESET_COLLECTION } = useListCollection({
+		initialItems: Object.keys(getColorSchemePresets()),
 	});
 
 	const { trigger: triggerAddColorScheme } = usePrompt(
 		createAddColorSchemePrompt({
-			render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" required />}</form.AppField>,
-			onSubmit: ({ value: { name } }) => dispatch(addColorScheme({ songId: sid, colorSchemeId: name })),
+			render: ({ form }) => (
+				<form.Row>
+					<form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" required />}</form.AppField>
+					<form.AppField name="preset">{(ctx) => <ctx.Combobox label="Preset" placeholder="Active Color Scheme" clearable collection={COLOR_SCHEME_PRESET_COLLECTION} />}</form.AppField>
+				</form.Row>
+			),
+			onSubmit: ({ value: { name, preset } }) => dispatch(addColorScheme({ songId: sid, colorSchemeId: name, colorSchemePreset: preset ?? EnvironmentSchemeName[environment] })),
 		}),
 	);
 
@@ -81,7 +93,7 @@ function SongDetails() {
 	return (
 		<Stack gap={3}>
 			<Heading rank={1}>Map Details</Heading>
-			<Tabs lazyMount unmountOnExit collection={collection} renderItem={renderItem} />
+			<Tabs lazyMount unmountOnExit collection={TABS_COLLECTION} renderItem={renderItem} />
 		</Stack>
 	);
 }

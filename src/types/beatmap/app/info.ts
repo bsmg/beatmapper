@@ -40,7 +40,7 @@ export interface ISong {
 	environment: EnvironmentV2Name | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
-	colorSchemesById: IEntityMap<IColorScheme>;
+	colorSchemesById: IEntityMap<IColorScheme & { overrideNotes?: boolean; overrideLights?: boolean }>;
 	difficultiesById: IEntityMap<IBeatmap>;
 	selectedDifficulty?: BeatmapId;
 	createdAt?: number;

@@ -1,5 +1,4 @@
-import type { EnvironmentName, IColor } from "bsmap";
-import { ColorScheme, colorToHex, EnvironmentSchemeName, type IV2ColorScheme } from "bsmap";
+import { ColorScheme, ColorSchemeVariant, colorToHex, type EnvironmentName, EnvironmentSchemeName, type IColor, type IV2ColorScheme } from "bsmap";
 
 import { BasicEventEffect, ColorSchemeKey, type IColorScheme, ObjectTool } from "$/types";
 import { token } from "$:styled-system/tokens";
@@ -66,11 +65,27 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 	}
 }
 
-export function deriveColorSchemeFromEnvironment(environment: EnvironmentName) {
+const ColorSchemeFlatVariants = Object.entries(ColorSchemeVariant).reduce((acc: Record<string, Readonly<Omit<IV2ColorScheme, "a">>>, [name, variants]) => {
+	for (const [key, data] of Object.entries(variants)) {
+		const scheme = ColorScheme[name as keyof typeof ColorScheme];
+		acc[key as keyof typeof acc] = { ...scheme, ...data };
+	}
+	return acc;
+}, {});
+
+export function getColorSchemePresets() {
+	return { ...ColorScheme, ...ColorSchemeFlatVariants };
+}
+
+export function deriveColorSchemeFromEnvironment(environment: EnvironmentName, colorSchemePreset?: string) {
 	let envScheme = DEFAULT_COLOR_SCHEME;
 
 	if (environment in EnvironmentSchemeName) {
 		envScheme = ColorScheme[EnvironmentSchemeName[environment]] as Required<{ [key in keyof IV2ColorScheme]: Required<IColor> }>;
+	}
+	if (colorSchemePreset) {
+		const Presets = getColorSchemePresets();
+		envScheme = Presets[colorSchemePreset as keyof typeof Presets] as Required<{ [key in keyof IV2ColorScheme]: Required<IColor> }>;
 	}
 
 	return {

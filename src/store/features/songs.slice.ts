@@ -9,7 +9,7 @@ import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { getAppToaster } from "$/setup";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import type { App, BeatmapId, ColorSchemeKey, IColorScheme, IGrid, SongId } from "$/types";
+import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
@@ -160,7 +160,7 @@ const slice = createSlice({
 					changes: deepAssign(song, { difficultiesById: { [targetBeatmapId]: { ...song.difficultiesById[sourceBeatmapId], ...changes } } }),
 				});
 			}),
-			updateBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; changes: Partial<App.IBeatmap> }>((state, action) => {
+			updateBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; changes: Partial<App.ISong["difficultiesById"][string]> }>((state, action) => {
 				const { songId, beatmapId, changes } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
@@ -182,15 +182,15 @@ const slice = createSlice({
 					},
 				});
 			}),
-			addColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId }>((state, action) => {
-				const { songId, colorSchemeId } = action.payload;
+			addColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId; colorSchemePreset?: string }>((state, action) => {
+				const { songId, colorSchemeId, colorSchemePreset } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, { colorSchemesById: { [colorSchemeId]: getColorScheme(song) } }),
+					changes: deepAssign(song, { colorSchemesById: { [colorSchemeId]: { ...getColorScheme(song, undefined, colorSchemePreset), overrideNotes: true, overrideLights: true } } }),
 				});
 			}),
-			updateColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId; changes: Partial<IColorScheme> }>((state, action) => {
+			updateColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId; changes: Partial<App.ISong["colorSchemesById"][string]> }>((state, action) => {
 				const { songId, colorSchemeId, changes } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
@@ -228,12 +228,12 @@ const slice = createSlice({
 					changes: deepAssign(song, { modSettings: { [key]: { isEnabled: !song.modSettings[key]?.isEnabled } } }),
 				});
 			}),
-			updateCustomColor: api.reducer<{ songId: SongId; key: ColorSchemeKey; value: string | null }>((state, action) => {
-				const { songId, key: element, value: color } = action.payload;
+			updateCustomColors: api.reducer<{ songId: SongId; changes: Partial<IColorScheme> }>((state, action) => {
+				const { songId, changes } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, { modSettings: { customColors: { [element]: color } } }),
+					changes: { modSettings: deepAssign(song.modSettings, { customColors: changes }) },
 				});
 			}),
 			updateGridSize: api.reducer<{ songId: SongId; changes: Partial<IGrid> }>((state, action) => {
@@ -241,7 +241,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, { modSettings: { mappingExtensions: { ...changes } } }),
+					changes: { modSettings: deepAssign(song.modSettings, { mappingExtensions: changes }) },
 				});
 			}),
 		};

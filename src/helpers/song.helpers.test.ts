@@ -24,10 +24,18 @@ describe(getColorScheme.name, () => {
 		environment: "NiceEnvironment" as const,
 		difficultiesById: {
 			Easy: createAppBeatmap({ characteristic: "Standard", difficulty: "Easy", environmentName: "LatticeEnvironment", colorSchemeName: "Collider" }),
+			Normal: createAppBeatmap({ characteristic: "Standard", difficulty: "Easy", environmentName: "LatticeEnvironment", colorSchemeName: "Grid" }),
 			Hard: createAppBeatmap({ characteristic: "Standard", difficulty: "Hard", environmentName: "LatticeEnvironment" }),
 		},
 		colorSchemesById: {
-			Collider: deriveColorSchemeFromEnvironment("ColliderEnvironment"),
+			Collider: {
+				...deriveColorSchemeFromEnvironment("ColliderEnvironment"),
+				overrideNotes: true,
+			},
+			Grid: {
+				...deriveColorSchemeFromEnvironment("GridEnvironment"),
+				overrideNotes: false,
+			},
 		},
 		modSettings: {
 			customColors: { isEnabled: false, colorLeft: "#ffffff" },
@@ -38,9 +46,14 @@ describe(getColorScheme.name, () => {
 		const expectedColorScheme = deriveColorSchemeFromEnvironment("NiceEnvironment");
 		expect(scheme.colorLeft).toBe(expectedColorScheme.colorLeft);
 	});
-	it("outputs beatmap color scheme override when defined", () => {
+	it("outputs beatmap color scheme override when active", () => {
 		const scheme = getColorScheme(mock, "Easy");
 		const expectedColorScheme = deriveColorSchemeFromEnvironment("ColliderEnvironment");
+		expect(scheme.colorLeft).toBe(expectedColorScheme.colorLeft);
+	});
+	it("outputs environment color scheme if color scheme override is disabled", () => {
+		const scheme = getColorScheme(mock, "Normal");
+		const expectedColorScheme = deriveColorSchemeFromEnvironment("LatticeEnvironment");
 		expect(scheme.colorLeft).toBe(expectedColorScheme.colorLeft);
 	});
 	it("outputs environment color scheme if color scheme override is not defined", () => {
@@ -48,10 +61,11 @@ describe(getColorScheme.name, () => {
 		const expectedColorScheme = deriveColorSchemeFromEnvironment("LatticeEnvironment");
 		expect(scheme.colorLeft).toBe(expectedColorScheme.colorLeft);
 	});
-	it("outputs custom color scheme when enabled", () => {
+	it("always outputs custom color scheme when enabled", () => {
 		mock.modSettings.customColors.isEnabled = true;
-		const scheme = getColorScheme(mock, "Easy");
-		expect(scheme.colorLeft).toBe("#ffffff");
+		expect(getColorScheme(mock, "Easy").colorLeft).toBe("#ffffff");
+		expect(getColorScheme(mock, "Normal").colorLeft).toBe("#ffffff");
+		expect(getColorScheme(mock, "Hard").colorLeft).toBe("#ffffff");
 	});
 });
 

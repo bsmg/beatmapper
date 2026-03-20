@@ -2,8 +2,7 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
-import type { EnvironmentName } from "bsmap";
-import { CharacteristicRename, DifficultyRename, NoteJumpSpeed } from "bsmap";
+import { CharacteristicRename, DifficultyRename, type EnvironmentName, EnvironmentSchemeName, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { array, custom, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
@@ -97,6 +96,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 	const njs = useMemo(() => NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset), [bpm, jumpSpeed, jumpOffset]);
 
+	const environmentName = useStore(Form.store, (state) => state.values.environmentName);
+
 	const deleteAlert = useDialog({ role: "alertdialog" });
 
 	const handleDeleteBeatmap = useCallback(() => {
@@ -164,7 +165,18 @@ function UpdateBeatmapForm({ bid }: Props) {
 								<Form.Row>
 									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox label="Environment Override" required creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
 									<Form.AppField name="colorSchemeName">
-										{(ctx) => <ctx.Combobox key={JSON.stringify(colorSchemeIds)} label="Color Scheme Override" required placeholder="Unset" clearable creatable collection={COLOR_SCHEME_COLLECTION} onValueCreate={(value) => dispatch(addColorScheme({ songId: sid, colorSchemeId: value }))} />}
+										{(ctx) => (
+											<ctx.Combobox
+												key={JSON.stringify(colorSchemeIds)}
+												label="Color Scheme Override"
+												required
+												placeholder="Unset"
+												clearable
+												creatable
+												collection={COLOR_SCHEME_COLLECTION}
+												onValueCreate={(value) => dispatch(addColorScheme({ songId: sid, colorSchemeId: value, colorSchemePreset: EnvironmentSchemeName[environmentName] }))}
+											/>
+										)}
 									</Form.AppField>
 								</Form.Row>
 							</Stack>

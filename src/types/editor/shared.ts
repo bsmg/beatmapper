@@ -33,8 +33,8 @@ export type IColorScheme = {
 	[ColorSchemeKey.OBSTACLE]: string;
 	[ColorSchemeKey.ENV_LEFT]: string;
 	[ColorSchemeKey.ENV_RIGHT]: string;
-	[ColorSchemeKey.ENV_WHITE]?: string;
+	[ColorSchemeKey.ENV_WHITE]: string;
 	[ColorSchemeKey.BOOST_LEFT]: string;
 	[ColorSchemeKey.BOOST_RIGHT]: string;
-	[ColorSchemeKey.BOOST_WHITE]?: string;
+	[ColorSchemeKey.BOOST_WHITE]: string;
 };

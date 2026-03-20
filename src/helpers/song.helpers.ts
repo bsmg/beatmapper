@@ -80,16 +80,27 @@ export function getEnvironment<T extends Pick<App.ISong, "environment" | "diffic
 	const beatmap = beatmapId ? song.difficultiesById[beatmapId] : null;
 	return beatmap ? (beatmap.environmentName ?? song.environment) : song.environment;
 }
-export function getColorScheme<T extends Pick<App.ISong, "environment" | "difficultiesById" | "colorSchemesById" | "modSettings">>(song: T, beatmapId?: BeatmapId): IColorScheme {
+export function getColorScheme<T extends Pick<App.ISong, "environment" | "difficultiesById" | "colorSchemesById" | "modSettings">>(song: T, beatmapId?: BeatmapId, colorSchemePreset?: string): IColorScheme {
 	const customOverrideScheme = song.modSettings.customColors;
 	const beatmap = beatmapId ? song.difficultiesById[beatmapId] : null;
 	const vanillaOverrideScheme = beatmap?.colorSchemeName ? song.colorSchemesById[beatmap.colorSchemeName] : null;
 	const environment = getEnvironment(song, beatmapId);
-	const envScheme = deriveColorSchemeFromEnvironment(environment);
+	const envScheme = deriveColorSchemeFromEnvironment(environment, colorSchemePreset);
 
 	function resolveColor<T extends string | undefined>(key: ColorSchemeKey): T {
-		if (customOverrideScheme?.isEnabled && customOverrideScheme[key]) return customOverrideScheme[key] as T;
-		if (vanillaOverrideScheme) return vanillaOverrideScheme[key] as T;
+		if (customOverrideScheme?.isEnabled && customOverrideScheme[key]) {
+			return customOverrideScheme[key] as T;
+		}
+		if (vanillaOverrideScheme) {
+			const isNoteColorOverride = key === "colorLeft" || key === "colorRight" || key === "obstacleColor";
+
+			if (isNoteColorOverride && !!vanillaOverrideScheme.overrideNotes) {
+				return vanillaOverrideScheme[key] as T;
+			}
+			if (!isNoteColorOverride && !!vanillaOverrideScheme.overrideLights) {
+				return vanillaOverrideScheme[key] as T;
+			}
+		}
 		return envScheme[key] as T;
 	}
 
@@ -106,17 +117,17 @@ export function getColorScheme<T extends Pick<App.ISong, "environment" | "diffic
 	};
 }
 export function getGridSize<T extends Pick<App.ISong, "modSettings">>(song: T, grid: IGrid = DEFAULT_GRID): IGrid {
-	const mappingExtensions = song.modSettings.mappingExtensions;
+	const { isEnabled: isMappingExtensionsEnabled, numCols, numRows, colWidth, rowHeight, colOffset, rowOffset } = { ...song.modSettings.mappingExtensions };
 
-	if (!mappingExtensions?.isEnabled) {
+	if (!isMappingExtensionsEnabled) {
 		return grid;
 	}
 	return deepAssign<IGrid>(grid, {
-		numRows: mappingExtensions.numRows,
-		numCols: mappingExtensions.numCols,
-		colWidth: mappingExtensions.colWidth,
-		rowHeight: mappingExtensions.rowHeight,
-		colOffset: mappingExtensions.colOffset,
-		rowOffset: mappingExtensions.rowOffset,
+		numCols: numCols ?? DEFAULT_GRID.numCols,
+		numRows: numRows ?? DEFAULT_GRID.numRows,
+		colWidth: colWidth ?? DEFAULT_GRID.colWidth,
+		rowHeight: rowHeight ?? DEFAULT_GRID.rowHeight,
+		colOffset: colOffset ?? DEFAULT_GRID.colOffset,
+		rowOffset: rowOffset ?? DEFAULT_GRID.rowOffset,
 	});
 }

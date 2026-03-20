@@ -1,7 +1,7 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, isV2Environment, isV3Environment } from "bsmap";
-import { nonEmpty, number, object, pipe, regex, string } from "valibot";
+import { nonEmpty, null_, number, object, pipe, regex, string, union } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
 import type { App } from "$/types";
@@ -86,7 +86,7 @@ export const createAddBookmarkPrompt = createPromptFactory({
 
 export const createAddColorSchemePrompt = createPromptFactory({
 	title: "Add Color Scheme",
-	description: "Create a new color scheme that may be used as an override for any beatmaps within the mapset.",
-	defaultValues: { name: "" },
-	validate: object({ name: pipe(string(), nonEmpty()) }),
+	description: "Create a new color scheme override that may be applied to any beatmaps within your mapset.",
+	defaultValues: { name: "", preset: null },
+	validate: object({ name: pipe(string(), nonEmpty()), preset: union([string(), null_()]) }),
 });

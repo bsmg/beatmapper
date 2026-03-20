@@ -2,7 +2,7 @@ import { useParams } from "@tanstack/react-router";
 
 import { ColorScheme, Module } from "$/components/app/compositions";
 import { RouterLink } from "$/components/ui/compositions";
-import { updateCustomColor, updateModuleEnabled } from "$/store/actions";
+import { updateCustomColors, updateModuleEnabled } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCustomColors, selectModuleEnabled } from "$/store/selectors";
 import { Stack } from "$:styled-system/jsx";
@@ -19,7 +19,7 @@ function AdvancedSettingsDetails() {
 		<Stack gap={3}>
 			<Module
 				label="Custom Colors"
-				render={() => <ColorScheme toggleable colorScheme={customColors} onColorChange={(key, color, active) => dispatch(updateCustomColor({ songId: sid, key, value: active ? color : null }))} />}
+				render={() => <ColorScheme toggleable colorScheme={customColors} onColorChange={(key, color, active) => dispatch(updateCustomColors({ songId: sid, changes: { [key]: active ? color : undefined } }))} />}
 				checked={enabledCustomColors}
 				onCheckedChange={() => dispatch(updateModuleEnabled({ songId: sid, key: "customColors" }))}
 			>

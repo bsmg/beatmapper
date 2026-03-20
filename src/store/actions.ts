@@ -97,7 +97,7 @@ export const {
 	updateColorScheme,
 	removeColorScheme,
 	updateModuleEnabled,
-	updateCustomColor,
+	updateCustomColors,
 	updateGridSize,
 } = songs.actions;
 
