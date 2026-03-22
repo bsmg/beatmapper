@@ -1,4 +1,4 @@
-import { flexRender, type Header, type RowData, type Table } from "@tanstack/react-table";
+import { type Column, flexRender, type RowData, type Table } from "@tanstack/react-table";
 import { useCallback } from "react";
 
 import { For } from "$/components/ui/atoms";
@@ -11,8 +11,8 @@ export interface DataTableProps<T extends RowData> {
 export function DataTable<T extends RowData>({ data }: DataTableProps<T>) {
 	const model = data.getRowModel();
 
-	const getHeaderCellStyles = useCallback((header: Header<T, unknown>) => {
-		return { width: `${header.getSize()}px` };
+	const getColumnStyles = useCallback((column: Column<T, unknown>) => {
+		return { width: `${column.getSize()}px` };
 	}, []);
 
 	return (
@@ -23,7 +23,7 @@ export function DataTable<T extends RowData>({ data }: DataTableProps<T>) {
 						<Builder.Row key={headerGroup.id}>
 							<For each={headerGroup.headers}>
 								{(header) => (
-									<Builder.HeaderCell key={header.id} style={getHeaderCellStyles(header)}>
+									<Builder.HeaderCell key={header.id} style={getColumnStyles(header.column)}>
 										{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
 									</Builder.HeaderCell>
 								)}
@@ -47,7 +47,7 @@ export function DataTable<T extends RowData>({ data }: DataTableProps<T>) {
 						<Builder.Row key={footerGroup.id}>
 							<For each={footerGroup.headers}>
 								{(header) => (
-									<Builder.HeaderCell key={header.id} style={getHeaderCellStyles(header)}>
+									<Builder.HeaderCell key={header.id} style={getColumnStyles(header.column)}>
 										{header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
 									</Builder.HeaderCell>
 								)}

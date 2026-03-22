@@ -68,6 +68,8 @@ export const fileUpload = defineSlotRecipe({
 			objectFit: "cover",
 			aspectRatio: "square",
 			flexShrink: 0,
+			display: "block",
+			overflow: "hidden",
 		},
 		itemName: {
 			gridArea: "name",
@@ -75,6 +77,8 @@ export const fileUpload = defineSlotRecipe({
 			textOverflow: "ellipsis",
 			overflow: "hidden",
 			minWidth: 0,
+			paddingBlock: "0.2em",
+			marginBlock: "-0.2em",
 		},
 		itemSizeText: {
 			gridArea: "size",

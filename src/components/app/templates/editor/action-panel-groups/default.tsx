@@ -35,7 +35,7 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 					endBeat = Number.POSITIVE_INFINITY;
 				}
 				dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
-				dispatch(jumpToBeat({ songId: sid, value: startBeat }));
+				dispatch(jumpToBeat({ songId: sid, value: startBeat, pauseTrack: true }));
 			},
 		}),
 	);

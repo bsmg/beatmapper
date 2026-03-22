@@ -1,19 +1,17 @@
-import { useDialog } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
-import { useBlocker, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import type { EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 import { custom, gtValue, number, object, pipe, string, transform } from "valibot";
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
 import { useSetupContext } from "$/components/context";
-import { AlertDialogProvider, Audio, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
+import { Audio, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { remuxImageToSquare } from "$/helpers/file.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById, selectSongVolume } from "$/store/selectors";
-import { Text } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	name: pipe(string()),
@@ -112,16 +110,8 @@ function UpdateSongForm() {
 	const previewStartTime = useStore(Form.store, (state) => state.values.previewStartTime);
 	const previewDuration = useStore(Form.store, (state) => state.values.previewDuration);
 
-	const { proceed, reset, status } = useBlocker({
-		shouldBlockFn: () => Form.state.isDirty,
-		withResolver: true,
-	});
-
-	const isDirtyAlert = useDialog({ role: "alertdialog", open: status === "blocked" });
-
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text textStyle={"paragraph"}>You have unsaved changes! Are you sure you want to leave this page?</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root>
 				<Form.Row>
 					<Field label="Song File" required>

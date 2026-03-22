@@ -102,7 +102,7 @@ const slice = createSlice({
 			decrementSnap: nextSnappingIncrement(api, { delta: -1 }),
 			updateTrackScale: api.reducer<{ value: number }>((state, action) => {
 				const { value: beatDepth } = action.payload;
-				return { ...state, beatDepth: beatDepth };
+				return { ...state, animateBlockMotion: false, beatDepth: beatDepth };
 			}),
 			updatePlaybackRate: api.reducer<{ value: number }>((state, action) => {
 				const { value: playbackRate } = action.payload;

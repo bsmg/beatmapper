@@ -70,7 +70,7 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 		<Form.AppForm>
 			<Form.Root>
 				<Form.AppField name="characteristic">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Characteristic" required collection={createBeatmapCharacteristicListCollection({ beatmaps })} onChange={() => Form.resetField("difficulty")} />}</Form.AppField>
-				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={createBeatmapDifficultyListCollection({ beatmaps, selectedCharacteristic })} />}</Form.AppField>
+				<Form.AppField name="difficulty">{(ctx) => <ctx.RadioButtonGroup label="Beatmap Difficulty" required collection={createBeatmapDifficultyListCollection({ beatmaps, characteristic: selectedCharacteristic })} />}</Form.AppField>
 				<Form.Submit>{children(beatmapId)}</Form.Submit>
 			</Form.Root>
 		</Form.AppForm>

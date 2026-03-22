@@ -30,8 +30,7 @@ interface BeatmapCharacteristicListCollection {
 }
 export function createBeatmapCharacteristicListCollection({ beatmaps }: BeatmapCharacteristicListCollection) {
 	return createListCollection({
-		items: CHARACTERISTIC_COLLECTION.items,
-		itemToString: (item) => CharacteristicRename[item],
+		...CHARACTERISTIC_COLLECTION,
 		isItemDisabled: (item) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;
@@ -42,12 +41,11 @@ export function createBeatmapCharacteristicListCollection({ beatmaps }: BeatmapC
 
 interface BeatmapDifficultyListCollection {
 	beatmaps: App.IBeatmap[];
-	selectedCharacteristic: CharacteristicName;
+	characteristic: CharacteristicName;
 }
-export function createBeatmapDifficultyListCollection({ beatmaps, selectedCharacteristic }: BeatmapDifficultyListCollection) {
+export function createBeatmapDifficultyListCollection({ beatmaps, characteristic: selectedCharacteristic }: BeatmapDifficultyListCollection) {
 	return createListCollection({
-		items: DIFFICULTY_COLLECTION.items,
-		itemToString: (item) => DifficultyRename[item],
+		...DIFFICULTY_COLLECTION,
 		isItemDisabled: (item) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === selectedCharacteristic);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;

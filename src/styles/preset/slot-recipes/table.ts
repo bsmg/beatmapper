@@ -29,6 +29,8 @@ export const table = defineSlotRecipe({
 			borderColor: { base: "border.muted" },
 		},
 		cell: {
+			lineHeight: "tight",
+			verticalAlign: "top",
 			padding: 1,
 		},
 	},

@@ -7,7 +7,7 @@ import { deepAssign } from "$/utils";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 
 export function createSongId(x: Pick<App.ISong, "name">, currentIds?: SongId[]): string {
-	let songId = toPascalCase(x.name);
+	let songId = toPascalCase(x.name.replaceAll(/[^a-zA-Z0-9]+/g, ""));
 
 	if (currentIds?.some((id) => id === songId)) {
 		if ("prompt" in window) {

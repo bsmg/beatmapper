@@ -27,6 +27,46 @@ const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 	Shortcut,
 };
 
+let lastParams: { sid: string; bid: string } | null = null;
+
+async function syncEditorLifecycle(cause: "enter" | "stay" | "leave", params: { sid: string; bid: string }) {
+	const store = await getAppStore();
+
+	const onEnter = async () => {
+		const state = store.getState();
+
+		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
+
+		if (cause !== "stay") {
+			store.dispatch(updateCursorPosition({ value: selectEditorOffset(state, params.sid) }));
+		}
+
+		lastParams = params;
+	};
+	const onLeave = async () => {
+		const store = await getAppStore();
+		const state = store.getState();
+
+		if (lastParams) {
+			store.dispatch(leaveEditor({ songId: lastParams.sid, beatmapId: lastParams.bid, entities: selectBeatmapEntities(state) }));
+		}
+	};
+
+	switch (cause) {
+		case "enter": {
+			return onEnter();
+		}
+		case "leave": {
+			return onLeave();
+		}
+		default: {
+			if (lastParams?.sid !== params.sid || lastParams?.bid !== params.bid) {
+				return onLeave().then(() => onEnter());
+			}
+		}
+	}
+}
+
 export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	component: RouteComponent,
 	beforeLoad: ({ location }) => {
@@ -49,38 +89,35 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	head: ({ params, loaderData }) => {
 		return { meta: [{ title: loaderData ? `${loaderData.view} ∙ ${params.sid}/${params.bid} ∙ Beatmapper Editor` : "Beatmapper Editor" }] };
 	},
-	onEnter: async ({ cause, params, loaderData }) => {
-		const store = await getAppStore();
-
-		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
-
-		if (cause !== "stay") {
-			store.dispatch(updateCursorPosition({ value: selectEditorOffset(store.getState(), params.sid) }));
-		}
+	onEnter: async ({ params, loaderData }) => {
+		syncEditorLifecycle("enter", params);
 
 		if (loaderData && "unseenPrompt" in loaderData) {
 			const { unseenPrompt } = loaderData;
 
 			if (unseenPrompt) {
+				const store = await getAppStore();
+
 				EDITOR_TOASTER.create({
 					id: unseenPrompt.id,
 					type: "loading",
 					title: unseenPrompt.title,
 					description: <MDX code={unseenPrompt.code} components={EDITOR_PROMPT_COMPONENTS} />,
 					closable: true,
-					onStatusChange: (details) => {
-						if (details.status === "dismissing") store.dispatch(dismissPrompt({ id: unseenPrompt.id }));
+					onStatusChange: async (details) => {
+						if (details.status === "dismissing") {
+							store.dispatch(dismissPrompt({ id: unseenPrompt.id }));
+						}
 					},
 				});
 			}
 		}
 	},
+	onStay: async ({ params }) => {
+		syncEditorLifecycle("stay", params);
+	},
 	onLeave: async ({ params }) => {
-		const store = await getAppStore();
-		const state = store.getState();
-		const entities = selectBeatmapEntities(state);
-
-		await Promise.resolve(store.dispatch(leaveEditor({ songId: params.sid, beatmapId: params.bid, entities })));
+		syncEditorLifecycle("leave", params);
 	},
 });
 

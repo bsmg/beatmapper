@@ -100,6 +100,8 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const initialLightState = useAppSelector((state) => selectCurrentLightStateForTrack(state, sid, bid, trackId));
 	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
 
+	const visibleEvents = useMemo(() => basicEvents.filter((x) => x.time >= startBeat && x.time < endBeat), [basicEvents, startBeat, endBeat]);
+
 	const backgroundBoxes = useMemo(() => {
 		return createBackgroundBoxes(trackId, { tracks, colorScheme, offsetInBeats, basicEvents, boostEvents, initialLightState, startBeat, endBeat });
 	}, [initialLightState, trackId, tracks, colorScheme, offsetInBeats, basicEvents, boostEvents, startBeat, endBeat]);
@@ -206,7 +208,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	return (
 		<EventGrid.Track {...api.getTrackProps(trackId, environment, actions)} {...rest}>
 			<For each={backgroundBoxes}>{(box) => <EventGrid.BackgroundBox key={resolveEventId({ type: trackId, time: box.time })} {...api.getBackgroundBoxProps(box)} />}</For>
-			<For each={basicEvents.filter((x) => x.time >= startBeat && x.time < endBeat)}>{(data) => <BasicEvent data={data} actions={actions} />}</For>
+			<For each={visibleEvents}>{(data) => <BasicEvent data={data} actions={actions} />}</For>
 		</EventGrid.Track>
 	);
 }

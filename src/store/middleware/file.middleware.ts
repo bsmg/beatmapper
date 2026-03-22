@@ -52,19 +52,13 @@ export default function createFileMiddleware() {
 		matcher: isAnyOf(finishLoadingMap, updateSong),
 		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, api) => {
 			const { songId, songFile } = action.payload;
-			const state = api.getState();
 
 			if (finishLoadingMap.match(action) || songFile) {
-				const songFile = await filestore.loadSongFile(songId);
+				const activeSongFile = songFile ?? (await filestore.loadSongFile(songId));
 
-				await Promise.all([
-					createAudioDataContentsFromFile(songFile, audioContext, { bpm: selectBpm(state, songId) }).then(({ frequency, sampleCount, bpmData }) => {
-						return filestore.updateAudioDataContents(songId, { frequency, sampleCount, bpmData });
-					}),
-					deriveWaveformDataFromFile(songFile, audioContext).then((waveformData) => {
-						return api.dispatch(reloadVisualizer({ duration: waveformData.duration, waveformData: waveformData.toJSON() }));
-					}),
-				]);
+				await deriveWaveformDataFromFile(activeSongFile, audioContext).then((waveformData) => {
+					return api.dispatch(reloadVisualizer({ duration: waveformData.duration, waveformData: waveformData.toJSON() }));
+				});
 			}
 		},
 	});

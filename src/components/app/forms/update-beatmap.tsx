@@ -1,7 +1,7 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
-import { useBlocker, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
+import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename, type EnvironmentName, EnvironmentSchemeName, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
@@ -121,16 +121,8 @@ function UpdateBeatmapForm({ bid }: Props) {
 		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
 	}, [dispatch, navigate, toaster, sid, bid, view, beatmaps]);
 
-	const { proceed, reset, status } = useBlocker({
-		shouldBlockFn: () => Form.state.isDirty,
-		withResolver: true,
-	});
-
-	const isDirtyAlert = useDialog({ role: "alertdialog", open: status === "blocked" });
-
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text textStyle={"paragraph"}>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
 					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { BeatMarkers } from "$/components/scene/layouts";
 import { useAppSelector } from "$/store/hooks";
-import { selectDurationInBeats, selectSnap } from "$/store/selectors";
+import { selectDurationInBeats, selectEditorOffsetInBeats, selectSnap } from "$/store/selectors";
 import { getComputedToken } from "$/styles/helpers";
 
 interface Props {
@@ -16,8 +16,9 @@ function EditorBeatMarkers({ beatDepth }: Props) {
 
 	const snapDivision = useAppSelector((state) => Math.max(1 / selectSnap(state), 1));
 	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
+	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
 
-	const marks = useMemo(() => Array.from({ length: Math.ceil((durationInBeats ?? 0) * snapDivision) + 1 }, (_, i) => i / snapDivision), [snapDivision, durationInBeats]);
+	const marks = useMemo(() => Array.from({ length: Math.ceil(((durationInBeats ?? 0) - offsetInBeats) * snapDivision) + 1 }, (_, i) => i / snapDivision), [snapDivision, durationInBeats, offsetInBeats]);
 
 	return (
 		<BeatMarkers.Root marks={marks}>

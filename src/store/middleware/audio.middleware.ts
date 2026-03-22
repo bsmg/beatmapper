@@ -282,11 +282,11 @@ export default function createAudioMiddleware() {
 			if (seekForwards.match(action)) {
 				const offset = progress < windowSize - threshold ? windowSize : 0;
 				const anchor = currentWindowStart + offset;
-				newStartBeat = anchor > Math.floor(durationInBeats) ? currentWindowStart : anchor;
+				newStartBeat = anchor > Math.floor(durationInBeats - offsetInBeats) ? Math.floor(durationInBeats - offsetInBeats) : anchor;
 			} else {
 				const offset = progress < threshold ? windowSize : 0;
 				const anchor = currentWindowStart - offset;
-				newStartBeat = anchor < 0 ? currentWindowStart : anchor;
+				newStartBeat = anchor < 0 ? 0 : anchor;
 			}
 			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, newStartBeat + offsetInBeats) }));
 		},

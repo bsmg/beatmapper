@@ -9,7 +9,7 @@ import * as Builder from "$/components/ui/styled/radio-button-group";
 import { Field, type FieldProps } from "./field";
 
 function getItemStyles(item: CollectionItem): CSSProperties {
-	return { "--current-color": typeof item === "object" && !!item && "color" in item ? item.color : undefined };
+	return { ["--current-color" as keyof CSSProperties]: typeof item === "object" && !!item && "color" in item ? item.color : undefined };
 }
 
 export interface RadioButtonProps {
@@ -39,7 +39,6 @@ export function RadioButtonGroup<T extends CollectionItem>({ label, collection, 
 				{(item, { value, label, disabled }) => (
 					<RadioButton key={value} item={item} value={value} disabled={disabled}>
 						<Builder.ItemText>{label}</Builder.ItemText>
-						<Builder.ItemHiddenInput />
 					</RadioButton>
 				)}
 			</ForListCollection>

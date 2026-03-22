@@ -2,7 +2,7 @@ import type { AnyFormApi } from "@tanstack/react-form";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
 import type { IBasicTrack, ITrackDefinitions } from "bsmap";
-import { type ComponentProps, useCallback, useMemo, useState } from "react";
+import { type ComponentProps, memo, useCallback, useMemo, useState } from "react";
 import { boolean, record, string } from "valibot";
 
 import { EventGrid } from "$/components/app/layouts";
@@ -205,4 +205,4 @@ function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
 	);
 }
 
-export default EventGridEditor;
+export default memo(EventGridEditor);

@@ -1,4 +1,4 @@
-import { type ComponentProps, Fragment, type MouseEvent, useState } from "react";
+import { type ComponentProps, Fragment, type MouseEvent, useMemo, useState } from "react";
 
 import { Button } from "$/components/ui/compositions";
 import type { App } from "$/types";
@@ -14,11 +14,14 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 	// We want to return two sibling pieces:
 	// - A thin vertical line that shows where the flag lives in the beat, which ignores pointer events so that the waveform remains scrubbable
 	// - The flag above the waveform, which displays the beatNum/name, and is clickable to jump the user to that moment in time.
-	const sharedStyles = {
-		left: `${offset}%`,
-		color: isColorDark(bookmark.color) ? "white" : "black",
-		backgroundColor: bookmark.color,
-	};
+	const sharedStyles = useMemo(
+		() => ({
+			left: `${offset}%`,
+			color: isColorDark(bookmark.color) ? "white" : "black",
+			backgroundColor: bookmark.color,
+		}),
+		[bookmark, offset],
+	);
 
 	const [isHovering, setIsHovering] = useState(false);
 

@@ -2,7 +2,7 @@ import { useListCollection } from "@ark-ui/react/collection";
 import { Link } from "@tanstack/react-router";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { ArrowRightToLineIcon } from "lucide-react";
-import { useCallback } from "react";
+import { Fragment, useCallback } from "react";
 
 import { CoverArtFile } from "$/components/app/compositions";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
@@ -12,7 +12,7 @@ import { updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllSongs, selectBeatmaps, selectDemo, selectProcessingImport, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import type { App, SongId } from "$/types";
-import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { HStack, styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
 import SongsDataTableActions from "./actions";
 
@@ -26,13 +26,13 @@ function Metadata({ songId }: Props) {
 	const isDemo = useAppSelector((state) => selectDemo(state, songId));
 
 	return (
-		<Stack gap={0.5}>
+		<Fragment>
 			<Title>
 				{metadata.title}
 				{isDemo && <Demo>(Demo song)</Demo>}
 			</Title>
 			<Artist>{metadata.artist}</Artist>
-		</Stack>
+		</Fragment>
 	);
 }
 function Beatmaps({ songId }: Props) {
@@ -51,7 +51,7 @@ function Actions({ songId }: Props) {
 	const selectedBeatmapId = useAppSelector((state) => selectSelectedBeatmap(state, songId));
 
 	return (
-		<HStack gap={1}>
+		<HStack justify={"start"} gap={1}>
 			<SongsDataTableActions sid={songId} />
 			<Link to={"/edit/$sid/$bid/notes"} params={{ sid: songId.toString(), bid: selectedBeatmapId.toString() }}>
 				<Button variant="subtle" size="icon">
