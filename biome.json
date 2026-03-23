@@ -8,13 +8,6 @@
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
-	"linter": {
-		"rules": {
-			"style": {
-				"noParameterAssign": "off"
-			}
-		}
-	},
 	"formatter": {
 		"lineEnding": "lf",
 		"lineWidth": 320

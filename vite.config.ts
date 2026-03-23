@@ -1,5 +1,4 @@
 import { execSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 
 import { default as pandacss } from "@pandacss/dev/postcss";
 import { devtools, type TanStackDevtoolsViteConfig } from "@tanstack/devtools-vite";
@@ -94,28 +93,24 @@ export default defineConfig(async (ctx) => {
 			version: `"${version}"`,
 		},
 		resolve: {
-			alias: {
-				$: fileURLToPath(new URL("./src", import.meta.url)),
-				"$:styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)),
-				"$:content": fileURLToPath(new URL("./.velite", import.meta.url)),
-			},
+			tsconfigPaths: true,
 		},
 		build: {
-			rollupOptions: {
+			rolldownOptions: {
 				output: {
-					manualChunks: (id) => {
-						if (id.includes(".velite")) return "content";
-						if (id.includes("node_modules")) {
-							if (id.includes("acorn/dist")) return "vendor-acorn";
-							if (id.includes("three.core.js")) return "vendor-three-core";
-							if (id.includes("three") || id.includes("@react-three")) return "vendor-three";
-							if (id.includes("@ark-ui") || id.includes("@floating-ui") || id.includes("@react-spring") || id.includes("@zag-js") || id.includes("lucide")) return "vendor-ui";
-							if (id.includes("react-dom")) return "vendor-react";
-							if (id.includes("@std")) return "vendor-std";
-							if (id.includes("@tanstack")) return "vendor-tanstack";
-							if (id.includes("bsmap")) return "vendor-bsmap";
-							return "vendor";
-						}
+					codeSplitting: {
+						groups: [
+							{ name: "content", test: /\.velite/ },
+							{ name: "vendor-acorn", test: /node_modules\/acorn\/dist/ },
+							{ name: "vendor-three-core", test: /node_modules\/.*three\.core\.js/ },
+							{ name: "vendor-three", test: /node_modules\/(three|@react-three)/ },
+							{ name: "vendor-ui", test: /node_modules\/(@ark-ui|@floating-ui|@react-spring|@zag-js|lucide)/ },
+							{ name: "vendor-react", test: /node_modules\/react-dom/ },
+							{ name: "vendor-std", test: /node_modules\/@std/ },
+							{ name: "vendor-tanstack", test: /node_modules\/@tanstack/ },
+							{ name: "vendor-bsmap", test: /node_modules\/bsmap/ },
+							{ name: "vendor", test: /node_modules/ },
+						],
 					},
 				},
 			},
@@ -123,11 +118,6 @@ export default defineConfig(async (ctx) => {
 		css: {
 			postcss: {
 				plugins: [pandacss({})],
-			},
-		},
-		esbuild: {
-			supported: {
-				"top-level-await": true,
 			},
 		},
 	} as UserConfig;
