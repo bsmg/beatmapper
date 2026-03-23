@@ -49,14 +49,6 @@ export async function createAudioDataContentsFromFile(songFile: File, audioConte
 	return createAudioData({ version: options.version, frequency, sampleCount, bpmData: [region] });
 }
 
-export function snapToNearestBeat(cursorPosition: number, snapTo: number, bpm: number, offset: number) {
-	const cursorPositionInBeats = convertMillisecondsToBeats(cursorPosition - offset, bpm);
-	// cursorPosition will be a fluid value in ms, like 65.29. I need to snap to the nearest bar.
-	// So if my BPM is 60, there is a bar every 4 seconds, so I'd round to 64ms.
-	// Note that BPMs can be any value, even fractions, so I can't rely on a decimal rounding solution :/
-	return convertBeatsToMilliseconds(roundToNearest(cursorPositionInBeats, snapTo), bpm) + offset;
-}
-
 export function formatCursorPosition(cursorPosition: number) {
 	const seconds = Math.floor((cursorPosition / 1000) % 60).toString();
 	const minutes = Math.floor((cursorPosition / (1000 * 60)) % 60).toString();

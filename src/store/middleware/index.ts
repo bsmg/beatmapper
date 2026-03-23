@@ -1,12 +1,14 @@
 import type { Middleware } from "@reduxjs/toolkit";
 import { createStateSyncMiddleware } from "redux-state-sync";
 
+import { AudioSample } from "$/services/audio.service";
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";
 import createFileMiddleware from "./file.middleware";
 import createHistoryMiddleware from "./history.middleware";
 import createPackagingMiddleware from "./packaging.middleware";
+import createPlaybackMiddleware from "./playback.middleware";
 
 export { createStorageMiddleware, type StorageObserver } from "./storage.middleware";
 
@@ -18,7 +20,11 @@ export function createAllSharedMiddleware() {
 		},
 	});
 
-	const audioMiddleware = createAudioMiddleware();
+	const songSample = new AudioSample({ volume: 1, playbackRate: 1 });
+	const tickSample = new AudioSample({ volume: 1, playbackRate: 1 });
+
+	const audioMiddleware = createAudioMiddleware({ songSample, tickSample });
+	const playbackMiddleware = createPlaybackMiddleware({ songSample });
 	const fileMiddleware = createFileMiddleware();
 	const downloadMiddleware = createPackagingMiddleware();
 	const backupMiddleware = createBackupMiddleware();
@@ -29,6 +35,7 @@ export function createAllSharedMiddleware() {
 		// For unknown reasons, things crash when `stateSyncMiddleware` is further down.
 		stateSyncMiddleware as Middleware,
 		audioMiddleware,
+		playbackMiddleware,
 		fileMiddleware,
 		downloadMiddleware,
 		demoMiddleware,

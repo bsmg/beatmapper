@@ -3,7 +3,7 @@ import { calculateNps, type IWrapBaseObject, sortObjectFn } from "bsmap";
 import { shallowEqual } from "react-redux";
 
 import { DEFAULT_GRID } from "$/constants";
-import { convertBeatsToMilliseconds, convertMillisecondsToBeats, snapToNearestBeat } from "$/helpers/audio.helpers";
+import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { getGridSize } from "$/helpers/song.helpers";
@@ -64,26 +64,16 @@ export const {
 	return state.songs;
 });
 
-export const selectBeatForTime = createDraftSafeSelector([selectBpm, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (bpm, time) => {
-	return convertMillisecondsToBeats(time, bpm);
-});
-export const selectTimeForBeat = createDraftSafeSelector([selectBpm, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (bpm, beat) => {
-	return convertBeatsToMilliseconds(beat, bpm);
-});
-
 export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
+
 export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
 	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
 });
 export const selectDurationInBeats = createSelector(selectDuration, selectBpm, (duration, bpm) => {
 	if (duration === null) return null;
 	return convertMillisecondsToBeats(duration, bpm);
-});
-
-export const selectNearestBeat = createDraftSafeSelector([selectSnap, selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (snapTo, bpm, offset, time) => {
-	return snapToNearestBeat(time, snapTo, bpm, offset);
 });
 
 export const {

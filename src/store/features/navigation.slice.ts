@@ -51,12 +51,12 @@ const slice = createSlice({
 		}
 
 		return {
-			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
+			updateCursorPosition: api.reducer<{ songId: SongId; value: number }>((state, action) => {
 				const { value } = action.payload;
 				return { ...state, cursorPosition: clamp(value, 0, state.duration ?? value) };
 			}),
-			tick: api.reducer<{ timeElapsed: number }>((state, action) => {
-				const { timeElapsed } = action.payload;
+			tick: api.reducer<{ songId: SongId; currentTime: number; lastBeat: number; currentBeat: number }>((state, action) => {
+				const { currentTime: timeElapsed } = action.payload;
 				return { ...state, cursorPosition: timeElapsed };
 			}),
 			startPlayback: api.reducer<{ songId: SongId }>((state) => {
