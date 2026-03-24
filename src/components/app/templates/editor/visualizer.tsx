@@ -7,7 +7,7 @@ import { Waveform } from "$/components/ui/compositions";
 import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
 import { jumpToBeat, jumpToTime, removeBookmark } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBookmarks, selectCursorPosition, selectDuration, selectDurationInBeats, selectEditorOffsetInBeats, selectLoading, selectRenderScale, selectWaveformData } from "$/store/selectors";
+import { selectAllBookmarks, selectCursorPosition, selectDuration, selectEditorOffset, selectLoading, selectRenderScale, selectTimeProcessor, selectWaveformData } from "$/store/selectors";
 import { roundToNearest } from "$/utils";
 
 function EditorAudioVisualizer() {
@@ -20,8 +20,8 @@ function EditorAudioVisualizer() {
 	const cursorPosition = useAppSelector(selectCursorPosition);
 	const renderScale = useAppSelector(selectRenderScale);
 	const bookmarks = useAppSelector(selectAllBookmarks);
-	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
-	const offsetInBeats = useAppSelector((state) => selectEditorOffsetInBeats(state, sid));
+	const timeProcessor = useAppSelector((state) => selectTimeProcessor(state, sid));
+	const offset = useAppSelector((state) => selectEditorOffset(state, sid));
 
 	const [container, dimensions] = useParentDimensions<HTMLDivElement>();
 
@@ -52,8 +52,8 @@ function EditorAudioVisualizer() {
 			<AudioVisualizer.Content duration={duration} cursorPosition={roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15)} onVisualizerClick={handleVisualizerClick}>
 				{(ref) => <Waveform ref={ref} width={dimensions.width} height={dimensions.height} waveformData={waveformData} duration={duration} />}
 			</AudioVisualizer.Content>
-			{durationInBeats !== null && (
-				<AudioVisualizer.Markers duration={durationInBeats} offset={offsetInBeats} markers={bookmarks} onMarkerClick={handleMarkerClick}>
+			{duration !== null && (
+				<AudioVisualizer.Markers duration={duration} offset={offset} timeProcessor={timeProcessor} markers={bookmarks} onMarkerClick={handleMarkerClick}>
 					{(bookmark, rest) => <AudioVisualizer.Bookmark key={resolveBookmarkId(bookmark)} bookmark={bookmark} {...rest} />}
 				</AudioVisualizer.Markers>
 			)}

@@ -1,4 +1,4 @@
-import { type ComponentProps, Fragment, type MouseEvent, useMemo, useState } from "react";
+import { type ComponentProps, Fragment, type MouseEvent, memo, useMemo, useState } from "react";
 
 import { Button } from "$/components/ui/compositions";
 import type { App } from "$/types";
@@ -89,4 +89,4 @@ const Name = styled("span", {
 	},
 });
 
-export default EditorBookmark;
+export default memo(EditorBookmark);
