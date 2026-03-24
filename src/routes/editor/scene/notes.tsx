@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
 import { EditorActionPanel } from "$/components/app/templates/editor";
@@ -18,10 +19,12 @@ function RouteComponent() {
 	const beatDepth = useAppSelector(selectBeatDepth);
 	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 
+	const timescale = useCallback((time: number) => time, []);
+
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<MapVisualization beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive />
+				<MapVisualization timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive />
 				<AmbientLight />
 				<Runway surfaceDepth={surfaceDepth} includeEdgeStrips />
 				<fogExp2 attach="fog" args={[getComputedToken("colors.bg.contrast"), 0.02]} />

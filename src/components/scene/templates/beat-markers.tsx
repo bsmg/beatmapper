@@ -8,9 +8,10 @@ import { selectDurationInBeats, selectEditorOffsetInBeats, selectSnap } from "$/
 import { getComputedToken } from "$/styles/helpers";
 
 interface Props {
+	timescale: (time: number) => number;
 	beatDepth: number;
 }
-function EditorBeatMarkers({ beatDepth }: Props) {
+function EditorBeatMarkers({ timescale, beatDepth }: Props) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { theme } = useRouteContext({ from: "__root__" });
 
@@ -24,8 +25,9 @@ function EditorBeatMarkers({ beatDepth }: Props) {
 		<BeatMarkers.Root marks={marks}>
 			{(beatNum, { isBeat }) => {
 				const color = isBeat ? getComputedToken("colors.fg.contrast") : getComputedToken(`colors.gray.${theme === "dark" ? 300 : 700}`);
+				const zPosition = -SONG_OFFSET - timescale(beatNum) * beatDepth;
 				return (
-					<BeatMarkers.Marker key={beatNum} type={isBeat ? "beat" : "sub-beat"} height={isBeat ? 0.2 : 0.08} overextendBy={isBeat ? 0.3 : 0} color={color} position-z={-SONG_OFFSET - beatNum * beatDepth}>
+					<BeatMarkers.Marker key={beatNum} type={isBeat ? "beat" : "sub-beat"} height={isBeat ? 0.2 : 0.08} overextendBy={isBeat ? 0.3 : 0} color={color} position-z={zPosition}>
 						{isBeat && beatNum}
 					</BeatMarkers.Marker>
 				);

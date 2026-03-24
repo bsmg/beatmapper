@@ -10,12 +10,13 @@ import { token } from "$:styled-system/tokens";
 
 export interface ObstacleProps<T extends IWrapObstacle> {
 	data: App.IWrapEditorObject<T>;
+	timescale: (time: number) => number;
 	beatDepth: number;
 	color?: ColorRepresentation;
 }
 
-export function Obstacle<T extends IWrapObstacle>({ data, beatDepth, position, color, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<"group">, ObstacleProps<T>>) {
-	const dimensions = useMemo(() => resolveDimensionsForObstacle(data, { beatDepth }), [data, beatDepth]);
+export function Obstacle<T extends IWrapObstacle>({ data, timescale, beatDepth, position, color, onPointerDown, onPointerOver, onPointerOut, onWheel, ...rest }: Assign<ComponentProps<"group">, ObstacleProps<T>>) {
+	const dimensions = useMemo(() => resolveDimensionsForObstacle(data, { timescale, beatDepth }), [data, timescale, beatDepth]);
 
 	const boxGeometry = useMemo(() => new BoxGeometry(...dimensions), [dimensions]);
 

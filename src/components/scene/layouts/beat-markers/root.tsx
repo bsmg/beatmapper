@@ -8,15 +8,15 @@ interface Props {
 	children: (beatNum: number, ctx: { isBeat: boolean }) => ReactNode;
 }
 function BeatMarkersRoot({ marks, children }: Props) {
-	const { cursorPositionInBeats, beatDepth, surfaceDepth } = useVisualizationContext();
+	const { cursorPosition, beatDepth, surfaceDepth } = useVisualizationContext();
 
 	const numToRender = useMemo(() => surfaceDepth / beatDepth, [surfaceDepth, beatDepth]);
 
 	const visibleMarkers = useMemo(() => {
-		const start = (cursorPositionInBeats ?? 0) - FUDGE_FACTOR;
-		const end = (cursorPositionInBeats ?? 0) + numToRender + FUDGE_FACTOR;
+		const start = (cursorPosition ?? 0) - FUDGE_FACTOR;
+		const end = (cursorPosition ?? 0) + numToRender + FUDGE_FACTOR;
 		return marks.filter((beat) => beat >= start && beat < end);
-	}, [marks, cursorPositionInBeats, numToRender]);
+	}, [marks, cursorPosition, numToRender]);
 
 	return visibleMarkers.map((beat) => children(beat, { isBeat: Number.isInteger(beat) }));
 }

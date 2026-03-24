@@ -1,7 +1,7 @@
 import { type ThreeEvent, useThree } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
 import { type IWrapBaseNote, type IWrapObstacle, NoteDirection } from "bsmap";
-import { useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 import type { Object3D } from "three";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
@@ -21,6 +21,7 @@ import EditorBeatMarkers from "./beat-markers";
 import EditorPlacementGrid from "./placement-grid";
 
 interface Props {
+	timescale: (time: number) => number;
 	beatDepth: number;
 	surfaceDepth: number;
 	interactive?: boolean;
@@ -30,7 +31,7 @@ interface Props {
  *
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
-function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
+function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: Props) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	useControls();
@@ -42,12 +43,14 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	const snapTo = useAppSelector(selectSnap);
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const animateTrack = useAppSelector(selectAnimateTrack);
-	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid) ?? 0);
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
-	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
-	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
-	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
+	const cursorPosition = useMemo(() => timescale(cursorPositionInBeats), [timescale, cursorPositionInBeats]);
+
+	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
+	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
+	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 
 	const noteActions = useObjectPlacement<App.IWrapEditorObject<IWrapBaseNote>>({
 		interactive,
@@ -149,9 +152,9 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	}, [notes, interactive]);
 
 	return (
-		<Visualization.Root cursorPositionInBeats={cursorPositionInBeats} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
+		<Visualization.Root cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
 			<Visualization.Mover immediate={!animateTrack}>
-				{interactive && <EditorBeatMarkers beatDepth={beatDepth} />}
+				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
 				<Visualization.ForGridObjects objects={notes} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
 					{(data, props) => (
 						<ColorNote
@@ -182,6 +185,7 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 						<Obstacle
 							key={resolveObstacleId(data)}
 							layers={1}
+							timescale={timescale}
 							beatDepth={beatDepth}
 							{...props}
 							onPointerDown={(e) => obstacleActions.handlePointerDown(e.nativeEvent, data)}
@@ -197,4 +201,4 @@ function MapVisualization({ beatDepth, surfaceDepth, interactive }: Props) {
 	);
 }
 
-export default MapVisualization;
+export default memo(MapVisualization);

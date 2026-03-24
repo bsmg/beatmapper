@@ -8,15 +8,15 @@ interface Props {
 	immediate?: boolean;
 }
 function VisualizationMover({ children, immediate }: Assign<PropsWithChildren, Props>) {
-	const { cursorPositionInBeats, beatDepth } = useVisualizationContext();
+	const { cursorPosition, beatDepth } = useVisualizationContext();
 
 	const [spring] = useSpring<{ zPosition: number }>(() => {
 		return {
-			zPosition: cursorPositionInBeats * beatDepth,
+			zPosition: cursorPosition * beatDepth,
 			immediate: immediate,
 			config: { tension: 360, friction: 22, mass: 0.4 },
 		};
-	}, [cursorPositionInBeats, beatDepth]);
+	}, [cursorPosition, beatDepth]);
 
 	return <animated.group position-z={spring.zPosition}>{children}</animated.group>;
 }

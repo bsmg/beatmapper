@@ -84,6 +84,21 @@ export const selectEditorOffsetInBeats = createSelector([selectEditorOffset, sel
 	return timeProcessor.toBeatTime(offset / 1000);
 });
 
+export const selectBpmScale = createSelector([selectBpm, selectCursorPositionInBeats, selectTimeProcessor], (baseBpm, currentBeat, timeProcessor) => {
+	const timescales = timeProcessor.timescale;
+
+	let activeBpm = baseBpm;
+
+	for (let i = timescales.length - 1; i >= 0; i--) {
+		if (timescales[i].time <= currentBeat) {
+			activeBpm = timescales[i].bpm;
+			break;
+		}
+	}
+
+	return activeBpm / baseBpm;
+});
+
 export const {
 	selectNew,
 	selectAnnouncements,
@@ -188,14 +203,15 @@ export const selectObjectsCanRedo = createSelector(
 
 export function createVisibleObjectsSelector<T extends IWrapBaseObject>(selector: (state: RootState) => T[]) {
 	return createSelector(
-		[selector, (_1, _2, options: { beatDepth: number; surfaceDepth: number; includeSpaceBeforeGrid?: boolean }) => options, selectCursorPositionInBeats],
-		(objects, { beatDepth, surfaceDepth, includeSpaceBeforeGrid }, cursorPositionInBeats) => {
-			const numOfBeatsInRange = surfaceDepth / beatDepth;
-			const cursor = cursorPositionInBeats ?? 0;
+		[selector, (_1, _2, options: { timescale: (time: number) => number; beatDepth: number; surfaceDepth: number; includeSpaceBeforeGrid?: boolean }) => options, selectCursorPositionInBeats],
+		(objects, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid }, cursorPositionInBeats) => {
+			const numOfBeatsInRange = timescale(surfaceDepth / beatDepth);
+			const cursor = timescale(cursorPositionInBeats ?? 0);
 			return objects.filter((x) => {
-				const numOfBeatsBeforeGrid = ("duration" in x && typeof x.duration === "number" ? x.duration : 0) + 0.01;
+				const time = timescale(x.time);
+				const numOfBeatsBeforeGrid = timescale(("duration" in x && typeof x.duration === "number" ? x.duration : 0) + 0.01);
 				const [closeLimit, farLimit] = calculateVisibleRange(cursor, numOfBeatsInRange, includeSpaceBeforeGrid ? numOfBeatsBeforeGrid + numOfBeatsInRange : numOfBeatsBeforeGrid);
-				return x.time > closeLimit && x.time < farLimit;
+				return time > closeLimit && time < farLimit;
 			});
 		},
 		{ memoizeOptions: { resultEqualityCheck: shallowEqual } },

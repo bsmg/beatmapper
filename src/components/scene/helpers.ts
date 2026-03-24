@@ -8,10 +8,11 @@ import { convertDegreesToRadians } from "$/utils";
 import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
 
 export interface ObjectResolverOptions {
+	timescale: (time: number) => number;
 	beatDepth: number;
 	zOffset?: number;
 }
-export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">): Vector3Tuple {
+export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { timescale, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">): Vector3Tuple {
 	const position: Vector3Tuple = [0, 0, 0];
 
 	// ----------- X ------------
@@ -19,7 +20,7 @@ export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T,
 	// ----------- Y ------------
 	position[1] = (deserializeCoordinate(data.posY) + -1) * BLOCK_CELL_SIZE;
 	// ----------- Z ------------
-	position[2] = -SONG_OFFSET + data.time * beatDepth * -1;
+	position[2] = -SONG_OFFSET + timescale(data.time) * beatDepth * -1;
 	// we may need to apply a manual offset for tentative objects
 	position[2] += zOffset;
 
@@ -34,20 +35,22 @@ export function resolveRotationForNote<T extends IWrapBaseNote>(data: T) {
 	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
 }
 
-export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "beatDepth" | "zOffset">) {
-	const position = resolvePositionForGridObject(data, { beatDepth, zOffset });
+export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
+	const position = resolvePositionForGridObject(data, { timescale, beatDepth, zOffset });
 
 	// ----------- X ------------
 	position[0] += (deserializeCoordinate(data.width) / 2 - 0.5) * BLOCK_CELL_SIZE;
 	// ----------- Y ------------
 	position[1] += (deserializeCoordinate(data.height) / 2 - 1.0) * BLOCK_CELL_SIZE;
 	// ----------- Z ------------
-	position[2] -= (data.duration * beatDepth) / 2;
+	const startZ = timescale(data.time);
+	const endZ = timescale(data.time + data.duration);
+	position[2] -= ((endZ - startZ) * beatDepth) / 2;
 
 	return position;
 }
 
-export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, { beatDepth }: Pick<ObjectResolverOptions, "beatDepth">) {
+export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, { timescale, beatDepth }: Pick<ObjectResolverOptions, "timescale" | "beatDepth">) {
 	const dimensions: Vector3Tuple = [0, 0, 0];
 
 	// ----------- WIDTH ------------
@@ -55,7 +58,9 @@ export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, {
 	// ----------- HEIGHT ------------
 	dimensions[1] = deserializeCoordinate(data.height) * BLOCK_CELL_SIZE;
 	// ----------- DEPTH ------------
-	dimensions[2] = data.duration * beatDepth;
+	const startZ = timescale(data.time);
+	const endZ = timescale(data.time + data.duration);
+	dimensions[2] = Math.abs(endZ - startZ) * beatDepth;
 	// we don't want to allow zero-depth walls
 	dimensions[2] = Math.max(dimensions[2], 0.01);
 

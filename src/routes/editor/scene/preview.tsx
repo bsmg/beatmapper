@@ -6,7 +6,8 @@ import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import DefaultEnvironment from "$/components/scene/templates/environment";
 import MapVisualization from "$/components/scene/templates/visualization";
 import { getAppStore } from "$/setup";
-import { selectBpm, selectJumpOffset, selectJumpSpeed } from "$/store/selectors";
+import { useAppSelector } from "$/store/hooks";
+import { selectBpm, selectJumpOffset, selectJumpSpeed, selectTimeProcessor } from "$/store/selectors";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 	component: RouteComponent,
@@ -19,18 +20,21 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/preview")({
 		const jumpOffset = selectJumpOffset(state, params.sid, params.bid);
 
 		const njs = NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset);
-
-		return { beatDepth: jumpSpeed, surfaceDepth: jumpSpeed * njs.hjd };
+		const factor = (bpm / jumpSpeed) * 0.25; // ballpark
+		return { beatDepth: njs.calcDistance(factor), surfaceDepth: njs.calcDistance(factor * njs.hjd) };
 	},
 });
 
 function RouteComponent() {
+	const { sid } = Route.useParams();
 	const { beatDepth, surfaceDepth } = Route.useLoaderData();
+
+	const timeProcessor = useAppSelector((state) => selectTimeProcessor(state, sid));
 
 	return (
 		<Fragment>
 			<ReduxForwardingCanvas>
-				<MapVisualization beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={false} />
+				<MapVisualization timescale={(time) => timeProcessor.toRealTime(time)} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={false} />
 				<DefaultEnvironment surfaceDepth={surfaceDepth} />
 			</ReduxForwardingCanvas>
 		</Fragment>
