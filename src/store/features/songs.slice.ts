@@ -3,7 +3,6 @@ import { distinct } from "@std/collections/distinct";
 import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
 import { eventTypeRename } from "bsmap/extensions/renamer";
 
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { getAppToaster } from "$/setup";
@@ -35,9 +34,6 @@ const slice = createSlice({
 		}),
 		selectEditorOffset: createSelector(selectById, (song) => {
 			return song.offset;
-		}),
-		selectEditorOffsetInBeats: createSelector(selectById, (song) => {
-			return convertMillisecondsToBeats(song.offset, song.bpm);
 		}),
 		selectBeatmaps: createSelector(selectById, (song) => {
 			return song.difficultiesById;

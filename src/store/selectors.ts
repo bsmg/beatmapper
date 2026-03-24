@@ -1,9 +1,8 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
-import { calculateNps, type IWrapBaseObject, sortObjectFn } from "bsmap";
+import { calculateNps, type IWrapBaseObject, sortObjectFn, TimeProcessor } from "bsmap";
 import { shallowEqual } from "react-redux";
 
 import { DEFAULT_GRID } from "$/constants";
-import { convertMillisecondsToBeats } from "$/helpers/audio.helpers";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { getGridSize } from "$/helpers/song.helpers";
@@ -21,6 +20,7 @@ import boostEvents from "./features/entities/lightshow/boost.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
+import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
 import { selectHistory } from "./helpers";
@@ -39,7 +39,6 @@ export const {
 	selectSongMetadata,
 	selectBpm,
 	selectEditorOffset,
-	selectEditorOffsetInBeats,
 	selectBeatmaps,
 	selectBeatmapIds,
 	selectAllBeatmaps,
@@ -64,16 +63,25 @@ export const {
 	return state.songs;
 });
 
+export const { selectTimescale } = timeline.getSelectors((state: Pick<RootState, "timeline">) => state.timeline);
+
+export const selectTimeProcessor = createDraftSafeSelector([selectBpm, selectEditorOffset, selectTimescale], (bpm, _, timeline) => {
+	return new TimeProcessor(bpm, timeline, 0);
+});
+
 export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
 
-export const selectCursorPositionInBeats = createSelector(selectCursorPosition, selectBpm, selectEditorOffset, (cursorPosition, bpm, offset) => {
-	return convertMillisecondsToBeats(cursorPosition - offset, bpm);
+export const selectCursorPositionInBeats = createSelector([selectCursorPosition, selectTimeProcessor, selectEditorOffset], (cursorPosition, timeProcessor, offset) => {
+	return timeProcessor.toBeatTime((cursorPosition - offset) / 1000);
 });
-export const selectDurationInBeats = createSelector(selectDuration, selectBpm, (duration, bpm) => {
+export const selectDurationInBeats = createSelector([selectDuration, selectTimeProcessor], (duration, timeProcessor) => {
 	if (duration === null) return null;
-	return convertMillisecondsToBeats(duration, bpm);
+	return timeProcessor.toBeatTime(duration / 1000);
+});
+export const selectEditorOffsetInBeats = createSelector([selectEditorOffset, selectTimeProcessor], (offset, timeProcessor) => {
+	return timeProcessor.toBeatTime(offset / 1000);
 });
 
 export const {
@@ -89,9 +97,10 @@ export const {
 	return state.user;
 });
 
-export const selectAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelay, selectBpm, (processingDelay, bpm) => {
-	return convertMillisecondsToBeats(processingDelay, bpm);
+export const selectAudioProcessingDelayInBeats = createSelector([selectAudioProcessingDelay, selectTimeProcessor], (processingDelay, timeProcessor) => {
+	return timeProcessor.toBeatTime(processingDelay / 1000);
 });
+
 export const selectUsableAudioProcessingDelay = createSelector(selectAudioProcessingDelay, selectPlaying, (processingDelay, isPlaying) => {
 	// If we're not playing the track, we shouldn't have any processing delay. This is to prevent stuff from firing prematurely when scrubbing.
 	return isPlaying ? processingDelay : 0;

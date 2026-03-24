@@ -1,4 +1,5 @@
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
+import type { EnvironmentName, ITrackDefinitions } from "bsmap";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
@@ -28,8 +29,6 @@ import type { RootState, SessionStorageObservers, UserStorageObservers } from ".
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
-import type { EnvironmentName, ITrackDefinitions } from "bsmap";
-
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
@@ -41,6 +40,7 @@ import boostEvents from "./features/entities/lightshow/boost.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
+import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
 
@@ -103,13 +103,15 @@ export const {
 
 export const loadDemoMap = createAction("loadDemoMap");
 
+export const { updateTimescale } = timeline.actions;
+
 export const {
+	updateCursorPosition,
+	tick,
 	startPlayback,
 	pausePlayback,
 	stopPlayback,
 	togglePlayback,
-	updateCursorPosition,
-	tick,
 	jumpToBeat,
 	jumpToTime,
 	jumpToStart,

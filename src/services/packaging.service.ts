@@ -4,6 +4,7 @@ import { toPascalCase } from "@std/text/to-pascal-case";
 import {
 	type BeatmapFileType,
 	compatibilityCheck,
+	createAudioData,
 	createBeatmap,
 	type ILoadOptions,
 	type InferBeatmapVersion,
@@ -23,7 +24,7 @@ import {
 } from "bsmap";
 import { type Unzipped, unzip, type Zippable, zip } from "fflate";
 
-import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
+import { createAudioDataContentsFromFile, createBpmDataFromDifficulty, createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
 import { createPlaceholderImageFile } from "$/helpers/file.helpers";
 import { deserializeInfoContents, resolveBeatmapIdFromFilename } from "$/helpers/packaging.helpers";
 import { createSongId, resolveSongId } from "$/helpers/song.helpers";
@@ -96,14 +97,6 @@ export async function importMapArchive(archive: Uint8Array, { loadOptions }: Imp
 			.catch(() => createPlaceholderImageFile()),
 	]);
 
-	const audioData = await yieldValue(getFileFromArchive(unzipped, [info.audio.audioDataFilename, "BPMInfo.dat"]))
-		.then(({ data }) => {
-			return loadAudioData(JSON.parse(decoder.decode(data)), null, loadOptions);
-		})
-		.catch(async () => {
-			return createAudioDataContentsFromFile(songFile, audioContext, { version: info.version, bpm: info.audio.bpm });
-		});
-
 	const beatmaps = await Promise.all(
 		info.difficulties.map(async (infoBeatmap) => {
 			const [difficultyContents, lightshowContents] = await Promise.all([
@@ -135,6 +128,15 @@ export async function importMapArchive(archive: Uint8Array, { loadOptions }: Imp
 			});
 		}),
 	);
+
+	const audioData = await yieldValue(getFileFromArchive(unzipped, [info.audio.audioDataFilename, "BPMInfo.dat"]))
+		.then(({ data }) => {
+			return loadAudioData(JSON.parse(decoder.decode(data)), null, loadOptions);
+		})
+		.catch(async () => {
+			const { frequency, bpmData, ...rest } = await createAudioDataContentsFromFile(songFile, audioContext, { version: info.version, bpm: info.audio.bpm });
+			return createAudioData({ ...rest, frequency, bpmData: createBpmDataFromDifficulty(beatmaps[0].difficulty, frequency, bpmData[0].endBeat) });
+		});
 
 	return { info, audioData, beatmaps, songFile, coverArtFile };
 }
@@ -182,6 +184,19 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 	zippable[info.audio.filename] = new Uint8Array(songFileBuffer);
 	zippable[info.coverImageFilename] = new Uint8Array(coverArtFileBuffer);
 
+	const infoVersion = resolveImplicitVersion<"info">(info, version, (v) => (v === 3 ? 2 : v));
+
+	if (infoVersion >= 2) {
+		const audioDataVersion = resolveImplicitVersion<"audioData">(audioData, version, (v) => (v === 3 || v === 1 ? 2 : v));
+		const audioDataFilename = audioDataVersion === 2 ? "BPMInfo.dat" : audioData.filename;
+
+		const serialAudioData = saveAudioData(audioData, audioDataVersion, {
+			...saveOptions,
+			preprocess: [(data) => ({ ...data, filename: audioDataFilename })],
+		});
+		zippable[audioDataFilename] = encoder.encode(JSON.stringify(serialAudioData, null, format));
+	}
+
 	const requirements: Record<string, ModRequirements[]> = {};
 
 	for (const beatmap of beatmaps) {
@@ -197,7 +212,16 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 
 		const serialDifficulty = saveDifficulty(beatmap.difficulty, beatmapVersion, {
 			...saveOptions,
-			preprocess: [(data) => createBeatmap({ ...beatmap, difficulty: data })],
+			preprocess: [
+				(data, version) => {
+					const bpmEvents = createBpmEventsFromAudioData(audioData);
+
+					if (version && version < 4 && bpmEvents.length > 1) {
+						data.bpmEvents = bpmEvents;
+					}
+					return createBeatmap({ ...beatmap, difficulty: data });
+				},
+			],
 		});
 		zippable[beatmap.filename] = encoder.encode(JSON.stringify(serialDifficulty, null, format));
 
@@ -209,8 +233,6 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 			zippable[beatmap.lightshowFilename] = encoder.encode(JSON.stringify(serialLightshow, null, format));
 		}
 	}
-
-	const infoVersion = resolveImplicitVersion<"info">(info, version, (v) => (v === 3 ? 2 : v));
 
 	const serialInfo = saveInfo(info, infoVersion, {
 		...saveOptions,
@@ -226,17 +248,6 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 		],
 	});
 	zippable[info.filename] = encoder.encode(JSON.stringify(serialInfo, null, format));
-
-	if (infoVersion >= 2) {
-		const audioDataVersion = resolveImplicitVersion<"audioData">(audioData, version, (v) => (v === 3 || v === 1 ? 2 : v));
-		const audioDataFilename = audioDataVersion === 2 ? "BPMInfo.dat" : audioData.filename;
-
-		const serialAudioData = saveAudioData(audioData, audioDataVersion, {
-			...saveOptions,
-			preprocess: [(data) => ({ ...data, filename: audioDataFilename })],
-		});
-		zippable[audioDataFilename] = encoder.encode(JSON.stringify(serialAudioData, null, format));
-	}
 
 	const { buffer } = await new Promise<Uint8Array<ArrayBufferLike>>((resolve) => {
 		zip(zippable, (_, data) => resolve(data));

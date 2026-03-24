@@ -1,25 +1,28 @@
 import { createDraftSafeSelector, createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { TimeProcessor } from "bsmap";
 
-import { convertBeatsToMilliseconds, convertMillisecondsToBeats } from "$/helpers/audio.helpers";
+import { createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
 import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
-import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong } from "$/store/actions";
-import { selectBpm, selectCursorPosition, selectDuration, selectEditorOffset, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSnap } from "$/store/selectors";
+import { getAppBeatmapFilestore } from "$/setup";
+import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
+import { selectBpm, selectCursorPosition, selectDuration, selectEditorOffset, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeProcessor } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 
-const selectBeatForTime = createDraftSafeSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (bpm, offset, time) => {
-	return convertMillisecondsToBeats(time - offset, bpm);
+const selectBeatForTime = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (timeProcessor, offset, time) => {
+	return timeProcessor.toBeatTime((time - offset) / 1000);
 });
-const selectTimeForBeat = createDraftSafeSelector([selectBpm, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (bpm, offset, beat) => {
-	return convertBeatsToMilliseconds(beat, bpm) + offset;
+const selectTimeForBeat = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (timeProcessor, offset, beat) => {
+	return timeProcessor.toRealTime(beat) * 1000 + offset;
 });
 
 /** Manages all concerns related to audio playback and timescales. */
 export default function createPlaybackMiddleware({ songSample }: { songSample: AudioSample }) {
 	const instance = createListenerMiddleware<RootState>();
 
+	const filestore = getAppBeatmapFilestore();
 	const router = getRouter();
 
 	let animationFrameId: number;
@@ -28,10 +31,16 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 		matcher: isAnyOf(finishLoadingMap, updateSong),
 		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, api) => {
 			const { songId } = action.payload;
+			const state = api.getState();
 
 			if (!finishLoadingMap.match(action)) {
 				api.dispatch(stopPlayback({ songId }));
 			}
+
+			await Promise.all([filestore.loadAudioDataContents(songId), filestore.loadBeatmapContents(songId, selectSelectedBeatmap(state, songId))]).then(([audioData, { difficulty }]) => {
+				const { timescale } = new TimeProcessor(selectBpm(state, songId), [...createBpmEventsFromAudioData(audioData), ...difficulty.bpmEvents], 0);
+				api.dispatch(updateTimescale({ timescale: timescale }));
+			});
 		},
 	});
 	instance.startListening({

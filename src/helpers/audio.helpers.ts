@@ -1,4 +1,5 @@
-import { createAudioData, type IWrapAudioData, type IWrapAudioDataBPM } from "bsmap";
+import { distinct } from "@std/collections/distinct";
+import { createAudioData, createBPMEvent, type IWrapAudioData, type IWrapAudioDataBPM, type IWrapBPMEvent, type IWrapDifficulty, sortObjectFn } from "bsmap";
 import { default as WaveformData } from "waveform-data";
 
 import { roundToNearest } from "$/utils";
@@ -47,6 +48,38 @@ export async function createAudioDataContentsFromFile(songFile: File, audioConte
 	};
 
 	return createAudioData({ version: options.version, frequency, sampleCount, bpmData: [region] });
+}
+
+export function createBpmDataFromDifficulty(difficulty: IWrapDifficulty, frequency: number, durationInBeats: number): IWrapAudioData["bpmData"] {
+	const allRegions = distinct([...difficulty.bpmEvents.map((e) => ({ time: e.time, bpm: e.bpm }))]).sort(sortObjectFn);
+
+	const addPoint = (curr: { time: number; bpm: number }, i: number): IWrapAudioDataBPM => {
+		const next = allRegions[i + 1];
+		const endBeat = next ? next.time : durationInBeats;
+		const samplesPerBeat = (60 / curr.bpm) * frequency;
+
+		return {
+			startBeat: curr.time,
+			endBeat: endBeat,
+			startSampleIndex: Math.floor(curr.time * samplesPerBeat),
+			endSampleIndex: Math.floor(endBeat * samplesPerBeat),
+		};
+	};
+
+	return allRegions.map(addPoint);
+}
+export function createBpmEventsFromAudioData({ bpmData, frequency }: IWrapAudioData): IWrapBPMEvent[] {
+	return bpmData.map((region) => {
+		const beatDelta = region.endBeat - region.startBeat;
+		const sampleDelta = region.endSampleIndex - region.startSampleIndex;
+
+		const derivedBpm = sampleDelta === 0 ? 0 : (beatDelta / sampleDelta) * frequency * 60;
+
+		return createBPMEvent({
+			time: region.startBeat,
+			bpm: Math.round(derivedBpm * 1000) / 1000,
+		});
+	});
 }
 
 export function formatCursorPosition(cursorPosition: number) {
