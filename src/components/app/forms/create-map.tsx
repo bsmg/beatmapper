@@ -2,7 +2,7 @@ import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { type CharacteristicName, CharacteristicNameSchema, type DifficultyName, DifficultyNameSchema, EnvironmentName, type EnvironmentV2Name, type EnvironmentV3Name } from "bsmap";
 import { useState } from "react";
-import { array, custom, file, gtValue, length, maxLength, message, minLength, number, object, pipe, string, transform } from "valibot";
+import { array, endsWith, file, type GenericSchema, gtValue, length, maxLength, minLength, number, object, pipe, string, transform } from "valibot";
 
 import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
@@ -15,21 +15,22 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds, selectSongVolume, selectUsername } from "$/store/selectors";
 
 const SCHEMA = object({
-	songFile: pipe(array(file()), length(1, "You must supply exactly one file")),
-	coverArtFile: pipe(array(file()), maxLength(1, "You cannot supply more than one file")),
-	name: pipe(string(), minLength(1, "Value must not be empty")),
+	songFile: pipe(array(file()), length(1)),
+	coverArtFile: pipe(array(file()), maxLength(1)),
+	name: pipe(string(), minLength(1)),
 	subName: pipe(string()),
 	artistName: pipe(string()),
-	bpm: pipe(number(), gtValue(0, "Value must be greater than 0")),
+	bpm: pipe(number(), gtValue(0)),
 	offset: pipe(
 		number(),
+		gtValue(0),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
-	previewStartTime: pipe(number(), gtValue(0, "Value must be greater than 0")),
-	previewDuration: pipe(number(), gtValue(0, "Value must be greater than 0")),
-	environment: custom<EnvironmentV2Name | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Value must end with "Environment"'),
-	characteristic: message(CharacteristicNameSchema, "You must select a characteristic"),
-	difficulty: message(DifficultyNameSchema, "You must select a difficulty"),
+	previewStartTime: pipe(number(), gtValue(0)),
+	previewDuration: pipe(number(), gtValue(0)),
+	environment: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentV2Name | EnvironmentV3Name>,
+	characteristic: CharacteristicNameSchema,
+	difficulty: DifficultyNameSchema,
 });
 
 interface Props {

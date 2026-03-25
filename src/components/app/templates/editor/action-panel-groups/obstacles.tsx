@@ -1,4 +1,4 @@
-import { gtValue, number, object, pipe } from "valibot";
+import { number, object } from "valibot";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button, usePrompt } from "$/components/ui/compositions";
@@ -13,7 +13,7 @@ function ObstaclesActionPanelGroup() {
 	const { trigger: triggerUpdateDurationForObstacles } = usePrompt({
 		title: "Update Duration for Obstacles",
 		description: "Changes the duration for all selected obstacles.",
-		validate: object({ duration: pipe(number(), gtValue(0)) }),
+		validate: object({ duration: number() }),
 		defaultValues: { duration: selectedObstacles?.[0]?.duration },
 		render: ({ form }) => <form.AppField name="duration">{(ctx) => <ctx.NumberInput autoFocus label="Duration" placeholder="4" />}</form.AppField>,
 		onSubmit: ({ value: { duration } }) => {

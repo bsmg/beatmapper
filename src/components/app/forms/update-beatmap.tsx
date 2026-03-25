@@ -5,24 +5,25 @@ import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router"
 import { CharacteristicRename, DifficultyRename, type EnvironmentName, EnvironmentSchemeName, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, custom, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
+import { array, endsWith, type GenericSchema, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { useSetupContext } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Stat, useAppForm } from "$/components/ui/compositions";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, RouterLink, Stat, useAppForm } from "$/components/ui/compositions";
 import { addColorScheme, copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectBpm, selectColorSchemeIds, selectLightshowIds } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
+import { css } from "$:styled-system/css";
 import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	lightshowId: string(),
-	noteJumpSpeed: pipe(number(), gtValue(0, "Value must be greater than 0")),
+	noteJumpSpeed: pipe(number(), gtValue(0)),
 	startBeatOffset: number(),
-	environmentName: custom<EnvironmentName>((name) => typeof name === "string" && name.endsWith("Environment"), 'Value must end with "Environment"'),
+	environmentName: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentName>,
 	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),
@@ -125,7 +126,11 @@ function UpdateBeatmapForm({ bid }: Props) {
 		<Form.AppForm>
 			<Form.Root size="sm">
 				<Stack gap={1}>
-					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
+					<Heading rank={3}>
+						<RouterLink to={`/edit/$sid/$bid/${view}`} params={{ sid: sid.toString(), bid: bid.toString() }} className={css({ fontWeight: 300, color: "fg.muted" })}>
+							{savedVersion.customLabel ?? bid}
+						</RouterLink>
+					</Heading>
 					<HStack gap={0}>
 						<Interleave separator={(index) => <DotIcon key={index} size={16} />}>
 							<Heading rank={4}>{CharacteristicRename[savedVersion.characteristic]}</Heading>

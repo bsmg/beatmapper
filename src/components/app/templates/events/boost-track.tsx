@@ -1,7 +1,7 @@
 import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
 import { createColorBoostEvent, type IWrapColorBoostEvent } from "bsmap";
-import { type ComponentProps, useCallback, useMemo } from "react";
+import { type ComponentProps, memo, useCallback, useMemo } from "react";
 
 import { EventGrid } from "$/components/app/layouts";
 import { For } from "$/components/ui/atoms";
@@ -13,7 +13,7 @@ import type { App } from "$/types";
 import { isColorDark } from "$/utils";
 import { token } from "$:styled-system/tokens";
 
-function BoostEvent({ data, actions }: { data: App.IBoostEvent; actions: EventGrid.IPlacementActions<IWrapColorBoostEvent> }) {
+const BoostEvent = memo(function BoostEvent({ data, actions }: { data: App.IBoostEvent; actions: EventGrid.IPlacementActions<IWrapColorBoostEvent> }) {
 	const api = EventGrid.useContext();
 
 	const color = token("colors.pink.500");
@@ -35,7 +35,7 @@ function BoostEvent({ data, actions }: { data: App.IBoostEvent; actions: EventGr
 			{data.toggle ? "1" : "0"}
 		</EventGrid.Event>
 	);
-}
+});
 
 interface Props {
 	trackId: number;
@@ -48,6 +48,8 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const boostEvents = useAppSelector((state) => selectAllBoostEvents(state));
+
+	const visibleEvents = useMemo(() => boostEvents.filter((x) => x.time >= startBeat && x.time < endBeat), [boostEvents, startBeat, endBeat]);
 
 	const api = EventGrid.useContext();
 
@@ -66,9 +68,9 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 
 	return (
 		<EventGrid.Track {...api.getTrackProps(trackId, environment, actions)} {...rest}>
-			<For each={boostEvents.filter((x) => x.time >= startBeat && x.time < endBeat)}>{(data) => <BoostEvent data={data} actions={actions} />}</For>
+			<For each={visibleEvents}>{(data) => <BoostEvent data={data} actions={actions} />}</For>
 		</EventGrid.Track>
 	);
 }
 
-export default BoostEventTrack;
+export default memo(BoostEventTrack);

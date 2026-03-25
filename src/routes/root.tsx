@@ -13,7 +13,7 @@ export const Route = createRootRoute({
 		return { now, theme: isToday(setYear("04/01", getYear(now))) ? "light" : "dark" };
 	},
 	head: () => {
-		return { meta: [{ title: "Beatmapper" }] };
+		return { meta: [{ title: "Beatmapper" }, { name: "description", content: "A web-based level editor for Beat Saber™." }] };
 	},
 	onEnter: ({ context }) => {
 		document.documentElement.classList.add(context.theme);

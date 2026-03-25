@@ -10,17 +10,15 @@ Okay I might have unintentionally lied about the "rapid updates" from our last c
 Nevertheless, we're back from hiatus and ready to deliver a brand new feature update to Beatmapper!
 
 While the bulk of this update primarily consists of maintenance work to clean up some of the mess from the initial rewrite, 
-I did manage to roll in a **ton** of feature parity and quality-of-life improvements you may or may not have been anticipating.
+I did manage to roll in a **ton** of quality-of-life improvements since last time, alongside a couple new features you probably weren't expecting.
 Let's cover some of the highlights:
 
 ## Standalone Map Converter
 
-A dedicated [map conversion tool](/convert) is now built directly into Beatmapper:
-
-![We call this product-market fit.](./images/converter.png)
+A dedicated [map conversion tool](/convert) is now built directly into Beatmapper.
 
 The converter uses the same serialization layer that's used across the editor and within the Download page, but fully decoupled from the internal filestore. 
-This means that unlike the editor, *the standalone converter will not perform any special processing to your map files*.
+This means that unlike the editor, *the standalone converter will not perform any special processing to your map files beyond what's necessary for compatibility*.
 
 I originally rolled this as an internal tool to test some end-to-end behaviors of our packaging workflow,
 but I figured it may be just as useful for those of you looking for a more robust conversion tool without having to fumble with scripts or load the maps into the editor every time.
@@ -31,7 +29,7 @@ Beat Saber's 1.41 update finally introduced unbounded obstacle placements into t
 
 If you were paying close attention to the release notes for our 0.4 update from awhile back, 
 you might have already noticed that visualization for free obstacles was already integrated within Beatmapper 
-(minus the lack of support for v3 format and legacy conversions we had to patch into the serialization engine for this update cycle).
+(minus legacy conversions we had to patch into the serialization engine for this update cycle).
 
 When it came time to add support for free obstacle placement, there was some level of divergence in how other editors would approach support for this feature, 
 and each strategy had their fair share of benefits and drawbacks.
@@ -42,7 +40,7 @@ and each strategy had their fair share of benefits and drawbacks.
 After trying both strategies to see how they would fare, I couldn't decide which approach would be best suited for Beatmapper, 
 so I ended up integrating both workflows into this update:
 
-![You know the saying: when in doubt, make it a toggle!](../../../media/images/free-obstacle-placement.gif)
+![When in doubt, make it a toggle!](../../../media/images/free-obstacle-placement.gif)
 
 If you'd like to learn more about how the new placement modes work in practice, check out the [updated section](/docs/manual/notes#obstacle-placement-modes) in the user manual.
 
@@ -62,36 +60,53 @@ which may be useful for improving performance and visual clarity for environment
 
 ![You're welcome, Gaga enjoyers.](../../../media/images/track-visibility.png)
 
+## Updated Details View
+
+The Details view has been given a bit of a facelift to break off its sections into dedicated tabs.
+This new layout allows for a much nicer presentation, where dynamic elements won't shift the layout as drastically as before,
+but also makes it easier for us to update the page with new features and capabilities:
+
+![You're welcome, mobile users.](../../../media/images/details-view.png)
+
+And speaking of new features: [vanilla color scheme overrides](/docs/manual/publishing#editing-color-schemes) now have proper support in editor, meaning you can add, remove, and modify them at will:
+
+![One step closer to feature parity.](../../../media/images/edit-color-schemes.png)
+
+It has all the same capabilities you would expect, like color pickers and conditional overrides, 
+as well as a *unique* capability for pre-populating new color schemes based on your active colors or "presets" from those found in OST/DLC maps.
+
 ## Noteworthy Changes
 
 I'm happy to report that lots of bugs and unintuitive behaviors were fixed within this release, so much so that I couldn't really keep track of absolutely everything that was changed.
 Here's a quick rundown of the most important ones that you'll definitely want to keep an eye on:
 
+- Vanilla BPM changes will now be reflected in the timescaling of audio playback and effects: 
+  - Unfortunately no support for custom/legacy BPM changes quite yet; you can read the [compatibility guide](/docs/migration#compatibility) for more details.
 - Beat markers now dynamically adjust their spacing based on your snap value, which should make it easier to see where the cursor will jump to at a glance.
 - The difficulty switcher now preserves the current beat and playback state, which should hopefully make it more convenient to compare beatmap contents across difficulties without interruption.
 - Inline rotations for color notes are now accurately reflected in the Preview view, meaning patterns like stacks and windows will be more visually accurate to how they will behave in-game.
-- Vanilla color scheme overrides now have proper support in editor, meaning you can add, remove, and modify them at will!
+- The Preview view will now simulate normalized jump behavior based on your set parameters and timescale changes. 
 - The "Create Map" form was updated to hide all optional fields under an explicit toggle. 
   That way, you can move through the field more quickly using recommended fallbacks if you decide to hold off on updating these fields until you're ready to publish.
-- The file upload components have been given new improvements and automations for uploaded files:
+- The file upload components have been given better handling behavior for uploaded files:
   - All image and audio files will now feature an embedded preview for their contents.
   - Song files will let you preview audio based on the values you set for the "Song Preview" fields.
-  - Cover art files will automatically crop themselves to a square aspect ratio.
-- The Mapping Extensions setting will now allow you to customize the horizontal and vertical offset for the placement grid.
+  - Cover image files will automatically crop to a square aspect ratio.
+- The Mapping Extensions toggle will now allow you to customize the horizontal and vertical offset for the placement grid.
 
-## Conclusion
+## Wrap-Up
 
-I know it's been a hot minute since our last update; 
-I did originally anticipate dropping a new patch update towards the end of last year to roll in some of these improvements more gradually, 
-but what I didn't anticipate was the scope of these improvements being large enough to warrant graduating the next release to a minor. 😵‍💫 
+I know it's been a hot minute since our last update; for what it's worth,
+I originally planned on dropping a new patch update towards the end of last year to roll in some of these changes more gradually, 
+but I ended up adding so many things over that period that the sheer amount of changes warranted graduating this release to a minor. 😵‍💫 
 
-The nature of an open source project governed by a single maintainer is that some updates will unfortunately take considerably longer than others, 
-but rest assured: I do plan on continuing to release regular updates to Beatmapper so long as there are new improvements to be made. 
-And we still have a very large backlog of other features that will give you lots to look forward to.
+I'd like to say that future updates are most likely going to be more focused updates that won't result in the same degree of downtime, 
+but the nature of an open source project governed by a single maintainer is that some updates may take considerably longer to roll out depending on their featureset and general availability. 
 
-As a reminder, Beatmapper is also entirely open source and contributors with the technical expertise are welcome to submit PRs for any useful improvements they deem fit. 
-If you're interested in helping get through the backlog of features on our roadmap and/or need help onboarding onto the codebase, 
-you can reach out to [officialMECH](https://github.com/officialmech) and I'll be happy to get you up to speed.
+As a reminder, Beatmapper is entirely [open source](https://github.com/bsmg/beatmapper), 
+and the burden of responsibility for shipping new improvements to the editor is not just limited to active maintainers. 
+If you're interested in helping us get through our backlog of features and/or want to land your own changes to improve the editor, 
+read through our [contributor's guide](https://github.com/bsmg/beatmapper/blob/master/CONTRIBUTING.md) and/or let us know if you have any questions.
 
-Finally, if you run into any issues with the new update, be sure to [file a bug report on the repository](https://github.com/bsmg/beatmapper/issues). 
-Until then, enjoy the update! ✌️
+That's all we got for now! If you run into any issues with the new update, be sure to [file a bug report](https://github.com/bsmg/beatmapper/issues) on the repository.
+Otherwise, have fun with the new update! ✌️

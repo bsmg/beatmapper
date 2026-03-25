@@ -1,7 +1,7 @@
 import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
 import { createBasicEvent, type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent } from "bsmap";
-import { type ComponentProps, useCallback, useMemo } from "react";
+import { type ComponentProps, memo, useCallback, useMemo } from "react";
 
 import { EventGrid } from "$/components/app/layouts";
 import { For } from "$/components/ui/atoms";
@@ -55,7 +55,7 @@ function resolveBackgroundForEvent(data: IWrapBasicEvent, options: Parameters<ty
 	}
 }
 
-function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGrid.IPlacementActions<IWrapBasicEvent> }) {
+const BasicEvent = memo(function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGrid.IPlacementActions<IWrapBasicEvent> }) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
@@ -79,7 +79,7 @@ function BasicEvent({ data, actions }: { data: App.IBasicEvent; actions: EventGr
 			{isBasicValueEvent(data, tracks) && data.value}
 		</EventGrid.Event>
 	);
-}
+});
 
 interface Props {
 	trackId: number;
@@ -213,4 +213,4 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	);
 }
 
-export default BasicEventTrack;
+export default memo(BasicEventTrack);

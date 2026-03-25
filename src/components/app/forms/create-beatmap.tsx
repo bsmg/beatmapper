@@ -5,7 +5,7 @@ import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router"
 import type { CharacteristicName, DifficultyName } from "bsmap";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
 import type { PropsWithChildren, ReactNode } from "react";
-import { message, object } from "valibot";
+import { object } from "valibot";
 
 import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
@@ -16,8 +16,8 @@ import { selectAllBeatmaps, selectUsername } from "$/store/selectors";
 import type { BeatmapId } from "$/types";
 
 const SCHEMA = object({
-	characteristic: message(CharacteristicNameSchema, "You must select a characteristic"),
-	difficulty: message(DifficultyNameSchema, "You must select a difficulty"),
+	characteristic: CharacteristicNameSchema,
+	difficulty: DifficultyNameSchema,
 });
 
 interface Props {

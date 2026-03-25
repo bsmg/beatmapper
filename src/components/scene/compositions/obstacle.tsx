@@ -28,7 +28,7 @@ export function Obstacle<T extends IWrapObstacle>({ data, timescale, beatDepth, 
 			</mesh>
 			<lineSegments>
 				<edgesGeometry attach="geometry" args={[boxGeometry]} />
-				<lineBasicMaterial attach="material" color={isFastObstacle(data) ? token("colors.green.500") : data.selected ? token("colors.yellow.500") : "white"} />
+				<lineBasicMaterial attach="material" color={data.selected ? token("colors.yellow.500") : isFastObstacle(data) ? token("colors.green.500") : "white"} />
 			</lineSegments>
 		</group>
 	);

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import ErrorBoundary from "$/components/app/templates/error-boundary";
 import DocsPageLayout from "$/components/docs/templates/page";
+import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { docs } from "$:content";
 
 // hack: tsr rewrites only work with a server environment, so we'll just cheat if we navigate to an old route
@@ -23,25 +24,27 @@ export const Route = createFileRoute("/_/docs/_/$")({
 	component: RouteComponent,
 	errorComponent: (ctx) => <ErrorBoundary {...ctx} interactive={false} />,
 	loader: ({ params }) => {
-		const container = document.querySelector("main");
 		const entry = docs.find((x) => x.id === rewriteId(params._splat));
 
 		if (!entry) {
 			throw Error("No document found.");
 		}
-		return { container, entry };
+
+		return { entry };
 	},
 	head: ({ loaderData }) => {
 		return { meta: [{ title: loaderData ? `${loaderData.entry.title ?? "Unknown"} ∙ Beatmapper Docs` : "Beatmapper Docs" }] };
 	},
-	onEnter: (c) => {
-		const { container } = c.loaderData ?? {};
-		container?.scrollTo({ top: 0 });
-	},
 });
 
 function RouteComponent() {
-	const { container, entry } = Route.useLoaderData();
+	const { entry } = Route.useLoaderData();
+
+	const container = document.querySelector("main");
+
+	useUpdateEffect(() => {
+		container?.scrollTo({ top: 0 });
+	}, [entry.id]);
 
 	return <DocsPageLayout id={entry.id} container={container} />;
 }

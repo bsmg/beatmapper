@@ -75,20 +75,36 @@ and allows both lightshow behaviors to co-exist without creating awkward conflic
 
 Some beatmap features have limited compatibility in the editor, or offer no compatbility at all. This will give you a rundown of what to expect if you're working with unsupported data.
 
+> [!note]
+> If you're using the [converter](/convert) for processing map data, you can ignore these advisories.
+> When importing/exporting maps using the converter, we don't perform any specialized processing steps on your map data beyond what would be required for compatibility. 
+> 
+> The only exception is with "custom data" properties for beatmaps; we generally leave those as-is since we can't 100% guarantee where they come from or how they're used.
+
+### BPM Changes: *Partial Support*
+
+As of 0.5, vanilla BPM changes have proper timescaling for audio playback and preview effects, and handle conversions across all related formats.
+
+The custom/legacy format for BPM changes is not yet supported due to the complexity around their timescales being more lossy as a result of a post-processing step,
+where more sophisticated logic is needed to rebuild the legacy timescale (using "BPM reset" mechanisms rather than regional adjustment) 
+and re-map timings across *all* beatmap entities to be synchronized to *both* timescale systems (if and when both are used concurrently).
+
+In a general sense, I may end up passing on support for legacy BPM changes if only to encourage more people to move their timings over to the vanilla system, 
+since most editors have already deprecated the system, and the vanilla timescale provides a more elegant means of handling resynchronization of timings without the need for a processing step.
+
+> [!important]
+> This specifically pertains to older maps which were made in legacy editors like EditSaber/MMA2 or older versions of ChroMapper.
+> If you use the official editor's timing utility or related software like Tempora for BPM changes, those programs use the vanilla timescale and should work just fine! 
+
 ### Arcs/Chains: *Unsupported*
 
 The systems for these features haven't been implemented yet. 
 Many systems were rearchitected in anticipation of these features during the rewrite, but it'll take some time before they're ready to land.
 
-### BPM Changes: *Unsupported*
-
-Beatmapper does not yet support a proper timescale for adjusting the tick rate of playback based on variable regions. 
-This is a pretty high priority feature, but it'll take a lot of prototyping and iteration to get right, 
-especially since there are two systems for calculating BPM changes that don't quite mesh with one another. 🙃
-
 ### NJS Events: *Unsupported*
 
-Similarly to the above, a proper timescale would need to be implemented for adjusting the jump speed of objects based on variable regions. 
+The systems for these features haven't been implemented yet. 
+Many systems were rearchitected in anticipation of these features during the rewrite, but it'll take some time before they're ready to land.
 
 ### Rotation Events: *Not Planned*
 

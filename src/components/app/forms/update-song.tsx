@@ -1,7 +1,7 @@
 import { useStore } from "@tanstack/react-form";
 import { useParams } from "@tanstack/react-router";
 import type { EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
-import { custom, gtValue, number, object, pipe, string, transform } from "valibot";
+import { endsWith, type GenericSchema, gtValue, number, object, pipe, string, transform } from "valibot";
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
@@ -17,9 +17,10 @@ const SCHEMA = object({
 	name: pipe(string()),
 	subName: pipe(string()),
 	artistName: pipe(string()),
-	bpm: pipe(number(), gtValue(0, "Value must be greater than 0")),
+	bpm: pipe(number(), gtValue(0)),
 	offset: pipe(
 		number(),
+		gtValue(0),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
 	swingAmount: pipe(
@@ -30,9 +31,9 @@ const SCHEMA = object({
 		number(),
 		transform(() => 0),
 	),
-	previewStartTime: pipe(number(), gtValue(0, "Value must be greater than 0")),
-	previewDuration: pipe(number(), gtValue(0, "Value must be greater than 0")),
-	environment: custom<EnvironmentV2Name | EnvironmentV3Name>((name) => typeof name === "string" && name.endsWith("Environment"), 'Value must end with "Environment"'),
+	previewStartTime: pipe(number(), gtValue(0)),
+	previewDuration: pipe(number(), gtValue(0)),
+	environment: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentV2Name | EnvironmentV3Name>,
 });
 
 function UpdateSongForm() {

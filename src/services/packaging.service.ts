@@ -214,10 +214,11 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 			...saveOptions,
 			preprocess: [
 				(data, version) => {
-					const bpmEvents = createBpmEventsFromAudioData(audioData);
-
-					if (version && version < 4 && bpmEvents.length > 1) {
-						data.bpmEvents = bpmEvents;
+					if (version && version < 3) {
+						data.arcs = [];
+					}
+					if (version && version < 4) {
+						data.bpmEvents = createBpmEventsFromAudioData(audioData);
 					}
 					return createBeatmap({ ...beatmap, difficulty: data });
 				},
@@ -237,7 +238,13 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 	const serialInfo = saveInfo(info, infoVersion, {
 		...saveOptions,
 		preprocess: [
-			(data) => {
+			(data, version) => {
+				if (version && version >= 4 && !data.environmentNames.length) {
+					data.environmentNames = [data.environmentBase.normal ?? "DefaultEnvironment", data.environmentBase.allDirections ?? "GlassDesertEnvironment"];
+					for (const beatmap of data.difficulties) {
+						beatmap.environmentId = beatmap.characteristic === "360Degree" || beatmap.characteristic === "90Degree" ? 1 : 0;
+					}
+				}
 				return {
 					...data,
 					difficulties: data.difficulties.map((infoBeatmap) => {
@@ -253,7 +260,7 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 		zip(zippable, (_, data) => resolve(data));
 	});
 
-	return new File([buffer as BlobPart], `${toPascalCase(info.song.title)}.zip`);
+	return new File([buffer as BlobPart], `${toPascalCase(info.song.title.replaceAll(/[^a-zA-Z0-9 ]+/g, ""))}.zip`);
 }
 
 export async function exportMapArchiveFromFilestore(song: App.ISong, options: ExportMapArchiveOptions) {

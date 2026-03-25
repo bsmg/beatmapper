@@ -24,9 +24,7 @@ function RouteComponent() {
 
 	const importMutation = useMutation({
 		mutationFn: async (files: File[]) => {
-			if (files.length === 0) {
-				setContents([]);
-			}
+			setContents([]);
 			for (const file of files) {
 				const archive = await file.arrayBuffer();
 				const content = await importMapArchive(new Uint8Array(archive), {});
