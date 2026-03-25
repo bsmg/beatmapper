@@ -51,7 +51,7 @@ const slice = createSlice({
 		}
 
 		return {
-			updateCursorPosition: api.reducer<{ songId: SongId; value: number }>((state, action) => {
+			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
 				const { value } = action.payload;
 				return { ...state, cursorPosition: clamp(value, 0, state.duration ?? value) };
 			}),

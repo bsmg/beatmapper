@@ -15,7 +15,7 @@ function Footer() {
 					<HStack gap={0}>
 						<Interleave separator={(index) => <DotIcon key={index} />}>
 							<RouterLink to="/docs/$" params={{ _splat: "privacy-policy" }}>
-								Privacy
+								Privacy Policy
 							</RouterLink>
 							<RouterLink to="/docs/$" params={{ _splat: "content-policy" }}>
 								Content Policy

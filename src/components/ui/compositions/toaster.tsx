@@ -30,7 +30,7 @@ export function Toaster({ toaster, portalled = true, portalRef, ...rest }: Toast
 					<Builder.Root key={toast.id}>
 						<Show when={toast.title}>{(title) => <Title>{title}</Title>}</Show>
 						<Show when={toast.description}>{(description) => <Builder.Description>{description}</Builder.Description>}</Show>
-						<Show when={toast.action}>{(action) => <ActionTrigger>{action.label}</ActionTrigger>}</Show>
+						<Show when={toast.action}>{(action) => <ActionTrigger onClick={action.onClick}>{action.label}</ActionTrigger>}</Show>
 						<Show when={toast.closable}>
 							<Builder.CloseTrigger>
 								<XIcon size={20} />

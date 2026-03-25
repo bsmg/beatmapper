@@ -2,12 +2,11 @@ import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { ExportMapForm } from "$/components/app/forms";
-import { useMount } from "$/components/hooks/use-mount";
 import { Show } from "$/components/ui/atoms";
 import { Heading } from "$/components/ui/compositions";
-import { downloadMapFiles, pausePlayback } from "$/store/actions";
+import { downloadMapFiles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDemo, selectPlaying } from "$/store/selectors";
+import { selectDemo } from "$/store/selectors";
 import { Stack, Text } from "$:styled-system/jsx";
 
 function Download() {
@@ -15,14 +14,6 @@ function Download() {
 
 	const dispatch = useAppDispatch();
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
-	const isPlaying = useAppSelector(selectPlaying);
-
-	// When this component mounts, if the song is playing, pause it.
-	useMount(() => {
-		if (isPlaying) {
-			dispatch(pausePlayback({ songId: sid }));
-		}
-	});
 
 	const demoBlocker = useMemo(() => import.meta.env.PROD && isDemo, [isDemo]);
 

@@ -205,7 +205,7 @@ export function createVisibleObjectsSelector<T extends IWrapBaseObject>(selector
 	return createSelector(
 		[selector, (_1, _2, options: { timescale: (time: number) => number; beatDepth: number; surfaceDepth: number; includeSpaceBeforeGrid?: boolean }) => options, selectCursorPositionInBeats],
 		(objects, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid }, cursorPositionInBeats) => {
-			const numOfBeatsInRange = timescale(surfaceDepth / beatDepth);
+			const numOfBeatsInRange = surfaceDepth / beatDepth;
 			const cursor = timescale(cursorPositionInBeats ?? 0);
 			return objects.filter((x) => {
 				const time = timescale(x.time);

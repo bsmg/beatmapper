@@ -33,7 +33,7 @@ import { Stack, Text, Wrap } from "$:styled-system/jsx";
 import BasicEventTrack from "./basic-track";
 import BoostEventTrack from "./boost-track";
 
-function EventGridEditor({ ...rest }: ComponentProps<typeof EventGrid.Root>) {
+function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>, "service">) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();

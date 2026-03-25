@@ -1,7 +1,7 @@
 import { useStore } from "@tanstack/react-form";
 import { useParams } from "@tanstack/react-router";
 import type { EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
-import { endsWith, type GenericSchema, gtValue, number, object, pipe, string, transform } from "valibot";
+import { endsWith, type GenericSchema, gtValue, minValue, number, object, pipe, string, transform } from "valibot";
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
@@ -20,7 +20,7 @@ const SCHEMA = object({
 	bpm: pipe(number(), gtValue(0)),
 	offset: pipe(
 		number(),
-		gtValue(0),
+		minValue(0),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
 	swingAmount: pipe(

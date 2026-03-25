@@ -62,7 +62,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 
 			const state = api.getState();
 			const targetBeat = Math.round(selectBeatForTime(state, songId, pausePlayback.match(action) ? selectCursorPosition(state) : 0));
-			api.dispatch(updateCursorPosition({ songId, value: selectTimeForBeat(state, songId, targetBeat) }));
+			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, targetBeat) }));
 		},
 	});
 	instance.startListening({
@@ -112,7 +112,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 
 				if (selectEventsEditorWindowLock(state) && justExceededWindow) {
 					const commandeeredPosition = selectTimeForBeat(state, songId, windowForLastBeat);
-					api.dispatch(updateCursorPosition({ songId, value: commandeeredPosition }));
+					api.dispatch(updateCursorPosition({ value: commandeeredPosition }));
 				}
 			}
 		},
@@ -124,7 +124,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 
 			const state = api.getState();
 
-			api.dispatch(updateCursorPosition({ songId, value: selectTimeForBeat(state, songId, Math.round(selectBeatForTime(state, songId, value))) }));
+			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, Math.round(selectBeatForTime(state, songId, value))) }));
 			if (pauseTrack) {
 				api.dispatch(pausePlayback({ songId }));
 			}
@@ -137,7 +137,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 
 			const state = api.getState();
 
-			api.dispatch(updateCursorPosition({ songId, value: selectTimeForBeat(state, songId, value) }));
+			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, value) }));
 			if (pauseTrack) {
 				api.dispatch(pausePlayback({ songId }));
 			}
@@ -152,7 +152,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 			const durationInBeats = selectBeatForTime(state, songId, selectDuration(state) ?? 0);
 			const targetBeat = jumpToStart.match(action) ? 0 : Math.floor(durationInBeats);
 
-			api.dispatch(updateCursorPosition({ songId, value: selectTimeForBeat(state, songId, targetBeat) }));
+			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, targetBeat) }));
 		},
 	});
 	instance.startListening({
@@ -183,7 +183,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 				newStartBeat = anchor < 0 ? 0 : anchor;
 			}
 
-			api.dispatch(updateCursorPosition({ songId, value: selectTimeForBeat(state, songId, newStartBeat) }));
+			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, newStartBeat) }));
 		},
 	});
 	instance.startListening({
@@ -198,7 +198,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 			const snapTo = selectSnap(state) * (direction === "forwards" ? 1 : -1);
 			const currentBeat = selectBeatForTime(state, songId, selectCursorPosition(state));
 
-			api.dispatch(updateCursorPosition({ songId, value: selectTimeForBeat(state, songId, currentBeat + snapTo) }));
+			api.dispatch(updateCursorPosition({ value: selectTimeForBeat(state, songId, currentBeat + snapTo) }));
 		},
 	});
 

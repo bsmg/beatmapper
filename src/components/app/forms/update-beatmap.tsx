@@ -144,9 +144,9 @@ function UpdateBeatmapForm({ bid }: Props) {
 						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput label="Jump offset" required step={0.25} />}</Form.AppField>
 					</Form.Row>
 					<Form.Row>
-						<Stat label="HJD (beats)">{njs.hjd}</Stat>
+						<Stat label="HJD (beats)">{Number.parseFloat(njs.hjd.toPrecision(4))}</Stat>
 						<Stat label="JD (meters)">{njs.jd.toFixed(1)}</Stat>
-						<Stat label="RT (ms)">{(njs.reactionTime * 1000).toFixed(0)}</Stat>
+						<Stat label="RT (ms)">{Math.round(njs.reactionTime * 1000)}</Stat>
 					</Form.Row>
 					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput label="Mapper(s)" required />}</Form.AppField>
 					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput label="Lighter(s)" required />}</Form.AppField>

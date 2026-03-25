@@ -31,6 +31,9 @@ export const toast = defineSlotRecipe({
 			transitionTimingFunction: "default",
 			"& > *:nth-child(2)": { marginRight: 6 },
 		},
+		description: {
+			marginBlockEnd: 0.5,
+		},
 		closeTrigger: {
 			position: "absolute",
 			top: 1,

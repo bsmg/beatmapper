@@ -96,6 +96,7 @@ export default defineConfig(async (ctx) => {
 			tsconfigPaths: true,
 		},
 		build: {
+			cssMinify: false,
 			rolldownOptions: {
 				output: {
 					codeSplitting: {

@@ -8,7 +8,7 @@ import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
 import { getAppStore } from "$/setup";
-import { dismissPrompt, leaveEditor, startLoadingMap, updateCursorPosition } from "$/store/actions";
+import { dismissPrompt, leaveEditor, startLoadingMap, stopPlayback, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
 import { prompts } from "$:content";
@@ -118,6 +118,9 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	},
 	onLeave: async ({ params }) => {
 		syncEditorLifecycle("leave", params);
+
+		const store = await getAppStore();
+		store.dispatch(stopPlayback({ songId: params.sid }));
 	},
 });
 

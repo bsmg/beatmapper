@@ -2,7 +2,7 @@ import type { UseDialogContext } from "@ark-ui/react/dialog";
 import { useStore } from "@tanstack/react-form";
 import { type CharacteristicName, CharacteristicNameSchema, type DifficultyName, DifficultyNameSchema, EnvironmentName, type EnvironmentV2Name, type EnvironmentV3Name } from "bsmap";
 import { useState } from "react";
-import { array, endsWith, file, type GenericSchema, gtValue, length, maxLength, minLength, number, object, pipe, string, transform } from "valibot";
+import { array, endsWith, file, type GenericSchema, gtValue, length, maxLength, minLength, minValue, number, object, pipe, string, transform } from "valibot";
 
 import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useSetupContext } from "$/components/context";
@@ -23,7 +23,7 @@ const SCHEMA = object({
 	bpm: pipe(number(), gtValue(0)),
 	offset: pipe(
 		number(),
-		gtValue(0),
+		minValue(0),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
 	previewStartTime: pipe(number(), gtValue(0)),
