@@ -10,7 +10,7 @@ import { token } from "$:styled-system/tokens";
 
 export interface ObstacleProps<T extends IWrapObstacle> {
 	data: App.IWrapEditorObject<T>;
-	timescale: (time: number) => number;
+	timescale?: (time: number) => number;
 	beatDepth: number;
 	color?: ColorRepresentation;
 }

@@ -8,11 +8,11 @@ import { convertDegreesToRadians } from "$/utils";
 import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
 
 export interface ObjectResolverOptions {
-	timescale: (time: number) => number;
+	timescale?: (time: number) => number;
 	beatDepth: number;
 	zOffset?: number;
 }
-export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { timescale, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">): Vector3Tuple {
+export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { timescale = (time) => time, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">): Vector3Tuple {
 	const position: Vector3Tuple = [0, 0, 0];
 
 	// ----------- X ------------
@@ -35,7 +35,7 @@ export function resolveRotationForNote<T extends IWrapBaseNote>(data: T) {
 	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
 }
 
-export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
+export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale = (time) => time, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
 	const position = resolvePositionForGridObject(data, { timescale, beatDepth, zOffset });
 
 	// ----------- X ------------
@@ -50,7 +50,7 @@ export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { t
 	return position;
 }
 
-export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, { timescale, beatDepth }: Pick<ObjectResolverOptions, "timescale" | "beatDepth">) {
+export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, { timescale = (time) => time, beatDepth }: Pick<ObjectResolverOptions, "timescale" | "beatDepth">) {
 	const dimensions: Vector3Tuple = [0, 0, 0];
 
 	// ----------- WIDTH ------------
