@@ -1,10 +1,16 @@
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
 import { SongsDataTable } from "$/components/app/templates/tables";
 import { Button, Dialog, Heading } from "$/components/ui/compositions";
+import { addSongFromFile } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectSongIds } from "$/store/selectors";
 import { styled } from "$:styled-system/jsx";
 import { stack, vstack } from "$:styled-system/patterns";
 
 function ReturningHome() {
+	const dispatch = useAppDispatch();
+	const songIds = useAppSelector(selectSongIds);
+
 	return (
 		<Wrapper>
 			<Heading rank={1}>Select map to edit</Heading>
@@ -18,7 +24,8 @@ function ReturningHome() {
 							Create new map
 						</Button>
 					</Dialog>
-					<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} />}>
+					{/** biome-ignore lint/suspicious/useIterableCallbackReturn: doesn't matter */}
+					<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
 						<Button variant="solid" size="md">
 							Import existing map
 						</Button>

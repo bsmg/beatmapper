@@ -1,26 +1,27 @@
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-import { useAppPrompterContext } from "$/components/app/compositions";
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { usePrompter } from "$/components/ui/compositions";
 import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
-import { EventColor, EventEditMode, EventTool, type SongId, View } from "$/types";
+import { EventColor, EventEditMode, EventTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-interface Props {
-	sid: SongId;
-}
-function EventsEditorShortcuts({ sid }: Props) {
+function EventsEditorShortcuts() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
-	const { active: activePrompt } = useAppPrompterContext();
+	const { isPromptActive } = usePrompter();
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
@@ -39,7 +40,7 @@ function EventsEditorShortcuts({ sid }: Props) {
 				case "KeyA": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view: View.LIGHTSHOW }));
+						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
 					}
 					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.PLACE }));
 				}
@@ -68,6 +69,9 @@ function EventsEditorShortcuts({ sid }: Props) {
 				case "Digit4": {
 					return dispatch(updateEventsEditorTool({ tool: EventTool.FADE }));
 				}
+				case "Digit5": {
+					return dispatch(updateEventsEditorTool({ tool: EventTool.TRANSITION }));
+				}
 				case "KeyR": {
 					if (ev.shiftKey) return;
 					return dispatch(updateEventsEditorColor({ color: EventColor.PRIMARY }));
@@ -82,7 +86,7 @@ function EventsEditorShortcuts({ sid }: Props) {
 				}
 			}
 		},
-		[isLoading, activePrompt, dispatch, sid],
+		[isLoading, isPromptActive, dispatch, sid, view],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

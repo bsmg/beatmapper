@@ -31,10 +31,10 @@ In Beat Saber, every component of an environment is controlled by a unique event
 - Some components have behaviors that can be controlled with a provided "value", like the speed of the side lasers.
 - Some components have premade effects that can be "triggered" on-demand, like the rotation and zoom effects for cascading ring trails.
 
-In Beatmapper's events view, every event type gets its own **track**. A track is a horizontal row that displays the events over a given period of time. 
-For example, the "Large ring" track shows every "ring rotation" event, represented as a green vertical bar.
+In Beatmapper's "Lightshow" view, every event type gets its own **track**. A track is a horizontal row that displays the events over a given period of time. 
+For example, the "Ring Rotation" track represents every event as a green vertical bar.
 
-The events view collects all environments tracks in a **table**. The table shows a specific **window** of time, measured in beats. 
+The "Lightshow" view collects all environments tracks in a **table**. The table shows a specific **window** of time, measured in beats. 
 In the screenshot above, we see beats 0 through 8, since we're editing the very first section of the song.
 
 A thick vertical yellow bar represents the song's current position. 
@@ -83,7 +83,7 @@ You can use the keyboard shortcuts <Shortcut separator="&">- & +</Shortcut>.
 
 ## Event Tracks
 
-Beatmapper supports 3 types of event tracks, and they're a little distinct in how they function.
+Beatmapper supports a variety of event types, and they're a little distinct in how they function.
 
 ### Light Tracks
 
@@ -100,7 +100,7 @@ Any values above 1 will make the light illuminate with more intensity.
 One last unique feature of these tracks: some events may produce a "background box" that indicates the current track status.
 For example, below you can see a translucent red box between the on and off events:
 
-!['On' and 'Flash' events leave the light on, so they create a background box afterwards.](../../../media/images/light-event-types.png)
+!['On', 'Flash', and 'Transition' events leave the light on, so they create a background box afterwards.](../../../media/images/light-event-types.png)
 
 ### Trigger Tracks
 
@@ -123,6 +123,21 @@ Lasers with a speed of 0 won't move at all, and increasing the value will subseq
 
 > Decimals are not supported for value events; the value defined for an event must be an integer starting from 0.
 
+### Color Boost Tracks
+
+![](../../../media/images/boost-event-track.png)
+
+**Color Boost** tracks will allow you to swap between two distinct sets of light colors, each of which are derived from your active color scheme.
+
+A value of 1 will enable the color boost effect, whereas a value of 0 will disable it.
+
+When the color boost effect is active, any light events placed after that point will change into their respective boost colors. 
+This effect will also be reflected in the interpolations for background boxes.
+
+> [!tip]
+> For environments that do not support boost colors (or simply do not have them defined in their color scheme), these events will not produce a noticeable effect.
+> However, players will still be able to experience any color boost effects for your map if they override the map's chosen environment or color scheme with one that has defined boost colors.
+
 ## Placing and Modifying Events
 
 Clicking on a track will place an event at the current cursor position (the white vertical line that follows the mouse and snaps to the nearest increment).
@@ -131,6 +146,7 @@ The height at where you click relative to the track will determine the values as
 
 - For Light tracks, the height will determine the brightness of the event, from a range of 0 to 1 with a step of 0.5.
 - For Value tracks, the height will determine the value of the event, from a range of 0 to 8 with a step of 1.
+- For Color Boost tracks, the height will determine whether the color boost effect is enabled.
 
 You can also adjust the value for both of these event types by hovering over an event, holding <Shortcut>option</Shortcut>, and scrolling forwards/backwards.
 Updating the value in this manner will allow you to set values above the upper limit or at greater precision (in the case of Light events).
@@ -223,15 +239,26 @@ You can toggle it on or off with the <Shortcut>z</Shortcut> key.
 
 ### Mirror Lock
 
-Certain environments feature symmetrical components, such as left and right lasers, where each element has its own respective event tracks. 
-Often this flexibility is awesome, and allows for some great lighting effects, but sometimes you want to operate on these elements at the same time. 
-It can be tedious recreating laser events and speeds twice for each side.
+Certain environments feature symmetrical components, such as left and right lasers, where you may want to operate on these tracks at the same time. 
+After all, it can be tedious recreating laser events and speeds twice for each side.
 
-The "laser lock" disables the "right-side" tracks, and copies all actions you make in the left-side tracks to the corresponding right-side ones:
+The "laser lock" will colorize every track based on whether it has an associated symmetrical neighbor, 
+and any actions you make in one track will be copied to its corresponding symmetrical track.
 
-![](../../../media/images/event-mirror-lock.gif)
+![](../../../media/images/event-mirror-lock.png)
 
 You can toggle it on or off with the <Shortcut>x</Shortcut> key.
+
+## Track Visibility
+
+By default, Beatmapper displays all supported event tracks for a particular environment, but in some cases you may want to limit the number of visible tracks to a subset of what's available, 
+either to improve performance in-editor or help with clarity on environments that feature a substantial number of tracks.
+
+The "Track Visibility" button next to the timeline is our solution for this problem, where you can toggle the visibility of each available basic event track within the editor view:
+
+![](../../../media/images/track-visibility.png)
+
+You can toggle each track individually, or alternatively use the buttons at the top to filter specific subsets of tracks based on their role within the environment.
 
 ## Integrated Previews
 

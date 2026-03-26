@@ -1,13 +1,13 @@
-import { type JsonWaveformData, default as WaveformData } from "waveform-data";
+import { distinct } from "@std/collections/distinct";
+import { createAudioData, createBPMEvent, type IWrapAudioData, type IWrapAudioDataBPM, type IWrapBPMEvent, type IWrapDifficulty, sortObjectFn } from "bsmap";
+import { default as WaveformData } from "waveform-data";
 
 import { roundToNearest } from "$/utils";
 import { convertFileToArrayBuffer } from "./file.helpers";
 
 export function convertMillisecondsToBeats(ms: number, bpm: number) {
 	const bps = bpm / 60;
-
 	const beats = (ms / 1000) * bps;
-
 	// To avoid floating-point issues like 2.999999997, let's round. We'll choose
 	// the lowest-common-multiple to "snap" to any possible value.
 	return roundToNearest(beats, 1 / 96);
@@ -36,28 +36,57 @@ export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audio
 	);
 }
 
-export function deriveDurationFromWaveformData<T extends Pick<JsonWaveformData, "length" | "samples_per_pixel" | "sample_rate">>(waveform: T) {
-	return (waveform.length * waveform.samples_per_pixel) / waveform.sample_rate;
-}
-export function deriveSampleCountFromWaveformData<T extends Pick<JsonWaveformData, "length" | "samples_per_pixel" | "sample_rate">>(waveform: T) {
-	const duration = deriveDurationFromWaveformData(waveform);
-	return waveform.sample_rate * duration;
+export async function createAudioDataContentsFromFile(songFile: File, audioContext: AudioContext, options: { bpm: number; version?: number }): Promise<IWrapAudioData> {
+	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
+
+	// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
+	const region: IWrapAudioDataBPM = {
+		startSampleIndex: 0,
+		endSampleIndex: sampleCount,
+		startBeat: 0,
+		endBeat: convertMillisecondsToBeats(duration * 1000, options.bpm),
+	};
+
+	return createAudioData({ version: options.version, frequency, sampleCount, bpmData: [region] });
 }
 
-export function snapToNearestBeat(cursorPosition: number, bpm: number, offset: number) {
-	// cursorPosition will be a fluid value in ms, like 65.29. I need to snap to the nearest bar.
-	// So if my BPM is 60, there is a bar every 4 seconds, so I'd round to 64ms.
-	// Note that BPMs can be any value, even fractions, so I can't rely on a decimal rounding solution :/
-	const cursorPositionInBeats = convertMillisecondsToBeats(cursorPosition - offset, bpm);
+export function createBpmDataFromDifficulty(difficulty: IWrapDifficulty, frequency: number, durationInBeats: number): IWrapAudioData["bpmData"] {
+	const allRegions = distinct([...difficulty.bpmEvents.map((e) => ({ time: e.time, bpm: e.bpm }))]).sort(sortObjectFn);
 
-	return convertBeatsToMilliseconds(Math.round(cursorPositionInBeats), bpm) + offset;
+	const addPoint = (curr: { time: number; bpm: number }, i: number): IWrapAudioDataBPM => {
+		const next = allRegions[i + 1];
+		const endBeat = next ? next.time : durationInBeats;
+		const samplesPerBeat = (60 / curr.bpm) * frequency;
+
+		return {
+			startBeat: curr.time,
+			endBeat: endBeat,
+			startSampleIndex: Math.floor(curr.time * samplesPerBeat),
+			endSampleIndex: Math.floor(endBeat * samplesPerBeat),
+		};
+	};
+
+	return allRegions.map(addPoint);
+}
+export function createBpmEventsFromAudioData({ bpmData, frequency }: IWrapAudioData): IWrapBPMEvent[] {
+	return bpmData.map((region) => {
+		const beatDelta = region.endBeat - region.startBeat;
+		const sampleDelta = region.endSampleIndex - region.startSampleIndex;
+
+		const derivedBpm = sampleDelta === 0 ? 0 : (beatDelta / sampleDelta) * frequency * 60;
+
+		return createBPMEvent({
+			time: region.startBeat,
+			bpm: Math.round(derivedBpm * 1000) / 1000,
+		});
+	});
 }
 
 export function formatCursorPosition(cursorPosition: number) {
-	const seconds = String(Math.floor((cursorPosition / 1000) % 60)).padStart(2, "0");
-	const minutes = String(Math.floor((cursorPosition / (1000 * 60)) % 60)).padStart(2, "0");
+	const seconds = Math.floor((cursorPosition / 1000) % 60).toString();
+	const minutes = Math.floor((cursorPosition / (1000 * 60)) % 60).toString();
 
-	return `${minutes}:${seconds}`;
+	return `${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
 }
 
 export function formatCursorPositionInBeats(cursorPositionInBeats: number) {

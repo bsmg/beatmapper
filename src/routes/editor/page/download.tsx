@@ -7,6 +7,5 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_page/download")({
 });
 
 function RouteComponent() {
-	const { sid } = Route.useParams();
-	return <DownloadView sid={sid} />;
+	return <DownloadView />;
 }

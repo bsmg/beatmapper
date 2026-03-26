@@ -1,61 +1,43 @@
-import { createBombNote, createColorNote } from "bsmap";
+import { createBombNote, createColorNote, type IWrapBaseNote, type IWrapBombNote, type IWrapColorNote } from "bsmap";
 
-import { type App, type IGrid, ObjectPlacementMode } from "$/types";
-import { convertGridColumn, convertGridRow } from "./grid.helpers";
+import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
+import { DEFAULT_GRID } from "$/constants";
+import { type IGrid, NotePlacementMode } from "$/types";
+import { convertGridCell } from "./grid.helpers";
+import { serializeCoordinate } from "./item.helpers";
 
-export function resolveNoteId<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(x: T) {
-	return `${x.time}/${x.posX}/${x.posY}`;
-}
-
-export function isColorNote(data: unknown): data is App.IColorNote {
+export function isColorNote(data: unknown): data is IWrapColorNote {
 	if (typeof data !== "object" || !data) return false;
 	return "direction" in data && "angleOffset" in data;
 }
-export function isBombNote(data: unknown): data is App.IBombNote {
+export function isBombNote(data: unknown): data is IWrapBombNote {
 	if (typeof data !== "object" || !data) return false;
 	return "direction" in data;
 }
 
-export function createColorNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid, direction: number) {
-	const note = createColorNote({
-		posX: mouseDownAt.colIndex,
-		posY: mouseDownAt.rowIndex,
-		direction: direction,
-	});
-
-	switch (mode) {
-		case ObjectPlacementMode.NORMAL: {
-			return note;
-		}
-		case ObjectPlacementMode.EXTENSIONS: {
-			const colIndex = convertGridColumn(mouseDownAt.colIndex, numCols, colWidth);
-			const rowIndex = convertGridRow(mouseDownAt.rowIndex, numRows, rowHeight);
-
-			note.posX = colIndex >= 0 ? (colIndex + 1) * 1000 : (colIndex - 1) * 1000;
-			note.posY = rowIndex >= 0 ? (rowIndex + 1) * 1000 : (rowIndex - 1) * 1000;
-
-			return note;
-		}
-	}
+export function resolveNoteId<T extends Pick<IWrapBaseNote, "time" | "posX" | "posY">>(x: T) {
+	return `${x.time}/${x.posX}/${x.posY}`;
 }
-export function createBombNoteFromMouseEvent(mode: ObjectPlacementMode, mouseDownAt: { colIndex: number; rowIndex: number }, { numCols, numRows, colWidth, rowHeight }: IGrid) {
-	const note = createBombNote({
-		posX: mouseDownAt.colIndex,
-		posY: mouseDownAt.rowIndex,
-	});
 
-	switch (mode) {
-		case ObjectPlacementMode.NORMAL: {
-			return note;
-		}
-		case ObjectPlacementMode.EXTENSIONS: {
-			const colIndex = convertGridColumn(mouseDownAt.colIndex, numCols, colWidth);
-			const rowIndex = convertGridRow(mouseDownAt.rowIndex, numRows, rowHeight);
+export function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: Partial<IWrapBaseNote>) => T) {
+	return ({ cellDownAt }: Pick<IPlacementContext, "cellDownAt">, mode: NotePlacementMode, grid: IGrid = DEFAULT_GRID, data: Partial<T> = {}) => {
+		if (!cellDownAt) return null;
 
-			note.posX = colIndex >= 0 ? (colIndex + 1) * 1000 : (colIndex - 1) * 1000;
-			note.posY = rowIndex >= 0 ? (rowIndex + 1) * 1000 : (rowIndex - 1) * 1000;
+		const isExtended = mode === NotePlacementMode.EXTENSIONS;
 
-			return note;
-		}
-	}
+		const { colIndex, rowIndex } = convertGridCell(cellDownAt, grid);
+
+		return createNote({
+			posX: serializeCoordinate(colIndex, isExtended),
+			posY: serializeCoordinate(rowIndex, isExtended),
+			...data,
+		});
+	};
 }
+
+export const createColorNoteFromMouseEvent = createNotePlacementFactory((data) => {
+	return createColorNote(data);
+});
+export const createBombNoteFromMouseEvent = createNotePlacementFactory((data) => {
+	return createBombNote(data);
+});

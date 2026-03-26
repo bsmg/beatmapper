@@ -1,32 +1,21 @@
-import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, isAnyOf } from "@reduxjs/toolkit";
-import { NoteJumpSpeed } from "bsmap";
-import { type CharacteristicName, type DifficultyName, EnvironmentName } from "bsmap/types";
+import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { distinct } from "@std/collections/distinct";
+import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
+import { eventTypeRename } from "bsmap/extensions/renamer";
 
-import { DEFAULT_GRID } from "$/constants";
-import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";
-import { getAllBeatmaps, getBeatmapById, getBeatmapIds, getBeatmaps, getColorScheme, getCustomColorsModule, getGridSize, getSelectedBeatmap, getSongLastOpenedAt, getSongMetadata, isModuleEnabled, isSongReadonly, resolveBeatmapId, resolveSongId } from "$/helpers/song.helpers";
-import { processImportedMap } from "$/services/packaging.service";
+import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
+import { importMapArchiveToFilestore } from "$/services/packaging.service";
+import { getAppToaster } from "$/setup";
 import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import { type App, type BeatmapId, type ColorSchemeKey, type IGrid, ObjectPlacementMode, type RequiredKeys, type SongId } from "$/types";
+import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
-	sortComparer: (a, b) => getSongLastOpenedAt(b) - getSongLastOpenedAt(a),
+	sortComparer: (a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0),
 });
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
-
-const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof processImportedMap>[1] }> = async (args, api) => {
-	try {
-		const { readonly } = args.options;
-		const archive = await args.file.arrayBuffer();
-		const songData = await processImportedMap(new Uint8Array(archive), args.options);
-		return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: readonly } });
-	} catch (e) {
-		return api.rejectWithValue(e);
-	}
-};
 
 const slice = createSlice({
 	name: "songs",
@@ -38,137 +27,125 @@ const slice = createSlice({
 		selectIds: selectIds,
 		selectById: selectById,
 		selectSongMetadata: createSelector(selectById, (song) => {
-			return getSongMetadata(song);
+			return { title: song.name, subtitle: song.subName, artist: song.artistName };
+		}),
+		selectBpm: createSelector(selectById, (song) => {
+			return song.bpm;
+		}),
+		selectEditorOffset: createSelector(selectById, (song) => {
+			return song.offset;
 		}),
 		selectBeatmaps: createSelector(selectById, (song) => {
-			return getBeatmaps(song);
+			return song.difficultiesById;
 		}),
 		selectAllBeatmaps: createSelector(selectById, (song) => {
-			return getAllBeatmaps(song);
+			return Object.values(song.difficultiesById);
 		}),
 		selectBeatmapIds: createSelector(selectById, (song) => {
-			return getBeatmapIds(song);
+			return Object.keys(song.difficultiesById);
 		}),
 		selectBeatmapById: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
-			return getBeatmapById(song, beatmapId);
+			return song.difficultiesById[beatmapId];
+		}),
+		selectJumpSpeed: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].noteJumpSpeed;
+		}),
+		selectJumpOffset: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].startBeatOffset;
+		}),
+		selectLabelForBeatmap: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].customLabel ?? beatmapId;
+		}),
+		selectLightshowIds: createSelector([selectById], (song) => {
+			return distinct(Object.values(song.difficultiesById).map((beatmap) => beatmap.lightshowId));
 		}),
 		selectLightshowIdForBeatmap: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
-			const beatmap = getBeatmapById(song, beatmapId);
-			return beatmap.lightshowId;
+			return song.difficultiesById[beatmapId].lightshowId;
 		}),
 		selectBeatmapIdsWithLightshowId: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, lightshowId: BeatmapId) => lightshowId], (song, lightshowId) => {
-			const beatmaps = Object.entries(getBeatmaps(song)).filter(([_, x]) => x.lightshowId === lightshowId);
+			const beatmaps = Object.entries(song.difficultiesById).filter(([_, x]) => x.lightshowId === lightshowId);
 			return beatmaps.map(([id]) => id);
+		}),
+		selectColorSchemes: createSelector(selectById, (song) => {
+			return song.colorSchemesById;
 		}),
 		selectColorSchemeIds: createSelector(selectById, (song) => {
 			return Object.keys(song.colorSchemesById);
 		}),
+		selectColorSchemeId: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return song.difficultiesById[beatmapId].colorSchemeName;
+		}),
+		selectColorSchemeOverrides: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId: BeatmapId) => beatmapId], (song, beatmapId) => {
+			const colorSchemeName = song.difficultiesById[beatmapId].colorSchemeName;
+			if (!colorSchemeName) return null;
+			return song.colorSchemesById[colorSchemeName];
+		}),
+		selectSelectedBeatmap: createSelector(selectById, (song) => {
+			return song.selectedDifficulty ?? Object.keys(song.difficultiesById)[0];
+		}),
+		selectDemo: createSelector(selectById, (song) => {
+			return !!song.demo;
+		}),
+		selectModuleEnabled: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: keyof App.IModSettings) => key], (song, key) => {
+			return !!song.modSettings[key]?.isEnabled;
+		}),
+		selectCustomColors: createSelector(selectById, (song) => {
+			return { ...song.modSettings.customColors };
+		}),
+		selectEnvironment: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return getEnvironment(song, beatmapId);
+		}),
 		selectColorScheme: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
 			return getColorScheme(song, beatmapId);
 		}),
-		selectSelectedBeatmap: createSelector(selectById, (song) => {
-			return getSelectedBeatmap(song);
-		}),
-		selectDemo: createSelector(selectById, (song) => {
-			return isSongReadonly(song);
-		}),
-		selectModuleEnabled: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, key: keyof App.IModSettings) => key], (song, key) => {
-			return isModuleEnabled(song, key);
-		}),
-		selectCustomColors: createSelector(selectById, (song) => {
-			return getCustomColorsModule(song);
-		}),
-		selectGridSize: createSelector(selectById, (song) => {
-			return getGridSize(song);
-		}),
-		selectPlacementMode: createSelector(selectById, (song) => {
-			return isModuleEnabled(song, "mappingExtensions") ? ObjectPlacementMode.EXTENSIONS : ObjectPlacementMode.NORMAL;
+		selectEventTracksForEnvironment: createSelector([selectById, (_1: ReturnType<typeof adapter.getInitialState>, _2: SongId, beatmapId?: BeatmapId) => beatmapId], (song, beatmapId) => {
+			return getBasicTracksForEnvironment(getEnvironment(song, beatmapId), eventTypeRename);
 		}),
 	},
 	reducers: (api) => {
+		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[1] }> = async (args, api) => {
+			const toaster = getAppToaster();
+
+			try {
+				const archive = await args.file.arrayBuffer();
+				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), args.options);
+				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: args.options.readonly } });
+			} catch (error) {
+				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				console.error(error);
+				return api.rejectWithValue(error);
+			}
+		};
+
 		return {
-			addOne: api.preparedReducer(
-				(args: Pick<App.ISong, "name" | "subName" | "artistName" | "bpm" | "offset"> & { username: string; songId: SongId; beatmapId: BeatmapId; songFile: File; coverArtFile: File; selectedCharacteristic: CharacteristicName; selectedDifficulty: DifficultyName }) => {
-					const { songId, songFile, coverArtFile, selectedCharacteristic, selectedDifficulty, username, ...rest } = args;
-					const mappers = username !== "" ? [username] : [];
-					return {
-						payload: {
-							songId: songId,
-							songData: { ...rest, id: songId.toString() },
-							beatmapId: resolveBeatmapId({ characteristic: selectedCharacteristic, difficulty: selectedDifficulty }),
-							beatmapData: { characteristic: selectedCharacteristic, difficulty: selectedDifficulty, mappers, lighters: mappers },
-							songFile,
-							coverArtFile,
-							username,
-						},
-					};
-				},
-				(state, action) => {
-					const { songData, songFile, coverArtFile, beatmapId, beatmapData } = action.payload;
-					return adapter.addOne(state, {
-						...songData,
-						songFilename: songFile.name,
-						coverArtFilename: coverArtFile.name,
-						previewStartTime: 12,
-						previewDuration: 10,
-						environment: EnvironmentName[0],
-						colorSchemesById: {},
-						difficultiesById: {
-							[beatmapId]: {
-								...beatmapData,
-								lightshowId: beatmapId,
-								noteJumpSpeed: NoteJumpSpeed.FallbackNJS[beatmapData.difficulty],
-								startBeatOffset: 0,
-								environmentName: EnvironmentName[0],
-								colorSchemeName: null,
-							},
-						},
-						modSettings: {
-							customColors: { isEnabled: false, ...deriveColorSchemeFromEnvironment(EnvironmentName[0]) },
-							mappingExtensions: { isEnabled: false, ...DEFAULT_GRID },
-						},
-					});
-				},
-			),
+			addOne: api.reducer<{ songId: SongId; beatmapId: BeatmapId; songFile: File; coverArtFile: File; songData: Parameters<typeof createAppSong>[0]; beatmapData: Parameters<typeof createAppBeatmap>[0] }>((state, action) => {
+				const { songData, beatmapId, beatmapData } = action.payload;
+				return adapter.addOne(state, createAppSong({ ...songData, difficultiesById: { [beatmapId]: createAppBeatmap({ ...beatmapData, environmentName: beatmapData.environmentName ?? songData.environment ?? EnvironmentName[0] }) } }));
+			}),
 			addOneFromFile: api.asyncThunk(fetchContentsFromFile, {
 				fulfilled: (state, action) => {
 					const { songData } = action.payload;
 					return adapter.upsertOne(state, songData);
 				},
 			}),
-			updateOne: api.reducer<{ songId: SongId; changes: Partial<App.ISong> }>((state, action) => {
+			updateOne: api.reducer<{ songId: SongId; songFile: File | undefined; changes: Partial<App.ISong> }>((state, action) => {
 				const { songId: id, changes } = action.payload;
 				return adapter.updateOne(state, { id, changes });
 			}),
 			updateSelectedBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId }>((state, action) => {
-				const { songId, beatmapId } = action.payload;
-				return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
+				const { songId: id, beatmapId } = action.payload;
+				return adapter.updateOne(state, { id, changes: { selectedDifficulty: beatmapId } });
 			}),
-			removeOne: api.reducer<{ id: SongId; beatmapIds: BeatmapId[] }>((state, action) => {
-				const { id } = action.payload;
+			removeOne: api.reducer<{ songId: SongId; beatmapIds: BeatmapId[] }>((state, action) => {
+				const { songId: id } = action.payload;
 				return adapter.removeOne(state, id);
 			}),
-			addBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; data: RequiredKeys<Partial<App.IBeatmap>, "characteristic" | "difficulty">; username: string }>((state, action) => {
-				const { songId, beatmapId, data, username } = action.payload;
+			addBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; data: Parameters<typeof createAppBeatmap>[0] }>((state, action) => {
+				const { songId, beatmapId, data } = action.payload;
 				const song = selectById(state, songId);
-				const mappers = username !== "" ? [username] : [];
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, {
-						difficultiesById: {
-							[beatmapId]: {
-								lightshowId: data.lightshowId ?? beatmapId,
-								characteristic: data.characteristic,
-								difficulty: data.difficulty,
-								noteJumpSpeed: NoteJumpSpeed.FallbackNJS[data.difficulty],
-								startBeatOffset: 0,
-								environmentName: song.environment,
-								colorSchemeName: null,
-								mappers: mappers,
-								lighters: mappers,
-							},
-						},
-					}),
+					changes: deepAssign(song, { difficultiesById: { [beatmapId]: createAppBeatmap({ ...data, environmentName: song.environment }) } }),
 				});
 			}),
 			cloneBeatmap: api.reducer<{ songId: SongId; sourceBeatmapId: BeatmapId; targetBeatmapId: BeatmapId; changes?: Partial<App.IBeatmap> }>((state, action) => {
@@ -176,53 +153,83 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, {
-						difficultiesById: {
-							[targetBeatmapId]: { ...getBeatmapById(song, sourceBeatmapId), ...changes },
-						},
-					}),
+					changes: deepAssign(song, { difficultiesById: { [targetBeatmapId]: { ...song.difficultiesById[sourceBeatmapId], ...changes } } }),
 				});
 			}),
-			updateBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; changes: Partial<App.IBeatmap> }>((state, action) => {
+			updateBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId; changes: Partial<App.ISong["difficultiesById"][string]> }>((state, action) => {
 				const { songId, beatmapId, changes } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, {
-						difficultiesById: {
-							[beatmapId]: { ...changes },
-						},
-					}),
+					changes: deepAssign(song, { difficultiesById: { [beatmapId]: { ...changes } } }),
 				});
 			}),
 			removeBeatmap: api.reducer<{ songId: SongId; beatmapId: BeatmapId }>((state, action) => {
 				const { songId, beatmapId } = action.payload;
 				const song = selectById(state, songId);
-				const difficultiesById = Object.entries(getBeatmaps(song)).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
-					if (bid === beatmapId) return acc;
-					acc[bid] = beatmap;
-					return acc;
-				}, {});
-				return adapter.updateOne(state, { id: songId, changes: { difficultiesById: difficultiesById } });
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: {
+						difficultiesById: Object.entries(song.difficultiesById).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
+							if (bid === beatmapId) return acc;
+							acc[bid] = beatmap;
+							return acc;
+						}, {}),
+					},
+				});
+			}),
+			addColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId; colorSchemePreset?: string }>((state, action) => {
+				const { songId, colorSchemeId, colorSchemePreset } = action.payload;
+				const song = selectById(state, songId);
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: deepAssign(song, { colorSchemesById: { [colorSchemeId]: { ...getColorScheme(song, undefined, colorSchemePreset), overrideNotes: true, overrideLights: true } } }),
+				});
+			}),
+			updateColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId; changes: Partial<App.ISong["colorSchemesById"][string]> }>((state, action) => {
+				const { songId, colorSchemeId, changes } = action.payload;
+				const song = selectById(state, songId);
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: deepAssign(song, { colorSchemesById: { [colorSchemeId]: { ...changes } } }),
+				});
+			}),
+			removeColorScheme: api.reducer<{ songId: SongId; colorSchemeId: EntityId }>((state, action) => {
+				const { songId, colorSchemeId } = action.payload;
+				const song = selectById(state, songId);
+				return adapter.updateOne(state, {
+					id: songId,
+					changes: {
+						difficultiesById: Object.entries(song.difficultiesById).reduce((acc: App.ISong["difficultiesById"], [bid, beatmap]) => {
+							if (beatmap.colorSchemeName !== colorSchemeId) {
+								acc[bid] = beatmap;
+							} else {
+								acc[bid] = { ...beatmap, colorSchemeName: null };
+							}
+							return acc;
+						}, {}),
+						colorSchemesById: Object.entries(song.colorSchemesById).reduce((acc: App.ISong["colorSchemesById"], [bid, colorScheme]) => {
+							if (bid === colorSchemeId) return acc;
+							acc[bid] = colorScheme;
+							return acc;
+						}, {}),
+					},
+				});
 			}),
 			updateModuleEnabled: api.reducer<{ songId: SongId; key: keyof App.IModSettings; checked?: boolean }>((state, action) => {
 				const { songId, key } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, {
-						modSettings: {
-							[key]: { isEnabled: !song.modSettings[key]?.isEnabled },
-						},
-					}),
+					changes: deepAssign(song, { modSettings: { [key]: { isEnabled: !song.modSettings[key]?.isEnabled } } }),
 				});
 			}),
-			updateCustomColor: api.reducer<{ songId: SongId; key: ColorSchemeKey; value?: string }>((state, action) => {
-				const { songId, key: element, value: color } = action.payload;
+			updateCustomColors: api.reducer<{ songId: SongId; changes: Partial<IColorScheme> }>((state, action) => {
+				const { songId, changes } = action.payload;
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, { modSettings: { customColors: { [element]: color } } }),
+					changes: { modSettings: deepAssign(song.modSettings, { customColors: changes }) },
 				});
 			}),
 			updateGridSize: api.reducer<{ songId: SongId; changes: Partial<IGrid> }>((state, action) => {
@@ -230,11 +237,7 @@ const slice = createSlice({
 				const song = selectById(state, songId);
 				return adapter.updateOne(state, {
 					id: songId,
-					changes: deepAssign(song, {
-						modSettings: {
-							mappingExtensions: { ...changes },
-						},
-					}),
+					changes: { modSettings: deepAssign(song.modSettings, { mappingExtensions: changes }) },
 				});
 			}),
 		};
@@ -249,10 +252,8 @@ const slice = createSlice({
 			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(finishLoadingMap, (state, action) => {
-			const {
-				songId,
-				songData: { lastOpenedAt },
-			} = action.payload;
+			const { songId, songData } = action.payload;
+			const { lastOpenedAt } = songData;
 			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
 		});
 		builder.addMatcher(isAnyOf(loadGridPreset), (state, action) => {
@@ -260,11 +261,7 @@ const slice = createSlice({
 			const song = selectById(state, songId);
 			return adapter.updateOne(state, {
 				id: songId,
-				changes: deepAssign(song, {
-					modSettings: {
-						mappingExtensions: { ...grid },
-					},
-				}),
+				changes: deepAssign(song, { modSettings: { mappingExtensions: { ...grid } } }),
 			});
 		});
 		builder.addDefaultCase((state) => state);

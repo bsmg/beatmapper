@@ -1,85 +1,38 @@
 import { createListCollection } from "@ark-ui/react/collection";
-import { createToaster } from "@ark-ui/react/toast";
 import type { FileMimeType } from "@zag-js/file-utils";
-import { CharacteristicRename, DifficultyRename, EnvironmentRename } from "bsmap";
-import { type CharacteristicName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, isV2Environment, isV3Environment } from "bsmap";
+import { nonEmpty, null_, number, object, pipe, regex, string, union } from "valibot";
 
-import { SNAPPING_INCREMENTS } from "$/constants";
-import type { App, BeatmapId } from "$/types";
-import { getMetaKeyLabel } from "$/utils";
-import { token } from "$:styled-system/tokens";
-
-export const APP_TOASTER = createToaster({
-	placement: "bottom-end",
-	overlap: true,
-	max: 8,
-});
-
-export const EDITOR_TOASTER = createToaster({
-	placement: "top-end",
-	max: 1,
-});
+import { createPromptFactory } from "$/components/ui/compositions";
+import type { App } from "$/types";
 
 export const SONG_FILE_ACCEPT_TYPE: FileMimeType[] = ["audio/ogg", "application/ogg"];
 export const COVER_ART_FILE_ACCEPT_TYPE: FileMimeType[] = ["image/jpeg", "image/png"];
 export const MAP_ARCHIVE_FILE_ACCEPT_TYPE: FileMimeType[] = ["application/zip", "application/x-zip-compressed", "application/octet-stream"];
 
 export const CHARACTERISTIC_COLLECTION = createListCollection({
-	items: (["Standard", "NoArrows", "OneSaber", "Legacy", "Lawless"] as const).map((value) => ({ value })),
-	itemToValue: (item) => item.value,
-	itemToString: (item) => CharacteristicRename[item.value],
+	items: CharacteristicName,
+	itemToValue: (item) => item,
+	itemToString: (item) => CharacteristicRename[item],
 });
 export const DIFFICULTY_COLLECTION = createListCollection({
-	items: (["Easy", "Normal", "Hard", "Expert", "ExpertPlus"] as const).map((value) => ({ value, color: token.var(`colors.difficulty.${value}`) })),
-	itemToValue: (item) => item.value,
-	itemToString: (item) => DifficultyRename[item.value],
+	items: DifficultyName,
+	itemToValue: (item) => item,
+	itemToString: (item) => DifficultyRename[item],
 });
-
 export const ENVIRONMENT_COLLECTION = createListCollection({
-	items: [...EnvironmentName, ...EnvironmentV3Name],
+	items: EnvironmentName.filter((x) => isV2Environment(x) || isV3Environment(x)),
 	itemToString: (item) => EnvironmentRename[item],
 });
-
-export const VERSION_COLLECTION = createListCollection({
-	items: ["4", "3", "2", "1"].map((x, i) => ({ value: x, index: i })),
-	itemToString: (item) => ["v4", "v3", "v2", "v1"][item.index],
-	isItemDisabled: (item) => item.value === "1",
-});
-
-export const SNAPPING_INCREMENT_LIST_COLLECTION = createListCollection({
-	items: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
-	itemToValue: (item) => item.value,
-	itemToString: (item) => (item.shortcutKey ? `${item.label} (${getMetaKeyLabel()}+${item.shortcutKey})` : item.label),
-});
-
-interface ColorSchemeListCollectionOptions {
-	colorSchemeIds: string[];
-}
-export function createColorSchemeCollection({ colorSchemeIds }: ColorSchemeListCollectionOptions) {
-	return createListCollection({
-		items: ["", ...colorSchemeIds],
-		itemToString: (item) => (item === "" ? "Unset" : item),
-	});
-}
-
-interface BeatmapListCollectionOptions {
-	beatmapIds: BeatmapId[];
-}
-export function createBeatmapListCollection({ beatmapIds }: BeatmapListCollectionOptions) {
-	return createListCollection({
-		items: beatmapIds,
-	});
-}
 
 interface BeatmapCharacteristicListCollection {
 	beatmaps: App.IBeatmap[];
 }
 export function createBeatmapCharacteristicListCollection({ beatmaps }: BeatmapCharacteristicListCollection) {
 	return createListCollection({
-		items: CHARACTERISTIC_COLLECTION.items,
-		itemToString: (item) => CharacteristicRename[item.value],
+		...CHARACTERISTIC_COLLECTION,
 		isItemDisabled: (item) => {
-			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item.value);
+			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === item);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;
 			return false;
 		},
@@ -88,19 +41,50 @@ export function createBeatmapCharacteristicListCollection({ beatmaps }: BeatmapC
 
 interface BeatmapDifficultyListCollection {
 	beatmaps: App.IBeatmap[];
-	currentBeatmap?: App.IBeatmap;
-	selectedCharacteristic: CharacteristicName;
+	characteristic: CharacteristicName;
 }
-export function createBeatmapDifficultyListCollection({ beatmaps, currentBeatmap, selectedCharacteristic }: BeatmapDifficultyListCollection) {
+export function createBeatmapDifficultyListCollection({ beatmaps, characteristic: selectedCharacteristic }: BeatmapDifficultyListCollection) {
 	return createListCollection({
-		items: DIFFICULTY_COLLECTION.items,
-		itemToString: (item) => DifficultyRename[item.value],
+		...DIFFICULTY_COLLECTION,
 		isItemDisabled: (item) => {
 			const withMatchingCharacteristic = beatmaps.filter((beatmap) => beatmap.characteristic === selectedCharacteristic);
 			if (withMatchingCharacteristic.length >= DIFFICULTY_COLLECTION.size) return true;
-			const withMatchingDifficulty = withMatchingCharacteristic.some((beatmap) => beatmap.difficulty === item.value);
+			const withMatchingDifficulty = withMatchingCharacteristic.some((beatmap) => beatmap.difficulty === item);
 			if (withMatchingDifficulty) return true;
-			return currentBeatmap?.characteristic === selectedCharacteristic && currentBeatmap?.difficulty === item.value;
+			return false;
 		},
 	});
 }
+
+export const createQuickSelectPrompt = createPromptFactory({
+	title: "Quick Select",
+	description: "Select all objects within the provided range of beats.",
+	defaultValues: { range: "" },
+	validate: object({
+		range: pipe(
+			string(),
+			regex(/^\d+(-\d+)?$/, (issue) => `Invalid format: Expected <number> or <number>-<number> but received "${issue.input}"`),
+		),
+	}),
+});
+
+export const createJumpToBeatPrompt = createPromptFactory({
+	title: "Jump to Beat",
+	description: "Move the cursor to the provided beat number.",
+	defaultValues: { beatNum: 0 },
+	validate: object({ beatNum: number() }),
+});
+
+export const createAddBookmarkPrompt = createPromptFactory({
+	title: "Add Bookmark",
+	description: "Create a new bookmark at the current beat.",
+	defaultValues: { name: "" },
+	validate: object({ name: pipe(string(), nonEmpty()) }),
+});
+
+export const createAddColorSchemePrompt = createPromptFactory({
+	title: "Add Color Scheme",
+	description: "Create a new color scheme override that may be applied to any beatmaps within your mapset.",
+	defaultValues: { name: "", preset: null },
+	validate: object({ name: pipe(string(), nonEmpty()), preset: union([string(), null_()]) }),
+});

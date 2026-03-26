@@ -4,13 +4,15 @@ import { useCallback, useState } from "react";
 import { heroVideo } from "$/assets";
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
 import { Button, Dialog, Heading } from "$/components/ui/compositions";
-import { loadDemoMap } from "$/store/actions";
-import { useAppDispatch } from "$/store/hooks";
+import { addSongFromFile, loadDemoMap } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectSongIds } from "$/store/selectors";
 import { styled, VStack, Wrap } from "$:styled-system/jsx";
 import OptionColumn from "./option";
 
 function FirstTimeHome() {
 	const dispatch = useAppDispatch();
+	const songIds = useAppSelector(selectSongIds);
 
 	const [isLoadingDemo, setIsLoadingDemo] = useState(false);
 
@@ -41,7 +43,8 @@ function FirstTimeHome() {
 						</Dialog>
 					</OptionColumn>
 					<OptionColumn icon={DownloadIcon} title="Import existing map" description="Edit an existing map by selecting it from your computer">
-						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} />}>
+						{/** biome-ignore lint/suspicious/useIterableCallbackReturn: doesn't matter */}
+						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
 							<Button variant="solid" size="md">
 								Import map
 							</Button>

@@ -16,7 +16,6 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/events")({
 });
 
 function RouteComponent() {
-	const { sid, bid } = Route.useParams();
 	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 	const showLightingPreview = useAppSelector(selectEventsEditorPreview);
 	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
@@ -28,14 +27,14 @@ function RouteComponent() {
 			<Background>
 				{showLightingPreview && (
 					<ReduxForwardingCanvas>
-						<DefaultEnvironment sid={sid} bid={bid} surfaceDepth={surfaceDepth} />
+						<DefaultEnvironment surfaceDepth={surfaceDepth} />
 					</ReduxForwardingCanvas>
 				)}
 			</Background>
 			<Wrapper>
-				<EventGridControls sid={sid} bid={bid} style={bgStyle} />
-				<EventGridEditor sid={sid} bid={bid} style={bgStyle} />
-				<EventsEditorShortcuts sid={sid} />
+				<EventGridControls style={bgStyle} />
+				<EventGridEditor style={bgStyle} />
+				<EventsEditorShortcuts />
 			</Wrapper>
 		</Fragment>
 	);

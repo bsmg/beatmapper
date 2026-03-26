@@ -1,19 +1,17 @@
+import { useListCollection } from "@ark-ui/react/collection";
 import type { SelectValueChangeDetails } from "@ark-ui/react/select";
-import { useNavigate } from "@tanstack/react-router";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
+import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
 
-import { CoverArtFilePreview } from "$/components/app/compositions";
-import { createBeatmapListCollection } from "$/components/app/constants";
+import { CoverArtFile } from "$/components/app/compositions";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { useViewFromLocation } from "$/components/app/hooks";
-import { Button, Dialog, Select, Text } from "$/components/ui/compositions";
+import { Button, Dialog, Select } from "$/components/ui/compositions";
+import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapIds, selectSelectedBeatmap, selectSongMetadata, selectUsername } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
-import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { selectBeatmaps, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 const COVER_ART_SIZES = {
 	medium: 75,
@@ -21,20 +19,22 @@ const COVER_ART_SIZES = {
 };
 
 interface Props {
-	sid: SongId;
-	bid: BeatmapId;
 	showDifficultySelector: boolean;
 }
-function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
+function EditorSongInfo({ showDifficultySelector }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
-	const view = useViewFromLocation();
 	const navigate = useNavigate();
-	const username = useAppSelector(selectUsername);
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
-	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
+	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 
-	const BEATMAP_LIST_COLLECTION = useMemo(() => createBeatmapListCollection({ beatmapIds }), [beatmapIds]);
+	const { collection: BEATMAP_LIST_COLLECTION } = useListCollection({
+		initialItems: Object.keys(beatmaps),
+		itemToString: (beatmapId) => beatmaps[beatmapId].customLabel ?? beatmapId,
+	});
 
 	const handleBeatmapSelect = useCallback(
 		(details: SelectValueChangeDetails) => {
@@ -44,34 +44,29 @@ function EditorSongInfo({ sid, bid, showDifficultySelector }: Props) {
 		[dispatch, navigate, sid, view],
 	);
 
-	const handleCreate = useCallback(
-		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(addBeatmap({ songId: sid, beatmapId: id, data: data, username }));
-		},
-		[dispatch, sid, username],
-	);
-
 	return (
 		<OuterWrapper gap={1.5}>
-			<CoverArtFilePreview songId={sid} width={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
+			<CoverArtFile filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} boxSize={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
 			<Stack gap={1}>
 				<Stack gap={0.5}>
-					<Text color={"fg.default"} fontSize="20px" fontWeight={400} lineHeight={1}>
+					<Text color={"fg.default"} fontSize={"20px"} fontWeight={400} lineHeight={1}>
 						{metadata.title}
 					</Text>
-					<Text color={"fg.muted"} fontSize="16px" fontWeight={400} lineHeight={1}>
+					<Text color={"fg.muted"} fontSize={"16px"} fontWeight={400} lineHeight={1}>
 						{metadata.artist}
 					</Text>
 				</Stack>
-				{showDifficultySelector && bid && (
+				{showDifficultySelector && (
 					<HStack gap={0.5}>
-						<Select unfocusOnClick size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
+						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
 						<Dialog
 							title="Create New Beatmap"
+							description="Add a new beatmap file to the mapset."
+							lazyMount
 							unmountOnExit
 							render={(ctx) => (
-								<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCreate}>
-									{() => "Create beatmap"}
+								<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
+									{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 								</CreateBeatmapForm>
 							)}
 						>

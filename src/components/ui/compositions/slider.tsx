@@ -1,34 +1,71 @@
-import { type ComponentProps, type KeyboardEvent, type MouseEvent, useCallback } from "react";
+import type { Assign } from "@ark-ui/react";
+import type { SliderThumbBaseProps } from "@ark-ui/react/slider";
+import { type ComponentProps, Fragment, forwardRef } from "react";
 
 import { For } from "$/components/ui/atoms";
+import { useFieldData } from "$/components/ui/hooks/form.hooks";
+import { type ComposableFn, useComposable } from "$/components/ui/hooks/use-composable";
+import { type UseInteractableOptions, useInteractable } from "$/components/ui/hooks/use-interactable";
 import * as Builder from "$/components/ui/styled/slider";
+import { Field, type FieldProps } from "./field";
 
-export interface SliderProps extends ComponentProps<typeof Builder.Root> {
+export interface SliderProps extends UseInteractableOptions {
+	label?: string;
 	marks?: Array<number>;
-	unfocusOnClick?: boolean;
 }
-export function Slider({ children, marks, unfocusOnClick, ...rest }: SliderProps) {
-	const handleUnfocus = useCallback(
-		(event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-			if (unfocusOnClick) event.currentTarget.blur();
-		},
-		[unfocusOnClick],
+
+function Track() {
+	return (
+		<Builder.Track>
+			<Builder.Range />
+		</Builder.Track>
 	);
+}
+const Thumb = forwardRef<HTMLInputElement, Assign<SliderThumbBaseProps, SliderProps>>(({ ...rest }, ref) => {
+	return (
+		<Builder.Thumb {...rest}>
+			<Builder.HiddenInput ref={ref} />
+		</Builder.Thumb>
+	);
+});
+function Marks({ marks }: SliderProps) {
+	return (
+		<Builder.MarkerGroup>
+			<For each={marks}>{(value) => <Builder.Marker key={value} value={value} />}</For>
+		</Builder.MarkerGroup>
+	);
+}
+
+interface SliderComposableProps extends SliderProps {
+	children?: ComposableFn<[controls: { Track: typeof Track; Thumb: typeof Thumb; Marks: typeof Marks }]>;
+}
+export function Slider({ children, label, marks, unfocusOnPress, ...rest }: Assign<ComponentProps<typeof Builder.Root>, SliderComposableProps>) {
+	const renderControl = useComposable(children, () => (
+		<Fragment>
+			<Track />
+			<Marks marks={marks} />
+			<Thumb index={0} />
+		</Fragment>
+	));
+
+	const { handlePress } = useInteractable({ unfocusOnPress });
 
 	return (
 		<Builder.Root thumbAlignment="center" {...rest}>
-			<Builder.Control>
-				<Builder.Track>
-					<Builder.Range />
-				</Builder.Track>
-				<Builder.Thumb index={0} onClickCapture={handleUnfocus} onKeyDownCapture={handleUnfocus}>
-					<Builder.HiddenInput />
-				</Builder.Thumb>
-				<Builder.MarkerGroup>
-					<For each={marks}>{(value) => <Builder.Marker key={value} value={value} />}</For>
-				</Builder.MarkerGroup>
+			{label && <Builder.Label>{label}</Builder.Label>}
+			<Builder.Control onClickCapture={handlePress} onKeyDownCapture={handlePress}>
+				{renderControl({ Track, Thumb, Marks })}
 			</Builder.Control>
-			{children && <Builder.Label>{children}</Builder.Label>}
 		</Builder.Root>
+	);
+}
+
+export function SliderDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Slider>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<number[]>(delegated);
+
+	return (
+		<Field id={id} cosmetic label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Slider {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.value)} />
+		</Field>
 	);
 }

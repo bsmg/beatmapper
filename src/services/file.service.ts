@@ -1,12 +1,11 @@
 import { omit } from "@std/collections/omit";
 import { pick } from "@std/collections/pick";
-import { basename } from "@std/path/basename";
-import { createAudioData, createBeatmap, createDifficulty, createInfo, createLightshow, sortObjectFn } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import type { DeepPartial, InferBeatmapVersion } from "bsmap";
+import { createAudioData, createBeatmap, createInfo, type IWrapAudioData, type IWrapBeatmap, type IWrapInfo, sortObjectFn } from "bsmap";
 import type { Storage, StorageValue } from "unstorage";
 
-import { defaultCoverArtPath } from "$/assets";
-import type { App, BeatmapId, MaybeDefined, SongId } from "$/types";
+import type { App, BeatmapId, SongId } from "$/types";
+import type { MaybeDefined } from "$/types/vendor";
 import { deepAssign, ensureArray, ensureObject } from "$/utils";
 
 type Saveable = File | Blob | ArrayBuffer | StorageValue;
@@ -34,11 +33,10 @@ export class Filestore {
 	}
 }
 
-type BeatmapFileType = "info" | "song" | "cover" | "beatmap" | "audio";
-type BeatmapFileOptions<T extends BeatmapFileType> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
+type BeatmapFileOptions<T> = T extends "beatmap" ? { id: BeatmapId } : Record<string, unknown>;
 
 export class BeatmapFilestore extends Filestore {
-	static resolveFilename<T extends BeatmapFileType>(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
+	static resolveFilename<T extends "info" | "song" | "cover" | "beatmap" | "audio">(songId: SongId, type: T, options: BeatmapFileOptions<T>) {
 		switch (type) {
 			case "song":
 			case "cover":
@@ -57,21 +55,6 @@ export class BeatmapFilestore extends Filestore {
 		}
 	}
 
-	private async saveBackupCoverFile() {
-		// If the user doesn't have a cover image yet, we'll supply a default.
-		// Ideally we'd need a File, to be consistent with the File we get from a locally-selected file, but a Blob is near-identical. If it looks like a duck, etc.
-		const coverArtFilename = basename(defaultCoverArtPath);
-		// I should first check and see if the user has already saved this placeholder, so that I can skip overwriting it.
-		if (await this.storage.hasItem(coverArtFilename)) {
-			const file = this.loadFile<File>(coverArtFilename);
-			return { filename: coverArtFilename, contents: file };
-		}
-		// I need to convert the file URL I have into a Blob, and then save that to indexedDB.
-		const res = await window.fetch(defaultCoverArtPath);
-		const blob = await res.blob();
-		return await this.saveFile(coverArtFilename, blob);
-	}
-
 	async loadSongFile(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "song", {});
 		return this.loadFile<File>(filename);
@@ -82,19 +65,19 @@ export class BeatmapFilestore extends Filestore {
 	}
 	async loadInfoContents(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
-		return this.loadFile<wrapper.IWrapInfo>(filename);
+		return this.loadFile<IWrapInfo>(filename);
 	}
 	async loadAudioDataContents(songId: SongId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
-		return this.loadFile<wrapper.IWrapAudioData>(filename);
+		return this.loadFile<IWrapAudioData>(filename);
 	}
 	async loadBeatmapContents(songId: SongId, beatmapId: BeatmapId) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
-		return this.loadFile<wrapper.IWrapBeatmap>(filename);
+		return this.loadFile<IWrapBeatmap>(filename);
 	}
 	async loadImplicitVersion(songId: SongId, beatmapId: BeatmapId) {
 		const beatmap = await this.loadBeatmapContents(songId, beatmapId);
-		return beatmap.version as 1 | 2 | 3 | 4;
+		return beatmap.version as InferBeatmapVersion;
 	}
 
 	async saveSongFile<T extends File>(songId: SongId, contents: T) {
@@ -102,71 +85,44 @@ export class BeatmapFilestore extends Filestore {
 		return this.saveFile<T>(filename, contents);
 	}
 	async saveCoverArtFile<T extends File>(songId: SongId, contents: T) {
-		if (!contents) return this.saveBackupCoverFile();
 		const filename = BeatmapFilestore.resolveFilename(songId, "cover", {});
 		return this.saveFile<T>(filename, contents);
 	}
-	async saveInfoContents<T extends wrapper.IWrapInfo>(songId: SongId, contents: T) {
+	async saveInfoContents(songId: SongId, contents: IWrapInfo) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "info", {});
-		return this.saveFile<T>(filename, contents);
+		return this.saveFile(filename, createInfo(contents));
 	}
-	async saveAudioDataContents<T extends wrapper.IWrapAudioData>(songId: SongId, contents: T) {
+	async saveAudioDataContents(songId: SongId, contents: IWrapAudioData) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "audio", {});
-		return this.saveFile<T>(filename, contents);
+		return this.saveFile(filename, createAudioData(contents));
 	}
-	async saveBeatmapContents<T extends wrapper.IWrapBeatmap>(songId: SongId, beatmapId: BeatmapId, contents: T) {
+	async saveBeatmapContents(songId: SongId, beatmapId: BeatmapId, contents: IWrapBeatmap) {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
-		return this.saveFile<T>(filename, contents);
+		return this.saveFile(
+			filename,
+			createBeatmap({
+				...contents,
+				// for difficulty data, we should remove all unsupported collections since those objects can cause issues the user would be unable to fix.
+				difficulty: pick({ ...contents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "customData"]),
+				// we can supply our own wrappers for editor-specific collections.
+				customData: ensureObject({
+					bookmarks: ensureArray<App.IBookmark>(contents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
+				}),
+			}),
+		);
 	}
 
-	async updateInfoContents(songId: SongId, newContents: Partial<wrapper.IWrapInfo>) {
+	async updateInfoContents(songId: SongId, newContents: DeepPartial<IWrapInfo>) {
 		const savedContents = await this.loadInfoContents(songId).catch(() => createInfo({ ...newContents }));
-		return await this.saveInfoContents(
-			songId,
-			createInfo({
-				...(savedContents ?? newContents),
-				...omit(newContents, ["version", "filename"]),
-				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
-			}),
-		);
+		return await this.saveInfoContents(songId, createInfo(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
-	async updateAudioDataContents(songId: SongId, newContents: Partial<wrapper.IWrapAudioData>) {
+	async updateAudioDataContents(songId: SongId, newContents: DeepPartial<IWrapAudioData>) {
 		const savedContents = await this.loadAudioDataContents(songId).catch(() => createAudioData({ ...newContents }));
-		return await this.saveAudioDataContents(
-			songId,
-			createAudioData({
-				...(savedContents ?? newContents),
-				...omit(newContents, ["version", "filename"]),
-				customData: ensureObject(deepAssign(savedContents?.customData, { ...newContents.customData })),
-			}),
-		);
+		return await this.saveAudioDataContents(songId, createAudioData(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
-	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: Partial<wrapper.IWrapBeatmap>) {
+	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: DeepPartial<IWrapBeatmap>) {
 		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
-		return await this.saveBeatmapContents(
-			songId,
-			beatmapId,
-			createBeatmap({
-				...(savedContents ?? newContents),
-				// we might have an updated lightshow filename if we update the lightshow id.
-				lightshowFilename: newContents.lightshowFilename ?? savedContents.lightshowFilename,
-				// for difficulty, we'll remove all unsupported collections since those objects shouldn't exist anyway.
-				difficulty: createDifficulty({
-					...pick(savedContents.difficulty, ["colorNotes", "bombNotes", "obstacles"]),
-					...newContents.difficulty,
-					customData: ensureObject(deepAssign(savedContents?.difficulty.customData, { ...newContents.difficulty?.customData })),
-				}),
-				// for lightshow, we'll merge the contents and only replace collections that are directly supported.
-				lightshow: createLightshow({
-					...savedContents.lightshow,
-					...newContents.lightshow,
-					customData: ensureObject(deepAssign(savedContents?.lightshow.customData, { ...newContents.lightshow?.customData })),
-				}),
-				customData: ensureObject({
-					bookmarks: ensureArray<App.IBookmark>(newContents.customData?.bookmarks ?? [])?.sort(sortObjectFn),
-				}),
-			}),
-		);
+		return await this.saveBeatmapContents(songId, beatmapId, createBeatmap(deepAssign(savedContents, omit(newContents, ["version", "filename"]))));
 	}
 
 	async removeAllFilesForSong(songId: SongId, beatmapIds: BeatmapId[]) {

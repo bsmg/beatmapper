@@ -6,6 +6,7 @@ import entities from "./entities";
 import global from "./global.slice";
 import navigation from "./navigation.slice";
 import songs from "./songs.slice";
+import timeline from "./timeline.slice";
 import user from "./user.slice";
 import waveform from "./visualizer.slice";
 
@@ -15,6 +16,7 @@ const reducer = combineReducers({
 	entities: entities.reducer,
 	waveform: waveform.reducer,
 	navigation: navigation.reducer,
+	timeline: timeline.reducer,
 	editor: editor.reducer,
 	global: global.reducer,
 	user: user.reducer,

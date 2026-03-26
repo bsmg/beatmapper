@@ -1,7 +1,7 @@
 import { combineReducers, type UnknownAction } from "@reduxjs/toolkit";
 import undoable, { type FilterFunction, type GroupByFunction, groupByActionTypes, includeAction } from "redux-undo";
 
-import { addObstacle, addToCell, bulkRemoveNote, cutSelection, finishLoadingMap, mirrorColorNote, mirrorSelection, nudgeSelection, pasteSelection, redoObjects, removeAllSelectedObjects, removeNote, removeObstacle, undoObjects, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
+import { addObstacle, addToCell, bulkRemoveNote, cutSelection, loadBeatmapEntities, mirrorColorNote, mirrorSelection, nudgeSelection, pasteSelection, redoObjects, removeAllSelectedObjects, removeNote, removeObstacle, undoObjects, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
 import bombs from "./bombs.slice";
 import notes from "./notes.slice";
 import obstacles from "./obstacles.slice";
@@ -13,7 +13,7 @@ const reducer = combineReducers({
 });
 
 const filter: FilterFunction<ReturnType<typeof reducer>, UnknownAction> = includeAction([
-	finishLoadingMap.type,
+	loadBeatmapEntities.type,
 	addToCell.fulfilled.type,
 	removeNote.type,
 	bulkRemoveNote.type,
@@ -34,6 +34,7 @@ const groupBy: GroupByFunction<ReturnType<typeof reducer>, UnknownAction> = grou
 export default {
 	reducer: undoable(reducer, {
 		limit: 100,
+		ignoreInitialState: true,
 		undoType: undoObjects.type,
 		redoType: redoObjects.type,
 		filter: filter,

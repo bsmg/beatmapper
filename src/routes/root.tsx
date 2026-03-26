@@ -1,30 +1,34 @@
 import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { getYear, isToday, setYear } from "date-fns";
 import { Fragment } from "react";
 
-import { APP_TOASTER } from "$/components/app/constants";
+import { useSetupContext } from "$/components/context";
+import Devtools from "$/components/devtools";
 import { Toaster } from "$/components/ui/compositions";
-import { store } from "$/setup";
-import { selectInitialized } from "$/store/selectors";
 
 export const Route = createRootRoute({
 	component: RootComponent,
-	loader: async () => {
-		const state = store.getState();
-		return await Promise.resolve(selectInitialized(state));
+	beforeLoad: () => {
+		const now = Date.now();
+		return { now, theme: isToday(setYear("04/01", getYear(now))) ? "light" : "dark" };
 	},
 	head: () => {
-		return { meta: [{ title: "Beatmapper" }] };
+		return { meta: [{ title: "Beatmapper" }, { name: "description", content: "A web-based level editor for Beat Saber™." }] };
+	},
+	onEnter: ({ context }) => {
+		document.documentElement.classList.add(context.theme);
 	},
 });
 
 function RootComponent() {
+	const { toaster } = useSetupContext();
+
 	return (
 		<Fragment>
 			<HeadContent />
 			<Outlet />
-			<Toaster toaster={APP_TOASTER} />
-			{import.meta.env.DEV && <TanStackRouterDevtools position="top-right" />}
+			{toaster && <Toaster toaster={toaster} />}
+			<Devtools position="top-right" hideUntilHover openHotkey={[`\``]} />
 		</Fragment>
 	);
 }

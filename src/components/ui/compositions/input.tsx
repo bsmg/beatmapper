@@ -1,52 +1,41 @@
 import type { Assign } from "@ark-ui/react";
-import { type ChangeEvent, type ComponentProps, useCallback } from "react";
+import type { ComponentProps } from "react";
 
-import { type UseControlledValueProps, useControlledValue } from "$/components/ui/hooks";
-import { Input as StyledInput, Select as StyledSelect, Textarea as StyledTextarea } from "$/components/ui/styled/input";
-import type { VirtualColorPalette } from "$/styles/types";
+import { useFieldData } from "$/components/ui/hooks/form.hooks";
+import { type UseControlledStateOptions, useInputState } from "$/components/ui/hooks/use-controlled-state";
+import * as Builder from "$/components/ui/styled/field";
+import { Input as Styled } from "$/components/ui/styled/input";
 import { css, cx } from "$:styled-system/css";
+import type { SystemStyleObject } from "$:styled-system/types";
+import { Field, type FieldProps } from "./field";
 
-export interface InputProps extends Assign<ComponentProps<typeof StyledInput>, UseControlledValueProps<{ value: string | number; valueAsString: string; valueAsNumber: number; valueAsDate: Date | null }>> {
-	colorPalette?: VirtualColorPalette;
+export interface InputProps extends UseControlledStateOptions<{ valueAsString: string; valueAsNumber: number; valueAsDate: Date | null }>, Pick<SystemStyleObject, "colorPalette"> {}
+
+export function Input({ colorPalette = "pink", className, onValueChange, ...rest }: Assign<ComponentProps<typeof Styled>, InputProps>) {
+	const [value, onChange] = useInputState({ value: rest.value, defaultValue: rest.defaultValue ?? "", onValueChange }, (target: HTMLInputElement) => {
+		return { value: target.value, valueAsString: target.value.toString(), valueAsNumber: target.valueAsNumber, valueAsDate: target.valueAsDate };
+	});
+	return <Styled {...rest} className={cx(css({ colorPalette: colorPalette }), className)} value={value} onChange={onChange} />;
 }
-export function Input({ colorPalette = "pink", className, onValueChange, ...rest }: InputProps) {
-	const [value, setValue] = useControlledValue({ value: rest.value, defaultValue: rest.defaultValue ?? "", onValueChange: onValueChange });
-	const handleChange = useCallback(
-		(e: ChangeEvent<HTMLInputElement>) => {
-			setValue({ value: e.target.value, valueAsString: e.target.value.toString(), valueAsNumber: e.target.valueAsNumber, valueAsDate: e.target.valueAsDate });
-		},
-		[setValue],
+export function FieldInput({ ...rest }: ComponentProps<typeof Input>) {
+	return <Input as={Builder.Input} {...rest} />;
+}
+
+export function InputDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Input>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<string>(delegated);
+
+	return (
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<FieldInput {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
+		</Field>
 	);
-
-	return <StyledInput {...rest} className={cx(css({ colorPalette: colorPalette }), className)} value={value} onChange={handleChange} />;
 }
+export function NumberInputDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Input>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<number>(delegated);
 
-export interface NativeSelectProps extends Assign<ComponentProps<typeof StyledSelect>, UseControlledValueProps<{ value: string }>> {
-	colorPalette?: VirtualColorPalette;
-}
-export function NativeSelect({ colorPalette = "pink", className, onValueChange, ...rest }: NativeSelectProps) {
-	const [value, setValue] = useControlledValue({ value: rest.value, defaultValue: rest.defaultValue ?? "", onValueChange });
-	const handleChange = useCallback(
-		(e: ChangeEvent<HTMLSelectElement>) => {
-			setValue({ value: e.target.value });
-		},
-		[setValue],
+	return (
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<FieldInput {...delegated} id={id} type="number" step={delegated.step ?? "any"} value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
+		</Field>
 	);
-
-	return <StyledSelect {...rest} className={cx(css({ colorPalette: colorPalette }), className)} value={value} onChange={handleChange} />;
-}
-
-export interface TextareaProps extends Assign<ComponentProps<typeof StyledTextarea>, UseControlledValueProps<{ value: string }>> {
-	colorPalette?: VirtualColorPalette;
-}
-export function Textarea({ colorPalette = "pink", className, onValueChange, ...rest }: TextareaProps) {
-	const [value, setValue] = useControlledValue({ value: rest.value, defaultValue: rest.defaultValue ?? "", onValueChange: onValueChange });
-	const handleChange = useCallback(
-		(e: ChangeEvent<HTMLTextAreaElement>) => {
-			setValue({ value: e.target.value });
-		},
-		[setValue],
-	);
-
-	return <StyledTextarea {...rest} className={cx(css({ colorPalette: colorPalette }), className)} value={value} onChange={handleChange} />;
 }

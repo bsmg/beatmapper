@@ -17,13 +17,12 @@ const collection = createListCollection({
 		{ value: "advanced", label: "Advanced", render: () => <AppAdvancedSettings /> },
 		//
 	],
-	isItemDisabled: (item) => !["user", "graphics", "audio", "advanced"].includes(item.value),
 });
 
 function AppSettings() {
 	return (
 		<Fragment>
-			<Tabs unfocusOnClick collection={collection} />
+			<Tabs unfocusOnPress collection={collection} renderItem={(item) => item.render()} />
 		</Fragment>
 	);
 }

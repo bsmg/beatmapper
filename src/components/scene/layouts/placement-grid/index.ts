@@ -1,6 +1,6 @@
 export { default as Cell } from "./cell";
-export * from "./context";
+export { usePlacementGridContext as useContext } from "./context";
 export { default as Layout } from "./layout";
+export { connect, machine, type PlacementGridSchema as Schema } from "./machine";
 export { default as Root } from "./root";
-export { default as TentativeNote } from "./tentative-note";
-export { default as TentativeObstacle } from "./tentative-obstacle";
+export { default as TentativeObject } from "./tentative-object";

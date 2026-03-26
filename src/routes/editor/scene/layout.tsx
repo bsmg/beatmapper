@@ -1,22 +1,35 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { useViewFromLocation } from "$/components/app/hooks";
-import { EditorView } from "$/components/app/layouts";
+import { NavigationPanel } from "$/components/app/layouts";
+import { EditorAudioVisualizer, EditorNavigationControls, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
+import { DefaultEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { View } from "$/types";
+import { styled } from "$:styled-system/jsx";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const { sid, bid } = Route.useParams();
-	const view = useViewFromLocation();
+	const { view } = Route.useRouteContext();
 
 	return (
-		<EditorView.Root>
-			<EditorView.Scene sid={sid} bid={bid} showBeatmapPicker={view !== View.LIGHTSHOW}>
-				<Outlet />
-			</EditorView.Scene>
-		</EditorView.Root>
+		<Wrapper>
+			<EditorSongInfo showDifficultySelector={view !== View.LIGHTSHOW} />
+			<Outlet />
+			<NavigationPanel.Root>
+				<EditorNavigationControls />
+				<EditorAudioVisualizer />
+			</NavigationPanel.Root>
+			<EditorStatusBar />
+			<DefaultEditorShortcuts />
+		</Wrapper>
 	);
 }
+
+const Wrapper = styled("div", {
+	base: {
+		backgroundColor: "bg.contrast",
+		boxSize: "100%",
+	},
+});

@@ -1,27 +1,28 @@
-import { LitSquareRing } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps, useRingCount } from "$/components/scene/hooks";
+import { useRouteContext } from "@tanstack/react-router";
+
+import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
+import { useBasicEventTrack, useBoostEventTrack } from "$/components/scene/hooks/use-event-track";
+import { useRenderScale } from "$/components/scene/hooks/use-render-scale";
 import { Environment } from "$/components/scene/layouts";
-import type { BeatmapId, SongId } from "$/types";
 
 const INITIAL_ROTATION = Math.PI * 0.25;
 const DISTANCE_BETWEEN_RINGS = 18;
 const FIRST_RING_OFFSET = -60;
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function LargeRings({ sid, bid }: Props) {
-	const [lastLightEvent] = useEventTrack({ sid, trackId: 1 });
-	const [lastRotationEvent] = useEventTrack({ sid, trackId: 8 });
+function LargeRings() {
+	const { theme } = useRouteContext({ from: "__root__" });
 
-	const light = useLightProps({ sid, bid, lastEvent: lastLightEvent });
+	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 1 });
+	const [lastRotationEvent] = useBasicEventTrack({ trackId: 8 });
+	const [lastBoostEvent] = useBoostEventTrack();
 
-	const numOfRings = useRingCount({ count: 16 });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent, lastBoostEvent });
+
+	const numOfRings = useRenderScale(16);
 
 	return (
 		<Environment.Rings count={numOfRings} lastRotationEvent={lastRotationEvent} lastZoomEvent={null} minDistance={DISTANCE_BETWEEN_RINGS} position-y={-2} position-z={FIRST_RING_OFFSET} rotation-z={INITIAL_ROTATION}>
-			{(index, { zPosition, zRotation }) => <LitSquareRing key={index} size={128} thickness={2.5} color="#171717" position-z={zPosition} rotation-z={zRotation} light={light} />}
+			{(index, { zPosition, zRotation }) => <Environment.SquareRing key={index} size={128} thickness={2.5} color={theme === "dark" ? "#171717" : "#E8E8E8"} position-z={zPosition} rotation-z={zRotation} light={light} />}
 		</Environment.Rings>
 	);
 }

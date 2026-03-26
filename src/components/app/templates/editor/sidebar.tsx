@@ -1,54 +1,53 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useMatchRoute, useParams } from "@tanstack/react-router";
 import { BookOpenIcon, BoxIcon, DownloadIcon, HomeIcon, ListIcon, PlayIcon, SettingsIcon, ZapIcon } from "lucide-react";
-import { useMemo } from "react";
 
 import { AppSettingsForm } from "$/components/app/forms";
 import { Sidebar } from "$/components/app/layouts";
 import { Dialog } from "$/components/ui/compositions";
-import type { BeatmapId, SongId } from "$/types";
+import type { View } from "$/types";
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-}
-function EditorSidebar({ sid, bid }: Props) {
-	const location = useLocation();
-	const params = useMemo(() => ({ sid: sid.toString(), bid: bid.toString() }), [sid, bid]);
+function EditorSidebar() {
+	const params = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const matchRoute = useMatchRoute();
+
+	const isView = (to: View) => {
+		return !!matchRoute({ to: `/edit/$sid/$bid/${to}`, params, fuzzy: true });
+	};
 
 	return (
 		<Sidebar.Root onWheel={(ev) => ev.stopPropagation()}>
 			<Sidebar.Section>
 				<Sidebar.Item icon={HomeIcon}>{(children) => <Link to="/">{children}</Link>}</Sidebar.Item>
 				<Sidebar.Divider />
-				<Sidebar.Item tooltip="Beatmap" icon={BoxIcon} active={!!location.pathname.match(/\/notes$/)}>
+				<Sidebar.Item tooltip="Beatmap" icon={BoxIcon} active={isView("notes")}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/notes"} params={params}>
 							{children}
 						</Link>
 					)}
 				</Sidebar.Item>
-				<Sidebar.Item tooltip="Lightshow" icon={ZapIcon} active={!!location.pathname.match(/\/events$/)}>
+				<Sidebar.Item tooltip="Lightshow" icon={ZapIcon} active={isView("events")}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/events"} params={params}>
 							{children}
 						</Link>
 					)}
 				</Sidebar.Item>
-				<Sidebar.Item tooltip="Preview" icon={PlayIcon} active={!!location.pathname.match(/\/preview$/)}>
+				<Sidebar.Item tooltip="Preview" icon={PlayIcon} active={isView("preview")}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/preview"} params={params}>
 							{children}
 						</Link>
 					)}
 				</Sidebar.Item>
-				<Sidebar.Item tooltip="Details" icon={ListIcon} active={!!location.pathname.match(/\/details$/)}>
+				<Sidebar.Item tooltip="Details" icon={ListIcon} active={isView("details")}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/details"} params={params}>
 							{children}
 						</Link>
 					)}
 				</Sidebar.Item>
-				<Sidebar.Item tooltip="Download" icon={DownloadIcon} active={!!location.pathname.match(/\/download$/)}>
+				<Sidebar.Item tooltip="Download" icon={DownloadIcon} active={isView("download")}>
 					{(children) => (
 						<Link to={"/edit/$sid/$bid/download"} params={params}>
 							{children}
@@ -60,7 +59,7 @@ function EditorSidebar({ sid, bid }: Props) {
 				<Sidebar.Item tooltip="Settings" icon={SettingsIcon} active={false}>
 					{(children) => (
 						<Dialog title="App Settings" render={() => <AppSettingsForm />}>
-							<span>{children}</span>
+							{children}
 						</Dialog>
 					)}
 				</Sidebar.Item>

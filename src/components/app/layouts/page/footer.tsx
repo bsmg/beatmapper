@@ -2,9 +2,8 @@ import { DotIcon } from "lucide-react";
 
 import { Logo } from "$/components/app/compositions";
 import { Interleave } from "$/components/ui/atoms";
-import { Text } from "$/components/ui/compositions";
-import { AnchorLink, RouterLink } from "$/components/ui/styled";
-import { Container, HStack, styled } from "$:styled-system/jsx";
+import { AnchorLink, RouterLink } from "$/components/ui/compositions";
+import { Container, HStack, styled, Text } from "$:styled-system/jsx";
 import { center, stack } from "$:styled-system/patterns";
 
 function Footer() {
@@ -14,9 +13,9 @@ function Footer() {
 				<SectionWrapper>
 					<Logo size="mini" />
 					<HStack gap={0}>
-						<Interleave separator={({ index }) => <DotIcon key={index} />}>
+						<Interleave separator={(index) => <DotIcon key={index} />}>
 							<RouterLink to="/docs/$" params={{ _splat: "privacy-policy" }}>
-								Privacy
+								Privacy Policy
 							</RouterLink>
 							<RouterLink to="/docs/$" params={{ _splat: "content-policy" }}>
 								Content Policy
@@ -29,7 +28,7 @@ function Footer() {
 						A side-project by <AnchorLink href="https://twitter.com/JoshWComeau">Josh Comeau</AnchorLink>. Maintained by <AnchorLink href="https://bsmg.wiki/">BSMG</AnchorLink>.
 					</div>
 					<div>© 2019-present, All rights reserved.</div>
-					<Text color={"fg.subtle"} fontSize={"14px"}>
+					<Text textStyle={"paragraph"} color={"fg.subtle"} fontSize={"14px"}>
 						Not affiliated with Beat Games™ or Beat Saber™.
 					</Text>
 				</SectionWrapper>

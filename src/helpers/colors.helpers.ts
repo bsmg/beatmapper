@@ -1,56 +1,62 @@
-import { parseColor } from "@zag-js/color-utils";
-import { ColorScheme, EnvironmentSchemeName } from "bsmap";
-import type { ColorArray, EnvironmentAllName, IColor, Vector3, Vector4, v2 } from "bsmap/types";
+import { ColorScheme, ColorSchemeVariant, colorToHex, type EnvironmentName, EnvironmentSchemeName, type IColor, type IV2ColorScheme } from "bsmap";
 
-import { App, ColorSchemeKey, EventColor, type IColorScheme, ObjectTool } from "$/types";
+import { BasicEventEffect, ColorSchemeKey, type IColorScheme, ObjectTool } from "$/types";
 import { token } from "$:styled-system/tokens";
-import { patchEnvironmentName } from "./packaging.helpers";
+
+export const DEFAULT_COLOR_SCHEME: Required<IV2ColorScheme> = {
+	_colorLeft: { r: 0.7529412, g: 0.1882353, b: 0.1882353 },
+	_colorRight: { r: 0.1254902, g: 0.3921569, b: 0.6588235 },
+	_envColorLeft: { r: 0.7529412, g: 0.1882353, b: 0.1882353 },
+	_envColorRight: { r: 0.1882353, g: 0.5960785, b: 1 },
+	_envColorWhite: { r: 1, g: 1, b: 1 },
+	_envColorLeftBoost: { r: 0.7529412, g: 0.1882353, b: 0.1882353 },
+	_envColorRightBoost: { r: 0.1882353, g: 0.5960785, b: 1 },
+	_envColorWhiteBoost: { r: 1, g: 1, b: 1 },
+	_obstacleColor: { r: 1, g: 0.1882353, b: 0.1882353 },
+};
 
 export interface ColorResolverOptions {
-	customColors: IColorScheme;
+	colorScheme: IColorScheme;
 }
-export function resolveColorForItem<T extends string | number>(item: T | undefined, { customColors: colorScheme }: ColorResolverOptions) {
-	const DEFAULT_COLOR_SCHEME = ColorScheme["Default Custom"] as Required<v2.IColorScheme>;
+export function resolveColorForItem<T extends string | number>(item: T | undefined, { colorScheme }: ColorResolverOptions) {
 	switch (item) {
 		case ObjectTool.LEFT_NOTE: {
-			return colorScheme.colorLeft ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._colorLeft);
+			return colorScheme.colorLeft ?? colorToHex(DEFAULT_COLOR_SCHEME._colorLeft).slice(0, 7);
 		}
 		case ObjectTool.RIGHT_NOTE: {
-			return colorScheme.colorRight ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._colorRight);
+			return colorScheme.colorRight ?? colorToHex(DEFAULT_COLOR_SCHEME._colorRight).slice(0, 7);
 		}
 		case ObjectTool.BOMB_NOTE: {
 			return "#687485";
 		}
 		case ObjectTool.OBSTACLE: {
-			return colorScheme.obstacleColor ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._obstacleColor);
+			return colorScheme.obstacleColor ?? colorToHex(DEFAULT_COLOR_SCHEME._obstacleColor).slice(0, 7);
 		}
-		case App.EventColor.PRIMARY:
-		case EventColor.PRIMARY:
 		case ColorSchemeKey.ENV_LEFT: {
-			return colorScheme.envColorLeft ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._envColorLeft);
+			return colorScheme.envColorLeft ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorLeft).slice(0, 7);
 		}
-		case App.EventColor.SECONDARY:
-		case EventColor.SECONDARY:
 		case ColorSchemeKey.ENV_RIGHT: {
-			return colorScheme.envColorRight ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._envColorRight);
+			return colorScheme.envColorRight ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorRight).slice(0, 7);
+		}
+		case ColorSchemeKey.ENV_WHITE: {
+			return colorScheme.envColorWhite ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorWhite).slice(0, 7);
 		}
 		case ColorSchemeKey.BOOST_LEFT: {
-			return colorScheme.envColorLeftBoost ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._envColorLeftBoost);
+			return colorScheme.envColorLeftBoost ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorLeftBoost).slice(0, 7);
 		}
 		case ColorSchemeKey.BOOST_RIGHT: {
-			return colorScheme.envColorRightBoost ?? deserializeColorToHex(DEFAULT_COLOR_SCHEME._envColorRightBoost);
+			return colorScheme.envColorRightBoost ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorRightBoost).slice(0, 7);
 		}
-		case App.EventColor.WHITE:
-		case EventColor.WHITE: {
-			return "white";
+		case ColorSchemeKey.BOOST_WHITE: {
+			return colorScheme.envColorWhiteBoost ?? colorToHex(DEFAULT_COLOR_SCHEME._envColorWhiteBoost).slice(0, 7);
 		}
-		case App.BasicEventEffect.TRIGGER: {
+		case BasicEventEffect.TRIGGER: {
 			return token("colors.green.500");
 		}
-		case App.BasicEventEffect.VALUE: {
+		case BasicEventEffect.VALUE: {
 			return token("colors.blue.500");
 		}
-		case App.BasicEventEffect.OFF: {
+		case BasicEventEffect.OFF: {
 			return token("colors.slate.400");
 		}
 		default: {
@@ -59,76 +65,38 @@ export function resolveColorForItem<T extends string | number>(item: T | undefin
 	}
 }
 
-export function serializeColorToObject(value: string, withAlpha: true): Required<IColor>;
-export function serializeColorToObject(value: string, withAlpha?: false): IColor;
-export function serializeColorToObject(value: string, withAlpha = false): IColor | Required<IColor> {
-	const color = parseColor(value).toFormat("rgba");
-	const r = color.getChannelValuePercent("red");
-	const g = color.getChannelValuePercent("green");
-	const b = color.getChannelValuePercent("blue");
-	const a = color.getChannelValuePercent("alpha");
-	if (withAlpha) return { r, g, b, a };
-	return { r, g, b };
+const ColorSchemeFlatVariants = Object.entries(ColorSchemeVariant).reduce((acc: Record<string, Readonly<Omit<IV2ColorScheme, "a">>>, [name, variants]) => {
+	for (const [key, data] of Object.entries(variants)) {
+		const scheme = ColorScheme[name as keyof typeof ColorScheme];
+		acc[key as keyof typeof acc] = { ...scheme, ...data };
+	}
+	return acc;
+}, {});
+
+export function getColorSchemePresets() {
+	return { ...ColorScheme, ...ColorSchemeFlatVariants };
 }
 
-export function serializeColorToArray(value: string, withAlpha: true): Vector4;
-export function serializeColorToArray(value: string, withAlpha?: false): Vector3;
-export function serializeColorToArray(value: string, withAlpha = false): ColorArray {
-	const color = parseColor(value).toFormat("rgba");
-	const r = color.getChannelValuePercent("red");
-	const g = color.getChannelValuePercent("green");
-	const b = color.getChannelValuePercent("blue");
-	const a = color.getChannelValuePercent("alpha");
-	if (withAlpha) return [r, g, b, a];
-	return [r, g, b];
-}
+export function deriveColorSchemeFromEnvironment(environment: EnvironmentName, colorSchemePreset?: string) {
+	let envScheme = DEFAULT_COLOR_SCHEME;
 
-export function deserializeColorToHex<T extends IColor | ColorArray>(value: T) {
-	let r: number;
-	let g: number;
-	let b: number;
-	let a: number | undefined;
-
-	if (Array.isArray(value)) {
-		r = value[0];
-		g = value[1];
-		b = value[2];
-		a = value[3];
-	} else {
-		r = value.r;
-		g = value.g;
-		b = value.b;
-		a = value.a;
+	if (environment in EnvironmentSchemeName) {
+		envScheme = ColorScheme[EnvironmentSchemeName[environment]] as Required<{ [key in keyof IV2ColorScheme]: Required<IColor> }>;
+	}
+	if (colorSchemePreset) {
+		const Presets = getColorSchemePresets();
+		envScheme = Presets[colorSchemePreset as keyof typeof Presets] as Required<{ [key in keyof IV2ColorScheme]: Required<IColor> }>;
 	}
 
-	const hr = Math.round(r * 255);
-	const hg = Math.round(g * 255);
-	const hb = Math.round(b * 255);
-
-	const toHex = (c: number): string => {
-		const hex = c.toString(16);
-		return hex.length === 1 ? `0${hex}` : hex;
-	};
-
-	let hex = `#${toHex(hr)}${toHex(hg)}${toHex(hb)}`;
-
-	if (a !== undefined) {
-		const ha = Math.round(a * 255);
-		hex += toHex(ha);
-	}
-
-	return hex;
-}
-
-export function deriveColorSchemeFromEnvironment(environment: EnvironmentAllName) {
-	const envScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
 	return {
-		[ColorSchemeKey.SABER_LEFT]: deserializeColorToHex(envScheme._colorLeft).slice(0, 7),
-		[ColorSchemeKey.SABER_RIGHT]: deserializeColorToHex(envScheme._colorRight).slice(0, 7),
-		[ColorSchemeKey.OBSTACLE]: deserializeColorToHex(envScheme._obstacleColor).slice(0, 7),
-		[ColorSchemeKey.ENV_LEFT]: deserializeColorToHex(envScheme._envColorLeft).slice(0, 7),
-		[ColorSchemeKey.ENV_RIGHT]: deserializeColorToHex(envScheme._envColorRight).slice(0, 7),
-		[ColorSchemeKey.BOOST_LEFT]: deserializeColorToHex(envScheme._envColorLeftBoost ?? envScheme._envColorLeft).slice(0, 7),
-		[ColorSchemeKey.BOOST_RIGHT]: deserializeColorToHex(envScheme._envColorRightBoost ?? envScheme._envColorRight).slice(0, 7),
+		[ColorSchemeKey.SABER_LEFT]: colorToHex(envScheme._colorLeft).slice(0, 7),
+		[ColorSchemeKey.SABER_RIGHT]: colorToHex(envScheme._colorRight).slice(0, 7),
+		[ColorSchemeKey.OBSTACLE]: colorToHex(envScheme._obstacleColor).slice(0, 7),
+		[ColorSchemeKey.ENV_LEFT]: colorToHex(envScheme._envColorLeft).slice(0, 7),
+		[ColorSchemeKey.ENV_RIGHT]: colorToHex(envScheme._envColorRight).slice(0, 7),
+		[ColorSchemeKey.ENV_WHITE]: colorToHex(envScheme._envColorWhite ?? DEFAULT_COLOR_SCHEME._envColorWhite).slice(0, 7),
+		[ColorSchemeKey.BOOST_LEFT]: colorToHex(envScheme._envColorLeftBoost ?? envScheme._envColorLeft).slice(0, 7),
+		[ColorSchemeKey.BOOST_RIGHT]: colorToHex(envScheme._envColorRightBoost ?? envScheme._envColorRight).slice(0, 7),
+		[ColorSchemeKey.BOOST_WHITE]: colorToHex(envScheme._envColorWhiteBoost ?? envScheme._envColorWhite ?? DEFAULT_COLOR_SCHEME._envColorWhite).slice(0, 7),
 	};
 }

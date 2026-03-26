@@ -1,268 +1,295 @@
 import { distinct } from "@std/collections/distinct";
-import { ColorScheme, createBeatmap, createInfo, createInfoBeatmap, EnvironmentSchemeName } from "bsmap";
-import type { EnvironmentAllName, IColor, v2, wrapper } from "bsmap/types";
+import { distinctBy } from "@std/collections/distinct-by";
+import { parseColor } from "@zag-js/color-utils";
+import {
+	colorToHex,
+	createBeatmap,
+	createInfo,
+	createInfoBeatmap,
+	EnvironmentName,
+	type EnvironmentV2Name,
+	type EnvironmentV3Name,
+	type IV2CustomDataDifficulty,
+	type IV2CustomDataInfoDifficulty,
+	type IWrapBeatmap,
+	type IWrapInfo,
+	type IWrapInfoColorScheme,
+	sortObjectFn,
+	sortV2ObjectFn,
+	sortV3ObjectFn,
+	toColorObject,
+} from "bsmap";
 
-import type { Accept, App, ColorSchemeKey, IColorScheme, IEntityMap } from "$/types";
-import { deepAssign, ensureObject, hasKeys } from "$/utils";
-import { deserializeCustomBookmark } from "./bookmarks.helpers";
-import { deserializeColorToHex, serializeColorToObject } from "./colors.helpers";
-import type { BeatmapEntitySerializationOptions, LightshowEntitySerializationOptions } from "./object.helpers";
-import { getBeatmaps, getCustomColorsModule, getExtensionsModule, isModuleEnabled, resolveBeatmapIdFromFilename, resolveLightshowIdFromFilename } from "./song.helpers";
+import { DEFAULT_GRID } from "$/constants";
+import { type App, ColorSchemeKey } from "$/types";
+import { deepAssign, ensureArray, ensureObject, hasKeys } from "$/utils";
+import { deserializeCustomBookmark, resolveBookmarkId, serializeCustomBookmark } from "./bookmarks.helpers";
+import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
+import { createDataFactory } from "./factory.helpers";
+import { createAppBeatmap, createAppSong } from "./song.helpers";
 
-function coalesceBeatmapCollection(data: App.ISong) {
-	const beatmaps = getBeatmaps(data);
-
-	// Has this song enabled any mod support?
-	const isCustomColorsEnabled = isModuleEnabled(data, "customColors");
-	const isMappingExtensionsEnabled = isModuleEnabled(data, "mappingExtensions");
-
-	const colors = isCustomColorsEnabled ? getCustomColorsModule(data) : undefined;
-
-	const customColors = ensureObject({
-		_colorLeft: colors?.colorLeft ? serializeColorToObject(colors.colorLeft) : undefined,
-		_colorRight: colors?.colorRight ? serializeColorToObject(colors.colorRight) : undefined,
-		_obstacleColor: colors?.obstacleColor ? serializeColorToObject(colors.obstacleColor) : undefined,
-		_envColorLeft: colors?.envColorLeft ? serializeColorToObject(colors.envColorLeft) : undefined,
-		_envColorRight: colors?.envColorRight ? serializeColorToObject(colors.envColorRight) : undefined,
-		_envColorLeftBoost: colors?.envColorLeftBoost ? serializeColorToObject(colors.envColorLeftBoost) : undefined,
-		_envColorRightBoost: colors?.envColorRightBoost ? serializeColorToObject(colors.envColorRightBoost) : undefined,
-	});
-
-	const editorSettings: App.IEditorData["editorSettings"] = ensureObject({
-		modSettings: ensureObject({
-			mappingExtensions: isMappingExtensionsEnabled ? getExtensionsModule(data) : undefined,
-		}),
-	});
-
-	return { beatmaps, customColors, editorSettings };
-}
-
-export function patchEnvironmentName(environment: Accept<EnvironmentAllName, string>): EnvironmentAllName {
-	if (environment === "Origins") return "OriginsEnvironment";
-	return environment as EnvironmentAllName;
-}
-
-export function deriveModSettingsFromInfo(data: wrapper.IWrapInfo): Partial<App.IModSettings> {
-	function resolveColor(data: wrapper.IWrapInfo, key: ColorSchemeKey) {
-		if (data.difficulties.some((x) => hasKeys(x.customData, `_${key}`))) {
-			const customColorExists = data.difficulties.find((x) => x.customData[`_${key}`]);
-			const customColor = customColorExists?.customData[`_${key}`];
-			if (customColor) return deserializeColorToHex(customColor).slice(0, 7);
-		}
+export function resolveBeatmapIdFromFilename(filename: string): string {
+	let fn = filename;
+	for (const ext of [".json", ".dat", ".beatmap", ".lightshow"]) {
+		fn = fn.replace(ext, "");
 	}
-
-	const isCustomColorsEnabled = data.difficulties.some((beatmap) => hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorLeftBoost", "_envColorRightBoost", "_obstacleColor"));
-	const isMappingExtensionsEnabled = data.difficulties.some((beatmap) => beatmap.customData._requirements?.includes("Mapping Extensions"));
-
-	const customColors = {
-		...data.customData.editors?.Beatmapper?.editorSettings?.modSettings?.customColors,
-		isEnabled: isCustomColorsEnabled,
-		colorLeft: resolveColor(data, "colorLeft"),
-		colorRight: resolveColor(data, "colorRight"),
-		envColorLeft: resolveColor(data, "envColorLeft"),
-		envColorRight: resolveColor(data, "envColorRight"),
-		envColorLeftBoost: resolveColor(data, "envColorLeftBoost"),
-		envColorRightBoost: resolveColor(data, "envColorRightBoost"),
-		obstacleColor: resolveColor(data, "obstacleColor"),
-	};
-
-	const mappingExtensions = {
-		...data.customData.editors?.Beatmapper?.editorSettings?.modSettings?.mappingExtensions,
-		isEnabled: isMappingExtensionsEnabled,
-	};
-
-	const baseModSettings = {
-		customColors: isCustomColorsEnabled ? customColors : undefined,
-		mappingExtensions: isMappingExtensionsEnabled ? mappingExtensions : undefined,
-	};
-
-	return deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings });
+	return fn;
+}
+export function patchEnvironmentName<T extends EnvironmentName>(environment: string): T {
+	if (environment === "Origins") {
+		return "OriginsEnvironment" as T;
+	}
+	return environment as T;
 }
 
-export interface InfoSerializationOptions {
-	songDuration?: number;
-}
-export interface InfoDeserializationOptions {
-	readonly?: boolean;
-}
+export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createDataFactory({
+	container: {
+		serialize: function serializeInfoContents(data: Omit<App.ISong, "id">, options: { songDuration?: number | null }) {
+			const envColorScheme = deriveColorSchemeFromEnvironment(data.environment);
 
-export function serializeInfoContents(data: App.ISong, options: InfoSerializationOptions) {
-	const { beatmaps, customColors, editorSettings } = coalesceBeatmapCollection(data);
-
-	const allEnvironments = distinct(Object.values(beatmaps).map((x) => x.environmentName));
-
-	const envColorScheme = ColorScheme[EnvironmentSchemeName[patchEnvironmentName(data.environment)]] as Required<{ [key in keyof v2.IColorScheme]: Required<IColor> }>;
-
-	const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): wrapper.IWrapInfoColorScheme => {
-		return {
-			name: name,
-			overrideNotes: true,
-			overrideLights: true,
-			saberLeftColor: serializeColorToObject(scheme.colorLeft, true) ?? envColorScheme._colorRight,
-			saberRightColor: serializeColorToObject(scheme.colorRight, true) ?? envColorScheme._colorRight,
-			environment0Color: serializeColorToObject(scheme.envColorLeft, true) ?? envColorScheme._envColorLeft,
-			environment1Color: serializeColorToObject(scheme.envColorRight, true) ?? envColorScheme._envColorRight,
-			obstaclesColor: serializeColorToObject(scheme.obstacleColor, true) ?? envColorScheme._obstacleColor,
-			environment0ColorBoost: serializeColorToObject(scheme.envColorLeftBoost, true) ?? envColorScheme._envColorLeftBoost ?? envColorScheme._envColorLeft,
-			environment1ColorBoost: serializeColorToObject(scheme.envColorRightBoost, true) ?? envColorScheme._envColorRightBoost ?? envColorScheme._envColorRight,
-		};
-	});
-
-	return createInfo({
-		song: {
-			title: data.name,
-			subTitle: data.subName,
-			author: data.artistName,
-		},
-		audio: {
-			filename: data.songFilename,
-			audioDataFilename: "AudioData.dat",
-			bpm: data.bpm,
-			duration: options.songDuration,
-			previewStartTime: data.previewStartTime,
-			previewDuration: data.previewDuration,
-		},
-		environmentBase: {
-			normal: data.environment,
-		},
-		environmentNames: allEnvironments,
-		colorSchemes: allColorSchemes,
-		songPreviewFilename: data.songFilename,
-		coverImageFilename: data.coverArtFilename,
-		difficulties: Object.entries(beatmaps).map(([beatmapId, beatmap]) => {
-			return createInfoBeatmap({
-				filename: `${beatmapId}.beatmap.dat`,
-				lightshowFilename: `${beatmap.lightshowId && beatmap.lightshowId !== "Unnamed" ? beatmap.lightshowId : beatmapId}.lightshow.dat`,
-				characteristic: beatmap.characteristic,
-				difficulty: beatmap.difficulty,
-				njs: beatmap.noteJumpSpeed,
-				njsOffset: beatmap.startBeatOffset,
-				environmentId: allEnvironments.indexOf(beatmap.environmentName),
-				colorSchemeId: beatmap.colorSchemeName ? allColorSchemes.map((x) => x.name).indexOf(beatmap.colorSchemeName) : -1,
-				authors: {
-					mappers: beatmap.mappers.filter((x) => x.length > 0),
-					lighters: beatmap.lighters.filter((x) => x.length > 0),
-				},
-				customData: ensureObject<v2.ICustomDataInfoDifficulty>({
-					_colorLeft: customColors?._colorLeft,
-					_colorRight: customColors?._colorRight,
-					_envColorLeft: customColors?._envColorLeft,
-					_envColorRight: customColors?._envColorRight,
-					_obstacleColor: customColors?._obstacleColor,
-					_difficultyLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
-					_editorOffset: data.offset !== 0 ? data.offset : undefined,
-				}),
+			const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): IWrapInfoColorScheme => {
+				return {
+					name: name,
+					overrideNotes: scheme.overrideNotes ?? true,
+					overrideLights: scheme.overrideLights ?? true,
+					saberLeftColor: toColorObject(scheme.colorLeft ?? envColorScheme.colorLeft, true),
+					saberRightColor: toColorObject(scheme.colorRight ?? envColorScheme.colorRight, true),
+					obstaclesColor: toColorObject(scheme.obstacleColor ?? envColorScheme.obstacleColor, true),
+					environment0Color: toColorObject(scheme.envColorLeft ?? envColorScheme.envColorLeft, true),
+					environment1Color: toColorObject(scheme.envColorRight ?? envColorScheme.envColorRight, true),
+					environmentWColor: scheme.envColorWhite && parseColor(scheme.envColorWhite).toString("hex") !== "#FFFFFF" ? toColorObject(scheme.envColorWhite ?? envColorScheme.envColorWhite, true) : undefined,
+					environment0ColorBoost: toColorObject(scheme.envColorLeftBoost ?? envColorScheme.envColorLeftBoost, true),
+					environment1ColorBoost: toColorObject(scheme.envColorRightBoost ?? envColorScheme.envColorRightBoost, true),
+					environmentWColorBoost: scheme.envColorWhiteBoost && parseColor(scheme.envColorWhiteBoost).toString("hex") !== "#FFFFFF" ? toColorObject(scheme.envColorWhiteBoost ?? envColorScheme.envColorWhiteBoost, true) : undefined,
+				};
 			});
-		}),
-		customData: {
-			_editors: {
-				_lastEditedBy: "Beatmapper",
-				Beatmapper: {
-					version: version,
-					editorSettings: editorSettings,
+
+			const allEnvironments = distinct(Object.values(data.difficultiesById).map((x) => x.environmentName));
+
+			const customColors = data.modSettings.customColors;
+			const mappingExtensions = data.modSettings.mappingExtensions;
+
+			return createInfo({
+				song: {
+					title: data.name,
+					subTitle: data.subName,
+					author: data.artistName,
 				},
-			},
+				audio: {
+					filename: data.songFilename,
+					audioDataFilename: "AudioData.dat",
+					bpm: data.bpm,
+					duration: options.songDuration ? options.songDuration / 1000 : undefined,
+					previewStartTime: data.previewStartTime,
+					previewDuration: data.previewDuration,
+				},
+				environmentBase: {
+					normal: data.environment,
+				},
+				environmentNames: allEnvironments,
+				colorSchemes: allColorSchemes,
+				songPreviewFilename: data.songFilename,
+				coverImageFilename: data.coverArtFilename,
+				difficulties: Object.entries(data.difficultiesById).map(([beatmapId, beatmap]) => {
+					return createInfoBeatmap({
+						filename: `${beatmapId}.beatmap.dat`,
+						lightshowFilename: `${beatmap.lightshowId}.lightshow.dat`,
+						characteristic: beatmap.characteristic,
+						difficulty: beatmap.difficulty,
+						njs: beatmap.noteJumpSpeed,
+						njsOffset: beatmap.startBeatOffset,
+						environmentId: allEnvironments.indexOf(beatmap.environmentName),
+						colorSchemeId: beatmap.colorSchemeName ? allColorSchemes.map((x) => x.name).indexOf(beatmap.colorSchemeName) : -1,
+						authors: {
+							mappers: beatmap.mappers.filter((x) => x.length > 0),
+							lighters: beatmap.lighters.filter((x) => x.length > 0),
+						},
+						customData: ensureObject<IV2CustomDataInfoDifficulty>({
+							_colorLeft: !!customColors?.isEnabled && customColors?.colorLeft ? toColorObject(customColors.colorLeft) : undefined,
+							_colorRight: !!customColors?.isEnabled && customColors?.colorRight ? toColorObject(customColors.colorRight) : undefined,
+							_obstacleColor: !!customColors?.isEnabled && customColors?.obstacleColor ? toColorObject(customColors.obstacleColor) : undefined,
+							_envColorLeft: !!customColors?.isEnabled && customColors?.envColorLeft ? toColorObject(customColors.envColorLeft) : undefined,
+							_envColorRight: !!customColors?.isEnabled && customColors?.envColorRight ? toColorObject(customColors.envColorRight) : undefined,
+							_envColorWhite: !!customColors?.isEnabled && customColors?.envColorWhite ? toColorObject(customColors.envColorWhite) : undefined,
+							_envColorLeftBoost: !!customColors?.isEnabled && customColors?.envColorLeftBoost ? toColorObject(customColors.envColorLeftBoost) : undefined,
+							_envColorRightBoost: !!customColors?.isEnabled && customColors?.envColorRightBoost ? toColorObject(customColors.envColorRightBoost) : undefined,
+							_envColorWhiteBoost: !!customColors?.isEnabled && customColors?.envColorWhiteBoost ? toColorObject(customColors.envColorWhiteBoost) : undefined,
+							_difficultyLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
+							_editorOffset: data.offset !== 0 ? data.offset : undefined,
+						}),
+					});
+				}),
+				customData: {
+					_editors: {
+						_lastEditedBy: "Beatmapper",
+						Beatmapper: {
+							version: version,
+							editorSettings: {
+								modSettings: {
+									mappingExtensions: ensureObject({
+										isEnabled: !!mappingExtensions?.isEnabled,
+										numCols: mappingExtensions?.numCols !== DEFAULT_GRID.numCols ? mappingExtensions?.numCols : undefined,
+										numRows: mappingExtensions?.numRows !== DEFAULT_GRID.numRows ? mappingExtensions?.numRows : undefined,
+										colWidth: mappingExtensions?.colWidth !== DEFAULT_GRID.colWidth ? mappingExtensions?.colWidth : undefined,
+										rowHeight: mappingExtensions?.rowHeight !== DEFAULT_GRID.rowHeight ? mappingExtensions?.rowHeight : undefined,
+										colOffset: mappingExtensions?.colOffset !== DEFAULT_GRID.colOffset ? mappingExtensions?.colOffset : undefined,
+										rowOffset: mappingExtensions?.rowOffset !== DEFAULT_GRID.rowOffset ? mappingExtensions?.rowOffset : undefined,
+									}),
+								},
+							},
+						},
+					},
+				},
+			});
 		},
-	});
-}
-export function deserializeInfoContents(data: wrapper.IWrapInfo, options: InfoDeserializationOptions): App.ISong {
-	const colorSchemesById = data.colorSchemes.reduce((acc: IEntityMap<Required<IColorScheme>>, scheme) => {
-		acc[scheme.name] = {
-			colorLeft: deserializeColorToHex(scheme.saberLeftColor).slice(0, 7),
-			colorRight: deserializeColorToHex(scheme.saberRightColor).slice(0, 7),
-			obstacleColor: deserializeColorToHex(scheme.obstaclesColor).slice(0, 7),
-			envColorLeft: deserializeColorToHex(scheme.environment0Color).slice(0, 7),
-			envColorRight: deserializeColorToHex(scheme.environment1Color).slice(0, 7),
-			envColorLeftBoost: deserializeColorToHex(scheme.environment0ColorBoost).slice(0, 7),
-			envColorRightBoost: deserializeColorToHex(scheme.environment1ColorBoost).slice(0, 7),
-		};
-		return acc;
-	}, {});
+		deserialize: function deserializeInfoContents(data: IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {
+			const colorSchemesById = data.colorSchemes.reduce((acc: App.ISong["colorSchemesById"], scheme) => {
+				acc[scheme.name] = {
+					overrideNotes: scheme.overrideNotes,
+					overrideLights: scheme.overrideLights,
+					colorLeft: colorToHex(scheme.saberLeftColor).slice(0, 7),
+					colorRight: colorToHex(scheme.saberRightColor).slice(0, 7),
+					obstacleColor: colorToHex(scheme.obstaclesColor).slice(0, 7),
+					envColorLeft: colorToHex(scheme.environment0Color).slice(0, 7),
+					envColorRight: colorToHex(scheme.environment1Color).slice(0, 7),
+					envColorWhite: scheme.environmentWColor ? colorToHex(scheme.environmentWColor).slice(0, 7) : "#FFFFFF",
+					envColorLeftBoost: colorToHex(scheme.environment0ColorBoost).slice(0, 7),
+					envColorRightBoost: colorToHex(scheme.environment1ColorBoost).slice(0, 7),
+					envColorWhiteBoost: scheme.environmentWColorBoost ? colorToHex(scheme.environmentWColorBoost).slice(0, 7) : "#FFFFFF",
+				};
+				return acc;
+			}, {});
 
-	const beatmapsById = data.difficulties.reduce((acc: IEntityMap<App.IBeatmap>, beatmap) => {
-		const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
-		const lightshowId = resolveLightshowIdFromFilename(beatmap.lightshowFilename, beatmapId);
-		acc[beatmapId] = {
-			lightshowId: lightshowId,
-			characteristic: beatmap.characteristic,
-			difficulty: beatmap.difficulty,
-			noteJumpSpeed: beatmap.njs,
-			startBeatOffset: beatmap.njsOffset,
-			environmentName: data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal,
-			colorSchemeName: beatmap.colorSchemeId >= 0 ? data.colorSchemes.map((x) => x.name)[beatmap.colorSchemeId] : null,
-			mappers: beatmap.authors.mappers.filter((x) => x.length > 0),
-			lighters: beatmap.authors.lighters.filter((x) => x.length > 0),
-			customLabel: beatmap.customData?._difficultyLabel,
-		};
-		return acc;
-	}, {});
+			const beatmapsById = data.difficulties.reduce((acc: App.ISong["difficultiesById"], beatmap) => {
+				const beatmapId = resolveBeatmapIdFromFilename(beatmap.filename);
 
-	return {
-		name: data.song.title,
-		subName: data.song.subTitle,
-		artistName: data.song.author,
-		bpm: data.audio.bpm,
-		offset: data.difficulties[0].customData._editorOffset ?? 0,
-		previewStartTime: data.audio.previewStartTime,
-		previewDuration: data.audio.previewDuration,
-		environment: data.environmentBase.normal ?? "DefaultEnvironment",
-		songFilename: data.audio.filename,
-		coverArtFilename: data.coverImageFilename,
-		difficultiesById: beatmapsById,
-		colorSchemesById: colorSchemesById,
-		demo: options.readonly,
-		modSettings: deriveModSettingsFromInfo(data),
-	};
-}
+				acc[beatmapId] = createAppBeatmap({
+					lightshowId: resolveBeatmapIdFromFilename(beatmap.lightshowFilename),
+					characteristic: beatmap.characteristic,
+					difficulty: beatmap.difficulty,
+					noteJumpSpeed: beatmap.njs,
+					startBeatOffset: beatmap.njsOffset,
+					environmentName: patchEnvironmentName(data.environmentNames[beatmap.environmentId] ?? data.environmentBase.normal ?? EnvironmentName[0]),
+					colorSchemeName: beatmap.colorSchemeId >= 0 ? data.colorSchemes.map((x) => x.name)[beatmap.colorSchemeId] : null,
+					mappers: beatmap.authors.mappers.filter((x) => x.length > 0),
+					lighters: beatmap.authors.lighters.filter((x) => x.length > 0),
+					customLabel: beatmap.customData?._difficultyLabel,
+				});
+				return acc;
+			}, {});
 
-export interface BeatmapSerializationOptions extends BeatmapEntitySerializationOptions<"mapping-extensions">, LightshowEntitySerializationOptions {
-	editorOffsetInBeats?: number;
-}
-export interface BeatmapDeserializationOptions extends BeatmapEntitySerializationOptions<"mapping-extensions">, LightshowEntitySerializationOptions {
-	editorOffsetInBeats?: number;
-}
+			const activeCustomColors = Object.values(ColorSchemeKey).reduce(
+				(acc, key) => {
+					const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
+					acc[key as ColorSchemeKey] = color ? colorToHex(color).slice(0, 7) : null;
+					return acc;
+				},
+				{} as { [key in ColorSchemeKey]: string | null },
+			);
+
+			const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
+				return hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor");
+			});
+
+			const customColors = ensureObject({
+				isEnabled: isCustomColorsEnabled,
+				colorLeft: activeCustomColors.colorLeft ?? undefined,
+				colorRight: activeCustomColors.colorRight ?? undefined,
+				envColorLeft: activeCustomColors.envColorLeft ?? undefined,
+				envColorRight: activeCustomColors.envColorRight ?? undefined,
+				envColorWhite: activeCustomColors.envColorWhite ?? undefined,
+				envColorLeftBoost: activeCustomColors.envColorLeftBoost ?? undefined,
+				envColorRightBoost: activeCustomColors.envColorRightBoost ?? undefined,
+				envColorWhiteBoost: activeCustomColors.envColorWhiteBoost ?? undefined,
+				obstacleColor: activeCustomColors.obstacleColor ?? undefined,
+			});
+
+			const baseModSettings = {
+				customColors: isCustomColorsEnabled ? customColors : undefined,
+			};
+
+			return createAppSong({
+				name: data.song.title,
+				subName: data.song.subTitle,
+				artistName: data.song.author,
+				bpm: data.audio.bpm,
+				offset: data.difficulties[0]?.customData._editorOffset,
+				previewStartTime: data.audio.previewStartTime,
+				previewDuration: data.audio.previewDuration,
+				environment: patchEnvironmentName<EnvironmentV2Name | EnvironmentV3Name>(data.environmentNames[0] ?? data.environmentBase.normal ?? EnvironmentName[0]),
+				songFilename: data.audio.filename,
+				coverArtFilename: data.coverImageFilename,
+				difficultiesById: beatmapsById,
+				colorSchemesById: colorSchemesById,
+				demo: options.readonly,
+				modSettings: deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings }),
+			});
+		},
+	},
+});
 
 function shiftByOffset<T extends { time: number }>(options: { editorOffsetInBeats: number }) {
 	return (item: T) => ({ ...item, time: item.time + options.editorOffsetInBeats }) as T;
 }
 
-export function serializeBeatmapContents(data: Partial<App.IBeatmapEntities>, { editorOffsetInBeats = 0 }: BeatmapSerializationOptions) {
-	const notes = data.notes?.map(shiftByOffset({ editorOffsetInBeats }));
-	const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats }));
-	const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats }));
-	const events = data.events?.map(shiftByOffset({ editorOffsetInBeats }));
-	const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
+export const { serialize: serializeBeatmapContents, deserialize: deserializeBeatmapContents } = createDataFactory({
+	container: {
+		serialize: function serializeBeatmapContents(data: Partial<App.IBeatmapEntities>, { version, editorOffsetInBeats }: { version: number; editorOffsetInBeats: number }) {
+			const notes = data.notes?.map(shiftByOffset({ editorOffsetInBeats }));
+			const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats }));
+			const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats }));
+			const basicEvents = data.basicEvents?.map(shiftByOffset({ editorOffsetInBeats }));
+			const boostEvents = data.boostEvents?.map(shiftByOffset({ editorOffsetInBeats }));
+			const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
 
-	return createBeatmap({
-		difficulty: {
-			colorNotes: notes,
-			bombNotes: bombs,
-			obstacles: obstacles,
+			return createBeatmap({
+				difficulty: {
+					colorNotes: notes,
+					bombNotes: bombs,
+					obstacles: obstacles,
+					customData: ensureObject<IV2CustomDataDifficulty>({
+						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
+						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
+					}),
+				},
+				lightshow: {
+					basicEvents: basicEvents,
+					colorBoostEvents: boostEvents,
+					customData: ensureObject<IV2CustomDataDifficulty>({
+						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
+						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
+					}),
+				},
+				customData: {
+					bookmarks: bookmarks,
+				},
+			});
 		},
-		lightshow: {
-			basicEvents: events,
-		},
-		customData: {
-			bookmarks: bookmarks,
-		},
-	});
-}
-export function deserializeBeatmapContents(data: wrapper.IWrapBeatmap, { editorOffsetInBeats = 0 }: BeatmapDeserializationOptions): Partial<App.IBeatmapEntities> {
-	const notes = data.difficulty.colorNotes;
-	const bombs = data.difficulty.bombNotes;
-	const obstacles = data.difficulty.obstacles;
-	const events = data.lightshow.basicEvents;
-	const bookmarks = distinct([
-		...(data.difficulty.customData?._bookmarks?.map((x) => deserializeCustomBookmark(2, x, {})) ?? []),
-		...(data.difficulty.customData?.bookmarks?.map((x) => deserializeCustomBookmark(3, x, {})) ?? []),
-		//
-	]);
+		deserialize: function deserializeBeatmapContents(data: IWrapBeatmap, { editorOffsetInBeats }: { editorOffsetInBeats: number }): Partial<App.IBeatmapEntities> {
+			const notes = data.difficulty.colorNotes;
+			const bombs = data.difficulty.bombNotes;
+			const obstacles = data.difficulty.obstacles;
+			const basicEvents = data.lightshow.basicEvents;
+			const boostEvents = data.lightshow.colorBoostEvents;
 
-	return {
-		notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-		bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-		obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-		events: events?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-		bookmarks: data.customData.bookmarks ?? bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
-	};
-}
+			const bookmarks = distinctBy(
+				[
+					...(data.customData?.bookmarks ?? []),
+					...distinct([...(data.difficulty.customData._bookmarks ?? []), ...(data.difficulty.customData.bookmarks ?? []), ...(data.lightshow.customData?._bookmarks ?? []), ...(data.lightshow.customData?.bookmarks ?? [])]).map((x) => {
+						return deserializeCustomBookmark(x, null, {});
+					}),
+				],
+				resolveBookmarkId,
+			).sort(sortObjectFn);
+
+			return {
+				notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				basicEvents: basicEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				boostEvents: boostEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				bookmarks: bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+			};
+		},
+	},
+});

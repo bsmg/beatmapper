@@ -1,10 +1,10 @@
 import { type AsyncThunkPayloadCreator, createEntityAdapter, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
-import { getNewBookmarkColor, resolveBookmarkId } from "$/helpers/bookmarks.helpers";
+import { resolveBookmarkId, resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import { addSong, leaveEditor, loadBeatmapEntities, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
-import { selectAllBookmarks, selectCursorPositionInBeats } from "$/store/selectors";
+import { selectCursorPositionInBeats } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import type { App, RequiredKeys, SongId, View } from "$/types";
 
@@ -16,12 +16,10 @@ const { selectAll } = adapter.getSelectors();
 
 const deriveDataFromState: AsyncThunkPayloadCreator<RequiredKeys<App.IBookmark, "time">, { songId: SongId; view: View; name: string }> = (args, api) => {
 	const state = api.getState() as RootState;
-	const existingBookmarks = selectAllBookmarks(state);
-	const color = getNewBookmarkColor(existingBookmarks);
 	// we want to use the cursor position to figure out when to create the bookmark for
 	const beatNum = selectCursorPositionInBeats(state, args.songId);
 	if (beatNum === null) return api.rejectWithValue("Invalid beat number.");
-	return api.fulfillWithValue({ ...args, time: beatNum, color });
+	return api.fulfillWithValue({ ...args, time: beatNum, color: resolveColorForBookmark(args.name) });
 };
 
 const slice = createSlice({

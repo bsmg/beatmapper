@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ErrorBoundary } from "$/components/app/layouts";
+import ErrorBoundary from "$/components/app/templates/error-boundary";
 import DocsPageLayout from "$/components/docs/templates/page";
-import { type Doc, docs } from "$:content";
+import { useUpdateEffect } from "$/components/hooks/use-update-effect";
+import { docs } from "$:content";
 
 // hack: tsr rewrites only work with a server environment, so we'll just cheat if we navigate to an old route
 function rewriteId(splat: string | undefined) {
@@ -24,20 +25,26 @@ export const Route = createFileRoute("/_/docs/_/$")({
 	errorComponent: (ctx) => <ErrorBoundary {...ctx} interactive={false} />,
 	loader: ({ params }) => {
 		const entry = docs.find((x) => x.id === rewriteId(params._splat));
-		const container = document.querySelector("main");
-		return { container, entry: entry as Doc };
+
+		if (!entry) {
+			throw Error("No document found.");
+		}
+
+		return { entry };
 	},
-	head: (c) => {
-		const { entry } = c.loaderData ?? {};
-		return { meta: [{ title: entry?.title ? `${entry?.title} | Beatmapper Docs` : "Beatmapper Docs" }] };
-	},
-	onEnter: (c) => {
-		const { container } = c.loaderData ?? {};
-		container?.scrollTo({ top: 0 });
+	head: ({ loaderData }) => {
+		return { meta: [{ title: loaderData ? `${loaderData.entry.title ?? "Unknown"} ∙ Beatmapper Docs` : "Beatmapper Docs" }] };
 	},
 });
 
 function RouteComponent() {
-	const { container, entry } = Route.useLoaderData();
+	const { entry } = Route.useLoaderData();
+
+	const container = document.querySelector("main");
+
+	useUpdateEffect(() => {
+		container?.scrollTo({ top: 0 });
+	}, [entry.id]);
+
 	return <DocsPageLayout id={entry.id} container={container} />;
 }

@@ -1,28 +1,37 @@
+import type { Assign } from "@ark-ui/react";
+import type { UseFieldProps } from "@ark-ui/react/field";
 import { HelpCircleIcon } from "lucide-react";
-import type { ComponentProps } from "react";
+import type { MDXComponents } from "mdx/types";
+import { type ComponentProps, forwardRef } from "react";
 
+import { MDXRemote } from "$/components/ui/atoms/mdx";
+import { toPolymorphic, useRender } from "$/components/ui/hooks/use-render";
 import * as Builder from "$/components/ui/styled/field";
 import { HStack } from "$:styled-system/jsx";
-import { Input as BaseInput, NativeSelect as BaseSelect, Textarea as BaseTextarea } from "./input";
-import { MDXRender } from "./mdx";
+import { AnchorLink } from "./link";
 import { Tooltip } from "./tooltip";
 
-export interface FieldProps extends Omit<ComponentProps<typeof Builder.Root>, "label"> {
-	label?: React.ReactNode;
+const FIELD_MDX_COMPONENTS: MDXComponents = {
+	a: forwardRef(({ ...rest }, ref) => <AnchorLink ref={ref} target="_blank" {...rest} />),
+};
+
+export interface FieldProps extends UseFieldProps {
+	label?: string;
 	cosmetic?: boolean;
-	helperText?: React.ReactNode;
-	errorText?: React.ReactNode;
+	helperText?: string;
+	errorText?: string;
 }
-export function Field({ label, cosmetic, children, helperText, errorText, ...rest }: FieldProps) {
+
+export function Field({ children, label, cosmetic, helperText, errorText, ...rest }: Assign<ComponentProps<typeof Builder.Root>, FieldProps>) {
+	const Label = useRender(Builder.Label, toPolymorphic(cosmetic ? "span" : "label"));
+
 	return (
 		<Builder.Root {...rest}>
 			{label && (
 				<HStack gap={1}>
-					<Builder.Label asChild={cosmetic} data-required={rest.required}>
-						<span>{label}</span>
-					</Builder.Label>
+					<Label>{label}</Label>
 					{helperText && (
-						<Tooltip interactive render={() => (typeof helperText === "string" ? <MDXRender code={helperText} /> : helperText)}>
+						<Tooltip interactive render={() => (typeof helperText === "string" ? <MDXRemote components={FIELD_MDX_COMPONENTS}>{helperText}</MDXRemote> : helperText)}>
 							<Builder.HelperText>
 								<HelpCircleIcon size={16} />
 							</Builder.HelperText>
@@ -33,27 +42,5 @@ export function Field({ label, cosmetic, children, helperText, errorText, ...res
 			{children}
 			<Builder.ErrorText>{errorText}</Builder.ErrorText>
 		</Builder.Root>
-	);
-}
-
-export function FieldInput({ ...rest }: ComponentProps<typeof BaseInput>) {
-	return (
-		<Builder.Input asChild>
-			<BaseInput {...rest} />
-		</Builder.Input>
-	);
-}
-export function FieldSelect({ ...rest }: ComponentProps<typeof BaseSelect>) {
-	return (
-		<Builder.Select asChild>
-			<BaseSelect {...rest} />
-		</Builder.Select>
-	);
-}
-export function FieldTextarea({ ...rest }: ComponentProps<typeof BaseTextarea>) {
-	return (
-		<Builder.Textarea asChild>
-			<BaseTextarea {...rest} />
-		</Builder.Textarea>
 	);
 }

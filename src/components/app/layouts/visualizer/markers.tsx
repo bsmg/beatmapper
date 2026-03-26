@@ -1,22 +1,32 @@
-import type { MouseEvent, ReactNode } from "react";
+import type { TimeProcessor } from "bsmap";
+import { type MouseEvent, type ReactNode, useMemo } from "react";
 
+import { For } from "$/components/ui/atoms";
 import type { App } from "$/types";
 
 interface Props {
 	markers: App.IBookmark[];
 	duration: number;
-	offset?: number;
+	offset: number;
+	timeProcessor: TimeProcessor;
 	onMarkerClick: (event: MouseEvent<HTMLButtonElement>, beatNum: number) => void;
 	children: (marker: App.IBookmark, ctx: { offset: number; onMarkerClick: (event: MouseEvent<HTMLButtonElement>, beatNum: number) => void }) => ReactNode;
 }
-function AudioVisualizerMarkers({ markers, duration, offset, onMarkerClick, children }: Props) {
-	// Add the bookmarks in reverse.
-	// This way, they stack from left to right, so earlier flags sit in front of later ones. This is important when hovering, to be able to see the flag name
-	return [...markers].reverse().map((bookmark) => {
-		const beatNumWithOffset = bookmark.time + (offset ?? 0);
-		const offsetPercentage = (beatNumWithOffset / duration) * 100;
-		return children(bookmark, { offset: offsetPercentage, onMarkerClick: onMarkerClick });
-	});
+function AudioVisualizerMarkers({ markers, duration, offset, timeProcessor, onMarkerClick, children }: Props) {
+	const allMarkers = useMemo(() => {
+		// Add the bookmarks in reverse.
+		// This way, they stack from left to right, so earlier flags sit in front of later ones. This is important when hovering, to be able to see the flag name
+		const reversed = markers.sort((a, b) => b.time - a.time);
+
+		return reversed.map((marker) => {
+			const realTimeInSeconds = timeProcessor.toRealTime(marker.time);
+			const realTimeMs = realTimeInSeconds * 1000 + offset;
+			const offsetPercentage = (realTimeMs / duration) * 100;
+			return { ...marker, offset: offsetPercentage };
+		});
+	}, [timeProcessor, markers, duration, offset]);
+
+	return <For each={allMarkers}>{(bookmark) => children(bookmark, { offset: bookmark.offset, onMarkerClick: onMarkerClick })}</For>;
 }
 
 export default AudioVisualizerMarkers;

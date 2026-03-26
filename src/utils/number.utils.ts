@@ -25,3 +25,18 @@ export function normalize(number: number, currentScaleMin: number, currentScaleM
 	// Next, transpose that value to our desired scale.
 	return (newScaleMax - newScaleMin) * standardNormalization + newScaleMin;
 }
+
+export function lerp(start: number, end: number, t: number) {
+	return start + (end - start) * t;
+}
+
+export function mulberry32(seed: number) {
+	let state = seed;
+
+	return () => {
+		state = (state + 0x6d2b79f5) | 0;
+		let t = Math.imul(state ^ (state >>> 15), state | 1);
+		t = (t + Math.imul(t ^ (t >>> 7), t | 61)) | 0;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}

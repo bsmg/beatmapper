@@ -1,4 +1,4 @@
-import { type EffectCallback, useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * **WARNING**
@@ -14,6 +14,12 @@ import { type EffectCallback, useEffect } from "react";
  *
  * Use with caution.
  */
-export function useMount(callback: EffectCallback) {
-	useEffect(callback, []);
+export function useMount(callback: () => void) {
+	const callbackRef = useRef(callback);
+
+	callbackRef.current = callback;
+
+	useEffect(() => {
+		callbackRef.current();
+	}, []);
 }

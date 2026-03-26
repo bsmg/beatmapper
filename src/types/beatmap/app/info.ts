@@ -1,16 +1,8 @@
-import type { EntityId } from "@reduxjs/toolkit";
-import type { CharacteristicName, DifficultyName, EnvironmentAllName, EnvironmentName, EnvironmentV3Name } from "bsmap/types";
+import type { CharacteristicName, DifficultyName, EnvironmentName, EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 
-import type { IColorScheme, IEntityMap, IGrid } from "$/types/editor";
+import type { BeatmapId, IColorScheme, IEntityMap, IGrid, SongId } from "$/types";
 
-export type SongId = EntityId;
-export type BeatmapId = EntityId;
-
-export interface IModule {
-	isEnabled: boolean;
-}
-
-type IWrapModule<T> = IModule & T;
+type IWrapModule<T> = { isEnabled: boolean } & T;
 
 export interface IModSettings {
 	mappingExtensions: IWrapModule<Partial<IGrid>>;
@@ -23,7 +15,7 @@ export interface IBeatmap {
 	difficulty: DifficultyName;
 	noteJumpSpeed: number;
 	startBeatOffset: number;
-	environmentName: EnvironmentAllName;
+	environmentName: EnvironmentName;
 	colorSchemeName: string | null;
 	mappers: string[];
 	lighters: string[];
@@ -31,7 +23,7 @@ export interface IBeatmap {
 }
 
 export interface ISong {
-	id: EntityId;
+	id: SongId;
 	name: string;
 	subName: string;
 	artistName: string;
@@ -45,10 +37,10 @@ export interface ISong {
 	swingPeriod?: number;
 	previewStartTime: number;
 	previewDuration: number;
-	environment: EnvironmentName | EnvironmentV3Name;
+	environment: EnvironmentV2Name | EnvironmentV3Name;
 	songFilename: string;
 	coverArtFilename: string;
-	colorSchemesById: IEntityMap<Required<IColorScheme>>;
+	colorSchemesById: IEntityMap<IColorScheme & { overrideNotes?: boolean; overrideLights?: boolean }>;
 	difficultiesById: IEntityMap<IBeatmap>;
 	selectedDifficulty?: BeatmapId;
 	createdAt?: number;

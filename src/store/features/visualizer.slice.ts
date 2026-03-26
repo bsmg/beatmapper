@@ -1,7 +1,7 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import type { JsonWaveformData } from "waveform-data";
 
-import { finishLoadingMap, leaveEditor, reloadVisualizer } from "$/store/actions";
+import { leaveEditor } from "$/store/actions";
 
 const initialState = {
 	waveform: null as JsonWaveformData | null,
@@ -17,6 +17,10 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
+			reloadVisualizer: api.reducer<{ duration: number; waveformData: JsonWaveformData }>((state, action) => {
+				const { waveformData } = action.payload;
+				return { ...state, waveform: waveformData, zoomAmount: 0, zoomCursorPosition: null };
+			}),
 			updateZoom: api.reducer<{ value: number }>((state, action) => {
 				const { value: amount } = action.payload;
 				let newWaveformZoom = state.zoomAmount + amount;
@@ -29,10 +33,6 @@ const slice = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder.addCase(leaveEditor, () => initialState);
-		builder.addMatcher(isAnyOf(finishLoadingMap, reloadVisualizer), (state, action) => {
-			const { waveformData } = action.payload;
-			return { ...state, waveform: waveformData, zoomAmount: 0, zoomCursorPosition: null };
-		});
 		builder.addDefaultCase((state) => state);
 	},
 });

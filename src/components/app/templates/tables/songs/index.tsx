@@ -1,95 +1,111 @@
+import { useListCollection } from "@ark-ui/react/collection";
 import { Link } from "@tanstack/react-router";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { ArrowRightToLineIcon } from "lucide-react";
-import { useMemo } from "react";
+import { Fragment, useCallback } from "react";
 
-import { CoverArtFilePreview } from "$/components/app/compositions";
-import { createBeatmapListCollection } from "$/components/app/constants";
+import { CoverArtFile } from "$/components/app/compositions";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
-import { getBeatmapIds, getSongMetadata, isSongReadonly, resolveSongId } from "$/helpers/song.helpers";
+import { resolveSongId } from "$/helpers/song.helpers";
+import { BeatmapFilestore } from "$/services/file.service";
 import { updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllSongs, selectProcessingImport, selectSelectedBeatmap } from "$/store/selectors";
-import type { App } from "$/types";
-import { HStack, Stack, styled } from "$:styled-system/jsx";
+import { selectAllSongs, selectBeatmaps, selectDemo, selectProcessingImport, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import type { App, SongId } from "$/types";
+import { HStack, styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
 import SongsDataTableActions from "./actions";
 
 const helper = createColumnHelper<App.ISong>();
 
-const SONG_TABLE = [
-	helper.accessor((data) => [resolveSongId(data)], {
-		id: "cover",
-		size: 40,
-		header: () => null,
-		cell: (ctx) => {
-			const [sid] = ctx.getValue();
-			return <CoverArtFilePreview songId={sid} width={40} />;
-		},
-	}),
-	helper.accessor((data) => [getSongMetadata(data), isSongReadonly(data)] as const, {
-		id: "metadata",
-		size: 240,
-		header: () => "Title",
-		cell: (ctx) => {
-			const [metadata, demo] = ctx.getValue();
-			return (
-				<Stack gap={0.5}>
-					<Title>
-						{metadata.title}
-						{demo && <Demo>(Demo song)</Demo>}
-					</Title>
-					<Artist>{metadata.artist}</Artist>
-				</Stack>
-			);
-		},
-	}),
-	helper.accessor((data) => [resolveSongId(data), createBeatmapListCollection({ beatmapIds: getBeatmapIds(data) })] as const, {
-		id: "beatmaps",
-		size: 120,
-		header: () => "Beatmaps",
-		cell: (ctx) => {
-			const dispatch = useAppDispatch();
-			const [sid, collection] = ctx.getValue();
-			const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
-			const initialValue = useMemo(() => [selectedBeatmap.toString()], [selectedBeatmap]);
-			return <Select collection={collection} value={initialValue} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId: sid, beatmapId: details.value[0] }))} />;
-		},
-	}),
-	helper.accessor((data) => [resolveSongId(data)] as const, {
-		id: "actions",
-		size: 80,
-		header: () => "Actions",
-		cell: (ctx) => {
-			const [sid] = ctx.getValue();
-			const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
-			return (
-				<HStack gap={1}>
-					<SongsDataTableActions sid={sid} />
-					<Link to={"/edit/$sid/$bid/notes"} params={{ sid: sid.toString(), bid: selectedBeatmap.toString() }}>
-						<Button variant="subtle" size="icon">
-							<ArrowRightToLineIcon />
-						</Button>
-					</Link>
-				</HStack>
-			);
-		},
-	}),
-];
+interface Props {
+	songId: SongId;
+}
+function Metadata({ songId }: Props) {
+	const metadata = useAppSelector((state) => selectSongMetadata(state, songId));
+	const isDemo = useAppSelector((state) => selectDemo(state, songId));
+
+	return (
+		<Fragment>
+			<Title>
+				{metadata.title}
+				{isDemo && <Demo>(Demo song)</Demo>}
+			</Title>
+			<Artist>{metadata.artist}</Artist>
+		</Fragment>
+	);
+}
+function Beatmaps({ songId }: Props) {
+	const dispatch = useAppDispatch();
+	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, songId));
+	const beatmaps = useAppSelector((state) => selectBeatmaps(state, songId));
+
+	const { collection } = useListCollection({
+		initialItems: Object.keys(beatmaps),
+		itemToString: (beatmapId) => beatmaps[beatmapId].customLabel ?? beatmapId,
+	});
+
+	return <Select collection={collection} value={[selectedBeatmap.toString()]} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId, beatmapId: details.value[0] }))} />;
+}
+function Actions({ songId }: Props) {
+	const selectedBeatmapId = useAppSelector((state) => selectSelectedBeatmap(state, songId));
+
+	return (
+		<HStack justify={"start"} gap={1}>
+			<SongsDataTableActions sid={songId} />
+			<Link to={"/edit/$sid/$bid/notes"} params={{ sid: songId.toString(), bid: selectedBeatmapId.toString() }}>
+				<Button variant="subtle" size="icon">
+					<ArrowRightToLineIcon />
+				</Button>
+			</Link>
+		</HStack>
+	);
+}
 
 function SongsDataTable() {
 	const songs = useAppSelector(selectAllSongs);
 	const isProcessingImport = useAppSelector(selectProcessingImport);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: force rerender when songs change
+	const getColumns = useCallback(
+		() => [
+			helper.accessor((data) => resolveSongId(data), {
+				id: "cover",
+				size: 40,
+				header: () => null,
+				cell: (ctx) => <CoverArtFile filename={BeatmapFilestore.resolveFilename(ctx.getValue(), "cover", {})} boxSize={40} />,
+			}),
+			helper.accessor((data) => resolveSongId(data), {
+				id: "metadata",
+				size: 240,
+				header: () => "Title",
+				cell: (ctx) => <Metadata songId={ctx.getValue()} />,
+			}),
+			helper.accessor((data) => resolveSongId(data), {
+				id: "beatmaps",
+				size: 120,
+				header: () => "Beatmaps",
+				cell: (ctx) => <Beatmaps songId={ctx.getValue()} />,
+			}),
+			helper.accessor((data) => resolveSongId(data), {
+				id: "actions",
+				size: 80,
+				header: () => "Actions",
+				cell: (ctx) => <Actions songId={ctx.getValue()} />,
+			}),
+		],
+		[songs],
+	);
+
 	const table = useReactTable({
-		columns: SONG_TABLE,
+		columns: getColumns(),
 		data: songs,
 		getCoreRowModel: getCoreRowModel(),
 	});
 
 	return (
 		<Wrapper>
-			<DataTable table={table} />
+			<DataTable data={table} />
 			{isProcessingImport && (
 				<LoadingBlocker>
 					<Spinner />

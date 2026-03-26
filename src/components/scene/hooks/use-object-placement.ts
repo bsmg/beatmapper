@@ -1,7 +1,7 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import { useCallback } from "react";
 
-import { useGlobalEventListener } from "$/components/hooks";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { finishManagingNoteSelection, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectNotesEditorSelectionMode } from "$/store/selectors";
@@ -108,7 +108,7 @@ export function useObjectPlacement<T>({ interactive, selectItemSelected, onItemS
 	);
 
 	const handlePointerOut = useCallback(
-		(event: PointerEvent) => {
+		(event: PointerEvent, _data: T) => {
 			if (!interactive) return;
 			event.stopPropagation();
 		},

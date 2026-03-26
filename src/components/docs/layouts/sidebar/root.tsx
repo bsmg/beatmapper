@@ -1,9 +1,9 @@
 import type { PropsWithChildren } from "react";
 
 import { Logo } from "$/components/app/compositions";
-import { DocsThemeToggle } from "$/components/docs/compositions";
 import { styled } from "$:styled-system/jsx";
 import { center, stack } from "$:styled-system/patterns";
+import ThemeToggle from "./theme-toggle";
 
 function DocsSidebarRoot({ children }: PropsWithChildren) {
 	return (
@@ -13,7 +13,7 @@ function DocsSidebarRoot({ children }: PropsWithChildren) {
 			</Header>
 			<Navigation>{children}</Navigation>
 			<Footer>
-				<DocsThemeToggle />
+				<ThemeToggle />
 			</Footer>
 		</Wrapper>
 	);

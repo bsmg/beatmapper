@@ -1,29 +1,28 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 
 import { demoFileUrl } from "$/assets";
-import { APP_TOASTER } from "$/components/app/constants";
-import { getSelectedBeatmap } from "$/helpers/song.helpers";
-import { router } from "$/index";
+import { getRouter } from "$/router";
+import { getAppToaster } from "$/setup";
 import { addSongFromFile, loadDemoMap } from "$/store/actions";
 import type { RootState } from "$/store/setup";
 
-/**
- * This middleware exists only to load (and possibly manage) the demo song that comes with this app.
- */
+/** This middleware exists only to load (and possibly manage) the demo song that comes with this app. */
 export default function createDemoMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
+	const router = getRouter();
+	const toaster = getAppToaster();
 
 	instance.startListening({
 		actionCreator: loadDemoMap,
 		effect: async (_, api) => {
 			try {
 				const blob = await fetch(demoFileUrl).then((response) => response.blob());
-				const { songId: sid, songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();
-				const bid = getSelectedBeatmap(songData);
-				router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid: sid.toString(), bid: bid.toString() } });
-			} catch (e) {
-				if (!(e instanceof Error)) return;
-				APP_TOASTER.error({ description: `${e.message}` });
+				const { songId, songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();
+				const beatmapId = songData.selectedDifficulty ?? Object.keys(songData.difficultiesById)[0];
+				router.navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId.toString(), bid: beatmapId.toString() } });
+			} catch (error) {
+				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				return console.error(error);
 			}
 		},
 	});

@@ -1,3 +1,7 @@
+import type { Assign } from "@ark-ui/react";
+import type { LucideProps } from "lucide-react";
+import { useId } from "react";
+
 import { EventTool } from "$/types";
 import { token } from "$:styled-system/tokens";
 
@@ -11,6 +15,8 @@ function getPathForTool(tool: EventTool) {
 			return "M24.5 0C31.5 -9.68242e-05 32 8.5 32 8.5V32H0C0 32 17.5 9.68259e-05 24.5 0Z";
 		case EventTool.FADE:
 			return "M7.49998 0C0.499969 -9.68242e-05 -1.52588e-05 8.5 -1.52588e-05 8.5V32H32C32 32 14.5 9.68259e-05 7.49998 0Z";
+		case EventTool.TRANSITION:
+			return "M0 32C0 32 6 0 16 0C26 0 32 32 32 32H0Z";
 		default:
 			throw new Error(`Unrecognized tool: ${tool}`);
 	}
@@ -18,14 +24,21 @@ function getPathForTool(tool: EventTool) {
 
 interface Props {
 	tool: EventTool;
-	color?: string;
+	boostColor?: string;
 }
+function EventToolIcon({ tool, color, boostColor }: Assign<LucideProps, Props>) {
+	const gradient = useId();
 
-function EventToolIcon({ tool, color }: Props) {
 	return (
 		<svg role="presentation" width={16} height={16} viewBox="0 0 32 32" fill="none">
 			<rect x1={0} y1={0} width={32} height={32} fill="none" stroke={token.var("colors.border.default")} />
-			<path d={getPathForTool(tool)} fill={color} stroke="none" />
+			<defs>
+				<linearGradient id={gradient} x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" stopColor={color} />
+					<stop offset="100%" stopColor={boostColor ?? color} />
+				</linearGradient>
+			</defs>
+			<path d={getPathForTool(tool)} fill={`url(#${gradient})`} stroke={"none"} />
 		</svg>
 	);
 }

@@ -1,109 +1,108 @@
-import { type EventType, sortObjectFn } from "bsmap";
+import { type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 
-import { isLightTrack, resolveEventColor, resolveEventEffect, resolveEventValue } from "$/helpers/events.helpers";
-import { type Accept, App, type IBackgroundBox, type IEventTracks, type Member } from "$/types";
+import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
+import { isLightEffectActive, isLightTrack, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
+import { BasicEventEffect, ColorSchemeKey, EventColor, type IBackgroundBox, type ILightState } from "$/types";
+import { clamp, lerp, lerpColor } from "$/utils";
 
-const ON_EVENT_TYPES: App.BasicEventEffect[] = [App.BasicEventEffect.ON, App.BasicEventEffect.FLASH, App.BasicEventEffect.TRANSITION];
-
-interface Options {
-	initialColor: App.EventColor | null;
-	initialBrightness: number | null;
-	startBeat: number;
-	numOfBeatsToShow: number;
-	tracks?: IEventTracks;
+const COLOR_KEY_MAP = {
+	[EventColor.PRIMARY]: [ColorSchemeKey.ENV_LEFT],
+	[EventColor.SECONDARY]: [ColorSchemeKey.ENV_RIGHT],
+	[EventColor.WHITE]: [ColorSchemeKey.ENV_WHITE],
+};
+const BOOST_COLOR_KEY_MAP = {
+	[EventColor.PRIMARY]: [ColorSchemeKey.BOOST_LEFT],
+	[EventColor.SECONDARY]: [ColorSchemeKey.BOOST_RIGHT],
+	[EventColor.WHITE]: [ColorSchemeKey.BOOST_WHITE],
+};
+export function resolveColorForLightState({ color, isBoosted }: { color: EventColor | null; isBoosted: boolean }, options: ColorResolverOptions): string | null {
+	const key = color !== null ? (isBoosted ? BOOST_COLOR_KEY_MAP : COLOR_KEY_MAP)[color][0] : null;
+	if (!key) return null;
+	return resolveColorForItem(key, options);
 }
-export function createBackgroundBoxes(events: App.IBasicEvent[], trackId: Accept<EventType, number>, { initialColor: initialTrackLightingColorType, initialBrightness, startBeat, numOfBeatsToShow, tracks }: Options) {
-	// If this track isn't a lighting track, bail early.
+
+interface StateResolverContext extends ColorResolverOptions {
+	initialLightState: ILightState;
+	offsetInBeats?: number;
+}
+export function deriveLightStateAtBeat(
+	targetBeat: number,
+	currentEvent: { data: IWrapBasicEvent; effect: BasicEventEffect; color: EventColor | null } | undefined,
+	nextEvent: { data: IWrapBasicEvent; effect: BasicEventEffect; color: EventColor | null } | undefined,
+	{ initialLightState, offsetInBeats = 0, isBoosted, ...options }: StateResolverContext & { isBoosted: boolean },
+): IBackgroundBox["startState" | "endState"] {
+	const isActive = currentEvent ? isLightEffectActive(currentEvent.effect) : false;
+
+	const startTime = currentEvent?.data.time ?? offsetInBeats;
+	const startBrightness = isActive ? (currentEvent?.data.floatValue ?? initialLightState.brightness ?? 0) : 0;
+	const startColor = currentEvent?.color ? resolveColorForLightState({ color: currentEvent.color, isBoosted }, options) : initialLightState.color;
+
+	if (nextEvent?.effect === BasicEventEffect.TRANSITION) {
+		const duration = nextEvent.data.time - startTime;
+		const ratio = duration > 0 ? clamp((targetBeat - startTime) / duration, 0, 1) : 1;
+
+		return {
+			color: lerpColor(startColor, resolveColorForLightState({ color: nextEvent.color, isBoosted }, options), ratio),
+			brightness: lerp(startBrightness, nextEvent.data.floatValue, ratio),
+		};
+	}
+
+	return {
+		color: isActive ? (startColor ?? "transparent") : "transparent",
+		brightness: startBrightness,
+	};
+}
+
+function deriveBoostStateAtBeat(targetBeat: number, boostEvents: IWrapColorBoostEvent[], initialBoostState: boolean): boolean {
+	let activeBoost = initialBoostState;
+	for (const event of boostEvents) {
+		if (event.time > targetBeat) break;
+		activeBoost = event.toggle;
+	}
+	return activeBoost;
+}
+
+interface CreateBackgroundBoxesOptions extends StateResolverContext {
+	tracks: ITrackDefinitions<IBasicTrack>;
+	basicEvents: IWrapBasicEvent[];
+	boostEvents: IWrapColorBoostEvent[];
+	startBeat: number;
+	endBeat: number;
+}
+export function createBackgroundBoxes(trackId: number, { tracks, basicEvents, boostEvents, startBeat, endBeat, offsetInBeats, ...rest }: CreateBackgroundBoxesOptions) {
 	if (!isLightTrack(trackId, tracks)) return [];
+
+	const sortedEvents = [...basicEvents].sort(sortObjectFn).map((data) => ({
+		data,
+		effect: resolveBasicEventEffect(data, tracks),
+		color: resolveBasicEventColor(data),
+	}));
+
+	const timeline = Array.from(new Set([startBeat, ...sortedEvents.map((e) => e.data.time).filter((t) => t >= startBeat && t < endBeat), ...boostEvents.map((e) => e.time).filter((t) => t >= startBeat && t < endBeat), endBeat])).sort((a, b) => a - b);
 
 	const backgroundBoxes: IBackgroundBox[] = [];
 
-	// If the initial lighting value is true, we wanna convert it into a pseudo-event.
-	// It's simpler if we treat it as an 'on' event at the very first beat of the section.
-	const workableEvents = [...events.sort(sortObjectFn)] as App.IBasicEvent[];
-	if (initialTrackLightingColorType) {
-		const pseudoInitialEvent = {
-			time: startBeat,
-			type: trackId,
-			value: resolveEventValue({ effect: App.BasicEventEffect.ON, color: initialTrackLightingColorType }, { tracks }),
-			floatValue: initialBrightness ?? 1,
-		} as Member<typeof workableEvents>;
+	for (let i = 0; i < timeline.length - 1; i++) {
+		const startPoint = timeline[i];
+		const endPoint = timeline[i + 1];
 
-		workableEvents.unshift(pseudoInitialEvent);
+		const currentEvent = [...sortedEvents].reverse().find((e) => e.data.time <= startPoint);
+		const nextEvent = sortedEvents.find((e) => e.data.time > startPoint);
+		const isTransition = nextEvent?.effect === BasicEventEffect.TRANSITION;
 
-		// SPECIAL CASE: initially lit but with no events in the window
-		if (events.length === 0) {
-			const initialColorType = resolveEventColor(pseudoInitialEvent);
+		const isBoosted = deriveBoostStateAtBeat(startPoint, boostEvents, false);
+
+		const startState = deriveLightStateAtBeat(startPoint, currentEvent, nextEvent, { ...rest, isBoosted });
+		const endState = isTransition ? deriveLightStateAtBeat(endPoint, currentEvent, nextEvent, { ...rest, isBoosted }) : startState;
+
+		if (startState.brightness > 0 || endState.brightness > 0) {
 			backgroundBoxes.push({
-				time: pseudoInitialEvent.time,
-				duration: numOfBeatsToShow,
-				startColor: initialColorType,
-				endColor: initialColorType,
-				startBrightness: pseudoInitialEvent.floatValue,
-				endBrightness: pseudoInitialEvent.floatValue,
+				time: startPoint,
+				duration: endPoint - startPoint,
+				startState,
+				endState,
 			});
-
-			return backgroundBoxes;
 		}
-	}
-
-	let tentativeBox: IBackgroundBox | null = null;
-
-	for (const event of workableEvents) {
-		const eventEffect = resolveEventEffect(event, tracks);
-		const eventColor = resolveEventColor(event);
-
-		const isOn = ON_EVENT_TYPES.includes(eventEffect) && event.floatValue > 0;
-
-		// relevant possibilities:
-		// It was off, and now it's on
-		// It was on, and now it's off
-		// It was red, and now it's blue (or vice versa)
-		// It hasn't changed (blue -> blue, red -> red, or off -> off)
-
-		if (!tentativeBox && isOn) {
-			// 1. It was off and now it's on
-
-			tentativeBox = {
-				time: event.time,
-				duration: undefined,
-				startColor: eventColor,
-				endColor: eventColor,
-				startBrightness: event.floatValue,
-				endBrightness: event.floatValue,
-			};
-		}
-
-		if (tentativeBox && !isOn) {
-			// 2. It was on, and now it's off
-			tentativeBox.duration = event.time - tentativeBox.time;
-			backgroundBoxes.push(tentativeBox);
-			tentativeBox = null;
-		}
-
-		if (tentativeBox && isOn) {
-			// 3. Color changed
-			tentativeBox.duration = event.time - tentativeBox.time;
-			if (tentativeBox.duration !== 0) backgroundBoxes.push(tentativeBox);
-
-			tentativeBox = {
-				time: event.time,
-				duration: undefined,
-				startColor: eventColor,
-				endColor: eventColor,
-				startBrightness: event.floatValue,
-				endBrightness: event.floatValue,
-			};
-		}
-	}
-
-	// If there's still a tentative box after iterating through all events, it means that it should remain on after the current window.
-	// Stretch it to fill the available space.
-	if (tentativeBox) {
-		const endBeat = startBeat + numOfBeatsToShow;
-		const durationRemaining = endBeat - tentativeBox.time;
-		tentativeBox.duration = durationRemaining;
-		backgroundBoxes.push(tentativeBox);
 	}
 
 	return backgroundBoxes;

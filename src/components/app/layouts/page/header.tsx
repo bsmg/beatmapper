@@ -1,13 +1,12 @@
-import { Link } from "@tanstack/react-router";
 import { DotIcon } from "lucide-react";
 
 import { Logo } from "$/components/app/compositions";
 import { Interleave } from "$/components/ui/atoms";
-import { Text } from "$/components/ui/compositions";
-import { Container, styled } from "$:styled-system/jsx";
+import { RouterLink } from "$/components/ui/compositions";
+import { Container, HStack, styled } from "$:styled-system/jsx";
 import { flex, stack } from "$:styled-system/patterns";
 
-function EditorPageHeader() {
+function Header() {
 	return (
 		<Wrapper>
 			<InnerWrapper>
@@ -15,13 +14,14 @@ function EditorPageHeader() {
 					<Logo />
 				</SectionWrapper>
 				<SectionWrapper>
-					<Interleave separator={({ index }) => <DotIcon key={index} />}>
-						<Text asChild textStyle={"link"}>
-							<Link to="/docs/$" params={{ _splat: "welcome" }}>
+					<HStack gap={0}>
+						<Interleave separator={(index) => <DotIcon key={index} />}>
+							<RouterLink to="/convert">Converter</RouterLink>
+							<RouterLink to="/docs/$" params={{ _splat: "welcome" }}>
 								Documentation
-							</Link>
-						</Text>
-					</Interleave>
+							</RouterLink>
+						</Interleave>
+					</HStack>
 				</SectionWrapper>
 			</InnerWrapper>
 		</Wrapper>
@@ -58,4 +58,4 @@ const SectionWrapper = styled("div", {
 	}),
 });
 
-export default EditorPageHeader;
+export default Header;

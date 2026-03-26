@@ -1,28 +1,30 @@
+import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
-import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { CharacteristicRename, DifficultyRename, EnvironmentAllNameSchema } from "bsmap";
-import type { CharacteristicName, DifficultyName } from "bsmap/types";
+import { useStore } from "@tanstack/react-form";
+import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
+import { CharacteristicRename, DifficultyRename, type EnvironmentName, EnvironmentSchemeName, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { array, minValue, number, object, pipe, string, transform } from "valibot";
+import { array, endsWith, type GenericSchema, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
-import { APP_TOASTER, createColorSchemeCollection, ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { ENVIRONMENT_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { useViewFromLocation } from "$/components/app/hooks";
+import { useSetupContext } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, Text, useAppForm } from "$/components/ui/compositions";
-import { copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
+import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, RouterLink, Stat, useAppForm } from "$/components/ui/compositions";
+import { addColorScheme, copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapById, selectBeatmaps, selectColorSchemeIds } from "$/store/selectors";
-import type { BeatmapId, SongId } from "$/types";
-import { HStack, Stack, Wrap } from "$:styled-system/jsx";
+import { selectBeatmapById, selectBeatmaps, selectBpm, selectColorSchemeIds, selectLightshowIds } from "$/store/selectors";
+import type { BeatmapId } from "$/types";
+import { css } from "$:styled-system/css";
+import { HStack, Stack, Text, Wrap } from "$:styled-system/jsx";
 
 const SCHEMA = object({
 	lightshowId: string(),
-	noteJumpSpeed: pipe(number(), minValue(0)),
+	noteJumpSpeed: pipe(number(), gtValue(0)),
 	startBeatOffset: number(),
-	environmentName: EnvironmentAllNameSchema,
-	colorSchemeName: string(),
+	environmentName: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentName>,
+	colorSchemeName: union([string(), null_()]),
 	mappers: array(string()),
 	lighters: array(string()),
 	customLabel: pipe(
@@ -32,15 +34,24 @@ const SCHEMA = object({
 });
 
 interface Props {
-	sid: SongId;
 	bid: BeatmapId;
 }
-function UpdateBeatmapForm({ sid, bid }: Props) {
+function UpdateBeatmapForm({ bid }: Props) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
+	const { toaster } = useSetupContext();
+
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-	const view = useViewFromLocation();
+	const bpm = useAppSelector((state) => selectBpm(state, sid));
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
+	const lightshowIds = useAppSelector((state) => selectLightshowIds(state, sid));
+	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
 	const savedVersion = useAppSelector((state) => selectBeatmapById(state, sid, bid));
+
+	const LIGHTSHOW_COLLECTION = useMemo(() => createListCollection({ items: lightshowIds }), [lightshowIds]);
+	const COLOR_SCHEME_COLLECTION = useMemo(() => createListCollection({ items: colorSchemeIds }), [colorSchemeIds]);
 
 	const [showAdvancedControls, setShowAdvancedControls] = useState(false);
 
@@ -50,7 +61,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			noteJumpSpeed: savedVersion.noteJumpSpeed,
 			startBeatOffset: savedVersion.startBeatOffset,
 			environmentName: savedVersion.environmentName,
-			colorSchemeName: savedVersion.colorSchemeName ?? "",
+			colorSchemeName: savedVersion.colorSchemeName,
 			mappers: savedVersion.mappers ?? [],
 			lighters: savedVersion.lighters ?? [],
 			customLabel: savedVersion.customLabel ?? "",
@@ -61,31 +72,34 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 			onSubmit: SCHEMA,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			dispatch(
-				updateBeatmap({
-					songId: sid,
-					beatmapId: bid,
-					changes: {
-						...value,
-						colorSchemeName: value.colorSchemeName === "" ? null : value.colorSchemeName,
-						customLabel: value.customLabel === "" ? undefined : value.customLabel,
-					},
-				}),
-			);
+			try {
+				dispatch(
+					updateBeatmap({
+						songId: sid,
+						beatmapId: bid,
+						changes: {
+							...value,
+							customLabel: value.customLabel === "" ? undefined : value.customLabel,
+						},
+					}),
+				);
 
-			formApi.reset(value);
+				formApi.reset(value);
+			} catch (error) {
+				toaster?.error({ description: `Could not update beatmap: ${error instanceof Error ? error.message : "See console for more information."}` });
+				return console.error(error);
+			}
 		},
 	});
 
-	const deleteAlert = useDialog({ role: "alertdialog" });
+	const jumpSpeed = useStore(Form.store, (state) => state.values.noteJumpSpeed);
+	const jumpOffset = useStore(Form.store, (state) => state.values.startBeatOffset);
 
-	const handleCopyBeatmap = useCallback(
-		(id: BeatmapId, data: { characteristic: CharacteristicName; difficulty: DifficultyName }) => {
-			dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }));
-			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: id.toString() } });
-		},
-		[dispatch, navigate, sid, bid, view],
-	);
+	const njs = useMemo(() => NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset), [bpm, jumpSpeed, jumpOffset]);
+
+	const environmentName = useStore(Form.store, (state) => state.values.environmentName);
+
+	const deleteAlert = useDialog({ role: "alertdialog" });
 
 	const handleDeleteBeatmap = useCallback(() => {
 		// Delete our working state
@@ -95,9 +109,8 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 		// Don't let the user delete the last difficulty!
 		const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
 		if (remainingDifficultyIds.length === 0) {
-			return APP_TOASTER.create({
+			return toaster?.error({
 				id: "last-difficulty",
-				type: "error",
 				description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
 			});
 		}
@@ -107,26 +120,19 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 
 		dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
 		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
-	}, [dispatch, navigate, sid, bid, view, beatmaps]);
-
-	const { proceed, reset, status } = useBlocker({
-		shouldBlockFn: () => Form.state.isDirty,
-		withResolver: true,
-	});
-
-	const isDirtyAlert = useDialog({ role: "alertdialog", open: status === "blocked" });
-
-	const colorSchemeIds = useAppSelector((state) => selectColorSchemeIds(state, sid));
-	const COLOR_SCHEME_COLLECTION = useMemo(() => createColorSchemeCollection({ colorSchemeIds }), [colorSchemeIds]);
+	}, [dispatch, navigate, toaster, sid, bid, view, beatmaps]);
 
 	return (
 		<Form.AppForm>
-			{status === "blocked" && <AlertDialogProvider value={isDirtyAlert} render={() => <Text>You have unsaved changes! Are you sure you want to leave this page? (You tweaked a value for the "{bid}" beatmap)</Text>} onSubmit={proceed} onCancel={reset} />}
 			<Form.Root size="sm">
 				<Stack gap={1}>
-					<Heading rank={3}>{savedVersion.customLabel ?? bid}</Heading>
+					<Heading rank={3}>
+						<RouterLink to={`/edit/$sid/$bid/${view}`} params={{ sid: sid.toString(), bid: bid.toString() }} className={css({ fontWeight: 300, color: "fg.muted" })}>
+							{savedVersion.customLabel ?? bid}
+						</RouterLink>
+					</Heading>
 					<HStack gap={0}>
-						<Interleave separator={({ index }) => <DotIcon key={index} size={16} />}>
+						<Interleave separator={(index) => <DotIcon key={index} size={16} />}>
 							<Heading rank={4}>{CharacteristicRename[savedVersion.characteristic]}</Heading>
 							<Heading rank={4}>{DifficultyRename[savedVersion.difficulty]}</Heading>
 						</Interleave>
@@ -134,22 +140,42 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 				</Stack>
 				<Stack gap={2}>
 					<Form.Row>
-						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump speed" />}</Form.AppField>
-						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput id={`${bid}.${ctx.name}`} label="Jump offset" />}</Form.AppField>
+						<Form.AppField name="noteJumpSpeed">{(ctx) => <ctx.NumberInput label="Jump speed" required min={0} />}</Form.AppField>
+						<Form.AppField name="startBeatOffset">{(ctx) => <ctx.NumberInput label="Jump offset" required step={0.25} />}</Form.AppField>
 					</Form.Row>
-					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Mapper(s)" />}</Form.AppField>
-					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput id={`${bid}.${ctx.name}`} label="Lighter(s)" />}</Form.AppField>
+					<Form.Row>
+						<Stat label="HJD (beats)">{Number.parseFloat(njs.hjd.toPrecision(4))}</Stat>
+						<Stat label="JD (meters)">{njs.jd.toFixed(1)}</Stat>
+						<Stat label="RT (ms)">{Math.round(njs.reactionTime * 1000)}</Stat>
+					</Form.Row>
+					<Form.AppField name="mappers">{(ctx) => <ctx.TagsInput label="Mapper(s)" required />}</Form.AppField>
+					<Form.AppField name="lighters">{(ctx) => <ctx.TagsInput label="Lighter(s)" required />}</Form.AppField>
 					<Collapsible
 						open={showAdvancedControls}
 						onOpenChange={(x) => setShowAdvancedControls(x.open)}
 						render={() => (
 							<Stack gap={2}>
 								<Form.Row>
-									<Form.AppField name="lightshowId">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Lightshow ID" />}</Form.AppField>
-									<Form.AppField name="customLabel">{(ctx) => <ctx.Input id={`${bid}.${ctx.name}`} label="Custom label" />}</Form.AppField>
+									<Form.AppField name="lightshowId">{(ctx) => <ctx.Combobox key={JSON.stringify(lightshowIds)} label="Lightshow" required creatable collection={LIGHTSHOW_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="customLabel">{(ctx) => <ctx.Input label="Custom Label" />}</Form.AppField>
 								</Form.Row>
-								<Form.AppField name="environmentName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Environment Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
-								<Form.AppField name="colorSchemeName">{(ctx) => <ctx.Select id={`${bid}.${ctx.name}`} label="Color Scheme Override" helperText={"NOTE: This will only apply when exporting to v2 or later."} collection={COLOR_SCHEME_COLLECTION} />}</Form.AppField>
+								<Form.Row>
+									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox label="Environment Override" required creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="colorSchemeName">
+										{(ctx) => (
+											<ctx.Combobox
+												key={JSON.stringify(colorSchemeIds)}
+												label="Color Scheme Override"
+												required
+												placeholder="Unset"
+												clearable
+												creatable
+												collection={COLOR_SCHEME_COLLECTION}
+												onValueCreate={(value) => dispatch(addColorScheme({ songId: sid, colorSchemeId: value, colorSchemePreset: EnvironmentSchemeName[environmentName] }))}
+											/>
+										)}
+									</Form.AppField>
+								</Form.Row>
 							</Stack>
 						)}
 					>
@@ -164,10 +190,12 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 					</Form.Submit>
 					<Dialog
 						title="Copy Beatmap"
+						description={`Clone the contents of the "${bid}" beatmap to a new beatmap file.`}
+						lazyMount
 						unmountOnExit
 						render={(ctx) => (
-							<CreateBeatmapForm dialog={ctx} sid={sid} bid={bid} onSubmit={handleCopyBeatmap}>
-								{() => "Copy beatmap"}
+							<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))}>
+								{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 							</CreateBeatmapForm>
 						)}
 					>
@@ -175,7 +203,7 @@ function UpdateBeatmapForm({ sid, bid }: Props) {
 							Copy
 						</Button>
 					</Dialog>
-					<AlertDialogProvider value={deleteAlert} render={() => <Text>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
+					<AlertDialogProvider value={deleteAlert} render={() => <Text textStyle={"paragraph"}>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
 						<Button variant="subtle" size="sm" colorPalette="red">
 							Delete
 						</Button>

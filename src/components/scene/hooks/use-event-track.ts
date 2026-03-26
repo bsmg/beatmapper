@@ -1,33 +1,44 @@
-import type { EventType } from "bsmap";
+import { useParams } from "@tanstack/react-router";
+import type { IWrapBaseObject, IWrapBasicEvent, IWrapColorBoostEvent } from "bsmap";
 import { useMemo } from "react";
 
 import { useAppSelector } from "$/store/hooks";
-import { selectAllBasicEventsForTrack, selectCursorPositionInBeats, selectUsableAudioProcessingDelayInBeats } from "$/store/selectors";
-import type { Accept, App, SongId } from "$/types";
+import { selectAllBasicEventsForTrack, selectAllBoostEvents, selectCursorPositionInBeats } from "$/store/selectors";
 
-function findLastEventInTrack<T extends App.IBasicEvent>(events: App.IBasicEvent[], currentBeat: number, processingDelayInBeats: number) {
+function findLastEventInTrack<T extends IWrapBaseObject>(events: T[], currentBeat: number): [T | null, T | null] {
 	for (let i = events.length - 1; i >= 0; i--) {
-		const event = events[i];
-		if (event.time <= currentBeat + processingDelayInBeats) {
-			return event as T;
+		const lastEvent = events[i];
+		const nextEvent = events[i + 1];
+		if (lastEvent.time <= currentBeat) {
+			return [lastEvent, nextEvent] as const;
 		}
 	}
-	return null;
+	return [null, null] as const;
 }
 
-export interface UseEventTrackOptions {
-	sid: SongId;
-	trackId: Accept<EventType, number>;
+export interface UseBasicEventTrackOptions {
+	trackId: number;
 }
-export function useEventTrack({ sid, trackId }: UseEventTrackOptions) {
+export function useBasicEventTrack({ trackId }: UseBasicEventTrackOptions) {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
 	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const processingDelayInBeats = useAppSelector((state) => selectUsableAudioProcessingDelayInBeats(state, sid));
-	const events = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));
+	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));
 
-	const lastEvent = useMemo(() => {
-		if (!sid || currentBeat === null) return null;
-		return findLastEventInTrack(events, currentBeat, processingDelayInBeats);
-	}, [sid, events, currentBeat, processingDelayInBeats]);
+	return useMemo((): [lastEvent: IWrapBasicEvent | null, nextEvent: IWrapBasicEvent | null] => {
+		if (!sid || currentBeat === null) return [null, null] as const;
+		return findLastEventInTrack(basicEvents, currentBeat);
+	}, [sid, basicEvents, currentBeat]);
+}
 
-	return [lastEvent];
+export function useBoostEventTrack() {
+	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
+	const currentBeat = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const boostEvents = useAppSelector((state) => selectAllBoostEvents(state));
+
+	return useMemo((): [lastEvent: IWrapColorBoostEvent | null, nextEvent: IWrapColorBoostEvent | null] => {
+		if (!sid || currentBeat === null) return [null, null] as const;
+		return findLastEventInTrack(boostEvents, currentBeat);
+	}, [sid, boostEvents, currentBeat]);
 }

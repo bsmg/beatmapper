@@ -1,4 +1,4 @@
-import type { DeepPartial } from "bsmap/types";
+import type { DeepPartial } from "bsmap";
 
 export function isObjectEmpty<T extends object>(obj: T) {
 	for (const key in obj) {
@@ -25,29 +25,24 @@ function isAssignable(item: unknown): item is Record<string, unknown> {
 // biome-ignore lint/suspicious/noExplicitAny: valid use case
 export function deepAssign<T extends { [k: string]: any }>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
 	if (!sources.length) return target;
-
 	const source = sources.shift() as NoInfer<DeepPartial<T>> | undefined;
-
 	if (source === undefined) return target;
 
-	let output: T = { ...target };
+	const output: T = { ...target };
 
 	if (isAssignable(target) && isAssignable(source)) {
 		const mergeSource = source as { [k: string]: never };
 		for (const key in mergeSource) {
 			if (Object.hasOwn(mergeSource, key)) {
-				if (key in output && isAssignable(output[key])) {
-					const targetValue = output[key] as T[Extract<keyof T, typeof key>];
-					const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
-					output = { ...output, [key]: deepAssign(targetValue, sourceValue) };
+				const targetValue = output[key] as T[Extract<keyof T, typeof key>];
+				const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
+				if (key in output && isAssignable(targetValue) && isAssignable(sourceValue)) {
+					output[key as keyof T] = deepAssign(targetValue, sourceValue);
 				} else {
-					if (mergeSource[key] !== undefined) {
-						output = { ...output, [key]: mergeSource[key] };
-					}
+					output[key as keyof T] = sourceValue;
 				}
 			}
 		}
 	}
-
 	return deepAssign(output, ...sources);
 }

@@ -10,10 +10,9 @@ import { default as ls } from "unstorage/drivers/localstorage";
 import { default as ss } from "unstorage/drivers/session-storage";
 
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
-import { resolveDifficultyFromBeatmapId } from "$/helpers/song.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
-import { autosaveWorker, filestore } from "$/setup";
-import { type App, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool } from "$/types";
+import { setupAppBeatmapFilestore, setupAppToaster } from "$/setup";
+import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
 import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
 import { default as root } from "./features";
 import { createAllSharedMiddleware, createStorageMiddleware, type StorageObserver } from "./middleware";
@@ -48,6 +47,7 @@ import {
 	selectTickType,
 	selectTickVolume,
 	selectUsername,
+	selectUserObstaclePlacementMode,
 } from "./selectors";
 
 const STORAGE_PREFIX = location.hostname === "localhost" ? "beatmapper" : "";
@@ -59,6 +59,7 @@ export type UserStorageObservers = {
 	"audio.offset": StorageObserver<RootState, number>;
 	"graphics.scale": StorageObserver<RootState, number>;
 	"graphics.bloom": StorageObserver<RootState, boolean>;
+	"controls.obstacles": StorageObserver<RootState, number>;
 	"advanced.wait": StorageObserver<RootState, number>;
 };
 export type SessionStorageObservers = {
@@ -82,7 +83,14 @@ export type SessionStorageObservers = {
 	"events.mirror": StorageObserver<RootState, boolean>;
 };
 
-const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
+/** @deprecated this is really only used during migration flow, don't use this elsewhere */
+function resolveDifficultyFromBeatmapId(bid: BeatmapId) {
+	for (const difficulty of ["ExpertPlus", "Expert", "Hard", "Normal", "Easy"].reverse()) {
+		if (difficulty === bid.toString()) return difficulty.substring(0, difficulty.length);
+	}
+	throw new Error(`Could not resolve difficulty from id: ${bid}`);
+}
+const appStoreDriver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 4,
 	async upgrade(idb, _current, next, tx) {
@@ -155,10 +163,10 @@ const driver = createDriver<LegacyStorageSchema & { songs: { key: string; value:
 });
 
 export async function createAppStore() {
-	const middleware = createAllSharedMiddleware({
-		filestore: filestore,
-		autosaveWorker: autosaveWorker,
-	});
+	setupAppBeatmapFilestore();
+	setupAppToaster();
+
+	const middleware = createAllSharedMiddleware();
 
 	const userMiddleware = createStorageMiddleware<RootState, UserStorageObservers>({
 		namespace: "user",
@@ -170,6 +178,7 @@ export async function createAppStore() {
 			"audio.offset": { selector: selectAudioProcessingDelay },
 			"graphics.scale": { selector: selectRenderScale },
 			"graphics.bloom": { selector: selectBloomEnabled },
+			"controls.obstacles": { selector: (state) => Object.values(ObstaclePlacementMode).indexOf(selectUserObstaclePlacementMode(state)) },
 			"advanced.wait": { selector: selectPacerWait },
 		},
 	});
@@ -199,7 +208,7 @@ export async function createAppStore() {
 	});
 	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.ISong>({
 		namespace: "songs",
-		storage: createStorage({ driver: driver({ name: "songs" }) }),
+		storage: createStorage({ driver: appStoreDriver({ name: "songs" }) }),
 		observer: {
 			keys: (state) => selectSongIds(state).map((x) => x.toString()),
 			selector: selectSongById,
@@ -208,7 +217,7 @@ export async function createAppStore() {
 	});
 	const gridStorageMiddleware = createEntityStorageMiddleware<RootState, Member<IGridPresets>>({
 		namespace: "grids",
-		storage: createStorage({ driver: driver({ name: "grids" }) }),
+		storage: createStorage({ driver: appStoreDriver({ name: "grids" }) }),
 		observer: {
 			keys: selectAllGridPresetIds,
 			selector: selectGridPresetById,

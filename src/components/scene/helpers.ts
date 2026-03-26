@@ -1,47 +1,115 @@
-import { resolveNoteAngle } from "bsmap";
-import type { wrapper } from "bsmap/types";
+import { type IWrapBaseNote, type IWrapColorNote, type IWrapGridObject, type IWrapObstacle, isInline, resolveNoteAngle } from "bsmap";
 import type { Vector3Tuple } from "three";
 
-import type { RequiredKeys } from "$/types";
+import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
+import { deserializeCoordinate, isExtendedCoordinate } from "$/helpers/item.helpers";
+import { isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { convertDegreesToRadians } from "$/utils";
 import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
 
-export interface PositionResolverOptions {
-	beatDepth?: number;
+export interface ObjectResolverOptions {
+	timescale: (time: number) => number;
+	beatDepth: number;
+	zOffset?: number;
 }
-export function resolvePositionForGridObject<T extends RequiredKeys<Partial<wrapper.IWrapBaseNote>, "posX" | "posY">>(object: T, { beatDepth }: PositionResolverOptions): Vector3Tuple {
-	const position = { x: 0, y: 0, z: 0 };
+export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { timescale, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">): Vector3Tuple {
+	const position: Vector3Tuple = [0, 0, 0];
 
 	// ----------- X ------------
-	const posX = object.posX >= 1000 || object.posX <= -1000 ? (object.posX < 0 ? object.posX / 1000 + 1 : object.posX / 1000 - 1) : object.posX;
-	position.x = posX * BLOCK_CELL_SIZE + BLOCK_CELL_SIZE * -1.5;
+	position[0] = (deserializeCoordinate(data.posX) + -1.5) * BLOCK_CELL_SIZE;
 	// ----------- Y ------------
-	const posY = object.posY >= 1000 || object.posY <= -1000 ? (object.posY < 0 ? object.posY / 1000 + 1 : object.posY / 1000 - 1) : object.posY;
-	position.y = posY * BLOCK_CELL_SIZE + BLOCK_CELL_SIZE * -1;
+	position[1] = (deserializeCoordinate(data.posY) + -1) * BLOCK_CELL_SIZE;
 	// ----------- Z ------------
-	if (object.time !== undefined && beatDepth) {
-		position.z = -SONG_OFFSET;
-		// We want to first lay the notes out with proper spacing between them.
-		// beatDepth controls the distance between two 1/4 notes.
-		// We want this to all be BPM-independent; two quarter notes should be equally distant regardless of BPM. To do this, we have to convert the note time into notes.
-		// First, get the note's "starting" position. Where it is when the song is at 0:00
-		// Next, take into account that the song is playing. `cursorPosition` will continue to grow, and we need to cursorPosition it by the right number of beats.
-		position.z += object.time * beatDepth * -1;
-	}
+	position[2] = -SONG_OFFSET + timescale(data.time) * beatDepth * -1;
+	// we may need to apply a manual offset for tentative objects
+	position[2] += zOffset;
 
-	return [position.x, position.y, position.z];
+	return position;
 }
 
-export function resolveRotationForNote<T extends { direction: number; angleOffset: number }>(object: T) {
-	// If the rotation is >=1000, we're in MappingExtensions land :D
-	// It uses a 1000-1360 system, from down clockwise.
-	if (object.direction >= 1000) {
-		// We have some conversions to do, to get an angle in radians.
-		// (this formula is a little bonkers, there's probably a simpler way, but it works.)
-		const reorientedAngle = 180 - ((object.direction + 270) % 360);
-		// hack: visual rotation is slightly off from the correct rotation value, not sure where this is happening but we can fix it here
-		const patchedAngle = reorientedAngle + Math.PI * 3;
-		return convertDegreesToRadians(patchedAngle);
+export function resolveRotationForNote<T extends IWrapBaseNote>(data: T) {
+	if (isExtendedCoordinate(data.direction)) {
+		return convertDegreesToRadians(180 - (data.direction % 1000));
 	}
-	return convertDegreesToRadians(resolveNoteAngle(object.direction) + object.angleOffset);
+	const angleOffset = isColorNote(data) ? data.angleOffset : 0;
+	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
+}
+
+export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
+	const position = resolvePositionForGridObject(data, { timescale, beatDepth, zOffset });
+
+	// ----------- X ------------
+	position[0] += (deserializeCoordinate(data.width) / 2 - 0.5) * BLOCK_CELL_SIZE;
+	// ----------- Y ------------
+	position[1] += (deserializeCoordinate(data.height) / 2 - 1.0) * BLOCK_CELL_SIZE;
+	// ----------- Z ------------
+	const startZ = timescale(data.time);
+	const endZ = timescale(data.time + data.duration);
+	position[2] -= ((endZ - startZ) * beatDepth) / 2;
+
+	return position;
+}
+
+export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, { timescale, beatDepth }: Pick<ObjectResolverOptions, "timescale" | "beatDepth">) {
+	const dimensions: Vector3Tuple = [0, 0, 0];
+
+	// ----------- WIDTH ------------
+	dimensions[0] = deserializeCoordinate(data.width) * BLOCK_CELL_SIZE;
+	// ----------- HEIGHT ------------
+	dimensions[1] = deserializeCoordinate(data.height) * BLOCK_CELL_SIZE;
+	// ----------- DEPTH ------------
+	const startZ = timescale(data.time);
+	const endZ = timescale(data.time + data.duration);
+	dimensions[2] = Math.abs(endZ - startZ) * beatDepth;
+	// we don't want to allow zero-depth walls
+	dimensions[2] = Math.max(dimensions[2], 0.01);
+
+	return dimensions;
+}
+
+export function calculateInlineRotations<T extends IWrapColorNote>(notes: T[], lapping: number = Math.hypot(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS), tolerance: number = Math.PI / 2): Map<string, number> {
+	const overrides = new Map<string, number>();
+
+	const processedIds = new Set<string>();
+
+	for (let i = 0; i < notes.length; i++) {
+		const n1 = notes[i];
+		const id1 = resolveNoteId(n1);
+		if (processedIds.has(id1)) continue;
+
+		for (let j = i + 1; j < notes.length; j++) {
+			const n2 = notes[j];
+			const id2 = resolveNoteId(n2);
+			if (processedIds.has(id2)) continue;
+
+			if (Math.abs(n1.time - n2.time) < Number.EPSILON && n1.color === n2.color && n1.direction === n2.direction && isInline(n1, n2, lapping)) {
+				const nativeAngle = resolveRotationForNote(n1);
+
+				const dx = n2.posX - n1.posX;
+				const dy = n2.posY - n1.posY;
+
+				const angleA = Math.atan2(dy, dx) - Math.PI / 2;
+				const angleB = Math.atan2(-dy, -dx) - Math.PI / 2;
+
+				const getDiff = (a: number) => Math.abs(Math.atan2(Math.sin(a - nativeAngle), Math.cos(a - nativeAngle)));
+
+				const diffA = getDiff(angleA);
+				const diffB = getDiff(angleB);
+
+				const bestAngle = diffA < diffB ? angleA : angleB;
+
+				if (Math.min(diffA, diffB) <= tolerance - Number.EPSILON) {
+					overrides.set(id1, bestAngle);
+					overrides.set(id2, bestAngle);
+
+					processedIds.add(id1);
+					processedIds.add(id2);
+
+					break;
+				}
+			}
+		}
+	}
+
+	return overrides;
 }

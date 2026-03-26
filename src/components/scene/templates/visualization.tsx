@@ -1,0 +1,204 @@
+import { type ThreeEvent, useThree } from "@react-three/fiber";
+import { useParams } from "@tanstack/react-router";
+import { type IWrapBaseNote, type IWrapObstacle, NoteDirection } from "bsmap";
+import { memo, useCallback, useMemo, useRef } from "react";
+import type { Object3D } from "three";
+
+import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
+import { SONG_OFFSET } from "$/components/scene/constants";
+import { calculateInlineRotations, resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
+import { useControls } from "$/components/scene/hooks/use-controls";
+import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
+import { Visualization } from "$/components/scene/layouts";
+import { resolveColorForItem } from "$/helpers/colors.helpers";
+import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
+import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
+import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObstacle, selectNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
+import { useAppDispatch, useAppSelector } from "$/store/hooks";
+import { selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
+import { type App, ObjectTool } from "$/types";
+import EditorBeatMarkers from "./beat-markers";
+import EditorPlacementGrid from "./placement-grid";
+
+interface Props {
+	timescale: (time: number) => number;
+	beatDepth: number;
+	surfaceDepth: number;
+	interactive?: boolean;
+}
+/**
+ * This component holds all of the internal 3D stuff, everything you see in the main part of the map editor.
+ *
+ * It does NOT include the 2D stuff like the toolbar or the track controls.
+ */
+function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: Props) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+
+	useControls();
+
+	const { raycaster, scene } = useThree((state) => state);
+
+	const isDispatchingEvent = useRef(false);
+	const dispatch = useAppDispatch();
+	const snapTo = useAppSelector(selectSnap);
+	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
+	const animateTrack = useAppSelector(selectAnimateTrack);
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
+
+	const cursorPosition = useMemo(() => timescale(cursorPositionInBeats), [timescale, cursorPositionInBeats]);
+
+	const notes = useAppSelector((state) => selectVisibleNotes(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
+	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
+	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
+
+	const noteActions = useObjectPlacement<App.IWrapEditorObject<IWrapBaseNote>>({
+		interactive,
+		selectId: resolveNoteId,
+		selectItemSelected: (x) => !!x.selected,
+		onItemSelect: (x) => dispatch(selectNote({ query: x })),
+		onItemDeselect: (x) => dispatch(deselectNote({ query: x })),
+		onItemDelete: (x) => dispatch(removeNote({ query: x })),
+		onItemModify: (x) => dispatch(mirrorColorNote({ query: x })),
+		onItemWheel: (x, delta) => {
+			if (!isColorNote(x)) return;
+			const step = 15 / delta;
+			if (Object.values<number>(NoteDirection).includes(x.direction)) {
+				return dispatch(updateColorNote({ query: x, changes: { angleOffset: (x.angleOffset ?? 0) + step } }));
+			}
+		},
+	});
+
+	const obstacleActions = useObjectPlacement<App.IWrapEditorObject<IWrapObstacle>>({
+		interactive,
+		selectId: resolveObstacleId,
+		selectItemSelected: (x) => !!x.selected,
+		onItemSelect: (x) => dispatch(selectObstacle({ id: resolveObstacleId(x) })),
+		onItemDeselect: (x) => dispatch(deselectObstacle({ id: resolveObstacleId(x) })),
+		onItemDelete: (x) => dispatch(removeObstacle({ id: resolveObstacleId(x) })),
+		onItemWheel: (x, delta) => {
+			const newDuration = x.duration + snapTo * delta;
+			// the new duration value should never create an invalid obstacle.
+			if (newDuration <= 0 || Math.abs(newDuration) < 0.01) return;
+			dispatch(updateObstacle({ id: resolveObstacleId(x), changes: { duration: x.duration + snapTo * delta } }));
+		},
+	});
+
+	const deriveUserDataFromTarget = useCallback(<T extends object>(object: Object3D) => {
+		let userData = {} as T;
+		let current: Object3D | null = object;
+		while (current !== null) {
+			userData = { ...current.userData, ...userData };
+			current = current.parent;
+		}
+		return userData;
+	}, []);
+
+	// pointer events should pass through when we're not in bulk selection mode.
+	const handleCellPointerDown = useCallback(
+		(event: ThreeEvent<PointerEvent>) => {
+			if (selectionMode) return;
+			if (isDispatchingEvent.current) return;
+			// ignore left click, since we don't want passthrough to take priority over placements
+			if (event.button === 0) return;
+
+			const intersects = raycaster.intersectObjects(scene.children, true);
+
+			if (intersects.length > 1) {
+				const target = intersects[1].object;
+
+				isDispatchingEvent.current = true;
+				try {
+					const data = deriveUserDataFromTarget(target);
+					if (isObstacle(data)) return obstacleActions.handlePointerDown(event.nativeEvent, data);
+					if (isColorNote(data) || isBombNote(data)) return noteActions.handlePointerDown(event.nativeEvent, data);
+				} finally {
+					isDispatchingEvent.current = false;
+				}
+			}
+		},
+		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handlePointerDown, obstacleActions.handlePointerDown],
+	);
+
+	const handleCellWheel = useCallback(
+		(event: ThreeEvent<WheelEvent>) => {
+			if (selectionMode) return;
+			if (isDispatchingEvent.current) return;
+
+			const intersects = raycaster.intersectObjects(scene.children, true);
+
+			if (intersects.length > 1) {
+				const target = intersects[1].object;
+
+				isDispatchingEvent.current = true;
+				try {
+					const data = deriveUserDataFromTarget(target);
+					if (isObstacle(data)) return obstacleActions.handleWheel(event.nativeEvent, data);
+					if (isColorNote(data)) return noteActions.handleWheel(event.nativeEvent, data);
+					return;
+				} finally {
+					isDispatchingEvent.current = false;
+				}
+			}
+		},
+		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, obstacleActions.handleWheel],
+	);
+
+	const rotationOverrides = useMemo(() => {
+		if (interactive) {
+			return new Map<string, number>();
+		}
+		return calculateInlineRotations(notes);
+	}, [notes, interactive]);
+
+	return (
+		<Visualization.Root cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
+			<Visualization.Mover immediate={!animateTrack}>
+				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
+				<Visualization.ForGridObjects objects={notes} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+					{(data, props) => (
+						<ColorNote
+							key={resolveNoteId(data)}
+							{...props}
+							rotationOffset={rotationOverrides.get(resolveNoteId(data))}
+							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
+							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
+							onPointerOut={(e) => noteActions.handlePointerOut(e.nativeEvent, data)}
+							onWheel={(e) => noteActions.handleWheel(e.nativeEvent, data)}
+						/>
+					)}
+				</Visualization.ForGridObjects>
+				<Visualization.ForGridObjects objects={bombs} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
+					{(data, props) => (
+						<BombNote
+							key={resolveNoteId(data)}
+							{...props}
+							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
+							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
+							onPointerOut={(e) => noteActions.handlePointerOut(e.nativeEvent, data)}
+							onWheel={(e) => noteActions.handleWheel(e.nativeEvent, data)}
+						/>
+					)}
+				</Visualization.ForGridObjects>
+				<Visualization.ForGridObjects objects={obstacles} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
+					{(data, props) => (
+						<Obstacle
+							key={resolveObstacleId(data)}
+							layers={1}
+							timescale={timescale}
+							beatDepth={beatDepth}
+							{...props}
+							onPointerDown={(e) => obstacleActions.handlePointerDown(e.nativeEvent, data)}
+							onPointerOver={(e) => obstacleActions.handlePointerOver(e.nativeEvent, data)}
+							onPointerOut={(e) => obstacleActions.handlePointerOut(e.nativeEvent, data)}
+							onWheel={(e) => obstacleActions.handleWheel(e.nativeEvent, data)}
+						/>
+					)}
+				</Visualization.ForGridObjects>
+			</Visualization.Mover>
+			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} onCellPointerDown={handleCellPointerDown} onCellWheel={handleCellWheel} />}
+		</Visualization.Root>
+	);
+}
+
+export default memo(MapVisualization);

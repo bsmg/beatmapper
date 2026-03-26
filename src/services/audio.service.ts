@@ -1,6 +1,7 @@
 export interface AudioSampleOptions {
-	volume: 1;
-	playbackRate: 1;
+	url?: string;
+	volume?: number;
+	playbackRate?: number;
 }
 
 /**
@@ -17,9 +18,10 @@ export class AudioSample {
 	gainNode: GainNode;
 	source!: AudioBufferSourceNode;
 	buffer!: AudioBuffer;
-	constructor(options: AudioSampleOptions = { volume: 1, playbackRate: 1 }) {
-		this.gain = options.volume;
-		this.playbackRate = options.playbackRate;
+
+	constructor({ volume = 1, playbackRate = 1 }: AudioSampleOptions) {
+		this.gain = volume;
+		this.playbackRate = playbackRate;
 
 		this.context = new AudioContext();
 
@@ -38,7 +40,7 @@ export class AudioSample {
 
 		this.gainNode = this.context.createGain();
 		this.gainNode.connect(this.context.destination);
-		this.gainNode.gain.value = options.volume;
+		this.gainNode.gain.value = volume;
 	}
 
 	changeVolume(volume: number) {
@@ -68,7 +70,12 @@ export class AudioSample {
 		return this.loadFromArrayBuffer(buffer);
 	}
 
-	loadFromArrayBuffer(arrayBuffer: ArrayBuffer) {
+	async loadFromFile(file: File) {
+		const buffer = await file.arrayBuffer();
+		return this.loadFromArrayBuffer(buffer);
+	}
+
+	async loadFromArrayBuffer(arrayBuffer: ArrayBuffer) {
 		return new Promise((resolve, reject) => {
 			this.context.decodeAudioData(
 				arrayBuffer,
@@ -81,9 +88,14 @@ export class AudioSample {
 		});
 	}
 
-	play() {
-		// Keep track of when we started playing.
-		this.startTime = this.context.currentTime - this.startOffset;
+	play(startTime?: number, duration?: number, onFinished?: () => void) {
+		if (this.isPlaying) {
+			this.pause();
+		}
+
+		const actualOffset = startTime !== undefined ? startTime : this.startOffset;
+
+		this.startTime = this.context.currentTime - actualOffset / this.playbackRate;
 		this.playbackRateLastSetAt = this.context.currentTime;
 		this.isPlaying = true;
 
@@ -92,7 +104,16 @@ export class AudioSample {
 		this.source.playbackRate.value = this.playbackRate;
 		this.source.connect(this.gainNode);
 
-		this.source.start(0, this.startOffset);
+		if (duration !== undefined) {
+			this.source.start(0, actualOffset, duration);
+
+			this.source.onended = () => {
+				this.isPlaying = false;
+				if (onFinished) onFinished();
+			};
+		} else {
+			this.source.start(0, actualOffset);
+		}
 	}
 
 	pause() {
@@ -106,11 +127,18 @@ export class AudioSample {
 		this.startOffset += this.context.currentTime - this.startTime;
 	}
 
+	trigger() {
+		this.pause();
+		this.setCurrentTime(0);
+		this.play();
+	}
+
 	isBufferLoaded() {
 		return !!this.buffer;
 	}
 
 	getCurrentTime() {
+		if (!this.isPlaying) return this.startOffset;
 		return this.getRateAdjustedElapsed() + (this.playbackRateLastSetAt - this.startTime);
 	}
 

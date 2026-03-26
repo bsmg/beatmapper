@@ -1,47 +1,48 @@
+import type { Assign } from "@ark-ui/react";
 import { ark } from "@ark-ui/react/factory";
-import { Presence } from "@ark-ui/react/presence";
 import { ArrowRightIcon, type LucideProps } from "lucide-react";
 import { type ComponentProps, type ComponentType, useMemo } from "react";
 
+import { Show } from "$/components/ui/atoms";
 import * as Builder from "$/components/ui/styled/list";
-import type { VirtualColorPalette } from "$/styles/types";
 import { css } from "$:styled-system/css";
+import type { SystemStyleObject } from "$:styled-system/types";
 
 const TYPES = { unordered: ark.ul, ordered: ark.ol } as const;
 
-export interface ListRootProps extends ComponentProps<typeof Builder.Root> {
+export interface ListRootProps extends Pick<SystemStyleObject, "colorPalette"> {
 	type: "unordered" | "ordered";
-	colorPalette?: VirtualColorPalette;
 }
-export function Root({ type, colorPalette = "blue", children, ...rest }: ListRootProps) {
+
+export function Root({ type, colorPalette = "blue", children, ...rest }: Assign<ComponentProps<typeof Builder.Root>, ListRootProps>) {
 	const context = useMemo(() => ({ variant: rest.variant }), [rest.variant]);
+
 	const Element = useMemo(() => TYPES[type], [type]);
 
 	return (
 		<Builder.Provider value={context}>
-			<Builder.Root asChild {...rest} className={css({ colorPalette })}>
-				<Element>{children}</Element>
+			<Builder.Root as={Element} {...rest} className={css({ colorPalette })}>
+				{children}
 			</Builder.Root>
 		</Builder.Provider>
 	);
 }
 
-export interface ListItemProps extends ComponentProps<typeof Builder.Item> {
+export interface ListItemProps {
 	indicator?: ComponentType<LucideProps>;
 }
-export function Item({ asChild, indicator: Indicator = ArrowRightIcon, children, ...rest }: ListItemProps) {
+
+export function Item({ indicator: Indicator = ArrowRightIcon, children, ...rest }: Assign<ComponentProps<typeof Builder.Item>, ListItemProps>) {
+	const api = Builder.useListContext();
+
 	return (
 		<Builder.Item {...rest}>
-			<Builder.Context>
-				{(ctx) => (
-					<Presence asChild present={ctx.variant === "plain"}>
-						<Builder.Indicator asChild>
-							<Indicator />
-						</Builder.Indicator>
-					</Presence>
-				)}
-			</Builder.Context>
-			<ark.span asChild={asChild}>{children}</ark.span>
+			<Show when={api.variant === "plain"}>
+				<Builder.Indicator>
+					<Indicator />
+				</Builder.Indicator>
+			</Show>
+			{children}
 		</Builder.Item>
 	);
 }

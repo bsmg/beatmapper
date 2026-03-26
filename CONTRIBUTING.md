@@ -50,12 +50,16 @@ If you think you're ready to make a pull request, be sure to run through the fol
 - [ ] If you did not activate the available git hooks for your workspace, run the following command to manually run the linter/formatter on your changes: `yarn check --write {files}`.
 - [ ] Run `yarn test run` to ensure all unit tests are passing.
 - [ ] Make a production build for your application (`yarn build && yarn preview`) and ensure your changes are stable and no critical errors are present.
-- [ ] Review your changes, and run `yarn version <major|minor|patch> --deferred` to add a changeset. This will make it easier for maintainers to integrate your changes properly for a future release.
-  - Use `patch` if your changes are strictly stability or performance improvements.
-  - Use `minor` if new features are added and/or non-breaking changes are introduced.
-  - Use `major` for *any and all* breaking changes (i.e. localstorage, redux state, etc).
 
 Once submitted, a maintainer will review your pull request and, once approved, integrate your changes into a staging branch for future release.
+
+> [!important]
+> While we don't explicitly forbid the use of LLMs when submitting contributions, 
+> **we do expect you to take full responsibility for all changes submitted within your pull request**, which includes acknowlegement of the following:
+> - Ensuring all changes match the general standards and practices of the current codebase
+> - Performing a manual audit of all changes to ensure there are no critical regressions or security issues
+> - Making any requested changes in a cordial and timely manner
+> Any attempt to subvert these expectations or otherwise mislead maintainers may result in your pull request being closed without further review and/or disciplinary action if deemed necessary.
 
 ## Knowledge Base
 
@@ -87,5 +91,6 @@ These are some of the more useful guides and documentation for the core technolo
 - [Vite](https://vite.dev/guide)
 - [Vite PWA](https://vite-pwa-org.netlify.app)
 - [Vitest](https://vitest.dev/guide)
+- [zag.js](https://zagjs.com)
 
 - [BeatSaber-JSMap](https://github.com/KivalEvan/BeatSaber-JSMap)

@@ -1,8 +1,6 @@
-import type { Vector3Tuple } from "three";
-
-import { TubeLight } from "$/components/scene/compositions/environment";
-import { useEventTrack, useLightProps } from "$/components/scene/hooks";
-import type { BeatmapId, SongId } from "$/types";
+import { useLightEffect } from "$/components/scene/hooks/environment.hooks";
+import { useBasicEventTrack, useBoostEventTrack } from "$/components/scene/hooks/use-event-track";
+import { Environment } from "$/components/scene/layouts";
 import { range } from "$/utils";
 
 const sides = ["left", "right"];
@@ -10,25 +8,15 @@ const sides = ["left", "right"];
 const NUM_OF_BEAMS_PER_SIDE = 5;
 const DISTANCE_BETWEEN_BEAMS = 25;
 
-const INDICES = Array.from(range(0, NUM_OF_BEAMS_PER_SIDE));
+function BackLasers() {
+	const [lastLightEvent, nextLightEvent] = useBasicEventTrack({ trackId: 0 });
+	const [lastBoostEvent] = useBoostEventTrack();
 
-interface Props {
-	sid: SongId;
-	bid: BeatmapId;
-	secondsSinceSongStart?: number;
-}
-function BackLasers({ sid, bid }: Props) {
-	const [lastEvent] = useEventTrack({ sid, trackId: 0 });
-
-	const light = useLightProps({ sid, bid, lastEvent });
+	const light = useLightEffect({ lastEvent: lastLightEvent, nextEvent: nextLightEvent, lastBoostEvent });
 
 	return sides.map((side) => {
-		const xOffset = 0;
-		const zOffset = -140;
-		return INDICES.map((index) => {
-			const position: Vector3Tuple = [xOffset, -40, zOffset + index * -DISTANCE_BETWEEN_BEAMS];
-			const rotation: Vector3Tuple = [0, 0, side === "right" ? -0.45 : 0.45];
-			return <TubeLight key={`${side}-${index}`} light={light} radius={0.25} position={position} rotation={rotation} />;
+		return Array.from(range(0, NUM_OF_BEAMS_PER_SIDE)).map((index) => {
+			return <Environment.TubeLight key={`${side}-${index}`} light={light} radius={0.25} position-y={-40} position-z={-140 + index * -DISTANCE_BETWEEN_BEAMS} rotation-z={side === "right" ? -0.45 : 0.45} />;
 		});
 	});
 }

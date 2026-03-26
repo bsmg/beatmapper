@@ -1,105 +1,128 @@
-import type { EntityId } from "@reduxjs/toolkit";
-import { useMemo, useState } from "react";
-import type { ColorRepresentation } from "three";
+import { useParams } from "@tanstack/react-router";
+import type { IWrapBasicEvent, IWrapColorBoostEvent } from "bsmap";
+import { useCallback, useMemo, useState } from "react";
 
-import { useOnChange } from "$/components/hooks";
-import { type ColorResolverOptions, resolveColorForItem } from "$/helpers/colors.helpers";
-import { resolveEventColor, resolveEventEffect, resolveEventId } from "$/helpers/events.helpers";
+import { resolveColorForLightState } from "$/components/app/templates/events/track.helpers";
+import { useUpdateEffect } from "$/components/hooks/use-update-effect";
+import { resolveBasicEventColor, resolveBasicEventEffect, resolveEventId } from "$/helpers/events.helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectPlaying, selectRenderScale } from "$/store/selectors";
-import { App, type BeatmapId, type SongId } from "$/types";
+import { selectColorScheme, selectEventTracksForEnvironment, selectPlaying } from "$/store/selectors";
+import { type App, BasicEventEffect, type EventColor, type ILightState } from "$/types";
 
-function deriveEffectForEvent(lastEvent: App.IBasicEvent | null) {
-	if (!lastEvent) return App.BasicEventEffect.OFF;
-	return resolveEventEffect(lastEvent) as App.LightEventEffect;
+interface UseLightEffectOptions {
+	lastEvent: IWrapBasicEvent | null;
+	nextEvent: IWrapBasicEvent | null;
+	lastBoostEvent: IWrapColorBoostEvent | null;
 }
-function deriveColorForEvent(lastEvent: App.IBasicEvent | null, options: ColorResolverOptions): ColorRepresentation {
-	const status = deriveEffectForEvent(lastEvent);
-	if (!lastEvent) return "#000000";
-	if (status === App.BasicEventEffect.OFF) return "#000000";
-	const eventColor = resolveEventColor(lastEvent);
-	return resolveColorForItem(eventColor, options);
-}
-function deriveBrightnessForEvent(lastEvent: App.IBasicEvent | null) {
-	if (!lastEvent) return 0;
-	return lastEvent.floatValue;
-}
+export function useLightEffect({ lastEvent, nextEvent, lastBoostEvent }: UseLightEffectOptions) {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
-interface UseLightPropsOptions {
-	sid: SongId;
-	bid: BeatmapId;
-	lastEvent: App.IBasicEvent | null;
-}
-export function useLightProps({ sid, bid, lastEvent }: UseLightPropsOptions) {
+	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
-	const derived = useMemo(() => {
+	const deriveEffectForEvent = useCallback(
+		(event: App.IBasicEvent | null): BasicEventEffect => {
+			if (!event) {
+				return BasicEventEffect.OFF;
+			}
+			return resolveBasicEventEffect(event, tracks);
+		},
+		[tracks],
+	);
+	const deriveColorForEvent = useCallback(
+		(event: App.IBasicEvent | null): EventColor | null => {
+			const effect = deriveEffectForEvent(event);
+
+			if (!event || effect === BasicEventEffect.OFF) {
+				return null;
+			}
+			return resolveBasicEventColor(event);
+		},
+		[deriveEffectForEvent],
+	);
+	const deriveBrightnessForEvent = useCallback(
+		(event: App.IBasicEvent | null): number => {
+			const effect = deriveEffectForEvent(event);
+
+			if (!event || effect === BasicEventEffect.OFF) {
+				return 0;
+			}
+			return event.floatValue;
+		},
+		[deriveEffectForEvent],
+	);
+
+	const deriveStateForEvent = useCallback(
+		(event: App.IBasicEvent | null): { [key in keyof ILightState]: NonNullable<ILightState[key]> } => {
+			if (!event) {
+				return { color: "black", brightness: 0 };
+			}
+
+			const color = deriveColorForEvent(event);
+			const brightness = deriveBrightnessForEvent(event);
+
+			return {
+				color: color ? (resolveColorForLightState({ color, isBoosted: !!lastBoostEvent?.toggle }, { colorScheme }) ?? "black") : "black",
+				brightness: brightness,
+			};
+		},
+		[deriveColorForEvent, deriveBrightnessForEvent, lastBoostEvent, colorScheme],
+	);
+
+	return useMemo(() => {
 		return {
 			lastEventId: lastEvent ? resolveEventId(lastEvent) : null,
-			effect: deriveEffectForEvent(lastEvent),
-			color: deriveColorForEvent(lastEvent, { customColors: colorScheme }),
-			brightness: deriveBrightnessForEvent(lastEvent),
+			time: lastEvent?.time ?? 0,
+			duration: (nextEvent?.time ?? 0) - (lastEvent?.time ?? 0),
+			lastEffect: deriveEffectForEvent(lastEvent),
+			nextEffect: deriveEffectForEvent(nextEvent),
+			prevState: deriveStateForEvent(lastEvent),
+			nextState: deriveStateForEvent(nextEvent),
 		};
-	}, [lastEvent, colorScheme]);
-
-	return { ...derived };
+	}, [lastEvent, nextEvent, deriveEffectForEvent, deriveStateForEvent]);
 }
 
-export type UseLightPropsReturn = ReturnType<typeof useLightProps>;
-
-export interface UseRingCountOptions {
-	count: number;
-}
-export function useRingCount({ count }: UseRingCountOptions) {
-	const renderScale = useAppSelector(selectRenderScale);
-
-	const numOfRings = useMemo(() => {
-		return Math.ceil(count * renderScale);
-	}, [count, renderScale]);
-
-	return numOfRings;
-}
-
-export interface UseRingRotationOptions {
-	lastEventId: EntityId | null;
+interface UseRingRotationEffectOptions {
+	lastEvent: IWrapBasicEvent | null;
 	incrementBy?: number;
 	ratio?: number;
 }
-export function useRingRotation({ lastEventId, incrementBy = Math.PI * 0.5, ratio = 0 }: UseRingRotationOptions): [rotationRatio: number] {
+export function useRingRotationEffect({ lastEvent, incrementBy = Math.PI * 0.5, ratio = 0 }: UseRingRotationEffectOptions): [rotationRatio: number] {
 	const [rotationRatio, setRotationRatio] = useState(ratio);
 
 	const isPlaying = useAppSelector(selectPlaying);
 
-	useOnChange(() => {
+	const lastEventId = useMemo(() => (lastEvent ? resolveEventId(lastEvent) : null), [lastEvent]);
+
+	useUpdateEffect(() => {
 		if (!isPlaying || !lastEventId) return;
 
 		const shouldChangeDirection = Math.random() < 0.5;
 		const directionMultiple = shouldChangeDirection ? 1 : -1;
+
 		setRotationRatio(rotationRatio + incrementBy * directionMultiple);
-	}, lastEventId ?? null);
+	}, [lastEventId]);
 
 	return [rotationRatio];
 }
 
-export interface UseRingZoomOptions {
-	lastEventId: EntityId | null;
+interface UseRingZoomEffectOptions {
+	lastEvent: IWrapBasicEvent | null;
 	minDistance?: number;
 	maxDistance?: number;
 }
-export function useRingZoom({ lastEventId, minDistance = 3, maxDistance = 12 }: UseRingZoomOptions): [distance: number] {
+export function useRingZoomEffect({ lastEvent, minDistance = 3, maxDistance = 12 }: UseRingZoomEffectOptions): [distance: number] {
 	const [distanceBetweenRings, setDistanceBetweenRings] = useState(minDistance);
 
 	const isPlaying = useAppSelector(selectPlaying);
 
-	useOnChange(() => {
-		if (!isPlaying) {
-			return;
-		}
+	const lastEventId = useMemo(() => (lastEvent ? resolveEventId(lastEvent) : null), [lastEvent]);
 
-		if (lastEventId) {
-			setDistanceBetweenRings(distanceBetweenRings === maxDistance ? minDistance : maxDistance);
-		}
-	}, lastEventId ?? null);
+	useUpdateEffect(() => {
+		if (!isPlaying || !lastEventId) return;
+
+		setDistanceBetweenRings(distanceBetweenRings === maxDistance ? minDistance : maxDistance);
+	}, [lastEventId]);
 
 	return [distanceBetweenRings];
 }

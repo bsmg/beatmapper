@@ -1,7 +1,9 @@
-import { asyncThunkCreator, buildCreateSlice, createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type ReducerCreators } from "@reduxjs/toolkit";
+import { asyncThunkCreator, buildCreateSlice, type CaseReducer, createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState, type PayloadAction, type WritableDraft } from "@reduxjs/toolkit";
 import { pick } from "@std/collections/pick";
+import type { EnvironmentName, IWrapBaseNote, IWrapBaseObject } from "bsmap";
 import type { StateWithHistory } from "redux-undo";
 
+import { isTrackGroupable, type resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { App } from "$/types";
 
@@ -31,30 +33,110 @@ export function selectHistory<T, R, State>(snapshotSelector: (state: T) => State
 	};
 }
 
-export function createSelectedEntitiesSelector<State, T extends App.IEditorObject>(selectAll: (state: State) => T[]) {
-	return createDraftSafeSelector(selectAll, (state) => state.filter((x) => x.selected === true));
+export function createEditorObjectSelectors<T extends App.IEditorObject, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
+	const selectors = adapter.getSelectors();
+
+	return {
+		selectAllSelected: createDraftSafeSelector(selectors.selectAll, (state) => state.filter((x) => x.selected === true)),
+	};
 }
-export function createGridObjectSelector<State, T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(selectAll: (state: State) => T[]) {
-	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "posX" | "posY">) => query], (state, { time, posX, posY }) => {
-		return state.find((x) => x.time === time && x.posX === posX && x.posY === posY);
-	});
-}
-export function createEventSelector<State, T extends Pick<App.IBasicEvent, "time" | "type">>(selectAll: (state: State) => T[]) {
-	return createDraftSafeSelector([selectAll, (_, query: Pick<T, "time" | "type">) => query], (state, { time, type }) => {
-		return state.find((x) => x.time === time && x.type === type);
-	});
+export function createEditorObjectReducers<T extends App.IEditorObject, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
+	const { selectAll } = adapter.getSelectors();
+	const { selectAllSelected } = createEditorObjectSelectors(adapter);
+
+	return {
+		removeAllSelected: (state: EntityState<T, Id>) => {
+			const entities = selectAllSelected(state);
+			return adapter.removeMany(
+				state,
+				entities.map((x) => adapter.selectId(x)),
+			);
+		},
+		updateAll: (state: EntityState<T, Id>, update: (data: T) => Partial<T>) => {
+			const entities = selectAll(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: update(x) })),
+			);
+		},
+		updateAllSelected: (state: EntityState<T, Id>, update: (data: T) => Partial<T>) => {
+			const entities = selectAllSelected(state);
+			return adapter.updateMany(
+				state,
+				entities.map((x) => ({ id: adapter.selectId(x), changes: update(x) })),
+			);
+		},
+		replaceAllSelected: (state: EntityState<T, Id>, update: (data: T) => Partial<T>) => {
+			const entities = selectAllSelected(state);
+			adapter.removeMany(
+				state,
+				entities.map((x) => adapter.selectId(x)),
+			);
+			return adapter.addMany(
+				state,
+				entities.map((x) => ({ ...x, ...update(x) })),
+			);
+		},
+	};
 }
 
-export function createActionsForNoteEntityAdapter<T extends Pick<App.IBaseNote, "time" | "posX" | "posY">>(api: ReducerCreators<EntityState<T, EntityId>>, adapter: EntityAdapter<T, EntityId>) {
+export function createEventSelectors<T extends Pick<App.IBasicEvent, "time">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
 	const { selectAll } = adapter.getSelectors();
-	const selectByPosition = createGridObjectSelector(selectAll);
-	type NotePayloadAction<T extends {}> = PayloadAction<{ query: Parameters<typeof resolveNoteId>[0] } & T>;
+
+	const selectAllForTrackBeforeBeat = createDraftSafeSelector([selectAll, (_, query: { trackId: number; beforeBeat: number }) => query], (state, { trackId, beforeBeat }) => {
+		return state.filter((x) => resolveTrackIdForEvent(x) === trackId && x.time < beforeBeat);
+	});
+
 	return {
-		updateOne: api.reducer((state, action: NotePayloadAction<{ changes: Partial<T> }>) => {
-			const { query, changes } = action.payload;
-			const match = selectByPosition(state, query);
-			if (!match) return state;
-			return adapter.updateOne(state, { id: adapter.selectId(match), changes });
+		selectAllForTrack: createDraftSafeSelector([selectAll, (_, trackId: number) => trackId], (state, trackId) => {
+			return state.filter((x) => resolveTrackIdForEvent(x) === trackId);
 		}),
+		createEventSelector: <Value>(selector: (data: T) => Value | undefined, fallback: Value) => {
+			return createDraftSafeSelector(selectAllForTrackBeforeBeat, (state) => {
+				return state[state.length - 1] ? (selector(state[state.length - 1]) ?? fallback) : fallback;
+			});
+		},
+	};
+}
+
+export function createGridObjectReducerFactory<T extends Pick<IWrapBaseNote, "time" | "posX" | "posY">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
+	const selectors = adapter.getSelectors();
+
+	const selectByQuery = createDraftSafeSelector([selectors.selectAll, (_, query: Pick<T, "time" | "posX" | "posY">) => query], (state, { time, posX, posY }) => {
+		return state.find((x) => x.time === time && x.posX === posX && x.posY === posY);
+	});
+
+	return <P>(callback: (data: T, state: WritableDraft<EntityState<T, Id>>, action: PayloadAction<P>) => EntityState<T, Id>): CaseReducer<EntityState<T, Id>, PayloadAction<{ query: Parameters<typeof resolveNoteId>[0] } & P>> => {
+		return (state, action) => {
+			const { query } = action.payload;
+			const match = selectByQuery(state, query);
+			if (!match) return state;
+			return callback(query as T, state, action);
+		};
+	};
+}
+export function createEventReducerFactory<T extends Pick<IWrapBaseObject, "time">, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
+	const selectors = adapter.getSelectors();
+
+	const selectByQuery = createDraftSafeSelector([selectors.selectAll, (_, query: Pick<T, "time">) => query], (state, query) => {
+		return state.find((x) => x.time === query.time && resolveTrackIdForEvent(x) === resolveTrackIdForEvent(query));
+	});
+
+	return <P>(
+		callback: (data: { match: T | undefined; trackId: number }, state: WritableDraft<EntityState<T, Id>>, action: PayloadAction<P & { environment: EnvironmentName }>) => EntityState<T, Id>,
+	): CaseReducer<EntityState<T, Id>, PayloadAction<{ query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked?: boolean } & P>> => {
+		return (state, action) => {
+			const { query, environment, areLasersLocked } = action.payload;
+			const match = selectByQuery(state, query);
+			const trackId = resolveTrackIdForEvent(query);
+			callback({ match, trackId }, state, action);
+			if (areLasersLocked && isTrackGroupable(trackId, environment)) {
+				const groupTrackIds = resolveGroupTrackIds(trackId, environment);
+				for (const mirrorTrackId of groupTrackIds) {
+					// Important: if the side lasers are "locked" we need to mimic this event from the left laser to the right laser.
+					callback({ match, trackId: mirrorTrackId }, state, action);
+				}
+			}
+		};
 	};
 }

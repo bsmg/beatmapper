@@ -1,10 +1,5 @@
-export { default as AmbientLight } from "./ambient";
-export { default as BeatMarker } from "./beat-marker";
-export { BloomWrapper as Bloom, NoBloomWrapper as NoBloom } from "./bloom";
-export { default as Runway } from "./environment/runway";
-export { default as BombNote } from "./note/bomb-note";
-export { default as ColorNote } from "./note/color-note";
-export * from "./note/helpers";
-export { default as Obstacle } from "./obstacle";
-export * from "./obstacle/helpers";
-export { default as TrackMover } from "./track-mover";
+export { AmbientLight } from "./ambient";
+export { Bloom } from "./bloom";
+export { BombNote, ColorNote } from "./note";
+export { Obstacle } from "./obstacle";
+export { Runway } from "./runway";

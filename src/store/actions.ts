@@ -1,15 +1,11 @@
-// biome-ignore-all assist/source/organizeImports: circular dependencies
-
 import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
-import type { BeatmapFileType, ISaveOptions } from "bsmap/types";
-import type { JsonWaveformData } from "waveform-data";
+import type { EnvironmentName, ITrackDefinitions } from "bsmap";
 
 import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
-import { resolveTimeForItem } from "$/helpers/item.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
-import type { ImplicitVersion } from "$/helpers/serialization.helpers";
-import { type App, type BeatmapId, type IEventTracks, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
+import type { ExportMapArchiveOptions } from "$/services/packaging.service";
+import { type App, type BeatmapId, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
 import { roundToNearest } from "$/utils";
 import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
@@ -21,6 +17,7 @@ import {
 	selectClipboardData,
 	selectCursorPositionInBeats,
 	selectDurationInBeats,
+	selectEarliestBeat,
 	selectEventEditorStartAndEndBeat,
 	selectEventsEditorCursor,
 	selectNotesEditorDirection,
@@ -30,6 +27,8 @@ import {
 } from "./selectors";
 import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
 
+// biome-ignore-start assist/source/organizeImports: circular dependencies
+
 import clipboard from "./features/clipboard.slice";
 import beatmap from "./features/editor/beatmap.slice";
 import lightshow from "./features/editor/lightshow.slice";
@@ -37,11 +36,15 @@ import notes from "./features/entities/beatmap/notes.slice";
 import obstacles from "./features/entities/beatmap/obstacles.slice";
 import bookmarks from "./features/entities/editor/bookmarks.slice";
 import basicEvents from "./features/entities/lightshow/basic.slice";
+import boostEvents from "./features/entities/lightshow/boost.slice";
 import global from "./features/global.slice";
 import navigation from "./features/navigation.slice";
 import songs from "./features/songs.slice";
+import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
+
+// biome-ignore-end assist/source/organizeImports: circular dependencies
 
 export const { init } = global.actions;
 
@@ -50,15 +53,17 @@ export const { load: loadSession, save: saveSession, hydrate: hydrateSession } =
 export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = createEntityStorageActions<App.ISong>("songs");
 export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGridPresets } = createEntityStorageActions<Member<IGridPresets>>("grids");
 
-export const rehydrate = createAction("@@STORAGE/rehydrate");
+export const rehydrate = createAction("@@STORAGE/rehydrate", (args: { songId: SongId; beatmapId: BeatmapId }) => {
+	return { payload: { ...args } };
+});
 
-export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updatePacerWait } = user.actions;
+export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
 
 export const startLoadingMap = createAction("startLoadingMap", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 
-export const finishLoadingMap = createAction("finishLoadingMap", (args: { songId: SongId; songData: App.ISong; duration: number; waveformData: JsonWaveformData }) => {
+export const finishLoadingMap = createAction("finishLoadingMap", (args: { songId: SongId; songData: App.ISong }) => {
 	return { payload: { ...args, songData: { ...args.songData, lastOpenedAt: Date.now() } } };
 });
 
@@ -70,7 +75,7 @@ export const saveBeatmapContents = createAction("saveBeatmapContents", (args: { 
 	return { payload: { ...args } };
 });
 
-export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId; version?: ImplicitVersion; options?: Omit<ISaveOptions<BeatmapFileType, 1 | 2 | 3 | 4>, "preprocess" | "postprocess"> }) => {
+export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId } & ExportMapArchiveOptions) => {
 	return { payload: { ...args } };
 });
 
@@ -78,20 +83,42 @@ export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; 
 	return { payload: { ...args } };
 });
 
-export const { addOne: addSong, addOneFromFile: addSongFromFile, updateOne: updateSong, updateSelectedBeatmap, removeOne: removeSong, addBeatmap, cloneBeatmap: copyBeatmap, updateBeatmap, removeBeatmap, updateModuleEnabled, updateCustomColor, updateGridSize } = songs.actions;
+export const {
+	addOne: addSong,
+	addOneFromFile: addSongFromFile,
+	updateOne: updateSong,
+	updateSelectedBeatmap,
+	removeOne: removeSong,
+	addBeatmap,
+	cloneBeatmap: copyBeatmap,
+	updateBeatmap,
+	removeBeatmap,
+	addColorScheme,
+	updateColorScheme,
+	removeColorScheme,
+	updateModuleEnabled,
+	updateCustomColors,
+	updateGridSize,
+} = songs.actions;
 
 export const loadDemoMap = createAction("loadDemoMap");
 
+export const { updateTimescale } = timeline.actions;
+
 export const {
+	updateCursorPosition,
+	tick,
 	startPlayback,
 	pausePlayback,
 	stopPlayback,
+	togglePlayback,
 	jumpToBeat,
+	jumpToTime,
 	jumpToStart,
 	jumpToEnd,
 	jumpForwards: seekForwards,
 	jumpBackwards: seekBackwards,
-	updateCursorPosition,
+	scrollThroughSong,
 	updateTrackScale: updateBeatDepth,
 	updatePlaybackRate,
 	incrementPlaybackRate,
@@ -104,67 +131,7 @@ export const {
 	decrementSnap,
 } = navigation.actions;
 
-export const reloadVisualizer = createAction("reloadVisualizer", (args: { duration: number; waveformData: JsonWaveformData }) => {
-	return { payload: { ...args } };
-});
-
-export const togglePlaying = createAction("togglePlaying", (args: { songId: SongId }) => {
-	return { payload: { ...args } };
-});
-
-export const tick = createAction("tick", (args: { timeElapsed: number }) => {
-	return { payload: { ...args } };
-});
-
-export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; posX: number; posY: number; direction?: number; tool: ObjectTool }, api) => {
-	const state = api.getState() as RootState;
-	const selectedDirection = args.direction ?? selectNotesEditorDirection(state);
-	const selectedTool = selectNotesEditorTool(state);
-	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
-	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	const duration = selectDurationInBeats(state, args.songId);
-	if (cursorPositionInBeats < 0 || (duration && cursorPositionInBeats > duration)) return api.rejectWithValue("Cannot place objects out-of-bounds.");
-
-	function adjustNoteCursorPosition(cursorPositionInBeats: number, state: RootState) {
-		const isPlaying = selectPlaying(state);
-
-		if (isPlaying) {
-			// If the user tries to place blocks while the song is playing, we want to snap to the nearest snapping interval.
-			// eg. if they're set to snap to 1/2 beats, and they click when the song is 3.476 beats in, we should round up to 3.5.
-			const snapTo = selectSnap(state);
-			return roundToNearest(cursorPositionInBeats, snapTo);
-		}
-		// If the song isn't playing, we want to snap to the highest precision we have.
-		// Note that this will mean a slight tweak for notes that are a multiple of 3 (eg. a note at 1.333 beats will be rounded to 1.328125)
-		return roundToNearest(cursorPositionInBeats, HIGHEST_PRECISION);
-	}
-
-	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
-	const alreadyExists = selectAllNotes(state).some((note) => note.time === adjustedCursorPosition && note.posX === args.posX && note.posY === args.posY);
-	if (alreadyExists) api.dispatch(removeFromCell(args));
-	return api.fulfillWithValue({ ...args, time: adjustedCursorPosition, direction: selectedDirection, tool: selectedTool });
-});
-
-export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api) => {
-	const state = api.getState() as RootState;
-	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
-	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
-	return api.fulfillWithValue({ ...args, time: cursorPositionInBeats });
-});
-
-export const { updateZoom: zoomVisualizer } = visualizer.actions;
-
-export const scrollThroughSong = createAction("scrollThroughSong", (args: { songId: SongId; direction: "forwards" | "backwards" }) => {
-	return { payload: { ...args } };
-});
-
-export const scrubVisualizer = createAction("scrubVisualizer", (args: { songId: SongId; newOffset: number }) => {
-	return { payload: { ...args } };
-});
-
-export const scrubEventsHeader = createAction("scrubEventsHeader", (args: { songId: SongId; selectedBeat: number }) => {
-	return { payload: { ...args } };
-});
+export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
 
 export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, upsertGridPreset: saveGridPreset, removeGridPreset } = beatmap.actions;
 
@@ -186,7 +153,7 @@ export const {
 	updateMirrorLock: updateEventsEditorMirrorLock,
 } = lightshow.actions;
 
-export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: IEventTracks; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
+export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
 	const state = api.getState() as RootState;
 	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, args.songId);
 	const metadata = { window: { startBeat, endBeat } };
@@ -199,6 +166,43 @@ export const cycleToNextTool = createAction("cycleToNextTool", (args: { view: Vi
 
 export const cycleToPrevTool = createAction("cycleToPrevTool", (args: { view: View }) => {
 	return { payload: { ...args } };
+});
+
+export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; posX: number; posY: number; direction?: number; tool: ObjectTool }, api) => {
+	const state = api.getState() as RootState;
+	const selectedDirection = args.direction ?? selectNotesEditorDirection(state);
+	const selectedTool = selectNotesEditorTool(state);
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
+	const durationInBeats = selectDurationInBeats(state, args.songId);
+	if (cursorPositionInBeats < 0 || (durationInBeats !== null && cursorPositionInBeats > durationInBeats)) {
+		return api.rejectWithValue("Cannot place objects out-of-bounds.");
+	}
+
+	function adjustNoteCursorPosition(cursorPositionInBeats: number, state: RootState) {
+		const isPlaying = selectPlaying(state);
+
+		if (isPlaying) {
+			// If the user tries to place blocks while the song is playing, we want to snap to the nearest snapping interval.
+			// eg. if they're set to snap to 1/2 beats, and they click when the song is 3.476 beats in, we should round up to 3.5.
+			const snapTo = selectSnap(state);
+			return roundToNearest(cursorPositionInBeats, snapTo);
+		}
+		// If the song isn't playing, we want to snap to the highest precision we have.
+		// Note that this will mean a slight tweak for notes that are a multiple of 3 (eg. a note at 1.333 beats will be rounded to 1.328125)
+		return roundToNearest(cursorPositionInBeats, HIGHEST_PRECISION);
+	}
+
+	const adjustedCursorPosition = adjustNoteCursorPosition(cursorPositionInBeats, state);
+	const alreadyExists = selectAllNotes(state).some((note) => note.time === adjustedCursorPosition && note.posX === args.posX && note.posY === args.posY);
+	if (alreadyExists) api.dispatch(removeFromCell(args));
+	return api.fulfillWithValue({ query: { time: adjustedCursorPosition, posX: args.posX, posY: args.posY }, direction: selectedDirection, tool: selectedTool });
+});
+
+export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api) => {
+	const state = api.getState() as RootState;
+	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
+	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
+	return api.fulfillWithValue({ query: { time: cursorPositionInBeats, posX: args.posX, posY: args.posY } });
 });
 
 export const { updateOne: updateColorNote, mirrorOne: mirrorColorNote } = notes.actions;
@@ -255,8 +259,8 @@ export const toggleSelectAllEntities = createAsyncThunk("toggleSelectAllEntities
 		const obstacles = selectAllObstacles(state);
 		anythingSelected = [...notes, ...bombs, ...obstacles].some((x) => !!x.selected);
 	} else if (args.view === View.LIGHTSHOW) {
-		const events = selectAllBasicEvents(state);
-		anythingSelected = [...events].some((x) => x.selected);
+		const basicEvents = selectAllBasicEvents(state);
+		anythingSelected = [...basicEvents].some((x) => x.selected);
 	}
 
 	if (anythingSelected) {
@@ -270,7 +274,7 @@ export const deselectAllEntitiesOfType = createAction("deselectAllEntitiesOfType
 	return { payload: { ...args } };
 });
 
-export const selectAllEntitiesInRange = createAction("selectAllEntitiesInRange", (args: { songId: SongId; view: View; start: number; end: number }) => {
+export const selectAllEntitiesInRange = createAction("selectAllEntitiesInRange", (args: { songId: SongId; view: View; startBeat: number; endBeat: number }) => {
 	return { payload: { ...args } };
 });
 
@@ -292,21 +296,23 @@ export const redoObjects = createAction("redoObjects", (args: { songId: SongId }
 	return { payload: { ...args } };
 });
 
-export const { addOne: addBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateBasicEvent, updateColor: mirrorBasicEvent } = basicEvents.actions;
+export const { addOne: addBasicEvent, addOne: bulkAddBasicEvent, updateOne: updateBasicEvent } = basicEvents.actions;
 
-export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const { addOne: addBoostEvent, addOne: bulkAddBoostEvent, updateOne: updateBoostEvent } = boostEvents.actions;
+
+export const selectEvent = createAction("selectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const deselectEvent = createAction("deselectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const deselectEvent = createAction("deselectEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const removeEvent = createAction("removeEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const removeEvent = createAction("removeEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
-export const bulkRemoveEvent = createAction("bulkRemoveEvent", (args: { query: Parameters<typeof resolveEventId>[0]; tracks?: IEventTracks; areLasersLocked: boolean }) => {
+export const bulkRemoveEvent = createAction("bulkRemoveEvent", (args: { query: Parameters<typeof resolveEventId>[0]; environment: EnvironmentName; areLasersLocked: boolean }) => {
 	return { payload: { ...args } };
 });
 
@@ -331,7 +337,7 @@ export const pasteSelection = createAsyncThunk("pasteSelection", (args: { songId
 	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
 	const pasteAtBeat = args.view === View.BEATMAP ? selectCursorPositionInBeats(state, args.songId) : selectEventsEditorCursor(state);
 	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
-	const earliestBeat = [...(data.notes ?? []), ...(data.obstacles ?? []), ...(data.events ?? [])].map(resolveTimeForItem).sort((a, b) => a - b)[0];
+	const earliestBeat = selectEarliestBeat(state);
 	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
 	// Every entity that has an ID (obstacles, events) needs a unique ID, we shouldn't blindly copy it over.
 	return api.fulfillWithValue({ ...args, data: data, deltaBetweenPeriods });

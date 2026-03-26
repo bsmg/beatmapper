@@ -1,12 +1,14 @@
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
-import { useAppPrompterContext } from "$/components/app/compositions";
-import { APP_TOASTER } from "$/components/app/constants";
-import { useViewFromLocation } from "$/components/app/hooks";
-import { useGlobalEventListener } from "$/components/hooks";
+import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
+import { useSetupContext } from "$/components/context";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import {
+	addBookmark,
 	copySelection,
 	cutSelection,
 	cycleToNextTool,
@@ -17,6 +19,7 @@ import {
 	downloadMapFiles,
 	incrementPlaybackRate,
 	incrementSnap,
+	jumpToBeat,
 	jumpToEnd,
 	jumpToStart,
 	nudgeSelection,
@@ -30,28 +33,58 @@ import {
 	scrollThroughSong,
 	seekBackwards,
 	seekForwards,
-	togglePlaying,
+	selectAllEntitiesInRange,
+	togglePlayback,
 	undoEvents,
 	undoObjects,
 	updateSnap,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
-import { type SongId, View } from "$/types";
+import { View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
-interface Props {
-	sid: SongId;
-}
+function DefaultEditorShortcuts() {
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
-function DefaultEditorShortcuts({ sid }: Props) {
+	const { toaster } = useSetupContext();
+
 	const dispatch = useAppDispatch();
-	const view = useViewFromLocation();
 	const isLoading = useAppSelector(selectLoading);
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
-	const { active: activePrompt, openPrompt } = useAppPrompterContext();
+	const { trigger: triggerQuickSelect } = usePrompt(
+		createQuickSelectPrompt({
+			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
+			onSubmit: ({ value: { range } }) => {
+				let [startBeat, endBeat] = range
+					.trim()
+					.split("-")
+					.map((x) => Number.parseFloat(x));
+				if (typeof endBeat !== "number") {
+					endBeat = Number.POSITIVE_INFINITY;
+				}
+				dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+				dispatch(jumpToBeat({ songId: sid, value: startBeat, pauseTrack: true }));
+			},
+		}),
+	);
+	const { trigger: triggerJumpToBeat } = usePrompt(
+		createJumpToBeatPrompt({
+			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ songId: sid, pauseTrack: true, value: beatNum })),
+		}),
+	);
+	const { trigger: triggerAddBookmark } = usePrompt(
+		createAddBookmarkPrompt({
+			render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" />}</form.AppField>,
+			onSubmit: ({ value }) => dispatch(addBookmark({ songId: sid, view, name: value.name })),
+		}),
+	);
+
+	const { isPromptActive } = usePrompter();
 
 	const keysDepressed = useRef({
 		space: false,
@@ -84,7 +117,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
@@ -100,7 +133,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				case "F5": {
 					if (ev.shiftKey) {
 						ev.preventDefault();
-						return dispatch(rehydrate());
+						return dispatch(rehydrate({ songId: sid, beatmapId: bid }));
 					}
 					return;
 				}
@@ -108,7 +141,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
 					if (keysDepressed.current.space) return;
 					keysDepressed.current.space = true;
-					return dispatch(togglePlaying({ songId: sid }));
+					return dispatch(togglePlayback({ songId: sid }));
 				}
 				case "Escape": {
 					return dispatch(deselectAllEntities({ view }));
@@ -126,10 +159,10 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return handleScroll("backwards", ev);
 				}
 				case "PageUp": {
-					return dispatch(seekForwards({ songId: sid, view }));
+					return dispatch(seekForwards({ songId: sid }));
 				}
 				case "PageDown": {
-					return dispatch(seekBackwards({ songId: sid, view }));
+					return dispatch(seekBackwards({ songId: sid }));
 				}
 				case "Home": {
 					return dispatch(jumpToStart({ songId: sid }));
@@ -172,12 +205,12 @@ function DefaultEditorShortcuts({ sid }: Props) {
 				}
 				case "KeyJ": {
 					ev.preventDefault();
-					return openPrompt("JUMP_TO_BEAT");
+					return triggerJumpToBeat();
 				}
 				case "KeyB": {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
-					return openPrompt("ADD_BOOKMARK");
+					return triggerAddBookmark();
 				}
 				case "KeyZ": {
 					if (!metaKeyPressed) return;
@@ -198,32 +231,32 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
 					if (import.meta.env.PROD && isDemo) {
-						return APP_TOASTER.create({
+						return toaster?.create({
 							id: "demo-download-blocker",
 							type: "info",
 							description: "Unfortunately, the demo map is not available for download.",
 						});
 					}
-					if (sid) return dispatch(downloadMapFiles({ songId: sid }));
+					if (sid) return dispatch(downloadMapFiles({ songId: sid, version: null }));
 					return;
 				}
 				case "KeyQ": {
 					ev.preventDefault();
-					return openPrompt("QUICK_SELECT");
+					return triggerQuickSelect();
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[isLoading, view, activePrompt, dispatch, sid, isDemo, handleScroll, openPrompt],
+		[isLoading, view, dispatch, toaster, sid, bid, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			switch (ev.code) {
 				case "Space": {
@@ -234,7 +267,7 @@ function DefaultEditorShortcuts({ sid }: Props) {
 					return;
 			}
 		},
-		[isLoading, view, activePrompt],
+		[isLoading, view, isPromptActive],
 	);
 
 	const handleWheel = useCallback(
@@ -242,13 +275,13 @@ function DefaultEditorShortcuts({ sid }: Props) {
 			ev.preventDefault();
 			if (isLoading) return;
 			if (!view) return;
-			if (activePrompt) return;
+			if (isPromptActive) return;
 
 			if (ev.altKey) return;
 			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 			handleScroll(direction, ev);
 		},
-		[isLoading, view, activePrompt, handleScroll],
+		[isLoading, view, isPromptActive, handleScroll],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
