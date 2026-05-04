@@ -144,7 +144,7 @@ function CreateMapForm({ dialog }: Props) {
 						</Form.AppField>
 						<Form.AppField name="coverArtFile">
 							{(ctx) => (
-								<ctx.FileUpload label="Cover Art File" acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} transformFiles={(files) => Promise.all(files.map(remuxImageToSquare))}>
+								<ctx.FileUpload label="Cover Art File" acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} transformFiles={(files) => Promise.all(files.map((file) => remuxImageToSquare(file)))}>
 									{() => null}
 								</ctx.FileUpload>
 							)}
