@@ -31,8 +31,8 @@ const SCHEMA = object({
 		number(),
 		transform(() => 0),
 	),
-	previewStartTime: pipe(number(), gtValue(0)),
-	previewDuration: pipe(number(), gtValue(0)),
+	previewStartTime: pipe(number(), minValue(0)),
+	previewDuration: pipe(number(), minValue(0)),
 	environment: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentV2Name | EnvironmentV3Name>,
 });
 
