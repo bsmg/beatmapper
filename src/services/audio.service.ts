@@ -49,17 +49,10 @@ export class AudioSample {
 	}
 
 	changePlaybackRate(playbackRate: number) {
-		// Every time that the playback rate changes, we first need to calculate how much elapsed with the old rate, offset the start time to compensate, and then start a new segment
-		const rateAdjustedElapsed = this.getRateAdjustedElapsed();
-		const realElapsed = this.context.currentTime - this.playbackRateLastSetAt;
-
-		// We have to shift the playback head pointer backwards or forwards, to make up for changes in playback rate
-		this.startTime = this.startTime + realElapsed - rateAdjustedElapsed;
-
+		this.startOffset = this.getCurrentTime();
 		this.playbackRateLastSetAt = this.context.currentTime;
 		this.playbackRate = playbackRate;
 
-		// Audio source might not yet be loaded
 		if (this.source) {
 			this.source.playbackRate.value = this.playbackRate;
 		}
@@ -121,10 +114,9 @@ export class AudioSample {
 			return;
 		}
 
+		this.startOffset = this.getCurrentTime();
 		this.isPlaying = false;
 		this.source.stop();
-		// Measure how much time passed since the last pause.
-		this.startOffset += this.context.currentTime - this.startTime;
 	}
 
 	trigger() {
@@ -138,8 +130,11 @@ export class AudioSample {
 	}
 
 	getCurrentTime() {
-		if (!this.isPlaying) return this.startOffset;
-		return this.getRateAdjustedElapsed() + (this.playbackRateLastSetAt - this.startTime);
+		if (!this.isPlaying) {
+			return this.startOffset;
+		}
+
+		return this.startOffset + (this.context.currentTime - this.playbackRateLastSetAt) * this.playbackRate;
 	}
 
 	getRateAdjustedElapsed() {
