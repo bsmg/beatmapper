@@ -30,7 +30,7 @@ export const Waveform = forwardRef<HTMLCanvasElement, Assign<Omit<ComponentProps
 			const resampledData = newWaveformData.resample({ width }).toJSON();
 
 			resampledData.data.forEach((min, i) => {
-				ctx.lineTo(i / 2, getY(height, min));
+				ctx.lineTo(i * (width / resampledData.data.length), getY(height, min));
 			});
 
 			ctx.stroke();
