@@ -4,3 +4,6 @@ allowBuilds:
 
 patchedDependencies:
   bsmap@2.3.2: patches/bsmap-npm-2.3.2-23d72a3a83.patch
+
+publicHoistPattern:
+  - "*workbox*"
