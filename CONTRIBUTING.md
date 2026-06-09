@@ -34,63 +34,29 @@ Once you have a local copy of the project on your machine, we'd recommend taking
 1. [Create a new fork](https://guides.github.com/activities/forking/) of the repository, so that all of your modifications can be tracked on *your* copy of the repository.
 2. [Create a new dedicated branch](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-and-deleting-branches-within-your-repository#creating-a-branch) for your changes
   and sync it to your workspace.
-3. Read through the guides and resources within the [Knowledge Base](#knowledge-base) located at the bottom of this guide, 
-  so that you can familiarize yourself with the technologies used in this project.
 
 #### Git Hooks
 
 Pre-commit hooks are configured via [lefthook](https://github.com/evilmartians/lefthook) to run linters/formatters automatically before making commits to the repository.
 
-**These hooks are not enabled by default**, but you can run `yarn lefthook install` to enable them for your workspace.
+**These hooks are not enabled by default**, but you can run `lefthook install` to enable them for your workspace.
 
 ### Submitting a Pull Request
 
 If you think you're ready to make a pull request, be sure to run through the following checklist to ensure your code is production-ready:
 
-- [ ] If you did not activate the available git hooks for your workspace, run the following command to manually run the linter/formatter on your changes: `yarn check --write {files}`.
-- [ ] Run `yarn test run` to ensure all unit tests are passing.
-- [ ] Make a production build for your application (`yarn build && yarn preview`) and ensure your changes are stable and no critical errors are present.
+- [ ] If you did not activate the available git hooks for your workspace, run the following command to manually run the linter/formatter on your changes: `biome check --write {files}`.
+- [ ] Run `vitest run` to ensure all unit tests are passing.
+- [ ] Make a production build for your application (`vite build && vite preview`) and ensure your changes are stable and no critical errors are present.
 
 Once submitted, a maintainer will review your pull request and, once approved, integrate your changes into a staging branch for future release.
 
 > [!important]
 > While we don't explicitly forbid the use of LLMs when submitting contributions, 
 > **we do expect you to take full responsibility for all changes submitted within your pull request**, which includes acknowlegement of the following:
+> 
 > - Ensuring all changes match the general standards and practices of the current codebase
 > - Performing a manual audit of all changes to ensure there are no critical regressions or security issues
 > - Making any requested changes in a cordial and timely manner
+> 
 > Any attempt to subvert these expectations or otherwise mislead maintainers may result in your pull request being closed without further review and/or disciplinary action if deemed necessary.
-
-## Knowledge Base
-
-These are some of the more useful guides and documentation for the core technologies used in the project:
-
-- [Ark UI](https://ark-ui.com/docs/overview/introduction)
-- [Biome](https://biomejs.dev/guides/getting-started/)
-- [Drei](https://drei.docs.pmnd.rs/getting-started/introduction)
-- [Lefthook](https://lefthook.dev)
-- [Lucide](https://lucide.dev/guide/packages/lucide-react)
-- [MDX](https://mdxjs.com)
-- [Panda CSS](https://panda-css.com/docs/overview/getting-started)
-- [React](https://react.dev/learn)
-- [React Spring](https://www.react-spring.dev)
-- [React Three Fiber](https://r3f.docs.pmnd.rs/getting-started/introduction)
-- [React Postprocessing](https://react-postprocessing.docs.pmnd.rs/introduction)
-- [Redux](https://redux.js.org/introduction/getting-started)
-- [Redux Toolkit](https://redux-toolkit.js.org/introduction/getting-started)
-- [TanStack Form](https://tanstack.com/form/latest/docs/framework/react/overview)
-- [TanStack Pacer](https://tanstack.com/pacer/latest/docs/framework/react/overview)
-- [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
-- [TanStack Router](https://tanstack.com/router/latest/docs/framework/react/overview)
-- [TanStack Table](https://tanstack.com/table/latest/docs/framework/react/overview)
-- [three.js](https://threejs.org)
-- [TypeScript](https://www.typescriptlang.org/)
-- [unstorage](https://unstorage.unjs.io)
-- [Valibot](https://valibot.dev/guides/introduction)
-- [Velite](https://velite.js.org/guide/quick-start)
-- [Vite](https://vite.dev/guide)
-- [Vite PWA](https://vite-pwa-org.netlify.app)
-- [Vitest](https://vitest.dev/guide)
-- [zag.js](https://zagjs.com)
-
-- [BeatSaber-JSMap](https://github.com/KivalEvan/BeatSaber-JSMap)

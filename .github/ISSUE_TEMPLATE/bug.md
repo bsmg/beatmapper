@@ -21,11 +21,15 @@ labels: bug
 2.
 3.
 
-## Environment <!-- Replace each comment with the relevant information about your environment. -->
+## Environment <!-- Insert any relevant information about your environment. -->
 
-- App Version: <!--(e.g. 0.3.1)-->
-- Device: <!--(e.g. Desktop, iPhone)-->
-- OS: <!--(e.g. Windows, iOS)-->
-- Browser: <!--(e.g. Chrome, Firefox, Safari)-->
+- App Version: 
+  <!--(e.g. 0.3.1)-->
+- Device: 
+  <!--(e.g. Desktop, iPhone)-->
+- OS: 
+  <!--(e.g. Windows, iOS)-->
+- Browser: 
+  <!--(e.g. Chrome, Firefox, Safari)-->
 
 ## Additional Context <!-- Any other information that's relevant to your issue? -->
