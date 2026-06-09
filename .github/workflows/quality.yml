@@ -6,9 +6,6 @@ on:
     branches: [master]
   pull_request:
 
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
-
 jobs:
   check:
     name: Run Quality Checks (Biome)
@@ -29,6 +26,6 @@ jobs:
       - name: Setup Mise
         uses: jdx/mise-action@v4
       - name: Prepare
-        run: mise run prepare
+        run: mise run setup
       - name: Run Vitest
         run: vitest run

@@ -30,7 +30,7 @@ jobs:
       - name: Setup Mise
         uses: jdx/mise-action@v4
       - name: Prepare
-        run: mise run prepare
+        run: mise run setup
       - name: Build
         run: |
           vite build

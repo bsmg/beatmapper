@@ -2,13 +2,13 @@
 biome = "2.4.8"
 lefthook = "2.1.4"
 node = "24.16.0"
-yarn = "4.13.0"
+pnpm = "11.5.2"
 
 [env]
 _.path = ['{{config_root}}/node_modules/.bin']
 
-[tasks.prepare]
+[tasks.setup]
 run = [
-  "yarn install",
+  "pnpm install",
   "panda codegen --clean"
 ]

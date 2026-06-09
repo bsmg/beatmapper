@@ -66,25 +66,19 @@ mise install
 After all tools are installed, we'll need to run a task that prepares all modules we'll need to compile the project:
 
 ```sh
-mise run prepare
+mise run setup
 ```
 
 The final output should look something like this:
 
 ```
-[prepare] $ yarn install
-➤ YN0000: · Yarn 4.3.1
-➤ YN0000: ┌ Resolution step
-➤ YN0000: └ Completed
-➤ YN0000: ┌ Post-resolution validation
-...
-➤ YN0000: └ Completed
-➤ YN0000: ┌ Fetch step
-➤ YN0000: └ Completed in 0s 338ms
-➤ YN0000: ┌ Link step
-➤ YN0000: └ Completed in 0s 331ms
-➤ YN0000: · Done with warnings in 0s 954ms
-[prepare] $ panda codegen --clean
+[setup] $ pnpm install
+Lockfile is up to date, resolution step is skipped
+Packages: +162
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 162, reused 162, downloaded 0, added 162, done
+Done in 6.5s using pnpm v11.5.2
+[setup] $ panda codegen --clean
 ✔️ `styled-system/css`: the css function to author styles
 ✔️ `styled-system/tokens`: the css variables and js function to query your tokens
 ✔️ `styled-system/patterns`: functions to implement and apply common layout patterns
