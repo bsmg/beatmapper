@@ -2,10 +2,8 @@ name: Deployment
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Code Quality"]
+  push:
     branches: [master]
-    types: [completed]
 
 permissions:
   contents: read
@@ -16,32 +14,26 @@ concurrency:
   group: production
   cancel-in-progress: false
 
-env:
-  NODE_VERSION: 24.x
-
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    if: ${{ (github.event.workflow_run.conclusion == 'success') && (github.repository_owner == 'bsmg') }}
+    if: ${{ (github.repository_owner == 'bsmg') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Mise
+        uses: jdx/mise-action@v4
+      - name: Load dependency cache
+        uses: ./.github/actions/cache-dependencies
       - name: Prepare
-        run: yarn prepare
+        run: mise run setup
       - name: Build
         run: |
-          yarn build
+          vite build
           cp ./dist/index.html ./dist/404.html
       - name: Setup Pages
         uses: actions/configure-pages@v5

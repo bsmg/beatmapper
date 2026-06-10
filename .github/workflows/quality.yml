@@ -2,13 +2,7 @@ name: Code Quality
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master]
   pull_request:
-
-env:
-  NODE_VERSION: 24.x
-  YARN_ENABLE_HARDENED_MODE: 0
 
 jobs:
   check:
@@ -17,10 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v2
-        with:
-          version: 2.4.8
+      - name: Setup Mise
+        uses: jdx/mise-action@v4
       - name: Run Biome
         run: biome ci --diagnostic-level=error .
   test:
@@ -29,14 +21,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
-      - name: Install dependencies
-        run: yarn install
+      - name: Setup Mise
+        uses: jdx/mise-action@v4
+      - name: Load dependency cache
+        uses: ./.github/actions/cache-dependencies
       - name: Prepare
-        run: yarn prepare
+        run: mise run setup
       - name: Run Vitest
-        run: yarn test run
+        run: vitest run

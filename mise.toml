@@ -1,0 +1,14 @@
+[tools]
+biome = "2.4.8"
+lefthook = "2.1.4"
+node = "24.16.0"
+pnpm = "11.5.2"
+
+[env]
+_.path = ['{{config_root}}/node_modules/.bin']
+
+[tasks.setup]
+run = [
+  "pnpm install",
+  "panda codegen --clean"
+]

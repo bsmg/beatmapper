@@ -3,15 +3,14 @@
 	"version": "0.5.0",
 	"type": "module",
 	"private": true,
-	"packageManager": "yarn@4.13.0",
+	"packageManager": "pnpm@11.5.2",
 	"scripts": {
-		"prepare": "yarn prepare:panda",
-		"prepare:panda": "panda codegen --clean",
-		"dev": "vite",
+		"setup": "mise run setup",
+		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "biome check --no-errors-on-unmatched",
-		"test": "vitest"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@ark-ui/react": "^5.34.1",
@@ -42,7 +41,7 @@
 		"@zag-js/file-utils": "^1.37.0",
 		"@zag-js/react": "^1.37.0",
 		"@zag-js/utils": "^1.37.0",
-		"bsmap": "patch:bsmap@npm%3A2.3.2#~/.yarn/patches/bsmap-npm-2.3.2-23d72a3a83.patch",
+		"bsmap": "2.3.2",
 		"date-fns": "^4.1.0",
 		"fflate": "^0.8.2",
 		"file-saver": "^2.0.5",
@@ -60,7 +59,6 @@
 		"waveform-data": "^4.5.2"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.8",
 		"@pandacss/dev": "^1.9.1",
 		"@pandacss/types": "^1.9.1",
 		"@tanstack/devtools-vite": "^0.6.0",
@@ -81,8 +79,6 @@
 		"@velite/plugin-vite": "^0.0.2",
 		"@vite-pwa/assets-generator": "^1.0.2",
 		"@vitejs/plugin-react": "^6.0.1",
-		"concurrently": "^9.2.1",
-		"lefthook": "^2.1.4",
 		"mdx": "^0.3.1",
 		"rehype-expressive-code": "^0.41.7",
 		"rehype-github-alerts": "^4.2.0",
