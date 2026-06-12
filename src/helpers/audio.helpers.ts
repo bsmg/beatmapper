@@ -27,9 +27,14 @@ export async function deriveAudioDataFromFile(file: Blob | MediaSource, audioCon
 }
 export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audioContext: AudioContext) {
 	const arrayBuffer = await convertFileToArrayBuffer(file);
+	const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+
+	const samples = audioBuffer.length;
+	const scale = Math.floor(samples / window.innerWidth);
 
 	return new Promise<WaveformData>((resolve, reject) =>
-		WaveformData.createFromAudio({ audio_context: audioContext, array_buffer: arrayBuffer, scale: 128 }, (err, waveform) => {
+		// clamp the upper bounds of scale for performance
+		WaveformData.createFromAudio({ audio_context: audioContext, array_buffer: arrayBuffer, scale: Math.min(scale, 128) }, (err, waveform) => {
 			if (err) reject(err);
 			resolve(waveform);
 		}),

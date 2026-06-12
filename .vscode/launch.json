@@ -2,36 +2,18 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Dev",
-			"request": "launch",
 			"type": "node",
-			"cwd": "${workspaceFolder}",
-			"runtimeExecutable": "yarn",
-			"runtimeArgs": ["dev"],
-			"console": "internalConsole",
-			"serverReadyAction": {
-				"action": "openExternally",
-				"pattern": "Local:\\s*(https?://localhost:[0-9]+)",
-				"uriFormat": "%s",
-				"killOnServerStop": true
-			},
-			"skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+			"request": "launch",
+			"name": "Dev",
+			"runtimeExecutable": "vite",
+			"runtimeArgs": ["dev"]
 		},
 		{
-			"name": "Preview",
-			"request": "launch",
 			"type": "node",
-			"cwd": "${workspaceFolder}",
-			"runtimeExecutable": "yarn",
-			"runtimeArgs": ["preview"],
-			"console": "internalConsole",
-			"serverReadyAction": {
-				"action": "openExternally",
-				"pattern": "Local:\\s*(https?://localhost:[0-9]+)",
-				"uriFormat": "%s",
-				"killOnServerStop": true
-			},
-			"skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+			"request": "launch",
+			"name": "Preview",
+			"runtimeExecutable": "vite",
+			"runtimeArgs": ["preview"]
 		}
 	]
 }

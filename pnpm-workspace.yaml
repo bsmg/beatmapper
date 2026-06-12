@@ -1,0 +1,9 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - bsmap
+
+publicHoistPattern:
+  - "*workbox*"

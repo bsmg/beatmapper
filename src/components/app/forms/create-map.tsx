@@ -26,8 +26,8 @@ const SCHEMA = object({
 		minValue(0),
 		transform((input) => (Number.isNaN(input) ? undefined : input)),
 	),
-	previewStartTime: pipe(number(), gtValue(0)),
-	previewDuration: pipe(number(), gtValue(0)),
+	previewStartTime: pipe(number(), minValue(0)),
+	previewDuration: pipe(number(), minValue(0)),
 	environment: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentV2Name | EnvironmentV3Name>,
 	characteristic: CharacteristicNameSchema,
 	difficulty: DifficultyNameSchema,
@@ -144,7 +144,7 @@ function CreateMapForm({ dialog }: Props) {
 						</Form.AppField>
 						<Form.AppField name="coverArtFile">
 							{(ctx) => (
-								<ctx.FileUpload label="Cover Art File" acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} transformFiles={(files) => Promise.all(files.map(remuxImageToSquare))}>
+								<ctx.FileUpload label="Cover Art File" acceptText="Image File" accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} transformFiles={(files) => Promise.all(files.map((file) => remuxImageToSquare(file)))}>
 									{() => null}
 								</ctx.FileUpload>
 							)}

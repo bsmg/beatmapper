@@ -35,22 +35,24 @@ export async function createPlaceholderImageFile() {
 		});
 }
 
-export async function remuxImageToSquare(file: File) {
+export async function remuxImageToSquare(file: File, minSize = 256) {
 	const bitmap = await createImageBitmap(file);
 
-	if (bitmap.width === bitmap.height) {
+	const sourceSize = Math.min(bitmap.width, bitmap.height);
+
+	if (bitmap.width === bitmap.height && sourceSize >= minSize) {
 		return file;
 	}
 
-	const size = Math.min(bitmap.width, bitmap.height);
+	const targetSize = Math.max(sourceSize, minSize);
 
-	const canvas = new OffscreenCanvas(size, size);
+	const canvas = new OffscreenCanvas(targetSize, targetSize);
 	const ctx = canvas.getContext("2d");
 
-	const x = (bitmap.width - size) / 2;
-	const y = (bitmap.height - size) / 2;
+	const x = (bitmap.width - sourceSize) / 2;
+	const y = (bitmap.height - sourceSize) / 2;
 
-	ctx?.drawImage(bitmap, x, y, size, size, 0, 0, size, size);
+	ctx?.drawImage(bitmap, x, y, sourceSize, sourceSize, 0, 0, targetSize, targetSize);
 
 	const blob = await canvas.convertToBlob({ type: file.type });
 

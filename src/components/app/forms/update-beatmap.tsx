@@ -7,7 +7,7 @@ import { DotIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { array, endsWith, type GenericSchema, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
-import { ENVIRONMENT_COLLECTION } from "$/components/app/constants";
+import { ENVIRONMENT_OVERRIDE_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { useSetupContext } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
@@ -160,7 +160,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 									<Form.AppField name="customLabel">{(ctx) => <ctx.Input label="Custom Label" />}</Form.AppField>
 								</Form.Row>
 								<Form.Row>
-									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox label="Environment Override" required creatable collection={ENVIRONMENT_COLLECTION} />}</Form.AppField>
+									<Form.AppField name="environmentName">{(ctx) => <ctx.Combobox label="Environment Override" required creatable collection={ENVIRONMENT_OVERRIDE_COLLECTION} />}</Form.AppField>
 									<Form.AppField name="colorSchemeName">
 										{(ctx) => (
 											<ctx.Combobox

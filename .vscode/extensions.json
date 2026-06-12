@@ -1,3 +1,3 @@
 {
-	"recommendations": ["biomejs.biome", "unifiedjs.vscode-mdx", "vitest.explorer"]
+	"recommendations": ["hverlin.mise-vscode", "biomejs.biome", "unifiedjs.vscode-mdx", "vitest.explorer"]
 }

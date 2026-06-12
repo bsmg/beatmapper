@@ -1,0 +1,17 @@
+name: 'Cache dependencies'
+description: 'Resolves the managed store path for the package manager and handles caching for future install steps.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get store directory
+      id: pnpm-cache
+      shell: bash
+      run: echo "STORE_PATH=$(mise exec -- pnpm store path --silent)" >> $GITHUB_OUTPUT
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-

@@ -31,8 +31,8 @@ const SCHEMA = object({
 		number(),
 		transform(() => 0),
 	),
-	previewStartTime: pipe(number(), gtValue(0)),
-	previewDuration: pipe(number(), gtValue(0)),
+	previewStartTime: pipe(number(), minValue(0)),
+	previewDuration: pipe(number(), minValue(0)),
 	environment: pipe(string(), endsWith("Environment")) as GenericSchema<EnvironmentV2Name | EnvironmentV3Name>,
 });
 
@@ -121,7 +121,7 @@ function UpdateSongForm() {
 						</FileUpload>
 					</Field>
 					<Field label="Cover Art File" required>
-						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} transformFiles={(files) => Promise.all(files.map(remuxImageToSquare))}>
+						<FileUpload label="Image File" deletable={false} accept={COVER_ART_FILE_ACCEPT_TYPE} maxFiles={1} acceptedFiles={acceptedCoverArtFile} onFileAccept={(details) => handleAcceptCoverArtFile(details.files[0])} transformFiles={(files) => Promise.all(files.map((file) => remuxImageToSquare(file)))}>
 							{() => null}
 						</FileUpload>
 					</Field>
