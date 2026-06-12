@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  bsmap@2.3.2: 07b744739ac35e2509a58fb160dd4f158485d76921b57bb3829e39d90fb0c97c
-
 importers:
 
   .:
@@ -96,8 +93,8 @@ importers:
         specifier: ^1.37.0
         version: 1.41.2
       bsmap:
-        specifier: 2.3.2
-        version: 2.3.2(patch_hash=07b744739ac35e2509a58fb160dd4f158485d76921b57bb3829e39d90fb0c97c)(typescript@6.0.3)
+        specifier: ^2.3.5
+        version: 2.3.5(typescript@6.0.3)
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
@@ -2690,8 +2687,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
-  bsmap@2.3.2:
-    resolution: {integrity: sha512-B3lTRqXWeNQKlOMgbX8H4YAv8ZT4wPDIbfWF04xOz2GgmvHrqv8mg8BNr5AwmBSUW8eNEFFCn6ow45MmqVxIYA==}
+  bsmap@2.3.5:
+    resolution: {integrity: sha512-sAx1cEtIXfSDTY6fnSLal28iTX2ST8BwcX/bvZJDr+MFh83Ev3Dxvwn/1WcdRyLYY8swW+B4pL+dtqCLyrC5HQ==}
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -8544,7 +8541,7 @@ snapshots:
       node-releases: 2.0.47
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
-  bsmap@2.3.2(patch_hash=07b744739ac35e2509a58fb160dd4f158485d76921b57bb3829e39d90fb0c97c)(typescript@6.0.3):
+  bsmap@2.3.5(typescript@6.0.3):
     dependencies:
       '@standard-schema/spec': 1.1.0
       valibot: 1.4.1(typescript@6.0.3)
