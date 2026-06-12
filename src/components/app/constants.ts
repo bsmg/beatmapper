@@ -1,6 +1,6 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
-import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, isV2Environment, isV3Environment } from "bsmap";
+import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, is360Environment, isV2Environment, isV3Environment } from "bsmap";
 import { nonEmpty, null_, number, object, pipe, regex, string, union } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
@@ -22,6 +22,10 @@ export const DIFFICULTY_COLLECTION = createListCollection({
 });
 export const ENVIRONMENT_COLLECTION = createListCollection({
 	items: EnvironmentName.filter((x) => isV2Environment(x) || isV3Environment(x)),
+	itemToString: (item) => EnvironmentRename[item],
+});
+export const ENVIRONMENT_OVERRIDE_COLLECTION = createListCollection({
+	items: EnvironmentName.filter((x) => (isV2Environment(x) || isV3Environment(x) || is360Environment(x)) && x !== "MultiplayerEnvironment"),
 	itemToString: (item) => EnvironmentRename[item],
 });
 
