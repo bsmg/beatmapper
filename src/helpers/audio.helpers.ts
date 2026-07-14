@@ -2,6 +2,7 @@ import { distinct } from "@std/collections/distinct";
 import { createAudioData, createBPMEvent, type IWrapAudioData, type IWrapAudioDataBPM, type IWrapBPMEvent, type IWrapDifficulty, sortObjectFn } from "bsmap";
 import { default as WaveformData } from "waveform-data";
 
+import { getAudioContext } from "$/setup";
 import { roundToNearest } from "$/utils";
 import { convertFileToArrayBuffer } from "./file.helpers";
 
@@ -18,14 +19,18 @@ export function convertBeatsToMilliseconds(beats: number, bpm: number) {
 	return (beats / bps) * 1000;
 }
 
-export async function deriveAudioDataFromFile(file: Blob | MediaSource, audioContext: AudioContext) {
+export async function deriveAudioDataFromFile(file: Blob | MediaSource) {
+	const audioContext = getAudioContext();
+
 	const arrayBuffer = await convertFileToArrayBuffer(file);
 
 	return await audioContext.decodeAudioData(arrayBuffer).then((audioBuffer) => {
 		return { duration: audioBuffer.duration, frequency: audioBuffer.sampleRate, sampleCount: audioBuffer.length };
 	});
 }
-export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audioContext: AudioContext) {
+export async function deriveWaveformDataFromFile(file: Blob | MediaSource) {
+	const audioContext = getAudioContext();
+
 	const arrayBuffer = await convertFileToArrayBuffer(file);
 	const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
 
@@ -41,8 +46,8 @@ export async function deriveWaveformDataFromFile(file: Blob | MediaSource, audio
 	);
 }
 
-export async function createAudioDataContentsFromFile(songFile: File, audioContext: AudioContext, options: { bpm: number; version?: number }): Promise<IWrapAudioData> {
-	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile, audioContext);
+export async function createAudioDataContentsFromFile(songFile: File, options: { bpm: number; version?: number }): Promise<IWrapAudioData> {
+	const { duration, frequency, sampleCount } = await deriveAudioDataFromFile(songFile);
 
 	// map will not load properly in-game if there isn't at least one bpm change defined. we call this peak stupid.
 	const region: IWrapAudioDataBPM = {

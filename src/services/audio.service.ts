@@ -1,3 +1,5 @@
+import { getAudioContext } from "$/setup";
+
 export interface AudioSampleOptions {
 	url?: string;
 	volume?: number;
@@ -23,7 +25,7 @@ export class AudioSample {
 		this.gain = volume;
 		this.playbackRate = playbackRate;
 
-		this.context = new AudioContext();
+		this.context = getAudioContext();
 
 		// Audio contexts have an always-incrementing `currentTime` ticker.
 		// When we start the file, we might be 20 seconds into that process, so we'll store the currentTime position that the audio started playing.

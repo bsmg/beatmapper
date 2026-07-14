@@ -32,8 +32,6 @@ import { getAppBeatmapFilestore } from "$/setup";
 import type { App, SongId } from "$/types";
 import { deepAssign, ensureArray, yieldValue } from "$/utils";
 
-const audioContext = new AudioContext();
-
 const decoder = new TextDecoder("utf-8");
 const encoder = new TextEncoder();
 
@@ -75,7 +73,7 @@ export interface ImportMapArchiveOptions {
 }
 
 export async function importMapArchive(archive: Uint8Array, { loadOptions }: ImportMapArchiveOptions): Promise<MapArchiveContents> {
-	const unzipped = await new Promise<Record<string, Uint8Array>>((resolve, reject) =>
+	const unzipped = await new Promise<Unzipped>((resolve, reject) =>
 		unzip(archive, (err, data) => {
 			if (err) return reject(err);
 			resolve(data);
@@ -134,7 +132,7 @@ export async function importMapArchive(archive: Uint8Array, { loadOptions }: Imp
 			return loadAudioData(JSON.parse(decoder.decode(data)), null, loadOptions);
 		})
 		.catch(async () => {
-			const { frequency, bpmData, ...rest } = await createAudioDataContentsFromFile(songFile, audioContext, { version: info.version, bpm: info.audio.bpm });
+			const { frequency, bpmData, ...rest } = await createAudioDataContentsFromFile(songFile, { version: info.version, bpm: info.audio.bpm });
 			return createAudioData({ ...rest, frequency, bpmData: createBpmDataFromDifficulty(beatmaps[0].difficulty, frequency, bpmData[0].endBeat) });
 		});
 

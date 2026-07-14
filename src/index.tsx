@@ -6,11 +6,12 @@ import { Provider } from "react-redux";
 
 import { SetupProvider } from "./components/context";
 import { getRouter, setupRouter } from "./router";
-import { getAppBeatmapFilestore, getAppStore, getAppToaster, setupAppStore } from "./setup";
+import { getAppBeatmapFilestore, getAppStore, getAppToaster, setupAppStore, setupAudioContext } from "./setup";
 
 import "./index.css";
 
 setupRouter();
+setupAudioContext();
 setupAppStore();
 
 const root = document.getElementById("root");

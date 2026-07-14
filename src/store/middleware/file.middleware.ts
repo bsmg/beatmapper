@@ -15,7 +15,6 @@ import { deepAssign } from "$/utils";
 export default function createFileMiddleware() {
 	const instance = createListenerMiddleware<RootState>();
 	const filestore = getAppBeatmapFilestore();
-	const audioContext = new AudioContext();
 
 	instance.startListening({
 		actionCreator: rehydrate,
@@ -56,7 +55,7 @@ export default function createFileMiddleware() {
 			if (finishLoadingMap.match(action) || songFile) {
 				const activeSongFile = songFile ?? (await filestore.loadSongFile(songId));
 
-				await deriveWaveformDataFromFile(activeSongFile, audioContext).then((waveformData) => {
+				await deriveWaveformDataFromFile(activeSongFile).then((waveformData) => {
 					return api.dispatch(reloadVisualizer({ duration: waveformData.duration, waveformData: waveformData.toJSON() }));
 				});
 			}
@@ -71,7 +70,7 @@ export default function createFileMiddleware() {
 			const infoContents = serializeInfoContents(selectSongById(state, songId), {
 				songDuration: selectDuration(state),
 			});
-			const audioDataContents = await createAudioDataContentsFromFile(songFile, audioContext, { bpm: selectBpm(state, songId) });
+			const audioDataContents = await createAudioDataContentsFromFile(songFile, { bpm: selectBpm(state, songId) });
 
 			await Promise.all([
 				filestore.saveSongFile(songId, songFile),

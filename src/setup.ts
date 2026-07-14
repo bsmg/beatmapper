@@ -75,6 +75,10 @@ const appFileDriver = createDriver<LegacyStorageSchema & { entries: { key: strin
 	},
 });
 
+export const { get: getAudioContext, setup: setupAudioContext } = createLazySingleton(() => {
+	return new AudioContext({ latencyHint: "playback" });
+});
+
 export const { get: getAppBeatmapFilestore, setup: setupAppBeatmapFilestore } = createLazySingleton((driver?: Driver) => {
 	return new BeatmapFilestore({
 		storage: createStorage({
