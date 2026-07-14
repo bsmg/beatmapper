@@ -5,9 +5,8 @@ import { HIGHEST_PRECISION } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
-import { type App, type BeatmapId, type IGrid, type IGridPresets, type ISelectionBoxInBeats, type Member, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
+import { type App, type BeatmapId, type IGrid, type ISelectionBoxInBeats, type ObjectSelectionMode, type ObjectTool, type ObjectType, type SongId, View } from "$/types";
 import { roundToNearest } from "$/utils";
-import { createEntityStorageActions, createStorageActions } from "./middleware/storage.middleware";
 import {
 	selectAllBasicEvents,
 	selectAllBombNotes,
@@ -25,7 +24,7 @@ import {
 	selectPlaying,
 	selectSnap,
 } from "./selectors";
-import type { RootState, SessionStorageObservers, UserStorageObservers } from "./setup";
+import type { RootState } from "./setup";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
@@ -48,16 +47,11 @@ import visualizer from "./features/visualizer.slice";
 
 export const { init } = global.actions;
 
-export const { load: loadUser, save: saveUser, hydrate: hydrateUser } = createStorageActions<RootState, UserStorageObservers>("user");
-export const { load: loadSession, save: saveSession, hydrate: hydrateSession } = createStorageActions<RootState, SessionStorageObservers>("session");
-export const { load: loadSongs, save: saveSongs, hydrate: hydrateSongs } = createEntityStorageActions<App.ISong>("songs");
-export const { load: loadGridPresets, save: saveGridPresets, hydrate: hydrateGridPresets } = createEntityStorageActions<Member<IGridPresets>>("grids");
-
-export const rehydrate = createAction("@@STORAGE/rehydrate", (args: { songId: SongId; beatmapId: BeatmapId }) => {
+export const rehydrate = createAction("rehydrate", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 
-export const { dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
+export const { updateNew, updateAnnouncements, dismissPrompt, updateUsername, updateProcessingDelay, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
 
 export const startLoadingMap = createAction("startLoadingMap", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
@@ -84,6 +78,7 @@ export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; 
 });
 
 export const {
+	hydrate: hydrateSongs,
 	addOne: addSong,
 	addOneFromFile: addSongFromFile,
 	updateOne: updateSong,
@@ -133,7 +128,7 @@ export const {
 
 export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
 
-export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, upsertGridPreset: saveGridPreset, removeGridPreset } = beatmap.actions;
+export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, hydrateGridPresets, upsertGridPreset: saveGridPreset, removeGridPreset } = beatmap.actions;
 
 export const loadGridPreset = createAction("loadGridPreset", (args: { songId: SongId; grid: IGrid }) => {
 	return { payload: { ...args } };
@@ -146,6 +141,7 @@ export const {
 	updateCursor: updateEventsEditorCursor,
 	updateTrackHeight: updateEventsEditorTrackHeight,
 	updateTrackOpacity: updateEventsEditorTrackOpacity,
+	updateZoomLevel: updateEventsEditorZoomLevel,
 	incrementZoom: incrementEventsEditorZoom,
 	decrementZoom: decrementEventsEditorZoom,
 	updatePreview: updateEventsEditorPreview,

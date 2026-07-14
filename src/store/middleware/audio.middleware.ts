@@ -5,7 +5,7 @@ import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
-import { decrementPlaybackRate, finishLoadingMap, hydrateSession, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
+import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
 import { selectAllColorNotes, selectAudioProcessingDelayInBeats, selectCursorPosition, selectPlaybackRate, selectTickVolume } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
@@ -27,16 +27,6 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 
 	let tickSchedule: number[] = [];
 
-	instance.startListening({
-		actionCreator: hydrateSession,
-		effect: async (action) => {
-			const { "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
-			if (playbackRate !== undefined) songSample.changePlaybackRate(playbackRate);
-			if (songVolume !== undefined) songSample.changeVolume(songVolume);
-			if (tickVolume !== undefined) tickSample.changeVolume(tickVolume);
-			if (tickType !== undefined) tickSample.load(NOTE_TICK_TYPES[tickType]);
-		},
-	});
 	instance.startListening({
 		actionCreator: updateCursorPosition,
 		effect: async (action) => {

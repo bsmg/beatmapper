@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { addSong, addSongFromFile, finishLoadingMap, hydrateUser, updateSong } from "$/store/actions";
+import { addSong, addSongFromFile, finishLoadingMap, updateSong } from "$/store/actions";
 import { ObstaclePlacementMode } from "$/types";
 
 const initialState = {
@@ -29,6 +29,14 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
+			updateNew: api.reducer<{ value: boolean }>((state, action) => {
+				const { value } = action.payload;
+				return { ...state, isNewUser: value };
+			}),
+			updateAnnouncements: api.reducer<{ value: string[] }>((state, action) => {
+				const { value } = action.payload;
+				return { ...state, seenPrompts: value };
+			}),
 			dismissPrompt: api.reducer<{ id: string }>((state, action) => {
 				const { id } = action.payload;
 				return { ...state, seenPrompts: [...state.seenPrompts, id] };
@@ -61,16 +69,6 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateUser, (state, action) => {
-			const { "user.new": isNewUser, "user.announcements": seenPrompts, "user.username": stickyMapAuthorName, "audio.offset": processingDelay, "graphics.scale": renderScale, "graphics.bloom": isBlooming, "controls.obstacles": obstaclePlacementMode } = action.payload;
-			if (isNewUser !== undefined) state.isNewUser = isNewUser;
-			if (seenPrompts !== undefined) state.seenPrompts = seenPrompts;
-			if (stickyMapAuthorName !== undefined) state.stickyMapAuthorName = stickyMapAuthorName;
-			if (processingDelay !== undefined) state.processingDelay = processingDelay;
-			if (renderScale !== undefined) state.renderScale = renderScale;
-			if (isBlooming !== undefined) state.isBloomEnabled = isBlooming;
-			if (obstaclePlacementMode !== undefined) state.obstaclePlacementMode = Object.values(ObstaclePlacementMode)[obstaclePlacementMode];
-		});
 		builder.addCase(addSongFromFile.fulfilled, (state) => {
 			return { ...state, isNewUser: false };
 		});

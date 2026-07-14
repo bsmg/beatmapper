@@ -2,6 +2,7 @@ import type { Middleware } from "@reduxjs/toolkit";
 import { createStateSyncMiddleware } from "redux-state-sync";
 
 import { AudioSample } from "$/services/audio.service";
+import { rehydrate } from "../actions";
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";
@@ -10,13 +11,10 @@ import createHistoryMiddleware from "./history.middleware";
 import createPackagingMiddleware from "./packaging.middleware";
 import createPlaybackMiddleware from "./playback.middleware";
 
-export { createStorageMiddleware, type StorageObserver } from "./storage.middleware";
-
 export function createAllSharedMiddleware() {
 	const stateSyncMiddleware = createStateSyncMiddleware({
 		predicate: (action) => {
-			if (action.type.startsWith("@@STORAGE")) return true;
-			return false;
+			return rehydrate.match(action);
 		},
 	});
 

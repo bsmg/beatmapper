@@ -5,18 +5,49 @@ import { omit } from "@std/collections/omit";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import type { NoteDirection } from "bsmap";
 import { initStateWithPrevTab } from "redux-state-sync";
-import { createStorage } from "unstorage";
-import { default as ls } from "unstorage/drivers/localstorage";
-import { default as ss } from "unstorage/drivers/session-storage";
+import { default as createLocalStorageDriver } from "unstorage/drivers/localstorage";
+import { default as createSessionStorageDriver } from "unstorage/drivers/session-storage";
 
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
 import { setupAppBeatmapFilestore, setupAppToaster } from "$/setup";
 import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
-import { init, loadGridPresets, loadSession, loadSongs, loadUser, tick, updateEventsEditorCursor } from "./actions";
+import {
+	hydrateGridPresets,
+	hydrateSongs,
+	init,
+	tick,
+	updateAnnouncements,
+	updateBeatDepth,
+	updateBloomEnabled,
+	updateEventsEditorColor,
+	updateEventsEditorCursor,
+	updateEventsEditorEditMode,
+	updateEventsEditorMirrorLock,
+	updateEventsEditorPreview,
+	updateEventsEditorTool,
+	updateEventsEditorTrackHeight,
+	updateEventsEditorTrackOpacity,
+	updateEventsEditorWindowLock,
+	updateEventsEditorZoomLevel,
+	updateNew,
+	updateNotesEditorDefaultObstacleDuration,
+	updateNotesEditorDirection,
+	updateNotesEditorTool,
+	updateObstaclePlacementMode,
+	updatePacerWait,
+	updatePlaybackRate,
+	updateProcessingDelay,
+	updateRenderScale,
+	updateSnap,
+	updateSongVolume,
+	updateTickType,
+	updateTickVolume,
+	updateUsername,
+} from "./actions";
+import { createEntityStorageStrategy, createKeyValueStorageStrategy, createStorageEnhancer } from "./enhancers/storage.enhancer";
 import { default as root } from "./features";
-import { createAllSharedMiddleware, createStorageMiddleware, type StorageObserver } from "./middleware";
-import { createEntityStorageMiddleware } from "./middleware/storage.middleware";
+import { createAllSharedMiddleware } from "./middleware";
 import {
 	selectAllGridPresetIds,
 	selectAnnouncements,
@@ -52,37 +83,6 @@ import {
 
 const STORAGE_PREFIX = location.hostname === "localhost" ? "beatmapper" : "";
 
-export type UserStorageObservers = {
-	"user.new": StorageObserver<RootState, boolean>;
-	"user.announcements": StorageObserver<RootState, string[]>;
-	"user.username": StorageObserver<RootState, string>;
-	"audio.offset": StorageObserver<RootState, number>;
-	"graphics.scale": StorageObserver<RootState, number>;
-	"graphics.bloom": StorageObserver<RootState, boolean>;
-	"controls.obstacles": StorageObserver<RootState, number>;
-	"advanced.wait": StorageObserver<RootState, number>;
-};
-export type SessionStorageObservers = {
-	"track.snap": StorageObserver<RootState, number>;
-	"track.spacing": StorageObserver<RootState, number>;
-	"playback.rate": StorageObserver<RootState, number>;
-	"playback.volume": StorageObserver<RootState, number>;
-	"tick.volume": StorageObserver<RootState, number>;
-	"tick.type": StorageObserver<RootState, number>;
-	"notes.tool": StorageObserver<RootState, number>;
-	"notes.direction": StorageObserver<RootState, NoteDirection>;
-	"notes.duration": StorageObserver<RootState, number>;
-	"events.mode": StorageObserver<RootState, number>;
-	"events.tool": StorageObserver<RootState, number>;
-	"events.color": StorageObserver<RootState, number>;
-	"events.zoom": StorageObserver<RootState, number>;
-	"events.opacity": StorageObserver<RootState, number>;
-	"events.height": StorageObserver<RootState, number>;
-	"events.preview": StorageObserver<RootState, boolean>;
-	"events.loop": StorageObserver<RootState, boolean>;
-	"events.mirror": StorageObserver<RootState, boolean>;
-};
-
 /** @deprecated this is really only used during migration flow, don't use this elsewhere */
 function resolveDifficultyFromBeatmapId(bid: BeatmapId) {
 	for (const difficulty of ["ExpertPlus", "Expert", "Hard", "Normal", "Easy"].reverse()) {
@@ -90,7 +90,7 @@ function resolveDifficultyFromBeatmapId(bid: BeatmapId) {
 	}
 	throw new Error(`Could not resolve difficulty from id: ${bid}`);
 }
-const appStoreDriver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
+const createAppEntityStorageDriver = createDriver<LegacyStorageSchema & { songs: { key: string; value: App.ISong }; grids: { key: keyof IGridPresets; value: Member<IGridPresets> } }>({
 	name: "beat-mapper-state",
 	version: 4,
 	async upgrade(idb, _current, next, tx) {
@@ -166,64 +166,168 @@ export async function createAppStore() {
 	setupAppBeatmapFilestore();
 	setupAppToaster();
 
-	const middleware = createAllSharedMiddleware();
+	type LocalStorage = {
+		"user.new": boolean;
+		"user.announcements": string[];
+		"user.username": string;
+		"audio.offset": number;
+		"graphics.scale": number;
+		"graphics.bloom": boolean;
+		"controls.obstacles": number;
+		"advanced.wait": number;
+	};
+	const localStorageEnhancer = createStorageEnhancer(
+		createLocalStorageDriver({ base: STORAGE_PREFIX }),
+		createKeyValueStorageStrategy<RootState, LocalStorage>({
+			"user.new": {
+				selectValue: selectNew,
+				hydrateValue: (value) => updateNew({ value }),
+			},
+			"user.announcements": {
+				selectValue: selectAnnouncements,
+				hydrateValue: (value) => updateAnnouncements({ value }),
+			},
+			"user.username": {
+				selectValue: (state) => selectUsername(state) ?? "",
+				hydrateValue: (value) => updateUsername({ value }),
+			},
+			"audio.offset": {
+				selectValue: selectAudioProcessingDelay,
+				hydrateValue: (value) => updateProcessingDelay({ value }),
+			},
+			"graphics.scale": {
+				selectValue: selectRenderScale,
+				hydrateValue: (value) => updateRenderScale({ value }),
+			},
+			"graphics.bloom": {
+				selectValue: selectBloomEnabled,
+				hydrateValue: (checked) => updateBloomEnabled({ checked }),
+			},
+			"controls.obstacles": {
+				selectValue: (state) => Object.values(ObstaclePlacementMode).indexOf(selectUserObstaclePlacementMode(state)),
+				hydrateValue: (index) => updateObstaclePlacementMode({ value: Object.values(ObstaclePlacementMode)[index] }),
+			},
+			"advanced.wait": {
+				selectValue: selectPacerWait,
+				hydrateValue: (value) => updatePacerWait({ value }),
+			},
+		}),
+	);
 
-	const userMiddleware = createStorageMiddleware<RootState, UserStorageObservers>({
-		namespace: "user",
-		storage: createStorage({ driver: ls({ base: STORAGE_PREFIX }) }),
-		observers: {
-			"user.new": { selector: selectNew },
-			"user.announcements": { selector: selectAnnouncements },
-			"user.username": { selector: (state) => selectUsername(state) ?? "" },
-			"audio.offset": { selector: selectAudioProcessingDelay },
-			"graphics.scale": { selector: selectRenderScale },
-			"graphics.bloom": { selector: selectBloomEnabled },
-			"controls.obstacles": { selector: (state) => Object.values(ObstaclePlacementMode).indexOf(selectUserObstaclePlacementMode(state)) },
-			"advanced.wait": { selector: selectPacerWait },
-		},
-	});
-	const sessionMiddleware = createStorageMiddleware<RootState, SessionStorageObservers>({
-		namespace: "session",
-		storage: createStorage({ driver: ss({ base: STORAGE_PREFIX }) }),
-		observers: {
-			"track.snap": { selector: selectSnap },
-			"track.spacing": { selector: selectBeatDepth },
-			"playback.rate": { selector: selectPlaybackRate },
-			"playback.volume": { selector: selectSongVolume },
-			"tick.volume": { selector: selectTickVolume },
-			"tick.type": { selector: selectTickType },
-			"notes.tool": { selector: (state) => Object.values(ObjectTool).indexOf(selectNotesEditorTool(state)) },
-			"notes.direction": { selector: selectNotesEditorDirection },
-			"notes.duration": { selector: selectDefaultObstacleDuration },
-			"events.mode": { selector: (state) => Object.values(EventEditMode).indexOf(selectEventsEditorEditMode(state)) },
-			"events.tool": { selector: (state) => Object.values(EventTool).indexOf(selectEventsEditorTool(state)) },
-			"events.color": { selector: (state) => Object.values(EventColor).indexOf(selectEventsEditorColor(state)) },
-			"events.zoom": { selector: selectEventsEditorZoomLevel },
-			"events.opacity": { selector: selectEventsEditorTrackOpacity },
-			"events.height": { selector: selectEventsEditorTrackHeight },
-			"events.preview": { selector: selectEventsEditorPreview },
-			"events.loop": { selector: selectEventsEditorWindowLock },
-			"events.mirror": { selector: selectEventsEditorMirrorLock },
-		},
-	});
-	const songStorageMiddleware = createEntityStorageMiddleware<RootState, App.ISong>({
-		namespace: "songs",
-		storage: createStorage({ driver: appStoreDriver({ name: "songs" }) }),
-		observer: {
-			keys: (state) => selectSongIds(state).map((x) => x.toString()),
-			selector: selectSongById,
-			asRaw: true,
-		},
-	});
-	const gridStorageMiddleware = createEntityStorageMiddleware<RootState, Member<IGridPresets>>({
-		namespace: "grids",
-		storage: createStorage({ driver: appStoreDriver({ name: "grids" }) }),
-		observer: {
-			keys: selectAllGridPresetIds,
-			selector: selectGridPresetById,
-			asRaw: true,
-		},
-	});
+	type SessionStorage = {
+		"track.snap": number;
+		"track.spacing": number;
+		"playback.rate": number;
+		"playback.volume": number;
+		"tick.volume": number;
+		"tick.type": number;
+		"notes.tool": number;
+		"notes.direction": NoteDirection;
+		"notes.duration": number;
+		"events.mode": number;
+		"events.tool": number;
+		"events.color": number;
+		"events.zoom": number;
+		"events.opacity": number;
+		"events.height": number;
+		"events.preview": boolean;
+		"events.loop": boolean;
+		"events.mirror": boolean;
+	};
+	const sessionStorageEnhancer = createStorageEnhancer(
+		createSessionStorageDriver({ base: STORAGE_PREFIX }),
+		createKeyValueStorageStrategy<RootState, SessionStorage>({
+			"track.snap": {
+				selectValue: selectSnap,
+				hydrateValue: (value) => updateSnap({ value }),
+			},
+			"track.spacing": {
+				selectValue: selectBeatDepth,
+				hydrateValue: (value) => updateBeatDepth({ value }),
+			},
+			"playback.rate": {
+				selectValue: selectPlaybackRate,
+				hydrateValue: (value) => updatePlaybackRate({ value }),
+			},
+			"playback.volume": {
+				selectValue: selectSongVolume,
+				hydrateValue: (value) => updateSongVolume({ value }),
+			},
+			"tick.volume": {
+				selectValue: selectTickVolume,
+				hydrateValue: (value) => updateTickVolume({ value }),
+			},
+			"tick.type": {
+				selectValue: selectTickType,
+				hydrateValue: (value) => updateTickType({ value }),
+			},
+			"notes.tool": {
+				selectValue: (state) => Object.values(ObjectTool).indexOf(selectNotesEditorTool(state)),
+				hydrateValue: (index) => updateNotesEditorTool({ tool: Object.values(ObjectTool)[index] }),
+			},
+			"notes.direction": {
+				selectValue: selectNotesEditorDirection,
+				hydrateValue: (direction) => updateNotesEditorDirection({ direction }),
+			},
+			"notes.duration": {
+				selectValue: selectDefaultObstacleDuration,
+				hydrateValue: (value) => updateNotesEditorDefaultObstacleDuration({ value }),
+			},
+			"events.mode": {
+				selectValue: (state) => Object.values(EventEditMode).indexOf(selectEventsEditorEditMode(state)),
+				hydrateValue: (index) => updateEventsEditorEditMode({ editMode: Object.values(EventEditMode)[index] }),
+			},
+			"events.tool": {
+				selectValue: (state) => Object.values(EventTool).indexOf(selectEventsEditorTool(state)),
+				hydrateValue: (index) => updateEventsEditorTool({ tool: Object.values(EventTool)[index] }),
+			},
+			"events.color": {
+				selectValue: (state) => Object.values(EventColor).indexOf(selectEventsEditorColor(state)),
+				hydrateValue: (index) => updateEventsEditorColor({ color: Object.values(EventColor)[index] }),
+			},
+			"events.zoom": {
+				selectValue: selectEventsEditorZoomLevel,
+				hydrateValue: (value) => updateEventsEditorZoomLevel({ value }),
+			},
+			"events.opacity": {
+				selectValue: selectEventsEditorTrackOpacity,
+				hydrateValue: (newOpacity) => updateEventsEditorTrackOpacity({ newOpacity }),
+			},
+			"events.height": {
+				selectValue: selectEventsEditorTrackHeight,
+				hydrateValue: (newHeight) => updateEventsEditorTrackHeight({ newHeight }),
+			},
+			"events.preview": {
+				selectValue: selectEventsEditorPreview,
+				hydrateValue: (checked) => updateEventsEditorPreview({ checked }),
+			},
+			"events.loop": {
+				selectValue: selectEventsEditorWindowLock,
+				hydrateValue: (checked) => updateEventsEditorWindowLock({ checked }),
+			},
+			"events.mirror": {
+				selectValue: selectEventsEditorMirrorLock,
+				hydrateValue: (checked) => updateEventsEditorMirrorLock({ checked }),
+			},
+		}),
+	);
+
+	const songStorageEnhancer = createStorageEnhancer(
+		createAppEntityStorageDriver({ name: "songs" }),
+		createEntityStorageStrategy<RootState, App.ISong>({
+			selectIds: (state) => selectSongIds(state).map((x) => x.toString()),
+			selectById: selectSongById,
+			hydrateEntities: hydrateSongs,
+		}),
+	);
+	const gridStorageEnhancer = createStorageEnhancer(
+		createAppEntityStorageDriver({ name: "grids" }),
+		createEntityStorageStrategy<RootState, Member<IGridPresets>>({
+			selectIds: selectAllGridPresetIds,
+			selectById: selectGridPresetById,
+			hydrateEntities: hydrateGridPresets,
+		}),
+	);
 
 	const devTools: DevToolsEnhancerOptions = {
 		name: "Beatmapper",
@@ -233,17 +337,15 @@ export async function createAppStore() {
 	const store = configureStore({
 		reducer: root.reducer,
 		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
-		middleware: (native) => native({ serializableCheck: false, immutableCheck: false }).concat(...middleware, userMiddleware, sessionMiddleware, songStorageMiddleware, gridStorageMiddleware),
-		enhancers: (native) => native(),
+		middleware: (getDefaultMiddleware) => {
+			return getDefaultMiddleware().concat(createAllSharedMiddleware());
+		},
+		enhancers: (getDefaultEnhancers) => {
+			return getDefaultEnhancers().concat(localStorageEnhancer, sessionStorageEnhancer, songStorageEnhancer, gridStorageEnhancer);
+		},
 	});
 
-	await Promise.all([
-		store.dispatch(loadUser()),
-		store.dispatch(loadSession()),
-		store.dispatch(loadSongs()),
-		store.dispatch(loadGridPresets()),
-		//
-	]).then(() => {
+	await store.hydrate().then(() => {
 		store.dispatch(init());
 	});
 

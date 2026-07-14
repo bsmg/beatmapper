@@ -6,7 +6,7 @@ import { eventTypeRename } from "bsmap/extensions/renamer";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { getAppToaster } from "$/setup";
-import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
+import { finishLoadingMap, loadGridPreset, startLoadingMap } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
@@ -118,6 +118,9 @@ const slice = createSlice({
 		};
 
 		return {
+			hydrate: api.reducer<Record<EntityId, App.ISong>>((state, action) => {
+				return adapter.upsertMany(state, action.payload);
+			}),
 			addOne: api.reducer<{ songId: SongId; beatmapId: BeatmapId; songFile: File; coverArtFile: File; songData: Parameters<typeof createAppSong>[0]; beatmapData: Parameters<typeof createAppBeatmap>[0] }>((state, action) => {
 				const { songData, beatmapId, beatmapData } = action.payload;
 				return adapter.addOne(state, createAppSong({ ...songData, difficultiesById: { [beatmapId]: createAppBeatmap({ ...beatmapData, environmentName: beatmapData.environmentName ?? songData.environment ?? EnvironmentName[0] }) } }));
@@ -243,10 +246,6 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSongs, (state, action) => {
-			const byId = action.payload;
-			return adapter.upsertMany(state, Object.values(byId));
-		});
 		builder.addCase(startLoadingMap, (state, action) => {
 			const { songId, beatmapId } = action.payload;
 			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });

@@ -1,7 +1,7 @@
 import { type AsyncThunkPayloadCreator, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
-import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, hydrateGridPresets, hydrateSession, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
+import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import { selectGridSize } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
@@ -45,6 +45,13 @@ const slice = createSlice({
 				const { direction } = action.payload;
 				return { ...state, selectedDirection: direction };
 			}),
+			updateDefaultObstacleDuration: api.reducer<{ value: number }>((state, action) => {
+				const { value } = action.payload;
+				return { ...state, defaultObstacleDuration: value };
+			}),
+			hydrateGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
+				return { ...state, gridPresets: action.payload };
+			}),
 			upsertGridPreset: api.asyncThunk(fetchGridSize, {
 				fulfilled: (state, action) => {
 					const { presetSlot: key, grid: value } = action.payload;
@@ -58,16 +65,6 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSession, (state, action) => {
-			const { "notes.tool": selectedTool, "notes.direction": selectedDirection, "notes.duration": defaultObstacleDuration } = action.payload;
-			if (selectedTool !== undefined) state.selectedTool = Object.values(ObjectTool)[selectedTool];
-			if (selectedDirection !== undefined) state.selectedDirection = selectedDirection;
-			if (defaultObstacleDuration !== undefined) state.defaultObstacleDuration = defaultObstacleDuration;
-		});
-		builder.addCase(hydrateGridPresets, (state, action) => {
-			const gridPresets = action.payload;
-			return { ...state, gridPresets: { ...state.gridPresets, ...gridPresets } };
-		});
 		builder.addCase(startManagingNoteSelection, (state, action) => {
 			const { selectionMode } = action.payload;
 			return { ...state, selectionMode: selectionMode };

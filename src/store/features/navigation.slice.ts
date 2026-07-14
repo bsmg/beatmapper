@@ -1,7 +1,7 @@
 import { isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
 
 import { SNAPPING_INCREMENTS } from "$/constants";
-import { hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
+import { leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import type { SongId } from "$/types";
 import { clamp } from "$/utils";
@@ -129,15 +129,6 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSession, (state, action) => {
-			const { "track.snap": snapTo, "track.spacing": beatDepth, "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
-			if (snapTo !== undefined) state.snapTo = snapTo;
-			if (beatDepth !== undefined) state.beatDepth = beatDepth;
-			if (playbackRate !== undefined) state.playbackRate = playbackRate;
-			if (songVolume !== undefined) state.songVolume = songVolume;
-			if (tickVolume !== undefined) state.tickVolume = tickVolume;
-			if (tickType !== undefined) state.tickType = tickType;
-		});
 		builder.addCase(reloadVisualizer, (state, action) => {
 			const { duration } = action.payload;
 			return { ...state, duration: duration * 1000 };

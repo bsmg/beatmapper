@@ -1,7 +1,7 @@
 import { createSlice, isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
 
 import { BEATS_PER_ZOOM_LEVEL, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
-import { cycleToNextTool, cycleToPrevTool, hydrateSession } from "$/store/actions";
+import { cycleToNextTool, cycleToPrevTool } from "$/store/actions";
 import { EventColor, EventEditMode, EventTool, View } from "$/types";
 
 const EVENT_TOOLS = Object.values(EventTool);
@@ -84,33 +84,14 @@ const slice = createSlice({
 				if (checked) return { ...state, areLasersLocked: checked };
 				return { ...state, areLasersLocked: !state.areLasersLocked };
 			}),
+			updateZoomLevel: api.reducer<{ value: number }>((state, action) => {
+				return { ...state, zoomLevel: action.payload.value };
+			}),
 			incrementZoom: updateZoomLevel(api, (current) => Math.min(ZOOM_LEVEL_MAX, current + 1)),
 			decrementZoom: updateZoomLevel(api, (current) => Math.max(ZOOM_LEVEL_MIN, current - 1)),
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSession, (state, action) => {
-			const {
-				"events.mode": selectedEditMode,
-				"events.tool": selectedTool,
-				"events.color": selectedColor,
-				"events.zoom": zoomLevel,
-				"events.preview": showLightingPreview,
-				"events.opacity": backgroundOpacity,
-				"events.height": rowHeight,
-				"events.loop": isLockedToCurrentWindow,
-				"events.mirror": areLasersLocked,
-			} = action.payload;
-			if (selectedEditMode !== undefined) state.selectedEditMode = Object.values(EventEditMode)[selectedEditMode];
-			if (selectedTool !== undefined) state.selectedTool = Object.values(EventTool)[selectedTool];
-			if (selectedColor !== undefined) state.selectedColor = Object.values(EventColor)[selectedColor];
-			if (zoomLevel !== undefined) state.zoomLevel = zoomLevel;
-			if (showLightingPreview !== undefined) state.showLightingPreview = showLightingPreview;
-			if (backgroundOpacity !== undefined) state.backgroundOpacity = backgroundOpacity;
-			if (rowHeight !== undefined) state.rowHeight = rowHeight;
-			if (isLockedToCurrentWindow !== undefined) state.isLockedToCurrentWindow = isLockedToCurrentWindow;
-			if (areLasersLocked !== undefined) state.areLasersLocked = areLasersLocked;
-		});
 		builder.addMatcher(isAnyOf(cycleToNextTool, cycleToPrevTool), (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.LIGHTSHOW) return state;
