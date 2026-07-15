@@ -6,6 +6,7 @@ import { DEFAULT_GRID } from "$/constants";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { getGridSize } from "$/helpers/song.helpers";
+import { getAudioContext } from "$/setup";
 import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import clipboard from "./features/clipboard.slice";
@@ -110,7 +111,6 @@ export const {
 	selectNew,
 	selectAnnouncements,
 	selectUsername,
-	selectProcessingDelay: selectAudioProcessingDelay,
 	selectRenderScale,
 	selectBloomEnabled,
 	selectObstaclePlacementMode: selectUserObstaclePlacementMode,
@@ -119,17 +119,11 @@ export const {
 	return state.user;
 });
 
-export const selectAudioProcessingDelayInBeats = createSelector([selectTimeProcessor, selectAudioProcessingDelay], (timeProcessor, processingDelay) => {
-	return timeProcessor.toBeatTime(processingDelay / 1000);
+export const selectAudioLatencyInBeats = createSelector([selectTimeProcessor], (timeProcessor) => {
+	const { baseLatency } = getAudioContext();
+	return timeProcessor.toBeatTime(baseLatency);
 });
 
-export const selectUsableAudioProcessingDelay = createSelector(selectAudioProcessingDelay, selectPlaying, (processingDelay, isPlaying) => {
-	// If we're not playing the track, we shouldn't have any processing delay. This is to prevent stuff from firing prematurely when scrubbing.
-	return isPlaying ? processingDelay : 0;
-});
-export const selectUsableAudioProcessingDelayInBeats = createSelector(selectAudioProcessingDelayInBeats, selectPlaying, (processingDelay, isPlaying) => {
-	return isPlaying ? processingDelay : 0;
-});
 export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
 	return Math.max(renderScale * 75, 25);
 });

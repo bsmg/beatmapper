@@ -7,7 +7,6 @@ const initialState = {
 	isNewUser: true,
 	seenPrompts: [] as string[],
 	stickyMapAuthorName: "",
-	processingDelay: 60,
 	renderScale: 1,
 	isBloomEnabled: true,
 	obstaclePlacementMode: ObstaclePlacementMode.LEGACY as ObstaclePlacementMode,
@@ -21,7 +20,6 @@ const slice = createSlice({
 		selectNew: (state) => state.isNewUser,
 		selectAnnouncements: (state) => state.seenPrompts,
 		selectUsername: (state) => state.stickyMapAuthorName,
-		selectProcessingDelay: (state) => (typeof state.processingDelay === "number" ? state.processingDelay : initialState.processingDelay),
 		selectRenderScale: (state) => state.renderScale,
 		selectBloomEnabled: (state) => state.isBloomEnabled,
 		selectObstaclePlacementMode: (state) => state.obstaclePlacementMode,
@@ -44,10 +42,6 @@ const slice = createSlice({
 			updateUsername: api.reducer<{ value: string }>((state, action) => {
 				const { value } = action.payload;
 				return { ...state, stickyMapAuthorName: value };
-			}),
-			updateProcessingDelay: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, processingDelay: value };
 			}),
 			updateRenderScale: api.reducer<{ value: number }>((state, action) => {
 				const { value } = action.payload;

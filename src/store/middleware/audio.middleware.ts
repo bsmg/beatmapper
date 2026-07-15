@@ -6,13 +6,13 @@ import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
-import { selectAllColorNotes, selectAudioProcessingDelayInBeats, selectCursorPosition, selectPlaybackRate, selectTickVolume } from "$/store/selectors";
+import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectTickVolume } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 
 function getTickSchedule(state: RootState, songId: SongId): number[] {
 	const notes = selectAllColorNotes(state);
-	const delayInBeats = selectAudioProcessingDelayInBeats(state, songId);
+	const delayInBeats = selectAudioLatencyInBeats(state, songId);
 	return notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
 }
 

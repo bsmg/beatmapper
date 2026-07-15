@@ -37,7 +37,6 @@ import {
 	updateObstaclePlacementMode,
 	updatePacerWait,
 	updatePlaybackRate,
-	updateProcessingDelay,
 	updateRenderScale,
 	updateSnap,
 	updateSongVolume,
@@ -51,7 +50,6 @@ import { createAllSharedMiddleware } from "./middleware";
 import {
 	selectAllGridPresetIds,
 	selectAnnouncements,
-	selectAudioProcessingDelay,
 	selectBeatDepth,
 	selectBloomEnabled,
 	selectDefaultObstacleDuration,
@@ -109,7 +107,6 @@ const createAppEntityStorageDriver = createDriver<LegacyStorageSchema & { songs:
 				localStorage.setItem(`${prefix}user.new`, String(selectNew(snapshot)));
 				if (username) localStorage.setItem(`${prefix}user.username`, username);
 				localStorage.setItem(`${prefix}user.announcements`, selectAnnouncements(snapshot).toString());
-				localStorage.setItem(`${prefix}audio.offset`, selectAudioProcessingDelay(snapshot).toString());
 				for (const [id, song] of Object.entries<any>(snapshot.songs.byId)) {
 					await idb.set(
 						"songs",
@@ -170,7 +167,6 @@ export async function createAppStore() {
 		"user.new": boolean;
 		"user.announcements": string[];
 		"user.username": string;
-		"audio.offset": number;
 		"graphics.scale": number;
 		"graphics.bloom": boolean;
 		"controls.obstacles": number;
@@ -190,10 +186,6 @@ export async function createAppStore() {
 			"user.username": {
 				selectValue: (state) => selectUsername(state) ?? "",
 				hydrateValue: (value) => updateUsername({ value }),
-			},
-			"audio.offset": {
-				selectValue: selectAudioProcessingDelay,
-				hydrateValue: (value) => updateProcessingDelay({ value }),
 			},
 			"graphics.scale": {
 				selectValue: selectRenderScale,
