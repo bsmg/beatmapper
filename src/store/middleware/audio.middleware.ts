@@ -30,7 +30,7 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 	instance.startListening({
 		actionCreator: updateCursorPosition,
 		effect: async (action) => {
-			songSample.setCurrentTime(action.payload.value / 1000);
+			songSample.setCurrentTime(action.payload.value);
 		},
 	});
 	instance.startListening({
@@ -70,7 +70,7 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 	instance.startListening({
 		actionCreator: startPlayback,
 		effect: (_, api) => {
-			songSample.play(selectCursorPosition(api.getState()) / 1000);
+			songSample.play(selectCursorPosition(api.getState()));
 		},
 	});
 	instance.startListening({

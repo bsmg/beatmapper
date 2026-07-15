@@ -65,26 +65,33 @@ export const {
 
 export const { selectTimescale } = timeline.getSelectors((state: Pick<RootState, "timeline">) => state.timeline);
 
-export const selectTimeProcessor = createDraftSafeSelector([selectBpm, selectEditorOffset, selectTimescale], (bpm, _, timeline) => {
+export const selectTimeProcessor = createDraftSafeSelector([selectBpm, selectTimescale], (bpm, timeline) => {
 	return new TimeProcessor(bpm, timeline, 0);
+});
+
+export const selectBeatForTime = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (timeProcessor, offset, time) => {
+	return timeProcessor.toBeatTime(time - offset);
+});
+export const selectTimeForBeat = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (timeProcessor, offset, beat) => {
+	return timeProcessor.toRealTime(beat) + offset;
 });
 
 export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
 	return state.navigation;
 });
 
-export const selectCursorPositionInBeats = createSelector([selectCursorPosition, selectTimeProcessor, selectEditorOffset], (cursorPosition, timeProcessor, offset) => {
-	return timeProcessor.toBeatTime((cursorPosition - offset) / 1000);
+export const selectCursorPositionInBeats = createSelector([selectTimeProcessor, selectCursorPosition, selectEditorOffset], (timeProcessor, cursorPosition, offset) => {
+	return timeProcessor.toBeatTime(cursorPosition - offset);
 });
-export const selectDurationInBeats = createSelector([selectDuration, selectTimeProcessor], (duration, timeProcessor) => {
+export const selectDurationInBeats = createSelector([selectTimeProcessor, selectDuration], (timeProcessor, duration) => {
 	if (duration === null) return null;
-	return timeProcessor.toBeatTime(duration / 1000);
+	return timeProcessor.toBeatTime(duration);
 });
-export const selectEditorOffsetInBeats = createSelector([selectEditorOffset, selectTimeProcessor], (offset, timeProcessor) => {
-	return timeProcessor.toBeatTime(offset / 1000);
+export const selectEditorOffsetInBeats = createSelector([selectTimeProcessor, selectEditorOffset], (timeProcessor, offset) => {
+	return timeProcessor.toBeatTime(offset);
 });
 
-export const selectBpmScale = createSelector([selectBpm, selectCursorPositionInBeats, selectTimeProcessor], (baseBpm, currentBeat, timeProcessor) => {
+export const selectBpmScale = createSelector([selectTimeProcessor, selectBpm, selectCursorPositionInBeats], (timeProcessor, baseBpm, currentBeat) => {
 	const timescales = timeProcessor.timescale;
 
 	let activeBpm = baseBpm;
@@ -112,7 +119,7 @@ export const {
 	return state.user;
 });
 
-export const selectAudioProcessingDelayInBeats = createSelector([selectAudioProcessingDelay, selectTimeProcessor], (processingDelay, timeProcessor) => {
+export const selectAudioProcessingDelayInBeats = createSelector([selectTimeProcessor, selectAudioProcessingDelay], (timeProcessor, processingDelay) => {
 	return timeProcessor.toBeatTime(processingDelay / 1000);
 });
 
@@ -240,7 +247,7 @@ export const { selectAll: selectFutureColorNotes } = notes.getSelectors(
 export const selectVisibleNotes = createVisibleObjectsSelector(selectAllColorNotes);
 
 export const selectNoteDensity = createSelector(selectAllColorNotes, selectDuration, (notes, duration) => {
-	return calculateNps({ difficulty: { colorNotes: notes } }, duration ? duration / 1000 : 0);
+	return calculateNps({ difficulty: { colorNotes: notes } }, duration ?? 0);
 });
 
 export const {

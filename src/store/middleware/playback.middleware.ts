@@ -1,4 +1,4 @@
-import { createDraftSafeSelector, createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 import { TimeProcessor } from "bsmap";
 
 import { createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
@@ -6,17 +6,10 @@ import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
-import { selectBpm, selectCursorPosition, selectDuration, selectEditorOffset, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeProcessor } from "$/store/selectors";
+import { selectBeatForTime, selectBpm, selectCursorPosition, selectDuration, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeForBeat } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
-
-const selectBeatForTime = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (timeProcessor, offset, time) => {
-	return timeProcessor.toBeatTime((time - offset) / 1000);
-});
-const selectTimeForBeat = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (timeProcessor, offset, beat) => {
-	return timeProcessor.toRealTime(beat) * 1000 + offset;
-});
 
 /** Manages all concerns related to audio playback and timescales. */
 export default function createPlaybackMiddleware({ songSample }: { songSample: AudioSample }) {
@@ -74,7 +67,7 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 
 			const onTick = () => {
 				const state = api.getState();
-				const currentTime = songSample.getCurrentTime() * 1000;
+				const currentTime = songSample.getCurrentTime();
 				const currentBeat = selectBeatForTime(state, songId, currentTime);
 				const duration = selectDuration(state);
 

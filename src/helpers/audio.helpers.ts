@@ -3,21 +3,7 @@ import { createAudioData, createBPMEvent, type IWrapAudioData, type IWrapAudioDa
 import { default as WaveformData } from "waveform-data";
 
 import { getAudioContext } from "$/setup";
-import { roundToNearest } from "$/utils";
 import { convertFileToArrayBuffer } from "./file.helpers";
-
-export function convertMillisecondsToBeats(ms: number, bpm: number) {
-	const bps = bpm / 60;
-	const beats = (ms / 1000) * bps;
-	// To avoid floating-point issues like 2.999999997, let's round. We'll choose
-	// the lowest-common-multiple to "snap" to any possible value.
-	return roundToNearest(beats, 1 / 96);
-}
-
-export function convertBeatsToMilliseconds(beats: number, bpm: number) {
-	const bps = bpm / 60;
-	return (beats / bps) * 1000;
-}
 
 export async function deriveAudioDataFromFile(file: Blob | MediaSource) {
 	const audioContext = getAudioContext();
@@ -54,7 +40,7 @@ export async function createAudioDataContentsFromFile(songFile: File, options: {
 		startSampleIndex: 0,
 		endSampleIndex: sampleCount,
 		startBeat: 0,
-		endBeat: convertMillisecondsToBeats(duration * 1000, options.bpm),
+		endBeat: duration * (options.bpm / 60),
 	};
 
 	return createAudioData({ version: options.version, frequency, sampleCount, bpmData: [region] });
@@ -83,18 +69,15 @@ export function createBpmEventsFromAudioData({ bpmData, frequency }: IWrapAudioD
 		const beatDelta = region.endBeat - region.startBeat;
 		const sampleDelta = region.endSampleIndex - region.startSampleIndex;
 
-		const derivedBpm = sampleDelta === 0 ? 0 : (beatDelta / sampleDelta) * frequency * 60;
+		const bpm = sampleDelta === 0 ? 0 : (beatDelta / sampleDelta) * frequency * 60;
 
-		return createBPMEvent({
-			time: region.startBeat,
-			bpm: Math.round(derivedBpm * 1000) / 1000,
-		});
+		return createBPMEvent({ time: region.startBeat, bpm });
 	});
 }
 
 export function formatCursorPosition(cursorPosition: number) {
-	const seconds = Math.floor((cursorPosition / 1000) % 60).toString();
-	const minutes = Math.floor((cursorPosition / (1000 * 60)) % 60).toString();
+	const seconds = Math.floor(cursorPosition % 60).toString();
+	const minutes = Math.floor((cursorPosition / 60) % 60).toString();
 
 	return `${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
 }

@@ -49,7 +49,7 @@ function EditorAudioVisualizer() {
 
 	return (
 		<AudioVisualizer.Root ref={container} isLoading={isLoadingSong}>
-			<AudioVisualizer.Content duration={duration} cursorPosition={roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15)} onVisualizerClick={handleVisualizerClick}>
+			<AudioVisualizer.Content duration={duration} cursorPosition={roundToNearest(cursorPosition, 1 / (renderScale * 60))} onVisualizerClick={handleVisualizerClick}>
 				{(ref) => <Waveform ref={ref} width={dimensions.width} height={dimensions.height} waveformData={waveformData} duration={duration} />}
 			</AudioVisualizer.Content>
 			{duration !== null && (

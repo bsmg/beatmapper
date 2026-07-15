@@ -130,8 +130,7 @@ const slice = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder.addCase(reloadVisualizer, (state, action) => {
-			const { duration } = action.payload;
-			return { ...state, duration: duration * 1000 };
+			return { ...state, duration: action.payload.duration };
 		});
 		builder.addCase(leaveEditor, (state) => {
 			return { ...state, duration: null };

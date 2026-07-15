@@ -33,7 +33,7 @@ const slice = createSlice({
 			return song.bpm;
 		}),
 		selectEditorOffset: createSelector(selectById, (song) => {
-			return song.offset;
+			return song.offset / 1000;
 		}),
 		selectBeatmaps: createSelector(selectById, (song) => {
 			return song.difficultiesById;
