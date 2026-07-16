@@ -1,6 +1,6 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: type validations for migration steps are not super necessary
 
-import { configureStore, type DevToolsEnhancerOptions } from "@reduxjs/toolkit";
+import { configureStore, type DevToolsEnhancerOptions, type ThunkDispatch, type UnknownAction } from "@reduxjs/toolkit";
 import { omit } from "@std/collections/omit";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import type { NoteDirection } from "bsmap";
@@ -347,4 +347,9 @@ export async function createAppStore() {
 }
 
 export type RootState = ReturnType<typeof root.reducer>;
-export type AppDispatch = Awaited<ReturnType<typeof createAppStore>>["dispatch"];
+export type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
+
+export interface AppThunkApiConfig {
+	state: RootState;
+	dispatch: AppDispatch;
+}

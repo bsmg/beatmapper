@@ -1,4 +1,4 @@
-import { createAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAction, createAsyncThunk, type GetThunkAPI } from "@reduxjs/toolkit";
 import type { EnvironmentName, ITrackDefinitions } from "bsmap";
 
 import { HIGHEST_PRECISION } from "$/constants";
@@ -24,7 +24,7 @@ import {
 	selectPlaying,
 	selectSnap,
 } from "./selectors";
-import type { RootState } from "./setup";
+import type { AppThunkApiConfig, RootState } from "./setup";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
@@ -149,8 +149,8 @@ export const {
 	updateMirrorLock: updateEventsEditorMirrorLock,
 } = lightshow.actions;
 
-export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }, api) => {
-	const state = api.getState() as RootState;
+export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, args.songId);
 	const metadata = { window: { startBeat, endBeat } };
 	return api.fulfillWithValue({ ...args, metadata });
@@ -164,8 +164,8 @@ export const cycleToPrevTool = createAction("cycleToPrevTool", (args: { view: Vi
 	return { payload: { ...args } };
 });
 
-export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; posX: number; posY: number; direction?: number; tool: ObjectTool }, api) => {
-	const state = api.getState() as RootState;
+export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; posX: number; posY: number; direction?: number; tool: ObjectTool }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 	const selectedDirection = args.direction ?? selectNotesEditorDirection(state);
 	const selectedTool = selectNotesEditorTool(state);
 	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
@@ -194,8 +194,8 @@ export const addToCell = createAsyncThunk("addToCell", (args: { songId: SongId; 
 	return api.fulfillWithValue({ query: { time: adjustedCursorPosition, posX: args.posX, posY: args.posY }, direction: selectedDirection, tool: selectedTool });
 });
 
-export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api) => {
-	const state = api.getState() as RootState;
+export const removeFromCell = createAsyncThunk("removeFromCell", (args: { songId: SongId; posX: number; posY: number; tool: ObjectTool }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 	const cursorPositionInBeats = selectCursorPositionInBeats(state, args.songId);
 	if (cursorPositionInBeats === null) return api.rejectWithValue("Invalid beat number.");
 	return api.fulfillWithValue({ query: { time: cursorPositionInBeats, posX: args.posX, posY: args.posY } });
@@ -229,8 +229,8 @@ export const finishManagingNoteSelection = createAction("finishManagingNoteSelec
 
 export const { addOne: addObstacle, updateOne: updateObstacle, selectOne: selectObstacle, deselectOne: deselectObstacle, updateAllSelected: updateAllSelectedObstacles, removeOne: removeObstacle } = obstacles.actions;
 
-export const selectAllEntities = createAsyncThunk("selectAllEntities", (args: { songId: SongId; view: View }, api) => {
-	const state = api.getState() as RootState;
+export const selectAllEntities = createAsyncThunk("selectAllEntities", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 	// For the events view, we don't actually want to select EVERY note. We only want to select what is visible in the current frame.
 	let metadata = null;
 	if (args.view === View.LIGHTSHOW) {
@@ -244,8 +244,8 @@ export const deselectAllEntities = createAction("deselectAllEntities", (args: { 
 	return { payload: { ...args } };
 });
 
-export const toggleSelectAllEntities = createAsyncThunk("toggleSelectAllEntities", (args: { songId: SongId; view: View }, api) => {
-	const state = api.getState() as RootState;
+export const toggleSelectAllEntities = createAsyncThunk("toggleSelectAllEntities", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 
 	let anythingSelected = false;
 
@@ -278,8 +278,8 @@ export const mirrorSelection = createAction("mirrorSelection", (args: { axis: "h
 	return { payload: { ...args } };
 });
 
-export const nudgeSelection = createAsyncThunk("nudgeSelection", (args: { direction: "forwards" | "backwards"; view: View }, api) => {
-	const state = api.getState() as RootState;
+export const nudgeSelection = createAsyncThunk("nudgeSelection", (args: { direction: "forwards" | "backwards"; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 	const snapTo = selectSnap(state);
 	return api.fulfillWithValue({ ...args, amount: snapTo });
 });
@@ -324,8 +324,8 @@ export const redoEvents = createAction("redoEvents", (args: { songId: SongId }) 
 
 export const { cutSelection, copySelection } = clipboard.actions;
 
-export const pasteSelection = createAsyncThunk("pasteSelection", (args: { songId: SongId; view: View }, api) => {
-	const state = api.getState() as RootState;
+export const pasteSelection = createAsyncThunk("pasteSelection", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
 	const data = selectClipboardData(state);
 	// If there's nothing copied, do nothing
 	if (!data) return api.rejectWithValue("Clipboard is empty.");
