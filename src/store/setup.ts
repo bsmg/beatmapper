@@ -79,6 +79,12 @@ import {
 	selectUserObstaclePlacementMode,
 } from "./selectors";
 
+// biome-ignore-start assist/source/organizeImports: circular dependencies
+
+import { getRouter } from "$/router";
+
+// biome-ignore-end assist/source/organizeImports: circular dependencies
+
 const STORAGE_PREFIX = location.hostname === "localhost" ? "beatmapper" : "";
 
 /** @deprecated this is really only used during migration flow, don't use this elsewhere */
@@ -158,6 +164,10 @@ const createAppEntityStorageDriver = createDriver<LegacyStorageSchema & { songs:
 		}
 	},
 });
+
+export interface AppExtraArgs {
+	getRouter: typeof getRouter;
+}
 
 export async function createAppStore() {
 	setupAppBeatmapFilestore();
@@ -330,7 +340,7 @@ export async function createAppStore() {
 		reducer: root.reducer,
 		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
 		middleware: (getDefaultMiddleware) => {
-			return getDefaultMiddleware().concat(createAllSharedMiddleware());
+			return getDefaultMiddleware({ thunk: { extraArgument: { getRouter } } }).concat(createAllSharedMiddleware());
 		},
 		enhancers: (getDefaultEnhancers) => {
 			return getDefaultEnhancers().concat(localStorageEnhancer, sessionStorageEnhancer, songStorageEnhancer, gridStorageEnhancer);
@@ -347,9 +357,10 @@ export async function createAppStore() {
 }
 
 export type RootState = ReturnType<typeof root.reducer>;
-export type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
+export type AppDispatch = ThunkDispatch<RootState, AppExtraArgs, UnknownAction>;
 
 export interface AppThunkApiConfig {
 	state: RootState;
 	dispatch: AppDispatch;
+	extra: AppExtraArgs;
 }
