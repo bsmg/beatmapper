@@ -8,7 +8,7 @@ import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
 import { getAppStore } from "$/setup";
-import { dismissPrompt, leaveEditor, startLoadingMap, stopPlayback, updateCursorPosition } from "$/store/actions";
+import { leaveEditor, startLoadingMap, stopPlayback, updateAnnouncements, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
 import { prompts } from "$:content";
@@ -97,6 +97,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 
 			if (unseenPrompt) {
 				const store = await getAppStore();
+				const announcements = selectAnnouncements(store.getState());
 
 				EDITOR_TOASTER.create({
 					id: unseenPrompt.id,
@@ -106,7 +107,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 					closable: true,
 					onStatusChange: async (details) => {
 						if (details.status === "dismissing") {
-							store.dispatch(dismissPrompt({ id: unseenPrompt.id }));
+							store.dispatch(updateAnnouncements(announcements.concat(unseenPrompt.id)));
 						}
 					},
 				});

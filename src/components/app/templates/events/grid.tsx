@@ -78,7 +78,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 			return dispatch(updateEventsEditorCursor({ selectedBeat }));
 		},
 		onTrackHeightChange: ({ height: newHeight }) => {
-			return dispatch(updateEventsEditorTrackHeight({ newHeight }));
+			return dispatch(updateEventsEditorTrackHeight(newHeight));
 		},
 		onSelectionCommit: ({ selectionBoxInBeats }) => {
 			const filteredTracks = allFilteredTracks.reduce((acc: ITrackDefinitions<{ id: number }>, track) => {

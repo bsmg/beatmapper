@@ -3,7 +3,7 @@ import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, Fas
 
 import { StatusBar } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
-import { updateBeatDepth, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume } from "$/store/actions";
+import { updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTrackScale } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectedTotalBombNotes, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
 import { View } from "$/types";
@@ -45,21 +45,21 @@ function EditorStatusBar() {
 					<StatusBar.Indicator label={"Notes per second"} icon={GaugeIcon}>
 						{noteDensity.toFixed(2)}
 					</StatusBar.Indicator>
-					<StatusBar.Range label={"Beat depth"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={5} max={25} value={[beatDepth]} onValueChange={(details) => dispatch(updateBeatDepth({ value: details.value[0] }))} />
-					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume({ value: details.value[0] }))} />
+					<StatusBar.Range label={"Beat depth"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={5} max={25} value={[beatDepth]} onValueChange={(details) => dispatch(updateTrackScale(details.value[0]))} />
+					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume(details.value[0]))} />
 				</Show>
 				<Show when={view === View.LIGHTSHOW}>
-					<StatusBar.Toggle label={"Show environment"} disabled={isLoading} checked={showLightingPreview} onIcon={ZapIcon} offIcon={ZapOffIcon} onCheckedChange={() => dispatch(updateEventsEditorPreview())} />
-					<StatusBar.Range label={"Track height"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={25} max={50} step={1} value={[rowHeight]} onValueChange={(details) => dispatch(updateEventsEditorTrackHeight({ newHeight: details.value[0] }))} />
-					<StatusBar.Range label={"Track opacity"} disabled={isLoading} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={[backgroundOpacity]} onValueChange={(details) => dispatch(updateEventsEditorTrackOpacity({ newOpacity: details.value[0] }))} />
+					<StatusBar.Toggle label={"Show environment"} disabled={isLoading} checked={showLightingPreview} onIcon={ZapIcon} offIcon={ZapOffIcon} onCheckedChange={(details) => dispatch(updateEventsEditorPreview(details.checked))} />
+					<StatusBar.Range label={"Track height"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={25} max={50} step={1} value={[rowHeight]} onValueChange={(details) => dispatch(updateEventsEditorTrackHeight(details.value[0]))} />
+					<StatusBar.Range label={"Track opacity"} disabled={isLoading} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={[backgroundOpacity]} onValueChange={(details) => dispatch(updateEventsEditorTrackOpacity(details.value[0]))} />
 				</Show>
 				<Show when={view === View.PREVIEW}>
-					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume({ value: details.value[0] }))} />
+					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume(details.value[0]))} />
 				</Show>
 			</StatusBar.Section>
 			<StatusBar.Section>
-				<StatusBar.Range label={"Playback rate"} marks={[1]} disabled={isLoading} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0} max={2} step={0.1} value={[playbackRate]} onValueChange={(details) => dispatch(updatePlaybackRate({ value: details.value[0] }))} />
-				<StatusBar.Range label={"Song volume"} disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[songVolume]} onValueChange={(details) => dispatch(updateSongVolume({ value: details.value[0] }))} />
+				<StatusBar.Range label={"Playback rate"} marks={[1]} disabled={isLoading} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0} max={2} step={0.1} value={[playbackRate]} onValueChange={(details) => dispatch(updatePlaybackRate(details.value[0]))} />
+				<StatusBar.Range label={"Song volume"} disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[songVolume]} onValueChange={(details) => dispatch(updateSongVolume(details.value[0]))} />
 			</StatusBar.Section>
 		</Wrapper>
 	);

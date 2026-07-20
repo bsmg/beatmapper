@@ -20,7 +20,7 @@ function AppAudioSettings() {
 		<Stack gap={4}>
 			<Wrap gap={2}>
 				<Field label="Note tick type" helperText="Change the sound effect played when simulating a hitsound during playback.">
-					<FieldSelectGroup collection={NOTE_TICK_COLLECTION} value={TICK_MAP[tickType]} onValueChange={(details) => dispatch(updateTickType({ value: TICK_MAP.indexOf(details.valueAsString) }))} />
+					<FieldSelectGroup collection={NOTE_TICK_COLLECTION} value={TICK_MAP[tickType]} onValueChange={(details) => dispatch(updateTickType(TICK_MAP.indexOf(details.valueAsString)))} />
 				</Field>
 			</Wrap>
 		</Stack>

@@ -42,10 +42,10 @@ function EventsEditorShortcuts() {
 						ev.preventDefault();
 						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
 					}
-					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.PLACE }));
+					return dispatch(updateEventsEditorEditMode(EventEditMode.PLACE));
 				}
 				case "KeyS": {
-					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.SELECT }));
+					return dispatch(updateEventsEditorEditMode(EventEditMode.SELECT));
 				}
 				case "KeyZ": {
 					if (metaKeyPressed) return;
@@ -58,28 +58,28 @@ function EventsEditorShortcuts() {
 					return dispatch(updateEventsEditorMirrorLock());
 				}
 				case "Digit1": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.ON }));
+					return dispatch(updateEventsEditorTool(EventTool.ON));
 				}
 				case "Digit2": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.OFF }));
+					return dispatch(updateEventsEditorTool(EventTool.OFF));
 				}
 				case "Digit3": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.FLASH }));
+					return dispatch(updateEventsEditorTool(EventTool.FLASH));
 				}
 				case "Digit4": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.FADE }));
+					return dispatch(updateEventsEditorTool(EventTool.FADE));
 				}
 				case "Digit5": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.TRANSITION }));
+					return dispatch(updateEventsEditorTool(EventTool.TRANSITION));
 				}
 				case "KeyR": {
 					if (ev.shiftKey) return;
-					return dispatch(updateEventsEditorColor({ color: EventColor.PRIMARY }));
+					return dispatch(updateEventsEditorColor(EventColor.PRIMARY));
 				}
 				case "KeyB": {
 					if (isMetaKeyPressed(ev)) return;
 					if (ev.shiftKey) return;
-					return dispatch(updateEventsEditorColor({ color: EventColor.SECONDARY }));
+					return dispatch(updateEventsEditorColor(EventColor.SECONDARY));
 				}
 				default: {
 					return;

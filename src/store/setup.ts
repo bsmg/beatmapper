@@ -18,7 +18,6 @@ import {
 	init,
 	tick,
 	updateAnnouncements,
-	updateBeatDepth,
 	updateBloomEnabled,
 	updateEventsEditorColor,
 	updateEventsEditorCursor,
@@ -42,9 +41,10 @@ import {
 	updateSongVolume,
 	updateTickType,
 	updateTickVolume,
+	updateTrackScale,
 	updateUsername,
 } from "./actions";
-import { createEntityStorageStrategy, createKeyValueStorageStrategy, createStorageEnhancer } from "./enhancers/storage.enhancer";
+import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./enhancers/storage.enhancer";
 import { default as root } from "./features";
 import { createAllSharedMiddleware } from "./middleware";
 import {
@@ -187,31 +187,31 @@ export async function createAppStore() {
 		createKeyValueStorageStrategy<RootState, LocalStorage>({
 			"user.new": {
 				selectValue: selectNew,
-				hydrateValue: (value) => updateNew({ value }),
+				hydrateValue: updateNew,
 			},
 			"user.announcements": {
 				selectValue: selectAnnouncements,
-				hydrateValue: (value) => updateAnnouncements({ value }),
+				hydrateValue: updateAnnouncements,
 			},
 			"user.username": {
-				selectValue: (state) => selectUsername(state) ?? "",
-				hydrateValue: (value) => updateUsername({ value }),
+				selectValue: selectUsername,
+				hydrateValue: updateUsername,
 			},
 			"graphics.scale": {
 				selectValue: selectRenderScale,
-				hydrateValue: (value) => updateRenderScale({ value }),
+				hydrateValue: updateRenderScale,
 			},
 			"graphics.bloom": {
 				selectValue: selectBloomEnabled,
-				hydrateValue: (checked) => updateBloomEnabled({ checked }),
+				hydrateValue: updateBloomEnabled,
 			},
-			"controls.obstacles": {
-				selectValue: (state) => Object.values(ObstaclePlacementMode).indexOf(selectUserObstaclePlacementMode(state)),
-				hydrateValue: (index) => updateObstaclePlacementMode({ value: Object.values(ObstaclePlacementMode)[index] }),
-			},
+			"controls.obstacles": createEnumerableStorageObserver(ObstaclePlacementMode, {
+				selectValue: selectUserObstaclePlacementMode,
+				hydrateValue: updateObstaclePlacementMode,
+			}),
 			"advanced.wait": {
 				selectValue: selectPacerWait,
-				hydrateValue: (value) => updatePacerWait({ value }),
+				hydrateValue: updatePacerWait,
 			},
 		}),
 	);
@@ -241,82 +241,82 @@ export async function createAppStore() {
 		createKeyValueStorageStrategy<RootState, SessionStorage>({
 			"track.snap": {
 				selectValue: selectSnap,
-				hydrateValue: (value) => updateSnap({ value }),
+				hydrateValue: updateSnap,
 			},
 			"track.spacing": {
 				selectValue: selectBeatDepth,
-				hydrateValue: (value) => updateBeatDepth({ value }),
+				hydrateValue: updateTrackScale,
 			},
 			"playback.rate": {
 				selectValue: selectPlaybackRate,
-				hydrateValue: (value) => updatePlaybackRate({ value }),
+				hydrateValue: updatePlaybackRate,
 			},
 			"playback.volume": {
 				selectValue: selectSongVolume,
-				hydrateValue: (value) => updateSongVolume({ value }),
+				hydrateValue: updateSongVolume,
 			},
 			"tick.volume": {
 				selectValue: selectTickVolume,
-				hydrateValue: (value) => updateTickVolume({ value }),
+				hydrateValue: updateTickVolume,
 			},
 			"tick.type": {
 				selectValue: selectTickType,
-				hydrateValue: (value) => updateTickType({ value }),
+				hydrateValue: updateTickType,
 			},
-			"notes.tool": {
-				selectValue: (state) => Object.values(ObjectTool).indexOf(selectNotesEditorTool(state)),
-				hydrateValue: (index) => updateNotesEditorTool({ tool: Object.values(ObjectTool)[index] }),
-			},
+			"notes.tool": createEnumerableStorageObserver(ObjectTool, {
+				selectValue: selectNotesEditorTool,
+				hydrateValue: updateNotesEditorTool,
+			}),
 			"notes.direction": {
 				selectValue: selectNotesEditorDirection,
-				hydrateValue: (direction) => updateNotesEditorDirection({ direction }),
+				hydrateValue: updateNotesEditorDirection,
 			},
 			"notes.duration": {
 				selectValue: selectDefaultObstacleDuration,
-				hydrateValue: (value) => updateNotesEditorDefaultObstacleDuration({ value }),
+				hydrateValue: updateNotesEditorDefaultObstacleDuration,
 			},
-			"events.mode": {
-				selectValue: (state) => Object.values(EventEditMode).indexOf(selectEventsEditorEditMode(state)),
-				hydrateValue: (index) => updateEventsEditorEditMode({ editMode: Object.values(EventEditMode)[index] }),
-			},
-			"events.tool": {
-				selectValue: (state) => Object.values(EventTool).indexOf(selectEventsEditorTool(state)),
-				hydrateValue: (index) => updateEventsEditorTool({ tool: Object.values(EventTool)[index] }),
-			},
-			"events.color": {
-				selectValue: (state) => Object.values(EventColor).indexOf(selectEventsEditorColor(state)),
-				hydrateValue: (index) => updateEventsEditorColor({ color: Object.values(EventColor)[index] }),
-			},
+			"events.mode": createEnumerableStorageObserver(EventEditMode, {
+				selectValue: selectEventsEditorEditMode,
+				hydrateValue: updateEventsEditorEditMode,
+			}),
+			"events.tool": createEnumerableStorageObserver(EventTool, {
+				selectValue: selectEventsEditorTool,
+				hydrateValue: updateEventsEditorTool,
+			}),
+			"events.color": createEnumerableStorageObserver(EventColor, {
+				selectValue: selectEventsEditorColor,
+				hydrateValue: updateEventsEditorColor,
+			}),
 			"events.zoom": {
 				selectValue: selectEventsEditorZoomLevel,
-				hydrateValue: (value) => updateEventsEditorZoomLevel({ value }),
+				hydrateValue: updateEventsEditorZoomLevel,
 			},
 			"events.opacity": {
 				selectValue: selectEventsEditorTrackOpacity,
-				hydrateValue: (newOpacity) => updateEventsEditorTrackOpacity({ newOpacity }),
+				hydrateValue: updateEventsEditorTrackOpacity,
 			},
 			"events.height": {
 				selectValue: selectEventsEditorTrackHeight,
-				hydrateValue: (newHeight) => updateEventsEditorTrackHeight({ newHeight }),
+				hydrateValue: updateEventsEditorTrackHeight,
 			},
 			"events.preview": {
 				selectValue: selectEventsEditorPreview,
-				hydrateValue: (checked) => updateEventsEditorPreview({ checked }),
+				hydrateValue: updateEventsEditorPreview,
 			},
 			"events.loop": {
 				selectValue: selectEventsEditorWindowLock,
-				hydrateValue: (checked) => updateEventsEditorWindowLock({ checked }),
+				hydrateValue: updateEventsEditorWindowLock,
 			},
 			"events.mirror": {
 				selectValue: selectEventsEditorMirrorLock,
-				hydrateValue: (checked) => updateEventsEditorMirrorLock({ checked }),
+				hydrateValue: updateEventsEditorMirrorLock,
 			},
 		}),
 	);
 
 	const songStorageEnhancer = createStorageEnhancer(
 		createAppEntityStorageDriver({ name: "songs" }),
-		createEntityStorageStrategy<RootState, App.ISong>({
+		createEntityStorageStrategy({
 			selectIds: (state) => selectSongIds(state).map((x) => x.toString()),
 			selectById: selectSongById,
 			hydrateEntities: hydrateSongs,
@@ -324,7 +324,7 @@ export async function createAppStore() {
 	);
 	const gridStorageEnhancer = createStorageEnhancer(
 		createAppEntityStorageDriver({ name: "grids" }),
-		createEntityStorageStrategy<RootState, Member<IGridPresets>>({
+		createEntityStorageStrategy({
 			selectIds: selectAllGridPresetIds,
 			selectById: selectGridPresetById,
 			hydrateEntities: hydrateGridPresets,

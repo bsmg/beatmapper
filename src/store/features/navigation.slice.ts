@@ -94,19 +94,16 @@ const slice = createSlice({
 			scrollThroughSong: api.reducer<{ songId: SongId; direction: "forwards" | "backwards" }>((state) => {
 				return { ...state, animateBlockMotion: true };
 			}),
-			updateSnap: api.reducer<{ value: number }>((state, action) => {
-				const { value: newSnapTo } = action.payload;
-				return { ...state, snapTo: newSnapTo };
+			updateSnap: api.reducer<number>((state, action) => {
+				return { ...state, snapTo: action.payload };
 			}),
 			incrementSnap: nextSnappingIncrement(api, { delta: 1 }),
 			decrementSnap: nextSnappingIncrement(api, { delta: -1 }),
-			updateTrackScale: api.reducer<{ value: number }>((state, action) => {
-				const { value: beatDepth } = action.payload;
-				return { ...state, animateBlockMotion: false, beatDepth: beatDepth };
+			updateTrackScale: api.reducer<number>((state, action) => {
+				return { ...state, beatDepth: action.payload, animateBlockMotion: false };
 			}),
-			updatePlaybackRate: api.reducer<{ value: number }>((state, action) => {
-				const { value: playbackRate } = action.payload;
-				return { ...state, playbackRate: playbackRate };
+			updatePlaybackRate: api.reducer<number>((state, action) => {
+				return { ...state, playbackRate: action.payload };
 			}),
 			incrementPlaybackRate: api.reducer((state) => {
 				return { ...state, playbackRate: Math.min(state.playbackRate + 0.25, 2) };
@@ -114,17 +111,14 @@ const slice = createSlice({
 			decrementPlaybackRate: api.reducer((state) => {
 				return { ...state, playbackRate: Math.max(state.playbackRate - 0.25, 0) };
 			}),
-			updateSongVolume: api.reducer<{ value: number }>((state, action) => {
-				const { value: volume } = action.payload;
-				return { ...state, songVolume: volume };
+			updateSongVolume: api.reducer<number>((state, action) => {
+				return { ...state, songVolume: action.payload };
 			}),
-			updateTickVolume: api.reducer<{ value: number }>((state, action) => {
-				const { value: volume } = action.payload;
-				return { ...state, tickVolume: volume };
+			updateTickVolume: api.reducer<number>((state, action) => {
+				return { ...state, tickVolume: action.payload };
 			}),
-			updateTickType: api.reducer<{ value: number }>((state, action) => {
-				const { value: type } = action.payload;
-				return { ...state, tickType: type };
+			updateTickType: api.reducer<number>((state, action) => {
+				return { ...state, tickType: action.payload };
 			}),
 		};
 	},

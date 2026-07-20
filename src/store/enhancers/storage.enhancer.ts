@@ -150,3 +150,11 @@ export function createEntityStorageStrategy<TState, TValue>(observer: IEntitySto
 		},
 	};
 }
+
+export function createEnumerableStorageObserver<TState, TValue>(entries: { [s: PropertyKey]: TValue }, { selectValue, hydrateValue }: IKeyValueStorageObserver<TState, TValue>): IKeyValueStorageObserver<TState, number> {
+	const values = Object.values(entries);
+	return {
+		selectValue: (state) => values.indexOf(selectValue(state)),
+		hydrateValue: (index) => hydrateValue(values[index]),
+	};
+}

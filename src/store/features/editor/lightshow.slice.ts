@@ -45,47 +45,36 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			updateTool: api.reducer<{ tool: EventTool }>((state, action) => {
-				const { tool } = action.payload;
-				return { ...state, selectedTool: tool };
+			updateTool: api.reducer<EventTool>((state, action) => {
+				return { ...state, selectedTool: action.payload };
 			}),
-			updateColor: api.reducer<{ color: EventColor }>((state, action) => {
-				const { color } = action.payload;
-				return { ...state, selectedColor: color };
+			updateColor: api.reducer<EventColor>((state, action) => {
+				return { ...state, selectedColor: action.payload };
 			}),
-			updateEditMode: api.reducer<{ editMode: EventEditMode }>((state, action) => {
-				const { editMode } = action.payload;
-				return { ...state, selectedEditMode: editMode };
+			updateEditMode: api.reducer<EventEditMode>((state, action) => {
+				return { ...state, selectedEditMode: action.payload };
 			}),
 			updateCursor: api.reducer<{ selectedBeat: number }>((state, action) => {
 				const { selectedBeat } = action.payload;
 				return { ...state, selectedBeat: selectedBeat };
 			}),
-			updateTrackHeight: api.reducer<{ newHeight: number }>((state, action) => {
-				const { newHeight } = action.payload;
-				return { ...state, rowHeight: newHeight };
+			updateTrackHeight: api.reducer<number>((state, action) => {
+				return { ...state, rowHeight: action.payload };
 			}),
-			updateTrackOpacity: api.reducer<{ newOpacity: number }>((state, action) => {
-				const { newOpacity } = action.payload;
-				return { ...state, backgroundOpacity: newOpacity };
+			updateTrackOpacity: api.reducer<number>((state, action) => {
+				return { ...state, backgroundOpacity: action.payload };
 			}),
-			updatePreview: api.reducer<{ checked?: boolean } | undefined>((state, action) => {
-				const { checked } = action.payload ?? {};
-				if (checked) return { ...state, showLightingPreview: checked };
-				return { ...state, showLightingPreview: !state.showLightingPreview };
+			updatePreview: api.reducer<boolean | undefined>((state, action) => {
+				return { ...state, showLightingPreview: action.payload ?? !state.showLightingPreview };
 			}),
-			updateWindowLock: api.reducer<{ checked?: boolean } | undefined>((state, action) => {
-				const { checked } = action.payload ?? {};
-				if (checked) return { ...state, isLockedToCurrentWindow: checked };
-				return { ...state, isLockedToCurrentWindow: !state.isLockedToCurrentWindow };
+			updateWindowLock: api.reducer<boolean | undefined>((state, action) => {
+				return { ...state, isLockedToCurrentWindow: action.payload ?? !state.isLockedToCurrentWindow };
 			}),
-			updateMirrorLock: api.reducer<{ checked?: boolean } | undefined>((state, action) => {
-				const { checked } = action.payload ?? {};
-				if (checked) return { ...state, areLasersLocked: checked };
-				return { ...state, areLasersLocked: !state.areLasersLocked };
+			updateMirrorLock: api.reducer<boolean | undefined>((state, action) => {
+				return { ...state, areLasersLocked: action.payload ?? !state.areLasersLocked };
 			}),
-			updateZoomLevel: api.reducer<{ value: number }>((state, action) => {
-				return { ...state, zoomLevel: action.payload.value };
+			updateZoomLevel: api.reducer<number>((state, action) => {
+				return { ...state, zoomLevel: action.payload };
 			}),
 			incrementZoom: updateZoomLevel(api, (current) => Math.min(ZOOM_LEVEL_MAX, current + 1)),
 			decrementZoom: updateZoomLevel(api, (current) => Math.max(ZOOM_LEVEL_MIN, current - 1)),

@@ -6,7 +6,7 @@ import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
-import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectTickVolume } from "$/store/selectors";
+import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume } from "$/store/selectors";
 import type { RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 
@@ -86,21 +86,21 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 		},
 	});
 	instance.startListening({
-		actionCreator: updateSongVolume,
-		effect: (action) => {
-			songSample.changeVolume(action.payload.value);
+		matcher: isAnyOf(updateSongVolume),
+		effect: (_, api) => {
+			songSample.changeVolume(selectSongVolume(api.getState()));
 		},
 	});
 	instance.startListening({
-		actionCreator: updateTickVolume,
-		effect: (action) => {
-			tickSample.changeVolume(action.payload.value);
+		matcher: isAnyOf(updateTickVolume),
+		effect: (_, api) => {
+			tickSample.changeVolume(selectTickVolume(api.getState()));
 		},
 	});
 	instance.startListening({
 		actionCreator: updateTickType,
 		effect: (action) => {
-			tickSample.load(NOTE_TICK_TYPES[action.payload.value]);
+			tickSample.load(NOTE_TICK_TYPES[action.payload]);
 		},
 	});
 

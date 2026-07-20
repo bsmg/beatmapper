@@ -126,7 +126,7 @@ function DefaultEditorShortcuts() {
 				const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === Number(ev.key));
 				// ctrl+0 doesn't do anything atm
 				if (!newSnappingIncrement) return;
-				dispatch(updateSnap({ value: newSnappingIncrement.value }));
+				dispatch(updateSnap(newSnappingIncrement.value));
 			}
 
 			switch (ev.code) {

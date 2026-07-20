@@ -51,7 +51,7 @@ export const rehydrate = createAction("rehydrate", (args: { songId: SongId; beat
 	return { payload: { ...args } };
 });
 
-export const { updateNew, updateAnnouncements, dismissPrompt, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
+export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
 
 export const startLoadingMap = createAction("startLoadingMap", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
@@ -114,7 +114,7 @@ export const {
 	jumpForwards: seekForwards,
 	jumpBackwards: seekBackwards,
 	scrollThroughSong,
-	updateTrackScale: updateBeatDepth,
+	updateTrackScale,
 	updatePlaybackRate,
 	incrementPlaybackRate,
 	decrementPlaybackRate,

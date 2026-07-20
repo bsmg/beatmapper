@@ -37,17 +37,14 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			updateTool: api.reducer<{ tool: ObjectTool }>((state, action) => {
-				const { tool } = action.payload;
-				return { ...state, selectedTool: tool };
+			updateTool: api.reducer<ObjectTool>((state, action) => {
+				return { ...state, selectedTool: action.payload };
 			}),
-			updateDirection: api.reducer<{ direction: NoteDirection }>((state, action) => {
-				const { direction } = action.payload;
-				return { ...state, selectedDirection: direction };
+			updateDirection: api.reducer<NoteDirection>((state, action) => {
+				return { ...state, selectedDirection: action.payload };
 			}),
-			updateDefaultObstacleDuration: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, defaultObstacleDuration: value };
+			updateDefaultObstacleDuration: api.reducer<number>((state, action) => {
+				return { ...state, defaultObstacleDuration: action.payload };
 			}),
 			hydrateGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
 				return { ...state, gridPresets: action.payload };

@@ -45,7 +45,7 @@ function EditorNavigationControls() {
 	return (
 		<NavigationPanel.Section>
 			<NavigationPanel.Column>
-				<Select label="Snap to" unfocusOnPress collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap({ value: Number.parseFloat(ev.value[0]) }))} />
+				<Select label="Snap to" unfocusOnPress collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap(Number.parseFloat(ev.value[0])))} />
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
 				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpToStart({ songId: sid }))}>

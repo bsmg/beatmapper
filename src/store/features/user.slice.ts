@@ -27,38 +27,26 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			updateNew: api.reducer<{ value: boolean }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, isNewUser: value };
+			updateNew: api.reducer<boolean>((state, action) => {
+				return { ...state, isNewUser: action.payload };
 			}),
-			updateAnnouncements: api.reducer<{ value: string[] }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, seenPrompts: value };
+			updateAnnouncements: api.reducer<string[]>((state, action) => {
+				return { ...state, seenPrompts: action.payload };
 			}),
-			dismissPrompt: api.reducer<{ id: string }>((state, action) => {
-				const { id } = action.payload;
-				return { ...state, seenPrompts: [...state.seenPrompts, id] };
+			updateUsername: api.reducer<string>((state, action) => {
+				return { ...state, stickyMapAuthorName: action.payload };
 			}),
-			updateUsername: api.reducer<{ value: string }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, stickyMapAuthorName: value };
+			updateRenderScale: api.reducer<number>((state, action) => {
+				return { ...state, renderScale: action.payload };
 			}),
-			updateRenderScale: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, renderScale: value };
+			updateBloomEnabled: api.reducer<boolean | undefined>((state, action) => {
+				return { ...state, isBloomEnabled: action.payload ?? !state.isBloomEnabled };
 			}),
-			updateBloomEnabled: api.reducer<{ checked?: boolean } | undefined>((state, action) => {
-				const { checked } = action.payload ?? {};
-				if (checked) return { ...state, isBloomEnabled: checked };
-				return { ...state, isBloomEnabled: !state.isBloomEnabled };
+			updateObstaclePlacementMode: api.reducer<ObstaclePlacementMode>((state, action) => {
+				return { ...state, obstaclePlacementMode: action.payload };
 			}),
-			updateObstaclePlacementMode: api.reducer<{ value: ObstaclePlacementMode }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, obstaclePlacementMode: value };
-			}),
-			updatePacerWait: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, pacerWaitMs: value };
+			updatePacerWait: api.reducer<number>((state, action) => {
+				return { ...state, pacerWaitMs: action.payload };
 			}),
 		};
 	},
