@@ -1,6 +1,6 @@
-import { createSlice, isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
+import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { BEATS_PER_ZOOM_LEVEL, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
+import { BEATS_PER_ZOOM_LEVEL } from "$/constants";
 import { cycleToNextTool, cycleToPrevTool } from "$/store/actions";
 import { EventColor, EventEditMode, EventTool, View } from "$/types";
 
@@ -20,12 +20,6 @@ const initialState = {
 	selectedTool: EVENT_TOOLS[0],
 	selectedColor: EVENT_COLORS[0],
 };
-
-function updateZoomLevel(api: ReducerCreators<typeof initialState>, update: (current: number) => number) {
-	return api.reducer((state) => {
-		return { ...state, zoomLevel: update(state.zoomLevel) };
-	});
-}
 
 const slice = createSlice({
 	name: "events",
@@ -76,8 +70,6 @@ const slice = createSlice({
 			updateZoomLevel: api.reducer<number>((state, action) => {
 				return { ...state, zoomLevel: action.payload };
 			}),
-			incrementZoom: updateZoomLevel(api, (current) => Math.min(ZOOM_LEVEL_MAX, current + 1)),
-			decrementZoom: updateZoomLevel(api, (current) => Math.max(ZOOM_LEVEL_MIN, current - 1)),
 		};
 	},
 	extraReducers: (builder) => {

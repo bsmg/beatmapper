@@ -23,8 +23,21 @@ export function difference<T, C = T>(arr1: T[], arr2: T[], comparator = (x: T) =
 	return uniques;
 }
 
-export function cycle<T>(arr: T[], current: T, step = 1) {
+export function cycle<T>(arr: T[], current: T, delta = 1, mode: "loop" | "stop" = "loop") {
 	const index = arr.indexOf(current);
-	const newIndex = (index + step) % arr.length;
-	return arr[newIndex >= 0 ? newIndex : newIndex + arr.length];
+
+	if (index === -1) {
+		return arr[0];
+	}
+
+	const targetIndex = index + delta;
+
+	switch (mode) {
+		case "stop": {
+			return arr[Math.max(0, Math.min(arr.length - 1, targetIndex))];
+		}
+		default: {
+			return arr[((targetIndex % arr.length) + arr.length) % arr.length];
+		}
+	}
 }

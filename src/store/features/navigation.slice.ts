@@ -1,6 +1,5 @@
-import { isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
+import { isAnyOf } from "@reduxjs/toolkit";
 
-import { SNAPPING_INCREMENTS } from "$/constants";
 import { leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
 import { createSlice } from "$/store/helpers";
 import type { SongId } from "$/types";
@@ -37,19 +36,6 @@ const slice = createSlice({
 		selectTickType: (state) => state.tickType,
 	},
 	reducers: (api) => {
-		function nextSnappingIncrement(api: ReducerCreators<typeof initialState>, options: { delta: number }) {
-			return api.reducer((state) => {
-				const currentSnappingIncrementIndex = SNAPPING_INCREMENTS.findIndex((increment) => increment.value === state.snapTo);
-				// This shouldn't be possible, but if somehow we don't have a recognized interval, just reset to 1.
-				if (currentSnappingIncrementIndex === -1) return { ...state, snapTo: 1 };
-				const nextSnappingIndex = currentSnappingIncrementIndex + options.delta;
-				const nextSnappingIncrement = SNAPPING_INCREMENTS[nextSnappingIndex];
-				// If we're at one end of the scale and we try to push beyond it, we'll hit an undefined. Do nothing in those cases (no wrapping around desired).
-				if (!nextSnappingIncrement) return state;
-				return { ...state, snapTo: nextSnappingIncrement.value };
-			});
-		}
-
 		return {
 			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
 				const { value } = action.payload;
@@ -97,19 +83,11 @@ const slice = createSlice({
 			updateSnap: api.reducer<number>((state, action) => {
 				return { ...state, snapTo: action.payload };
 			}),
-			incrementSnap: nextSnappingIncrement(api, { delta: 1 }),
-			decrementSnap: nextSnappingIncrement(api, { delta: -1 }),
 			updateTrackScale: api.reducer<number>((state, action) => {
 				return { ...state, beatDepth: action.payload, animateBlockMotion: false };
 			}),
 			updatePlaybackRate: api.reducer<number>((state, action) => {
 				return { ...state, playbackRate: action.payload };
-			}),
-			incrementPlaybackRate: api.reducer((state) => {
-				return { ...state, playbackRate: Math.min(state.playbackRate + 0.25, 2) };
-			}),
-			decrementPlaybackRate: api.reducer((state) => {
-				return { ...state, playbackRate: Math.max(state.playbackRate - 0.25, 0) };
 			}),
 			updateSongVolume: api.reducer<number>((state, action) => {
 				return { ...state, songVolume: action.payload };

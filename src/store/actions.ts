@@ -1,7 +1,7 @@
 import { createAction, createAsyncThunk, type GetThunkAPI } from "@reduxjs/toolkit";
 import type { EnvironmentName, ITrackDefinitions } from "bsmap";
 
-import { HIGHEST_PRECISION } from "$/constants";
+import { HIGHEST_PRECISION, SNAPPING_INCREMENT_VALUES, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import type { resolveEventId } from "$/helpers/events.helpers";
 import type { resolveNoteId } from "$/helpers/notes.helpers";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
@@ -19,12 +19,17 @@ import {
 	selectEarliestBeat,
 	selectEventEditorStartAndEndBeat,
 	selectEventsEditorCursor,
+	selectEventsEditorZoomLevel,
 	selectNotesEditorDirection,
 	selectNotesEditorTool,
+	selectPlaybackRate,
 	selectPlaying,
 	selectSnap,
+	selectSongVolume,
+	selectTickVolume,
 } from "./selectors";
 import type { AppThunkApiConfig, RootState } from "./setup";
+import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "./utils";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
@@ -116,15 +121,55 @@ export const {
 	scrollThroughSong,
 	updateTrackScale,
 	updatePlaybackRate,
-	incrementPlaybackRate,
-	decrementPlaybackRate,
 	updateSongVolume,
 	updateTickVolume,
 	updateTickType,
 	updateSnap,
-	incrementSnap,
-	decrementSnap,
 } = navigation.actions;
+
+const createIncrementSnap = createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, {
+	select: selectSnap,
+	update: updateSnap,
+});
+export const incrementSnap = createThunk("incrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementSnap({ delta: 1 }, api);
+});
+export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementSnap({ delta: -1 }, api);
+});
+
+const createIncrementPlaybackRate = createIncrementByValuePayloadActionCreator([0, 2], {
+	select: selectPlaybackRate,
+	update: updatePlaybackRate,
+});
+export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementPlaybackRate({ delta: 0.25 }, api);
+});
+export const decrementPlaybackRate = createThunk("decrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementPlaybackRate({ delta: -0.25 }, api);
+});
+
+const createIncrementSongVolume = createIncrementByValuePayloadActionCreator([0, 1], {
+	select: selectSongVolume,
+	update: updateSongVolume,
+});
+export const incrementSongVolume = createThunk("incrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementSongVolume({ delta: 0.125 }, api);
+});
+export const decrementSongVolume = createThunk("decrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementSongVolume({ delta: -0.125 }, api);
+});
+
+const createIncrementTickVolume = createIncrementByValuePayloadActionCreator([0, 1], {
+	select: selectTickVolume,
+	update: updateTickVolume,
+});
+export const incrementTickVolume = createThunk("incrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementTickVolume({ delta: 0.125 }, api);
+});
+export const decrementTickVolume = createThunk("decrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementTickVolume({ delta: -0.125 }, api);
+});
 
 export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
 
@@ -142,12 +187,21 @@ export const {
 	updateTrackHeight: updateEventsEditorTrackHeight,
 	updateTrackOpacity: updateEventsEditorTrackOpacity,
 	updateZoomLevel: updateEventsEditorZoomLevel,
-	incrementZoom: incrementEventsEditorZoom,
-	decrementZoom: decrementEventsEditorZoom,
 	updatePreview: updateEventsEditorPreview,
 	updateWindowLock: updateEventsEditorWindowLock,
 	updateMirrorLock: updateEventsEditorMirrorLock,
 } = lightshow.actions;
+
+const createIncrementZoomLevel = createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], {
+	select: selectEventsEditorZoomLevel,
+	update: updateEventsEditorZoomLevel,
+});
+export const incrementEventsEditorZoomLevel = createThunk("incrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementZoomLevel({ delta: 1 }, api);
+});
+export const decrementEventsEditorZoomLevel = createThunk("decrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementZoomLevel({ delta: -1 }, api);
+});
 
 export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }, api: GetThunkAPI<AppThunkApiConfig>) => {
 	const state = api.getState();

@@ -1,4 +1,6 @@
-import type { ActionCreatorWithPayload, GetState, SerializedError, ThunkAction, ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+import type { ActionCreatorWithPayload, Dispatch, GetState, SerializedError, ThunkAction, ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+
+import { cycle } from "$/utils";
 
 type IsAny<T, True, False = never> = true | false extends (T extends never ? true : false) ? True : False;
 type IsUnknown<T, True, False = never> = unknown extends T ? IsAny<T, False, True> : False;
@@ -59,4 +61,20 @@ export function createThunk<Arg, ThunkApiConfig, Returned>(type: string, payload
 			return action?.type === type;
 		},
 	}) as ThunkActionCreator<Arg, ThunkApiConfig, Returned>;
+}
+
+export function createIncrementByIndexPayloadActionCreator<TState, TValue>(iterable: Iterable<TValue>, options: { select: (state: TState) => TValue; update: (value: TValue) => UnknownAction }) {
+	const values = Object.values(iterable);
+
+	return (args: { delta: number }, api: { getState: () => TState; dispatch: Dispatch }) => {
+		const value = options.select(api.getState());
+		api.dispatch(options.update(cycle(values, value, args.delta, "stop")));
+	};
+}
+export function createIncrementByValuePayloadActionCreator<TState>([min, max]: [number, number], options: { select: (state: TState) => number; update: (value: number) => UnknownAction }) {
+	return (args: { delta: number }, api: { getState: () => TState; dispatch: Dispatch }) => {
+		const value = options.select(api.getState());
+		const isIncrement = args.delta > 0;
+		api.dispatch(options.update((isIncrement ? Math.min : Math.max)(value + args.delta, isIncrement ? max : min)));
+	};
 }

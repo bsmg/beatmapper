@@ -3,7 +3,7 @@ import { useCallback } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompter } from "$/components/ui/compositions";
-import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
+import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
@@ -29,13 +29,13 @@ function EventsEditorShortcuts() {
 				case "Minus": {
 					if (metaKeyPressed) return;
 					ev.preventDefault();
-					return dispatch(decrementEventsEditorZoom());
+					return dispatch(decrementEventsEditorZoomLevel());
 				}
 				case "NumpadAdd":
 				case "Equal": {
 					if (metaKeyPressed) return;
 					ev.preventDefault();
-					return dispatch(incrementEventsEditorZoom());
+					return dispatch(incrementEventsEditorZoomLevel());
 				}
 				case "KeyA": {
 					if (metaKeyPressed) {
