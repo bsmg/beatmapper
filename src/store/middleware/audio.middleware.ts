@@ -2,12 +2,12 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 
 import { NOTE_TICK_TYPES } from "$/constants";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
-import { getRouter } from "$/router";
+import { getRouter, selectActiveView } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
 import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 
 function getTickSchedule(state: RootState, songId: SongId): number[] {
@@ -18,10 +18,11 @@ function getTickSchedule(state: RootState, songId: SongId): number[] {
 
 /** Manages all concerns related to audio samples. */
 export default function createAudioMiddleware({ songSample, tickSample }: { songSample: AudioSample; tickSample: AudioSample }) {
-	const instance = createListenerMiddleware<RootState>();
+	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
+		extra: { getRouter },
+	});
 
 	const filestore = getAppBeatmapFilestore();
-	const router = getRouter();
 
 	tickSample.load(NOTE_TICK_TYPES[0]);
 
@@ -57,9 +58,9 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 			const { lastBeat, currentBeat } = action.payload;
 
 			if (selectTickVolume(api.getState()) > 0) {
-				const { context } = router.state.matches[router.state.matches.length - 1];
+				const view = selectActiveView(api.extra.getRouter());
 
-				if ("view" in context && (context.view === View.PREVIEW || context.view === View.BEATMAP)) {
+				if (view === View.PREVIEW || view === View.BEATMAP) {
 					if (tickSchedule.some((t) => t >= lastBeat && t < currentBeat)) {
 						tickSample.trigger();
 					}

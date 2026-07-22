@@ -3,11 +3,12 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 import { createSaveHandler } from "$/services/backup.service";
 import { leaveEditor, saveBeatmapContents, updateBeatmap, updateSong } from "$/store/actions";
 import { selectSelectedBeatmap } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, RootState } from "$/store/setup";
 import type { App, BeatmapId, SongId } from "$/types";
 
 export default function createBackupMiddleware() {
-	const instance = createListenerMiddleware<RootState>();
+	const instance = createListenerMiddleware<RootState, AppDispatch>();
+
 	const save = createSaveHandler();
 
 	instance.startListening({

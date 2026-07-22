@@ -7,13 +7,14 @@ import { BeatmapFilestore } from "$/services/file.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { addBeatmap, addColorScheme, addSong, copyBeatmap, finishLoadingMap, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeColorScheme, removeSong, startLoadingMap, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, RootState } from "$/store/setup";
 import type { SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 /** This middleware manages file storage concerns. */
 export default function createFileMiddleware() {
-	const instance = createListenerMiddleware<RootState>();
+	const instance = createListenerMiddleware<RootState, AppDispatch>();
+
 	const filestore = getAppBeatmapFilestore();
 
 	instance.startListening({

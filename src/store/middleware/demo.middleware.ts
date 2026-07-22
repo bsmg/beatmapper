@@ -4,17 +4,21 @@ import { demoFileUrl } from "$/assets";
 import { getRouter } from "$/router";
 import { getAppToaster } from "$/setup";
 import { addSongFromFile, loadDemoMap } from "$/store/actions";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
 
 /** This middleware exists only to load (and possibly manage) the demo song that comes with this app. */
 export default function createDemoMiddleware() {
-	const instance = createListenerMiddleware<RootState>();
-	const router = getRouter();
+	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
+		extra: { getRouter },
+	});
+
 	const toaster = getAppToaster();
 
 	instance.startListening({
 		actionCreator: loadDemoMap,
 		effect: async (_, api) => {
+			const router = api.extra.getRouter();
+
 			try {
 				const blob = await fetch(demoFileUrl).then((response) => response.blob());
 				const { songId, songData } = await api.dispatch(addSongFromFile({ file: blob, options: { readonly: true } })).unwrap();

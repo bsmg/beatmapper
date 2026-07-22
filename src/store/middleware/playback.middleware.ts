@@ -2,21 +2,22 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 import { TimeProcessor } from "bsmap";
 
 import { createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
-import { getRouter } from "$/router";
+import { getRouter, selectActiveView } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
 import { selectBeatForTime, selectBpm, selectCursorPosition, selectDuration, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeForBeat } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 
 /** Manages all concerns related to audio playback and timescales. */
 export default function createPlaybackMiddleware({ songSample }: { songSample: AudioSample }) {
-	const instance = createListenerMiddleware<RootState>();
+	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
+		extra: { getRouter },
+	});
 
 	const filestore = getAppBeatmapFilestore();
-	const router = getRouter();
 
 	let animationFrameId: number;
 
@@ -91,9 +92,9 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 
 			const state = api.getState();
 
-			const { context } = router.state.matches[router.state.matches.length - 1];
+			const view = selectActiveView(api.extra.getRouter());
 
-			if ("view" in context && context.view === View.LIGHTSHOW) {
+			if (view === View.LIGHTSHOW) {
 				const beatsPerZoomLevel = selectEventsEditorBeatsPerZoomLevel(state);
 
 				const currentTime = selectTimeForBeat(state, songId, currentBeat);
@@ -157,9 +158,9 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 			const durationInBeats = selectBeatForTime(state, songId, selectDuration(state) ?? 0);
 			const cursorPositionInBeats = selectBeatForTime(state, songId, selectCursorPosition(state));
 
-			const { context } = router.state.matches[router.state.matches.length - 1];
+			const view = selectActiveView(api.extra.getRouter());
 
-			const windowSize = "view" in context && context.view === View.LIGHTSHOW ? selectEventsEditorBeatsPerZoomLevel(state) : 32;
+			const windowSize = view === View.LIGHTSHOW ? selectEventsEditorBeatsPerZoomLevel(state) : 32;
 			const threshold = Math.ceil(windowSize / 8);
 			const progress = cursorPositionInBeats % windowSize;
 			const currentWindowStart = cursorPositionInBeats - progress;

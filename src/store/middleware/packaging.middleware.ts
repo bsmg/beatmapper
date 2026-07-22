@@ -5,10 +5,11 @@ import { exportMapArchiveFromFilestore } from "$/services/packaging.service";
 import { getAppToaster } from "$/setup";
 import { downloadMapFiles } from "$/store/actions";
 import { selectSongById } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, RootState } from "$/store/setup";
 
 export default function createPackagingMiddleware() {
-	const instance = createListenerMiddleware<RootState>();
+	const instance = createListenerMiddleware<RootState, AppDispatch>();
+
 	const toaster = getAppToaster();
 
 	instance.startListening({

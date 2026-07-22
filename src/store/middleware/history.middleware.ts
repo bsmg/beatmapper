@@ -1,4 +1,4 @@
-import { createListenerMiddleware, type Dispatch, type ListenerEffectAPI } from "@reduxjs/toolkit";
+import { createListenerMiddleware, type ListenerEffectAPI } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 import { ActionCreators } from "redux-undo";
 
@@ -23,11 +23,11 @@ import {
 	selectPastColorNotes,
 	selectPastObstacles,
 } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppDispatch, RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
 import { difference } from "$/utils";
 
-function jumpToEarliestObject(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantNotes = difference(args.notes.before, args.notes.after, resolveNoteId);
 	const relevantBombs = difference(args.bombs.before, args.bombs.after, resolveNoteId);
 	const relevantObstacles = difference(args.obstacles.before, args.obstacles.after, resolveObstacleId);
@@ -38,7 +38,7 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, Dispatch>, songI
 	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
 }
 
-function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId: SongId, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, songId: SongId, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantBasicEvents = difference(args.basicEvents.before, args.basicEvents.after, resolveEventId);
 	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after, resolveEventId);
 
@@ -54,7 +54,7 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, Dispatch>, songId
  * This middleware listens for undo events, and handles updating the cursor position in response to these actions.
  */
 export default function createHistoryMiddleware() {
-	const instance = createListenerMiddleware<RootState>();
+	const instance = createListenerMiddleware<RootState, AppDispatch>();
 
 	instance.startListening({
 		actionCreator: leaveEditor,
