@@ -2,7 +2,7 @@ import type { Middleware } from "@reduxjs/toolkit";
 import { createStateSyncMiddleware } from "redux-state-sync";
 
 import { AudioSample } from "$/services/audio.service";
-import { rehydrate } from "../actions";
+import { isHydrationAction } from "$/store/enhancers/storage.enhancer";
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";
@@ -14,7 +14,7 @@ import createPlaybackMiddleware from "./playback.middleware";
 export function createAllSharedMiddleware() {
 	const stateSyncMiddleware = createStateSyncMiddleware({
 		predicate: (action) => {
-			return rehydrate.match(action);
+			return isHydrationAction(action);
 		},
 	});
 

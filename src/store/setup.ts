@@ -3,7 +3,6 @@
 import { configureStore, type DevToolsEnhancerOptions, type ThunkDispatch, type UnknownAction } from "@reduxjs/toolkit";
 import { omit } from "@std/collections/omit";
 import { toPascalCase } from "@std/text/to-pascal-case";
-import type { NoteDirection } from "bsmap";
 import { initStateWithPrevTab } from "redux-state-sync";
 import { default as createLocalStorageDriver } from "unstorage/drivers/localstorage";
 import { default as createSessionStorageDriver } from "unstorage/drivers/session-storage";
@@ -173,18 +172,9 @@ export async function createAppStore() {
 	setupAppBeatmapFilestore();
 	setupAppToaster();
 
-	type LocalStorage = {
-		"user.new": boolean;
-		"user.announcements": string[];
-		"user.username": string;
-		"graphics.scale": number;
-		"graphics.bloom": boolean;
-		"controls.obstacles": number;
-		"advanced.wait": number;
-	};
 	const localStorageEnhancer = createStorageEnhancer(
 		createLocalStorageDriver({ base: STORAGE_PREFIX }),
-		createKeyValueStorageStrategy<RootState, LocalStorage>({
+		createKeyValueStorageStrategy({
 			"user.new": {
 				selectValue: selectNew,
 				hydrateValue: updateNew,
@@ -216,29 +206,9 @@ export async function createAppStore() {
 		}),
 	);
 
-	type SessionStorage = {
-		"track.snap": number;
-		"track.spacing": number;
-		"playback.rate": number;
-		"playback.volume": number;
-		"tick.volume": number;
-		"tick.type": number;
-		"notes.tool": number;
-		"notes.direction": NoteDirection;
-		"notes.duration": number;
-		"events.mode": number;
-		"events.tool": number;
-		"events.color": number;
-		"events.zoom": number;
-		"events.opacity": number;
-		"events.height": number;
-		"events.preview": boolean;
-		"events.loop": boolean;
-		"events.mirror": boolean;
-	};
 	const sessionStorageEnhancer = createStorageEnhancer(
 		createSessionStorageDriver({ base: STORAGE_PREFIX }),
-		createKeyValueStorageStrategy<RootState, SessionStorage>({
+		createKeyValueStorageStrategy({
 			"track.snap": {
 				selectValue: selectSnap,
 				hydrateValue: updateSnap,

@@ -1,9 +1,13 @@
-import type { Store, StoreEnhancer, UnknownAction } from "@reduxjs/toolkit";
+import { isFluxStandardAction, type PayloadAction, type Store, type StoreEnhancer, type UnknownAction } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
 import { createStorage, type Driver, type StorageValue } from "unstorage";
 
 import type { MaybeDefined } from "$/types/vendor";
-import { rehydrate } from "../actions";
+
+export function isHydrationAction<P = void, T extends string = string, M = never, E = never>(action: unknown): action is PayloadAction<P, T, M & { hydrate?: boolean }, E> {
+	if (!isFluxStandardAction(action)) return false;
+	return "meta" in action && typeof action.meta === "object" && action.meta !== null && "hydrate" in action.meta && typeof action.meta.hydrate === "boolean" && (action.meta as Record<string, unknown>).hydrate === true;
+}
 
 export interface StorageStrategy<TState, TValue = StorageValue> {
 	getKeys: (prevState: TState, nextState: TState) => string[];
@@ -79,7 +83,7 @@ export function createStorageEnhancer<TState>(driver: Driver, { getKeys, getValu
 			...store,
 			hydrate: hydrate,
 			dispatch: (action) => {
-				if (rehydrate.match(action)) {
+				if (isHydrationAction(action)) {
 					// run the hydration step if we manually rehydrate the app
 					hydrate();
 					return store.dispatch(action);
@@ -110,11 +114,11 @@ export function createStorageEnhancer<TState>(driver: Driver, { getKeys, getValu
 	};
 }
 
-interface IKeyValueStorageObserver<TState, TValue> {
+interface IKeyValueStorageObserver<TValue, TState> {
 	selectValue: (s: TState) => TValue;
 	hydrateValue: (v: TValue) => UnknownAction;
 }
-export function createKeyValueStorageStrategy<TState, TShape extends { [key: string]: StorageValue }>(observers: { [key in keyof TShape]: IKeyValueStorageObserver<TState, TShape[key]> }): StorageStrategy<TState> {
+export function createKeyValueStorageStrategy<TShape extends { [key: string]: StorageValue }, TState = TShape extends { [key: string]: IKeyValueStorageObserver<unknown, infer S> } ? S : never>(observers: { [key in keyof TShape]: IKeyValueStorageObserver<TShape[key], TState> }): StorageStrategy<TState> {
 	const keys = Object.keys(observers);
 
 	return {
@@ -131,12 +135,12 @@ export function createKeyValueStorageStrategy<TState, TShape extends { [key: str
 	};
 }
 
-interface IEntityStorageObserver<TState, TValue> {
+interface IEntityStorageObserver<TValue, TState> {
 	selectIds: (s: TState) => string[];
 	selectById: (s: TState, id: string) => TValue;
 	hydrateEntities: (data: Record<string, TValue>) => UnknownAction;
 }
-export function createEntityStorageStrategy<TState, TValue>(observer: IEntityStorageObserver<TState, TValue>): StorageStrategy<TState, TValue> {
+export function createEntityStorageStrategy<TValue, TState>(observer: IEntityStorageObserver<TValue, TState>): StorageStrategy<TState, TValue> {
 	return {
 		asRaw: true,
 		getKeys: (prevState, nextState) => {
@@ -151,7 +155,7 @@ export function createEntityStorageStrategy<TState, TValue>(observer: IEntitySto
 	};
 }
 
-export function createEnumerableStorageObserver<TState, TValue>(entries: { [s: PropertyKey]: TValue }, { selectValue, hydrateValue }: IKeyValueStorageObserver<TState, TValue>): IKeyValueStorageObserver<TState, number> {
+export function createEnumerableStorageObserver<TValue, TState>(entries: { [s: PropertyKey]: TValue }, { selectValue, hydrateValue }: IKeyValueStorageObserver<TValue, TState>): IKeyValueStorageObserver<number, TState> {
 	const values = Object.values(entries);
 	return {
 		selectValue: (state) => values.indexOf(selectValue(state)),
