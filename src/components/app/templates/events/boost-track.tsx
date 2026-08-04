@@ -6,7 +6,7 @@ import { type ComponentProps, memo, useCallback, useMemo } from "react";
 import { EventGrid } from "$/components/app/layouts";
 import { For } from "$/components/ui/atoms";
 import { resolveEventId } from "$/helpers/events.helpers";
-import { addBoostEvent, bulkAddBoostEvent, bulkRemoveEvent, deselectEvent, removeEvent, selectEvent, updateBoostEvent } from "$/store/actions";
+import { addBoostEvent, deselectBoostEvent, removeBoostEvent, selectBoostEvent, updateBoostEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllBoostEvents, selectEnvironment, selectEventEditorStartAndEndBeat, selectEventsEditorMirrorLock } from "$/store/selectors";
 import type { App } from "$/types";
@@ -57,12 +57,13 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 
 	const actions = useMemo<EventGrid.IPlacementActions<IWrapColorBoostEvent>>(() => {
 		return {
+			selectId: resolveEventId,
 			onCreate: resolveEventData,
-			onPlace: (data, isBulk) => dispatch((isBulk ? bulkAddBoostEvent : addBoostEvent)({ query: data, data: data, environment, areLasersLocked })),
-			onDelete: (data, isBulk) => dispatch((isBulk ? bulkRemoveEvent : removeEvent)({ query: data, environment, areLasersLocked })),
-			onSelect: (data) => dispatch(selectEvent({ query: data, environment, areLasersLocked })),
-			onDeselect: (data) => dispatch(deselectEvent({ query: data, environment, areLasersLocked })),
-			onWheel: (data, delta) => dispatch(updateBoostEvent({ query: data, environment, areLasersLocked, changes: { toggle: delta > 0 } })),
+			onPlace: (data) => dispatch(addBoostEvent({ data: data, environment, areLasersLocked })),
+			onDelete: (_, id) => dispatch(removeBoostEvent({ id, environment, areLasersLocked })),
+			onSelect: (_, id) => dispatch(selectBoostEvent({ id, environment, areLasersLocked })),
+			onDeselect: (_, id) => dispatch(deselectBoostEvent({ id, environment, areLasersLocked })),
+			onWheel: (_, id, delta) => dispatch(updateBoostEvent({ id, environment, areLasersLocked, changes: { toggle: delta > 0 } })),
 		};
 	}, [dispatch, resolveEventData, environment, areLasersLocked]);
 

@@ -1,6 +1,6 @@
 import { type ThreeEvent, useThree } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
-import { type IWrapBaseNote, type IWrapObstacle, NoteDirection } from "bsmap";
+import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, NoteDirection } from "bsmap";
 import { memo, useCallback, useMemo, useRef } from "react";
 import type { Object3D } from "three";
 
@@ -13,7 +13,7 @@ import { Visualization } from "$/components/scene/layouts";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { deselectNote, deselectObstacle, mirrorColorNote, removeNote, removeObstacle, selectNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
+import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap, selectVisibleBombs, selectVisibleNotes } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
@@ -52,35 +52,40 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 	const bombs = useAppSelector((state) => selectVisibleBombs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 
-	const noteActions = useObjectPlacement<App.IWrapEditorObject<IWrapBaseNote>>({
+	const noteActions = useObjectPlacement<App.IWrapEditorObject<IWrapColorNote>>({
 		interactive,
 		selectId: resolveNoteId,
-		selectItemSelected: (x) => !!x.selected,
-		onItemSelect: (x) => dispatch(selectNote({ query: x })),
-		onItemDeselect: (x) => dispatch(deselectNote({ query: x })),
-		onItemDelete: (x) => dispatch(removeNote({ query: x })),
-		onItemModify: (x) => dispatch(mirrorColorNote({ query: x })),
-		onItemWheel: (x, delta) => {
-			if (!isColorNote(x)) return;
+		onItemSelect: (_, id) => dispatch(selectColorNote({ id })),
+		onItemDeselect: (_, id) => dispatch(deselectColorNote({ id })),
+		onItemDelete: (_, id) => dispatch(removeColorNote({ id })),
+		onItemModify: (data, id) => dispatch(updateColorNote({ id, changes: { color: mirrorNoteColor(data.color) } })),
+		onItemWheel: (data, id, delta) => {
 			const step = 15 / delta;
-			if (Object.values<number>(NoteDirection).includes(x.direction)) {
-				return dispatch(updateColorNote({ query: x, changes: { angleOffset: (x.angleOffset ?? 0) + step } }));
+			if (Object.values<number>(NoteDirection).includes(data.direction)) {
+				return dispatch(updateColorNote({ id, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
 			}
 		},
+	});
+
+	const bombActions = useObjectPlacement<App.IWrapEditorObject<IWrapBombNote>>({
+		interactive,
+		selectId: resolveNoteId,
+		onItemSelect: (_, id) => dispatch(selectBombNote({ id })),
+		onItemDeselect: (_, id) => dispatch(deselectBombNote({ id })),
+		onItemDelete: (_, id) => dispatch(removeBombNote({ id })),
 	});
 
 	const obstacleActions = useObjectPlacement<App.IWrapEditorObject<IWrapObstacle>>({
 		interactive,
 		selectId: resolveObstacleId,
-		selectItemSelected: (x) => !!x.selected,
-		onItemSelect: (x) => dispatch(selectObstacle({ id: resolveObstacleId(x) })),
-		onItemDeselect: (x) => dispatch(deselectObstacle({ id: resolveObstacleId(x) })),
-		onItemDelete: (x) => dispatch(removeObstacle({ id: resolveObstacleId(x) })),
-		onItemWheel: (x, delta) => {
+		onItemSelect: (_, id) => dispatch(selectObstacle({ id })),
+		onItemDeselect: (_, id) => dispatch(deselectObstacle({ id })),
+		onItemDelete: (_, id) => dispatch(removeObstacle({ id })),
+		onItemWheel: (x, id, delta) => {
 			const newDuration = x.duration + snapTo * delta;
 			// the new duration value should never create an invalid obstacle.
 			if (newDuration <= 0 || Math.abs(newDuration) < 0.01) return;
-			dispatch(updateObstacle({ id: resolveObstacleId(x), changes: { duration: x.duration + snapTo * delta } }));
+			dispatch(updateObstacle({ id, changes: { duration: x.duration + snapTo * delta } }));
 		},
 	});
 
@@ -110,14 +115,15 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 				isDispatchingEvent.current = true;
 				try {
 					const data = deriveUserDataFromTarget(target);
+					if (isColorNote(data)) return noteActions.handlePointerDown(event.nativeEvent, data);
+					if (isBombNote(data)) return bombActions.handlePointerDown(event.nativeEvent, data);
 					if (isObstacle(data)) return obstacleActions.handlePointerDown(event.nativeEvent, data);
-					if (isColorNote(data) || isBombNote(data)) return noteActions.handlePointerDown(event.nativeEvent, data);
 				} finally {
 					isDispatchingEvent.current = false;
 				}
 			}
 		},
-		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handlePointerDown, obstacleActions.handlePointerDown],
+		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handlePointerDown, bombActions.handlePointerDown, obstacleActions.handlePointerDown],
 	);
 
 	const handleCellWheel = useCallback(
@@ -133,15 +139,16 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 				isDispatchingEvent.current = true;
 				try {
 					const data = deriveUserDataFromTarget(target);
-					if (isObstacle(data)) return obstacleActions.handleWheel(event.nativeEvent, data);
 					if (isColorNote(data)) return noteActions.handleWheel(event.nativeEvent, data);
+					if (isBombNote(data)) return bombActions.handleWheel(event.nativeEvent, data);
+					if (isObstacle(data)) return obstacleActions.handleWheel(event.nativeEvent, data);
 					return;
 				} finally {
 					isDispatchingEvent.current = false;
 				}
 			}
 		},
-		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, obstacleActions.handleWheel],
+		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, bombActions.handleWheel, obstacleActions.handleWheel],
 	);
 
 	const rotationOverrides = useMemo(() => {
@@ -173,10 +180,10 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 						<BombNote
 							key={resolveNoteId(data)}
 							{...props}
-							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
-							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
-							onPointerOut={(e) => noteActions.handlePointerOut(e.nativeEvent, data)}
-							onWheel={(e) => noteActions.handleWheel(e.nativeEvent, data)}
+							onPointerDown={(e) => bombActions.handlePointerDown(e.nativeEvent, data)}
+							onPointerOver={(e) => bombActions.handlePointerOver(e.nativeEvent, data)}
+							onPointerOut={(e) => bombActions.handlePointerOut(e.nativeEvent, data)}
+							onWheel={(e) => bombActions.handleWheel(e.nativeEvent, data)}
 						/>
 					)}
 				</Visualization.ForGridObjects>

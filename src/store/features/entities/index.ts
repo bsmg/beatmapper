@@ -1,12 +1,12 @@
 import { combineReducers } from "@reduxjs/toolkit";
 
-import beatmap from "./beatmap";
 import editor from "./editor";
-import lightshow from "./lightshow";
+import events from "./events.slice";
+import objects from "./objects.slice";
 
 const reducer = combineReducers({
-	beatmap: beatmap.reducer,
-	lightshow: lightshow.reducer,
+	beatmap: objects.reducer,
+	lightshow: events.reducer,
 	editor: editor.reducer,
 });
 

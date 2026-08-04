@@ -1,3 +1,4 @@
+import type { EntityId } from "@reduxjs/toolkit";
 import { shuffle } from "@std/random/shuffle";
 import { createMachine, type MachineSchema, type Params, type Service } from "@zag-js/core";
 import { normalizeProps } from "@zag-js/react";
@@ -39,6 +40,7 @@ export interface EventGridSchema extends MachineSchema {
 	refs: {
 		mouseDownAt: { x: number; y: number; button: number } | null;
 		hoveredTrackId: number | null;
+		lastPlacedId: string | null;
 		norm: number;
 	};
 	computed: {
@@ -84,6 +86,7 @@ export const machine = createMachine<EventGridSchema>({
 		return {
 			mouseDownAt: null,
 			hoveredTrackId: null,
+			lastPlacedId: null,
 			norm: 0,
 		};
 	},
@@ -195,13 +198,14 @@ export const machine = createMachine<EventGridSchema>({
 });
 
 export interface IEventPlacementActions<T extends IWrapBaseObject> {
-	onCreate: (time: number, norm: number) => App.IWrapEditorObject<T>;
-	onPlace: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
-	onDelete: (data: App.IWrapEditorObject<T>, isBulk?: boolean) => void;
-	onSelect: (data: App.IWrapEditorObject<T>) => void;
-	onDeselect: (data: App.IWrapEditorObject<T>) => void;
-	onPick?: (data: App.IWrapEditorObject<T>) => void;
-	onWheel?: (data: App.IWrapEditorObject<T>, delta: number) => void;
+	selectId: (data: T) => EntityId;
+	onCreate: (time: number, norm: number) => T;
+	onPlace: (data: T, id: EntityId) => void;
+	onDelete: (data: T, id: EntityId) => void;
+	onSelect: (data: T, id: EntityId) => void;
+	onDeselect: (data: T, id: EntityId) => void;
+	onPick?: (data: T, id: EntityId) => void;
+	onWheel?: (data: T, id: EntityId, delta: number) => void;
 }
 
 export function connect({ scope, send, prop, context, refs, computed }: Service<EventGridSchema>, normalize = normalizeProps) {
@@ -300,17 +304,24 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 
 					if (isPlaceMode && event.button === 0) {
 						const data = actions.onCreate(context.get("pointer"), refs.get("norm"));
-						return actions.onPlace?.(data, false);
+						const id = actions.selectId(data);
+						refs.set("lastPlacedId", id.toString());
+						return actions.onPlace?.(data, id);
 					}
 				},
 				onPointerUp: () => {
 					refs.set("norm", 0);
 					refs.set("hoveredTrackId", null);
+					refs.set("lastPlacedId", null);
 				},
 				onPointerMove: () => {
 					if (isPlaceMode && activeButton === 0 && isHoveringTrack(trackId)) {
 						const data = actions.onCreate(context.get("pointer"), refs.get("norm"));
-						return actions.onPlace?.(data, true);
+						const id = actions.selectId(data);
+						if (id !== refs.get("lastPlacedId")) {
+							refs.set("lastPlacedId", id.toString());
+							return actions.onPlace?.(data, id);
+						}
 					}
 				},
 				onPointerOver: () => {
@@ -331,28 +342,34 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				style: { ...style, transform: `translateX(${centeredOffset}px)` },
 				onContextMenu: (e) => e.preventDefault(),
 				onPointerDown: (ev) => {
+					const id = actions.selectId(data);
+
 					switch (ev.button) {
 						case 0: {
-							return data.selected ? actions.onDeselect?.(data) : actions.onSelect?.(data);
+							return data.selected ? actions.onDeselect?.(data, id) : actions.onSelect?.(data, id);
 						}
 						case 1: {
 							ev.preventDefault();
-							return actions.onPick?.(data);
+							return actions.onPick?.(data, id);
 						}
 						case 2: {
-							return actions.onDelete?.(data, false);
+							return actions.onDelete?.(data, id);
 						}
 					}
 				},
 				onPointerOver: () => {
+					const id = actions.selectId(data);
+
 					if (activeButton === 2) {
-						actions.onDelete?.(data, true);
+						actions.onDelete?.(data, id);
 					}
 				},
 				onWheel: (event: React.WheelEvent) => {
+					const id = actions.selectId(data);
+
 					if (event.altKey) {
 						const delta = event.deltaY > 0 ? -1 : 1;
-						actions.onWheel?.(data, delta);
+						actions.onWheel?.(data, id, delta);
 					}
 				},
 			});

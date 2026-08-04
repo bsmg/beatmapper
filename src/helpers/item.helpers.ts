@@ -3,8 +3,10 @@ import { type IWrapBaseNote, type IWrapGridObject, mirrorNoteColor, mirrorNoteDi
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import type { IGrid } from "$/types";
 
-export function nudgeItem<T extends { time: number }>(item: T, direction: "forwards" | "backwards", amount = 1) {
-	return { time: item.time - amount * (direction === "backwards" ? 1 : -1) } as Partial<T>;
+export function nudgeItem<T extends { time: number }>(direction: "forwards" | "backwards", amount = 1) {
+	return (data: T): Partial<T> => {
+		return { time: data.time - amount * (direction === "backwards" ? 1 : -1) } as Partial<T>;
+	};
 }
 
 export function isExtendedCoordinate(x: number) {
@@ -24,16 +26,21 @@ export function mirrorCoordinate(coordinate: number, count: number, offset?: num
 	return serializeCoordinate(mirrored, isExtendedCoordinate(coordinate));
 }
 
-export function mirrorGridObjectProperties<T extends IWrapGridObject>(item: T, axis: "horizontal" | "vertical", grid?: IGrid, offset?: number): Partial<T> {
-	return {
-		posX: axis === "horizontal" ? mirrorCoordinate(item.posX, DEFAULT_NUM_COLS, offset) : item.posX,
-		posY: axis === "vertical" ? mirrorCoordinate(item.posY, grid?.numRows ?? DEFAULT_NUM_ROWS, offset) : item.posY,
-	} as Partial<T>;
+export function mirrorGridObjectProperties<T extends IWrapGridObject>(axis: "horizontal" | "vertical", grid?: IGrid, offset?: number) {
+	return (data: T): Partial<T> => {
+		return {
+			posX: axis === "horizontal" ? mirrorCoordinate(data.posX, DEFAULT_NUM_COLS, offset) : data.posX,
+			posY: axis === "vertical" ? mirrorCoordinate(data.posY, grid?.numRows ?? DEFAULT_NUM_ROWS, offset) : data.posY,
+		} as Partial<T>;
+	};
 }
-export function mirrorBaseNoteProperties<T extends IWrapBaseNote>(item: T, axis: "horizontal" | "vertical"): Partial<T> {
+export function mirrorBaseNoteProperties<T extends IWrapBaseNote>(axis: "horizontal" | "vertical") {
 	const resolveDirection = axis === "horizontal" ? mirrorNoteDirectionHorizontally : mirrorNoteDirectionVertically;
-	return {
-		color: axis === "horizontal" ? mirrorNoteColor(item.color) : item.color,
-		direction: resolveDirection(item.direction),
-	} as Partial<T>;
+
+	return (data: T): Partial<T> => {
+		return {
+			color: axis === "horizontal" ? mirrorNoteColor(data.color) : data.color,
+			direction: resolveDirection(data.direction),
+		} as Partial<T>;
+	};
 }

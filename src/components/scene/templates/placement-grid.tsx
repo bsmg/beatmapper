@@ -11,16 +11,19 @@ import { Match, Switch } from "$/components/ui/atoms";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
-import { addObstacle, addToCell } from "$/store/actions";
+import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectColorScheme, selectDefaultObstacleDuration, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode } from "$/store/selectors";
+import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectDefaultObstacleDuration, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectSnap } from "$/store/selectors";
 import { ObjectTool } from "$/types";
+import { roundToNearest } from "$/utils";
 
 function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const snapTo = useAppSelector(selectSnap);
 	const notePlacementMode = useAppSelector((state) => selectNotePlacementMode(state, sid));
 	const obstaclePlacementMode = useAppSelector((state) => selectObstaclePlacementMode(state, sid));
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
@@ -39,21 +42,23 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 		onPointerUp: (_, ctx) => {
 			if (selectionMode) return;
 
+			const time = roundToNearest(cursorPositionInBeats, snapTo);
+
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
 					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) });
-					if (note) return dispatch(addToCell({ songId: sid, tool: selectedTool, posX: note.posX, posY: note.posY, direction: note.direction }));
+					if (note) return dispatch(addColorNote({ ...note, time }));
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
 					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid);
-					if (note) return dispatch(addToCell({ songId: sid, tool: selectedTool, posX: note.posX, posY: note.posY }));
+					if (note) return dispatch(addBombNote({ ...note, time }));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
 					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, { duration: defaultObstacleDuration });
-					if (obstacle) return dispatch(addObstacle({ songId: sid, obstacle }));
+					if (obstacle) return dispatch(addObstacle({ ...obstacle, time }));
 					break;
 				}
 			}

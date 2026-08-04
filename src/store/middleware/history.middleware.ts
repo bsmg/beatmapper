@@ -1,11 +1,11 @@
 import { createListenerMiddleware, type ListenerEffectAPI } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
-import { ActionCreators } from "redux-undo";
 
 import { resolveEventId } from "$/helpers/events.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
+import { getRouter, selectActiveSongId } from "$/router";
+import { clearEventHistory, clearObjectHistory, jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
 import {
 	selectAllBasicEvents,
 	selectAllBombNotes,
@@ -23,7 +23,7 @@ import {
 	selectPastColorNotes,
 	selectPastObstacles,
 } from "$/store/selectors";
-import type { AppDispatch, RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
 import type { App, SongId } from "$/types";
 import { difference } from "$/utils";
 
@@ -54,19 +54,23 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, son
  * This middleware listens for undo events, and handles updating the cursor position in response to these actions.
  */
 export default function createHistoryMiddleware() {
-	const instance = createListenerMiddleware<RootState, AppDispatch>();
+	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
+		extra: { getRouter },
+	});
 
 	instance.startListening({
 		actionCreator: leaveEditor,
 		effect: (_, api) => {
-			api.dispatch(ActionCreators.clearHistory());
+			api.dispatch(clearObjectHistory());
+			api.dispatch(clearEventHistory());
 		},
 	});
 	instance.startListening({
 		actionCreator: undoObjects,
-		effect: (action, api) => {
+		effect: (_, api) => {
 			const state = api.getState();
-			const { songId } = action.payload;
+			const songId = selectActiveSongId(api.extra.getRouter());
+
 			jumpToEarliestObject(api, songId, {
 				notes: { before: selectFutureColorNotes(state), after: selectAllColorNotes(state) },
 				bombs: { before: selectFutureBombNotes(state), after: selectAllBombNotes(state) },
@@ -76,9 +80,10 @@ export default function createHistoryMiddleware() {
 	});
 	instance.startListening({
 		actionCreator: redoObjects,
-		effect: (action, api) => {
+		effect: (_, api) => {
 			const state = api.getState();
-			const { songId } = action.payload;
+			const songId = selectActiveSongId(api.extra.getRouter());
+
 			jumpToEarliestObject(api, songId, {
 				notes: { before: selectPastColorNotes(state), after: selectAllColorNotes(state) },
 				bombs: { before: selectPastBombNotes(state), after: selectAllBombNotes(state) },
@@ -88,9 +93,10 @@ export default function createHistoryMiddleware() {
 	});
 	instance.startListening({
 		actionCreator: undoEvents,
-		effect: (action, api) => {
+		effect: (_, api) => {
 			const state = api.getState();
-			const { songId } = action.payload;
+			const songId = selectActiveSongId(api.extra.getRouter());
+
 			jumpToEarliestEvent(api, songId, {
 				basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
 				boostEvents: { before: selectFutureBoostEvents(state), after: selectAllBoostEvents(state) },
@@ -99,9 +105,10 @@ export default function createHistoryMiddleware() {
 	});
 	instance.startListening({
 		actionCreator: redoEvents,
-		effect: (action, api) => {
+		effect: (_, api) => {
 			const state = api.getState();
-			const { songId } = action.payload;
+			const songId = selectActiveSongId(api.extra.getRouter());
+
 			jumpToEarliestEvent(api, songId, {
 				basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
 				boostEvents: { before: selectPastBoostEvents(state), after: selectAllBoostEvents(state) },
