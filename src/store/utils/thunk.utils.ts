@@ -1,4 +1,4 @@
-import type { ActionCreatorWithPayload, Dispatch, GetState, SerializedError, ThunkAction, ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+import { type ActionCreatorWithPreparedPayload, type Dispatch, type GetState, isAction, type PayloadAction, type SerializedError, type ThunkAction, type ThunkDispatch, type UnknownAction } from "@reduxjs/toolkit";
 
 import { cycle } from "$/utils";
 
@@ -11,7 +11,7 @@ type GetExtra<ThunkApiConfig> = ThunkApiConfig extends { extra: infer Extra } ? 
 type GetMeta<ThunkApiConfig> = ThunkApiConfig extends { meta: infer Meta } ? Meta : unknown;
 type GetSerializedErrorType<ThunkApiConfig> = ThunkApiConfig extends { serializedErrorType: infer TError } ? TError : SerializedError;
 
-type GetArgs<Arg> = [undefined] extends [Arg] ? [_?: Arg] : [arg: Arg];
+type GetArgs<Arg> = [undefined] extends [Arg] ? [] : [Arg];
 
 export interface GetShallowThunkAPI<ThunkApiConfig> {
 	dispatch: GetDispatch<ThunkApiConfig>;
@@ -19,17 +19,22 @@ export interface GetShallowThunkAPI<ThunkApiConfig> {
 	extra: GetExtra<ThunkApiConfig>;
 }
 
-export interface ThunkActionCreator<Arg, ThunkApiConfig, Returned = void> extends ActionCreatorWithPayload<Returned> {
+export interface ThunkActionCreator<Arg, ThunkApiConfig, Returned = void, T extends string = string, S = GetSerializedErrorType<ThunkApiConfig>, M = GetMeta<ThunkApiConfig>> extends ActionCreatorWithPreparedPayload<[Arg], Returned, string, S, M> {
 	(...args: GetArgs<Arg>): ThunkAction<Returned, GetState<ThunkApiConfig>, GetExtra<ThunkApiConfig>, UnknownAction>;
+	match: (action: unknown) => action is PayloadAction<Returned, T, M, S>;
 }
 
-export interface ThunkOptions<Arg, ThunkApiConfig> {
+export interface ThunkOptions<Arg, ThunkApiConfig, S = GetSerializedErrorType<ThunkApiConfig>, M = GetMeta<ThunkApiConfig>> {
 	condition?: (arg: Arg, api: Pick<GetShallowThunkAPI<ThunkApiConfig>, "getState" | "extra">) => boolean | undefined;
-	getMeta?: (arg: Arg, api: Pick<GetShallowThunkAPI<ThunkApiConfig>, "getState" | "extra">) => GetMeta<ThunkApiConfig>;
-	serializeError?: (x: unknown) => GetSerializedErrorType<ThunkApiConfig>;
+	getMeta?: (arg: Arg, api: Pick<GetShallowThunkAPI<ThunkApiConfig>, "getState" | "extra">) => M;
+	serializeError?: (x: unknown) => S;
 }
 
-export function createThunk<Arg, ThunkApiConfig, Returned>(type: string, payloadCreator: (arg: Arg, api: GetShallowThunkAPI<ThunkApiConfig>) => Returned, options?: ThunkOptions<Arg, ThunkApiConfig>): ThunkActionCreator<Arg, ThunkApiConfig, Returned> {
+export function createThunk<Arg, ThunkApiConfig, Returned = void, T extends string = string, S = GetSerializedErrorType<ThunkApiConfig>, M = GetMeta<ThunkApiConfig>>(
+	type: string,
+	payloadCreator: (arg: Arg, api: GetShallowThunkAPI<ThunkApiConfig>) => Returned,
+	options?: ThunkOptions<Arg, ThunkApiConfig, S, M>,
+): ThunkActionCreator<Arg, ThunkApiConfig, Returned, T, S, M> {
 	const actionCreator = (...args: GetArgs<Arg>) => {
 		const arg = args[0] as Arg;
 
@@ -57,10 +62,10 @@ export function createThunk<Arg, ThunkApiConfig, Returned>(type: string, payload
 	return Object.assign(actionCreator, {
 		type: type,
 		toString: () => type,
-		match: (action: UnknownAction): action is ReturnType<ActionCreatorWithPayload<Returned>> => {
-			return action?.type === type;
+		match: (action: unknown): action is PayloadAction<Returned, T, M, S> => {
+			return isAction(action) && action.type === type;
 		},
-	}) as ThunkActionCreator<Arg, ThunkApiConfig, Returned>;
+	}) as ThunkActionCreator<Arg, ThunkApiConfig, Returned, T, S, M>;
 }
 
 export function createIncrementByIndexPayloadActionCreator<TState, TValue>(iterable: Iterable<TValue>, options: { select: (state: TState) => TValue; update: (value: TValue) => UnknownAction }) {
