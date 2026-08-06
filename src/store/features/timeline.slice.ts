@@ -1,7 +1,7 @@
+import { createSlice } from "@reduxjs/toolkit";
 import type { IBPMTimeScale } from "bsmap";
 
-import { createSlice } from "$/store/helpers";
-import { leaveEditor } from "../actions";
+import { leaveEditor } from "$/store/actions";
 
 const initialState = {
 	timescale: [] as IBPMTimeScale[],

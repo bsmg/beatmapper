@@ -22,8 +22,8 @@ import {
 	selectSongVolume,
 	selectTickVolume,
 } from "./selectors";
-import type { AppThunkApiConfig } from "./setup";
-import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "./utils";
+import type { AppThunkApiConfig } from "./types";
+import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "./utils/thunk.utils";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 

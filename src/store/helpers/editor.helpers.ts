@@ -1,33 +1,6 @@
-import { asyncThunkCreator, buildCreateSlice, createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState } from "@reduxjs/toolkit";
-import { pick } from "@std/collections/pick";
-import type { HistoryState } from "history-adapter/redux";
+import { createDraftSafeSelector, type EntityAdapter, type EntityId, type EntityState } from "@reduxjs/toolkit";
 
 import type { App } from "$/types";
-
-export const createSlice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } });
-
-/** @deprecated */
-export type Snapshot = ReturnType<typeof selectSnapshot>;
-
-/** @deprecated */
-// biome-ignore lint/suspicious/noExplicitAny: only used during migrations
-export function selectSnapshot<T extends { [k: string]: any }>(state: T) {
-	return {
-		user: state.user,
-		editor: state.editor,
-		songs: {
-			byId: state.songs.entities,
-		},
-		navigation: pick<T, keyof T>(state.navigation, ["snapTo", "beatDepth", "volume", "playNoteTick"]),
-	};
-}
-
-export function selectPrevSnapshot<State>(state: HistoryState<State>) {
-	return state.past[state.past.length - 1];
-}
-export function selectNextSnapshot<State>(state: HistoryState<State>) {
-	return state.future[state.future.length - 1];
-}
 
 export function createEditorObjectAdapter<T extends App.IEditorObject, Id extends EntityId>(adapter: EntityAdapter<T, Id>) {
 	const { selectAll } = adapter.getSelectors();

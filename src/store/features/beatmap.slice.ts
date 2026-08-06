@@ -1,10 +1,9 @@
-import { type AsyncThunkPayloadCreator, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, type GetThunkAPI, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
 import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
-import { createSlice } from "$/store/helpers";
 import { selectGridSize } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { AppThunkApiConfig } from "$/store/types";
 import { type IGrid, type IGridPresets, type ObjectSelectionMode, ObjectTool, type SongId, View } from "$/types";
 
 const NOTE_TOOLS = Object.values(ObjectTool);
@@ -17,13 +16,7 @@ const initialState = {
 	gridPresets: {} as IGridPresets,
 };
 
-const fetchGridSize: AsyncThunkPayloadCreator<{ presetSlot: string; grid: IGrid }, { songId: SongId; presetSlot: string }> = (args, api) => {
-	const state = api.getState() as RootState;
-	const grid = selectGridSize(state, args.songId ?? null);
-	return api.fulfillWithValue({ ...args, grid });
-};
-
-const slice = createSlice({
+const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })({
 	name: "beatmap",
 	initialState: initialState,
 	selectors: {
@@ -36,6 +29,12 @@ const slice = createSlice({
 		selectGridPresetById: (state, id: string) => state.gridPresets[id],
 	},
 	reducers: (api) => {
+		const fetchGridSize: AsyncThunkPayloadCreator<{ presetSlot: string; grid: IGrid }, { songId: SongId; presetSlot: string }> = (args, api: GetThunkAPI<AppThunkApiConfig>) => {
+			const state = api.getState();
+			const grid = selectGridSize(state, args.songId ?? null);
+			return api.fulfillWithValue({ ...args, grid });
+		};
+
 		return {
 			updateTool: api.reducer<ObjectTool>((state, action) => {
 				return { ...state, selectedTool: action.payload };

@@ -23,7 +23,7 @@ import {
 	selectPastColorNotes,
 	selectPastObstacles,
 } from "$/store/selectors";
-import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import type { App, SongId } from "$/types";
 import { difference } from "$/utils";
 

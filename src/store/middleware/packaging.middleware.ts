@@ -5,7 +5,7 @@ import { exportMapArchiveFromFilestore } from "$/services/packaging.service";
 import { getAppToaster } from "$/setup";
 import { downloadMapFiles } from "$/store/actions";
 import { selectSongById } from "$/store/selectors";
-import type { AppDispatch, RootState } from "$/store/setup";
+import type { AppDispatch, RootState } from "$/store/types";
 
 export default function createPackagingMiddleware() {
 	const instance = createListenerMiddleware<RootState, AppDispatch>();

@@ -1,7 +1,7 @@
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { getAppBeatmapFilestore, getAppToaster } from "$/setup";
 import { selectBeatmapEntities, selectBeatmapIds, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import type { RootState } from "$/store/types";
 import type { App, BeatmapId, SongId } from "$/types";
 
 // A mechanism already exists to back up the Redux state to our persistence layer, so that the state can be rehydrated on return visits.

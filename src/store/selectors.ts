@@ -21,7 +21,7 @@ import songs from "./features/songs.slice";
 import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
-import type { RootState } from "./setup";
+import type { RootState } from "./types";
 
 export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors(global.selectSlice);
 

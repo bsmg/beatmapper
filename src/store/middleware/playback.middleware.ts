@@ -7,7 +7,7 @@ import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
 import { selectBeatForTime, selectBpm, selectCursorPosition, selectDuration, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeForBeat } from "$/store/selectors";
-import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 

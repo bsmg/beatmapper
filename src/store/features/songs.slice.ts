@@ -1,4 +1,4 @@
-import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
 import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
 import { eventTypeRename } from "bsmap/extensions/renamer";
@@ -7,7 +7,6 @@ import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolv
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { getAppToaster } from "$/setup";
 import { finishLoadingMap, loadGridPreset, startLoadingMap } from "$/store/actions";
-import { createSlice } from "$/store/helpers";
 import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
@@ -15,9 +14,10 @@ const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
 	sortComparer: (a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0),
 });
+
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
 
-const slice = createSlice({
+const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })({
 	name: "songs",
 	initialState: adapter.getInitialState(),
 	selectors: {

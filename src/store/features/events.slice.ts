@@ -5,7 +5,8 @@ import { createHistoryAdapter, type HistoryState } from "history-adapter/redux";
 import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { cutSelection, deselectAllEntities, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, nudgeSelection, pasteSelection, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
-import { createEditorObjectAdapter, selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers";
+import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
+import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, View } from "$/types";
 
 const basicEvents = createEntityAdapter<App.IWrapEditorObject<IWrapBasicEvent>, EntityId>({ selectId: resolveEventId, sortComparer: sortObjectFn });

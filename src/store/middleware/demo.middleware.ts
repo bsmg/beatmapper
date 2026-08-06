@@ -4,7 +4,7 @@ import { demoFileUrl } from "$/assets";
 import { getRouter } from "$/router";
 import { getAppToaster } from "$/setup";
 import { addSongFromFile, loadDemoMap } from "$/store/actions";
-import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 
 /** This middleware exists only to load (and possibly manage) the demo song that comes with this app. */
 export default function createDemoMiddleware() {

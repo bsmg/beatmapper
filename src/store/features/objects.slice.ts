@@ -6,7 +6,8 @@ import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from 
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { cutSelection, deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, mirrorSelection, nudgeSelection, pasteSelection, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
-import { createEditorObjectAdapter, selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers";
+import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
+import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, ObjectType, View } from "$/types";
 
 const notes = createEntityAdapter<App.IWrapEditorObject<IWrapColorNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });

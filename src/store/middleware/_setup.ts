@@ -11,7 +11,7 @@ import createHistoryMiddleware from "./history.middleware";
 import createPackagingMiddleware from "./packaging.middleware";
 import createPlaybackMiddleware from "./playback.middleware";
 
-export function createAllSharedMiddleware() {
+export function createAppMiddleware() {
 	const stateSyncMiddleware = createStateSyncMiddleware({
 		predicate: (action) => {
 			return isHydrationAction(action);
@@ -25,23 +25,9 @@ export function createAllSharedMiddleware() {
 	const playbackMiddleware = createPlaybackMiddleware({ songSample });
 	const fileMiddleware = createFileMiddleware();
 	const downloadMiddleware = createPackagingMiddleware();
-	const backupMiddleware = createBackupMiddleware();
 	const demoMiddleware = createDemoMiddleware();
 	const historyMiddleware = createHistoryMiddleware();
+	const backupMiddleware = createBackupMiddleware();
 
-	return [
-		// For unknown reasons, things crash when `stateSyncMiddleware` is further down.
-		stateSyncMiddleware as Middleware,
-		audioMiddleware,
-		playbackMiddleware,
-		fileMiddleware,
-		downloadMiddleware,
-		demoMiddleware,
-		historyMiddleware,
-		// We have two middlewares related to persistence:
-		// - Backup middleware saves the editor entities as beatmap files, also in indexeddb.
-		// - Storage middleware persists the current redux state to indexeddb (injected during setup)
-		// It's important that this stuff happens last, after all the other middlewares have fully affected the state.
-		backupMiddleware,
-	];
+	return [stateSyncMiddleware as Middleware, audioMiddleware, playbackMiddleware, fileMiddleware, downloadMiddleware, demoMiddleware, historyMiddleware, backupMiddleware];
 }

@@ -7,7 +7,7 @@ import { BeatmapFilestore } from "$/services/file.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { addBeatmap, addColorScheme, addSong, copyBeatmap, finishLoadingMap, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeColorScheme, removeSong, startLoadingMap, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
-import type { AppDispatch, RootState } from "$/store/setup";
+import type { AppDispatch, RootState } from "$/store/types";
 import type { SongId } from "$/types";
 import { deepAssign } from "$/utils";
 

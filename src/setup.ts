@@ -7,7 +7,6 @@ import { createStorage, type Driver, type StorageValue } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
 import { createDriver, type LegacyStorageSchema } from "./services/storage.service";
-import { createAppStore } from "./store/setup";
 import type { App } from "./types";
 import { createLazySingleton } from "./utils";
 
@@ -92,4 +91,4 @@ export const { get: getAppToaster, setup: setupAppToaster } = createLazySingleto
 	return createToaster({ placement: "bottom-end", overlap: true, max: 8 });
 });
 
-export const { get: getAppStore, setup: setupAppStore } = createLazySingleton(createAppStore);
+export { getAppStore, setupAppStore } from "./store/_setup";

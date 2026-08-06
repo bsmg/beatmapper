@@ -7,7 +7,7 @@ import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
 import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume } from "$/store/selectors";
-import type { AppDispatch, AppExtraArgs, RootState } from "$/store/setup";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { type SongId, View } from "$/types";
 
 function getTickSchedule(state: RootState, songId: SongId): number[] {

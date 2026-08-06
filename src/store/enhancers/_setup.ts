@@ -1,25 +1,18 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: type validations for migration steps are not super necessary
 
-import { configureStore, type DevToolsEnhancerOptions, type ThunkDispatch, type UnknownAction } from "@reduxjs/toolkit";
 import { omit } from "@std/collections/omit";
 import { toPascalCase } from "@std/text/to-pascal-case";
-import { initStateWithPrevTab } from "redux-state-sync";
 import { default as createLocalStorageDriver } from "unstorage/drivers/localstorage";
 import { default as createSessionStorageDriver } from "unstorage/drivers/session-storage";
 
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
-import { setupAppBeatmapFilestore, setupAppToaster } from "$/setup";
-import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
 import {
 	hydrateGridPresets,
 	hydrateSongs,
-	init,
-	tick,
 	updateAnnouncements,
 	updateBloomEnabled,
 	updateEventsEditorColor,
-	updateEventsEditorCursor,
 	updateEventsEditorEditMode,
 	updateEventsEditorMirrorLock,
 	updateEventsEditorPreview,
@@ -42,10 +35,7 @@ import {
 	updateTickVolume,
 	updateTrackScale,
 	updateUsername,
-} from "./actions";
-import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./enhancers/storage.enhancer";
-import { default as reducer } from "./features";
-import { createAllSharedMiddleware } from "./middleware";
+} from "$/store/actions";
 import {
 	selectAllGridPresetIds,
 	selectAnnouncements,
@@ -76,13 +66,9 @@ import {
 	selectTickVolume,
 	selectUsername,
 	selectUserObstaclePlacementMode,
-} from "./selectors";
-
-// biome-ignore-start assist/source/organizeImports: circular dependencies
-
-import { getRouter } from "$/router";
-
-// biome-ignore-end assist/source/organizeImports: circular dependencies
+} from "$/store/selectors";
+import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
+import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./storage.enhancer";
 
 const STORAGE_PREFIX = location.hostname === "localhost" ? "beatmapper" : "";
 
@@ -164,14 +150,7 @@ const createAppEntityStorageDriver = createDriver<LegacyStorageSchema & { songs:
 	},
 });
 
-export interface AppExtraArgs {
-	getRouter: typeof getRouter;
-}
-
-export async function createAppStore() {
-	setupAppBeatmapFilestore();
-	setupAppToaster();
-
+export function createAppEnhancers() {
 	const localStorageEnhancer = createStorageEnhancer(
 		createLocalStorageDriver({ base: STORAGE_PREFIX }),
 		createKeyValueStorageStrategy({
@@ -301,36 +280,5 @@ export async function createAppStore() {
 		}),
 	);
 
-	const devTools: DevToolsEnhancerOptions = {
-		name: "Beatmapper",
-		actionsDenylist: [tick.type, updateEventsEditorCursor.type],
-	};
-
-	const store = configureStore({
-		reducer: reducer,
-		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
-		middleware: (getDefaultMiddleware) => {
-			return getDefaultMiddleware({ thunk: { extraArgument: { getRouter } } }).concat(createAllSharedMiddleware());
-		},
-		enhancers: (getDefaultEnhancers) => {
-			return getDefaultEnhancers().concat(localStorageEnhancer, sessionStorageEnhancer, songStorageEnhancer, gridStorageEnhancer);
-		},
-	});
-
-	await store.hydrate().then(() => {
-		store.dispatch(init());
-	});
-
-	initStateWithPrevTab(store);
-
-	return store;
-}
-
-export type RootState = ReturnType<typeof reducer>;
-export type AppDispatch = ThunkDispatch<RootState, AppExtraArgs, UnknownAction>;
-
-export interface AppThunkApiConfig {
-	state: RootState;
-	dispatch: AppDispatch;
-	extra: AppExtraArgs;
+	return [localStorageEnhancer, sessionStorageEnhancer, songStorageEnhancer, gridStorageEnhancer] as const;
 }
