@@ -24,7 +24,7 @@ const fetchGridSize: AsyncThunkPayloadCreator<{ presetSlot: string; grid: IGrid 
 };
 
 const slice = createSlice({
-	name: "notes",
+	name: "beatmap",
 	initialState: initialState,
 	selectors: {
 		selectTool: (state) => state.selectedTool,

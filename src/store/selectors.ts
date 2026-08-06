@@ -9,23 +9,21 @@ import { getGridSize } from "$/helpers/song.helpers";
 import { getAudioContext } from "$/setup";
 import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
+import beatmap from "./features/beatmap.slice";
+import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
-import beatmap from "./features/editor/beatmap.slice";
-import lightshow from "./features/editor/lightshow.slice";
-import bookmarks from "./features/entities/editor/bookmarks.slice";
-import events from "./features/entities/events.slice";
-import objects from "./features/entities/objects.slice";
+import events from "./features/events.slice";
 import global from "./features/global.slice";
+import lightshow from "./features/lightshow.slice";
 import navigation from "./features/navigation.slice";
+import objects from "./features/objects.slice";
 import songs from "./features/songs.slice";
 import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
 import type { RootState } from "./setup";
 
-export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors((state: Pick<RootState, "global">) => {
-	return state.global;
-});
+export const { selectInitialized, selectLoading, selectProcessingImport } = global.getSelectors(global.selectSlice);
 
 export const {
 	selectId: selectSongId,
@@ -56,26 +54,22 @@ export const {
 	selectDemo,
 	selectModuleEnabled,
 	selectCustomColors,
-} = songs.getSelectors((state: Pick<RootState, "songs">) => {
-	return state.songs;
-});
+} = songs.getSelectors(songs.selectSlice);
 
-export const { selectTimescale } = timeline.getSelectors((state: Pick<RootState, "timeline">) => state.timeline);
+export const { selectTimescale } = timeline.getSelectors(timeline.selectSlice);
 
 export const selectTimeProcessor = createDraftSafeSelector([selectBpm, selectTimescale], (bpm, timeline) => {
 	return new TimeProcessor(bpm, timeline, 0);
 });
 
-export const selectBeatForTime = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, time: number) => time], (timeProcessor, offset, time) => {
+export const selectBeatForTime = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: RootState, _2: SongId, time: number) => time], (timeProcessor, offset, time) => {
 	return timeProcessor.toBeatTime(time - offset);
 });
-export const selectTimeForBeat = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: Pick<RootState, "songs" | "entities">, _2: SongId, beat: number) => beat], (timeProcessor, offset, beat) => {
+export const selectTimeForBeat = createDraftSafeSelector([selectTimeProcessor, selectEditorOffset, (_1: RootState, _2: SongId, beat: number) => beat], (timeProcessor, offset, beat) => {
 	return timeProcessor.toRealTime(beat) + offset;
 });
 
-export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors((state: RootState) => {
-	return state.navigation;
-});
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = navigation.getSelectors(navigation.selectSlice);
 
 export const selectCursorPositionInBeats = createSelector([selectTimeProcessor, selectCursorPosition, selectEditorOffset], (timeProcessor, cursorPosition, offset) => {
 	return timeProcessor.toBeatTime(cursorPosition - offset);
@@ -103,17 +97,7 @@ export const selectBpmScale = createSelector([selectTimeProcessor, selectBpm, se
 	return activeBpm / baseBpm;
 });
 
-export const {
-	selectNew,
-	selectAnnouncements,
-	selectUsername,
-	selectRenderScale,
-	selectBloomEnabled,
-	selectObstaclePlacementMode: selectUserObstaclePlacementMode,
-	selectPacerWait,
-} = user.getSelectors((state: Pick<RootState, "user">) => {
-	return state.user;
-});
+export const { selectNew, selectAnnouncements, selectUsername, selectRenderScale, selectBloomEnabled, selectObstaclePlacementMode: selectUserObstaclePlacementMode, selectPacerWait } = user.getSelectors(user.selectSlice);
 
 export const selectAudioLatencyInBeats = createSelector([selectTimeProcessor], (timeProcessor) => {
 	const { baseLatency } = getAudioContext();
@@ -133,21 +117,9 @@ export const selectObstaclePlacementMode = createSelector(selectSongById, select
 	return userPlacementMode;
 });
 
-export const { selectWaveformData } = visualizer.getSelectors((state: RootState) => {
-	return state.waveform;
-});
+export const { selectWaveformData } = visualizer.getSelectors(visualizer.selectSlice);
 
-export const {
-	selectTool: selectNotesEditorTool,
-	selectDirection: selectNotesEditorDirection,
-	selectSelectionMode: selectNotesEditorSelectionMode,
-	selectDefaultObstacleDuration,
-	selectGridPresets,
-	selectAllGridPresetIds,
-	selectGridPresetById,
-} = beatmap.getSelectors((state: RootState) => {
-	return state.editor.notes;
-});
+export const { selectTool: selectNotesEditorTool, selectDirection: selectNotesEditorDirection, selectSelectionMode: selectNotesEditorSelectionMode, selectDefaultObstacleDuration, selectGridPresets, selectAllGridPresetIds, selectGridPresetById } = beatmap.getSelectors(beatmap.selectSlice);
 
 export const selectGridSize = createSelector(selectSongById, selectNotesEditorTool, selectObstaclePlacementMode, (song, tool, obstaclePlacementMode) => {
 	switch (tool) {
@@ -174,9 +146,8 @@ export const {
 	selectMirrorLock: selectEventsEditorMirrorLock,
 	selectZoomLevel: selectEventsEditorZoomLevel,
 	selectBeatsPerZoomLevel: selectEventsEditorBeatsPerZoomLevel,
-} = lightshow.getSelectors((state: RootState) => {
-	return state.editor.events;
-});
+} = lightshow.getSelectors(lightshow.selectSlice);
+
 export const selectEventEditorZoomLevelStartBeat = createSelector(selectCursorPositionInBeats, selectEventsEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
 	return floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
 });
@@ -206,7 +177,7 @@ export const {
 	selectFutureObstacles,
 	selectSelectedObjects,
 	selectAnySelectedObjects,
-} = objects.getSelectors((state: RootState) => state.entities.beatmap);
+} = objects.getSelectors(objects.selectSlice);
 
 export const selectNoteDensity = createSelector(selectAllColorNotes, selectDuration, (notes, duration) => {
 	return calculateNps({ difficulty: { colorNotes: notes } }, duration ?? 0);
@@ -247,7 +218,7 @@ export const {
 	selectFutureBoostEvents,
 	selectSelectedEvents,
 	selectAnySelectedEvents,
-} = events.getSelectors((state: RootState) => state.entities.lightshow);
+} = events.getSelectors(events.selectSlice);
 
 export const selectCurrentLightStateForTrack = createDraftSafeSelector([selectEventEditorStartAndEndBeat, selectEventTracksForEnvironment, (state: RootState, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events): ILightState => {
 	const basicEventsInWindow = events.filter((event) => event.time <= startBeat);
@@ -272,19 +243,10 @@ export const selectSelectedBeatmapEntities = createSelector([selectSelectedObjec
 	};
 });
 
-export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors((state: RootState) => {
-	return state.entities.editor.bookmarks;
-});
+export const { selectAll: selectAllBookmarks } = bookmarks.getSelectors(bookmarks.selectSlice);
 
 export const selectBeatmapEntities = createSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
 	return { notes, bombs, obstacles, basicEvents, boostEvents, bookmarks };
 });
 
-export const {
-	selectData: selectClipboardData,
-	selectHasObjects: selectClipboardHasObjects,
-	selectHasEvents: selectClipboardHasEvents,
-	selectEarliestBeat,
-} = clipboard.getSelectors((state: Pick<RootState, "clipboard">) => {
-	return state.clipboard;
-});
+export const { selectData: selectClipboardData, selectHasObjects: selectClipboardHasObjects, selectHasEvents: selectClipboardHasEvents, selectEarliestBeat } = clipboard.getSelectors(clipboard.selectSlice);

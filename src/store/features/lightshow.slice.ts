@@ -22,7 +22,7 @@ const initialState = {
 };
 
 const slice = createSlice({
-	name: "events",
+	name: "lightshow",
 	initialState: initialState,
 	selectors: {
 		selectTool: (state) => state.selectedTool,

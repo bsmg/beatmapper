@@ -27,14 +27,14 @@ import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePaylo
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
+import beatmap from "./features/beatmap.slice";
+import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
-import beatmap from "./features/editor/beatmap.slice";
-import lightshow from "./features/editor/lightshow.slice";
-import bookmarks from "./features/entities/editor/bookmarks.slice";
-import events from "./features/entities/events.slice";
-import objects from "./features/entities/objects.slice";
+import events from "./features/events.slice";
 import global from "./features/global.slice";
+import lightshow from "./features/lightshow.slice";
 import navigation from "./features/navigation.slice";
+import objects from "./features/objects.slice";
 import songs from "./features/songs.slice";
 import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";

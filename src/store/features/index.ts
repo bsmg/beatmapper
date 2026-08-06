@@ -1,27 +1,16 @@
-import { combineReducers } from "@reduxjs/toolkit";
+import { combineSlices } from "@reduxjs/toolkit";
 
+import beatmap from "./beatmap.slice";
+import bookmarks from "./bookmarks.slice";
 import clipboard from "./clipboard.slice";
-import editor from "./editor";
-import entities from "./entities";
+import events from "./events.slice";
 import global from "./global.slice";
+import lightshow from "./lightshow.slice";
 import navigation from "./navigation.slice";
+import objects from "./objects.slice";
 import songs from "./songs.slice";
 import timeline from "./timeline.slice";
 import user from "./user.slice";
-import waveform from "./visualizer.slice";
+import visualizer from "./visualizer.slice";
 
-const reducer = combineReducers({
-	songs: songs.reducer,
-	clipboard: clipboard.reducer,
-	entities: entities.reducer,
-	waveform: waveform.reducer,
-	navigation: navigation.reducer,
-	timeline: timeline.reducer,
-	editor: editor.reducer,
-	global: global.reducer,
-	user: user.reducer,
-});
-
-export default {
-	reducer,
-};
+export default combineSlices(global, user, navigation, visualizer, beatmap, lightshow, songs, timeline, objects, events, bookmarks, clipboard);

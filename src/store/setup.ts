@@ -44,7 +44,7 @@ import {
 	updateUsername,
 } from "./actions";
 import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./enhancers/storage.enhancer";
-import { default as root } from "./features";
+import { default as reducer } from "./features";
 import { createAllSharedMiddleware } from "./middleware";
 import {
 	selectAllGridPresetIds,
@@ -307,7 +307,7 @@ export async function createAppStore() {
 	};
 
 	const store = configureStore({
-		reducer: root.reducer,
+		reducer: reducer,
 		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
 		middleware: (getDefaultMiddleware) => {
 			return getDefaultMiddleware({ thunk: { extraArgument: { getRouter } } }).concat(createAllSharedMiddleware());
@@ -326,7 +326,7 @@ export async function createAppStore() {
 	return store;
 }
 
-export type RootState = ReturnType<typeof root.reducer>;
+export type RootState = ReturnType<typeof reducer>;
 export type AppDispatch = ThunkDispatch<RootState, AppExtraArgs, UnknownAction>;
 
 export interface AppThunkApiConfig {
