@@ -4,7 +4,7 @@ import { sortObjectFn } from "bsmap";
 import { resolveEventId } from "$/helpers/events.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { getRouter, selectActiveSongId } from "$/router";
+import { getRouter } from "$/router";
 import { clearEventHistory, clearObjectHistory, jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
 import {
 	selectAllBasicEvents,
@@ -26,6 +26,7 @@ import {
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import type { App, SongId } from "$/types";
 import { difference } from "$/utils";
+import { selectActiveSongId } from "../helpers/route.helpers";
 
 function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantNotes = difference(args.notes.before, args.notes.after, resolveNoteId);

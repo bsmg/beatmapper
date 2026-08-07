@@ -2,7 +2,7 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 import { TimeProcessor } from "bsmap";
 
 import { createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
-import { getRouter, selectActiveView } from "$/router";
+import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
 import { getAppBeatmapFilestore } from "$/setup";
 import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
@@ -10,6 +10,7 @@ import { selectBeatForTime, selectBpm, selectCursorPosition, selectDuration, sel
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
+import { selectActiveView } from "../helpers/route.helpers";
 
 /** Manages all concerns related to audio playback and timescales. */
 export default function createPlaybackMiddleware({ songSample }: { songSample: AudioSample }) {
