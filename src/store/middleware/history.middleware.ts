@@ -4,8 +4,8 @@ import { sortObjectFn } from "bsmap";
 import { resolveEventId } from "$/helpers/events.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { getRouter } from "$/router";
 import { clearEventHistory, clearObjectHistory, jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
+import { selectActiveSongId } from "$/store/helpers/route.helpers";
 import {
 	selectAllBasicEvents,
 	selectAllBombNotes,
@@ -26,7 +26,6 @@ import {
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import type { App, SongId } from "$/types";
 import { difference } from "$/utils";
-import { selectActiveSongId } from "../helpers/route.helpers";
 
 function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantNotes = difference(args.notes.before, args.notes.after, resolveNoteId);
@@ -49,15 +48,13 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, son
 	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
 }
 
-/**
- * I use redux-undo to manage undo/redo stuff, but this comes with one limitation: I want to scroll the user to the right place, when undoing/redoing.
- *
- * This middleware listens for undo events, and handles updating the cursor position in response to these actions.
- */
-export default function createHistoryMiddleware() {
-	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
-		extra: { getRouter },
-	});
+interface Options {
+	extra: Pick<AppExtraArgs, "getRouter">;
+}
+
+/** This middleware listens for undo events, and handles updating the cursor position in response to these actions. */
+export default function createHistoryMiddleware({ extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	instance.startListening({
 		actionCreator: leaveEditor,

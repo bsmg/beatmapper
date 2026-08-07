@@ -1,10 +1,14 @@
+import type { CreateToasterReturn } from "@ark-ui/react/toast";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+import type { AnyRouter } from "@tanstack/react-router";
 
-import type { getRouter } from "$/router";
+import type { BeatmapFilestore } from "$/services/file.service";
 import type { default as reducer } from "./features/_setup";
 
 export interface AppExtraArgs {
-	getRouter: typeof getRouter;
+	getRouter: () => AnyRouter;
+	getFilestore: () => BeatmapFilestore;
+	getToaster: () => CreateToasterReturn | null;
 }
 
 export type RootState = ReturnType<typeof reducer>;

@@ -10,9 +10,9 @@ import { getAppBeatmapFilestore, getAppStore, getAppToaster, setupAppStore, setu
 
 import "./index.css";
 
-setupRouter();
+const router = setupRouter();
 setupAudioContext();
-setupAppStore();
+setupAppStore({ extraArgument: { getRouter: getRouter, getFilestore: getAppBeatmapFilestore, getToaster: getAppToaster } });
 
 const root = document.getElementById("root");
 
@@ -26,7 +26,7 @@ createRoot(root).render(
 	<SetupProvider value={{ filestore: getAppBeatmapFilestore(), toaster: getAppToaster() }}>
 		<Provider store={store}>
 			<QueryClientProvider client={new QueryClient()}>
-				<RouterProvider router={getRouter()} />
+				<RouterProvider router={router} />
 			</QueryClientProvider>
 		</Provider>
 	</SetupProvider>,

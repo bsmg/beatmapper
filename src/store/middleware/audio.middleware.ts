@@ -2,9 +2,7 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 
 import { NOTE_TICK_TYPES } from "$/constants";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
-import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
-import { getAppBeatmapFilestore } from "$/setup";
 import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
 import { selectActiveView } from "$/store/helpers/route.helpers";
 import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume } from "$/store/selectors";
@@ -17,13 +15,15 @@ function getTickSchedule(state: RootState, songId: SongId): number[] {
 	return notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
 }
 
-/** Manages all concerns related to audio samples. */
-export default function createAudioMiddleware({ songSample, tickSample }: { songSample: AudioSample; tickSample: AudioSample }) {
-	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
-		extra: { getRouter },
-	});
+interface Options {
+	songSample: AudioSample;
+	tickSample: AudioSample;
+	extra: Pick<AppExtraArgs, "getRouter" | "getFilestore">;
+}
 
-	const filestore = getAppBeatmapFilestore();
+/** Manages all concerns related to audio samples. */
+export default function createAudioMiddleware({ songSample, tickSample, extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	tickSample.load(NOTE_TICK_TYPES[0]);
 
@@ -37,10 +37,11 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 	});
 	instance.startListening({
 		matcher: isAnyOf(finishLoadingMap, updateSong),
-		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, _) => {
+		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, api) => {
 			const { songId, songFile } = action.payload;
 
 			if (finishLoadingMap.match(action) || songFile) {
+				const filestore = api.extra.getFilestore();
 				const updatedSongFile = songFile ?? (await filestore.loadSongFile(songId));
 				const arrayBuffer = await convertFileToArrayBuffer(updatedSongFile);
 				await songSample.loadFromArrayBuffer(arrayBuffer);

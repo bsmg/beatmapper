@@ -6,14 +6,13 @@ import { init, tick, updateEventsEditorCursor } from "./actions";
 import { createAppEnhancers } from "./enhancers/_setup";
 import { default as reducer } from "./features/_setup";
 import { createAppMiddleware } from "./middleware/_setup";
+import type { AppExtraArgs } from "./types";
 
-// biome-ignore-start assist/source/organizeImports: circular dependencies
+interface Options {
+	extraArgument: AppExtraArgs;
+}
 
-import { getRouter } from "$/router";
-
-// biome-ignore-end assist/source/organizeImports: circular dependencies
-
-export async function createAppStore() {
+export async function createAppStore({ extraArgument }: Options) {
 	const devTools: DevToolsEnhancerOptions = {
 		name: "Beatmapper",
 		actionsDenylist: [tick.type, updateEventsEditorCursor.type],
@@ -23,7 +22,7 @@ export async function createAppStore() {
 		reducer: reducer,
 		devTools: import.meta.env.VITE_ENABLE_DEVTOOLS ? devTools : undefined,
 		middleware: (getDefaultMiddleware) => {
-			return getDefaultMiddleware({ thunk: { extraArgument: { getRouter } } }).concat(createAppMiddleware());
+			return getDefaultMiddleware({ thunk: { extraArgument } }).concat(createAppMiddleware({ extraArgument }));
 		},
 		enhancers: (getDefaultEnhancers) => {
 			return getDefaultEnhancers().concat(createAppEnhancers());

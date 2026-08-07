@@ -4,18 +4,19 @@ import { createBeatmap } from "bsmap";
 import { createAudioDataContentsFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
 import { deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { getAppBeatmapFilestore } from "$/setup";
 import { addBeatmap, addColorScheme, addSong, copyBeatmap, finishLoadingMap, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeColorScheme, removeSong, startLoadingMap, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
-import type { AppDispatch, RootState } from "$/store/types";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import type { SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
-/** This middleware manages file storage concerns. */
-export default function createFileMiddleware() {
-	const instance = createListenerMiddleware<RootState, AppDispatch>();
+interface Options {
+	extra: Pick<AppExtraArgs, "getFilestore">;
+}
 
-	const filestore = getAppBeatmapFilestore();
+/** This middleware manages file storage concerns. */
+export default function createFileMiddleware({ extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	instance.startListening({
 		actionCreator: rehydrate,
@@ -28,8 +29,10 @@ export default function createFileMiddleware() {
 		actionCreator: startLoadingMap,
 		effect: async (action, api) => {
 			const { songId, beatmapId } = action.payload;
+
 			const state = api.getState();
 
+			const filestore = api.extra.getFilestore();
 			// fetch the metadata for this beatmap from our local store
 			const beatmap = await filestore.loadBeatmapContents(songId, beatmapId).then((data) => createBeatmap(data));
 			// pull the lightshow data from any beatmap with a matching lightshow id
@@ -54,6 +57,7 @@ export default function createFileMiddleware() {
 			const { songId, songFile } = action.payload;
 
 			if (finishLoadingMap.match(action) || songFile) {
+				const filestore = api.extra.getFilestore();
 				const activeSongFile = songFile ?? (await filestore.loadSongFile(songId));
 
 				await deriveWaveformDataFromFile(activeSongFile).then((waveformData) => {
@@ -72,6 +76,8 @@ export default function createFileMiddleware() {
 				songDuration: selectDuration(state),
 			});
 			const audioDataContents = await createAudioDataContentsFromFile(songFile, { bpm: selectBpm(state, songId) });
+
+			const filestore = api.extra.getFilestore();
 
 			await Promise.all([
 				filestore.saveSongFile(songId, songFile),
@@ -92,8 +98,11 @@ export default function createFileMiddleware() {
 	});
 	instance.startListening({
 		actionCreator: removeSong,
-		effect: async (action) => {
+		effect: async (action, api) => {
 			const { songId, beatmapIds } = action.payload;
+
+			const filestore = api.extra.getFilestore();
+
 			await filestore.removeAllFilesForSong(songId, beatmapIds);
 		},
 	});
@@ -101,9 +110,12 @@ export default function createFileMiddleware() {
 		actionCreator: addBeatmap,
 		effect: async (action, api) => {
 			const { songId, beatmapId } = action.payload;
-			const state = api.getState();
 
+			const state = api.getState();
+			// pull the lightshow id from the source
 			const lightshowId = selectLightshowIdForBeatmap(state, songId, beatmapId);
+
+			const filestore = api.extra.getFilestore();
 			// grab the implicit version from the currently selected beatmap, so we can keep all related files on the same version
 			const version = await filestore.loadImplicitVersion(songId, selectSelectedBeatmap(state, songId));
 			// save it to our destination file
@@ -124,10 +136,12 @@ export default function createFileMiddleware() {
 			const { songId, sourceBeatmapId, targetBeatmapId } = action.payload;
 
 			const state = api.getState();
-			// grab the implicit version and all related collections from the source data
-			const { version, difficulty, lightshow, customData } = await filestore.loadBeatmapContents(songId, sourceBeatmapId);
 			// pull the lightshow id from the source (since we're deriving that data anyway)
 			const lightshowId = selectLightshowIdForBeatmap(state, songId, sourceBeatmapId);
+
+			const filestore = api.extra.getFilestore();
+			// grab the implicit version and all related collections from the source data
+			const { version, difficulty, lightshow, customData } = await filestore.loadBeatmapContents(songId, sourceBeatmapId);
 			// save it to our destination
 			await filestore.saveBeatmapContents(
 				songId,
@@ -147,12 +161,15 @@ export default function createFileMiddleware() {
 		actionCreator: updateBeatmap,
 		effect: async (action, api) => {
 			const { songId, beatmapId, changes } = action.payload;
+
 			const state = api.getState();
 
 			if ("lightshowId" in changes) {
 				const lightshowId = selectLightshowIdForBeatmap(state, songId, beatmapId);
 				// reference a beatmap that has the same lightshow id as the one provided via form data
 				const derivedBeatmapId = selectBeatmapIdsWithLightshowId(state, songId, lightshowId)[0];
+
+				const filestore = api.extra.getFilestore();
 				// extract the lightshow data from the derived beatmap file
 				const { lightshow } = await filestore.loadBeatmapContents(songId, derivedBeatmapId);
 				// update the beatmap with the new lightshow data
@@ -166,8 +183,10 @@ export default function createFileMiddleware() {
 	});
 	instance.startListening({
 		actionCreator: removeBeatmap,
-		effect: async (action) => {
+		effect: async (action, api) => {
 			const { songId, beatmapId } = action.payload;
+
+			const filestore = api.extra.getFilestore();
 			// Our reducer will handle the redux state part, but we also need to delete the corresponding beatmap from the filesystem.
 			await filestore.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId }));
 		},
@@ -182,6 +201,8 @@ export default function createFileMiddleware() {
 			const infoContents = serializeInfoContents(selectSongById(state, songId), {
 				songDuration: selectDuration(state),
 			});
+
+			const filestore = api.extra.getFilestore();
 			// Back up our latest data!
 			await filestore.updateInfoContents(songId, infoContents);
 		},

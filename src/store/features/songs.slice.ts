@@ -1,12 +1,12 @@
-import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, type GetThunkAPI, isAnyOf } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
 import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
 import { eventTypeRename } from "bsmap/extensions/renamer";
 
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
-import { getAppToaster } from "$/setup";
 import { finishLoadingMap, loadGridPreset, startLoadingMap } from "$/store/actions";
+import type { AppThunkApiConfig } from "$/store/types";
 import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
@@ -103,14 +103,13 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 		}),
 	},
 	reducers: (api) => {
-		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[1] }> = async (args, api) => {
-			const toaster = getAppToaster();
-
+		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[1] }> = async (args, api: GetThunkAPI<AppThunkApiConfig>) => {
 			try {
 				const archive = await args.file.arrayBuffer();
 				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), args.options);
 				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: args.options.readonly } });
 			} catch (error) {
+				const toaster = api.extra.getToaster();
 				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
 				console.error(error);
 				return api.rejectWithValue(error);

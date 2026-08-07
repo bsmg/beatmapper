@@ -2,23 +2,22 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 import { TimeProcessor } from "bsmap";
 
 import { createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
-import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
-import { getAppBeatmapFilestore } from "$/setup";
 import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
+import { selectActiveView } from "$/store/helpers/route.helpers";
 import { selectBeatForTime, selectBpm, selectCursorPosition, selectDuration, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeForBeat } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
-import { selectActiveView } from "../helpers/route.helpers";
+
+interface Options {
+	songSample: AudioSample;
+	extra: Pick<AppExtraArgs, "getRouter" | "getFilestore">;
+}
 
 /** Manages all concerns related to audio playback and timescales. */
-export default function createPlaybackMiddleware({ songSample }: { songSample: AudioSample }) {
-	const instance = createListenerMiddleware<RootState, AppDispatch, AppExtraArgs>({
-		extra: { getRouter },
-	});
-
-	const filestore = getAppBeatmapFilestore();
+export default function createPlaybackMiddleware({ songSample, extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	let animationFrameId: number;
 
@@ -31,6 +30,8 @@ export default function createPlaybackMiddleware({ songSample }: { songSample: A
 			if (!finishLoadingMap.match(action)) {
 				api.dispatch(stopPlayback({ songId }));
 			}
+
+			const filestore = api.extra.getFilestore();
 
 			await Promise.all([filestore.loadAudioDataContents(songId), filestore.loadBeatmapContents(songId, selectSelectedBeatmap(state, songId))]).then(([audioData, { difficulty }]) => {
 				const { timescale } = new TimeProcessor(selectBpm(state, songId), [...createBpmEventsFromAudioData(audioData), ...difficulty.bpmEvents], 0);

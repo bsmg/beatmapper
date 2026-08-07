@@ -2,15 +2,16 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { saveAs } from "file-saver";
 
 import { exportMapArchiveFromFilestore } from "$/services/packaging.service";
-import { getAppToaster } from "$/setup";
 import { downloadMapFiles } from "$/store/actions";
 import { selectSongById } from "$/store/selectors";
-import type { AppDispatch, RootState } from "$/store/types";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 
-export default function createPackagingMiddleware() {
-	const instance = createListenerMiddleware<RootState, AppDispatch>();
+interface Options {
+	extra: Pick<AppExtraArgs, "getToaster">;
+}
 
-	const toaster = getAppToaster();
+export default function createPackagingMiddleware({ extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	instance.startListening({
 		actionCreator: downloadMapFiles,
@@ -22,6 +23,7 @@ export default function createPackagingMiddleware() {
 			try {
 				saveAs(await exportMapArchiveFromFilestore(song, options));
 			} catch (error) {
+				const toaster = api.extra.getToaster();
 				toaster?.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);
 			}
