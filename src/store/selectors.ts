@@ -6,7 +6,6 @@ import { DEFAULT_GRID } from "$/constants";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
 import { getGridSize } from "$/helpers/song.helpers";
-import { getAudioContext } from "$/setup";
 import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
 import beatmap from "./features/beatmap.slice";
@@ -98,11 +97,6 @@ export const selectBpmScale = createSelector([selectTimeProcessor, selectBpm, se
 });
 
 export const { selectNew, selectAnnouncements, selectUsername, selectRenderScale, selectBloomEnabled, selectObstaclePlacementMode: selectUserObstaclePlacementMode, selectPacerWait } = user.getSelectors(user.selectSlice);
-
-export const selectAudioLatencyInBeats = createSelector([selectTimeProcessor], (timeProcessor) => {
-	const { baseLatency } = getAudioContext();
-	return timeProcessor.toBeatTime(baseLatency);
-});
 
 export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
 	return Math.max(renderScale * 75, 25);

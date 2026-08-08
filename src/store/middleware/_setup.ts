@@ -23,8 +23,10 @@ export function createAppMiddleware({ extraArgument: extra }: Options) {
 		},
 	});
 
-	const songSample = new AudioSample({ volume: 1, playbackRate: 1 });
-	const tickSample = new AudioSample({ volume: 1, playbackRate: 1 });
+	const audioContext = extra.getAudioContext();
+
+	const songSample = new AudioSample(audioContext, { volume: 1, playbackRate: 1 });
+	const tickSample = new AudioSample(audioContext, { volume: 1, playbackRate: 1 });
 
 	const audioMiddleware = createAudioMiddleware({ songSample, tickSample, extra });
 	const playbackMiddleware = createPlaybackMiddleware({ songSample, extra });

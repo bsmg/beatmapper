@@ -4,10 +4,10 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
 import { forwardRef } from "react";
 
+import { AppStore } from "$/_setup";
 import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
-import { getAppStore } from "$/setup";
 import { leaveEditor, startLoadingMap, stopPlayback, updateAnnouncements, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectBeatmapEntities, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
@@ -30,25 +30,22 @@ const EDITOR_PROMPT_COMPONENTS: MDXComponents = {
 let lastParams: { sid: string; bid: string } | null = null;
 
 async function syncEditorLifecycle(cause: "enter" | "stay" | "leave", params: { sid: string; bid: string }) {
-	const store = await getAppStore();
-
 	const onEnter = async () => {
-		const state = store.getState();
+		const state = AppStore.instance.getState();
 
-		await Promise.resolve(store.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
+		await Promise.resolve(AppStore.instance.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
 
 		if (cause !== "stay") {
-			store.dispatch(updateCursorPosition({ value: selectEditorOffset(state, params.sid) }));
+			AppStore.instance.dispatch(updateCursorPosition({ value: selectEditorOffset(state, params.sid) }));
 		}
 
 		lastParams = params;
 	};
 	const onLeave = async () => {
-		const store = await getAppStore();
-		const state = store.getState();
+		const state = AppStore.instance.getState();
 
 		if (lastParams) {
-			store.dispatch(leaveEditor({ songId: lastParams.sid, beatmapId: lastParams.bid, entities: selectBeatmapEntities(state) }));
+			AppStore.instance.dispatch(leaveEditor({ songId: lastParams.sid, beatmapId: lastParams.bid, entities: selectBeatmapEntities(state) }));
 		}
 	};
 
@@ -77,13 +74,11 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 		};
 	},
 	loader: async ({ context }) => {
-		const store = await getAppStore();
-		const state = store.getState();
-		const seenPrompts = selectAnnouncements(state);
+		const announcements = selectAnnouncements(AppStore.instance.getState());
 
 		return {
 			view: toPascalCase(context.view),
-			unseenPrompt: prompts.find((prompt) => !seenPrompts.includes(prompt.id)),
+			unseenPrompt: prompts.find((prompt) => !announcements.includes(prompt.id)),
 		};
 	},
 	head: ({ params, loaderData }) => {
@@ -96,8 +91,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 			const { unseenPrompt } = loaderData;
 
 			if (unseenPrompt) {
-				const store = await getAppStore();
-				const announcements = selectAnnouncements(store.getState());
+				const announcements = selectAnnouncements(AppStore.instance.getState());
 
 				EDITOR_TOASTER.create({
 					id: unseenPrompt.id,
@@ -107,7 +101,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 					closable: true,
 					onStatusChange: async (details) => {
 						if (details.status === "dismissing") {
-							store.dispatch(updateAnnouncements(announcements.concat(unseenPrompt.id)));
+							AppStore.instance.dispatch(updateAnnouncements(announcements.concat(unseenPrompt.id)));
 						}
 					},
 				});
@@ -120,8 +114,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	onLeave: async ({ params }) => {
 		syncEditorLifecycle("leave", params);
 
-		const store = await getAppStore();
-		store.dispatch(stopPlayback({ songId: params.sid }));
+		AppStore.instance.dispatch(stopPlayback({ songId: params.sid }));
 	},
 });
 

@@ -8,7 +8,7 @@ import type { PropsWithChildren, ReactNode } from "react";
 import { object } from "valibot";
 
 import { createBeatmapCharacteristicListCollection, createBeatmapDifficultyListCollection } from "$/components/app/constants";
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { useAppForm } from "$/components/ui/compositions";
 import { type createAppBeatmap, resolveBeatmapId } from "$/helpers/song.helpers";
 import { useAppSelector } from "$/store/hooks";
@@ -30,8 +30,7 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const navigate = useNavigate();
-
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
 
 	const username = useAppSelector(selectUsername);
 	const beatmaps = useAppSelector((state) => selectAllBeatmaps(state, sid));
@@ -54,7 +53,7 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 				if (dialog) dialog.setOpen(false);
 				navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: beatmapId } });
 			} catch (error) {
-				toaster?.error({ description: `Could not create beatmap: ${error instanceof Error ? error.message : "See console for more info."}` });
+				toaster.error({ description: `Could not create beatmap: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);
 			}
 		},

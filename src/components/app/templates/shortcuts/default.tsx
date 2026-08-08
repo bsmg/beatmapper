@@ -3,7 +3,7 @@ import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback, useRef } from "react";
 
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
@@ -48,7 +48,7 @@ function DefaultEditorShortcuts() {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
 
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
@@ -215,10 +215,10 @@ function DefaultEditorShortcuts() {
 				case "KeyZ": {
 					if (!metaKeyPressed) return;
 					if (view === View.BEATMAP) {
-						return dispatch(ev.shiftKey ? redoObjects({ songId: sid }) : undoObjects({ songId: sid }));
+						return dispatch((ev.shiftKey ? redoObjects : undoObjects)());
 					}
 					if (view === View.LIGHTSHOW) {
-						return dispatch(ev.shiftKey ? redoEvents({ songId: sid }) : undoEvents({ songId: sid }));
+						return dispatch((ev.shiftKey ? redoEvents : undoEvents)());
 					}
 					return;
 				}
@@ -231,7 +231,7 @@ function DefaultEditorShortcuts() {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
 					if (import.meta.env.PROD && isDemo) {
-						return toaster?.create({
+						return toaster.create({
 							id: "demo-download-blocker",
 							type: "info",
 							description: "Unfortunately, the demo map is not available for download.",
@@ -249,7 +249,7 @@ function DefaultEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, view, dispatch, toaster, sid, bid, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
+		[dispatch, toaster, sid, bid, view, isLoading, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
 	);
 
 	const handleKeyUp = useCallback(

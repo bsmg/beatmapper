@@ -1,7 +1,6 @@
 import { configureStore, type DevToolsEnhancerOptions } from "@reduxjs/toolkit";
 import { initStateWithPrevTab } from "redux-state-sync";
 
-import { createLazySingleton } from "$/utils";
 import { init, tick, updateEventsEditorCursor } from "./actions";
 import { createAppEnhancers } from "./enhancers/_setup";
 import { default as reducer } from "./features/_setup";
@@ -37,5 +36,3 @@ export async function createAppStore({ extraArgument }: Options) {
 
 	return store;
 }
-
-export const { get: getAppStore, setup: setupAppStore } = createLazySingleton(createAppStore);

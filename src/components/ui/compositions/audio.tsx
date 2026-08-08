@@ -1,6 +1,7 @@
 import { PlayIcon, SquareIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useAudioContext } from "$/components/context";
 import { Button } from "$/components/ui/compositions";
 import { AudioSample } from "$/services/audio.service";
 import { styled } from "$:styled-system/jsx";
@@ -14,11 +15,13 @@ interface Props {
 }
 
 export function AudioPreview({ file, startTime = 0, duration, volume }: Props) {
+	const audioContext = useAudioContext();
+
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [progress, setProgress] = useState(0);
 
-	const audio = useMemo(() => new AudioSample({ volume }), [volume]);
+	const audio = useMemo(() => new AudioSample(audioContext, { volume }), [audioContext, volume]);
 	const requestRef = useRef<number>(null);
 
 	const getEffectiveDuration = () => {

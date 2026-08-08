@@ -5,20 +5,14 @@ import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import type { AudioSample } from "$/services/audio.service";
 import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
 import { selectActiveView } from "$/store/helpers/route.helpers";
-import { selectAllColorNotes, selectAudioLatencyInBeats, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume } from "$/store/selectors";
+import { selectAllColorNotes, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTimeProcessor } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { type SongId, View } from "$/types";
-
-function getTickSchedule(state: RootState, songId: SongId): number[] {
-	const notes = selectAllColorNotes(state);
-	const delayInBeats = selectAudioLatencyInBeats(state, songId);
-	return notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
-}
 
 interface Options {
 	songSample: AudioSample;
 	tickSample: AudioSample;
-	extra: Pick<AppExtraArgs, "getRouter" | "getFilestore">;
+	extra: Pick<AppExtraArgs, "getRouter" | "getFilestore" | "getAudioContext">;
 }
 
 /** Manages all concerns related to audio samples. */
@@ -51,7 +45,14 @@ export default function createAudioMiddleware({ songSample, tickSample, extra }:
 	instance.startListening({
 		matcher: isAnyOf(finishLoadingMap, startPlayback),
 		effect: (action: PayloadAction<{ songId: SongId }>, api) => {
-			tickSchedule = getTickSchedule(api.getState(), action.payload.songId);
+			const state = api.getState();
+			const { baseLatency } = api.extra.getAudioContext();
+
+			const notes = selectAllColorNotes(state);
+			const timeProcessor = selectTimeProcessor(state, action.payload.songId);
+			const delayInBeats = timeProcessor.toBeatTime(baseLatency);
+
+			tickSchedule = notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
 		},
 	});
 	instance.startListening({

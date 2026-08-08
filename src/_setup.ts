@@ -2,19 +2,16 @@ import { createToaster } from "@ark-ui/react/toast";
 import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { toPascalCase } from "@std/text/to-pascal-case";
-import { createBeatmap, loadDifficulty, loadInfo, setupLogger } from "bsmap";
-import { createStorage, type Driver, type StorageValue } from "unstorage";
+import { createBeatmap, loadDifficulty, loadInfo } from "bsmap";
+import { type CreateStorageOptions, createStorage, type StorageValue } from "unstorage";
 
 import { BeatmapFilestore } from "./services/file.service";
 import { createDriver, type LegacyStorageSchema } from "./services/storage.service";
+import { createAppStore } from "./store/_setup";
 import type { App } from "./types";
-import { createLazySingleton } from "./utils";
+import { createSingleton } from "./utils";
 
-if (import.meta.env.DEV) {
-	setupLogger();
-}
-
-const appFileDriver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
+export const createAppFileStorageDriver = createDriver<LegacyStorageSchema & { entries: { key: string; value: StorageValue } }>({
 	name: "beat-mapper-files",
 	version: 4,
 	async upgrade(idb, _current, next, tx) {
@@ -74,21 +71,16 @@ const appFileDriver = createDriver<LegacyStorageSchema & { entries: { key: strin
 	},
 });
 
-export const { get: getAudioContext, setup: setupAudioContext } = createLazySingleton(() => {
-	return new AudioContext({ latencyHint: "playback" });
+export const AppAudioContext = createSingleton((options: Omit<AudioContextOptions, "latencyHint">) => {
+	return new AudioContext({ ...options, latencyHint: "playback" });
 });
 
-export const { get: getAppBeatmapFilestore, setup: setupAppBeatmapFilestore } = createLazySingleton((driver?: Driver) => {
+export const AppFilestore = createSingleton((options: CreateStorageOptions) => {
 	return new BeatmapFilestore({
-		storage: createStorage({
-			driver: driver ?? appFileDriver({ name: "entries" }),
-		}),
+		storage: createStorage(options),
 	});
 });
 
-export const { get: getAppToaster, setup: setupAppToaster } = createLazySingleton((toaster?: ReturnType<typeof createToaster>): NonNullable<typeof toaster> | null => {
-	if (toaster !== undefined) return toaster ?? null;
-	return createToaster({ placement: "bottom-end", overlap: true, max: 8 });
-});
+export const AppToaster = createSingleton(createToaster);
 
-export { getAppStore, setupAppStore } from "./store/_setup";
+export const AppStore = createSingleton(createAppStore);

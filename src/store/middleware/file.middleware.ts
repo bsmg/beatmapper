@@ -11,7 +11,7 @@ import type { SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 interface Options {
-	extra: Pick<AppExtraArgs, "getFilestore">;
+	extra: Pick<AppExtraArgs, "getFilestore" | "getAudioContext">;
 }
 
 /** This middleware manages file storage concerns. */
@@ -60,7 +60,7 @@ export default function createFileMiddleware({ extra }: Options) {
 				const filestore = api.extra.getFilestore();
 				const activeSongFile = songFile ?? (await filestore.loadSongFile(songId));
 
-				await deriveWaveformDataFromFile(activeSongFile).then((waveformData) => {
+				await deriveWaveformDataFromFile(activeSongFile, api.extra.getAudioContext()).then((waveformData) => {
 					return api.dispatch(reloadVisualizer({ duration: waveformData.duration, waveformData: waveformData.toJSON() }));
 				});
 			}
@@ -75,7 +75,7 @@ export default function createFileMiddleware({ extra }: Options) {
 			const infoContents = serializeInfoContents(selectSongById(state, songId), {
 				songDuration: selectDuration(state),
 			});
-			const audioDataContents = await createAudioDataContentsFromFile(songFile, { bpm: selectBpm(state, songId) });
+			const audioDataContents = await createAudioDataContentsFromFile(songFile, api.extra.getAudioContext(), { bpm: selectBpm(state, songId) });
 
 			const filestore = api.extra.getFilestore();
 

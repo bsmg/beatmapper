@@ -7,7 +7,7 @@ import { selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 
 interface Options {
-	extra: Pick<AppExtraArgs, "getToaster">;
+	extra: Pick<AppExtraArgs, "getFilestore" | "getToaster">;
 }
 
 export default function createPackagingMiddleware({ extra }: Options) {
@@ -21,7 +21,8 @@ export default function createPackagingMiddleware({ extra }: Options) {
 			const song = selectSongById(state, songId);
 
 			try {
-				saveAs(await exportMapArchiveFromFilestore(song, options));
+				const filestore = api.extra.getFilestore();
+				saveAs(await exportMapArchiveFromFilestore(song, filestore, options));
 			} catch (error) {
 				const toaster = api.extra.getToaster();
 				toaster?.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
