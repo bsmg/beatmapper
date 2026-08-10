@@ -19,18 +19,18 @@ export interface GetShallowThunkAPI<ThunkApiConfig> {
 	extra: GetExtra<ThunkApiConfig>;
 }
 
-export interface ThunkActionCreator<Arg, ThunkApiConfig, Returned = void, T extends string = string, S = GetSerializedErrorType<ThunkApiConfig>, M = GetMeta<ThunkApiConfig>> extends ActionCreatorWithPreparedPayload<[Arg], Returned, string, S, M> {
+export interface ThunkActionCreator<Arg, ThunkApiConfig, Returned = void, T extends string = string, S = GetSerializedErrorType<ThunkApiConfig>, M extends { arg: Arg } = GetMeta<ThunkApiConfig> & { arg: Arg }> extends ActionCreatorWithPreparedPayload<[Arg], Returned, string, S, M> {
 	(...args: GetArgs<Arg>): ThunkAction<Returned, GetState<ThunkApiConfig>, GetExtra<ThunkApiConfig>, UnknownAction>;
 	match: (action: unknown) => action is PayloadAction<Returned, T, M, S>;
 }
 
-export interface ThunkOptions<Arg, ThunkApiConfig, S = GetSerializedErrorType<ThunkApiConfig>, M = GetMeta<ThunkApiConfig>> {
+export interface ThunkOptions<Arg, ThunkApiConfig, S = GetSerializedErrorType<ThunkApiConfig>, M extends { arg: Arg } = GetMeta<ThunkApiConfig> & { arg: Arg }> {
 	condition?: (arg: Arg, api: Pick<GetShallowThunkAPI<ThunkApiConfig>, "getState" | "extra">) => boolean | undefined;
-	getMeta?: (arg: Arg, api: Pick<GetShallowThunkAPI<ThunkApiConfig>, "getState" | "extra">) => M;
+	getMeta?: (arg: Arg, api: Pick<GetShallowThunkAPI<ThunkApiConfig>, "getState" | "extra">) => Omit<M, "arg">;
 	serializeError?: (x: unknown) => S;
 }
 
-export function createThunk<Arg, ThunkApiConfig, Returned = void, T extends string = string, S = GetSerializedErrorType<ThunkApiConfig>, M = GetMeta<ThunkApiConfig>>(
+export function createThunk<Arg, ThunkApiConfig, Returned = void, T extends string = string, S = GetSerializedErrorType<ThunkApiConfig>, M extends { arg: Arg } = GetMeta<ThunkApiConfig> & { arg: Arg }>(
 	type: string,
 	payloadCreator: (arg: Arg, api: GetShallowThunkAPI<ThunkApiConfig>) => Returned,
 	options?: ThunkOptions<Arg, ThunkApiConfig, S, M>,
@@ -45,7 +45,7 @@ export function createThunk<Arg, ThunkApiConfig, Returned = void, T extends stri
 				return;
 			}
 
-			const meta = options?.getMeta?.(arg, api);
+			const meta = { ...options?.getMeta?.(arg, api), arg };
 
 			try {
 				const payload = payloadCreator(arg, api);

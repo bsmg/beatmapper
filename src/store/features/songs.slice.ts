@@ -103,7 +103,7 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 		}),
 	},
 	reducers: (api) => {
-		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[3] }> = async (args, api: GetThunkAPI<AppThunkApiConfig>) => {
+		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[3] }> = async (args, api: GetThunkAPI<AppThunkApiConfig<"getFilestore" | "getToaster" | "getAudioContext">>) => {
 			try {
 				const archive = await args.file.arrayBuffer();
 				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), api.extra.getAudioContext(), api.extra.getFilestore(), args.options);

@@ -15,8 +15,8 @@ export interface AppExtraArgs {
 export type RootState = ReturnType<typeof reducer>;
 export type AppDispatch = ThunkDispatch<RootState, AppExtraArgs, UnknownAction>;
 
-export interface AppThunkApiConfig {
+export interface AppThunkApiConfig<E extends keyof AppExtraArgs = never> {
 	state: RootState;
 	dispatch: AppDispatch;
-	extra: AppExtraArgs;
+	extra: Pick<AppExtraArgs, E>;
 }
