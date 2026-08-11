@@ -2,8 +2,8 @@ import type { Middleware } from "@reduxjs/toolkit";
 import { createStateSyncMiddleware } from "redux-state-sync";
 
 import { AudioSample } from "$/services/audio.service";
-import { isHydrationAction } from "$/store/enhancers/storage.enhancer";
 import type { AppExtraArgs } from "$/store/types";
+import { withFluxStandardMeta } from "$/store/utils/guards.utils";
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
 import createDemoMiddleware from "./demo.middleware";
@@ -18,9 +18,9 @@ interface Options {
 
 export function createAppMiddleware({ extraArgument: extra }: Options) {
 	const stateSyncMiddleware = createStateSyncMiddleware({
-		predicate: (action) => {
-			return isHydrationAction(action);
-		},
+		predicate: withFluxStandardMeta<{ sync?: boolean }>((meta) => {
+			return "sync" in meta && typeof meta.sync === "boolean" && meta.sync === true;
+		}),
 	});
 
 	const audioContext = extra.getAudioContext();

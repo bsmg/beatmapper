@@ -1,13 +1,13 @@
-import { isFluxStandardAction, type PayloadAction, type Store, type StoreEnhancer, type UnknownAction } from "@reduxjs/toolkit";
+import type { Store, StoreEnhancer, UnknownAction } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
 import { createStorage, type Driver, type StorageValue } from "unstorage";
 
+import { withFluxStandardMeta } from "$/store/utils/guards.utils";
 import type { MaybeDefined } from "$/types/vendor";
 
-export function isHydrationAction<P = void, T extends string = string, M = never, E = never>(action: unknown): action is PayloadAction<P, T, M & { hydrate?: boolean }, E> {
-	if (!isFluxStandardAction(action)) return false;
-	return "meta" in action && typeof action.meta === "object" && action.meta !== null && "hydrate" in action.meta && typeof action.meta.hydrate === "boolean" && (action.meta as Record<string, unknown>).hydrate === true;
-}
+const isHydrationAction = withFluxStandardMeta((meta) => {
+	return "hydrate" in meta && typeof meta.hydrate === "boolean" && meta.hydrate === true;
+});
 
 export interface StorageStrategy<TState, TValue = StorageValue> {
 	getKeys: (prevState: TState, nextState: TState) => string[];

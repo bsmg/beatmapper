@@ -45,7 +45,7 @@ import visualizer from "./features/visualizer.slice";
 export const { init } = global.actions;
 
 export const rehydrate = createAction("rehydrate", (args: { songId: SongId; beatmapId: BeatmapId }) => {
-	return { payload: { ...args }, meta: { hydrate: true } };
+	return { payload: { ...args }, meta: { hydrate: true, sync: true } };
 });
 
 export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
