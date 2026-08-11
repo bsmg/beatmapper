@@ -13,7 +13,7 @@ export function ensureObject<T extends object>(object: T) {
 
 export function hasKeys<T extends object, K extends keyof Required<T>>(obj: T, ...keys: K[]): boolean {
 	for (const key of keys) {
-		if (Object.hasOwn(obj, key)) return true;
+		if (Object.hasOwn(obj, key) && obj[key]) return true;
 	}
 	return false;
 }

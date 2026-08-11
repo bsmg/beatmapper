@@ -11,6 +11,7 @@ import {
 	type EnvironmentV3Name,
 	type IV2CustomDataDifficulty,
 	type IV2CustomDataInfoDifficulty,
+	type IV2EditorInfo,
 	type IWrapBeatmap,
 	type IWrapInfo,
 	type IWrapInfoColorScheme,
@@ -21,12 +22,12 @@ import {
 } from "bsmap";
 
 import { DEFAULT_GRID } from "$/constants";
-import { type App, ColorSchemeKey } from "$/types";
+import { type App, ColorSchemeKey, type IEditorData } from "$/types";
 import { deepAssign, ensureArray, ensureObject, hasKeys } from "$/utils";
 import { deserializeCustomBookmark, resolveBookmarkId, serializeCustomBookmark } from "./bookmarks.helpers";
 import { deriveColorSchemeFromEnvironment } from "./colors.helpers";
 import { createDataFactory } from "./factory.helpers";
-import { createAppBeatmap, createAppSong } from "./song.helpers";
+import { createAppBeatmap, createAppSong, createSongId } from "./song.helpers";
 
 export function resolveBeatmapIdFromFilename(filename: string): string {
 	let fn = filename;
@@ -40,6 +41,47 @@ export function patchEnvironmentName<T extends EnvironmentName>(environment: str
 		return "OriginsEnvironment" as T;
 	}
 	return environment as T;
+}
+
+export function getEditorSettings(data: IWrapInfo): IEditorData {
+	const { editorSettings } = {
+		...(data.customData._editors?.Beatmapper as IV2EditorInfo & { editorSettings?: IEditorData }),
+	};
+
+	const activeCustomColors = Object.values(ColorSchemeKey).reduce(
+		(acc, key) => {
+			const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
+			acc[key as ColorSchemeKey] = color ? colorToHex(color).slice(0, 7) : null;
+			return acc;
+		},
+		{} as { [key in ColorSchemeKey]: string | null },
+	);
+
+	const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
+		return hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor");
+	});
+
+	const customColors = ensureObject({
+		isEnabled: isCustomColorsEnabled,
+		colorLeft: activeCustomColors.colorLeft ?? undefined,
+		colorRight: activeCustomColors.colorRight ?? undefined,
+		envColorLeft: activeCustomColors.envColorLeft ?? undefined,
+		envColorRight: activeCustomColors.envColorRight ?? undefined,
+		envColorWhite: activeCustomColors.envColorWhite ?? undefined,
+		envColorLeftBoost: activeCustomColors.envColorLeftBoost ?? undefined,
+		envColorRightBoost: activeCustomColors.envColorRightBoost ?? undefined,
+		envColorWhiteBoost: activeCustomColors.envColorWhiteBoost ?? undefined,
+		obstacleColor: activeCustomColors.obstacleColor ?? undefined,
+	});
+
+	return deepAssign(
+		{ ...editorSettings },
+		{
+			modSettings: {
+				customColors: isCustomColorsEnabled ? customColors : undefined,
+			},
+		},
+	);
 }
 
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createDataFactory({
@@ -79,7 +121,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 					filename: data.songFilename,
 					audioDataFilename: "AudioData.dat",
 					bpm: data.bpm,
-					duration: options.songDuration ? options.songDuration / 1000 : undefined,
+					duration: options.songDuration ?? undefined,
 					previewStartTime: data.previewStartTime,
 					previewDuration: data.previewDuration,
 				},
@@ -125,6 +167,11 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						Beatmapper: {
 							version: version,
 							editorSettings: {
+								id: createSongId(data),
+								readonly: data.demo,
+								createdAt: data.createdAt,
+								lastOpenedAt: data.lastOpenedAt,
+								lastOpenedBeatmapId: data.selectedDifficulty,
 								modSettings: {
 									mappingExtensions: ensureObject({
 										isEnabled: !!mappingExtensions?.isEnabled,
@@ -178,37 +225,10 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				return acc;
 			}, {});
 
-			const activeCustomColors = Object.values(ColorSchemeKey).reduce(
-				(acc, key) => {
-					const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
-					acc[key as ColorSchemeKey] = color ? colorToHex(color).slice(0, 7) : null;
-					return acc;
-				},
-				{} as { [key in ColorSchemeKey]: string | null },
-			);
-
-			const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
-				return hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor");
-			});
-
-			const customColors = ensureObject({
-				isEnabled: isCustomColorsEnabled,
-				colorLeft: activeCustomColors.colorLeft ?? undefined,
-				colorRight: activeCustomColors.colorRight ?? undefined,
-				envColorLeft: activeCustomColors.envColorLeft ?? undefined,
-				envColorRight: activeCustomColors.envColorRight ?? undefined,
-				envColorWhite: activeCustomColors.envColorWhite ?? undefined,
-				envColorLeftBoost: activeCustomColors.envColorLeftBoost ?? undefined,
-				envColorRightBoost: activeCustomColors.envColorRightBoost ?? undefined,
-				envColorWhiteBoost: activeCustomColors.envColorWhiteBoost ?? undefined,
-				obstacleColor: activeCustomColors.obstacleColor ?? undefined,
-			});
-
-			const baseModSettings = {
-				customColors: isCustomColorsEnabled ? customColors : undefined,
-			};
+			const { id, readonly, createdAt, lastOpenedAt, lastOpenedBeatmapId, modSettings } = getEditorSettings(data);
 
 			return createAppSong({
+				id: id,
 				name: data.song.title,
 				subName: data.song.subTitle,
 				artistName: data.song.author,
@@ -221,8 +241,11 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				coverArtFilename: data.coverImageFilename,
 				difficultiesById: beatmapsById,
 				colorSchemesById: colorSchemesById,
-				demo: options.readonly,
-				modSettings: deepAssign(baseModSettings, { ...data.customData.editors?.Beatmapper?.editorSettings?.modSettings }),
+				demo: readonly ?? options.readonly,
+				createdAt: createdAt,
+				lastOpenedAt: lastOpenedAt,
+				selectedDifficulty: lastOpenedBeatmapId,
+				modSettings: modSettings,
 			});
 		},
 	},
