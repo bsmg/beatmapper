@@ -9,7 +9,6 @@ import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
 import {
 	hydrateGridPresets,
-	hydrateSongs,
 	updateAnnouncements,
 	updateBloomEnabled,
 	updateEventsEditorColor,
@@ -35,6 +34,7 @@ import {
 	updateTickVolume,
 	updateTrackScale,
 	updateUsername,
+	upsertSongs,
 } from "$/store/actions";
 import {
 	selectAllGridPresetIds,
@@ -146,6 +146,9 @@ const createAppEntityStorageDriver = createDriver<LegacyStorageSchema & { songs:
 					await idb.delete("songs", sid);
 				}),
 			]);
+		}
+		if (next && next >= 5) {
+			await idb.removeStore("songs", tx);
 		}
 	},
 });
@@ -268,7 +271,7 @@ export function createAppEnhancers() {
 		createEntityStorageStrategy({
 			selectIds: (state) => selectSongIds(state).map((x) => x.toString()),
 			selectById: selectSongById,
-			hydrateEntities: hydrateSongs,
+			hydrateEntities: upsertSongs,
 		}),
 	);
 	const gridStorageEnhancer = createStorageEnhancer(

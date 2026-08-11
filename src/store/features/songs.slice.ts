@@ -3,6 +3,7 @@ import { distinct } from "@std/collections/distinct";
 import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
 import { eventTypeRename } from "bsmap/extensions/renamer";
 
+import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
 import { finishLoadingMap, loadGridPreset, startLoadingMap } from "$/store/actions";
@@ -115,9 +116,24 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 				return api.rejectWithValue(error);
 			}
 		};
+		const hydrate: AsyncThunkPayloadCreator<App.ISong[], undefined> = async (_, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+			const filestore = api.extra.getFilestore();
+			const ids = await filestore.getAllSongIds();
+			return Promise.all(
+				ids.map(async (id) => {
+					const info = await filestore.loadInfoContents(id);
+					return createAppSong(deserializeInfoContents(info, {}));
+				}),
+			);
+		};
 
 		return {
-			hydrate: api.reducer<Record<EntityId, App.ISong>>((state, action) => {
+			hydrate: api.asyncThunk(hydrate, {
+				fulfilled: (state, action) => {
+					return adapter.upsertMany(state, action.payload);
+				},
+			}),
+			upsertMany: api.reducer<Record<EntityId, App.ISong>>((state, action) => {
 				return adapter.upsertMany(state, action.payload);
 			}),
 			addOne: api.reducer<{ songId: SongId; beatmapId: BeatmapId; songFile: File; coverArtFile: File; songData: Parameters<typeof createAppSong>[0]; beatmapData: Parameters<typeof createAppBeatmap>[0] }>((state, action) => {

@@ -76,6 +76,7 @@ export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; 
 
 export const {
 	hydrate: hydrateSongs,
+	upsertMany: upsertSongs,
 	addOne: addSong,
 	addOneFromFile: addSongFromFile,
 	updateOne: updateSong,
