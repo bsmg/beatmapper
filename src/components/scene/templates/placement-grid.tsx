@@ -47,7 +47,10 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
-					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) });
+					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, {
+						color: Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1,
+						direction: Math.round(ctx.direction ?? selectedDirection),
+					});
 					if (note) return dispatch(addColorNote({ ...note, time }));
 					break;
 				}
@@ -57,7 +60,9 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
-					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, { duration: defaultObstacleDuration });
+					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, {
+						duration: defaultObstacleDuration,
+					});
 					if (obstacle) return dispatch(addObstacle({ ...obstacle, time }));
 					break;
 				}
