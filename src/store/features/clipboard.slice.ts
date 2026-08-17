@@ -1,10 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
-import type { App, View } from "$/types";
+import type { App } from "$/types";
 
 const initialState = {
-	view: null as View | null,
 	data: {} as Partial<Omit<App.IBeatmapEntities, "bookmarks">>,
 };
 

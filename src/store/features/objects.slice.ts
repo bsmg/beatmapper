@@ -5,10 +5,10 @@ import { createHistoryAdapter } from "history-adapter/redux";
 import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { cutSelection, deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, mirrorSelection, nudgeSelection, pasteSelection, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
+import { deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
-import { type App, ObjectType, View } from "$/types";
+import { type App, type IGrid, ObjectType, View } from "$/types";
 
 const notes = createEntityAdapter<App.IWrapEditorObject<IWrapColorNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
 const bombs = createEntityAdapter<App.IWrapEditorObject<IWrapBombNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
@@ -146,11 +146,39 @@ const slice = createSlice({
 			}),
 			updateAllSelectedObstacles: api.reducer<{ changes: Partial<IWrapObstacle> }>(
 				history.undoable((state, action) => {
-					const entities = obstacleSelectors.selectAll(state.obstacles).filter((data) => !!data.selected);
-					obstacles.updateMany(
-						state.obstacles,
-						entities.map((data) => ({ id: obstacles.selectId(data), changes: action.payload.changes })),
-					);
+					updateAllSelectedObstacles(state.obstacles, () => action.payload.changes);
+				}),
+			),
+			upsertObjects: api.reducer<Partial<App.IBeatmapEntities>>(
+				history.undoable((state, action) => {
+					if (action.payload.notes) {
+						notes.upsertMany(state.notes, action.payload.notes);
+					}
+					if (action.payload.bombs) {
+						bombs.upsertMany(state.bombs, action.payload.bombs);
+					}
+					if (action.payload.obstacles) {
+						obstacles.upsertMany(state.obstacles, action.payload.obstacles);
+					}
+				}),
+			),
+			mirrorAllSelectedObjects: api.reducer<{ axis: "horizontal" | "vertical"; grid?: IGrid }>(
+				history.undoable((state, action) => {
+					const { axis, grid } = action.payload;
+					replaceAllSelectedColorNotes(state.notes, mirrorGridObjectProperties(axis, grid, 0));
+					replaceAllSelectedColorNotes(state.notes, mirrorBaseNoteProperties(axis));
+					replaceAllSelectedBombNotes(state.bombs, mirrorGridObjectProperties(axis, grid, 0));
+					if (axis === "horizontal") {
+						replaceAllSelectedObstacles(state.obstacles, mirrorGridObjectProperties(axis, grid, 0));
+					}
+				}),
+			),
+			nudgeAllSelectedObjects: api.reducer<{ direction: "forwards" | "backwards"; amount: number }>(
+				history.undoable((state, action) => {
+					const { direction, amount } = action.payload;
+					updateAllSelectedColorNotes(state.notes, nudgeItem(direction, amount));
+					updateAllSelectedBombNotes(state.bombs, nudgeItem(direction, amount));
+					updateAllSelectedObstacles(state.obstacles, nudgeItem(direction, amount));
 				}),
 			),
 			removeAllSelectedObjects: api.reducer(
@@ -168,62 +196,7 @@ const slice = createSlice({
 			bombs.setAll(state.present.bombs, action.payload.bombs ?? []);
 			obstacles.setAll(state.present.obstacles, action.payload.obstacles ?? []);
 		});
-		builder.addCase(
-			mirrorSelection,
-			history.undoable((state, action) => {
-				const { axis, grid } = action.payload;
-				replaceAllSelectedColorNotes(state.notes, mirrorGridObjectProperties(axis, grid, 0));
-				replaceAllSelectedColorNotes(state.notes, mirrorBaseNoteProperties(axis));
-				replaceAllSelectedBombNotes(state.bombs, mirrorGridObjectProperties(axis, grid, 0));
-				if (axis === "horizontal") {
-					replaceAllSelectedObstacles(state.obstacles, mirrorGridObjectProperties(axis, grid, 0));
-				}
-			}),
-		);
-		builder.addCase(
-			nudgeSelection.fulfilled,
-			history.undoable((state, action) => {
-				if (action.payload.view !== View.BEATMAP) return state;
-				const { direction, amount } = action.payload;
-				updateAllSelectedColorNotes(state.notes, nudgeItem(direction, amount));
-				updateAllSelectedBombNotes(state.bombs, nudgeItem(direction, amount));
-				updateAllSelectedObstacles(state.obstacles, nudgeItem(direction, amount));
-			}),
-		);
-		builder.addCase(
-			cutSelection.fulfilled,
-			history.undoable((state, action) => {
-				if (action.payload.view !== View.BEATMAP) return state;
-				removeAllSelectedColorNotes(state.notes);
-				removeAllSelectedBombNotes(state.bombs);
-				removeAllSelectedObstacles(state.obstacles);
-			}),
-		);
-		builder.addCase(
-			pasteSelection.fulfilled,
-			history.undoable((state, action) => {
-				if (action.payload.view !== View.BEATMAP) return state;
-				if (action.payload.data.notes) {
-					notes.upsertMany(
-						state.notes,
-						action.payload.data.notes.map((x) => ({ ...x, selected: true, time: x.time + action.payload.deltaBetweenPeriods })),
-					);
-				}
-				if (action.payload.data.bombs) {
-					bombs.upsertMany(
-						state.bombs,
-						action.payload.data.bombs.map((x) => ({ ...x, selected: true, time: x.time + action.payload.deltaBetweenPeriods })),
-					);
-				}
-				if (action.payload.data.obstacles) {
-					obstacles.upsertMany(
-						state.obstacles,
-						action.payload.data.obstacles.map((x) => ({ ...x, selected: true, time: x.time + action.payload.deltaBetweenPeriods })),
-					);
-				}
-			}),
-		);
-		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
+		builder.addCase(selectAllEntities, (state, action) => {
 			if (action.payload.view !== View.BEATMAP) return state;
 			updateAllColorNotes(state.present.notes, () => ({ selected: true }));
 			updateAllBombNotes(state.present.bombs, () => ({ selected: true }));

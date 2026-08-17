@@ -1,4 +1,3 @@
-import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
@@ -10,9 +9,6 @@ import { EventColor, EventEditMode, EventTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 function EventsEditorShortcuts() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
-
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
@@ -40,7 +36,7 @@ function EventsEditorShortcuts() {
 				case "KeyA": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
+						return dispatch(toggleSelectAllEntities());
 					}
 					return dispatch(updateEventsEditorEditMode(EventEditMode.PLACE));
 				}
@@ -86,7 +82,7 @@ function EventsEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, isPromptActive, dispatch, sid, view],
+		[isLoading, isPromptActive, dispatch],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

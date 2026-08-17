@@ -68,7 +68,7 @@ function DefaultEditorShortcuts() {
 				if (typeof endBeat !== "number") {
 					endBeat = Number.POSITIVE_INFINITY;
 				}
-				dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
 				dispatch(jumpToBeat({ songId: sid, value: startBeat, pauseTrack: true }));
 			},
 		}),
@@ -102,7 +102,7 @@ function DefaultEditorShortcuts() {
 				return dispatch(direction === "forwards" ? decrementSnap() : incrementSnap());
 			}
 			if (ev.altKey) {
-				return dispatch(nudgeSelection({ view, direction }));
+				return dispatch(nudgeSelection({ direction }));
 			}
 			if (ev.shiftKey) return;
 
@@ -146,11 +146,11 @@ function DefaultEditorShortcuts() {
 					return dispatch(togglePlayback({ songId: sid }));
 				}
 				case "Escape": {
-					return dispatch(deselectAllEntities({ view }));
+					return dispatch(deselectAllEntities());
 				}
 				case "Tab": {
 					ev.preventDefault();
-					return dispatch(ev.shiftKey ? cycleToPrevTool({ view }) : cycleToNextTool({ view }));
+					return dispatch(ev.shiftKey ? cycleToPrevTool() : cycleToNextTool());
 				}
 				case "ArrowUp":
 				case "ArrowRight": {
@@ -195,15 +195,15 @@ function DefaultEditorShortcuts() {
 				}
 				case "KeyX": {
 					if (!metaKeyPressed) return;
-					return dispatch(cutSelection({ view }));
+					return dispatch(cutSelection());
 				}
 				case "KeyC": {
 					if (!metaKeyPressed) return;
-					return dispatch(copySelection({ view }));
+					return dispatch(copySelection());
 				}
 				case "KeyV": {
 					if (!metaKeyPressed) return;
-					return dispatch(pasteSelection({ songId: sid, view }));
+					return dispatch(pasteSelection());
 				}
 				case "KeyJ": {
 					ev.preventDefault();

@@ -1,4 +1,3 @@
-import { useParams, useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
@@ -6,17 +5,13 @@ import { useGlobalEventListener } from "$/components/hooks/use-global-event-list
 import { usePrompter } from "$/components/ui/compositions";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectGridSize, selectLoading } from "$/store/selectors";
+import { selectLoading } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 function NotesEditorShortcuts() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
-
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
-	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
 	const { isPromptActive } = usePrompter();
 
@@ -61,12 +56,12 @@ function NotesEditorShortcuts() {
 					return dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE));
 				}
 				case "KeyH": {
-					return dispatch(mirrorSelection({ axis: "horizontal", grid }));
+					return dispatch(mirrorSelection({ axis: "horizontal" }));
 				}
 				case "KeyV": {
 					// If the user is pasting with Meta+V, ignore.
 					if (metaKeyPressed) return;
-					return dispatch(mirrorSelection({ axis: "vertical", grid }));
+					return dispatch(mirrorSelection({ axis: "vertical" }));
 				}
 				case "KeyW": {
 					if (ev.shiftKey) return;
@@ -83,7 +78,7 @@ function NotesEditorShortcuts() {
 					if (ev.shiftKey) return;
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
+						return dispatch(toggleSelectAllEntities());
 					}
 					keysDepressed.current.a = true;
 					if (keysDepressed.current.w) {
@@ -153,7 +148,7 @@ function NotesEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, isPromptActive, dispatch, sid, view, grid],
+		[isLoading, isPromptActive, dispatch],
 	);
 
 	const handleKeyUp = useCallback(

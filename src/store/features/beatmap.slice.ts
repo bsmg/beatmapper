@@ -40,8 +40,8 @@ const slice = createSlice({
 			hydrateGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
 				return { ...state, gridPresets: action.payload };
 			}),
-			upsertGridPreset: api.reducer<{ presetSlot: string; grid: IGrid }>((state, action) => {
-				const { presetSlot: key, grid: value } = action.payload;
+			upsertGridPreset: api.reducer<{ slot: string; grid: IGrid }>((state, action) => {
+				const { slot: key, grid: value } = action.payload;
 				return { ...state, gridPresets: { ...state.gridPresets, [key]: value } };
 			}),
 			removeGridPreset: api.reducer<{ songId: SongId; presetSlot: string }>((state, action) => {

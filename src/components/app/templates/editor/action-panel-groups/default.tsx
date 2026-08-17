@@ -1,4 +1,4 @@
-import { useParams, useRouteContext } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import type { MouseEventHandler } from "react";
 
 import { createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
@@ -14,7 +14,6 @@ interface Props {
 }
 function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const canUndo = useAppSelector(selectObjectsCanUndo);
@@ -34,7 +33,7 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 				if (typeof endBeat !== "number") {
 					endBeat = Number.POSITIVE_INFINITY;
 				}
-				dispatch(selectAllEntitiesInRange({ songId: sid, view: view, startBeat, endBeat }));
+				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
 				dispatch(jumpToBeat({ songId: sid, value: startBeat, pauseTrack: true }));
 			},
 		}),
@@ -49,21 +48,21 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	return (
 		<ActionPanelGroup.Root label="Actions">
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnPress onClick={() => dispatch(undoObjects({ songId: sid }))}>
+				<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnPress onClick={() => dispatch(undoObjects())}>
 					Undo
 				</Button>
-				<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnPress onClick={() => dispatch(redoObjects({ songId: sid }))}>
+				<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnPress onClick={() => dispatch(redoObjects())}>
 					Redo
 				</Button>
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(cutSelection({ view }))}>
+				<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(cutSelection())}>
 					Cut
 				</Button>
-				<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(copySelection({ view }))}>
+				<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(copySelection())}>
 					Copy
 				</Button>
-				<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} unfocusOnPress onClick={() => dispatch(pasteSelection({ songId: sid, view }))}>
+				<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} unfocusOnPress onClick={() => dispatch(pasteSelection())}>
 					Paste Selection
 				</Button>
 			</ActionPanelGroup.ActionGroup>

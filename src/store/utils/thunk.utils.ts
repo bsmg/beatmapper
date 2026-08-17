@@ -68,18 +68,18 @@ export function createThunk<Arg, ThunkApiConfig, Returned = void, T extends stri
 	}) as ThunkActionCreator<Arg, ThunkApiConfig, Returned, T, S, M>;
 }
 
-export function createIncrementByIndexPayloadActionCreator<TState, TValue>(iterable: Iterable<TValue>, options: { select: (state: TState) => TValue; update: (value: TValue) => UnknownAction }) {
+export function createIncrementByIndexPayloadActionCreator<TState, TValue>(iterable: Iterable<TValue>, select: (state: TState) => TValue, update: (value: TValue) => UnknownAction) {
 	const values = Object.values(iterable);
 
 	return (args: { delta: number }, api: { getState: () => TState; dispatch: Dispatch }) => {
-		const value = options.select(api.getState());
-		api.dispatch(options.update(cycle(values, value, args.delta, "stop")));
+		const value = select(api.getState());
+		api.dispatch(update(cycle(values, value, args.delta, "stop")));
 	};
 }
-export function createIncrementByValuePayloadActionCreator<TState>([min, max]: [number, number], options: { select: (state: TState) => number; update: (value: number) => UnknownAction }) {
+export function createIncrementByValuePayloadActionCreator<TState>([min, max]: [number, number], select: (state: TState) => number, update: (value: number) => UnknownAction) {
 	return (args: { delta: number }, api: { getState: () => TState; dispatch: Dispatch }) => {
-		const value = options.select(api.getState());
+		const value = select(api.getState());
 		const isIncrement = args.delta > 0;
-		api.dispatch(options.update((isIncrement ? Math.min : Math.max)(value + args.delta, isIncrement ? max : min)));
+		api.dispatch(update((isIncrement ? Math.min : Math.max)(value + args.delta, isIncrement ? max : min)));
 	};
 }

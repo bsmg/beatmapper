@@ -1,4 +1,4 @@
-import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, type GetThunkAPI, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, type GetThunkAPI } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
 import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
 import { eventTypeRename } from "bsmap/extensions/renamer";
@@ -6,7 +6,7 @@ import { eventTypeRename } from "bsmap/extensions/renamer";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
-import { finishLoadingMap, loadGridPreset, startLoadingMap } from "$/store/actions";
+import { finishLoadingMap, startLoadingMap } from "$/store/actions";
 import type { AppThunkApiConfig } from "$/store/types";
 import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
@@ -269,14 +269,6 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 			const { songId, songData } = action.payload;
 			const { lastOpenedAt } = songData;
 			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
-		});
-		builder.addMatcher(isAnyOf(loadGridPreset), (state, action) => {
-			const { songId, grid } = action.payload;
-			const song = selectById(state, songId);
-			return adapter.updateOne(state, {
-				id: songId,
-				changes: deepAssign(song, { modSettings: { mappingExtensions: { ...grid } } }),
-			});
 		});
 		builder.addDefaultCase((state) => state);
 	},

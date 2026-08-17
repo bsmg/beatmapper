@@ -1,31 +1,11 @@
-import { createAction, createAsyncThunk, type GetThunkAPI } from "@reduxjs/toolkit";
+import { createAction } from "@reduxjs/toolkit";
 import type { ITrackDefinitions } from "bsmap";
 
-import { SNAPPING_INCREMENT_VALUES, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
-import { type App, type BeatmapId, type IGrid, type ISelectionBoxInBeats, type ObjectSelectionMode, type ObjectType, type SongId, View } from "$/types";
-import {
-	selectAllBasicEvents,
-	selectAllBombNotes,
-	selectAllColorNotes,
-	selectAllObstacles,
-	selectAnySelectedEvents,
-	selectAnySelectedObjects,
-	selectClipboardData,
-	selectCursorPositionInBeats,
-	selectEarliestBeat,
-	selectEventEditorStartAndEndBeat,
-	selectEventsEditorCursor,
-	selectEventsEditorZoomLevel,
-	selectGridSize,
-	selectPlaybackRate,
-	selectSelectedBeatmapEntities,
-	selectSnap,
-	selectSongVolume,
-	selectTickVolume,
-} from "./selectors";
+import type { App, BeatmapId, ISelectionBoxInBeats, ObjectSelectionMode, ObjectType, SongId } from "$/types";
+import { selectActiveView } from "./helpers/route.helpers";
 import type { AppThunkApiConfig } from "./types";
-import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "./utils/thunk.utils";
+import { createThunk, type GetShallowThunkAPI } from "./utils/thunk.utils";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
@@ -122,61 +102,27 @@ export const {
 	updateSnap,
 } = navigation.actions;
 
-const createIncrementSnap = createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, {
-	select: selectSnap,
-	update: updateSnap,
-});
-export const incrementSnap = createThunk("incrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementSnap({ delta: 1 }, api);
-});
-export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementSnap({ delta: -1 }, api);
-});
+export const incrementSnap = createAction("incrementSnap");
+export const decrementSnap = createAction("decrementSnap");
 
-const createIncrementPlaybackRate = createIncrementByValuePayloadActionCreator([0, 2], {
-	select: selectPlaybackRate,
-	update: updatePlaybackRate,
-});
-export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementPlaybackRate({ delta: 0.25 }, api);
-});
-export const decrementPlaybackRate = createThunk("decrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementPlaybackRate({ delta: -0.25 }, api);
-});
+export const incrementPlaybackRate = createAction("incrementPlaybackRate");
+export const decrementPlaybackRate = createAction("decrementPlaybackRate");
 
-const createIncrementSongVolume = createIncrementByValuePayloadActionCreator([0, 1], {
-	select: selectSongVolume,
-	update: updateSongVolume,
-});
-export const incrementSongVolume = createThunk("incrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementSongVolume({ delta: 0.125 }, api);
-});
-export const decrementSongVolume = createThunk("decrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementSongVolume({ delta: -0.125 }, api);
-});
+export const incrementSongVolume = createAction("incrementSongVolume");
+export const decrementSongVolume = createAction("decrementSongVolume");
 
-const createIncrementTickVolume = createIncrementByValuePayloadActionCreator([0, 1], {
-	select: selectTickVolume,
-	update: updateTickVolume,
-});
-export const incrementTickVolume = createThunk("incrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementTickVolume({ delta: 0.125 }, api);
-});
-export const decrementTickVolume = createThunk("decrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementTickVolume({ delta: -0.125 }, api);
-});
+export const incrementTickVolume = createAction("incrementTickVolume");
+export const decrementTickVolume = createAction("decrementTickVolume");
 
 export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
 
 export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, hydrateGridPresets, upsertGridPreset, removeGridPreset } = beatmap.actions;
 
-export const loadGridPreset = createAction("loadGridPreset", (args: { songId: SongId; grid: IGrid }) => {
+export const loadGridPreset = createAction("loadGridPreset", (args: { slot: string }) => {
 	return { payload: { ...args } };
 });
-export const saveGridPreset = createThunk("saveGridPreset", (args: { songId: SongId; presetSlot: string }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	const grid = selectGridSize(state, args.songId ?? null);
-	return api.dispatch(upsertGridPreset({ ...args, grid }));
+export const saveGridPreset = createAction("saveGridPreset", (args: { slot: string }) => {
+	return { payload: { ...args } };
 });
 
 export const {
@@ -192,33 +138,21 @@ export const {
 	updateMirrorLock: updateEventsEditorMirrorLock,
 } = lightshow.actions;
 
-const createIncrementZoomLevel = createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], {
-	select: selectEventsEditorZoomLevel,
-	update: updateEventsEditorZoomLevel,
-});
-export const incrementEventsEditorZoomLevel = createThunk("incrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementZoomLevel({ delta: 1 }, api);
-});
-export const decrementEventsEditorZoomLevel = createThunk("decrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementZoomLevel({ delta: -1 }, api);
-});
+export const incrementEventsEditorZoomLevel = createAction("incrementZoomLevel");
+export const decrementEventsEditorZoomLevel = createAction("decrementZoomLevel");
 
-export const drawEventSelectionBox = createAsyncThunk("drawEventSelectionBox", (args: { songId: SongId; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, args.songId);
-	const metadata = { window: { startBeat, endBeat } };
-	return api.fulfillWithValue({ ...args, metadata });
-});
-
-export const cycleToNextTool = createAction("cycleToNextTool", (args: { view: View }) => {
+export const drawEventSelectionBox = createAction("drawEventSelectionBox", (args: { window: { startBeat: number; endBeat: number }; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }) => {
 	return { payload: { ...args } };
 });
 
-export const cycleToPrevTool = createAction("cycleToPrevTool", (args: { view: View }) => {
-	return { payload: { ...args } };
+export const cycleToNextTool = createThunk("cycleToNextTool", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { view: selectActiveView(api.extra.getRouter()) };
+});
+export const cycleToPrevTool = createThunk("cycleToPrevTool", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { view: selectActiveView(api.extra.getRouter()) };
 });
 
-export const { undo: undoObjects, redo: redoObjects, clearHistory: clearObjectHistory, removeAllSelectedObjects } = objects.actions;
+export const { undo: undoObjects, redo: redoObjects, clearHistory: clearObjectHistory, upsertObjects, mirrorAllSelectedObjects, nudgeAllSelectedObjects, removeAllSelectedObjects } = objects.actions;
 export const { addColorNote, updateColorNote, selectColorNote, deselectColorNote, removeColorNote } = objects.actions;
 export const { addBombNote, selectBombNote, deselectBombNote, removeBombNote } = objects.actions;
 export const { addObstacle, updateObstacle, selectObstacle, deselectObstacle, updateAllSelectedObstacles, removeObstacle } = objects.actions;
@@ -229,96 +163,37 @@ export const startManagingNoteSelection = createAction("startManagingNoteSelecti
 
 export const finishManagingNoteSelection = createAction("finishManagingNoteSelection");
 
-export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHistory, removeAllSelectedEvents } = events.actions;
+export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHistory, upsertEvents, nudgeAllSelectedEvents, removeAllSelectedEvents } = events.actions;
 export const { addBasicEvent, updateBasicEvent, selectBasicEvent, deselectBasicEvent, removeBasicEvent } = events.actions;
 export const { addBoostEvent, updateBoostEvent, selectBoostEvent, deselectBoostEvent, removeBoostEvent } = events.actions;
 
-export const selectAllEntities = createAsyncThunk("selectAllEntities", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	// For the events view, we don't actually want to select EVERY note. We only want to select what is visible in the current frame.
-	let metadata = null;
-	if (args.view === View.LIGHTSHOW) {
-		const { startBeat, endBeat } = selectEventEditorStartAndEndBeat(state, args.songId);
-		metadata = { startBeat, endBeat };
-	}
-	return api.fulfillWithValue({ ...args, metadata });
+export const selectAllEntities = createThunk("selectAllEntities", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { view: selectActiveView(api.extra.getRouter()) };
+});
+export const selectAllEntitiesInRange = createThunk("selectAllEntitiesInRange", (args: { startBeat: number; endBeat: number }, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { ...args, view: selectActiveView(api.extra.getRouter()) };
 });
 
-export const deselectAllEntities = createAction("deselectAllEntities", (args: { view: View }) => {
+export const deselectAllEntities = createThunk("deselectAllEntities", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { view: selectActiveView(api.extra.getRouter()) };
+});
+export const deselectAllEntitiesOfType = createThunk("deselectAllEntitiesOfType", (args: { itemType: ObjectType }, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { ...args, view: selectActiveView(api.extra.getRouter()) };
+});
+
+export const toggleSelectAllEntities = createAction("toggleSelectAllEntities");
+
+export const mirrorSelection = createAction("mirrorSelection", (args: { axis: "horizontal" | "vertical" }) => {
 	return { payload: { ...args } };
 });
-
-export const toggleSelectAllEntities = createAsyncThunk("toggleSelectAllEntities", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-
-	let anythingSelected = false;
-
-	if (args.view === View.BEATMAP) {
-		const notes = selectAllColorNotes(state);
-		const bombs = selectAllBombNotes(state);
-		const obstacles = selectAllObstacles(state);
-		anythingSelected = [...notes, ...bombs, ...obstacles].some((x) => !!x.selected);
-	} else if (args.view === View.LIGHTSHOW) {
-		const basicEvents = selectAllBasicEvents(state);
-		anythingSelected = [...basicEvents].some((x) => x.selected);
-	}
-
-	if (anythingSelected) {
-		api.dispatch(deselectAllEntities({ view: args.view }));
-	} else {
-		api.dispatch(selectAllEntities({ songId: args.songId, view: args.view }));
-	}
-});
-
-export const deselectAllEntitiesOfType = createAction("deselectAllEntitiesOfType", (args: { itemType: ObjectType }) => {
+export const nudgeSelection = createAction("nudgeSelection", (args: { direction: "forwards" | "backwards" }) => {
 	return { payload: { ...args } };
-});
-
-export const selectAllEntitiesInRange = createAction("selectAllEntitiesInRange", (args: { songId: SongId; view: View; startBeat: number; endBeat: number }) => {
-	return { payload: { ...args } };
-});
-
-export const mirrorSelection = createAction("mirrorSelection", (args: { axis: "horizontal" | "vertical"; grid?: IGrid }) => {
-	return { payload: { ...args } };
-});
-
-export const nudgeSelection = createAsyncThunk("nudgeSelection", (args: { direction: "forwards" | "backwards"; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	const snapTo = selectSnap(state);
-	return api.fulfillWithValue({ ...args, amount: snapTo });
 });
 
 export const { setData: setClipboardData } = clipboard.actions;
 
-export const cutSelection = createAsyncThunk("cutSelection", (args: { view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	const selection = selectSelectedBeatmapEntities(state, args.view);
-	api.dispatch(setClipboardData({ ...args, data: selection }));
-	return { ...args };
-});
-export const copySelection = createAsyncThunk("copySelection", (args: { view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	const selection = selectSelectedBeatmapEntities(state, args.view);
-	api.dispatch(setClipboardData({ ...args, data: selection }));
-	return { ...args };
-});
-export const pasteSelection = createAsyncThunk("pasteSelection", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-	const state = api.getState();
-	const data = selectClipboardData(state);
-	// If there's nothing copied, do nothing
-	if (!data) return api.rejectWithValue("Clipboard is empty.");
-	// when we're pasting, we need to deselect all currently selected entities
-	if (selectAnySelectedObjects(state) || selectAnySelectedEvents(state)) {
-		api.dispatch(deselectAllEntities({ view: args.view }));
-	}
-	// When pasting in notes view, we want to paste at the cursor position, where the song is currently playing.
-	// For the events view, we want to paste it where the mouse cursor is, the selected beat.
-	const pasteAtBeat = args.view === View.BEATMAP ? selectCursorPositionInBeats(state, args.songId) : selectEventsEditorCursor(state);
-	if (pasteAtBeat === null) return api.rejectWithValue("Invalid beat number.");
-	const earliestBeat = selectEarliestBeat(state);
-	const deltaBetweenPeriods = pasteAtBeat - earliestBeat;
-	// Every entity that has an ID (obstacles, events) needs a unique ID, we shouldn't blindly copy it over.
-	return api.fulfillWithValue({ ...args, data: data, deltaBetweenPeriods });
-});
+export const cutSelection = createAction("cutSelection");
+export const copySelection = createAction("copySelection");
+export const pasteSelection = createAction("pasteSelection");
 
 export const { addOne: addBookmark, removeOne: removeBookmark } = bookmarks.actions;

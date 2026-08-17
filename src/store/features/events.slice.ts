@@ -4,7 +4,7 @@ import { createHistoryAdapter, type HistoryState } from "history-adapter/redux";
 
 import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
-import { cutSelection, deselectAllEntities, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, nudgeSelection, pasteSelection, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
+import { deselectAllEntities, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, View } from "$/types";
@@ -147,6 +147,23 @@ const slice = createSlice({
 			deselectBoostEvent: api.reducer<{ id: EntityId; environment: EnvironmentName; areLasersLocked?: boolean }>((state, action) => {
 				boostEvents.updateOne(state.present.boostEvents, { id: action.payload.id, changes: { selected: false } });
 			}),
+			upsertEvents: api.reducer<Partial<App.IBeatmapEntities>>(
+				history.undoable((state, action) => {
+					if (action.payload.basicEvents) {
+						basicEvents.upsertMany(state.basicEvents, action.payload.basicEvents);
+					}
+					if (action.payload.boostEvents) {
+						boostEvents.upsertMany(state.boostEvents, action.payload.boostEvents);
+					}
+				}),
+			),
+			nudgeAllSelectedEvents: api.reducer<{ direction: "forwards" | "backwards"; amount: number }>(
+				history.undoable((state, action) => {
+					const { direction, amount } = action.payload;
+					updateAllSelectedBasicEvents(state.basicEvents, nudgeItem(direction, amount));
+					updateAllSelectedBoostEvents(state.boostEvents, nudgeItem(direction, amount));
+				}),
+			),
 			removeAllSelectedEvents: api.reducer(
 				history.undoable((state) => {
 					removeAllSelectedBasicEvents(state.basicEvents);
@@ -160,42 +177,7 @@ const slice = createSlice({
 			basicEvents.setAll(state.present.basicEvents, action.payload.basicEvents ?? []);
 			boostEvents.setAll(state.present.boostEvents, action.payload.boostEvents ?? []);
 		});
-		builder.addCase(
-			nudgeSelection.fulfilled,
-			history.undoable((state, action) => {
-				if (action.payload.view !== View.LIGHTSHOW) return state;
-				const { direction, amount } = action.payload;
-				updateAllSelectedBasicEvents(state.basicEvents, nudgeItem(direction, amount));
-				updateAllSelectedBoostEvents(state.boostEvents, nudgeItem(direction, amount));
-			}),
-		);
-		builder.addCase(
-			cutSelection.fulfilled,
-			history.undoable((state, action) => {
-				if (action.payload.view !== View.LIGHTSHOW) return state;
-				removeAllSelectedBasicEvents(state.basicEvents);
-				removeAllSelectedBoostEvents(state.boostEvents);
-			}),
-		);
-		builder.addCase(
-			pasteSelection.fulfilled,
-			history.undoable((state, action) => {
-				if (action.payload.view !== View.LIGHTSHOW) return state;
-				if (action.payload.data.basicEvents) {
-					basicEvents.upsertMany(
-						state.basicEvents,
-						action.payload.data.basicEvents.map((x) => ({ ...x, selected: true, time: x.time + action.payload.deltaBetweenPeriods })),
-					);
-				}
-				if (action.payload.data.boostEvents) {
-					boostEvents.upsertMany(
-						state.boostEvents,
-						action.payload.data.boostEvents.map((x) => ({ ...x, selected: true, time: x.time + action.payload.deltaBetweenPeriods })),
-					);
-				}
-			}),
-		);
-		builder.addCase(selectAllEntities.fulfilled, (state, action) => {
+		builder.addCase(selectAllEntities, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
 			updateAllBasicEvents(state.present.basicEvents, () => ({ selected: true }));
 			updateAllBoostEvents(state.present.boostEvents, () => ({ selected: true }));
@@ -210,8 +192,8 @@ const slice = createSlice({
 			updateAllBasicEvents(state.present.basicEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
 			updateAllBoostEvents(state.present.boostEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
 		});
-		builder.addCase(drawEventSelectionBox.fulfilled, (state, action) => {
-			const { tracks, selectionBoxInBeats, metadata } = action.payload;
+		builder.addCase(drawEventSelectionBox, (state, action) => {
+			const { window, tracks, selectionBoxInBeats } = action.payload;
 
 			const allTracks = Object.keys(tracks).concat("5");
 			const allBasicEvents = basicSelectors.selectAll(state.present.basicEvents);
@@ -229,7 +211,7 @@ const slice = createSlice({
 			}
 
 			const allVisibleEvents = [...allBasicEvents, ...allBoostEvents].filter((x) => {
-				const isInWindow = x.time >= metadata.window.startBeat && x.time <= metadata.window.endBeat;
+				const isInWindow = x.time >= window.startBeat && x.time <= window.endBeat;
 				const isInVisibleTracks = x.time >= selectionBoxInBeats.startBeat && x.time <= selectionBoxInBeats.endBeat;
 				return isInWindow && isInVisibleTracks;
 			});

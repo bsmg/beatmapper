@@ -43,7 +43,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 	const snapTo = useAppSelector(selectSnap);
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
-	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const { startBeat, endBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
@@ -85,7 +85,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 				acc[track.id] = track;
 				return acc;
 			}, {});
-			return dispatch(drawEventSelectionBox({ songId: sid, tracks: filteredTracks, selectionBoxInBeats: selectionBoxInBeats }));
+			return dispatch(drawEventSelectionBox({ window: { startBeat, endBeat }, tracks: filteredTracks, selectionBoxInBeats: selectionBoxInBeats }));
 		},
 	});
 
