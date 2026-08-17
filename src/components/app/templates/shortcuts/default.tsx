@@ -7,6 +7,7 @@ import { useToaster } from "$/components/context";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
+import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import {
 	addBookmark,
 	copySelection,
@@ -40,7 +41,7 @@ import {
 	updateSnap,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
+import { selectCursorPositionInBeats, selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
 import { View } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
@@ -53,6 +54,7 @@ function DefaultEditorShortcuts() {
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
 	const { trigger: triggerQuickSelect } = usePrompt(
@@ -80,7 +82,7 @@ function DefaultEditorShortcuts() {
 	const { trigger: triggerAddBookmark } = usePrompt(
 		createAddBookmarkPrompt({
 			render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" />}</form.AppField>,
-			onSubmit: ({ value }) => dispatch(addBookmark({ songId: sid, view, name: value.name })),
+			onSubmit: ({ value }) => dispatch(addBookmark({ time: cursorPositionInBeats, name: value.name, color: resolveColorForBookmark(value.name) })),
 		}),
 	);
 

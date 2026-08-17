@@ -17,7 +17,9 @@ import {
 	selectEventEditorStartAndEndBeat,
 	selectEventsEditorCursor,
 	selectEventsEditorZoomLevel,
+	selectGridSize,
 	selectPlaybackRate,
+	selectSelectedBeatmapEntities,
 	selectSnap,
 	selectSongVolume,
 	selectTickVolume,
@@ -166,10 +168,15 @@ export const decrementTickVolume = createThunk("decrementTickVolume", (_, api: G
 
 export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
 
-export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, hydrateGridPresets, upsertGridPreset: saveGridPreset, removeGridPreset } = beatmap.actions;
+export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, hydrateGridPresets, upsertGridPreset, removeGridPreset } = beatmap.actions;
 
 export const loadGridPreset = createAction("loadGridPreset", (args: { songId: SongId; grid: IGrid }) => {
 	return { payload: { ...args } };
+});
+export const saveGridPreset = createThunk("saveGridPreset", (args: { songId: SongId; presetSlot: string }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
+	const grid = selectGridSize(state, args.songId ?? null);
+	return api.dispatch(upsertGridPreset({ ...args, grid }));
 });
 
 export const {
@@ -281,8 +288,20 @@ export const nudgeSelection = createAsyncThunk("nudgeSelection", (args: { direct
 	return api.fulfillWithValue({ ...args, amount: snapTo });
 });
 
-export const { cutSelection, copySelection } = clipboard.actions;
+export const { setData: setClipboardData } = clipboard.actions;
 
+export const cutSelection = createAsyncThunk("cutSelection", (args: { view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
+	const selection = selectSelectedBeatmapEntities(state, args.view);
+	api.dispatch(setClipboardData({ ...args, data: selection }));
+	return { ...args };
+});
+export const copySelection = createAsyncThunk("copySelection", (args: { view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
+	const state = api.getState();
+	const selection = selectSelectedBeatmapEntities(state, args.view);
+	api.dispatch(setClipboardData({ ...args, data: selection }));
+	return { ...args };
+});
 export const pasteSelection = createAsyncThunk("pasteSelection", (args: { songId: SongId; view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
 	const state = api.getState();
 	const data = selectClipboardData(state);

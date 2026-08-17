@@ -1,9 +1,7 @@
-import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, type GetThunkAPI, isAnyOf } from "@reduxjs/toolkit";
+import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
 import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
-import { selectGridSize } from "$/store/selectors";
-import type { AppThunkApiConfig } from "$/store/types";
 import { type IGrid, type IGridPresets, type ObjectSelectionMode, ObjectTool, type SongId, View } from "$/types";
 
 const NOTE_TOOLS = Object.values(ObjectTool);
@@ -16,7 +14,7 @@ const initialState = {
 	gridPresets: {} as IGridPresets,
 };
 
-const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })({
+const slice = createSlice({
 	name: "beatmap",
 	initialState: initialState,
 	selectors: {
@@ -29,12 +27,6 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 		selectGridPresetById: (state, id: string) => state.gridPresets[id],
 	},
 	reducers: (api) => {
-		const fetchGridSize: AsyncThunkPayloadCreator<{ presetSlot: string; grid: IGrid }, { songId: SongId; presetSlot: string }> = (args, api: GetThunkAPI<AppThunkApiConfig>) => {
-			const state = api.getState();
-			const grid = selectGridSize(state, args.songId ?? null);
-			return api.fulfillWithValue({ ...args, grid });
-		};
-
 		return {
 			updateTool: api.reducer<ObjectTool>((state, action) => {
 				return { ...state, selectedTool: action.payload };
@@ -48,11 +40,9 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 			hydrateGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
 				return { ...state, gridPresets: action.payload };
 			}),
-			upsertGridPreset: api.asyncThunk(fetchGridSize, {
-				fulfilled: (state, action) => {
-					const { presetSlot: key, grid: value } = action.payload;
-					return { ...state, gridPresets: { ...state.gridPresets, [key]: value } };
-				},
+			upsertGridPreset: api.reducer<{ presetSlot: string; grid: IGrid }>((state, action) => {
+				const { presetSlot: key, grid: value } = action.payload;
+				return { ...state, gridPresets: { ...state.gridPresets, [key]: value } };
 			}),
 			removeGridPreset: api.reducer<{ songId: SongId; presetSlot: string }>((state, action) => {
 				const { presetSlot } = action.payload;

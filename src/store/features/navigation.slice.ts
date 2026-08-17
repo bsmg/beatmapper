@@ -1,4 +1,4 @@
-import { asyncThunkCreator, buildCreateSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
 import { leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
 import type { SongId } from "$/types";
@@ -18,7 +18,7 @@ const initialState = {
 	playbackRate: 1,
 };
 
-const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })({
+const slice = createSlice({
 	name: "navigation",
 	initialState: initialState,
 	selectors: {

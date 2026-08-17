@@ -1,8 +1,6 @@
-import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, type CaseReducer, type GetThunkAPI, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
-import { selectSelectedBeatmapEntities } from "$/store/selectors";
-import type { AppThunkApiConfig } from "$/store/types";
 import type { App, View } from "$/types";
 
 const initialState = {
@@ -10,7 +8,7 @@ const initialState = {
 	data: {} as Partial<Omit<App.IBeatmapEntities, "bookmarks">>,
 };
 
-const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })({
+const slice = createSlice({
 	name: "clipboard",
 	initialState: initialState,
 	selectors: {
@@ -29,33 +27,21 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 		},
 	},
 	reducers: (api) => {
-		const fetchClipboardData: AsyncThunkPayloadCreator<typeof initialState, { view: View }> = (args: { view: View }, api: GetThunkAPI<AppThunkApiConfig>) => {
-			const state = api.getState();
-			const selection = selectSelectedBeatmapEntities(state, args.view);
-			return api.fulfillWithValue({ ...args, data: selection });
-		};
-		const processSelection: CaseReducer<typeof initialState, PayloadAction<typeof initialState>> = (state, action) => {
-			const { data } = action.payload;
-			if (!data) return state;
-			return {
-				...state,
-				data: {
-					// We want to sort the data so that it goes from earliest beat to latest beat.
-					notes: data.notes?.sort(sortObjectFn),
-					bombs: data.bombs?.sort(sortObjectFn),
-					obstacles: data.obstacles?.sort(sortObjectFn),
-					basicEvents: data.basicEvents?.sort(sortObjectFn),
-					boostEvents: data.boostEvents?.sort(sortObjectFn),
-				},
-			};
-		};
-
 		return {
-			cutSelection: api.asyncThunk(fetchClipboardData, {
-				fulfilled: processSelection,
-			}),
-			copySelection: api.asyncThunk(fetchClipboardData, {
-				fulfilled: processSelection,
+			setData: api.reducer<typeof initialState>((state, action) => {
+				const { data } = action.payload;
+				if (!data) return state;
+				return {
+					...state,
+					data: {
+						// We want to sort the data so that it goes from earliest beat to latest beat.
+						notes: data.notes?.sort(sortObjectFn),
+						bombs: data.bombs?.sort(sortObjectFn),
+						obstacles: data.obstacles?.sort(sortObjectFn),
+						basicEvents: data.basicEvents?.sort(sortObjectFn),
+						boostEvents: data.boostEvents?.sort(sortObjectFn),
+					},
+				};
 			}),
 		};
 	},
