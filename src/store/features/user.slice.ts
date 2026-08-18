@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { addSong, addSongFromFile, finishLoadingMap, updateSong } from "$/store/actions";
+import { addSong, addSongFromFile, updateSong } from "$/store/actions";
 import { ObstaclePlacementMode } from "$/types";
 
 const initialState = {
@@ -51,15 +51,12 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(addSongFromFile.fulfilled, (state) => {
-			return { ...state, isNewUser: false };
-		});
 		builder.addCase(updateSong, (state, action) => {
 			const { changes: songData } = action.payload;
 			if (!songData.mapAuthorName) return state;
 			return { ...state, stickyMapAuthorName: songData.mapAuthorName };
 		});
-		builder.addMatcher(isAnyOf(addSong, finishLoadingMap), (state) => {
+		builder.addMatcher(isAnyOf(addSong, addSongFromFile.fulfilled), (state) => {
 			return { ...state, isNewUser: false };
 		});
 		builder.addDefaultCase((state) => state);

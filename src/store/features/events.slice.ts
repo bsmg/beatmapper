@@ -1,10 +1,10 @@
-import { createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId } from "@reduxjs/toolkit";
 import { type EnvironmentName, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 import { createHistoryAdapter, type HistoryState } from "history-adapter/redux";
 
 import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
-import { deselectAllEntities, drawEventSelectionBox, leaveEditor, loadBeatmapEntities, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
+import { deselectAllEntities, drawEventSelectionBox, leaveEditor, loadBeatmapContents, selectAllEntities, selectAllEntitiesInRange } from "$/store/actions";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, View } from "$/types";
@@ -173,9 +173,15 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(loadBeatmapEntities, (state, action) => {
-			basicEvents.setAll(state.present.basicEvents, action.payload.basicEvents ?? []);
-			boostEvents.setAll(state.present.boostEvents, action.payload.boostEvents ?? []);
+		builder.addCase(loadBeatmapContents.fulfilled, (state, action) => {
+			basicEvents.setAll(state.present.basicEvents, action.payload.entities.basicEvents ?? []);
+			boostEvents.setAll(state.present.boostEvents, action.payload.entities.boostEvents ?? []);
+		});
+		builder.addCase(leaveEditor, () => {
+			history.getInitialState({
+				basicEvents: basicEvents.getInitialState(),
+				boostEvents: boostEvents.getInitialState(),
+			});
 		});
 		builder.addCase(selectAllEntities, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
@@ -227,12 +233,6 @@ const slice = createSlice({
 					boostEvents.updateOne(state.present.boostEvents, { id: boostEvents.selectId(event), changes: { selected: isInSelectionBox || (selectionBoxInBeats.withPrevious && event.selected) } });
 				}
 			}
-		});
-		builder.addMatcher(isAnyOf(startLoadingMap, leaveEditor), () => {
-			history.getInitialState({
-				basicEvents: basicEvents.getInitialState(),
-				boostEvents: boostEvents.getInitialState(),
-			});
 		});
 		builder.addDefaultCase((state) => state);
 	},

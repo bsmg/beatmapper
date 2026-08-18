@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
+import { leaveEditor, loadSongFile, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
 import type { SongId } from "$/types";
 import { clamp } from "$/utils";
 
@@ -100,7 +100,7 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(reloadVisualizer, (state, action) => {
+		builder.addCase(loadSongFile.fulfilled, (state, action) => {
 			return { ...state, duration: action.payload.duration };
 		});
 		builder.addCase(leaveEditor, (state) => {

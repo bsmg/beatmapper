@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { JsonWaveformData } from "waveform-data";
 
-import { leaveEditor } from "$/store/actions";
+import { leaveEditor, loadSongFile } from "$/store/actions";
 
 const initialState = {
 	waveform: null as JsonWaveformData | null,
@@ -17,10 +17,6 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			reloadVisualizer: api.reducer<{ duration: number; waveformData: JsonWaveformData }>((state, action) => {
-				const { waveformData } = action.payload;
-				return { ...state, waveform: waveformData, zoomAmount: 0, zoomCursorPosition: null };
-			}),
 			updateZoom: api.reducer<{ value: number }>((state, action) => {
 				const { value: amount } = action.payload;
 				let newWaveformZoom = state.zoomAmount + amount;
@@ -32,6 +28,9 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
+		builder.addCase(loadSongFile.fulfilled, (state, action) => {
+			return { ...state, waveform: action.payload.waveform };
+		});
 		builder.addCase(leaveEditor, () => initialState);
 		builder.addDefaultCase((state) => state);
 	},

@@ -104,17 +104,10 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 		}),
 	},
 	reducers: (api) => {
-		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[3] }> = async (args, api: GetThunkAPI<AppThunkApiConfig<"getFilestore" | "getToaster" | "getAudioContext">>) => {
-			try {
-				const archive = await args.file.arrayBuffer();
-				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), api.extra.getAudioContext(), api.extra.getFilestore(), args.options);
-				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: args.options.readonly } });
-			} catch (error) {
-				const toaster = api.extra.getToaster();
-				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
-				console.error(error);
-				return api.rejectWithValue(error);
-			}
+		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; beatmapId: BeatmapId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[3] }> = async (args, api: GetThunkAPI<AppThunkApiConfig<"getFilestore" | "getToaster" | "getAudioContext">>) => {
+			const archive = await args.file.arrayBuffer();
+			const songData = await importMapArchiveToFilestore(new Uint8Array(archive), api.extra.getAudioContext(), api.extra.getFilestore(), args.options);
+			return api.fulfillWithValue({ songId: songData.id, beatmapId: songData.selectedDifficulty ?? Object.keys(songData.difficultiesById)[0], songData: { ...songData, demo: args.options.readonly } });
 		};
 		const hydrate: AsyncThunkPayloadCreator<App.ISong[], undefined> = async (_, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
 			const filestore = api.extra.getFilestore();
@@ -266,9 +259,8 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(finishLoadingMap, (state, action) => {
-			const { songId, songData } = action.payload;
-			const { lastOpenedAt } = songData;
-			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
+			const { songId } = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt: Date.now() } });
 		});
 		builder.addDefaultCase((state) => state);
 	},

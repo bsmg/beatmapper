@@ -1,11 +1,9 @@
 import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
-import { TimeProcessor } from "bsmap";
 
-import { createBpmEventsFromAudioData } from "$/helpers/audio.helpers";
 import type { AudioSample } from "$/services/audio.service";
-import { finishLoadingMap, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition, updateSong, updateTimescale } from "$/store/actions";
+import { jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, pausePlayback, scrollThroughSong, seekBackwards, seekForwards, startPlayback, stopPlayback, tick, togglePlayback, updateCursorPosition } from "$/store/actions";
 import { selectActiveView } from "$/store/helpers/route.helpers";
-import { selectBeatForTime, selectBpm, selectCursorPosition, selectDuration, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSelectedBeatmap, selectSnap, selectTimeForBeat } from "$/store/selectors";
+import { selectBeatForTime, selectCursorPosition, selectDuration, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectSnap, selectTimeForBeat } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { type SongId, View } from "$/types";
 import { floorToNearest } from "$/utils";
@@ -21,24 +19,6 @@ export default function createPlaybackMiddleware({ songSample, extra }: Options)
 
 	let animationFrameId: number;
 
-	instance.startListening({
-		matcher: isAnyOf(finishLoadingMap, updateSong),
-		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, api) => {
-			const { songId } = action.payload;
-			const state = api.getState();
-
-			if (!finishLoadingMap.match(action)) {
-				api.dispatch(stopPlayback({ songId }));
-			}
-
-			const filestore = api.extra.getFilestore();
-
-			await Promise.all([filestore.loadAudioDataContents(songId), filestore.loadBeatmapContents(songId, selectSelectedBeatmap(state, songId))]).then(([audioData, { difficulty }]) => {
-				const { timescale } = new TimeProcessor(selectBpm(state, songId), [...createBpmEventsFromAudioData(audioData), ...difficulty.bpmEvents], 0);
-				api.dispatch(updateTimescale({ timescale: timescale }));
-			});
-		},
-	});
 	instance.startListening({
 		actionCreator: togglePlayback,
 		effect: (action, api) => {

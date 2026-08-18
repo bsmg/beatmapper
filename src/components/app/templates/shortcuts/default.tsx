@@ -27,14 +27,14 @@ import {
 	pasteSelection,
 	redoEvents,
 	redoObjects,
-	rehydrate,
 	removeAllSelectedEvents,
 	removeAllSelectedObjects,
-	saveBeatmapContents,
+	saveMapFiles,
 	scrollThroughSong,
 	seekBackwards,
 	seekForwards,
 	selectAllEntitiesInRange,
+	startLoadingMap,
 	togglePlayback,
 	undoEvents,
 	undoObjects,
@@ -111,9 +111,7 @@ function DefaultEditorShortcuts() {
 		{ wait: wait },
 	);
 
-	const handleRefresh = useCallback(() => {
-		dispatch(saveBeatmapContents({ songId: sid }));
-	}, [dispatch, sid]);
+	const handleRefresh = useCallback(() => dispatch(saveMapFiles()), [dispatch]);
 
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
@@ -135,7 +133,7 @@ function DefaultEditorShortcuts() {
 				case "F5": {
 					if (ev.shiftKey) {
 						ev.preventDefault();
-						return dispatch(rehydrate({ songId: sid, beatmapId: bid }));
+						return dispatch(startLoadingMap({ songId: sid, beatmapId: bid }));
 					}
 					return;
 				}
@@ -227,7 +225,7 @@ function DefaultEditorShortcuts() {
 				case "KeyS": {
 					if (!metaKeyPressed) return;
 					ev.preventDefault();
-					return dispatch(saveBeatmapContents({ songId: sid }));
+					return dispatch(saveMapFiles());
 				}
 				case "KeyP": {
 					if (!metaKeyPressed) return;
@@ -239,7 +237,7 @@ function DefaultEditorShortcuts() {
 							description: "Unfortunately, the demo map is not available for download.",
 						});
 					}
-					if (sid) return dispatch(downloadMapFiles({ songId: sid, version: null }));
+					if (sid) return dispatch(downloadMapFiles({ songId: sid, options: { version: null } }));
 					return;
 				}
 				case "KeyQ": {

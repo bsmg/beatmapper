@@ -1,8 +1,8 @@
-import { createEntityAdapter, createSlice, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSlice, type EntityId } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
 import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
-import { leaveEditor, loadBeatmapEntities, startLoadingMap } from "$/store/actions";
+import { leaveEditor, loadBeatmapContents } from "$/store/actions";
 import type { App } from "$/types";
 
 const adapter = createEntityAdapter<App.IBookmark, EntityId>({
@@ -31,11 +31,10 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(loadBeatmapEntities, (state, action) => {
-			const { bookmarks } = action.payload;
-			return adapter.setAll(state, bookmarks ?? []);
+		builder.addCase(loadBeatmapContents.fulfilled, (state, action) => {
+			return adapter.setAll(state, action.payload.entities.bookmarks ?? []);
 		});
-		builder.addMatcher(isAnyOf(startLoadingMap, leaveEditor), () => adapter.getInitialState());
+		builder.addCase(leaveEditor, () => adapter.getInitialState());
 		builder.addDefaultCase((state) => state);
 	},
 });

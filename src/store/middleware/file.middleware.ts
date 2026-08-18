@@ -1,13 +1,12 @@
-import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { createBeatmap } from "bsmap";
 
-import { createAudioDataContentsFromFile, deriveWaveformDataFromFile } from "$/helpers/audio.helpers";
-import { deserializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
+import { serializeInfoContents } from "$/helpers/packaging.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { addBeatmap, addColorScheme, addSong, copyBeatmap, finishLoadingMap, loadBeatmapEntities, rehydrate, reloadVisualizer, removeBeatmap, removeColorScheme, removeSong, startLoadingMap, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
+import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, loadAudioDataContents, loadBeatmapContents, loadSongFile, removeBeatmap, removeSong, startLoadingMap, updateBeatmap } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
-import type { SongId } from "$/types";
 import { deepAssign } from "$/utils";
 
 interface Options {
@@ -19,51 +18,17 @@ export default function createFileMiddleware({ extra }: Options) {
 	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	instance.startListening({
-		actionCreator: rehydrate,
-		effect: (action, api) => {
-			const { songId, beatmapId } = action.payload;
-			api.dispatch(startLoadingMap({ songId, beatmapId }));
-		},
-	});
-	instance.startListening({
 		actionCreator: startLoadingMap,
 		effect: async (action, api) => {
 			const { songId, beatmapId } = action.payload;
 
 			const state = api.getState();
+			const bpm = selectBpm(state, songId);
+			const editorOffsetInBeats = selectEditorOffsetInBeats(state, songId);
 
-			const filestore = api.extra.getFilestore();
-			// fetch the metadata for this beatmap from our local store
-			const beatmap = await filestore.loadBeatmapContents(songId, beatmapId).then((data) => createBeatmap(data));
-			// pull the lightshow data from any beatmap with a matching lightshow id
-			const derivedBeatmapId = selectBeatmapIdsWithLightshowId(state, songId, selectLightshowIdForBeatmap(state, songId, beatmapId)).find((x) => x !== beatmapId);
-
-			if (derivedBeatmapId) {
-				const { lightshow: sharedLightshow } = await filestore.loadBeatmapContents(songId, derivedBeatmapId);
-				beatmap.lightshow = sharedLightshow;
-			}
-			// deserialize the metadata into editor-compatible wrappers
-			const entities = deserializeBeatmapContents(beatmap, {
-				editorOffsetInBeats: selectEditorOffsetInBeats(state, songId),
+			await Promise.all([api.dispatch(loadSongFile({ songId })), api.dispatch(loadAudioDataContents({ songId, options: { bpm } })), api.dispatch(loadBeatmapContents({ songId, beatmapId, options: { editorOffsetInBeats } }))]).then(() => {
+				api.dispatch(finishLoadingMap({ songId }));
 			});
-
-			api.dispatch(loadBeatmapEntities({ ...entities }));
-			api.dispatch(finishLoadingMap({ songId: songId, songData: selectSongById(state, songId) }));
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(finishLoadingMap, updateSong),
-		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, api) => {
-			const { songId, songFile } = action.payload;
-
-			if (finishLoadingMap.match(action) || songFile) {
-				const filestore = api.extra.getFilestore();
-				const activeSongFile = songFile ?? (await filestore.loadSongFile(songId));
-
-				await deriveWaveformDataFromFile(activeSongFile, api.extra.getAudioContext()).then((waveformData) => {
-					return api.dispatch(reloadVisualizer({ duration: waveformData.duration, waveformData: waveformData.toJSON() }));
-				});
-			}
 		},
 	});
 	instance.startListening({
@@ -189,22 +154,6 @@ export default function createFileMiddleware({ extra }: Options) {
 			const filestore = api.extra.getFilestore();
 			// Our reducer will handle the redux state part, but we also need to delete the corresponding beatmap from the filesystem.
 			await filestore.removeFile(BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId }));
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(updateSong, addBeatmap, copyBeatmap, updateBeatmap, removeBeatmap, addColorScheme, updateColorScheme, removeColorScheme, updateModuleEnabled, updateCustomColors, updateGridSize),
-		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
-			const { songId } = action.payload;
-
-			const state = api.getState();
-			// Pull that updated redux state and save it to our Info.dat
-			const infoContents = serializeInfoContents(selectSongById(state, songId), {
-				songDuration: selectDuration(state),
-			});
-
-			const filestore = api.extra.getFilestore();
-			// Back up our latest data!
-			await filestore.updateInfoContents(songId, infoContents);
 		},
 	});
 

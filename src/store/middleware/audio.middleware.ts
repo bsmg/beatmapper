@@ -3,7 +3,7 @@ import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/
 import { NOTE_TICK_TYPES } from "$/constants";
 import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
 import type { AudioSample } from "$/services/audio.service";
-import { decrementPlaybackRate, finishLoadingMap, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
+import { decrementPlaybackRate, incrementPlaybackRate, loadSongFile, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
 import { selectActiveView } from "$/store/helpers/route.helpers";
 import { selectAllColorNotes, selectCursorPosition, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTimeProcessor } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
@@ -30,20 +30,16 @@ export default function createAudioMiddleware({ songSample, tickSample, extra }:
 		},
 	});
 	instance.startListening({
-		matcher: isAnyOf(finishLoadingMap, updateSong),
-		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, api) => {
-			const { songId, songFile } = action.payload;
-
-			if (finishLoadingMap.match(action) || songFile) {
-				const filestore = api.extra.getFilestore();
-				const updatedSongFile = songFile ?? (await filestore.loadSongFile(songId));
-				const arrayBuffer = await convertFileToArrayBuffer(updatedSongFile);
-				await songSample.loadFromArrayBuffer(arrayBuffer);
-			}
+		actionCreator: loadSongFile.pending,
+		effect: async (action, api) => {
+			const filestore = api.extra.getFilestore();
+			const updatedSongFile = await filestore.loadSongFile(action.meta.arg.songId);
+			const arrayBuffer = await convertFileToArrayBuffer(updatedSongFile);
+			await songSample.loadFromArrayBuffer(arrayBuffer);
 		},
 	});
 	instance.startListening({
-		matcher: isAnyOf(finishLoadingMap, startPlayback),
+		actionCreator: startPlayback,
 		effect: (action: PayloadAction<{ songId: SongId }>, api) => {
 			const state = api.getState();
 			const { baseLatency } = api.extra.getAudioContext();

@@ -1,11 +1,11 @@
-import { createDraftSafeSelector, createEntityAdapter, createSelector, createSlice, type EntityId, isAnyOf, type Update } from "@reduxjs/toolkit";
+import { createDraftSafeSelector, createEntityAdapter, createSelector, createSlice, type EntityId, type Update } from "@reduxjs/toolkit";
 import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, sortObjectFn } from "bsmap";
 import { createHistoryAdapter } from "history-adapter/redux";
 
 import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapEntities, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "$/store/actions";
+import { deselectAllEntities, deselectAllEntitiesOfType, leaveEditor, loadBeatmapContents, selectAllEntities, selectAllEntitiesInRange } from "$/store/actions";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, type IGrid, ObjectType, View } from "$/types";
@@ -191,10 +191,17 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(loadBeatmapEntities, (state, action) => {
-			notes.setAll(state.present.notes, action.payload.notes ?? []);
-			bombs.setAll(state.present.bombs, action.payload.bombs ?? []);
-			obstacles.setAll(state.present.obstacles, action.payload.obstacles ?? []);
+		builder.addCase(loadBeatmapContents.fulfilled, (state, action) => {
+			notes.setAll(state.present.notes, action.payload.entities.notes ?? []);
+			bombs.setAll(state.present.bombs, action.payload.entities.bombs ?? []);
+			obstacles.setAll(state.present.obstacles, action.payload.entities.obstacles ?? []);
+		});
+		builder.addCase(leaveEditor, () => {
+			history.getInitialState({
+				notes: notes.getInitialState(),
+				bombs: bombs.getInitialState(),
+				obstacles: obstacles.getInitialState(),
+			});
 		});
 		builder.addCase(selectAllEntities, (state, action) => {
 			if (action.payload.view !== View.BEATMAP) return state;
@@ -229,13 +236,6 @@ const slice = createSlice({
 					break;
 				}
 			}
-		});
-		builder.addMatcher(isAnyOf(startLoadingMap, leaveEditor), () => {
-			history.getInitialState({
-				notes: notes.getInitialState(),
-				bombs: bombs.getInitialState(),
-				obstacles: obstacles.getInitialState(),
-			});
 		});
 		builder.addDefaultCase((state) => state);
 	},

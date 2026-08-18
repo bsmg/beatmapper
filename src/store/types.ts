@@ -8,7 +8,7 @@ import type { default as reducer } from "./features/_setup";
 export interface AppExtraArgs {
 	getRouter: () => Register["router"];
 	getFilestore: () => BeatmapFilestore;
-	getToaster: () => CreateToasterReturn | null;
+	getToaster: () => CreateToasterReturn;
 	getAudioContext: () => AudioContext;
 }
 

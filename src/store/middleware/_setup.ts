@@ -6,7 +6,6 @@ import type { AppExtraArgs } from "$/store/types";
 import { withFluxStandardMeta } from "$/store/utils/guards.utils";
 import createAudioMiddleware from "./audio.middleware";
 import createBackupMiddleware from "./backup.middleware";
-import createDemoMiddleware from "./demo.middleware";
 import createEditorMiddleware from "./editor.middleware";
 import createEntitiesMiddleware from "./entities.middleware";
 import createFileMiddleware from "./file.middleware";
@@ -35,10 +34,9 @@ export function createAppMiddleware({ extraArgument: extra }: Options) {
 	const playbackMiddleware = createPlaybackMiddleware({ songSample, extra });
 	const fileMiddleware = createFileMiddleware({ extra });
 	const downloadMiddleware = createPackagingMiddleware({ extra });
-	const demoMiddleware = createDemoMiddleware({ extra });
 	const entitiesMiddleware = createEntitiesMiddleware({ extra });
 	const historyMiddleware = createHistoryMiddleware({ extra });
 	const backupMiddleware = createBackupMiddleware({ extra });
 
-	return [stateSyncMiddleware as Middleware, editorMiddleware, audioMiddleware, playbackMiddleware, fileMiddleware, downloadMiddleware, demoMiddleware, entitiesMiddleware, historyMiddleware, backupMiddleware];
+	return [stateSyncMiddleware as Middleware, editorMiddleware, audioMiddleware, playbackMiddleware, fileMiddleware, downloadMiddleware, entitiesMiddleware, historyMiddleware, backupMiddleware];
 }

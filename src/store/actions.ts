@@ -1,14 +1,16 @@
-import { createAction } from "@reduxjs/toolkit";
-import type { ITrackDefinitions } from "bsmap";
+import { createAction, createAsyncThunk, type GetThunkAPI } from "@reduxjs/toolkit";
+import { createAudioData, createBeatmap, type ITrackDefinitions } from "bsmap";
 
-import type { ExportMapArchiveOptions } from "$/services/packaging.service";
-import type { App, BeatmapId, ISelectionBoxInBeats, ObjectSelectionMode, ObjectType, SongId } from "$/types";
-import { selectActiveView } from "./helpers/route.helpers";
+import { createTimescaleFromAudioData, decodeAudioData, decodeWaveformData } from "$/helpers/audio.helpers";
+import { deserializeBeatmapContents } from "$/helpers/packaging.helpers";
+import type { BeatmapId, ISelectionBoxInBeats, ObjectSelectionMode, ObjectType, SongId } from "$/types";
+import { selectActiveBeatmapId, selectActiveSongId, selectActiveView } from "./helpers/route.helpers";
 import type { AppThunkApiConfig } from "./types";
 import { createThunk, type GetShallowThunkAPI } from "./utils/thunk.utils";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
+import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import beatmap from "./features/beatmap.slice";
 import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
@@ -18,7 +20,6 @@ import lightshow from "./features/lightshow.slice";
 import navigation from "./features/navigation.slice";
 import objects from "./features/objects.slice";
 import songs from "./features/songs.slice";
-import timeline from "./features/timeline.slice";
 import user from "./features/user.slice";
 import visualizer from "./features/visualizer.slice";
 
@@ -26,34 +27,45 @@ import visualizer from "./features/visualizer.slice";
 
 export const { init } = global.actions;
 
-export const rehydrate = createAction("rehydrate", (args: { songId: SongId; beatmapId: BeatmapId }) => {
-	return { payload: { ...args }, meta: { hydrate: true, sync: true } };
-});
-
 export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
 
 export const startLoadingMap = createAction("startLoadingMap", (args: { songId: SongId; beatmapId: BeatmapId }) => {
+	return { payload: { ...args }, meta: { hydrate: true, sync: true } };
+});
+export const finishLoadingMap = createAction("finishLoadingMap", (args: { songId: SongId }) => {
+	return { payload: { ...args } };
+});
+export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; beatmapId: BeatmapId }) => {
 	return { payload: { ...args } };
 });
 
-export const finishLoadingMap = createAction("finishLoadingMap", (args: { songId: SongId; songData: App.ISong }) => {
-	return { payload: { ...args, songData: { ...args.songData, lastOpenedAt: Date.now() } } };
+export const loadSongFile = createAsyncThunk("loadSongFile", async (args: { songId: SongId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore" | "getAudioContext">>) => {
+	const filestore = api.extra.getFilestore();
+	const songFile = await filestore.loadSongFile(args.songId);
+
+	const audioContext = api.extra.getAudioContext();
+	const [audioBuffer, waveformData] = await Promise.all([decodeAudioData(songFile, audioContext), decodeWaveformData(songFile, audioContext)]);
+	return api.fulfillWithValue({ duration: audioBuffer.duration, waveform: waveformData.toJSON() });
+});
+export const loadAudioDataContents = createAsyncThunk("loadAudioDataContents", async (args: { songId: SongId; options: { bpm: number } }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+	const filestore = api.extra.getFilestore();
+	const contents = await filestore.loadAudioDataContents(args.songId).then(createAudioData);
+
+	const timescale = createTimescaleFromAudioData(contents, args.options);
+	return api.fulfillWithValue({ timescale });
+});
+export const loadBeatmapContents = createAsyncThunk("loadBeatmapContents", async (args: { songId: SongId; beatmapId: BeatmapId; options: Parameters<typeof deserializeBeatmapContents>[1] }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+	const filestore = api.extra.getFilestore();
+	const contents = await filestore.loadBeatmapContents(args.songId, args.beatmapId).then(createBeatmap);
+
+	return api.fulfillWithValue({ entities: deserializeBeatmapContents(contents, args.options) });
 });
 
-export const loadBeatmapEntities = createAction("loadBeatmapContents", (args: Partial<App.IBeatmapEntities>) => {
+export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId; options: ExportMapArchiveOptions }) => {
 	return { payload: { ...args } };
 });
-
-export const saveBeatmapContents = createAction("saveBeatmapContents", (args: { songId: SongId }) => {
-	return { payload: { ...args } };
-});
-
-export const downloadMapFiles = createAction("downloadMap", (args: { songId: SongId } & ExportMapArchiveOptions) => {
-	return { payload: { ...args } };
-});
-
-export const leaveEditor = createAction("leaveEditor", (args: { songId: SongId; beatmapId: BeatmapId; entities: Partial<App.IBeatmapEntities> }) => {
-	return { payload: { ...args } };
+export const saveMapFiles = createThunk("saveMap", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	return { songId: selectActiveSongId(api.extra.getRouter()), beatmapId: selectActiveBeatmapId(api.extra.getRouter()) };
 });
 
 export const {
@@ -75,10 +87,6 @@ export const {
 	updateCustomColors,
 	updateGridSize,
 } = songs.actions;
-
-export const loadDemoMap = createAction("loadDemoMap");
-
-export const { updateTimescale } = timeline.actions;
 
 export const {
 	updateCursorPosition,
@@ -114,7 +122,7 @@ export const decrementSongVolume = createAction("decrementSongVolume");
 export const incrementTickVolume = createAction("incrementTickVolume");
 export const decrementTickVolume = createAction("decrementTickVolume");
 
-export const { reloadVisualizer, updateZoom: zoomVisualizer } = visualizer.actions;
+export const { updateZoom: zoomVisualizer } = visualizer.actions;
 
 export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, hydrateGridPresets, upsertGridPreset, removeGridPreset } = beatmap.actions;
 

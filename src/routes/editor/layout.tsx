@@ -9,7 +9,7 @@ import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
 import { leaveEditor, startLoadingMap, stopPlayback, updateAnnouncements, updateCursorPosition } from "$/store/actions";
-import { selectAnnouncements, selectBeatmapEntities, selectEditorOffset } from "$/store/selectors";
+import { selectAnnouncements, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
 import { prompts } from "$:content";
 import { css, cx } from "$:styled-system/css";
@@ -31,21 +31,17 @@ let lastParams: { sid: string; bid: string } | null = null;
 
 async function syncEditorLifecycle(cause: "enter" | "stay" | "leave", params: { sid: string; bid: string }) {
 	const onEnter = async () => {
-		const state = AppStore.instance.getState();
-
-		await Promise.resolve(AppStore.instance.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid })));
+		AppStore.instance.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid }));
 
 		if (cause !== "stay") {
-			AppStore.instance.dispatch(updateCursorPosition({ value: selectEditorOffset(state, params.sid) }));
+			AppStore.instance.dispatch(updateCursorPosition({ value: selectEditorOffset(AppStore.instance.getState(), params.sid) }));
 		}
 
 		lastParams = params;
 	};
 	const onLeave = async () => {
-		const state = AppStore.instance.getState();
-
 		if (lastParams) {
-			AppStore.instance.dispatch(leaveEditor({ songId: lastParams.sid, beatmapId: lastParams.bid, entities: selectBeatmapEntities(state) }));
+			AppStore.instance.dispatch(leaveEditor({ songId: lastParams.sid, beatmapId: lastParams.bid }));
 		}
 	};
 
