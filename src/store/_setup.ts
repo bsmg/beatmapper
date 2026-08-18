@@ -1,7 +1,7 @@
 import { configureStore, type DevToolsEnhancerOptions } from "@reduxjs/toolkit";
 import { initStateWithPrevTab } from "redux-state-sync";
 
-import { hydrateSongs, init, tick, updateEventsEditorCursor } from "./actions";
+import { init, tick, updateEventsEditorCursor } from "./actions";
 import { createAppEnhancers } from "./enhancers/_setup";
 import { default as reducer } from "./features/_setup";
 import { createAppMiddleware } from "./middleware/_setup";
@@ -28,7 +28,6 @@ export async function createAppStore({ extraArgument }: Options) {
 		},
 	});
 
-	await store.dispatch(hydrateSongs());
 	await store.hydrate().then(() => {
 		store.dispatch(init());
 	});

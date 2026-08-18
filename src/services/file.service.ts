@@ -57,7 +57,7 @@ export class BeatmapFilestore extends Filestore {
 
 	async getAllSongIds() {
 		return await this.storage.keys().then((keys) => {
-			return keys.map((filename) => filename.split(".")[0]);
+			return keys.filter((filename) => filename.endsWith(".info")).map((filename) => filename.split(".")[0]);
 		});
 	}
 
