@@ -88,27 +88,28 @@ export const {
 	updateGridSize,
 } = songs.actions;
 
-export const {
-	updateCursorPosition,
-	tick,
-	startPlayback,
-	pausePlayback,
-	stopPlayback,
-	togglePlayback,
-	jumpToBeat,
-	jumpToTime,
-	jumpToStart,
-	jumpToEnd,
-	jumpForwards: seekForwards,
-	jumpBackwards: seekBackwards,
-	scrollThroughSong,
-	updateTrackScale,
-	updatePlaybackRate,
-	updateSongVolume,
-	updateTickVolume,
-	updateTickType,
-	updateSnap,
-} = navigation.actions;
+export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap } = navigation.actions;
+
+export const togglePlayback = createAction("togglePlayback");
+
+export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
+	return { payload: { ...args } };
+});
+
+export const jumpToTime = createAction("jumpToTime", (args: { value: number }) => {
+	return { payload: { ...args } };
+});
+export const jumpToBeat = createAction("jumpToBeat", (args: { value: number }) => {
+	return { payload: { ...args } };
+});
+
+export const jumpToStart = createAction("jumpToStart");
+export const jumpToEnd = createAction("jumpToEnd");
+export const jumpForwards = createAction("jumpForwards");
+export const jumpBackwards = createAction("jumpBackwards");
+
+export const moveForwards = createAction("moveForwards");
+export const moveBackwards = createAction("moveBackwards");
 
 export const incrementSnap = createAction("incrementSnap");
 export const decrementSnap = createAction("decrementSnap");

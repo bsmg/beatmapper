@@ -34,14 +34,14 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 					endBeat = Number.POSITIVE_INFINITY;
 				}
 				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
-				dispatch(jumpToBeat({ songId: sid, value: startBeat, pauseTrack: true }));
+				dispatch(jumpToBeat({ value: startBeat }));
 			},
 		}),
 	);
 	const { trigger: triggerJumpToBeat } = usePrompt(
 		createJumpToBeatPrompt({
 			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
-			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ songId: sid, pauseTrack: true, value: beatNum })),
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
 		}),
 	);
 

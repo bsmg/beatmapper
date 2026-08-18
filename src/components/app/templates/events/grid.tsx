@@ -177,7 +177,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 						Track Visibility
 					</Button>
 				</EventGrid.Actions>
-				<EventGrid.Timeline onScrubHeader={({ beat }) => dispatch(jumpToBeat({ songId: sid, value: beat }))} />
+				<EventGrid.Timeline onScrubHeader={({ beat }) => dispatch(jumpToBeat({ value: beat }))} />
 			</EventGrid.Header>
 			<EventGrid.Body>
 				<EventGrid.PrefixGroup onWheel={(ev) => ev.stopPropagation()}>

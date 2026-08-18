@@ -1,6 +1,7 @@
 import type { Middleware } from "@reduxjs/toolkit";
 import { createStateSyncMiddleware } from "redux-state-sync";
 
+import { NOTE_TICK_TYPES } from "$/constants/editor.constants";
 import { AudioSample } from "$/services/audio.service";
 import type { AppExtraArgs } from "$/store/types";
 import { withFluxStandardMeta } from "$/store/utils/guards.utils";
@@ -28,6 +29,8 @@ export function createAppMiddleware({ extraArgument: extra }: Options) {
 
 	const songSample = new AudioSample(audioContext, { volume: 1, playbackRate: 1 });
 	const tickSample = new AudioSample(audioContext, { volume: 1, playbackRate: 1 });
+
+	tickSample.load(NOTE_TICK_TYPES[0]);
 
 	const editorMiddleware = createEditorMiddleware({ extra });
 	const audioMiddleware = createAudioMiddleware({ songSample, tickSample, extra });

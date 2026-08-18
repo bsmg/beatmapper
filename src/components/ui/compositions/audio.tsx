@@ -26,7 +26,7 @@ export function AudioPreview({ file, startTime = 0, duration, volume }: Props) {
 
 	const getEffectiveDuration = () => {
 		if (duration) return duration;
-		return audio.buffer ? audio.buffer.duration - startTime : 0;
+		return audio.duration - startTime;
 	};
 
 	const animate = () => {

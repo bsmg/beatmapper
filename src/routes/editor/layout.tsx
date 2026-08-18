@@ -8,7 +8,7 @@ import { AppStore } from "$/_setup";
 import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
 import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
-import { leaveEditor, startLoadingMap, stopPlayback, updateAnnouncements, updateCursorPosition } from "$/store/actions";
+import { leaveEditor, startLoadingMap, updateAnnouncements, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
 import { prompts } from "$:content";
@@ -34,7 +34,7 @@ async function syncEditorLifecycle(cause: "enter" | "stay" | "leave", params: { 
 		AppStore.instance.dispatch(startLoadingMap({ songId: params.sid, beatmapId: params.bid }));
 
 		if (cause !== "stay") {
-			AppStore.instance.dispatch(updateCursorPosition({ value: selectEditorOffset(AppStore.instance.getState(), params.sid) }));
+			AppStore.instance.dispatch(updateCursorPosition(selectEditorOffset(AppStore.instance.getState(), params.sid)));
 		}
 
 		lastParams = params;
@@ -109,8 +109,6 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 	},
 	onLeave: async ({ params }) => {
 		syncEditorLifecycle("leave", params);
-
-		AppStore.instance.dispatch(stopPlayback({ songId: params.sid }));
 	},
 });
 

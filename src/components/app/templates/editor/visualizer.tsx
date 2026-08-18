@@ -27,9 +27,9 @@ function EditorAudioVisualizer() {
 
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {
-			dispatch(jumpToTime({ songId: sid, value: offset }));
+			dispatch(jumpToTime({ value: offset }));
 		},
-		[dispatch, sid],
+		[dispatch],
 	);
 
 	const handleMarkerClick = useCallback(
@@ -40,11 +40,11 @@ function EditorAudioVisualizer() {
 					return dispatch(removeBookmark({ beatNum: time }));
 				}
 				default: {
-					return dispatch(jumpToBeat({ songId: sid, value: time }));
+					return dispatch(jumpToBeat({ value: time }));
 				}
 			}
 		},
-		[dispatch, sid],
+		[dispatch],
 	);
 
 	return (

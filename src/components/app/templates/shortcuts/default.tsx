@@ -20,9 +20,13 @@ import {
 	downloadMapFiles,
 	incrementPlaybackRate,
 	incrementSnap,
+	jumpBackwards,
+	jumpForwards,
 	jumpToBeat,
 	jumpToEnd,
 	jumpToStart,
+	moveBackwards,
+	moveForwards,
 	nudgeSelection,
 	pasteSelection,
 	redoEvents,
@@ -30,9 +34,6 @@ import {
 	removeAllSelectedEvents,
 	removeAllSelectedObjects,
 	saveMapFiles,
-	scrollThroughSong,
-	seekBackwards,
-	seekForwards,
 	selectAllEntitiesInRange,
 	startLoadingMap,
 	togglePlayback,
@@ -69,14 +70,14 @@ function DefaultEditorShortcuts() {
 					endBeat = Number.POSITIVE_INFINITY;
 				}
 				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
-				dispatch(jumpToBeat({ songId: sid, value: startBeat, pauseTrack: true }));
+				dispatch(jumpToBeat({ value: startBeat }));
 			},
 		}),
 	);
 	const { trigger: triggerJumpToBeat } = usePrompt(
 		createJumpToBeatPrompt({
 			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
-			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ songId: sid, pauseTrack: true, value: beatNum })),
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
 		}),
 	);
 	const { trigger: triggerAddBookmark } = usePrompt(
@@ -106,7 +107,7 @@ function DefaultEditorShortcuts() {
 			}
 			if (ev.shiftKey) return;
 
-			dispatch(scrollThroughSong({ songId: sid, direction }));
+			dispatch((direction === "forwards" ? moveForwards : moveBackwards)());
 		},
 		{ wait: wait },
 	);
@@ -141,7 +142,7 @@ function DefaultEditorShortcuts() {
 					// If the user holds down the space, we don't want to register a bunch of play/pause events.
 					if (keysDepressed.current.space) return;
 					keysDepressed.current.space = true;
-					return dispatch(togglePlayback({ songId: sid }));
+					return dispatch(togglePlayback());
 				}
 				case "Escape": {
 					return dispatch(deselectAllEntities());
@@ -159,16 +160,16 @@ function DefaultEditorShortcuts() {
 					return handleScroll("backwards", ev);
 				}
 				case "PageUp": {
-					return dispatch(seekForwards({ songId: sid }));
+					return dispatch(jumpForwards());
 				}
 				case "PageDown": {
-					return dispatch(seekBackwards({ songId: sid }));
+					return dispatch(jumpBackwards());
 				}
 				case "Home": {
-					return dispatch(jumpToStart({ songId: sid }));
+					return dispatch(jumpToStart());
 				}
 				case "End": {
-					return dispatch(jumpToEnd({ songId: sid }));
+					return dispatch(jumpToEnd());
 				}
 				case "NumpadSubtract":
 				case "Minus": {

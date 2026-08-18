@@ -5,7 +5,6 @@ import { resolveEventId } from "$/helpers/events.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { clearEventHistory, clearObjectHistory, jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
-import { selectActiveSongId } from "$/store/helpers/route.helpers";
 import {
 	selectAllBasicEvents,
 	selectAllBombNotes,
@@ -24,10 +23,10 @@ import {
 	selectPastObstacles,
 } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
-import type { App, SongId } from "$/types";
+import type { App } from "$/types";
 import { difference } from "$/utils";
 
-function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, songId: SongId, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantNotes = difference(args.notes.before, args.notes.after, resolveNoteId);
 	const relevantBombs = difference(args.bombs.before, args.bombs.after, resolveNoteId);
 	const relevantObstacles = difference(args.obstacles.before, args.obstacles.after, resolveObstacleId);
@@ -35,17 +34,17 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, so
 	const relevantEntities = [...relevantNotes, ...relevantBombs, ...relevantObstacles].sort(sortObjectFn);
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
-	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
+	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
 
-function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, songId: SongId, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantBasicEvents = difference(args.basicEvents.before, args.basicEvents.after, resolveEventId);
 	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after, resolveEventId);
 
 	const relevantEntities = [...relevantBasicEvents, ...relevantBoostEvents].sort(sortObjectFn);
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
-	api.dispatch(jumpToBeat({ songId, value: earliestBeat, pauseTrack: true, animateJump: true }));
+	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
 
 interface Options {
@@ -67,9 +66,8 @@ export default function createHistoryMiddleware({ extra }: Options) {
 		actionCreator: undoObjects,
 		effect: (_, api) => {
 			const state = api.getState();
-			const songId = selectActiveSongId(api.extra.getRouter());
 
-			jumpToEarliestObject(api, songId, {
+			jumpToEarliestObject(api, {
 				notes: { before: selectFutureColorNotes(state), after: selectAllColorNotes(state) },
 				bombs: { before: selectFutureBombNotes(state), after: selectAllBombNotes(state) },
 				obstacles: { before: selectFutureObstacles(state), after: selectAllObstacles(state) },
@@ -80,9 +78,8 @@ export default function createHistoryMiddleware({ extra }: Options) {
 		actionCreator: redoObjects,
 		effect: (_, api) => {
 			const state = api.getState();
-			const songId = selectActiveSongId(api.extra.getRouter());
 
-			jumpToEarliestObject(api, songId, {
+			jumpToEarliestObject(api, {
 				notes: { before: selectPastColorNotes(state), after: selectAllColorNotes(state) },
 				bombs: { before: selectPastBombNotes(state), after: selectAllBombNotes(state) },
 				obstacles: { before: selectPastObstacles(state), after: selectAllObstacles(state) },
@@ -93,9 +90,8 @@ export default function createHistoryMiddleware({ extra }: Options) {
 		actionCreator: undoEvents,
 		effect: (_, api) => {
 			const state = api.getState();
-			const songId = selectActiveSongId(api.extra.getRouter());
 
-			jumpToEarliestEvent(api, songId, {
+			jumpToEarliestEvent(api, {
 				basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
 				boostEvents: { before: selectFutureBoostEvents(state), after: selectAllBoostEvents(state) },
 			});
@@ -105,9 +101,8 @@ export default function createHistoryMiddleware({ extra }: Options) {
 		actionCreator: redoEvents,
 		effect: (_, api) => {
 			const state = api.getState();
-			const songId = selectActiveSongId(api.extra.getRouter());
 
-			jumpToEarliestEvent(api, songId, {
+			jumpToEarliestEvent(api, {
 				basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
 				boostEvents: { before: selectPastBoostEvents(state), after: selectAllBoostEvents(state) },
 			});
