@@ -139,7 +139,7 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 					return adapter.upsertOne(state, songData);
 				},
 			}),
-			updateOne: api.reducer<{ songId: SongId; songFile: File | undefined; changes: Partial<App.ISong> }>((state, action) => {
+			updateOne: api.reducer<{ songId: SongId; changes: Partial<App.ISong> }>((state, action) => {
 				const { songId: id, changes } = action.payload;
 				return adapter.updateOne(state, { id, changes });
 			}),

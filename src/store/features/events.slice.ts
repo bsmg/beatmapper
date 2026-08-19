@@ -178,7 +178,7 @@ const slice = createSlice({
 			boostEvents.setAll(state.present.boostEvents, action.payload.entities.boostEvents ?? []);
 		});
 		builder.addCase(leaveEditor, () => {
-			history.getInitialState({
+			return history.getInitialState({
 				basicEvents: basicEvents.getInitialState(),
 				boostEvents: boostEvents.getInitialState(),
 			});

@@ -1,7 +1,7 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
-import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, startManagingNoteSelection, updateAllSelectedObstacles, updateObstacle } from "$/store/actions";
+import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, startManagingNoteSelection } from "$/store/actions";
 import { type IGrid, type IGridPresets, type ObjectSelectionMode, ObjectTool, type SongId, View } from "$/types";
 
 const NOTE_TOOLS = Object.values(ObjectTool);
@@ -66,11 +66,6 @@ const slice = createSlice({
 			const currentToolIndex = NOTE_TOOLS.indexOf(currentlySelectedTool);
 			const nextTool = NOTE_TOOLS[(currentToolIndex + NOTE_TOOLS.length + incrementBy) % NOTE_TOOLS.length];
 			return { ...state, selectedTool: nextTool };
-		});
-		builder.addMatcher(isAnyOf(updateObstacle, updateAllSelectedObstacles), (state, action) => {
-			const { changes } = action.payload;
-			if (!("duration" in changes) || !changes.duration) return state;
-			return { ...state, defaultObstacleDuration: changes.duration };
 		});
 		builder.addDefaultCase((state) => state);
 	},

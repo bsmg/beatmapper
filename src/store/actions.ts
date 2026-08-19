@@ -3,6 +3,7 @@ import { createAudioData, createBeatmap, type ITrackDefinitions } from "bsmap";
 
 import { createTimescaleFromAudioData, decodeAudioData, decodeWaveformData } from "$/helpers/audio.helpers";
 import { deserializeBeatmapContents } from "$/helpers/packaging.helpers";
+import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import type { BeatmapId, ISelectionBoxInBeats, ObjectSelectionMode, ObjectType, SongId } from "$/types";
 import { selectActiveBeatmapId, selectActiveSongId, selectActiveView } from "./helpers/route.helpers";
 import type { AppThunkApiConfig } from "./types";
@@ -10,7 +11,6 @@ import { createThunk, type GetShallowThunkAPI } from "./utils/thunk.utils";
 
 // biome-ignore-start assist/source/organizeImports: circular dependencies
 
-import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import beatmap from "./features/beatmap.slice";
 import bookmarks from "./features/bookmarks.slice";
 import clipboard from "./features/clipboard.slice";
@@ -25,7 +25,7 @@ import visualizer from "./features/visualizer.slice";
 
 // biome-ignore-end assist/source/organizeImports: circular dependencies
 
-export const { init } = global.actions;
+export const { init, updateProcessingImport } = global.actions;
 
 export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = user.actions;
 

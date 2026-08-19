@@ -13,6 +13,7 @@ import createFileMiddleware from "./file.middleware";
 import createHistoryMiddleware from "./history.middleware";
 import createPackagingMiddleware from "./packaging.middleware";
 import createPlaybackMiddleware from "./playback.middleware";
+import createSharedMiddleware from "./shared.middleware";
 
 interface Options {
 	extraArgument: AppExtraArgs;
@@ -33,6 +34,7 @@ export function createAppMiddleware({ extraArgument: extra }: Options) {
 	tickSample.load(NOTE_TICK_TYPES[0]);
 
 	const editorMiddleware = createEditorMiddleware({ extra });
+	const sharedMiddleware = createSharedMiddleware({ extra });
 	const audioMiddleware = createAudioMiddleware({ songSample, tickSample, extra });
 	const playbackMiddleware = createPlaybackMiddleware({ songSample, extra });
 	const fileMiddleware = createFileMiddleware({ extra });
@@ -41,5 +43,5 @@ export function createAppMiddleware({ extraArgument: extra }: Options) {
 	const historyMiddleware = createHistoryMiddleware({ extra });
 	const backupMiddleware = createBackupMiddleware({ extra });
 
-	return [stateSyncMiddleware as Middleware, editorMiddleware, audioMiddleware, playbackMiddleware, fileMiddleware, downloadMiddleware, entitiesMiddleware, historyMiddleware, backupMiddleware];
+	return [stateSyncMiddleware as Middleware, editorMiddleware, sharedMiddleware, audioMiddleware, playbackMiddleware, fileMiddleware, downloadMiddleware, entitiesMiddleware, historyMiddleware, backupMiddleware];
 }

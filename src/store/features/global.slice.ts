@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { addSongFromFile, finishLoadingMap, startLoadingMap } from "$/store/actions";
+import { finishLoadingMap, startLoadingMap } from "$/store/actions";
 
 const initialState = {
 	initialized: false,
@@ -16,23 +16,20 @@ const slice = createSlice({
 		selectLoading: (state) => state.isLoading,
 		selectProcessingImport: (state) => state.isProcessingImport,
 	},
-	reducers: {
-		init: (state) => {
+	reducers: (api) => ({
+		init: api.reducer((state) => {
 			return { ...state, initialized: true };
-		},
-	},
+		}),
+		updateProcessingImport: api.reducer<boolean>((state, action) => {
+			return { ...state, isProcessingImport: action.payload };
+		}),
+	}),
 	extraReducers: (builder) => {
 		builder.addMatcher(isAnyOf(startLoadingMap), (state) => {
 			return { ...state, isLoading: true };
 		});
 		builder.addMatcher(isAnyOf(finishLoadingMap), (state) => {
 			return { ...state, isLoading: false };
-		});
-		builder.addMatcher(isAnyOf(addSongFromFile.pending), (state) => {
-			return { ...state, isProcessingImport: true };
-		});
-		builder.addMatcher(isAnyOf(addSongFromFile.fulfilled, addSongFromFile.rejected), (state) => {
-			return { ...state, isProcessingImport: false };
 		});
 		builder.addDefaultCase((state) => state);
 	},

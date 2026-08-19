@@ -197,7 +197,7 @@ const slice = createSlice({
 			obstacles.setAll(state.present.obstacles, action.payload.entities.obstacles ?? []);
 		});
 		builder.addCase(leaveEditor, () => {
-			history.getInitialState({
+			return history.getInitialState({
 				notes: notes.getInitialState(),
 				bombs: bombs.getInitialState(),
 				obstacles: obstacles.getInitialState(),
