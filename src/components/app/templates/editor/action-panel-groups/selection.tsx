@@ -5,7 +5,7 @@ import { type MouseEventHandler, useMemo } from "react";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip } from "$/components/ui/compositions";
-import { deselectAllEntities, deselectAllEntitiesOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
+import { deselectAllEntities, deselectAllObjectsOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSelectedBeatmapEntities } from "$/store/selectors";
 import { ObjectType } from "$/types";
@@ -38,9 +38,9 @@ function SelectionActionPanelGroup() {
 	return (
 		<ActionPanelGroup.Root label="Selection">
 			<ActionPanelGroup.ActionGroup gap="md">
-				<Show when={selectedEntities.notes}>{(items) => <SelectionCount key="blocks" num={items.length} label="note" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.NOTE }))} />}</Show>
-				<Show when={selectedEntities.bombs}>{(items) => <SelectionCount key="mines" num={items.length} label="bomb" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.BOMB }))} />}</Show>
-				<Show when={selectedEntities.obstacles}>{(items) => <SelectionCount key="obstacles" num={items.length} label="obstacle" onClick={() => dispatch(deselectAllEntitiesOfType({ itemType: ObjectType.OBSTACLE }))} />}</Show>
+				<Show when={selectedEntities.notes}>{(items) => <SelectionCount key="blocks" num={items.length} label="note" onClick={() => dispatch(deselectAllObjectsOfType({ itemType: ObjectType.NOTE }))} />}</Show>
+				<Show when={selectedEntities.bombs}>{(items) => <SelectionCount key="mines" num={items.length} label="bomb" onClick={() => dispatch(deselectAllObjectsOfType({ itemType: ObjectType.BOMB }))} />}</Show>
+				<Show when={selectedEntities.obstacles}>{(items) => <SelectionCount key="obstacles" num={items.length} label="obstacle" onClick={() => dispatch(deselectAllObjectsOfType({ itemType: ObjectType.OBSTACLE }))} />}</Show>
 			</ActionPanelGroup.ActionGroup>
 			<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(deselectAllEntities())}>
 				Clear selection

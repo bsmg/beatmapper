@@ -2,8 +2,8 @@ import { createEntityAdapter, createSlice, type EntityId } from "@reduxjs/toolki
 import { sortObjectFn } from "bsmap";
 
 import { resolveBookmarkId } from "$/helpers/bookmarks.helpers";
-import { leaveEditor, loadBeatmapContents } from "$/store/actions";
 import type { App } from "$/types";
+import { leaveEditor, loadBeatmapContents } from "./actions";
 
 const adapter = createEntityAdapter<App.IBookmark, EntityId>({
 	selectId: resolveBookmarkId,
@@ -38,5 +38,9 @@ const slice = createSlice({
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const { selectAll: selectAllBookmarks } = slice.getSelectors(slice.selectSlice);
+
+export const { addOne: addBookmark, removeOne: removeBookmark } = slice.actions;
 
 export default slice;

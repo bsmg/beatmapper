@@ -1,6 +1,6 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { finishLoadingMap, startLoadingMap } from "$/store/actions";
+import { finishLoadingMap, startLoadingMap } from "./actions";
 
 const initialState = {
 	initialized: false,
@@ -34,5 +34,9 @@ const slice = createSlice({
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const { selectInitialized, selectLoading, selectProcessingImport } = slice.getSelectors(slice.selectSlice);
+
+export const { init, updateProcessingImport } = slice.actions;
 
 export default slice;

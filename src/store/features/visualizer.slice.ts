@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { JsonWaveformData } from "waveform-data";
 
-import { leaveEditor, loadSongFile } from "$/store/actions";
+import { leaveEditor, loadSongFile } from "./actions";
 
 const initialState = {
 	waveform: null as JsonWaveformData | null,
@@ -35,5 +35,9 @@ const slice = createSlice({
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const { selectWaveformData } = slice.getSelectors(slice.selectSlice);
+
+export const { updateZoom: zoomVisualizer } = slice.actions;
 
 export default slice;

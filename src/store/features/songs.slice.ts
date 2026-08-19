@@ -6,10 +6,10 @@ import { eventTypeRename } from "bsmap/extensions/renamer";
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
-import { finishLoadingMap, startLoadingMap } from "$/store/actions";
 import type { AppThunkApiConfig } from "$/store/types";
 import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
+import { finishLoadingMap, startLoadingMap } from "./actions";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
@@ -265,5 +265,56 @@ const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })(
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const {
+	selectId: selectSongId,
+	selectEntities: selectSongs,
+	selectIds: selectSongIds,
+	selectAll: selectAllSongs,
+	selectById: selectSongById,
+	selectSongMetadata,
+	selectBpm,
+	selectEditorOffset,
+	selectBeatmaps,
+	selectBeatmapIds,
+	selectAllBeatmaps,
+	selectBeatmapById,
+	selectJumpSpeed,
+	selectJumpOffset,
+	selectLightshowIds,
+	selectLightshowIdForBeatmap,
+	selectBeatmapIdsWithLightshowId,
+	selectEnvironment,
+	selectColorScheme,
+	selectEventTracksForEnvironment,
+	selectColorSchemes,
+	selectColorSchemeIds,
+	selectColorSchemeId,
+	selectColorSchemeOverrides,
+	selectSelectedBeatmap,
+	selectDemo,
+	selectModuleEnabled,
+	selectCustomColors,
+} = slice.getSelectors(slice.selectSlice);
+
+export const {
+	hydrate: hydrateSongs,
+	upsertMany: upsertSongs,
+	addOne: addSong,
+	addOneFromFile: addSongFromFile,
+	updateOne: updateSong,
+	updateSelectedBeatmap,
+	removeOne: removeSong,
+	addBeatmap,
+	cloneBeatmap: copyBeatmap,
+	updateBeatmap,
+	removeBeatmap,
+	addColorScheme,
+	updateColorScheme,
+	removeColorScheme,
+	updateModuleEnabled,
+	updateCustomColors,
+	updateGridSize,
+} = slice.actions;
 
 export default slice;

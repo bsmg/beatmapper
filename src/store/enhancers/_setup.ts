@@ -8,7 +8,6 @@ import { default as createSessionStorageDriver } from "unstorage/drivers/session
 import { patchEnvironmentName } from "$/helpers/packaging.helpers";
 import { createDriver, type LegacyStorageSchema } from "$/services/storage.service";
 import {
-	hydrateGridPresets,
 	updateAnnouncements,
 	updateBloomEnabled,
 	updateEventsEditorColor,
@@ -34,6 +33,7 @@ import {
 	updateTickVolume,
 	updateTrackScale,
 	updateUsername,
+	upsertGridPresets,
 	upsertSongs,
 } from "$/store/actions";
 import {
@@ -279,7 +279,7 @@ export function createAppEnhancers() {
 		createEntityStorageStrategy({
 			selectIds: selectAllGridPresetIds,
 			selectById: selectGridPresetById,
-			hydrateEntities: hydrateGridPresets,
+			hydrateEntities: upsertGridPresets,
 		}),
 	);
 

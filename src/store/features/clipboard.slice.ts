@@ -49,4 +49,8 @@ const slice = createSlice({
 	},
 });
 
+export const { selectData: selectClipboardData, selectHasObjects: selectClipboardHasObjects, selectHasEvents: selectClipboardHasEvents, selectEarliestBeat } = slice.getSelectors(slice.selectSlice);
+
+export const { setData: setClipboardData } = slice.actions;
+
 export default slice;

@@ -17,9 +17,9 @@ import {
 	selectCurrentLightStateForTrack,
 	selectEditorOffsetInBeats,
 	selectEnvironment,
-	selectEventEditorStartAndEndBeat,
 	selectEventsEditorColor,
 	selectEventsEditorMirrorLock,
+	selectEventsEditorStartAndEndBeat,
 	selectEventsEditorTool,
 	selectEventTracksForEnvironment,
 } from "$/store/selectors";
@@ -91,7 +91,7 @@ function BasicEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const selectedColorType = useAppSelector(selectEventsEditorColor);
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
-	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const { startBeat, endBeat } = useAppSelector((state) => selectEventsEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const basicEvents = useAppSelector((state) => selectAllBasicEventsForTrack(state, trackId));

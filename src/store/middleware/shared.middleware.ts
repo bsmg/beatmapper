@@ -5,9 +5,10 @@ import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import type { App } from "$/types";
 
 interface Options {
-	extra: Pick<AppExtraArgs, "getRouter">;
+	extra: Pick<AppExtraArgs, never>;
 }
 
+/** Manages cross-site side effects (since colocating these effects with their respective slices would otherwise cause circular references). */
 export default function createSharedMiddleware({ extra }: Options) {
 	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 

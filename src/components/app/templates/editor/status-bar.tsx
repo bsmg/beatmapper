@@ -5,7 +5,7 @@ import { StatusBar } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTrackScale } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectedTotalBombNotes, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
+import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalBombNotes, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
 import { View } from "$/types";
 import { pluralize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
@@ -20,7 +20,7 @@ function EditorStatusBar() {
 	const songVolume = useAppSelector(selectSongVolume);
 	const tickVolume = useAppSelector(selectTickVolume);
 	const numOfBlocks = useAppSelector(selectTotalColorNotes);
-	const numOfMines = useAppSelector(selectedTotalBombNotes);
+	const numOfMines = useAppSelector(selectTotalBombNotes);
 	const numOfObstacles = useAppSelector(selectTotalObstacles);
 	const showLightingPreview = useAppSelector(selectEventsEditorPreview);
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);

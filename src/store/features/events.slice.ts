@@ -1,13 +1,13 @@
-import { createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId } from "@reduxjs/toolkit";
-import { type EnvironmentName, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
+import { createAction, createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId } from "@reduxjs/toolkit";
+import { type EnvironmentName, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 import { createHistoryAdapter, type HistoryState } from "history-adapter/redux";
 
 import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
-import { deselectAllEntities, drawEventSelectionBox, leaveEditor, loadBeatmapContents, selectAllEntities, selectAllEntitiesInRange } from "$/store/actions";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
-import { type App, View } from "$/types";
+import { type App, type ISelectionBoxInBeats, View } from "$/types";
+import { deselectAllEntities, leaveEditor, loadBeatmapContents, selectAllEntities, selectAllEntitiesInRange } from "./actions";
 
 const basicEvents = createEntityAdapter<App.IWrapEditorObject<IWrapBasicEvent>, EntityId>({ selectId: resolveEventId, sortComparer: sortObjectFn });
 const boostEvents = createEntityAdapter<App.IWrapEditorObject<IWrapColorBoostEvent>, EntityId>({ selectId: resolveEventId, sortComparer: sortObjectFn });
@@ -15,8 +15,8 @@ const boostEvents = createEntityAdapter<App.IWrapEditorObject<IWrapColorBoostEve
 const basicSelectors = basicEvents.getSelectors();
 const boostSelectors = boostEvents.getSelectors();
 
-const { updateAll: updateAllBasicEvents, updateAllSelected: updateAllSelectedBasicEvents, removeAllSelected: removeAllSelectedBasicEvents } = createEditorObjectAdapter(basicEvents);
-const { updateAll: updateAllBoostEvents, updateAllSelected: updateAllSelectedBoostEvents, removeAllSelected: removeAllSelectedBoostEvents } = createEditorObjectAdapter(boostEvents);
+const basicReducers = createEditorObjectAdapter(basicEvents);
+const boostReducers = createEditorObjectAdapter(boostEvents);
 
 interface State {
 	basicEvents: ReturnType<typeof basicEvents.getInitialState>;
@@ -160,14 +160,14 @@ const slice = createSlice({
 			nudgeAllSelectedEvents: api.reducer<{ direction: "forwards" | "backwards"; amount: number }>(
 				history.undoable((state, action) => {
 					const { direction, amount } = action.payload;
-					updateAllSelectedBasicEvents(state.basicEvents, nudgeItem(direction, amount));
-					updateAllSelectedBoostEvents(state.boostEvents, nudgeItem(direction, amount));
+					basicReducers.updateAllSelected(state.basicEvents, nudgeItem(direction, amount));
+					boostReducers.updateAllSelected(state.boostEvents, nudgeItem(direction, amount));
 				}),
 			),
 			removeAllSelectedEvents: api.reducer(
 				history.undoable((state) => {
-					removeAllSelectedBasicEvents(state.basicEvents);
-					removeAllSelectedBoostEvents(state.boostEvents);
+					basicReducers.removeAllSelected(state.basicEvents);
+					boostReducers.removeAllSelected(state.boostEvents);
 				}),
 			),
 		};
@@ -185,18 +185,18 @@ const slice = createSlice({
 		});
 		builder.addCase(selectAllEntities, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
-			updateAllBasicEvents(state.present.basicEvents, () => ({ selected: true }));
-			updateAllBoostEvents(state.present.boostEvents, () => ({ selected: true }));
+			basicReducers.updateAll(state.present.basicEvents, () => ({ selected: true }));
+			boostReducers.updateAll(state.present.boostEvents, () => ({ selected: true }));
 		});
 		builder.addCase(deselectAllEntities, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
-			updateAllBasicEvents(state.present.basicEvents, () => ({ selected: false }));
-			updateAllBoostEvents(state.present.boostEvents, () => ({ selected: false }));
+			basicReducers.updateAll(state.present.basicEvents, () => ({ selected: false }));
+			boostReducers.updateAll(state.present.boostEvents, () => ({ selected: false }));
 		});
 		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
-			updateAllBasicEvents(state.present.basicEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
-			updateAllBoostEvents(state.present.boostEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
+			basicReducers.updateAll(state.present.basicEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
+			boostReducers.updateAll(state.present.boostEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
 		});
 		builder.addCase(drawEventSelectionBox, (state, action) => {
 			const { window, tracks, selectionBoxInBeats } = action.payload;
@@ -236,6 +236,30 @@ const slice = createSlice({
 		});
 		builder.addDefaultCase((state) => state);
 	},
+});
+
+export const {
+	selectAllBasicEvents,
+	selectAllSelectedBasicEvents,
+	selectAllBasicEventsForTrack,
+	selectValueForTrackAtBeat,
+	selectPastBasicEvents,
+	selectFutureBasicEvents,
+	selectAllBoostEvents,
+	selectAllSelectedBoostEvents,
+	selectColorBoostAtBeat,
+	selectPastBoostEvents,
+	selectFutureBoostEvents,
+	selectSelectedEvents,
+	selectAnySelectedEvents,
+} = slice.getSelectors(slice.selectSlice);
+
+export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHistory, upsertEvents, nudgeAllSelectedEvents, removeAllSelectedEvents } = slice.actions;
+export const { addBasicEvent, updateBasicEvent, selectBasicEvent, deselectBasicEvent, removeBasicEvent } = slice.actions;
+export const { addBoostEvent, updateBoostEvent, selectBoostEvent, deselectBoostEvent, removeBoostEvent } = slice.actions;
+
+export const drawEventSelectionBox = createAction("drawEventSelectionBox", (args: { window: { startBeat: number; endBeat: number }; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }) => {
+	return { payload: { ...args } };
 });
 
 export default slice;

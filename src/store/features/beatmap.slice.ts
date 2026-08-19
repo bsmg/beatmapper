@@ -1,8 +1,8 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createAction, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
-import { cycleToNextTool, cycleToPrevTool, finishManagingNoteSelection, startManagingNoteSelection } from "$/store/actions";
 import { type IGrid, type IGridPresets, type ObjectSelectionMode, ObjectTool, type SongId, View } from "$/types";
+import { cycleToNextTool, cycleToPrevTool } from "./actions";
 
 const NOTE_TOOLS = Object.values(ObjectTool);
 
@@ -37,7 +37,7 @@ const slice = createSlice({
 			updateDefaultObstacleDuration: api.reducer<number>((state, action) => {
 				return { ...state, defaultObstacleDuration: action.payload };
 			}),
-			hydrateGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
+			upsertGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
 				return { ...state, gridPresets: action.payload };
 			}),
 			upsertGridPreset: api.reducer<{ slot: string; grid: IGrid }>((state, action) => {
@@ -70,5 +70,14 @@ const slice = createSlice({
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const { selectTool: selectNotesEditorTool, selectDirection: selectNotesEditorDirection, selectSelectionMode: selectNotesEditorSelectionMode, selectDefaultObstacleDuration, selectGridPresets, selectAllGridPresetIds, selectGridPresetById } = slice.getSelectors(slice.selectSlice);
+
+export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, upsertGridPresets, upsertGridPreset, removeGridPreset } = slice.actions;
+
+export const startManagingNoteSelection = createAction("startManagingNoteSelection", (args: { selectionMode: ObjectSelectionMode }) => {
+	return { payload: { ...args } };
+});
+export const finishManagingNoteSelection = createAction("finishManagingNoteSelection");
 
 export default slice;

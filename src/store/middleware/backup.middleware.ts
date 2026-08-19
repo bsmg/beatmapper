@@ -1,12 +1,22 @@
 import { createAsyncThunk, createListenerMiddleware, type GetThunkAPI, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 
 import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
-import { addBeatmap, addColorScheme, copyBeatmap, leaveEditor, removeBeatmap, removeColorScheme, saveMapFiles, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
+import { addBeatmap, addColorScheme, copyBeatmap, leaveEditor, removeBeatmap, removeColorScheme, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
+import { selectActiveBeatmapId, selectActiveSongId } from "$/store/helpers/route.helpers";
 import { selectBeatmapEntities, selectBeatmapIds, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, AppThunkApiConfig, RootState } from "$/store/types";
+import { createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import type { BeatmapId, SongId } from "$/types";
 
-const saveInfoContents = createAsyncThunk("saveInfoContents", async (args: { songId: SongId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+export const saveMapFiles = createThunk("saveMap", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	const songId = selectActiveSongId(api.extra.getRouter());
+	const beatmapId = selectActiveBeatmapId(api.extra.getRouter());
+
+	api.dispatch(saveInfoContents({ songId }));
+	api.dispatch(saveBeatmapContents({ songId, beatmapId }));
+});
+
+export const saveInfoContents = createAsyncThunk("saveInfoContents", async (args: { songId: SongId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
 	const state = api.getState();
 	const filestore = api.extra.getFilestore();
 
@@ -18,7 +28,7 @@ const saveInfoContents = createAsyncThunk("saveInfoContents", async (args: { son
 
 	await filestore.updateInfoContents(args.songId, info);
 });
-const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async (args: { songId: SongId; beatmapId: BeatmapId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+export const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async (args: { songId: SongId; beatmapId: BeatmapId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
 	const state = api.getState();
 	const filestore = api.extra.getFilestore();
 
@@ -45,17 +55,18 @@ interface Options {
 	extra: Pick<AppExtraArgs, "getToaster">;
 }
 
+/** Manages autosaving for map contents when specific actions are triggered. */
 export default function createBackupMiddleware({ extra }: Options) {
 	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	instance.startListening({
-		matcher: isAnyOf(saveMapFiles, updateSong, addBeatmap, copyBeatmap, updateBeatmap, removeBeatmap, addColorScheme, updateColorScheme, removeColorScheme, updateModuleEnabled, updateCustomColors, updateGridSize),
+		matcher: isAnyOf(updateSong, addBeatmap, copyBeatmap, updateBeatmap, removeBeatmap, addColorScheme, updateColorScheme, removeColorScheme, updateModuleEnabled, updateCustomColors, updateGridSize),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
 			api.dispatch(saveInfoContents(action.payload));
 		},
 	});
 	instance.startListening({
-		matcher: isAnyOf(saveMapFiles, leaveEditor),
+		matcher: isAnyOf(leaveEditor),
 		effect: async (action: PayloadAction<{ songId: SongId; beatmapId: BeatmapId }>, api) => {
 			api.dispatch(saveBeatmapContents(action.payload));
 		},

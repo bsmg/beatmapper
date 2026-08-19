@@ -1,7 +1,10 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createAction, createSlice } from "@reduxjs/toolkit";
 
-import { jumpBackwards, jumpForwards, jumpToBeat, jumpToEnd, jumpToStart, jumpToTime, leaveEditor, loadSongFile, moveBackwards, moveForwards, tick } from "$/store/actions";
+import { SNAPPING_INCREMENT_VALUES } from "$/constants/editor.constants";
+import type { AppThunkApiConfig } from "$/store/types";
+import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { clamp } from "$/utils";
+import { leaveEditor, loadSongFile } from "./actions";
 
 const initialState = {
 	isPlaying: false,
@@ -36,7 +39,7 @@ const slice = createSlice({
 	reducers: (api) => {
 		return {
 			updateCursorPosition: api.reducer<number>((state, action) => {
-				return { ...state, cursorPosition: clamp(action.payload, 0, state.duration ?? action.payload) };
+				return { ...state, cursorPosition: clamp(action.payload, 0, state.duration ?? action.payload), animateBlockMotion: true };
 			}),
 			startPlayback: api.reducer((state) => {
 				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
@@ -77,11 +80,44 @@ const slice = createSlice({
 		builder.addCase(tick, (state, action) => {
 			return { ...state, cursorPosition: action.payload.cursorPosition };
 		});
-		builder.addMatcher(isAnyOf(moveForwards, moveBackwards, jumpToTime, jumpToBeat, jumpToStart, jumpToEnd, jumpForwards, jumpBackwards), (state) => {
-			return { ...state, animateBlockMotion: true };
-		});
 		builder.addDefaultCase((state) => state);
 	},
+});
+
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+
+export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap } = slice.actions;
+
+export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
+	return { payload: { ...args } };
+});
+
+export const incrementSnap = createThunk("incrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: 1 }, api);
+});
+export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: -1 }, api);
+});
+
+export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 2], selectPlaybackRate, updatePlaybackRate)({ delta: 0.25 }, api);
+});
+export const decrementPlaybackRate = createThunk("decrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 2], selectPlaybackRate, updatePlaybackRate)({ delta: -0.25 }, api);
+});
+
+export const incrementSongVolume = createThunk("incrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectSongVolume, updateSongVolume)({ delta: 0.125 }, api);
+});
+export const decrementSongVolume = createThunk("decrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectSongVolume, updateSongVolume)({ delta: -0.125 }, api);
+});
+
+export const incrementTickVolume = createThunk("incrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectTickVolume, updateTickVolume)({ delta: 0.125 }, api);
+});
+export const decrementTickVolume = createThunk("decrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectTickVolume, updateTickVolume)({ delta: -0.125 }, api);
 });
 
 export default slice;

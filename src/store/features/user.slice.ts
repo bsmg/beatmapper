@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSelector, createSlice } from "@reduxjs/toolkit";
 
 import { ObstaclePlacementMode } from "$/types";
 
@@ -53,5 +53,13 @@ const slice = createSlice({
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const { selectNew, selectAnnouncements, selectUsername, selectRenderScale, selectBloomEnabled, selectObstaclePlacementMode: selectUserObstaclePlacementMode, selectPacerWait } = slice.getSelectors(slice.selectSlice);
+
+export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
+	return Math.max(renderScale * 75, 25);
+});
+
+export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = slice.actions;
 
 export default slice;

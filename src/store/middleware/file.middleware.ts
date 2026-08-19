@@ -13,7 +13,7 @@ interface Options {
 	extra: Pick<AppExtraArgs, "getFilestore" | "getAudioContext">;
 }
 
-/** This middleware manages file storage concerns. */
+/** Manages all concerns related to file storage. */
 export default function createFileMiddleware({ extra }: Options) {
 	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 

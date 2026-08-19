@@ -48,10 +48,10 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, arg
 }
 
 interface Options {
-	extra: Pick<AppExtraArgs, "getRouter">;
+	extra: Pick<AppExtraArgs, never>;
 }
 
-/** This middleware listens for undo events, and handles updating the cursor position in response to these actions. */
+/** Manages side effects for object/event history tracking. */
 export default function createHistoryMiddleware({ extra }: Options) {
 	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 

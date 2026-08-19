@@ -8,7 +8,7 @@ import { For } from "$/components/ui/atoms";
 import { resolveEventId } from "$/helpers/events.helpers";
 import { addBoostEvent, deselectBoostEvent, removeBoostEvent, selectBoostEvent, updateBoostEvent } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllBoostEvents, selectEnvironment, selectEventEditorStartAndEndBeat, selectEventsEditorMirrorLock } from "$/store/selectors";
+import { selectAllBoostEvents, selectEnvironment, selectEventsEditorMirrorLock, selectEventsEditorStartAndEndBeat } from "$/store/selectors";
 import type { App } from "$/types";
 import { isColorDark } from "$/utils";
 import { token } from "$:styled-system/tokens";
@@ -45,7 +45,7 @@ function BoostEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof Even
 
 	const dispatch = useAppDispatch();
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
-	const { startBeat, endBeat } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const { startBeat, endBeat } = useAppSelector((state) => selectEventsEditorStartAndEndBeat(state, sid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const boostEvents = useAppSelector((state) => selectAllBoostEvents(state));
 

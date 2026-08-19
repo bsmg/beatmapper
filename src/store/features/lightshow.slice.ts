@@ -1,8 +1,10 @@
 import { createSlice, isAnyOf } from "@reduxjs/toolkit";
 
-import { BEATS_PER_ZOOM_LEVEL } from "$/constants";
-import { cycleToNextTool, cycleToPrevTool } from "$/store/actions";
+import { BEATS_PER_ZOOM_LEVEL, ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants/editor.constants";
+import type { AppThunkApiConfig } from "$/store/types";
+import { createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { EventColor, EventEditMode, EventTool, View } from "$/types";
+import { cycleToNextTool, cycleToPrevTool } from "./actions";
 
 const EVENT_TOOLS = Object.values(EventTool);
 const EVENT_EDIT_MODES = Object.values(EventEditMode);
@@ -84,6 +86,40 @@ const slice = createSlice({
 		});
 		builder.addDefaultCase((state) => state);
 	},
+});
+
+export const {
+	selectTool: selectEventsEditorTool,
+	selectColor: selectEventsEditorColor,
+	selectEditMode: selectEventsEditorEditMode,
+	selectCursor: selectEventsEditorCursor,
+	selectTrackHeight: selectEventsEditorTrackHeight,
+	selectTrackOpacity: selectEventsEditorTrackOpacity,
+	selectPreview: selectEventsEditorPreview,
+	selectWindowLock: selectEventsEditorWindowLock,
+	selectMirrorLock: selectEventsEditorMirrorLock,
+	selectZoomLevel: selectEventsEditorZoomLevel,
+	selectBeatsPerZoomLevel: selectEventsEditorBeatsPerZoomLevel,
+} = slice.getSelectors(slice.selectSlice);
+
+export const {
+	updateTool: updateEventsEditorTool,
+	updateColor: updateEventsEditorColor,
+	updateEditMode: updateEventsEditorEditMode,
+	updateCursor: updateEventsEditorCursor,
+	updateTrackHeight: updateEventsEditorTrackHeight,
+	updateTrackOpacity: updateEventsEditorTrackOpacity,
+	updateZoomLevel: updateEventsEditorZoomLevel,
+	updatePreview: updateEventsEditorPreview,
+	updateWindowLock: updateEventsEditorWindowLock,
+	updateMirrorLock: updateEventsEditorMirrorLock,
+} = slice.actions;
+
+export const incrementEventsEditorZoomLevel = createThunk("incrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], selectEventsEditorZoomLevel, updateEventsEditorZoomLevel)({ delta: 1 }, api);
+});
+export const decrementEventsEditorZoomLevel = createThunk("decrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], selectEventsEditorZoomLevel, updateEventsEditorZoomLevel)({ delta: 1 }, api);
 });
 
 export default slice;
