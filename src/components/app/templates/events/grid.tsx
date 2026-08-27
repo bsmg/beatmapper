@@ -18,10 +18,10 @@ import {
 	selectDurationInBeats,
 	selectEditorOffsetInBeats,
 	selectEnvironment,
-	selectEventEditorStartAndEndBeat,
 	selectEventsEditorCursor,
 	selectEventsEditorEditMode,
 	selectEventsEditorMirrorLock,
+	selectEventsEditorStartAndEndBeat,
 	selectEventsEditorTrackHeight,
 	selectEventTracksForEnvironment,
 	selectLoading,
@@ -43,7 +43,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 	const snapTo = useAppSelector(selectSnap);
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
-	const { startBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventEditorStartAndEndBeat(state, sid));
+	const { startBeat, endBeat, numOfBeatsToShow } = useAppSelector((state) => selectEventsEditorStartAndEndBeat(state, sid));
 	const tracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
@@ -78,14 +78,14 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 			return dispatch(updateEventsEditorCursor({ selectedBeat }));
 		},
 		onTrackHeightChange: ({ height: newHeight }) => {
-			return dispatch(updateEventsEditorTrackHeight({ newHeight }));
+			return dispatch(updateEventsEditorTrackHeight(newHeight));
 		},
 		onSelectionCommit: ({ selectionBoxInBeats }) => {
 			const filteredTracks = allFilteredTracks.reduce((acc: ITrackDefinitions<{ id: number }>, track) => {
 				acc[track.id] = track;
 				return acc;
 			}, {});
-			return dispatch(drawEventSelectionBox({ songId: sid, tracks: filteredTracks, selectionBoxInBeats: selectionBoxInBeats }));
+			return dispatch(drawEventSelectionBox({ window: { startBeat, endBeat }, tracks: filteredTracks, selectionBoxInBeats: selectionBoxInBeats }));
 		},
 	});
 
@@ -177,7 +177,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 						Track Visibility
 					</Button>
 				</EventGrid.Actions>
-				<EventGrid.Timeline onScrubHeader={({ beat }) => dispatch(jumpToBeat({ songId: sid, value: beat }))} />
+				<EventGrid.Timeline onScrubHeader={({ beat }) => dispatch(jumpToBeat({ value: beat }))} />
 			</EventGrid.Header>
 			<EventGrid.Body>
 				<EventGrid.PrefixGroup onWheel={(ev) => ev.stopPropagation()}>

@@ -1,10 +1,11 @@
+import { useNavigate } from "@tanstack/react-router";
 import { CirclePlusIcon, DownloadIcon, PackageOpenIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import { heroVideo } from "$/assets";
+import { demoFileUrl, heroVideo } from "$/assets";
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
 import { Button, Dialog, Heading } from "$/components/ui/compositions";
-import { addSongFromFile, loadDemoMap } from "$/store/actions";
+import { addSongFromFile } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
 import { styled, VStack, Wrap } from "$:styled-system/jsx";
@@ -14,12 +15,17 @@ function FirstTimeHome() {
 	const dispatch = useAppDispatch();
 	const songIds = useAppSelector(selectSongIds);
 
+	const navigate = useNavigate();
+
 	const [isLoadingDemo, setIsLoadingDemo] = useState(false);
 
-	const handleDemoClick = useCallback(() => {
+	const handleDemoClick = useCallback(async () => {
 		setIsLoadingDemo(true);
-		dispatch(loadDemoMap());
-	}, [dispatch]);
+		const file = await fetch(demoFileUrl).then((response) => response.blob());
+		const { songId, beatmapId } = await dispatch(addSongFromFile({ file, options: { readonly: true } })).unwrap();
+		navigate({ to: "/edit/$sid/$bid/notes", params: { sid: songId.toString(), bid: beatmapId.toString() } });
+		setIsLoadingDemo(false);
+	}, [dispatch, navigate]);
 
 	return (
 		<VStack gap={8}>
@@ -43,7 +49,6 @@ function FirstTimeHome() {
 						</Dialog>
 					</OptionColumn>
 					<OptionColumn icon={DownloadIcon} title="Import existing map" description="Edit an existing map by selecting it from your computer">
-						{/** biome-ignore lint/suspicious/useIterableCallbackReturn: doesn't matter */}
 						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
 							<Button variant="solid" size="md">
 								Import map

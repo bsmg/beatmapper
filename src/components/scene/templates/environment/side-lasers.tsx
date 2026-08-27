@@ -32,7 +32,7 @@ function resolveLaserRotation(side: "left" | "right", beamIndex: number, current
 		randomOffset = random() * Math.PI * 2;
 	}
 
-	const angle = (currentTime / 1000) * laserSpeed * 0.35 + randomOffset;
+	const angle = currentTime * laserSpeed * 0.35 + randomOffset;
 	return normalize(Math.sin(angle), -1, 1, defaultRotation, defaultRotation * -1);
 }
 

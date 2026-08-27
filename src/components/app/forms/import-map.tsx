@@ -5,7 +5,7 @@ import { type ComponentProps, useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
 import { MAP_ARCHIVE_FILE_ACCEPT_TYPE } from "$/components/app/constants";
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { FileUpload, List } from "$/components/ui/compositions";
 import { Stack, Text } from "$:styled-system/jsx";
 
@@ -14,7 +14,7 @@ interface Props {
 	onAccept: (files: File[]) => void;
 }
 function ImportMapForm({ dialog, onAccept, ...rest }: Assign<ComponentProps<typeof FileUpload>, Props>) {
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
 
 	const handleFileChange = useCallback(
 		(details: FileUploadFileChangeDetails) => {
@@ -23,7 +23,7 @@ function ImportMapForm({ dialog, onAccept, ...rest }: Assign<ComponentProps<type
 			try {
 				onAccept(details.acceptedFiles);
 			} catch (error) {
-				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				toaster.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);
 			}
 		},

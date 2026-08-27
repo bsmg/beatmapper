@@ -25,7 +25,7 @@ function GridActionPanelGroup({ finishTweakingGrid }: Props) {
 		validate: object({ slot: pipe(string(), nonEmpty()) }),
 		render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Input label="Preset Name" />}</form.AppField>,
 		onSubmit: ({ value }) => {
-			return dispatch(saveGridPreset({ songId: sid, presetSlot: value.slot }));
+			return dispatch(saveGridPreset({ slot: value.slot }));
 		},
 	});
 

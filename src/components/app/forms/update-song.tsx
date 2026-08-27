@@ -5,11 +5,11 @@ import { endsWith, type GenericSchema, gtValue, minValue, number, object, pipe, 
 
 import { COVER_ART_FILE_ACCEPT_TYPE, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
 import { useLocalFileMutation, useLocalFileQuery } from "$/components/app/hooks/local-file.hooks";
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { Audio, Field, FileUpload, useAppForm } from "$/components/ui/compositions";
 import { remuxImageToSquare } from "$/helpers/file.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { updateSong } from "$/store/actions";
+import { loadSongFile, updateSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongById, selectSongVolume } from "$/store/selectors";
 
@@ -39,7 +39,7 @@ const SCHEMA = object({
 function UpdateSongForm() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
-	const { filestore, toaster } = useSetupContext();
+	const toaster = useToaster();
 
 	const dispatch = useAppDispatch();
 	const song = useAppSelector((state) => selectSongById(state, sid));
@@ -56,12 +56,14 @@ function UpdateSongForm() {
 
 	const { mutate: handleAcceptSongFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "song", {}), {
 		onSuccess: () => {
-			toaster?.success({ id: "song-file-accepted", description: "Successfully updated song file!" });
+			toaster.success({ id: "song-file-accepted", description: "Successfully updated song file!" });
+			// reload the song file to reconcile the redux store
+			dispatch(loadSongFile({ songId: sid }));
 		},
 	});
 	const { mutate: handleAcceptCoverArtFile } = useLocalFileMutation(BeatmapFilestore.resolveFilename(sid, "cover", {}), {
 		onSuccess: () => {
-			toaster?.success({ id: "cover-art-file-accepted", description: "Successfully updated cover art file!" });
+			toaster.success({ id: "cover-art-file-accepted", description: "Successfully updated cover art file!" });
 		},
 	});
 
@@ -85,24 +87,10 @@ function UpdateSongForm() {
 		},
 		onSubmit: async ({ value, formApi }) => {
 			try {
-				const newSongObject = { ...song, ...value };
-
-				if (acceptedCoverArtFile) {
-					const { filename: coverArtFilename } = await filestore.saveCoverArtFile(sid, acceptedCoverArtFile[0]);
-					newSongObject.coverArtFilename = coverArtFilename;
-				}
-
-				if (acceptedSongFile) {
-					const { filename: songFilename } = await filestore.saveSongFile(sid, acceptedSongFile[0]);
-					newSongObject.songFilename = songFilename;
-				}
-
-				// Update our redux state
-				dispatch(updateSong({ songId: sid, songFile: acceptedSongFile?.[0], changes: newSongObject }));
-
+				dispatch(updateSong({ songId: sid, changes: value }));
 				formApi.reset(value);
 			} catch (error) {
-				toaster?.error({ description: `Could not update song: ${error instanceof Error ? error.message : "See console for more information."}` });
+				toaster.error({ description: `Could not update song: ${error instanceof Error ? error.message : "See console for more information."}` });
 				return console.error(error);
 			}
 		},

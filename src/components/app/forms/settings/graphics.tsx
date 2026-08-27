@@ -13,10 +13,10 @@ function AppGraphicsSettings() {
 		<Stack gap={4}>
 			<Wrap gap={2}>
 				<Field cosmetic label="Render Scale" helperText="Reduces the number of components for computationally intensive objects within the view.">
-					<Slider name="render-scale" stretch value={[renderScale]} step={0.05} min={0} max={1} onValueChange={(details) => dispatch(updateRenderScale({ value: details.value[0] }))} />
+					<Slider name="render-scale" stretch value={[renderScale]} step={0.05} min={0} max={1} onValueChange={(details) => dispatch(updateRenderScale(details.value[0]))} />
 				</Field>
 				<Field cosmetic label="Enable Bloom Effect" helperText="Enables/disables the bloom post-processing effect for lighting events.">
-					<Switch name="enable-bloom" checked={isBloomEnabled} onCheckedChange={(details) => dispatch(updateBloomEnabled({ checked: details.checked }))} />
+					<Switch name="enable-bloom" checked={isBloomEnabled} onCheckedChange={(details) => dispatch(updateBloomEnabled(details.checked))} />
 				</Field>
 			</Wrap>
 		</Stack>

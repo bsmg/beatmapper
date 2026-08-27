@@ -19,9 +19,8 @@ function AudioVisualizerMarkers({ markers, duration, offset, timeProcessor, onMa
 		const reversed = markers.sort((a, b) => b.time - a.time);
 
 		return reversed.map((marker) => {
-			const realTimeInSeconds = timeProcessor.toRealTime(marker.time);
-			const realTimeMs = realTimeInSeconds * 1000 + offset;
-			const offsetPercentage = (realTimeMs / duration) * 100;
+			const realTimeInSeconds = timeProcessor.toRealTime(marker.time) + offset;
+			const offsetPercentage = (realTimeInSeconds / duration) * 100;
 			return { ...marker, offset: offsetPercentage };
 		});
 	}, [timeProcessor, markers, duration, offset]);

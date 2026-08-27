@@ -1,12 +1,12 @@
 import { type UseQueryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useSetupContext } from "$/components/context";
+import { useBeatmapFilestore } from "$/components/context";
 
 interface UseLocalFileQueryOptions<T> extends Omit<UseQueryOptions<T>, "queryFn"> {
 	transformFile?: (file: File) => Promise<T> | T;
 }
 export function useLocalFileQuery<T = File>(filename: string, { ...rest }: UseLocalFileQueryOptions<T>) {
-	const { filestore } = useSetupContext();
+	const filestore = useBeatmapFilestore();
 
 	return useQuery<T>({
 		...rest,
@@ -21,9 +21,8 @@ export function useLocalFileQuery<T = File>(filename: string, { ...rest }: UseLo
 }
 
 export function useLocalFileMutation(filename: string, options: { onSuccess: () => void }) {
-	const { filestore } = useSetupContext();
-
 	const client = useQueryClient();
+	const filestore = useBeatmapFilestore();
 
 	return useMutation({
 		mutationFn: async (file: File) => {

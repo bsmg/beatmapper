@@ -12,7 +12,7 @@ function AppUserSettings() {
 		<Stack gap={4}>
 			<Wrap gap={2}>
 				<Field label="Username" helperText="Will autopopulate mappers/lighters fields for any new maps/beatmaps that are created.">
-					<FieldInput value={username} onValueChange={(details) => dispatch(updateUsername({ value: details.valueAsString }))} />
+					<FieldInput value={username} onValueChange={(details) => dispatch(updateUsername(details.valueAsString))} />
 				</Field>
 			</Wrap>
 		</Stack>

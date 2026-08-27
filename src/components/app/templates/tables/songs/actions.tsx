@@ -4,7 +4,7 @@ import type { MenuSelectionDetails } from "@ark-ui/react/menu";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { Fragment, useCallback } from "react";
 
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { AlertDialogProvider, Button, Menu } from "$/components/ui/compositions";
 import { downloadMapFiles, removeSong } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -16,11 +16,11 @@ interface Props {
 	sid: SongId;
 }
 function SongsDataTableActions({ sid }: Props) {
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
 
+	const dispatch = useAppDispatch();
 	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 	const beatmapIds = useAppSelector((state) => selectBeatmapIds(state, sid));
-	const dispatch = useAppDispatch();
 
 	const { collection: ACTION_LIST_COLLECTION } = useListCollection({
 		initialItems: ["download", "delete"],
@@ -41,10 +41,10 @@ function SongsDataTableActions({ sid }: Props) {
 					return deleteAlert.setOpen(true);
 				}
 				case "download": {
-					return dispatch(downloadMapFiles({ songId: sid, version: null }));
+					return dispatch(downloadMapFiles({ songId: sid, options: { version: null } }));
 				}
 				default: {
-					return toaster?.create({
+					return toaster.create({
 						id: `song-action.${details.value}`,
 						description: "This feature does not exist yet. Sorry! Coming soon.",
 					});

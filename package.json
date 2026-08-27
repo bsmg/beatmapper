@@ -45,6 +45,7 @@
 		"date-fns": "^4.1.0",
 		"fflate": "^0.8.2",
 		"file-saver": "^2.0.5",
+		"history-adapter": "^2.1.1",
 		"idb": "^8.0.3",
 		"lucide-react": "^1.0.1",
 		"postprocessing": "^6.39.0",

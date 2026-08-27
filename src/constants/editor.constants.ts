@@ -30,6 +30,8 @@ export const SNAPPING_INCREMENTS = [
 	{ value: 16, label: "4 Bars", shortcutKey: 9 } as const,
 ];
 
+export const SNAPPING_INCREMENT_VALUES = SNAPPING_INCREMENTS.map((x) => x.value);
+
 export const HIGHEST_PRECISION = SNAPPING_INCREMENTS[0].value;
 
 export const BEATS_PER_ZOOM_LEVEL = [32, 16, 8, 4, 2] as const;

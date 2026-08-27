@@ -5,7 +5,7 @@ import { Fragment, useState } from "react";
 
 import { ExportMapForm, ImportMapForm } from "$/components/app/forms";
 import { Page } from "$/components/app/layouts";
-import { useSetupContext } from "$/components/context";
+import { useAudioContext, useToaster } from "$/components/context";
 import { Heading } from "$/components/ui/compositions";
 import { type ExportMapArchiveOptions, exportMapArchive, importMapArchive, type MapArchiveContents } from "$/services/packaging.service";
 import { Stack } from "$:styled-system/jsx";
@@ -18,7 +18,8 @@ export const Route = createFileRoute("/convert")({
 });
 
 function RouteComponent() {
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
+	const audioContext = useAudioContext();
 
 	const [allContents, setContents] = useState<MapArchiveContents[]>([]);
 
@@ -27,12 +28,12 @@ function RouteComponent() {
 			setContents([]);
 			for (const file of files) {
 				const archive = await file.arrayBuffer();
-				const content = await importMapArchive(new Uint8Array(archive), {});
+				const content = await importMapArchive(new Uint8Array(archive), audioContext, {});
 				setContents((contents) => contents.concat(content));
 			}
 		},
 		onError: (error) => {
-			toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
+			toaster.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
 			return console.error(error);
 		},
 	});
@@ -47,7 +48,7 @@ function RouteComponent() {
 			}
 		},
 		onError: (error) => {
-			toaster?.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
+			toaster.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
 			return console.error(error);
 		},
 	});

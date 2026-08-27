@@ -1,86 +1,60 @@
-import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
 import { NOTE_TICK_TYPES } from "$/constants";
-import { convertFileToArrayBuffer } from "$/helpers/file.helpers";
-import { getRouter } from "$/router";
 import type { AudioSample } from "$/services/audio.service";
-import { getAppBeatmapFilestore } from "$/setup";
-import { decrementPlaybackRate, finishLoadingMap, hydrateSession, incrementPlaybackRate, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition, updatePlaybackRate, updateSong, updateSongVolume, updateTickType, updateTickVolume } from "$/store/actions";
-import { selectAllColorNotes, selectAudioProcessingDelayInBeats, selectCursorPosition, selectPlaybackRate, selectTickVolume } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
-import { type SongId, View } from "$/types";
+import {
+	decrementPlaybackRate,
+	decrementSongVolume,
+	decrementTickVolume,
+	incrementPlaybackRate,
+	incrementSongVolume,
+	incrementTickVolume,
+	loadSongFile,
+	pausePlayback,
+	startPlayback,
+	stopPlayback,
+	tick,
+	updateCursorPosition,
+	updatePlaybackRate,
+	updateSongVolume,
+	updateTickType,
+	updateTickVolume,
+} from "$/store/actions";
+import { selectActiveSongId, selectActiveView } from "$/store/helpers/route.helpers";
+import { selectAllColorNotes, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTimeProcessor } from "$/store/selectors";
+import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
+import { View } from "$/types";
 
-function getTickSchedule(state: RootState, songId: SongId): number[] {
-	const notes = selectAllColorNotes(state);
-	const delayInBeats = selectAudioProcessingDelayInBeats(state, songId);
-	return notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
+interface Options {
+	songSample: AudioSample;
+	tickSample: AudioSample;
+	extra: Pick<AppExtraArgs, "getRouter" | "getFilestore" | "getAudioContext">;
 }
 
 /** Manages all concerns related to audio samples. */
-export default function createAudioMiddleware({ songSample, tickSample }: { songSample: AudioSample; tickSample: AudioSample }) {
-	const instance = createListenerMiddleware<RootState>();
-
-	const filestore = getAppBeatmapFilestore();
-	const router = getRouter();
-
-	tickSample.load(NOTE_TICK_TYPES[0]);
+export default function createAudioMiddleware({ songSample, tickSample, extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	let tickSchedule: number[] = [];
 
 	instance.startListening({
-		actionCreator: hydrateSession,
-		effect: async (action) => {
-			const { "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
-			if (playbackRate !== undefined) songSample.changePlaybackRate(playbackRate);
-			if (songVolume !== undefined) songSample.changeVolume(songVolume);
-			if (tickVolume !== undefined) tickSample.changeVolume(tickVolume);
-			if (tickType !== undefined) tickSample.load(NOTE_TICK_TYPES[tickType]);
+		actionCreator: loadSongFile.pending,
+		effect: async (action, api) => {
+			const filestore = api.extra.getFilestore();
+			const songFile = await filestore.loadSongFile(action.meta.arg.songId);
+			songSample.loadFromFile(songFile);
 		},
 	});
 	instance.startListening({
 		actionCreator: updateCursorPosition,
-		effect: async (action) => {
-			songSample.setCurrentTime(action.payload.value / 1000);
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(finishLoadingMap, updateSong),
-		effect: async (action: PayloadAction<{ songId: SongId; songFile?: File }>, _) => {
-			const { songId, songFile } = action.payload;
-
-			if (finishLoadingMap.match(action) || songFile) {
-				const updatedSongFile = songFile ?? (await filestore.loadSongFile(songId));
-				const arrayBuffer = await convertFileToArrayBuffer(updatedSongFile);
-				await songSample.loadFromArrayBuffer(arrayBuffer);
-			}
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(finishLoadingMap, startPlayback),
-		effect: (action: PayloadAction<{ songId: SongId }>, api) => {
-			tickSchedule = getTickSchedule(api.getState(), action.payload.songId);
-		},
-	});
-	instance.startListening({
-		actionCreator: tick,
-		effect: (action, api) => {
-			const { lastBeat, currentBeat } = action.payload;
-
-			if (selectTickVolume(api.getState()) > 0) {
-				const { context } = router.state.matches[router.state.matches.length - 1];
-
-				if ("view" in context && (context.view === View.PREVIEW || context.view === View.BEATMAP)) {
-					if (tickSchedule.some((t) => t >= lastBeat && t < currentBeat)) {
-						tickSample.trigger();
-					}
-				}
-			}
+		effect: (action) => {
+			songSample.setCurrentTime(action.payload);
 		},
 	});
 	instance.startListening({
 		actionCreator: startPlayback,
-		effect: (_, api) => {
-			songSample.play(selectCursorPosition(api.getState()) / 1000);
+		effect: () => {
+			songSample.play();
 		},
 	});
 	instance.startListening({
@@ -96,21 +70,48 @@ export default function createAudioMiddleware({ songSample, tickSample }: { song
 		},
 	});
 	instance.startListening({
-		actionCreator: updateSongVolume,
-		effect: (action) => {
-			songSample.changeVolume(action.payload.value);
+		matcher: isAnyOf(updateSongVolume, incrementSongVolume, decrementSongVolume),
+		effect: (_, api) => {
+			songSample.changeVolume(selectSongVolume(api.getState()));
+		},
+	});
+
+	instance.startListening({
+		actionCreator: startPlayback,
+		effect: (_, api) => {
+			const state = api.getState();
+			const notes = selectAllColorNotes(state);
+			const songId = selectActiveSongId(api.extra.getRouter());
+			const timeProcessor = selectTimeProcessor(state, songId);
+			const { baseLatency } = api.extra.getAudioContext();
+			const delayInBeats = timeProcessor.toBeatTime(baseLatency);
+
+			tickSchedule = notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
 		},
 	});
 	instance.startListening({
-		actionCreator: updateTickVolume,
-		effect: (action) => {
-			tickSample.changeVolume(action.payload.value);
+		actionCreator: tick,
+		effect: (action, api) => {
+			const view = selectActiveView(api.extra.getRouter());
+			const areNotesVisible = view === View.PREVIEW || view === View.BEATMAP;
+			const isTickAudible = selectTickVolume(api.getState()) > 0;
+			const shouldTick = tickSchedule.some((t) => t >= action.payload.lastBeat && t < action.payload.currentBeat);
+
+			if (isTickAudible && areNotesVisible && shouldTick) {
+				tickSample.trigger();
+			}
+		},
+	});
+	instance.startListening({
+		matcher: isAnyOf(updateTickVolume, incrementTickVolume, decrementTickVolume),
+		effect: (_, api) => {
+			tickSample.changeVolume(selectTickVolume(api.getState()));
 		},
 	});
 	instance.startListening({
 		actionCreator: updateTickType,
 		effect: (action) => {
-			tickSample.load(NOTE_TICK_TYPES[action.payload.value]);
+			tickSample.load(NOTE_TICK_TYPES[action.payload]);
 		},
 	});
 

@@ -1,156 +1,153 @@
-import { getAudioContext } from "$/setup";
-
 export interface AudioSampleOptions {
-	url?: string;
 	volume?: number;
 	playbackRate?: number;
 }
 
-/**
- * This service abstracts the Web Audio API to allow easy, precise playback of audio files.
- */
 export class AudioSample {
-	gain: number;
-	playbackRate: number;
-	context: AudioContext;
-	startTime: number;
-	playbackRateLastSetAt: number;
-	startOffset: number;
-	isPlaying: boolean;
-	gainNode: GainNode;
-	source!: AudioBufferSourceNode;
-	buffer!: AudioBuffer;
+	#context: AudioContext;
+	#gainNode: GainNode;
+	#buffer?: AudioBuffer;
+	#source?: AudioBufferSourceNode;
 
-	constructor({ volume = 1, playbackRate = 1 }: AudioSampleOptions) {
-		this.gain = volume;
+	#startTime = 0;
+	#startOffset = 0;
+	#lastTime = 0;
+	#animationFrameId: number | null = null;
+	#onTickCallback?: (currentTime: number, lastTime: number) => void;
+
+	isPlaying = false;
+	playbackRate: number;
+
+	get duration(): number {
+		return this.#buffer?.duration ?? 0;
+	}
+
+	constructor(audioContext: AudioContext, { volume = 1, playbackRate = 1 }: AudioSampleOptions) {
+		this.#context = audioContext;
 		this.playbackRate = playbackRate;
 
-		this.context = getAudioContext();
+		this.#gainNode = this.#context.createGain();
+		this.#gainNode.connect(this.#context.destination);
+		this.#gainNode.gain.value = volume;
+	}
 
-		// Audio contexts have an always-incrementing `currentTime` ticker.
-		// When we start the file, we might be 20 seconds into that process, so we'll store the currentTime position that the audio started playing.
-		this.startTime = 0;
-
-		// If playback rate changes, we need track when for computation
-		this.playbackRateLastSetAt = 0;
-
-		// When we pause the song, we might be 55 seconds into its playback. Store the number 55, so that we know where to resume from.
-		// This is because there is no native "pause" functionality.
-		this.startOffset = 0;
-
-		this.isPlaying = false;
-
-		this.gainNode = this.context.createGain();
-		this.gainNode.connect(this.context.destination);
-		this.gainNode.gain.value = volume;
+	#resetTimings(offset = this.getCurrentTime()) {
+		this.#startOffset = Math.max(offset, 0);
+		this.#startTime = this.#context.currentTime;
+		this.#lastTime = this.#context.currentTime;
 	}
 
 	changeVolume(volume: number) {
-		this.gain = volume;
-		this.gainNode.gain.value = this.gain;
+		this.#gainNode.gain.value = volume;
 	}
-
 	changePlaybackRate(playbackRate: number) {
-		this.startOffset = this.getCurrentTime();
-		this.playbackRateLastSetAt = this.context.currentTime;
+		this.#resetTimings();
 		this.playbackRate = playbackRate;
 
-		if (this.source) {
-			this.source.playbackRate.value = this.playbackRate;
+		if (this.#source) {
+			this.#source.playbackRate.value = playbackRate;
 		}
 	}
 
 	async load(path: string) {
-		const buffer = await fetch(path).then((response) => response.arrayBuffer());
-		return this.loadFromArrayBuffer(buffer);
+		const response = await fetch(path);
+		return this.loadFromArrayBuffer(await response.arrayBuffer());
 	}
-
 	async loadFromFile(file: File) {
-		const buffer = await file.arrayBuffer();
-		return this.loadFromArrayBuffer(buffer);
+		return this.loadFromArrayBuffer(await file.arrayBuffer());
 	}
-
 	async loadFromArrayBuffer(arrayBuffer: ArrayBuffer) {
-		return new Promise((resolve, reject) => {
-			this.context.decodeAudioData(
-				arrayBuffer,
-				(buffer) => {
-					this.buffer = buffer;
-					resolve(buffer);
-				},
-				reject,
-			);
-		});
+		this.#buffer = await this.#context.decodeAudioData(arrayBuffer);
+		return this.#buffer;
 	}
 
 	play(startTime?: number, duration?: number, onFinished?: () => void) {
+		if (!this.#buffer) return;
+
 		if (this.isPlaying) {
 			this.pause();
 		}
+		if (startTime !== undefined) {
+			this.#resetTimings(startTime);
+		} else {
+			this.#resetTimings();
+		}
 
-		const actualOffset = startTime !== undefined ? startTime : this.startOffset;
-
-		this.startTime = this.context.currentTime - actualOffset / this.playbackRate;
-		this.playbackRateLastSetAt = this.context.currentTime;
 		this.isPlaying = true;
 
-		this.source = this.context.createBufferSource();
-		this.source.buffer = this.buffer;
-		this.source.playbackRate.value = this.playbackRate;
-		this.source.connect(this.gainNode);
+		this.#source = this.#context.createBufferSource();
+		this.#source.buffer = this.#buffer;
+		this.#source.playbackRate.value = this.playbackRate;
+		this.#source.connect(this.#gainNode);
 
 		if (duration !== undefined) {
-			this.source.start(0, actualOffset, duration);
-
-			this.source.onended = () => {
+			this.#source.start(0, this.#startOffset, duration);
+			this.#source.onended = () => {
+				this.#stopAnimationLoop();
 				this.isPlaying = false;
-				if (onFinished) onFinished();
+				onFinished?.();
 			};
 		} else {
-			this.source.start(0, actualOffset);
+			this.#source.start(0, this.#startOffset);
 		}
-	}
 
+		this.#startAnimationLoop();
+	}
 	pause() {
-		if (!this.isPlaying) {
-			return;
-		}
+		if (!this.isPlaying) return;
 
-		this.startOffset = this.getCurrentTime();
+		this.#startOffset = this.getCurrentTime();
+		this.#stopAnimationLoop();
 		this.isPlaying = false;
-		this.source.stop();
-	}
 
+		this.#source?.stop();
+		this.#source = undefined;
+	}
 	trigger() {
 		this.pause();
 		this.setCurrentTime(0);
 		this.play();
 	}
 
-	isBufferLoaded() {
-		return !!this.buffer;
+	isBufferLoaded(): boolean {
+		return !!this.#buffer;
 	}
 
-	getCurrentTime() {
-		if (!this.isPlaying) {
-			return this.startOffset;
-		}
-
-		return this.startOffset + (this.context.currentTime - this.playbackRateLastSetAt) * this.playbackRate;
+	getCurrentTime(): number {
+		if (!this.isPlaying) return this.#startOffset;
+		return this.#startOffset + (this.#context.currentTime - this.#startTime) * this.playbackRate;
 	}
-
-	getRateAdjustedElapsed() {
-		return (this.context.currentTime - this.playbackRateLastSetAt) * this.playbackRate;
-	}
-
 	setCurrentTime(time: number) {
-		// This method updates `startOffset` so that when we unpause it, we pick up from the right place.
+		this.#resetTimings(time);
+
 		if (this.isPlaying) {
 			this.pause();
-			this.startOffset = Math.max(time, 0);
 			this.play();
-		} else {
-			this.startOffset = Math.max(time, 0);
+		}
+	}
+
+	onTick(callback: (currentTime: number, lastTime: number) => void) {
+		this.#onTickCallback = callback;
+	}
+
+	#startAnimationLoop() {
+		const loop = () => {
+			if (!this.isPlaying) return;
+
+			const currentTime = this.getCurrentTime();
+			const lastTime = this.#startOffset + (this.#lastTime - this.#startTime) * this.playbackRate;
+
+			this.#onTickCallback?.(currentTime, lastTime);
+			this.#lastTime = this.#context.currentTime;
+			this.#animationFrameId = window.requestAnimationFrame(loop);
+		};
+
+		this.#animationFrameId = window.requestAnimationFrame(loop);
+	}
+	#stopAnimationLoop() {
+		if (this.#animationFrameId !== null) {
+			window.cancelAnimationFrame(this.#animationFrameId);
+			this.#animationFrameId = null;
 		}
 	}
 }

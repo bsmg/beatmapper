@@ -1,10 +1,10 @@
-import { isAnyOf, type ReducerCreators } from "@reduxjs/toolkit";
+import { createAction, createSlice } from "@reduxjs/toolkit";
 
-import { SNAPPING_INCREMENTS } from "$/constants";
-import { hydrateSession, leaveEditor, reloadVisualizer, scrollThroughSong, selectAllEntitiesInRange, updateSong } from "$/store/actions";
-import { createSlice } from "$/store/helpers";
-import type { SongId } from "$/types";
+import { SNAPPING_INCREMENT_VALUES } from "$/constants/editor.constants";
+import type { AppThunkApiConfig } from "$/store/types";
+import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { clamp } from "$/utils";
+import { leaveEditor, loadSongFile } from "./actions";
 
 const initialState = {
 	isPlaying: false,
@@ -37,127 +37,87 @@ const slice = createSlice({
 		selectTickType: (state) => state.tickType,
 	},
 	reducers: (api) => {
-		function nextSnappingIncrement(api: ReducerCreators<typeof initialState>, options: { delta: number }) {
-			return api.reducer((state) => {
-				const currentSnappingIncrementIndex = SNAPPING_INCREMENTS.findIndex((increment) => increment.value === state.snapTo);
-				// This shouldn't be possible, but if somehow we don't have a recognized interval, just reset to 1.
-				if (currentSnappingIncrementIndex === -1) return { ...state, snapTo: 1 };
-				const nextSnappingIndex = currentSnappingIncrementIndex + options.delta;
-				const nextSnappingIncrement = SNAPPING_INCREMENTS[nextSnappingIndex];
-				// If we're at one end of the scale and we try to push beyond it, we'll hit an undefined. Do nothing in those cases (no wrapping around desired).
-				if (!nextSnappingIncrement) return state;
-				return { ...state, snapTo: nextSnappingIncrement.value };
-			});
-		}
-
 		return {
-			updateCursorPosition: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, cursorPosition: clamp(value, 0, state.duration ?? value) };
+			updateCursorPosition: api.reducer<number>((state, action) => {
+				return { ...state, cursorPosition: clamp(action.payload, 0, state.duration ?? action.payload), animateBlockMotion: true };
 			}),
-			tick: api.reducer<{ songId: SongId; currentTime: number; lastBeat: number; currentBeat: number }>((state, action) => {
-				const { currentTime: timeElapsed } = action.payload;
-				return { ...state, cursorPosition: timeElapsed };
-			}),
-			startPlayback: api.reducer<{ songId: SongId }>((state) => {
+			startPlayback: api.reducer((state) => {
 				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
 			}),
-			pausePlayback: api.reducer<{ songId: SongId }>((state) => {
+			pausePlayback: api.reducer((state) => {
 				return { ...state, isPlaying: false, animateBlockMotion: true, animateRingMotion: false };
 			}),
-			stopPlayback: api.reducer<{ songId: SongId }>((state) => {
+			stopPlayback: api.reducer((state) => {
 				return { ...state, isPlaying: false, animateBlockMotion: false, animateRingMotion: false };
 			}),
-			togglePlayback: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, isPlaying: !state.isPlaying };
+			updateSnap: api.reducer<number>((state, action) => {
+				return { ...state, snapTo: action.payload };
 			}),
-			jumpToTime: api.reducer<{ songId: SongId; value: number; pauseTrack?: boolean; animateJump?: boolean }>((state, action) => {
-				const { animateJump } = action.payload;
-				return { ...state, animateBlockMotion: !!animateJump };
+			updateTrackScale: api.reducer<number>((state, action) => {
+				return { ...state, beatDepth: action.payload };
 			}),
-			jumpToBeat: api.reducer<{ songId: SongId; value: number; pauseTrack?: boolean; animateJump?: boolean }>((state, action) => {
-				const { animateJump } = action.payload;
-				return { ...state, animateBlockMotion: !!animateJump };
+			updatePlaybackRate: api.reducer<number>((state, action) => {
+				return { ...state, playbackRate: action.payload };
 			}),
-			jumpToStart: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true };
+			updateSongVolume: api.reducer<number>((state, action) => {
+				return { ...state, songVolume: action.payload };
 			}),
-			jumpToEnd: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true };
+			updateTickVolume: api.reducer<number>((state, action) => {
+				return { ...state, tickVolume: action.payload };
 			}),
-			jumpForwards: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true };
-			}),
-			jumpBackwards: api.reducer<{ songId: SongId }>((state) => {
-				return { ...state, animateBlockMotion: true };
-			}),
-			scrollThroughSong: api.reducer<{ songId: SongId; direction: "forwards" | "backwards" }>((state) => {
-				return { ...state, animateBlockMotion: true };
-			}),
-			updateSnap: api.reducer<{ value: number }>((state, action) => {
-				const { value: newSnapTo } = action.payload;
-				return { ...state, snapTo: newSnapTo };
-			}),
-			incrementSnap: nextSnappingIncrement(api, { delta: 1 }),
-			decrementSnap: nextSnappingIncrement(api, { delta: -1 }),
-			updateTrackScale: api.reducer<{ value: number }>((state, action) => {
-				const { value: beatDepth } = action.payload;
-				return { ...state, animateBlockMotion: false, beatDepth: beatDepth };
-			}),
-			updatePlaybackRate: api.reducer<{ value: number }>((state, action) => {
-				const { value: playbackRate } = action.payload;
-				return { ...state, playbackRate: playbackRate };
-			}),
-			incrementPlaybackRate: api.reducer((state) => {
-				return { ...state, playbackRate: Math.min(state.playbackRate + 0.25, 2) };
-			}),
-			decrementPlaybackRate: api.reducer((state) => {
-				return { ...state, playbackRate: Math.max(state.playbackRate - 0.25, 0) };
-			}),
-			updateSongVolume: api.reducer<{ value: number }>((state, action) => {
-				const { value: volume } = action.payload;
-				return { ...state, songVolume: volume };
-			}),
-			updateTickVolume: api.reducer<{ value: number }>((state, action) => {
-				const { value: volume } = action.payload;
-				return { ...state, tickVolume: volume };
-			}),
-			updateTickType: api.reducer<{ value: number }>((state, action) => {
-				const { value: type } = action.payload;
-				return { ...state, tickType: type };
+			updateTickType: api.reducer<number>((state, action) => {
+				return { ...state, tickType: action.payload };
 			}),
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSession, (state, action) => {
-			const { "track.snap": snapTo, "track.spacing": beatDepth, "playback.rate": playbackRate, "playback.volume": songVolume, "tick.volume": tickVolume, "tick.type": tickType } = action.payload;
-			if (snapTo !== undefined) state.snapTo = snapTo;
-			if (beatDepth !== undefined) state.beatDepth = beatDepth;
-			if (playbackRate !== undefined) state.playbackRate = playbackRate;
-			if (songVolume !== undefined) state.songVolume = songVolume;
-			if (tickVolume !== undefined) state.tickVolume = tickVolume;
-			if (tickType !== undefined) state.tickType = tickType;
-		});
-		builder.addCase(reloadVisualizer, (state, action) => {
-			const { duration } = action.payload;
-			return { ...state, duration: duration * 1000 };
+		builder.addCase(loadSongFile.fulfilled, (state, action) => {
+			return { ...state, duration: action.payload.duration };
 		});
 		builder.addCase(leaveEditor, (state) => {
 			return { ...state, duration: null };
 		});
-		builder.addCase(updateSong, (state, action) => {
-			const { changes } = action.payload;
-			if (!changes.offset) return state;
-			return { ...state, cursorPosition: Math.max(changes.offset, 0) };
-		});
-		builder.addMatcher(isAnyOf(scrollThroughSong), (state) => {
-			return { ...state, animateBlockMotion: true };
-		});
-		builder.addMatcher(isAnyOf(selectAllEntitiesInRange), (state) => {
-			return { ...state, animateBlockMotion: false };
+		builder.addCase(tick, (state, action) => {
+			return { ...state, cursorPosition: action.payload.cursorPosition };
 		});
 		builder.addDefaultCase((state) => state);
 	},
+});
+
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+
+export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap } = slice.actions;
+
+export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
+	return { payload: { ...args } };
+});
+
+export const incrementSnap = createThunk("incrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: 1 }, api);
+});
+export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: -1 }, api);
+});
+
+export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 2], selectPlaybackRate, updatePlaybackRate)({ delta: 0.25 }, api);
+});
+export const decrementPlaybackRate = createThunk("decrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 2], selectPlaybackRate, updatePlaybackRate)({ delta: -0.25 }, api);
+});
+
+export const incrementSongVolume = createThunk("incrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectSongVolume, updateSongVolume)({ delta: 0.125 }, api);
+});
+export const decrementSongVolume = createThunk("decrementSongVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectSongVolume, updateSongVolume)({ delta: -0.125 }, api);
+});
+
+export const incrementTickVolume = createThunk("incrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectTickVolume, updateTickVolume)({ delta: 0.125 }, api);
+});
+export const decrementTickVolume = createThunk("decrementTickVolume", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0, 1], selectTickVolume, updateTickVolume)({ delta: -0.125 }, api);
 });
 
 export default slice;
