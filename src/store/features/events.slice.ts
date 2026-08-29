@@ -124,7 +124,7 @@ const slice = createSlice({
 				basicEvents.updateOne(state.present.basicEvents, { id: action.payload.id, changes: { selected: true } });
 			}),
 			deselectBasicEvent: api.reducer<{ id: EntityId; environment: EnvironmentName; areLasersLocked?: boolean }>((state, action) => {
-				boostEvents.updateOne(state.present.boostEvents, { id: action.payload.id, changes: { selected: false } });
+				basicEvents.updateOne(state.present.basicEvents, { id: action.payload.id, changes: { selected: false } });
 			}),
 			addBoostEvent: api.reducer<{ data: IWrapColorBoostEvent; overwrite?: boolean; environment: EnvironmentName; areLasersLocked?: boolean }>(
 				history.undoable((state, action) => {

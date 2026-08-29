@@ -346,6 +346,7 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 
 					switch (ev.button) {
 						case 0: {
+							ev.stopPropagation();
 							return data.selected ? actions.onDeselect?.(data, id) : actions.onSelect?.(data, id);
 						}
 						case 1: {
@@ -364,11 +365,12 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 						actions.onDelete?.(data, id);
 					}
 				},
-				onWheel: (event: React.WheelEvent) => {
+				onWheel: (ev) => {
 					const id = actions.selectId(data);
 
-					if (event.altKey) {
-						const delta = event.deltaY > 0 ? -1 : 1;
+					if (ev.altKey) {
+						ev.stopPropagation();
+						const delta = ev.deltaY > 0 ? -1 : 1;
 						actions.onWheel?.(data, id, delta);
 					}
 				},

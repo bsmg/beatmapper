@@ -117,7 +117,6 @@ function DefaultEditorShortcuts() {
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (!view) return;
 			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
@@ -256,7 +255,6 @@ function DefaultEditorShortcuts() {
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (!view) return;
 			if (isPromptActive) return;
 
 			switch (ev.code) {
@@ -268,21 +266,19 @@ function DefaultEditorShortcuts() {
 					return;
 			}
 		},
-		[isLoading, view, isPromptActive],
+		[isLoading, isPromptActive],
 	);
 
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
 			ev.preventDefault();
 			if (isLoading) return;
-			if (!view) return;
 			if (isPromptActive) return;
 
-			if (ev.altKey) return;
 			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 			handleScroll(direction, ev);
 		},
-		[isLoading, view, isPromptActive, handleScroll],
+		[isLoading, isPromptActive, handleScroll],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);
