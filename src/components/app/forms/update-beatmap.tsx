@@ -37,7 +37,7 @@ interface Props {
 	bid: BeatmapId;
 }
 function UpdateBeatmapForm({ bid }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid: abid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const navigate = useNavigate();
@@ -115,12 +115,11 @@ function UpdateBeatmapForm({ bid }: Props) {
 			});
 		}
 
-		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
-		const nextDifficultyId = remainingDifficultyIds[0];
-
 		dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
+		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
+		const nextDifficultyId = remainingDifficultyIds.includes(abid.toString()) ? abid : remainingDifficultyIds[0];
 		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
-	}, [dispatch, navigate, toaster, sid, bid, view, beatmaps]);
+	}, [dispatch, navigate, toaster, sid, bid, abid, view, beatmaps]);
 
 	return (
 		<Form.AppForm>
