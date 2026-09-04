@@ -6,7 +6,7 @@ import { selectActiveBeatmapId, selectActiveSongId } from "$/store/helpers/route
 import { selectBeatmapEntities, selectBeatmapIds, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, AppThunkApiConfig, RootState } from "$/store/types";
 import { createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
-import type { BeatmapId, SongId } from "$/types";
+import type { App, BeatmapId, SongId } from "$/types";
 
 export const saveMapFiles = createThunk("saveMap", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const songId = selectActiveSongId(api.extra.getRouter());
@@ -28,13 +28,11 @@ export const saveInfoContents = createAsyncThunk("saveInfoContents", async (args
 
 	await filestore.updateInfoContents(args.songId, info);
 });
-export const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async (args: { songId: SongId; beatmapId: BeatmapId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+export const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async (args: { songId: SongId; beatmapId: BeatmapId; entities: App.IBeatmapEntities }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
 	const state = api.getState();
 	const filestore = api.extra.getFilestore();
 
-	const entities = selectBeatmapEntities(state);
-
-	const { difficulty, lightshow, customData } = serializeBeatmapContents(entities, {
+	const { difficulty, lightshow, customData } = serializeBeatmapContents(args.entities, {
 		version: await filestore.loadImplicitVersion(args.songId, args.beatmapId),
 		editorOffsetInBeats: selectEditorOffsetInBeats(state, args.songId),
 	});
@@ -68,7 +66,8 @@ export default function createBackupMiddleware({ extra }: Options) {
 	instance.startListening({
 		matcher: isAnyOf(leaveEditor),
 		effect: async (action: PayloadAction<{ songId: SongId; beatmapId: BeatmapId }>, api) => {
-			api.dispatch(saveBeatmapContents(action.payload));
+			const entities = selectBeatmapEntities(api.getOriginalState());
+			api.dispatch(saveBeatmapContents({ ...action.payload, entities }));
 		},
 	});
 	instance.startListening({
