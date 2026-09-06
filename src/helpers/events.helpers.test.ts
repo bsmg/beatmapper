@@ -1,4 +1,4 @@
-import { getBasicTracksForEnvironment } from "bsmap";
+import { getBasicTracksForEnvironment } from "bsmap/environment";
 import { describe, expect, it } from "vitest";
 
 import { BasicEventEffect, EventColor } from "$/types";

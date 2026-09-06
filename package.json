@@ -41,7 +41,7 @@
 		"@zag-js/file-utils": "^1.37.0",
 		"@zag-js/react": "^1.37.0",
 		"@zag-js/utils": "^1.37.0",
-		"bsmap": "^2.3.5",
+		"bsmap": "^3.0.0",
 		"date-fns": "^4.1.0",
 		"fflate": "^0.8.2",
 		"file-saver": "^2.0.5",

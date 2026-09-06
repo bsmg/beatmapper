@@ -93,8 +93,8 @@ importers:
         specifier: ^1.37.0
         version: 1.41.2
       bsmap:
-        specifier: ^2.3.5
-        version: 2.3.5(typescript@6.0.3)
+        specifier: ^3.0.0
+        version: 3.0.0(typescript@6.0.3)
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
@@ -2693,8 +2693,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
-  bsmap@2.3.5:
-    resolution: {integrity: sha512-sAx1cEtIXfSDTY6fnSLal28iTX2ST8BwcX/bvZJDr+MFh83Ev3Dxvwn/1WcdRyLYY8swW+B4pL+dtqCLyrC5HQ==}
+  bsmap@3.0.0:
+    resolution: {integrity: sha512-ILjvIqykVBlxwt51/yn5dRxWevTApytVRkM0voEKEA326ObO3s5i6O5d8nATM3uTyFsX8JWOs368Lt68nqI96A==}
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -8559,7 +8559,7 @@ snapshots:
       node-releases: 2.0.47
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
-  bsmap@2.3.5(typescript@6.0.3):
+  bsmap@3.0.0(typescript@6.0.3):
     dependencies:
       '@standard-schema/spec': 1.1.0
       valibot: 1.4.1(typescript@6.0.3)

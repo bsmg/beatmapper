@@ -1,6 +1,7 @@
 import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, type GetThunkAPI } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
-import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
+import { EnvironmentName } from "bsmap";
+import { getBasicTracksForEnvironment } from "bsmap/environment";
 import { eventTypeRename } from "bsmap/extensions/renamer";
 
 import { deserializeInfoContents } from "$/helpers/packaging.helpers";

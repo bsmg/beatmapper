@@ -1,6 +1,7 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
-import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, is360Environment, isV2Environment, isV3Environment } from "bsmap";
+import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, is360Environment, isV2Environment, isV3Environment } from "bsmap";
+import { EnvironmentRename } from "bsmap/environment";
 import { nonEmpty, null_, number, object, pipe, regex, string, union } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
