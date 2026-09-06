@@ -27,7 +27,7 @@ export default function createPackagingMiddleware({ extra }: Options) {
 		effect: (action, api) => {
 			console.error(action.error);
 			const toaster = api.extra.getToaster();
-			toaster.error({ description: `Could not import map: ${action.error ?? "See console for more info."}` });
+			toaster.error({ description: `Could not import map: ${action.error.message ?? "See console for more info."}` });
 		},
 	});
 	instance.startListening({
@@ -35,7 +35,7 @@ export default function createPackagingMiddleware({ extra }: Options) {
 		effect: (action, api) => {
 			console.error(action.error);
 			const toaster = api.extra.getToaster();
-			toaster.error({ description: `Could not export map: ${action.error ?? "See console for more info."}` });
+			toaster.error({ description: `Could not export map: ${action.error.message ?? "See console for more info."}` });
 		},
 	});
 
