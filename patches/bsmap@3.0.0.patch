@@ -1,0 +1,13 @@
+diff --git a/esm/beatmap/mapping/converter.js b/esm/beatmap/mapping/converter.js
+index 0cdd9261759ec36f0a3820c84b0209f0b7fdec9c..e821dacf2b71dc1f94fb1884e4f59185ac522511 100644
+--- a/esm/beatmap/mapping/converter.js
++++ b/esm/beatmap/mapping/converter.js
+@@ -51,7 +51,7 @@ export function convertBeatmap(type, targetVersion, data, sourceVersion) {
+         throw new Error(`Unsupported ${type} beatmap version ${String(targetVersion)}.`);
+     }
+     if (sourceVersion !== undefined &&
+-        !isSupportedMajorVersion(type, sourceVersion)) {
++        !isSupportedMajorVersion(type === "lightshow" ? "difficulty" : type, sourceVersion)) {
+         throw new Error(`Unsupported ${type} source beatmap version ${String(sourceVersion)}.`);
+     }
+     logger?.tInfo(tag('convertBeatmap'), `Converting wrapper contents for ${type} to version ${targetVersion}`);

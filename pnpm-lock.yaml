@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  bsmap@3.0.0: 6cfaacd3d5eadb931916451fc8b85a511b9a095d091d9031127a781ca189c509
+
 importers:
 
   .:
@@ -94,7 +97,7 @@ importers:
         version: 1.41.2
       bsmap:
         specifier: ^3.0.0
-        version: 3.0.0(typescript@6.0.3)
+        version: 3.0.0(patch_hash=6cfaacd3d5eadb931916451fc8b85a511b9a095d091d9031127a781ca189c509)(typescript@6.0.3)
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
@@ -8559,7 +8562,7 @@ snapshots:
       node-releases: 2.0.47
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
-  bsmap@3.0.0(typescript@6.0.3):
+  bsmap@3.0.0(patch_hash=6cfaacd3d5eadb931916451fc8b85a511b9a095d091d9031127a781ca189c509)(typescript@6.0.3):
     dependencies:
       '@standard-schema/spec': 1.1.0
       valibot: 1.4.1(typescript@6.0.3)
