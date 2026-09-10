@@ -11,9 +11,10 @@ import type { App, BeatmapId, SongId } from "$/types";
 export const saveMapFiles = createThunk("saveMap", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const songId = selectActiveSongId(api.extra.getRouter());
 	const beatmapId = selectActiveBeatmapId(api.extra.getRouter());
+	const entities = selectBeatmapEntities(api.getState());
 
 	api.dispatch(saveInfoContents({ songId }));
-	api.dispatch(saveBeatmapContents({ songId, beatmapId }));
+	api.dispatch(saveBeatmapContents({ songId, beatmapId, entities }));
 });
 
 export const saveInfoContents = createAsyncThunk("saveInfoContents", async (args: { songId: SongId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
