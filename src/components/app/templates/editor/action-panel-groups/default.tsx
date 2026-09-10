@@ -5,9 +5,10 @@ import { createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/ap
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip, usePrompt } from "$/components/ui/compositions";
+import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
 import { copySelection, cutSelection, jumpToBeat, pasteSelection, redoObjects, selectAllEntitiesInRange, undoObjects } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAnySelectedObjects, selectClipboardHasObjects, selectModuleEnabled, selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
+import { selectAnySelectedObjects, selectClipboardHasObjects, selectCursorPositionInBeats, selectModuleEnabled, selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
 
 interface Props {
 	handleGridConfigClick?: MouseEventHandler;
@@ -20,19 +21,14 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	const canRedo = useAppSelector(selectObjectsCanRedo);
 	const isAnythingSelected = useAppSelector(selectAnySelectedObjects);
 	const hasCopiedNotes = useAppSelector(selectClipboardHasObjects);
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const mappingExtensionsEnabled = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
 
 	const { trigger: triggerQuickSelect } = usePrompt(
 		createQuickSelectPrompt({
 			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
 			onSubmit: ({ value: { range } }) => {
-				let [startBeat, endBeat] = range
-					.trim()
-					.split("-")
-					.map((x) => Number.parseFloat(x));
-				if (typeof endBeat !== "number") {
-					endBeat = Number.POSITIVE_INFINITY;
-				}
+				const [startBeat, endBeat] = calculateQuickSelectRange(range, cursorPositionInBeats, 0.01);
 				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
 				dispatch(jumpToBeat({ value: startBeat }));
 			},

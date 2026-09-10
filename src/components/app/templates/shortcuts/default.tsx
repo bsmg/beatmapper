@@ -8,6 +8,7 @@ import { useGlobalEventListener } from "$/components/hooks/use-global-event-list
 import { usePrompt, usePrompter } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
+import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
 import {
 	addBookmark,
 	copySelection,
@@ -62,13 +63,7 @@ function DefaultEditorShortcuts() {
 		createQuickSelectPrompt({
 			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
 			onSubmit: ({ value: { range } }) => {
-				let [startBeat, endBeat] = range
-					.trim()
-					.split("-")
-					.map((x) => Number.parseFloat(x));
-				if (typeof endBeat !== "number") {
-					endBeat = Number.POSITIVE_INFINITY;
-				}
+				const [startBeat, endBeat] = calculateQuickSelectRange(range, cursorPositionInBeats, 0.01);
 				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
 				dispatch(jumpToBeat({ value: startBeat }));
 			},
