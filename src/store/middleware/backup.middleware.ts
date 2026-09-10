@@ -23,7 +23,7 @@ export const saveInfoContents = createAsyncThunk("saveInfoContents", async (args
 
 	const song = selectSongById(state, args.songId);
 
-	const { ...info } = serializeInfoContents(song, {
+	const info = serializeInfoContents(song, {
 		songDuration: selectDuration(state),
 	});
 
@@ -33,20 +33,20 @@ export const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async
 	const state = api.getState();
 	const filestore = api.extra.getFilestore();
 
-	const { difficulty, lightshow, customData } = serializeBeatmapContents(args.entities, {
+	const beatmap = serializeBeatmapContents(args.entities, {
 		version: await filestore.loadImplicitVersion(args.songId, args.beatmapId),
 		editorOffsetInBeats: selectEditorOffsetInBeats(state, args.songId),
 	});
 
-	await filestore.updateBeatmapContents(args.songId, args.beatmapId, { difficulty, lightshow, customData });
+	await filestore.updateBeatmapContents(args.songId, args.beatmapId, beatmap);
 
 	// copy custom data across all beatmaps
 	for (const targetBeatmapId of selectBeatmapIds(state, args.songId)) {
-		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { customData });
+		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { difficulty: { customData: beatmap.difficulty.customData }, lightshow: { customData: beatmap.lightshow.customData }, customData: beatmap.customData });
 	}
 	// copy lightshow data across beatmaps that share the same lightshow
 	for (const targetBeatmapId of selectBeatmapIdsWithLightshowId(state, args.songId, selectLightshowIdForBeatmap(state, args.songId, args.beatmapId))) {
-		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { lightshow });
+		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { lightshow: beatmap.lightshow });
 	}
 });
 
