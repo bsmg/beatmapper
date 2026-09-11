@@ -1,4 +1,4 @@
-import { createListenerMiddleware } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 import { createBeatmap } from "bsmap";
 
 import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
@@ -8,7 +8,7 @@ import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, loadAudioDataConten
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { deepAssign } from "$/utils";
-import { hydrateSongs } from "../features/songs.slice";
+import { hydrateSongs, selectAllSongs, upsertSongs } from "../features/songs.slice";
 
 interface Options {
 	extra: Pick<AppExtraArgs, "getFilestore" | "getAudioContext">;
@@ -33,9 +33,9 @@ export default function createFileMiddleware({ extra }: Options) {
 		},
 	});
 	instance.startListening({
-		actionCreator: hydrateSongs.fulfilled,
-		effect: async (action, api) => {
-			for (const song of action.payload) {
+		matcher: isAnyOf(hydrateSongs.fulfilled, upsertSongs),
+		effect: async (_, api) => {
+			for (const song of selectAllSongs(api.getState())) {
 				const filestore = api.extra.getFilestore();
 				await filestore.updateInfoContents(song.id, { customData: createInfoEditorData(song) });
 			}

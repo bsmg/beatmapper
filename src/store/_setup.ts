@@ -29,7 +29,7 @@ export async function createAppStore({ extraArgument }: Options) {
 		},
 	});
 
-	await Promise.all([store.dispatch(hydrateSongs()), store.hydrate()]).then(() => {
+	await Promise.all([store.hydrate()]).then(() => {
 		store.dispatch(init());
 	});
 
