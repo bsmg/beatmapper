@@ -4,7 +4,7 @@ import type { FileMimeType } from "@zag-js/file-utils";
 import { FileArchiveIcon, FileAudioIcon, FileIcon, FileImageIcon, FileTextIcon, type LucideProps, TrashIcon } from "lucide-react";
 import { type ComponentProps, Fragment, forwardRef, useEffect, useMemo } from "react";
 
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { For, Show } from "$/components/ui/atoms";
 import { useFieldData } from "$/components/ui/hooks/form.hooks";
 import { type ComposableFn, useComposable } from "$/components/ui/hooks/use-composable";
@@ -52,9 +52,9 @@ interface ListComposableProps {
 }
 
 function List({ accept, deletable, children }: FileUploadProps & ListComposableProps) {
-	const { toaster } = useSetupContext();
-
 	const api = useFileUploadContext();
+
+	const toaster = useToaster();
 
 	const ItemDeleteTrigger = useRender(
 		Builder.ItemDeleteTrigger,
@@ -76,7 +76,7 @@ function List({ accept, deletable, children }: FileUploadProps & ListComposableP
 					break;
 				}
 			}
-			return toaster?.error({ id: errors[0], description: message });
+			return toaster.error({ id: errors[0], description: message });
 		}
 	}, [toaster, api.rejectedFiles, accept]);
 

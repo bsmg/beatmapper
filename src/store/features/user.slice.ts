@@ -1,13 +1,11 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { createSelector, createSlice } from "@reduxjs/toolkit";
 
-import { addSong, addSongFromFile, finishLoadingMap, hydrateUser, updateSong } from "$/store/actions";
 import { ObstaclePlacementMode } from "$/types";
 
 const initialState = {
 	isNewUser: true,
 	seenPrompts: [] as string[],
 	stickyMapAuthorName: "",
-	processingDelay: 60,
 	renderScale: 1,
 	isBloomEnabled: true,
 	obstaclePlacementMode: ObstaclePlacementMode.LEGACY as ObstaclePlacementMode,
@@ -21,7 +19,6 @@ const slice = createSlice({
 		selectNew: (state) => state.isNewUser,
 		selectAnnouncements: (state) => state.seenPrompts,
 		selectUsername: (state) => state.stickyMapAuthorName,
-		selectProcessingDelay: (state) => (typeof state.processingDelay === "number" ? state.processingDelay : initialState.processingDelay),
 		selectRenderScale: (state) => state.renderScale,
 		selectBloomEnabled: (state) => state.isBloomEnabled,
 		selectObstaclePlacementMode: (state) => state.obstaclePlacementMode,
@@ -29,61 +26,40 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			dismissPrompt: api.reducer<{ id: string }>((state, action) => {
-				const { id } = action.payload;
-				return { ...state, seenPrompts: [...state.seenPrompts, id] };
+			updateNew: api.reducer<boolean>((state, action) => {
+				return { ...state, isNewUser: action.payload };
 			}),
-			updateUsername: api.reducer<{ value: string }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, stickyMapAuthorName: value };
+			updateAnnouncements: api.reducer<string[]>((state, action) => {
+				return { ...state, seenPrompts: action.payload };
 			}),
-			updateProcessingDelay: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, processingDelay: value };
+			updateUsername: api.reducer<string>((state, action) => {
+				return { ...state, stickyMapAuthorName: action.payload };
 			}),
-			updateRenderScale: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, renderScale: value };
+			updateRenderScale: api.reducer<number>((state, action) => {
+				return { ...state, renderScale: action.payload };
 			}),
-			updateBloomEnabled: api.reducer<{ checked?: boolean } | undefined>((state, action) => {
-				const { checked } = action.payload ?? {};
-				if (checked) return { ...state, isBloomEnabled: checked };
-				return { ...state, isBloomEnabled: !state.isBloomEnabled };
+			updateBloomEnabled: api.reducer<boolean | undefined>((state, action) => {
+				return { ...state, isBloomEnabled: action.payload ?? !state.isBloomEnabled };
 			}),
-			updateObstaclePlacementMode: api.reducer<{ value: ObstaclePlacementMode }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, obstaclePlacementMode: value };
+			updateObstaclePlacementMode: api.reducer<ObstaclePlacementMode>((state, action) => {
+				return { ...state, obstaclePlacementMode: action.payload };
 			}),
-			updatePacerWait: api.reducer<{ value: number }>((state, action) => {
-				const { value } = action.payload;
-				return { ...state, pacerWaitMs: value };
+			updatePacerWait: api.reducer<number>((state, action) => {
+				return { ...state, pacerWaitMs: action.payload };
 			}),
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateUser, (state, action) => {
-			const { "user.new": isNewUser, "user.announcements": seenPrompts, "user.username": stickyMapAuthorName, "audio.offset": processingDelay, "graphics.scale": renderScale, "graphics.bloom": isBlooming, "controls.obstacles": obstaclePlacementMode } = action.payload;
-			if (isNewUser !== undefined) state.isNewUser = isNewUser;
-			if (seenPrompts !== undefined) state.seenPrompts = seenPrompts;
-			if (stickyMapAuthorName !== undefined) state.stickyMapAuthorName = stickyMapAuthorName;
-			if (processingDelay !== undefined) state.processingDelay = processingDelay;
-			if (renderScale !== undefined) state.renderScale = renderScale;
-			if (isBlooming !== undefined) state.isBloomEnabled = isBlooming;
-			if (obstaclePlacementMode !== undefined) state.obstaclePlacementMode = Object.values(ObstaclePlacementMode)[obstaclePlacementMode];
-		});
-		builder.addCase(addSongFromFile.fulfilled, (state) => {
-			return { ...state, isNewUser: false };
-		});
-		builder.addCase(updateSong, (state, action) => {
-			const { changes: songData } = action.payload;
-			if (!songData.mapAuthorName) return state;
-			return { ...state, stickyMapAuthorName: songData.mapAuthorName };
-		});
-		builder.addMatcher(isAnyOf(addSong, finishLoadingMap), (state) => {
-			return { ...state, isNewUser: false };
-		});
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const { selectNew, selectAnnouncements, selectUsername, selectRenderScale, selectBloomEnabled, selectObstaclePlacementMode: selectUserObstaclePlacementMode, selectPacerWait } = slice.getSelectors(slice.selectSlice);
+
+export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
+	return Math.max(renderScale * 75, 25);
+});
+
+export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = slice.actions;
 
 export default slice;

@@ -1,4 +1,5 @@
-import { createBasicEvent, createColorBoostEvent, getBasicTracksForEnvironment, type IWrapBasicEvent, type IWrapColorBoostEvent } from "bsmap";
+import { createBasicEvent, createColorBoostEvent, type IWrapBasicEvent, type IWrapColorBoostEvent } from "bsmap";
+import { getBasicTracksForEnvironment } from "bsmap/environment";
 import { describe, expect, it } from "vitest";
 
 import { deriveColorSchemeFromEnvironment } from "$/helpers/colors.helpers";

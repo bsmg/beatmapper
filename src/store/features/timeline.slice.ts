@@ -1,7 +1,7 @@
+import { createSlice } from "@reduxjs/toolkit";
 import type { IBPMTimeScale } from "bsmap";
 
-import { createSlice } from "$/store/helpers";
-import { leaveEditor } from "../actions";
+import { leaveEditor, loadAudioDataContents } from "./actions";
 
 const initialState = {
 	timescale: [] as IBPMTimeScale[],
@@ -13,18 +13,15 @@ const slice = createSlice({
 	selectors: {
 		selectTimescale: (state) => state.timescale,
 	},
-	reducers: (api) => {
-		return {
-			updateTimescale: api.reducer<{ timescale: IBPMTimeScale[] }>((state, action) => {
-				return { ...state, timescale: action.payload.timescale };
-			}),
-		};
-	},
+	reducers: {},
 	extraReducers: (builder) => {
-		builder.addCase(leaveEditor, (state) => {
-			return { ...state, timescale: [] };
+		builder.addCase(loadAudioDataContents.fulfilled, (state, action) => {
+			return { ...state, timescale: action.payload.timescale };
 		});
+		builder.addCase(leaveEditor, () => initialState);
 	},
 });
+
+export const { selectTimescale } = slice.getSelectors(slice.selectSlice);
 
 export default slice;

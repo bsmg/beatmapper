@@ -1,23 +1,25 @@
-import { type AsyncThunkPayloadCreator, createEntityAdapter, createSelector, type EntityId, isAnyOf } from "@reduxjs/toolkit";
+import { type AsyncThunkPayloadCreator, asyncThunkCreator, buildCreateSlice, createEntityAdapter, createSelector, type EntityId, type GetThunkAPI } from "@reduxjs/toolkit";
 import { distinct } from "@std/collections/distinct";
-import { EnvironmentName, getBasicTracksForEnvironment } from "bsmap";
+import { EnvironmentName } from "bsmap";
+import { getBasicTracksForEnvironment } from "bsmap/environment";
 import { eventTypeRename } from "bsmap/extensions/renamer";
 
+import { deserializeInfoContents } from "$/helpers/packaging.helpers";
 import { createAppBeatmap, createAppSong, getColorScheme, getEnvironment, resolveSongId } from "$/helpers/song.helpers";
 import { importMapArchiveToFilestore } from "$/services/packaging.service";
-import { getAppToaster } from "$/setup";
-import { finishLoadingMap, hydrateSongs, loadGridPreset, startLoadingMap } from "$/store/actions";
-import { createSlice } from "$/store/helpers";
+import type { AppThunkApiConfig } from "$/store/types";
 import type { App, BeatmapId, IColorScheme, IGrid, SongId } from "$/types";
 import { deepAssign } from "$/utils";
+import { finishLoadingMap, startLoadingMap } from "./actions";
 
 const adapter = createEntityAdapter<App.ISong, SongId>({
 	selectId: resolveSongId,
 	sortComparer: (a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0),
 });
+
 const { selectEntities, selectAll, selectIds, selectById } = adapter.getSelectors();
 
-const slice = createSlice({
+const slice = buildCreateSlice({ creators: { asyncThunk: asyncThunkCreator } })({
 	name: "songs",
 	initialState: adapter.getInitialState(),
 	selectors: {
@@ -33,7 +35,7 @@ const slice = createSlice({
 			return song.bpm;
 		}),
 		selectEditorOffset: createSelector(selectById, (song) => {
-			return song.offset;
+			return song.offset / 1000;
 		}),
 		selectBeatmaps: createSelector(selectById, (song) => {
 			return song.difficultiesById;
@@ -103,21 +105,31 @@ const slice = createSlice({
 		}),
 	},
 	reducers: (api) => {
-		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[1] }> = async (args, api) => {
-			const toaster = getAppToaster();
-
-			try {
-				const archive = await args.file.arrayBuffer();
-				const songData = await importMapArchiveToFilestore(new Uint8Array(archive), args.options);
-				return api.fulfillWithValue({ songId: songData.id, songData: { ...songData, demo: args.options.readonly } });
-			} catch (error) {
-				toaster?.error({ description: `Could not import map: ${error instanceof Error ? error.message : "See console for more info."}` });
-				console.error(error);
-				return api.rejectWithValue(error);
-			}
+		const fetchContentsFromFile: AsyncThunkPayloadCreator<{ songId: SongId; beatmapId: BeatmapId; songData: App.ISong }, { file: File | Blob; options: Parameters<typeof importMapArchiveToFilestore>[3] }> = async (args, api: GetThunkAPI<AppThunkApiConfig<"getFilestore" | "getToaster" | "getAudioContext">>) => {
+			const archive = await args.file.arrayBuffer();
+			const songData = await importMapArchiveToFilestore(new Uint8Array(archive), api.extra.getAudioContext(), api.extra.getFilestore(), args.options);
+			return api.fulfillWithValue({ songId: songData.id, beatmapId: songData.selectedDifficulty ?? Object.keys(songData.difficultiesById)[0], songData: { ...songData, demo: args.options.readonly } });
+		};
+		const hydrate: AsyncThunkPayloadCreator<App.ISong[], undefined> = async (_, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+			const filestore = api.extra.getFilestore();
+			const ids = await filestore.getAllSongIds();
+			return Promise.all(
+				ids.map(async (id) => {
+					const info = await filestore.loadInfoContents(id);
+					return createAppSong(deserializeInfoContents(info, {}));
+				}),
+			);
 		};
 
 		return {
+			hydrate: api.asyncThunk(hydrate, {
+				fulfilled: (state, action) => {
+					return adapter.upsertMany(state, action.payload);
+				},
+			}),
+			upsertMany: api.reducer<Record<EntityId, App.ISong>>((state, action) => {
+				return adapter.upsertMany(state, action.payload);
+			}),
 			addOne: api.reducer<{ songId: SongId; beatmapId: BeatmapId; songFile: File; coverArtFile: File; songData: Parameters<typeof createAppSong>[0]; beatmapData: Parameters<typeof createAppBeatmap>[0] }>((state, action) => {
 				const { songData, beatmapId, beatmapData } = action.payload;
 				return adapter.addOne(state, createAppSong({ ...songData, difficultiesById: { [beatmapId]: createAppBeatmap({ ...beatmapData, environmentName: beatmapData.environmentName ?? songData.environment ?? EnvironmentName[0] }) } }));
@@ -128,7 +140,7 @@ const slice = createSlice({
 					return adapter.upsertOne(state, songData);
 				},
 			}),
-			updateOne: api.reducer<{ songId: SongId; songFile: File | undefined; changes: Partial<App.ISong> }>((state, action) => {
+			updateOne: api.reducer<{ songId: SongId; changes: Partial<App.ISong> }>((state, action) => {
 				const { songId: id, changes } = action.payload;
 				return adapter.updateOne(state, { id, changes });
 			}),
@@ -243,29 +255,67 @@ const slice = createSlice({
 		};
 	},
 	extraReducers: (builder) => {
-		builder.addCase(hydrateSongs, (state, action) => {
-			const byId = action.payload;
-			return adapter.upsertMany(state, Object.values(byId));
-		});
 		builder.addCase(startLoadingMap, (state, action) => {
 			const { songId, beatmapId } = action.payload;
 			return adapter.updateOne(state, { id: songId, changes: { selectedDifficulty: beatmapId } });
 		});
 		builder.addCase(finishLoadingMap, (state, action) => {
-			const { songId, songData } = action.payload;
-			const { lastOpenedAt } = songData;
-			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt } });
-		});
-		builder.addMatcher(isAnyOf(loadGridPreset), (state, action) => {
-			const { songId, grid } = action.payload;
-			const song = selectById(state, songId);
-			return adapter.updateOne(state, {
-				id: songId,
-				changes: deepAssign(song, { modSettings: { mappingExtensions: { ...grid } } }),
-			});
+			const { songId } = action.payload;
+			return adapter.updateOne(state, { id: songId, changes: { lastOpenedAt: Date.now() } });
 		});
 		builder.addDefaultCase((state) => state);
 	},
 });
+
+export const {
+	selectId: selectSongId,
+	selectEntities: selectSongs,
+	selectIds: selectSongIds,
+	selectAll: selectAllSongs,
+	selectById: selectSongById,
+	selectSongMetadata,
+	selectBpm,
+	selectEditorOffset,
+	selectBeatmaps,
+	selectBeatmapIds,
+	selectAllBeatmaps,
+	selectBeatmapById,
+	selectJumpSpeed,
+	selectJumpOffset,
+	selectLightshowIds,
+	selectLightshowIdForBeatmap,
+	selectBeatmapIdsWithLightshowId,
+	selectEnvironment,
+	selectColorScheme,
+	selectEventTracksForEnvironment,
+	selectColorSchemes,
+	selectColorSchemeIds,
+	selectColorSchemeId,
+	selectColorSchemeOverrides,
+	selectSelectedBeatmap,
+	selectDemo,
+	selectModuleEnabled,
+	selectCustomColors,
+} = slice.getSelectors(slice.selectSlice);
+
+export const {
+	hydrate: hydrateSongs,
+	upsertMany: upsertSongs,
+	addOne: addSong,
+	addOneFromFile: addSongFromFile,
+	updateOne: updateSong,
+	updateSelectedBeatmap,
+	removeOne: removeSong,
+	addBeatmap,
+	cloneBeatmap: copyBeatmap,
+	updateBeatmap,
+	removeBeatmap,
+	addColorScheme,
+	updateColorScheme,
+	removeColorScheme,
+	updateModuleEnabled,
+	updateCustomColors,
+	updateGridSize,
+} = slice.actions;
 
 export default slice;

@@ -27,9 +27,9 @@ function EditorAudioVisualizer() {
 
 	const handleVisualizerClick = useCallback(
 		(_: MouseEvent<HTMLElement>, offset: number) => {
-			dispatch(jumpToTime({ songId: sid, value: offset }));
+			dispatch(jumpToTime({ value: offset }));
 		},
-		[dispatch, sid],
+		[dispatch],
 	);
 
 	const handleMarkerClick = useCallback(
@@ -40,16 +40,16 @@ function EditorAudioVisualizer() {
 					return dispatch(removeBookmark({ beatNum: time }));
 				}
 				default: {
-					return dispatch(jumpToBeat({ songId: sid, value: time }));
+					return dispatch(jumpToBeat({ value: time }));
 				}
 			}
 		},
-		[dispatch, sid],
+		[dispatch],
 	);
 
 	return (
 		<AudioVisualizer.Root ref={container} isLoading={isLoadingSong}>
-			<AudioVisualizer.Content duration={duration} cursorPosition={roundToNearest(cursorPosition, Math.min(1 / renderScale, 15) * 15)} onVisualizerClick={handleVisualizerClick}>
+			<AudioVisualizer.Content duration={duration} cursorPosition={roundToNearest(cursorPosition, 1 / (renderScale * 60))} onVisualizerClick={handleVisualizerClick}>
 				{(ref) => <Waveform ref={ref} width={dimensions.width} height={dimensions.height} waveformData={waveformData} duration={duration} />}
 			</AudioVisualizer.Content>
 			{duration !== null && (

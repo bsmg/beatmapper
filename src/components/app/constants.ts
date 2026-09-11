@@ -1,6 +1,7 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
-import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, EnvironmentRename, is360Environment, isV2Environment, isV3Environment } from "bsmap";
+import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, is360Environment, isV2Environment, isV3Environment } from "bsmap";
+import { EnvironmentRename } from "bsmap/environment";
 import { nonEmpty, null_, number, object, pipe, regex, string, union } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
@@ -67,7 +68,7 @@ export const createQuickSelectPrompt = createPromptFactory({
 	validate: object({
 		range: pipe(
 			string(),
-			regex(/^\d+(-\d+)?$/, (issue) => `Invalid format: Expected <number> or <number>-<number> but received "${issue.input}"`),
+			regex(/^[+-]?\d+(?:\.\d+)?(-\d+(?:\.\d+)?)?$/, (issue) => `Invalid format: Expected a range ("3-6") or delta ("+3", "-3") but received "${issue.input}"`),
 		),
 	}),
 });

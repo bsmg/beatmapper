@@ -27,7 +27,7 @@ function GridPresetsActionPanelGroup() {
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>
 				<Tooltip render={() => "Load Grid Preset"}>
-					<Button variant="subtle" size="sm" disabled={!gridPresets[slot]} unfocusOnPress onClick={() => dispatch(loadGridPreset({ songId: sid, grid: gridPresets[slot] }))}>
+					<Button variant="subtle" size="sm" disabled={!gridPresets[slot]} unfocusOnPress onClick={() => dispatch(loadGridPreset({ slot }))}>
 						<ArrowUpFromDotIcon size={16} />
 					</Button>
 				</Tooltip>

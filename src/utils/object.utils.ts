@@ -13,7 +13,7 @@ export function ensureObject<T extends object>(object: T) {
 
 export function hasKeys<T extends object, K extends keyof Required<T>>(obj: T, ...keys: K[]): boolean {
 	for (const key of keys) {
-		if (Object.hasOwn(obj, key)) return true;
+		if (Object.hasOwn(obj, key) && obj[key]) return true;
 	}
 	return false;
 }
@@ -36,7 +36,7 @@ export function deepAssign<T extends { [k: string]: any }>(target: T, ...sources
 			if (Object.hasOwn(mergeSource, key)) {
 				const targetValue = output[key] as T[Extract<keyof T, typeof key>];
 				const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
-				if (key in output && isAssignable(targetValue) && isAssignable(sourceValue)) {
+				if (key in output && isAssignable(targetValue) && isAssignable(sourceValue) && Object.keys(sourceValue).length > 0) {
 					output[key as keyof T] = deepAssign(targetValue, sourceValue);
 				} else {
 					output[key as keyof T] = sourceValue;

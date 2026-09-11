@@ -7,7 +7,7 @@ import { EventEffectIcon } from "$/components/icons";
 import { Button, Field, Toggle, ToggleGroup, Tooltip } from "$/components/ui/compositions";
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import type { ColorResolverOptions } from "$/helpers/colors.helpers";
-import { decrementEventsEditorZoom, incrementEventsEditorZoom, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
+import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
@@ -62,23 +62,23 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 		<Wrapper {...rest}>
 			<HStack gap={4} justify={"flex-start"}>
 				<Field cosmetic size="sm" label="Edit Mode">
-					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} unfocusOnPress value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorEditMode({ editMode: details.value[0] as EventEditMode }))} />
+					<ToggleGroup collection={EDIT_MODE_LIST_COLLECTION} unfocusOnPress value={[selectedEditMode]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorEditMode(details.value[0] as EventEditMode))} />
 				</Field>
 				<Field cosmetic size="sm" label="Light Color">
-					<ToggleGroup collection={COLOR_LIST_COLLECTION} unfocusOnPress value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorColor({ color: details.value[0] as EventColor }))} />
+					<ToggleGroup collection={COLOR_LIST_COLLECTION} unfocusOnPress value={[selectedColor]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorColor(details.value[0] as EventColor))} />
 				</Field>
 				<Field cosmetic size="sm" label="Light Effect">
-					<ToggleGroup collection={EFFECT_LIST_COLLECTION} unfocusOnPress value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorTool({ tool: details.value[0] as EventTool }))} />
+					<ToggleGroup collection={EFFECT_LIST_COLLECTION} unfocusOnPress value={[selectedTool]} onValueChange={(details) => details.value.length > 0 && dispatch(updateEventsEditorTool(details.value[0] as EventTool))} />
 				</Field>
 				<Field cosmetic size="sm" label="Locks">
 					<HStack gap={1}>
 						<Tooltip render={() => "Loop playback within the current event window"}>
-							<Toggle unfocusOnPress pressed={isLockedToCurrentWindow} onPressedChange={() => dispatch(updateEventsEditorWindowLock())}>
+							<Toggle unfocusOnPress pressed={isLockedToCurrentWindow} onPressedChange={(pressed) => dispatch(updateEventsEditorWindowLock(pressed))}>
 								<RepeatIcon size={16} />
 							</Toggle>
 						</Tooltip>
 						<Tooltip render={() => "Clone event placements for symmetrical tracks"}>
-							<Toggle unfocusOnPress pressed={areLasersLocked} onPressedChange={() => dispatch(updateEventsEditorMirrorLock())}>
+							<Toggle unfocusOnPress pressed={areLasersLocked} onPressedChange={(pressed) => dispatch(updateEventsEditorMirrorLock(pressed))}>
 								<LockIcon size={16} />
 							</Toggle>
 						</Tooltip>
@@ -88,10 +88,10 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 			<HStack gap={4} justify={"flex-end"}>
 				<Field cosmetic size="sm" label="Zoom" align="end">
 					<HStack gap={1}>
-						<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(decrementEventsEditorZoom())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
+						<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(decrementEventsEditorZoomLevel())} disabled={zoomLevel === ZOOM_LEVEL_MIN}>
 							<ZoomOutIcon size={14} />
 						</Button>
-						<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(incrementEventsEditorZoom())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
+						<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(incrementEventsEditorZoomLevel())} disabled={zoomLevel === ZOOM_LEVEL_MAX}>
 							<ZoomInIcon size={14} />
 						</Button>
 					</HStack>

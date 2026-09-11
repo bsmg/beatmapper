@@ -26,11 +26,11 @@ export function resolveGroupTrackIds(trackId: number, environment: EnvironmentNa
 	return group.filter((id) => id !== trackId);
 }
 
-export function isBasicEvent(data: unknown): data is IWrapBasicEvent {
+export function isBasicEvent<T extends IWrapBasicEvent>(data: unknown): data is T {
 	if (typeof data !== "object" || !data) return false;
 	return "type" in data;
 }
-export function isBoostEvent(data: unknown): data is IWrapColorBoostEvent {
+export function isBoostEvent<T extends IWrapColorBoostEvent>(data: unknown): data is T {
 	if (typeof data !== "object" || !data) return false;
 	return "toggle" in data;
 }

@@ -1,9 +1,9 @@
 import { createListCollection } from "@ark-ui/react/collection";
 
-import { Field, FieldInput, FieldSelectGroup } from "$/components/ui/compositions";
-import { updateProcessingDelay, updateTickType } from "$/store/actions";
+import { Field, FieldSelectGroup } from "$/components/ui/compositions";
+import { updateTickType } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAudioProcessingDelay, selectTickType } from "$/store/selectors";
+import { selectTickType } from "$/store/selectors";
 import { Stack, Wrap } from "$:styled-system/jsx";
 
 const TICK_MAP = ["woodblock", "switch"];
@@ -14,17 +14,13 @@ const NOTE_TICK_COLLECTION = createListCollection({
 
 function AppAudioSettings() {
 	const dispatch = useAppDispatch();
-	const processingDelay = useAppSelector(selectAudioProcessingDelay);
 	const tickType = useAppSelector(selectTickType);
 
 	return (
 		<Stack gap={4}>
 			<Wrap gap={2}>
 				<Field label="Note tick type" helperText="Change the sound effect played when simulating a hitsound during playback.">
-					<FieldSelectGroup collection={NOTE_TICK_COLLECTION} value={TICK_MAP[tickType]} onValueChange={(details) => dispatch(updateTickType({ value: TICK_MAP.indexOf(details.valueAsString) }))} />
-				</Field>
-				<Field label="Processing delay" helperText="Tweak the amount of time, in milliseconds, that the audio should be offset by, for it to seem synchronized. Slower machines should experiment with larger numbers.">
-					<FieldInput type="number" value={processingDelay} onValueChange={(details) => dispatch(updateProcessingDelay({ value: details.valueAsNumber }))} />
+					<FieldSelectGroup collection={NOTE_TICK_COLLECTION} value={TICK_MAP[tickType]} onValueChange={(details) => dispatch(updateTickType(TICK_MAP.indexOf(details.valueAsString)))} />
 				</Field>
 			</Wrap>
 		</Stack>

@@ -1,46 +1,82 @@
-import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createListenerMiddleware, type GetThunkAPI, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
 
-import { createSaveHandler } from "$/services/backup.service";
-import { leaveEditor, saveBeatmapContents, updateBeatmap, updateSong } from "$/store/actions";
-import { selectSelectedBeatmap } from "$/store/selectors";
-import type { RootState } from "$/store/setup";
+import { serializeBeatmapContents, serializeInfoContents } from "$/helpers/packaging.helpers";
+import { addBeatmap, addColorScheme, copyBeatmap, leaveEditor, removeBeatmap, removeColorScheme, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSong } from "$/store/actions";
+import { selectActiveBeatmapId, selectActiveSongId } from "$/store/helpers/route.helpers";
+import { selectBeatmapEntities, selectBeatmapIds, selectBeatmapIdsWithLightshowId, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSongById } from "$/store/selectors";
+import type { AppDispatch, AppExtraArgs, AppThunkApiConfig, RootState } from "$/store/types";
+import { createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import type { App, BeatmapId, SongId } from "$/types";
 
-export default function createBackupMiddleware() {
-	const instance = createListenerMiddleware<RootState>();
-	const save = createSaveHandler();
+export const saveMapFiles = createThunk("saveMap", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	const songId = selectActiveSongId(api.extra.getRouter());
+	const beatmapId = selectActiveBeatmapId(api.extra.getRouter());
+	const entities = selectBeatmapEntities(api.getState());
+
+	api.dispatch(saveInfoContents({ songId }));
+	api.dispatch(saveBeatmapContents({ songId, beatmapId, entities }));
+});
+
+export const saveInfoContents = createAsyncThunk("saveInfoContents", async (args: { songId: SongId }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+	const state = api.getState();
+	const filestore = api.extra.getFilestore();
+
+	const song = selectSongById(state, args.songId);
+
+	const info = serializeInfoContents(song, {
+		songDuration: selectDuration(state),
+	});
+
+	await filestore.updateInfoContents(args.songId, info);
+});
+export const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async (args: { songId: SongId; beatmapId: BeatmapId; entities: App.IBeatmapEntities }, api: GetThunkAPI<AppThunkApiConfig<"getFilestore">>) => {
+	const state = api.getState();
+	const filestore = api.extra.getFilestore();
+
+	const beatmap = serializeBeatmapContents(args.entities, {
+		version: await filestore.loadImplicitVersion(args.songId, args.beatmapId),
+		editorOffsetInBeats: selectEditorOffsetInBeats(state, args.songId),
+	});
+
+	await filestore.updateBeatmapContents(args.songId, args.beatmapId, beatmap);
+
+	// copy custom data across all beatmaps
+	for (const targetBeatmapId of selectBeatmapIds(state, args.songId)) {
+		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { difficulty: { customData: beatmap.difficulty.customData }, lightshow: { customData: beatmap.lightshow.customData }, customData: beatmap.customData });
+	}
+	// copy lightshow data across beatmaps that share the same lightshow
+	for (const targetBeatmapId of selectBeatmapIdsWithLightshowId(state, args.songId, selectLightshowIdForBeatmap(state, args.songId, args.beatmapId))) {
+		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { lightshow: beatmap.lightshow });
+	}
+});
+
+interface Options {
+	extra: Pick<AppExtraArgs, "getToaster">;
+}
+
+/** Manages autosaving for map contents when specific actions are triggered. */
+export default function createBackupMiddleware({ extra }: Options) {
+	const instance = createListenerMiddleware<RootState, AppDispatch, Options["extra"]>({ extra });
 
 	instance.startListening({
-		matcher: isAnyOf(saveBeatmapContents),
+		matcher: isAnyOf(updateSong, addBeatmap, copyBeatmap, updateBeatmap, removeBeatmap, addColorScheme, updateColorScheme, removeColorScheme, updateModuleEnabled, updateCustomColors, updateGridSize),
 		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
-			const { songId } = action.payload;
-			const state = api.getState();
-			const beatmapId = selectSelectedBeatmap(state, songId);
-			await save(state, songId, beatmapId);
+			api.dispatch(saveInfoContents(action.payload));
 		},
 	});
 	instance.startListening({
 		matcher: isAnyOf(leaveEditor),
-		effect: async (action: PayloadAction<{ songId: SongId; beatmapId: BeatmapId; entities: Partial<App.IBeatmapEntities> }>, api) => {
-			const { songId, beatmapId, entities } = action.payload;
-			const state = api.getState();
-			await save(state, songId, beatmapId, entities);
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(updateSong),
-		effect: async (action: PayloadAction<{ songId: SongId }>, api) => {
-			const { songId } = action.payload;
-			const state = api.getState();
-			await save(state, songId, null);
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(updateBeatmap),
 		effect: async (action: PayloadAction<{ songId: SongId; beatmapId: BeatmapId }>, api) => {
-			const { songId, beatmapId } = action.payload;
-			const state = api.getState();
-			await save(state, songId, beatmapId);
+			const entities = selectBeatmapEntities(api.getOriginalState());
+			api.dispatch(saveBeatmapContents({ ...action.payload, entities }));
+		},
+	});
+	instance.startListening({
+		matcher: isAnyOf(saveInfoContents.fulfilled, saveBeatmapContents.fulfilled),
+		effect: async (action: PayloadAction<unknown, string, { arg: { songId: SongId; beatmapId?: BeatmapId } }>, api) => {
+			const toaster = api.extra.getToaster();
+			const id = `${action.meta.arg.beatmapId ? `${action.meta.arg.songId}/${action.meta.arg.beatmapId}` : action.meta.arg.songId}`;
+			toaster.success({ id: `save/${action.meta.arg.songId}`, description: `Contents for "${id}" has been saved.` });
 		},
 	});
 

@@ -1,4 +1,3 @@
-import { useParams, useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { useCallback, useRef } from "react";
 
@@ -6,17 +5,13 @@ import { useGlobalEventListener } from "$/components/hooks/use-global-event-list
 import { usePrompter } from "$/components/ui/compositions";
 import { mirrorSelection, toggleSelectAllEntities, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectGridSize, selectLoading } from "$/store/selectors";
+import { selectLoading } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 function NotesEditorShortcuts() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
-
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
-	const grid = useAppSelector((state) => selectGridSize(state, sid));
 
 	const { isPromptActive } = usePrompter();
 
@@ -37,123 +32,123 @@ function NotesEditorShortcuts() {
 				case "Digit1": {
 					// Ignore meta+number, since that's used for snapping intervals
 					if (metaKeyPressed) return;
-					return dispatch(updateNotesEditorTool({ tool: ObjectTool.LEFT_NOTE }));
+					return dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE));
 				}
 				case "Digit2": {
 					if (metaKeyPressed) return;
-					return dispatch(updateNotesEditorTool({ tool: ObjectTool.RIGHT_NOTE }));
+					return dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE));
 				}
 				case "Digit3": {
 					if (metaKeyPressed) return;
-					return dispatch(updateNotesEditorTool({ tool: ObjectTool.BOMB_NOTE }));
+					return dispatch(updateNotesEditorTool(ObjectTool.BOMB_NOTE));
 				}
 				case "Digit4": {
 					if (metaKeyPressed) return;
-					return dispatch(updateNotesEditorTool({ tool: ObjectTool.OBSTACLE }));
+					return dispatch(updateNotesEditorTool(ObjectTool.OBSTACLE));
 				}
 				case "KeyR": {
 					if (ev.shiftKey) return;
-					return dispatch(updateNotesEditorTool({ tool: ObjectTool.LEFT_NOTE }));
+					return dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE));
 				}
 				case "KeyB": {
 					if (isMetaKeyPressed(ev)) return;
 					if (ev.shiftKey) return;
-					return dispatch(updateNotesEditorTool({ tool: ObjectTool.RIGHT_NOTE }));
+					return dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE));
 				}
 				case "KeyH": {
-					return dispatch(mirrorSelection({ axis: "horizontal", grid }));
+					return dispatch(mirrorSelection({ axis: "horizontal" }));
 				}
 				case "KeyV": {
 					// If the user is pasting with Meta+V, ignore.
 					if (metaKeyPressed) return;
-					return dispatch(mirrorSelection({ axis: "vertical", grid }));
+					return dispatch(mirrorSelection({ axis: "vertical" }));
 				}
 				case "KeyW": {
 					if (ev.shiftKey) return;
 					keysDepressed.current.w = true;
 					if (keysDepressed.current.a) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_LEFT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT));
 					}
 					if (keysDepressed.current.d) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_RIGHT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.UP_RIGHT));
 					}
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.UP));
 				}
 				case "KeyA": {
 					if (ev.shiftKey) return;
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
+						return dispatch(toggleSelectAllEntities());
 					}
 					keysDepressed.current.a = true;
 					if (keysDepressed.current.w) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_LEFT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT));
 					}
 					if (keysDepressed.current.s) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_LEFT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_LEFT));
 					}
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.LEFT));
 				}
 				case "KeyS": {
 					if (metaKeyPressed) return;
 					if (ev.shiftKey) return;
 					keysDepressed.current.s = true;
 					if (keysDepressed.current.a) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_LEFT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_LEFT));
 					}
 					if (keysDepressed.current.d) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_RIGHT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_RIGHT));
 					}
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.DOWN));
 				}
 				case "KeyD": {
 					if (ev.shiftKey) return;
 					keysDepressed.current.d = true;
 					if (keysDepressed.current.w) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_RIGHT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.UP_RIGHT));
 					}
 					if (keysDepressed.current.s) {
-						return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_RIGHT }));
+						return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_RIGHT));
 					}
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.RIGHT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.RIGHT));
 				}
 				case "KeyF": {
 					if (ev.shiftKey) return;
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.ANY }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.ANY));
 				}
 				case "Numpad1": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_LEFT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_LEFT));
 				}
 				case "Numpad2": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.DOWN));
 				}
 				case "Numpad3": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_RIGHT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_RIGHT));
 				}
 				case "Numpad4": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.LEFT));
 				}
 				case "Numpad5": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.ANY }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.ANY));
 				}
 				case "Numpad6": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.RIGHT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.RIGHT));
 				}
 				case "Numpad7": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_LEFT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT));
 				}
 				case "Numpad8": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.UP));
 				}
 				case "Numpad9": {
-					return dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_RIGHT }));
+					return dispatch(updateNotesEditorDirection(NoteDirection.UP_RIGHT));
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[isLoading, isPromptActive, dispatch, sid, view, grid],
+		[isLoading, isPromptActive, dispatch],
 	);
 
 	const handleKeyUp = useCallback(

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { array, endsWith, file, type GenericSchema, gtValue, length, maxLength, minLength, minValue, number, object, pipe, string, transform } from "valibot";
 
 import { CHARACTERISTIC_COLLECTION, COVER_ART_FILE_ACCEPT_TYPE, DIFFICULTY_COLLECTION, ENVIRONMENT_COLLECTION, SONG_FILE_ACCEPT_TYPE } from "$/components/app/constants";
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { Show } from "$/components/ui/atoms";
 import { Audio, Switch, useAppForm } from "$/components/ui/compositions";
 import { createPlaceholderImageFile, remuxImageToSquare } from "$/helpers/file.helpers";
@@ -42,7 +42,7 @@ function CreateMapForm({ dialog }: Props) {
 	const username = useAppSelector(selectUsername);
 	const volume = useAppSelector(selectSongVolume);
 
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
 
 	const Form = useAppForm({
 		defaultValues: {
@@ -104,7 +104,7 @@ function CreateMapForm({ dialog }: Props) {
 
 				if (dialog) dialog.setOpen(false);
 			} catch (error) {
-				toaster?.error({ description: `Could not create map: ${error instanceof Error ? error.message : "See console for more information."}` });
+				toaster.error({ description: `Could not create map: ${error instanceof Error ? error.message : "See console for more information."}` });
 				return console.error(error);
 			}
 		},

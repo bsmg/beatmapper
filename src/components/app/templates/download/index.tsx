@@ -21,7 +21,7 @@ function Download() {
 		<Stack gap={4}>
 			<Heading rank={1}>Download Map</Heading>
 			<Show when={!demoBlocker} fallback={<Text textStyle={"paragraph"}>Unfortunately, the demo map is not available for download.</Text>}>
-				<ExportMapForm onSubmit={(options) => dispatch(downloadMapFiles({ songId: sid, ...options }))} />
+				<ExportMapForm onSubmit={(options) => dispatch(downloadMapFiles({ songId: sid, options }))} />
 			</Show>
 		</Stack>
 	);

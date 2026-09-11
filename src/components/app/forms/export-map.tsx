@@ -4,7 +4,7 @@ import type { InferBeatmapVersion } from "bsmap";
 import type { ComponentProps } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { Heading, useAppForm } from "$/components/ui/compositions";
 import type { SubmitButton } from "$/components/ui/compositions/button";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
@@ -20,7 +20,7 @@ interface Props {
 	onSubmit: (ctx: ExportMapArchiveOptions) => void;
 }
 function ExportMapForm({ onSubmit, ...rest }: Assign<ComponentProps<typeof SubmitButton>, Props>) {
-	const { toaster } = useSetupContext();
+	const toaster = useToaster();
 
 	const { collection: serialVersionCollection } = useListCollection({
 		initialItems: ["4", "3", "2", "1"],
@@ -46,7 +46,7 @@ function ExportMapForm({ onSubmit, ...rest }: Assign<ComponentProps<typeof Submi
 					saveOptions: { format: value.minify ? 0 : 2, optimize: { purgeZeros: value.purgeZeros } },
 				});
 			} catch (error) {
-				toaster?.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
+				toaster.error({ description: `Could not export map: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);
 			}
 		},

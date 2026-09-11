@@ -28,11 +28,9 @@ import { createAudioDataContentsFromFile, createBpmDataFromDifficulty, createBpm
 import { createPlaceholderImageFile } from "$/helpers/file.helpers";
 import { deserializeInfoContents, resolveBeatmapIdFromFilename } from "$/helpers/packaging.helpers";
 import { createSongId, resolveSongId } from "$/helpers/song.helpers";
-import { getAppBeatmapFilestore } from "$/setup";
 import type { App, SongId } from "$/types";
 import { deepAssign, ensureArray, yieldValue } from "$/utils";
-
-const audioContext = new AudioContext();
+import type { BeatmapFilestore } from "./file.service";
 
 const decoder = new TextDecoder("utf-8");
 const encoder = new TextEncoder();
@@ -74,8 +72,8 @@ export interface ImportMapArchiveOptions {
 	loadOptions?: Omit<ILoadOptions<BeatmapFileType, InferBeatmapVersion>, "preprocess" | "postprocess">;
 }
 
-export async function importMapArchive(archive: Uint8Array, { loadOptions }: ImportMapArchiveOptions): Promise<MapArchiveContents> {
-	const unzipped = await new Promise<Record<string, Uint8Array>>((resolve, reject) =>
+export async function importMapArchive(archive: Uint8Array, audioContext: AudioContext, { loadOptions }: ImportMapArchiveOptions): Promise<MapArchiveContents> {
+	const unzipped = await new Promise<Unzipped>((resolve, reject) =>
 		unzip(archive, (err, data) => {
 			if (err) return reject(err);
 			resolve(data);
@@ -141,8 +139,8 @@ export async function importMapArchive(archive: Uint8Array, { loadOptions }: Imp
 	return { info, audioData, beatmaps, songFile, coverArtFile };
 }
 
-export async function importMapArchiveToFilestore(archive: Uint8Array, { currentSongIds = [], readonly, ...options }: ImportMapArchiveOptions & { currentSongIds?: SongId[] } & Parameters<typeof deserializeInfoContents>[1]): Promise<App.ISong> {
-	const { songFile, coverArtFile, info, audioData, beatmaps } = await importMapArchive(archive, options);
+export async function importMapArchiveToFilestore(archive: Uint8Array, audioContext: AudioContext, filestore: BeatmapFilestore, { currentSongIds = [], readonly, ...options }: ImportMapArchiveOptions & { currentSongIds?: SongId[] } & Parameters<typeof deserializeInfoContents>[1]): Promise<App.ISong> {
+	const { songFile, coverArtFile, info, audioData, beatmaps } = await importMapArchive(archive, audioContext, options);
 
 	const song = deserializeInfoContents(info, { readonly });
 
@@ -152,8 +150,6 @@ export async function importMapArchiveToFilestore(archive: Uint8Array, { current
 		acc[resolveBeatmapIdFromFilename(beatmap.filename)] = beatmap;
 		return acc;
 	}, {});
-
-	const filestore = getAppBeatmapFilestore();
 
 	await Promise.all([
 		filestore.saveSongFile(songId, songFile),
@@ -263,9 +259,7 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 	return new File([buffer as BlobPart], `${toPascalCase(info.song.title.replaceAll(/[^a-zA-Z0-9 ]+/g, ""))}.zip`);
 }
 
-export async function exportMapArchiveFromFilestore(song: App.ISong, options: ExportMapArchiveOptions) {
-	const filestore = getAppBeatmapFilestore();
-
+export async function exportMapArchiveFromFilestore(song: App.ISong, filestore: BeatmapFilestore, options: ExportMapArchiveOptions) {
 	const songId = resolveSongId(song);
 
 	const [songFile, coverArtFile, info, audioData, ...beatmaps] = await Promise.all([

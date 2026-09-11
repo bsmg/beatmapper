@@ -5,5 +5,8 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - bsmap
 
+patchedDependencies:
+  bsmap@3.0.0: patches/bsmap@3.0.0.patch
+
 publicHoistPattern:
   - "*workbox*"

@@ -9,7 +9,7 @@ import { array, endsWith, type GenericSchema, gtValue, null_, number, object, pi
 
 import { ENVIRONMENT_OVERRIDE_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { useSetupContext } from "$/components/context";
+import { useToaster } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
 import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, RouterLink, Stat, useAppForm } from "$/components/ui/compositions";
 import { addColorScheme, copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
@@ -37,13 +37,13 @@ interface Props {
 	bid: BeatmapId;
 }
 function UpdateBeatmapForm({ bid }: Props) {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid: abid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
-	const { toaster } = useSetupContext();
+	const navigate = useNavigate();
+	const toaster = useToaster();
 
 	const dispatch = useAppDispatch();
-	const navigate = useNavigate();
 	const bpm = useAppSelector((state) => selectBpm(state, sid));
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 	const lightshowIds = useAppSelector((state) => selectLightshowIds(state, sid));
@@ -86,7 +86,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 				formApi.reset(value);
 			} catch (error) {
-				toaster?.error({ description: `Could not update beatmap: ${error instanceof Error ? error.message : "See console for more information."}` });
+				toaster.error({ description: `Could not update beatmap: ${error instanceof Error ? error.message : "See console for more information."}` });
 				return console.error(error);
 			}
 		},
@@ -109,18 +109,17 @@ function UpdateBeatmapForm({ bid }: Props) {
 		// Don't let the user delete the last difficulty!
 		const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
 		if (remainingDifficultyIds.length === 0) {
-			return toaster?.error({
+			return toaster.error({
 				id: "last-difficulty",
 				description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
 			});
 		}
 
-		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
-		const nextDifficultyId = remainingDifficultyIds[0];
-
 		dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
+		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
+		const nextDifficultyId = remainingDifficultyIds.includes(abid.toString()) ? abid : remainingDifficultyIds[0];
 		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
-	}, [dispatch, navigate, toaster, sid, bid, view, beatmaps]);
+	}, [dispatch, navigate, toaster, sid, bid, abid, view, beatmaps]);
 
 	return (
 		<Form.AppForm>

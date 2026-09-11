@@ -1,6 +1,10 @@
-function isMac(navigator?: Navigator) {
-	if (!navigator) return false;
-	return !navigator.userAgent.includes("Win");
+declare global {
+	interface Navigator {
+		userAgentData?: { platform: string };
+	}
+}
+function isMac(nav: Navigator = navigator): boolean {
+	return /mac|iphone|ipad|ipod/i.test(navigator.userAgentData?.platform ?? nav.platform ?? nav.userAgent ?? "");
 }
 
 export function isMetaKeyPressed<T extends KeyboardEvent | MouseEvent>(ev: T, navigator?: Navigator) {

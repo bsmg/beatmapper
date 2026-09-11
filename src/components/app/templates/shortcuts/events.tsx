@@ -1,18 +1,14 @@
-import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompter } from "$/components/ui/compositions";
-import { decrementEventsEditorZoom, incrementEventsEditorZoom, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
+import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
 import { isMetaKeyPressed } from "$/utils";
 
 function EventsEditorShortcuts() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
-
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
@@ -29,23 +25,23 @@ function EventsEditorShortcuts() {
 				case "Minus": {
 					if (metaKeyPressed) return;
 					ev.preventDefault();
-					return dispatch(decrementEventsEditorZoom());
+					return dispatch(decrementEventsEditorZoomLevel());
 				}
 				case "NumpadAdd":
 				case "Equal": {
 					if (metaKeyPressed) return;
 					ev.preventDefault();
-					return dispatch(incrementEventsEditorZoom());
+					return dispatch(incrementEventsEditorZoomLevel());
 				}
 				case "KeyA": {
 					if (metaKeyPressed) {
 						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities({ songId: sid, view }));
+						return dispatch(toggleSelectAllEntities());
 					}
-					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.PLACE }));
+					return dispatch(updateEventsEditorEditMode(EventEditMode.PLACE));
 				}
 				case "KeyS": {
-					return dispatch(updateEventsEditorEditMode({ editMode: EventEditMode.SELECT }));
+					return dispatch(updateEventsEditorEditMode(EventEditMode.SELECT));
 				}
 				case "KeyZ": {
 					if (metaKeyPressed) return;
@@ -58,35 +54,35 @@ function EventsEditorShortcuts() {
 					return dispatch(updateEventsEditorMirrorLock());
 				}
 				case "Digit1": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.ON }));
+					return dispatch(updateEventsEditorTool(EventTool.ON));
 				}
 				case "Digit2": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.OFF }));
+					return dispatch(updateEventsEditorTool(EventTool.OFF));
 				}
 				case "Digit3": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.FLASH }));
+					return dispatch(updateEventsEditorTool(EventTool.FLASH));
 				}
 				case "Digit4": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.FADE }));
+					return dispatch(updateEventsEditorTool(EventTool.FADE));
 				}
 				case "Digit5": {
-					return dispatch(updateEventsEditorTool({ tool: EventTool.TRANSITION }));
+					return dispatch(updateEventsEditorTool(EventTool.TRANSITION));
 				}
 				case "KeyR": {
 					if (ev.shiftKey) return;
-					return dispatch(updateEventsEditorColor({ color: EventColor.PRIMARY }));
+					return dispatch(updateEventsEditorColor(EventColor.PRIMARY));
 				}
 				case "KeyB": {
 					if (isMetaKeyPressed(ev)) return;
 					if (ev.shiftKey) return;
-					return dispatch(updateEventsEditorColor({ color: EventColor.SECONDARY }));
+					return dispatch(updateEventsEditorColor(EventColor.SECONDARY));
 				}
 				default: {
 					return;
 				}
 			}
 		},
-		[isLoading, isPromptActive, dispatch, sid, view],
+		[isLoading, isPromptActive, dispatch],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

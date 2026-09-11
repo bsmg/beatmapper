@@ -20,31 +20,31 @@ function NoteDirectionActionPanelGroup() {
 	return (
 		<ActionPanelGroup.Root label="Notes">
 			<Grid columns={3} gap={0.5}>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP_LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_LEFT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP_LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT))}>
 					<ArrowUpLeftIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.UP))}>
 					<ArrowUpIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP_RIGHT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.UP_RIGHT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP_RIGHT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.UP_RIGHT))}>
 					<ArrowUpRightIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.LEFT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.LEFT))}>
 					<ArrowLeftIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.ANY} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.ANY }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.ANY} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.ANY))}>
 					<CircleIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.RIGHT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.RIGHT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.RIGHT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.RIGHT))}>
 					<ArrowRightIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.DOWN_LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_LEFT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.DOWN_LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.DOWN_LEFT))}>
 					<ArrowDownLeftIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.DOWN} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.DOWN} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.DOWN))}>
 					<ArrowDownIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.DOWN_RIGHT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection({ direction: NoteDirection.DOWN_RIGHT }))}>
+				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.DOWN_RIGHT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.DOWN_RIGHT))}>
 					<ArrowDownRightIcon />
 				</Button>
 			</Grid>

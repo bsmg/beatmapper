@@ -33,10 +33,8 @@ export function resolveBeatmapId(x: Pick<App.IBeatmap, "characteristic" | "diffi
 }
 
 export function createAppSong(data: RequiredKeys<Partial<App.ISong>, "name" | "bpm" | "songFilename" | "coverArtFilename">): App.ISong {
-	const songId = createSongId(data);
-
 	return {
-		id: data.id ?? songId,
+		id: data.id ?? createSongId(data),
 		name: data.name,
 		subName: data.subName ?? "",
 		artistName: data.artistName ?? "",
