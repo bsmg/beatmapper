@@ -83,6 +83,36 @@ export function getEditorSettings(data: IWrapInfo): IEditorData {
 		},
 	);
 }
+export function createInfoEditorData(data: Omit<App.ISong, "id">) {
+	const mappingExtensions = data.modSettings.mappingExtensions;
+
+	return {
+		_editors: {
+			_lastEditedBy: "Beatmapper",
+			Beatmapper: {
+				version: version,
+				editorSettings: {
+					id: createSongId(data),
+					readonly: data.demo,
+					createdAt: data.createdAt,
+					lastOpenedAt: data.lastOpenedAt,
+					lastOpenedBeatmapId: data.selectedDifficulty,
+					modSettings: ensureObject({
+						mappingExtensions: ensureObject({
+							isEnabled: mappingExtensions?.isEnabled ? true : undefined,
+							numCols: mappingExtensions?.numCols !== DEFAULT_GRID.numCols ? mappingExtensions?.numCols : undefined,
+							numRows: mappingExtensions?.numRows !== DEFAULT_GRID.numRows ? mappingExtensions?.numRows : undefined,
+							colWidth: mappingExtensions?.colWidth !== DEFAULT_GRID.colWidth ? mappingExtensions?.colWidth : undefined,
+							rowHeight: mappingExtensions?.rowHeight !== DEFAULT_GRID.rowHeight ? mappingExtensions?.rowHeight : undefined,
+							colOffset: mappingExtensions?.colOffset !== DEFAULT_GRID.colOffset ? mappingExtensions?.colOffset : undefined,
+							rowOffset: mappingExtensions?.rowOffset !== DEFAULT_GRID.rowOffset ? mappingExtensions?.rowOffset : undefined,
+						}),
+					}),
+				},
+			},
+		},
+	};
+}
 
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createDataFactory({
 	container: {
@@ -109,7 +139,6 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 			const allEnvironments = distinct(Object.values(data.difficultiesById).map((x) => x.environmentName));
 
 			const customColors = data.modSettings.customColors;
-			const mappingExtensions = data.modSettings.mappingExtensions;
 
 			return createInfo({
 				song: {
@@ -161,32 +190,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 						}),
 					});
 				}),
-				customData: {
-					_editors: {
-						_lastEditedBy: "Beatmapper",
-						Beatmapper: {
-							version: version,
-							editorSettings: {
-								id: createSongId(data),
-								readonly: data.demo,
-								createdAt: data.createdAt,
-								lastOpenedAt: data.lastOpenedAt,
-								lastOpenedBeatmapId: data.selectedDifficulty,
-								modSettings: {
-									mappingExtensions: ensureObject({
-										isEnabled: !!mappingExtensions?.isEnabled,
-										numCols: mappingExtensions?.numCols !== DEFAULT_GRID.numCols ? mappingExtensions?.numCols : undefined,
-										numRows: mappingExtensions?.numRows !== DEFAULT_GRID.numRows ? mappingExtensions?.numRows : undefined,
-										colWidth: mappingExtensions?.colWidth !== DEFAULT_GRID.colWidth ? mappingExtensions?.colWidth : undefined,
-										rowHeight: mappingExtensions?.rowHeight !== DEFAULT_GRID.rowHeight ? mappingExtensions?.rowHeight : undefined,
-										colOffset: mappingExtensions?.colOffset !== DEFAULT_GRID.colOffset ? mappingExtensions?.colOffset : undefined,
-										rowOffset: mappingExtensions?.rowOffset !== DEFAULT_GRID.rowOffset ? mappingExtensions?.rowOffset : undefined,
-									}),
-								},
-							},
-						},
-					},
-				},
+				customData: createInfoEditorData(data),
 			});
 		},
 		deserialize: function deserializeInfoContents(data: IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {

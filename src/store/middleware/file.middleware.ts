@@ -2,12 +2,13 @@ import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { createBeatmap } from "bsmap";
 
 import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
-import { serializeInfoContents } from "$/helpers/packaging.helpers";
+import { createInfoEditorData, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, loadAudioDataContents, loadBeatmapContents, loadSongFile, removeBeatmap, removeSong, startLoadingMap, updateBeatmap } from "$/store/actions";
 import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { deepAssign } from "$/utils";
+import { hydrateSongs } from "../features/songs.slice";
 
 interface Options {
 	extra: Pick<AppExtraArgs, "getFilestore" | "getAudioContext">;
@@ -29,6 +30,15 @@ export default function createFileMiddleware({ extra }: Options) {
 			await Promise.all([api.dispatch(loadSongFile({ songId })), api.dispatch(loadAudioDataContents({ songId, options: { bpm } })), api.dispatch(loadBeatmapContents({ songId, beatmapId, options: { editorOffsetInBeats } }))]).then(() => {
 				api.dispatch(finishLoadingMap({ songId }));
 			});
+		},
+	});
+	instance.startListening({
+		actionCreator: hydrateSongs.fulfilled,
+		effect: async (action, api) => {
+			for (const song of action.payload) {
+				const filestore = api.extra.getFilestore();
+				await filestore.updateInfoContents(song.id, { customData: createInfoEditorData(song) });
+			}
 		},
 	});
 	instance.startListening({

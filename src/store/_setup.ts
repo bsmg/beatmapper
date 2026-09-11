@@ -4,6 +4,7 @@ import { initStateWithPrevTab } from "redux-state-sync";
 import { init, tick, updateEventsEditorCursor } from "./actions";
 import { createAppEnhancers } from "./enhancers/_setup";
 import { default as reducer } from "./features/_setup";
+import { hydrateSongs } from "./features/songs.slice";
 import { createAppMiddleware } from "./middleware/_setup";
 import type { AppExtraArgs } from "./types";
 
@@ -28,7 +29,7 @@ export async function createAppStore({ extraArgument }: Options) {
 		},
 	});
 
-	await store.hydrate().then(() => {
+	await Promise.all([store.dispatch(hydrateSongs()), store.hydrate()]).then(() => {
 		store.dispatch(init());
 	});
 
