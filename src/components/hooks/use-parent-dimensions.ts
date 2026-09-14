@@ -1,6 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 
-export function useParentDimensions<T extends Element>(): [ref: RefObject<T>, dimensions: { width: number; height: number }] {
+export function useParentDimensions<T extends Element>(): [ref: RefObject<T | null>, dimensions: { width: number; height: number }] {
 	const ref = useRef<T>(null);
 
 	const [dimensions, setDimensions] = useState<{ width: number | null; height: number | null }>({ width: null, height: null });

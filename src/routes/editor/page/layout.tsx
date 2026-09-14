@@ -10,12 +10,10 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_page")({
 });
 
 function RouteComponent() {
-	const { sid } = Route.useParams();
-
 	const dispatch = useAppDispatch();
 
 	useMount(() => {
-		dispatch(pausePlayback({ songId: sid }));
+		dispatch(pausePlayback());
 	});
 
 	return (

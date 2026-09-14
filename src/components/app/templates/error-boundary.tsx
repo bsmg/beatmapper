@@ -16,12 +16,12 @@ function ErrorBoundary({ error, interactive = true, reset }: Props) {
 			<Container>
 				<Stack gap={3}>
 					<Stack gap={2}>
-						<Heading rank={1}>{error.name}</Heading>
-						<Text textStyle={"paragraph"}>{error.message}</Text>
+						{error instanceof Error && <Heading rank={1}>{error.name}</Heading>}
+						{error instanceof Error && <Text textStyle={"paragraph"}>{error.message}</Text>}
 					</Stack>
 					<Stack gap={2}>
 						<Heading rank={3}>Stack Trace</Heading>
-						{error.stack && (
+						{error instanceof Error && (
 							<StackWrapper>
 								{error.stack}
 								<Float placement="top-end" offset={"2"} className={css({ position: "sticky", alignSelf: "flex-start" })}>
