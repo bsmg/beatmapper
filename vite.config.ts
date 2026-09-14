@@ -118,6 +118,7 @@ export default defineConfig(async (ctx) => {
 		},
 		css: {
 			postcss: {
+				// @ts-expect-error as directed (chakra-ui/panda#3258)
 				plugins: [pandacss({})],
 			},
 		},

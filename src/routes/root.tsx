@@ -37,7 +37,7 @@ function RootComponent() {
 			<HeadContent />
 			<Outlet />
 			<Toaster toaster={toaster} />
-			<Devtools position="top-right" hideUntilHover openHotkey={[`\``]} />
+			<Devtools position="top-right" triggerMode="fixed" hideUntilHover openHotkey={[`\``]} />
 		</Fragment>
 	);
 }
