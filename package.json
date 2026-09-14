@@ -3,7 +3,7 @@
 	"version": "0.5.2",
 	"type": "module",
 	"private": true,
-	"packageManager": "pnpm@11.5.2",
+	"packageManager": "pnpm@12.4.1",
 	"scripts": {
 		"setup": "mise run setup",
 		"dev": "vite dev",
