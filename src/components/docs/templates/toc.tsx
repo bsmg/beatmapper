@@ -23,8 +23,8 @@ function DocsTableOfContents({ toc, container }: Props) {
 						</Toc.Item>
 						<For each={toc}>
 							{(entry) => (
-								<Toc.Item key={entry.url} href={entry.url} aria-current={entry.url === activeHeadingId}>
-									{entry.title}
+								<Toc.Item key={entry.value} href={`#${entry.value}`} aria-current={entry.value === activeHeadingId}>
+									{entry.label}
 								</Toc.Item>
 							)}
 						</For>

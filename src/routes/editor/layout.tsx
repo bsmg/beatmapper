@@ -11,7 +11,7 @@ import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/c
 import { leaveEditor, startLoadingMap, updateAnnouncements, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
-import { prompts } from "$:content";
+import { allPrompts } from "$:content";
 import { css, cx } from "$:styled-system/css";
 import { styled, Text } from "$:styled-system/jsx";
 
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 
 		return {
 			view: toPascalCase(context.view),
-			unseenPrompt: prompts.find((prompt) => !announcements.includes(prompt.id)),
+			unseenPrompt: allPrompts.find((prompt) => !announcements.includes(prompt.id)),
 		};
 	},
 	head: ({ params, loaderData }) => {

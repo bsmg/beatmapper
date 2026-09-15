@@ -1,9 +1,9 @@
 import { execSync } from "node:child_process";
 
+import { default as content } from "@content-collections/vite";
 import { default as pandacss } from "@pandacss/dev/postcss";
 import { devtools, type TanStackDevtoolsViteConfig } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { default as velite } from "@velite/plugin-vite";
 import { default as react } from "@vitejs/plugin-react";
 import { defineConfig, type UserConfig } from "vite";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
@@ -87,7 +87,7 @@ export default defineConfig(async (ctx) => {
 	}
 
 	return {
-		plugins: [devtools(DEVTOOLS_OPTIONS), react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), velite()],
+		plugins: [devtools(DEVTOOLS_OPTIONS), react(), VitePWA(PWA_OPTIONS), tanstackRouter(TSR_OPTIONS), content()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
 			version: `"${version}"`,
@@ -101,7 +101,7 @@ export default defineConfig(async (ctx) => {
 				output: {
 					codeSplitting: {
 						groups: [
-							{ name: "content", test: /\.velite/ },
+							{ name: "content", test: /\.content-collections/ },
 							{ name: "vendor-acorn", test: /node_modules\/acorn\/dist/ },
 							{ name: "vendor-three-core", test: /node_modules\/.*three\.core\.js/ },
 							{ name: "vendor-three", test: /node_modules\/(three|@react-three)/ },

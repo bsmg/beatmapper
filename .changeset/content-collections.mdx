@@ -1,0 +1,12 @@
+---
+"beatmapper": minor
+---
+
+## Technical Changes
+
+Migrated from Velite to [Content Collections](https://www.content-collections.dev) and a [Sätteri](https://satteri.bruits.org)-based Markdown processing pipeline. 
+
+- This new pipeline offers faster compilation of Markdown/MDX content via a Rust-based parser and native/optional support for extending the syntax.
+- We also managed to safely drop `sharp` as a transitive dependency, since they recently introduced a broken shim that can break the install step on certain environments. It also wasn't really being used within our original content processing workflow.
+- All collection schemas now use Valibot for validation, as Content Collections is fully Standard Schema compliant.
+- All custom syntax tree mutations and transformations were ported to local MDAST/HAST plugins, so we can own the supply chain for functionality and align generated data structures (like table of contents) more closely with the frontend.

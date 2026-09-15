@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import ErrorBoundary from "$/components/app/templates/error-boundary";
 import DocsPageLayout from "$/components/docs/templates/page";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
-import { docs } from "$:content";
+import { allDocs } from "$:content";
 
 // hack: tsr rewrites only work with a server environment, so we'll just cheat if we navigate to an old route
 function rewriteId(splat: string | undefined) {
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_/docs/_/$")({
 	component: RouteComponent,
 	errorComponent: (ctx) => <ErrorBoundary {...ctx} interactive={false} />,
 	loader: ({ params }) => {
-		const entry = docs.find((x) => x.id === rewriteId(params._splat));
+		const entry = allDocs.find((x) => x.id === rewriteId(params._splat));
 
 		if (!entry) {
 			throw Error("No document found.");

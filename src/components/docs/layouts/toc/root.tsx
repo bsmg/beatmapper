@@ -1,15 +1,12 @@
 import type { Assign } from "@ark-ui/react";
+import type { TocItemData } from "@ark-ui/react/toc";
 import { type PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
 
-import type { Member } from "$/types";
-import type { Doc } from "$:content";
 import { styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
 import { Provider } from "./context";
 
-type TocEntry = Member<Doc["tableOfContents"]>;
-
-function useToc(headings: TocEntry[], containerElement: HTMLElement | null) {
+function useToc(headings: TocItemData[], containerElement: HTMLElement | null) {
 	const scrollContainerRef = useRef<HTMLElement | null>(null);
 	const headingElementsRef = useRef<{ id: string; element: HTMLElement | null }[]>([]);
 
@@ -17,8 +14,8 @@ function useToc(headings: TocEntry[], containerElement: HTMLElement | null) {
 
 	useEffect(() => {
 		headingElementsRef.current = headings.map((entry) => ({
-			id: entry.url,
-			element: document.querySelector(entry.url),
+			id: entry.value,
+			element: document.querySelector(`#${entry.value}`),
 		}));
 	}, [headings]);
 
@@ -37,8 +34,8 @@ function useToc(headings: TocEntry[], containerElement: HTMLElement | null) {
 		// 2. If there are no headings in the viewport, are there any above the viewport? If so, pick the last one (most recently scrolled out of view)
 		// If neither condition is met, I'll assume I'm still in the intro, although this would have to be a VERY long intro to ever be true.
 		const headingBoxes = headings.map((entry) => {
-			const elem = document.querySelector(entry.url);
-			return { id: entry.url, box: elem?.getBoundingClientRect() };
+			const elem = document.querySelector(`#${entry.value}`);
+			return { id: entry.value, box: elem?.getBoundingClientRect() };
 		});
 
 		// The first heading within the viewport is the one we want to highlight.
@@ -90,7 +87,7 @@ function useToc(headings: TocEntry[], containerElement: HTMLElement | null) {
 }
 
 interface Props {
-	toc: TocEntry[];
+	toc: TocItemData[];
 	container: HTMLElement | null;
 }
 function DocsTocRoot({ toc, container, children }: Assign<PropsWithChildren, Props>) {

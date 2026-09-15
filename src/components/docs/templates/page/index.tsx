@@ -1,7 +1,7 @@
 import { type PropsWithChildren, useMemo } from "react";
 
 import DocsTableOfContents from "$/components/docs/templates/toc";
-import { docs } from "$:content";
+import { allDocs } from "$:content";
 import { Divider, Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
 import DocsNavigation from "./navigation";
@@ -13,7 +13,7 @@ interface Props extends PropsWithChildren {
 }
 
 function DocsPageLayout({ id, container }: Props) {
-	const entry = useMemo(() => docs.find((x) => x.id === id), [id]);
+	const entry = useMemo(() => allDocs.find((x) => x.id === id), [id]);
 
 	if (!entry) {
 		throw new Error("No doc found at this route.");
