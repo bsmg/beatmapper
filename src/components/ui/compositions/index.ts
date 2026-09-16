@@ -31,6 +31,7 @@ export { Tabs } from "./tabs";
 export { TagsInput } from "./tags-input";
 export { FieldTextarea, Textarea } from "./textarea";
 export { Toaster } from "./toaster";
+export { Prose } from "./toc";
 export { Toggle } from "./toggle";
 export { ToggleGroup } from "./toggle-group";
 export { Tooltip } from "./tooltip";

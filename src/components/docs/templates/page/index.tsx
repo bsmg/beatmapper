@@ -1,18 +1,18 @@
-import { type PropsWithChildren, useMemo } from "react";
+import { ExternalLinkIcon } from "lucide-react";
+import { type PropsWithChildren, useMemo, useRef } from "react";
 
-import DocsTableOfContents from "$/components/docs/templates/toc";
+import { AnchorLink, Prose } from "$/components/ui/compositions";
 import { allDocs } from "$:content";
-import { Divider, Stack, styled } from "$:styled-system/jsx";
+import { Divider, HStack, Stack, styled } from "$:styled-system/jsx";
 import { stack } from "$:styled-system/patterns";
 import DocsNavigation from "./navigation";
 import DocsProse from "./prose";
 
 interface Props extends PropsWithChildren {
 	id: string;
-	container: HTMLElement | null;
 }
 
-function DocsPageLayout({ id, container }: Props) {
+function DocsPageLayout({ id }: Props) {
 	const entry = useMemo(() => allDocs.find((x) => x.id === id), [id]);
 
 	if (!entry) {
@@ -26,10 +26,14 @@ function DocsPageLayout({ id, container }: Props) {
 				{entry.subtitle && <Subtitle>{entry.subtitle}</Subtitle>}
 			</Stack>
 			<Divider color={"border.muted"} />
-			<ContentWrapper>
-				<DocsProse code={entry.code} />
-				<DocsTableOfContents container={container} toc={entry.tableOfContents} />
-			</ContentWrapper>
+			<Prose key={entry.id} tableOfContents={entry.tableOfContents} content={<DocsProse code={entry.code} />}>
+				<AnchorLink href={`https://github.com/bsmg/beatmapper/edit/master/src/content${location.pathname}/index.mdx`}>
+					<HStack gap={1}>
+						Suggest an edit
+						<ExternalLinkIcon size={15} />
+					</HStack>
+				</AnchorLink>
+			</Prose>
 			{(entry.prev || entry.next) && <DocsNavigation prev={entry.prev} next={entry.next} />}
 		</Wrapper>
 	);
@@ -60,15 +64,6 @@ const Subtitle = styled("div", {
 		color: "fg.muted",
 		fontWeight: "normal",
 	},
-});
-
-const ContentWrapper = styled("div", {
-	base: stack.raw({
-		align: "start",
-		gap: { base: 4, lg: 8 },
-		flex: 1,
-		direction: { base: "column-reverse", lg: "row" },
-	}),
 });
 
 export default DocsPageLayout;

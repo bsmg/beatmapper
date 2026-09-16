@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import ErrorBoundary from "$/components/app/templates/error-boundary";
 import DocsPageLayout from "$/components/docs/templates/page";
-import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { allDocs } from "$:content";
 
 // hack: tsr rewrites only work with a server environment, so we'll just cheat if we navigate to an old route
@@ -39,12 +38,5 @@ export const Route = createFileRoute("/_/docs/_/$")({
 
 function RouteComponent() {
 	const { entry } = Route.useLoaderData();
-
-	const container = document.querySelector("main");
-
-	useUpdateEffect(() => {
-		container?.scrollTo({ top: 0 });
-	}, [entry.id]);
-
-	return <DocsPageLayout id={entry.id} container={container} />;
+	return <DocsPageLayout id={entry.id} />;
 }
