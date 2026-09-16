@@ -1,7 +1,7 @@
 import { useHotkey, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { useToaster } from "$/components/context";

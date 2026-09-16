@@ -53,9 +53,9 @@ function callouts() {
 			visit(node, ctx) {
 				const pNode = node.children.find((c) => c.type === "element" && c.tagName === "p");
 				const text = pNode && "children" in pNode ? pNode.children.find((c) => c.type === "text") : null;
-				const match = text.value.match(ALERT_REGEX);
+				const match = text?.value.match(ALERT_REGEX);
 
-				if (match) {
+				if (match && text) {
 					const classes = Array.from(node.properties.className ?? []);
 					ctx.setProperty(node, "className", [...classes, `alert-${match[1].toLowerCase()}`]);
 					ctx.setProperty(text, "value", text.value.replace(ALERT_REGEX, ""));
@@ -71,7 +71,7 @@ function inlineMedia() {
 		element: {
 			filter: ["img"],
 			visit(node, ctx) {
-				if ([".mp4", ".webm", ".ogv", ".mov", ".m4v"].some((ext) => node.properties.src.toLowerCase().endsWith(ext))) {
+				if ([".mp4", ".webm", ".ogv", ".mov", ".m4v"].some((ext) => node.properties.src?.toLowerCase().endsWith(ext))) {
 					ctx.replaceNode(node, { ...node, tagName: "video", properties: { ...node.properties, controls: true, alt: undefined } });
 				}
 			},
@@ -88,8 +88,11 @@ function staticAssets(options = { staticDir: join(cwd(), "public/static") }) {
 		element: {
 			filter: ["img", "video"],
 			async visit(node, ctx) {
+				if (!ctx.fileURL || !node.properties.src) return;
 				if (INVALID_LOCAL_ASSET.test(node.properties.src)) return;
-				const [_, cleanUrl, suffix] = node.properties.src.match(SANITIZE_ASSET);
+				const match = node.properties.src.match(SANITIZE_ASSET);
+				if (!match) return;
+				const [_, cleanUrl, suffix] = match;
 				const filePath = fileURLToPath(ctx.fileURL);
 
 				try {

@@ -19,7 +19,7 @@ export function Prose<T extends TocItemData>({ tableOfContents, content, childre
 		<Builder.Root {...rest} autoScroll={false} scrollEl={() => container.current} items={tableOfContents}>
 			{content && <Content>{content}</Content>}
 			<Builder.Nav>
-				<Builder.Title onClick={() => container.current.scrollTo({ top: 0 })}>Table of Contents</Builder.Title>
+				<Builder.Title onClick={() => container.current?.scrollTo({ top: 0 })}>Table of Contents</Builder.Title>
 				<Builder.List>
 					<For each={tableOfContents}>
 						{(item) => (

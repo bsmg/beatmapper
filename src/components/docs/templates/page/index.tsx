@@ -1,5 +1,5 @@
 import { ExternalLinkIcon } from "lucide-react";
-import { type PropsWithChildren, useMemo, useRef } from "react";
+import { type PropsWithChildren, useMemo } from "react";
 
 import { AnchorLink, Prose } from "$/components/ui/compositions";
 import { allDocs } from "$:content";
