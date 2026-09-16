@@ -6,6 +6,7 @@ import { EditorActionPanel } from "$/components/app/templates/editor";
 import { NotesEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import { AmbientLight, Runway } from "$/components/scene/compositions";
+import { Controls } from "$/components/scene/templates/controls";
 import MapVisualization from "$/components/scene/templates/visualization";
 import { useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectSurfaceDepth } from "$/store/selectors";
@@ -25,6 +26,7 @@ function RouteComponent() {
 		<Fragment>
 			<ReduxForwardingCanvas>
 				<MapVisualization timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive />
+				<Controls />
 				<AmbientLight />
 				<Runway surfaceDepth={surfaceDepth} includeEdgeStrips />
 				<fogExp2 attach="fog" args={[getComputedToken("colors.bg.contrast"), 0.02]} />

@@ -25,7 +25,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const handlePointerDown = useCallback(
 		(event: PointerEvent, data: T) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 
 			if (activePointerIdRef.current === event.pointerId) return;
 			activePointerIdRef.current = event.pointerId;
@@ -63,7 +63,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const handlePointerUp = useCallback(
 		(event: PointerEvent) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 
 			if (activePointerIdRef.current !== null && activePointerIdRef.current !== event.pointerId) {
 				return;
@@ -82,7 +82,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const handlePointerOver = useCallback(
 		(event: PointerEvent, data: T) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 			event.stopPropagation();
 
 			if (!selectionMode) return;
@@ -113,7 +113,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const handlePointerOut = useCallback(
 		(event: PointerEvent, _data: T) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 			event.stopPropagation();
 		},
 		[interactive],
@@ -121,7 +121,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const resolveWheelAction = useCallback(
 		(event: WheelEvent, data: T) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 			event.stopPropagation();
 
 			const id = selectId(data);
