@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { usePrompter } from "$/components/ui/compositions";
 import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
@@ -12,12 +11,9 @@ function EventsEditorShortcuts() {
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
-	const { isPromptActive } = usePrompter();
-
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			switch (ev.code) {
@@ -82,7 +78,7 @@ function EventsEditorShortcuts() {
 				}
 			}
 		},
-		[isLoading, isPromptActive, dispatch],
+		[isLoading, dispatch],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

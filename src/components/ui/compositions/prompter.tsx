@@ -29,6 +29,8 @@ export function Prompter({ children }: PropsWithChildren) {
 
 	const open = useCallback(
 		(id: string) => {
+			if (active) return;
+
 			const entry = registry.get(id);
 
 			if (entry) {
@@ -36,7 +38,7 @@ export function Prompter({ children }: PropsWithChildren) {
 				dialog.setOpen(true);
 			}
 		},
-		[registry, dialog],
+		[registry, dialog, active],
 	);
 
 	const contextValue = useMemo(() => {

@@ -5,7 +5,7 @@ import { useCallback, useRef } from "react";
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { useToaster } from "$/components/context";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { usePrompt, usePrompter } from "$/components/ui/compositions";
+import { usePrompt } from "$/components/ui/compositions";
 import { SNAPPING_INCREMENTS } from "$/constants";
 import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
@@ -82,8 +82,6 @@ function DefaultEditorShortcuts() {
 		}),
 	);
 
-	const { isPromptActive } = usePrompter();
-
 	const keysDepressed = useRef({
 		space: false,
 	});
@@ -112,7 +110,6 @@ function DefaultEditorShortcuts() {
 	const handleKeyDown = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (isPromptActive) return;
 
 			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
 			// If the control key and a number is pressed, we want to update snapping.
@@ -244,13 +241,12 @@ function DefaultEditorShortcuts() {
 				}
 			}
 		},
-		[dispatch, toaster, sid, bid, view, isLoading, isDemo, handleScroll, isPromptActive, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
+		[dispatch, toaster, sid, bid, view, isLoading, isDemo, handleScroll, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
 	);
 
 	const handleKeyUp = useCallback(
 		(ev: KeyboardEvent) => {
 			if (isLoading) return;
-			if (isPromptActive) return;
 
 			switch (ev.code) {
 				case "Space": {
@@ -261,19 +257,18 @@ function DefaultEditorShortcuts() {
 					return;
 			}
 		},
-		[isLoading, isPromptActive],
+		[isLoading],
 	);
 
 	const handleWheel = useCallback(
 		(ev: WheelEvent) => {
 			ev.preventDefault();
 			if (isLoading) return;
-			if (isPromptActive) return;
 
 			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
 			handleScroll(direction, ev);
 		},
-		[isLoading, isPromptActive, handleScroll],
+		[isLoading, handleScroll],
 	);
 
 	useGlobalEventListener("keydown", handleKeyDown);

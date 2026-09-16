@@ -17,7 +17,7 @@ export * as List from "./list";
 export { Menu } from "./menu";
 export { FieldSelect, FieldSelectGroup, NativeSelect, NativeSelectGroup } from "./native-select";
 export { Prompter } from "./prompter";
-export { createPromptFactory, usePrompt, usePrompter } from "./prompter.context";
+export { createPromptFactory, usePrompt } from "./prompter.context";
 export { RadioButtonGroup } from "./radio-button-group";
 export { RadioGroup } from "./radio-group";
 export { Select } from "./select";
