@@ -119,7 +119,7 @@ export const incrementEventsEditorZoomLevel = createThunk("incrementZoomLevel", 
 	return createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], selectEventsEditorZoomLevel, updateEventsEditorZoomLevel)({ delta: 1 }, api);
 });
 export const decrementEventsEditorZoomLevel = createThunk("decrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], selectEventsEditorZoomLevel, updateEventsEditorZoomLevel)({ delta: 1 }, api);
+	return createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], selectEventsEditorZoomLevel, updateEventsEditorZoomLevel)({ delta: -1 }, api);
 });
 
 export default slice;
