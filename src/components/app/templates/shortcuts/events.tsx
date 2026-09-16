@@ -1,87 +1,43 @@
-import { useCallback } from "react";
+import { useHotkey } from "@ark-ui/react/hotkeys";
+import { useRouteContext } from "@tanstack/react-router";
+import { useMemo } from "react";
 
-import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, toggleSelectAllEntities, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
+import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, redoEvents, removeAllSelectedEvents, undoEvents, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
-import { isMetaKeyPressed } from "$/utils";
+import { getScopes } from "./helpers";
 
 function EventsEditorShortcuts() {
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
-	const handleKeyDown = useCallback(
-		(ev: KeyboardEvent) => {
-			if (isLoading) return;
+	const isEnabled = useMemo(() => !isLoading, [isLoading]);
 
-			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
-			switch (ev.code) {
-				case "NumpadSubtract":
-				case "Minus": {
-					if (metaKeyPressed) return;
-					ev.preventDefault();
-					return dispatch(decrementEventsEditorZoomLevel());
-				}
-				case "NumpadAdd":
-				case "Equal": {
-					if (metaKeyPressed) return;
-					ev.preventDefault();
-					return dispatch(incrementEventsEditorZoomLevel());
-				}
-				case "KeyA": {
-					if (metaKeyPressed) {
-						ev.preventDefault();
-						return dispatch(toggleSelectAllEntities());
-					}
-					return dispatch(updateEventsEditorEditMode(EventEditMode.PLACE));
-				}
-				case "KeyS": {
-					return dispatch(updateEventsEditorEditMode(EventEditMode.SELECT));
-				}
-				case "KeyZ": {
-					if (metaKeyPressed) return;
-					ev.stopPropagation();
-					return dispatch(updateEventsEditorWindowLock());
-				}
-				case "KeyX": {
-					if (metaKeyPressed) return;
-					ev.stopPropagation();
-					return dispatch(updateEventsEditorMirrorLock());
-				}
-				case "Digit1": {
-					return dispatch(updateEventsEditorTool(EventTool.ON));
-				}
-				case "Digit2": {
-					return dispatch(updateEventsEditorTool(EventTool.OFF));
-				}
-				case "Digit3": {
-					return dispatch(updateEventsEditorTool(EventTool.FLASH));
-				}
-				case "Digit4": {
-					return dispatch(updateEventsEditorTool(EventTool.FADE));
-				}
-				case "Digit5": {
-					return dispatch(updateEventsEditorTool(EventTool.TRANSITION));
-				}
-				case "KeyR": {
-					if (ev.shiftKey) return;
-					return dispatch(updateEventsEditorColor(EventColor.PRIMARY));
-				}
-				case "KeyB": {
-					if (isMetaKeyPressed(ev)) return;
-					if (ev.shiftKey) return;
-					return dispatch(updateEventsEditorColor(EventColor.SECONDARY));
-				}
-				default: {
-					return;
-				}
-			}
-		},
-		[isLoading, dispatch],
-	);
+	useHotkey({ hotkey: "-", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(decrementEventsEditorZoomLevel()) });
+	useHotkey({ hotkey: "=", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(incrementEventsEditorZoomLevel()) });
 
-	useGlobalEventListener("keydown", handleKeyDown);
+	useHotkey({ hotkey: "A", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorEditMode(EventEditMode.PLACE)) });
+	useHotkey({ hotkey: "S", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorEditMode(EventEditMode.SELECT)) });
+
+	useHotkey({ hotkey: "Z", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorWindowLock()) });
+	useHotkey({ hotkey: "X", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorMirrorLock()) });
+
+	useHotkey({ hotkey: "1", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorTool(EventTool.ON)) });
+	useHotkey({ hotkey: "2", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorTool(EventTool.OFF)) });
+	useHotkey({ hotkey: "3", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorTool(EventTool.FLASH)) });
+	useHotkey({ hotkey: "4", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorTool(EventTool.FADE)) });
+	useHotkey({ hotkey: "5", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorTool(EventTool.TRANSITION)) });
+
+	useHotkey({ hotkey: "R", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorColor(EventColor.PRIMARY)) });
+	useHotkey({ hotkey: "B", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateEventsEditorColor(EventColor.SECONDARY)) });
+
+	useHotkey({ hotkey: "Delete", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(removeAllSelectedEvents()) });
+
+	useHotkey({ hotkey: "Mod+Z", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(undoEvents()) });
+	useHotkey({ hotkey: "Mod+Shift+Z", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(redoEvents()) });
 
 	return null;
 }

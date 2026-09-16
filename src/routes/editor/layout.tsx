@@ -1,8 +1,9 @@
+import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { createToaster } from "@ark-ui/react/toast";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 
 import { AppStore } from "$/_setup";
 import { EditorSidebar } from "$/components/app/templates/editor";
@@ -113,6 +114,15 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 });
 
 function RouteComponent() {
+	const store = useHotkeyStore();
+
+	useEffect(() => {
+		store.addScope("editor");
+		return () => {
+			store.removeScope("editor");
+		};
+	});
+
 	return (
 		<Prompter>
 			<EditorSidebar />

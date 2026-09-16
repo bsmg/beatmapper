@@ -4,7 +4,7 @@ import { createMachine, type MachineSchema, type Service } from "@zag-js/core";
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
 import { type IGrid, type IGridCell, NotePlacementMode, type ObstaclePlacementMode } from "$/types";
 import type { ThreeProps } from "$/types/vendor";
-import { isMetaKeyPressed } from "$/utils";
+import { isModKeyPressed } from "$/utils";
 import { resolveNoteDirectionForPlacementMode } from "./direction.helpers";
 
 export interface IPlacementContext {
@@ -110,7 +110,7 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 				onPointerMove: (event: PointerEvent) => {
 					if (!mouseDownAt) return;
 
-					const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isMetaKeyPressed(event);
+					const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isModKeyPressed(event);
 					const currentDir = resolveNoteDirectionForPlacementMode(mouseDownAt, { x: event.pageX, y: event.pageY }, { usePrecisionPlacement });
 
 					if (currentDir !== context.get("direction")) {

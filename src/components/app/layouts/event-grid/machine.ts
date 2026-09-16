@@ -10,7 +10,7 @@ import type { UseMousePositionOverElementOptions } from "$/components/hooks/use-
 import { BasicTrackMirror } from "$/constants";
 import { resolveGroupIdForTrack } from "$/helpers/events.helpers";
 import { type App, EventEditMode, type IBackgroundBox, type ISelectionBoxInBeats } from "$/types";
-import { clamp, hashCode, normalize as interpolate, isMetaKeyPressed, mulberry32, range, roundToNearest } from "$/utils";
+import { clamp, hashCode, normalize as interpolate, isModKeyPressed, mulberry32, range, roundToNearest } from "$/utils";
 
 const { getElement, getProps } = createMachineAnatomy("event-grid", {
 	parts: ["root", "timeline", "prefix", "content", "trigger", "track", "event", "backgroundBox", "selectionBox", "cursor", "pointer"],
@@ -52,7 +52,7 @@ export interface EventGridSchema extends MachineSchema {
 	effect: "trackDimensions";
 	event: AsEventObject<{
 		"trigger/down": [{ x: number; y: number; button: number }];
-		"trigger/up": [{ ctrlKey: boolean }];
+		"trigger/up": [{ modKey: boolean }];
 		"trigger/move": [{ x: number; y: number }];
 		"track/enter": [{ trackId: number }];
 		"track/leave": [{ trackId: number }];
@@ -186,7 +186,7 @@ export const machine = createMachine<EventGridSchema>({
 					endTrackIndex: Math.floor(box.bottom / context.get("trackHeight")),
 					startBeat: convertMousePositionToBeatNum(box.left, { prop, context, computed }),
 					endBeat: convertMousePositionToBeatNum(box.right, { prop, context, computed }),
-					withPrevious: event.ctrlKey,
+					withPrevious: event.modKey,
 				};
 
 				prop("onSelectionCommit")?.({ selectionBoxInBeats });
@@ -273,7 +273,7 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 					return send({ type: "trigger/down", x: event.clientX - rect.left, y: event.clientY - rect.top, button: event.button });
 				},
 				onPointerUp: (event) => {
-					return send({ type: "trigger/up", ctrlKey: isMetaKeyPressed(event.nativeEvent) });
+					return send({ type: "trigger/up", modKey: isModKeyPressed(event.nativeEvent) });
 				},
 				onPointerMove: (event) => {
 					return send({ type: "trigger/move", x: event.nativeEvent.offsetX, y: event.nativeEvent.offsetY });

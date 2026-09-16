@@ -1,4 +1,6 @@
+import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { NavigationPanel } from "$/components/app/layouts";
 import { EditorAudioVisualizer, EditorNavigationControls, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
@@ -12,6 +14,15 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene")({
 
 function RouteComponent() {
 	const { view } = Route.useRouteContext();
+
+	const store = useHotkeyStore();
+
+	useEffect(() => {
+		store.addScope(view);
+		return () => {
+			store.removeScope(view);
+		};
+	});
 
 	return (
 		<Wrapper>

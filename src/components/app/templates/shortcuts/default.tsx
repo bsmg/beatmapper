@@ -1,6 +1,7 @@
+import { useHotkey, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
-import { useParams, useRouteContext } from "@tanstack/react-router";
-import { useCallback, useRef } from "react";
+import { useParams } from "@tanstack/react-router";
+import { useCallback, useMemo } from "react";
 
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { useToaster } from "$/components/context";
@@ -30,26 +31,19 @@ import {
 	moveForwards,
 	nudgeSelection,
 	pasteSelection,
-	redoEvents,
-	redoObjects,
-	removeAllSelectedEvents,
-	removeAllSelectedObjects,
 	saveMapFiles,
 	selectAllEntitiesInRange,
 	startLoadingMap,
 	togglePlayback,
-	undoEvents,
-	undoObjects,
 	updateSnap,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCursorPositionInBeats, selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
-import { View } from "$/types";
-import { isMetaKeyPressed } from "$/utils";
+import { range } from "$/utils";
+import { getScopes } from "./helpers";
 
 function DefaultEditorShortcuts() {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const toaster = useToaster();
 
@@ -82,200 +76,103 @@ function DefaultEditorShortcuts() {
 		}),
 	);
 
-	const keysDepressed = useRef({
-		space: false,
+	const isEnabled = useMemo(() => !isLoading, [isLoading]);
+
+	useHotkey({ hotkey: "Shift+F5", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(startLoadingMap({ songId: sid, beatmapId: bid })) });
+	useHotkey({ hotkey: "Space", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(togglePlayback()), options: { requireReset: true } });
+	useHotkey({ hotkey: "Escape", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(deselectAllEntities()) });
+
+	useHotkey({ hotkey: "Tab", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(cycleToNextTool()) });
+	useHotkey({ hotkey: "Shift+Tab", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(cycleToPrevTool()) });
+
+	useHotkeys({
+		commands: Array.from(range(1, 9)).map((num) => {
+			return {
+				hotkey: `Mod+${num}`,
+				scopes: getScopes(),
+				enabled: isEnabled,
+				action: () => {
+					const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === num);
+					if (!newSnappingIncrement) return;
+					return dispatch(updateSnap(newSnappingIncrement.value));
+				},
+				options: {
+					preventDefault: true,
+				},
+			};
+		}),
 	});
+
+	useHotkey({ hotkey: "ArrowUp", scopes: getScopes(), enabled: isEnabled, action: () => handleScroll("forwards") });
+	useHotkey({ hotkey: "ArrowDown", scopes: getScopes(), enabled: isEnabled, action: () => handleScroll("backwards") });
+
+	useHotkey({ hotkey: "PageUp", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpForwards()) });
+	useHotkey({ hotkey: "PageDown", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpBackwards()) });
+	useHotkey({ hotkey: "Home", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpToStart()) });
+	useHotkey({ hotkey: "End", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpToEnd()) });
+
+	useHotkey({ hotkey: "Mod+-", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(decrementPlaybackRate()) });
+	useHotkey({ hotkey: "Mod+=", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(incrementPlaybackRate()) });
+
+	useHotkey({ hotkey: "Mod+X", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(cutSelection()) });
+	useHotkey({ hotkey: "Mod+C", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(copySelection()) });
+	useHotkey({ hotkey: "Mod+V", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(pasteSelection()) });
+
+	useHotkey({ hotkey: "Mod+S", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(saveMapFiles()) });
+
+	useHotkey({
+		hotkey: "Mod+P",
+		scopes: getScopes(),
+		enabled: isEnabled,
+		action: () => {
+			if (import.meta.env.PROD && isDemo) {
+				return toaster.create({
+					id: "demo-download-blocker",
+					type: "info",
+					description: "Unfortunately, the demo map is not available for download.",
+				});
+			}
+			return dispatch(downloadMapFiles({ songId: sid, options: { version: null } }));
+		},
+	});
+
+	useHotkey({ hotkey: "Q", scopes: getScopes(), enabled: isEnabled, action: () => triggerQuickSelect() });
+	useHotkey({ hotkey: "J", scopes: getScopes(), enabled: isEnabled, action: () => triggerJumpToBeat() });
+	useHotkey({ hotkey: "Mod+B", scopes: getScopes(), enabled: isEnabled, action: () => triggerAddBookmark() });
+
+	const isModKeyPressed = useIsKeyPressed({ hotkey: "Mod" });
+	const isAltKeyPressed = useIsKeyPressed({ hotkey: "Alt" });
 
 	// This handler handles mousewheel events, as well as up/down/left/right arrow keys.
 	const handleScroll = useThrottledCallback(
-		(direction: "forwards" | "backwards", ev: KeyboardEvent | WheelEvent) => {
-			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
-
+		(direction: "forwards" | "backwards") => {
+			if (!isEnabled) return;
 			// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
-			if (metaKeyPressed) {
+			if (isModKeyPressed) {
 				return dispatch(direction === "forwards" ? decrementSnap() : incrementSnap());
 			}
-			if (ev.altKey) {
+			if (isAltKeyPressed) {
 				return dispatch(nudgeSelection({ direction }));
 			}
-			if (ev.shiftKey) return;
-
 			dispatch((direction === "forwards" ? moveForwards : moveBackwards)());
 		},
-		{ wait: wait },
+		{ enabled: isEnabled, wait: wait },
 	);
 
-	const handleRefresh = useCallback(() => dispatch(saveMapFiles()), [dispatch]);
-
-	const handleKeyDown = useCallback(
-		(ev: KeyboardEvent) => {
-			if (isLoading) return;
-
-			const metaKeyPressed = isMetaKeyPressed(ev, navigator);
-			// If the control key and a number is pressed, we want to update snapping.
-			if (metaKeyPressed && !Number.isNaN(Number(ev.key))) {
-				ev.preventDefault();
-				const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === Number(ev.key));
-				// ctrl+0 doesn't do anything atm
-				if (!newSnappingIncrement) return;
-				dispatch(updateSnap(newSnappingIncrement.value));
-			}
-
-			switch (ev.code) {
-				case "F5": {
-					if (ev.shiftKey) {
-						ev.preventDefault();
-						return dispatch(startLoadingMap({ songId: sid, beatmapId: bid }));
-					}
-					return;
-				}
-				case "Space": {
-					// If the user holds down the space, we don't want to register a bunch of play/pause events.
-					if (keysDepressed.current.space) return;
-					keysDepressed.current.space = true;
-					return dispatch(togglePlayback());
-				}
-				case "Escape": {
-					return dispatch(deselectAllEntities());
-				}
-				case "Tab": {
-					ev.preventDefault();
-					return dispatch(ev.shiftKey ? cycleToPrevTool() : cycleToNextTool());
-				}
-				case "ArrowUp":
-				case "ArrowRight": {
-					return handleScroll("forwards", ev);
-				}
-				case "ArrowDown":
-				case "ArrowLeft": {
-					return handleScroll("backwards", ev);
-				}
-				case "PageUp": {
-					return dispatch(jumpForwards());
-				}
-				case "PageDown": {
-					return dispatch(jumpBackwards());
-				}
-				case "Home": {
-					return dispatch(jumpToStart());
-				}
-				case "End": {
-					return dispatch(jumpToEnd());
-				}
-				case "NumpadSubtract":
-				case "Minus": {
-					if (!metaKeyPressed) return;
-					ev.preventDefault();
-					return dispatch(decrementPlaybackRate());
-				}
-				case "NumpadAdd":
-				case "Equal": {
-					if (!metaKeyPressed) return;
-					ev.preventDefault();
-					return dispatch(incrementPlaybackRate());
-				}
-				case "Delete": {
-					if (view === View.LIGHTSHOW) {
-						return dispatch(removeAllSelectedEvents());
-					}
-					if (view === View.BEATMAP) {
-						return dispatch(removeAllSelectedObjects());
-					}
-					return;
-				}
-				case "KeyX": {
-					if (!metaKeyPressed) return;
-					return dispatch(cutSelection());
-				}
-				case "KeyC": {
-					if (!metaKeyPressed) return;
-					return dispatch(copySelection());
-				}
-				case "KeyV": {
-					if (!metaKeyPressed) return;
-					return dispatch(pasteSelection());
-				}
-				case "KeyJ": {
-					ev.preventDefault();
-					return triggerJumpToBeat();
-				}
-				case "KeyB": {
-					if (!metaKeyPressed) return;
-					ev.preventDefault();
-					return triggerAddBookmark();
-				}
-				case "KeyZ": {
-					if (!metaKeyPressed) return;
-					if (view === View.BEATMAP) {
-						return dispatch((ev.shiftKey ? redoObjects : undoObjects)());
-					}
-					if (view === View.LIGHTSHOW) {
-						return dispatch((ev.shiftKey ? redoEvents : undoEvents)());
-					}
-					return;
-				}
-				case "KeyS": {
-					if (!metaKeyPressed) return;
-					ev.preventDefault();
-					return dispatch(saveMapFiles());
-				}
-				case "KeyP": {
-					if (!metaKeyPressed) return;
-					ev.preventDefault();
-					if (import.meta.env.PROD && isDemo) {
-						return toaster.create({
-							id: "demo-download-blocker",
-							type: "info",
-							description: "Unfortunately, the demo map is not available for download.",
-						});
-					}
-					if (sid) return dispatch(downloadMapFiles({ songId: sid, options: { version: null } }));
-					return;
-				}
-				case "KeyQ": {
-					ev.preventDefault();
-					return triggerQuickSelect();
-				}
-				default: {
-					return;
-				}
-			}
+	useGlobalEventListener(
+		"wheel",
+		(event) => {
+			if (!isEnabled) return;
+			event.preventDefault();
+			return handleScroll(event.deltaY > 0 ? "backwards" : "forwards");
 		},
-		[dispatch, toaster, sid, bid, view, isLoading, isDemo, handleScroll, triggerQuickSelect, triggerJumpToBeat, triggerAddBookmark],
+		{ options: { passive: false } },
 	);
 
-	const handleKeyUp = useCallback(
-		(ev: KeyboardEvent) => {
-			if (isLoading) return;
-
-			switch (ev.code) {
-				case "Space": {
-					keysDepressed.current.space = false;
-					break;
-				}
-				default:
-					return;
-			}
-		},
-		[isLoading],
-	);
-
-	const handleWheel = useCallback(
-		(ev: WheelEvent) => {
-			ev.preventDefault();
-			if (isLoading) return;
-
-			const direction = ev.deltaY > 0 ? "backwards" : "forwards";
-			handleScroll(direction, ev);
-		},
-		[isLoading, handleScroll],
-	);
-
-	useGlobalEventListener("keydown", handleKeyDown);
-	useGlobalEventListener("keyup", handleKeyUp);
-	useGlobalEventListener("wheel", handleWheel, { options: { passive: false } });
-
-	useGlobalEventListener("beforeunload", handleRefresh);
+	useGlobalEventListener("beforeunload", () => {
+		if (!isEnabled) return;
+		return dispatch(saveMapFiles());
+	});
 
 	return null;
 }
