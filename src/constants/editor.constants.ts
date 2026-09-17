@@ -1,4 +1,5 @@
-import { tickSwitchSfxPath, tickWoodblockSfxPath } from "$/assets";
+import { default as tickSwitchSfxPath } from "$/assets/audio/switch.mp3";
+import { default as tickWoodblockSfxPath } from "$/assets/audio/woodblock.mp3";
 
 export const DEFAULT_NUM_COLS = 4;
 export const DEFAULT_NUM_ROWS = 3;

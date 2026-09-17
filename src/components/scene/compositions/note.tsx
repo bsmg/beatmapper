@@ -3,7 +3,9 @@ import { type IWrapBaseNote, type IWrapBombNote, type IWrapColorNote, NoteDirect
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { ColorRepresentation } from "three";
 
-import { blockCenterUrl, blockDirectionalUrl, mineUrl } from "$/assets";
+import { default as blockCenterUrl } from "$/assets/models/block-center.obj?url";
+import { default as blockDirectionalUrl } from "$/assets/models/block-directional.obj?url";
+import { default as mineUrl } from "$/assets/models/mine.obj?url";
 import { Obj, useOBJ } from "$/components/scene/atoms";
 import { resolveRotationForNote } from "$/components/scene/helpers";
 import type { App } from "$/types";

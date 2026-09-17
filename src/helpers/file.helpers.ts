@@ -1,6 +1,6 @@
 import { basename } from "@std/path/basename";
 
-import { defaultCoverArtPath } from "$/assets";
+import { default as defaultCoverArtPath } from "$/assets/images/sample-cover-art.jpg";
 
 export function convertFileToArrayBuffer<T extends File | Blob | MediaSource>(file: T) {
 	return new Promise<ArrayBuffer>((resolve, reject) => {

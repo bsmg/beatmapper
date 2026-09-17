@@ -4,7 +4,8 @@ import { useThree } from "@react-three/fiber";
 import { type ComponentProps, useMemo } from "react";
 import { AdditiveBlending, Color, FrontSide } from "three";
 
-import { glowFragmentShader, glowVertexShader } from "$/assets";
+import { default as glowFragmentShader } from "$/assets/shaders/glow.frag?raw";
+import { default as glowVertexShader } from "$/assetsshaders/glow.vert?raw";
 import { type UseLightSpringOptions, useLightSpring } from "$/components/scene/hooks/use-light-spring";
 import { normalize } from "$/utils";
 
