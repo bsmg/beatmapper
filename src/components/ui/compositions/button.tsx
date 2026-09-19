@@ -1,6 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { ark } from "@ark-ui/react/factory";
-import { useStore } from "@tanstack/react-form";
+import { useSelector as useFormSelector } from "@tanstack/react-form";
 import { type ComponentProps, type MouseEvent, useCallback, useMemo } from "react";
 
 import { Show } from "$/components/ui/atoms";
@@ -39,8 +39,8 @@ export function Button({ children, className, disabled, loading, unfocusOnPress,
 export function SubmitButton({ children, onClick, disabled, loading, ...rest }: ComponentProps<typeof Button>) {
 	const form = useFormContext();
 
-	const isDisabled = useStore(form.store, (state) => disabled || !state.canSubmit);
-	const isLoading = useStore(form.store, (state) => loading || state.isSubmitting);
+	const isDisabled = useFormSelector(form.store, (state) => disabled || !state.canSubmit);
+	const isLoading = useFormSelector(form.store, (state) => loading || state.isSubmitting);
 
 	const handleClick = useCallback(
 		(event: MouseEvent<HTMLButtonElement>) => {

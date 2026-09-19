@@ -1,4 +1,4 @@
-import { useStore } from "@tanstack/react-form";
+import { useSelector as useFormSelector } from "@tanstack/react-form";
 import { useParams } from "@tanstack/react-router";
 import type { EnvironmentV2Name, EnvironmentV3Name } from "bsmap";
 import { endsWith, type GenericSchema, gtValue, minValue, number, object, pipe, string, transform } from "valibot";
@@ -96,8 +96,8 @@ function UpdateSongForm() {
 		},
 	});
 
-	const previewStartTime = useStore(Form.store, (state) => state.values.previewStartTime);
-	const previewDuration = useStore(Form.store, (state) => state.values.previewDuration);
+	const previewStartTime = useFormSelector(Form.store, (state) => state.values.previewStartTime);
+	const previewDuration = useFormSelector(Form.store, (state) => state.values.previewDuration);
 
 	return (
 		<Form.AppForm>
