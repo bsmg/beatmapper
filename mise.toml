@@ -10,5 +10,6 @@ _.path = ['{{config_root}}/node_modules/.bin']
 [tasks.setup]
 run = [
   "pnpm install",
-  "panda codegen --clean"
+  "panda codegen --clean",
+  "pnpm exec playwright install"
 ]
