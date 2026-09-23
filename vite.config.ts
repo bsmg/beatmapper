@@ -4,9 +4,13 @@ import { default as content } from "@content-collections/vite";
 import { default as pandacss } from "@pandacss/dev/postcss";
 import { devtools, type TanStackDevtoolsViteConfig } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { default as react } from "@vitejs/plugin-react";
+import { type Options as ReactOptions, default as react } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
+
+export const REACT_OPTIONS: ReactOptions = {
+	compiler: true,
+};
 
 export const VITE_PWA_OPTIONS: Partial<VitePWAOptions> = {
 	registerType: "prompt",
@@ -89,7 +93,7 @@ export async function defineVersion(isDev?: boolean) {
 // https://vitejs.dev/config/
 export default defineConfig(async (ctx) => {
 	return {
-		plugins: [devtools(TANSTACK_DEVTOOLS_OPTIONS), react(), VitePWA(VITE_PWA_OPTIONS), tanstackRouter(TANSTACK_ROUTER_OPTIONS), content()],
+		plugins: [devtools(TANSTACK_DEVTOOLS_OPTIONS), react(REACT_OPTIONS), VitePWA(VITE_PWA_OPTIONS), tanstackRouter(TANSTACK_ROUTER_OPTIONS), content()],
 		assetsInclude: ["**/*.glsl"],
 		define: {
 			version: await defineVersion(ctx.mode === "development"),
