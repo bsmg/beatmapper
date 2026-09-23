@@ -5,7 +5,7 @@ import { default as react } from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
-import { defineVersion, TANSTACK_ROUTER_OPTIONS } from "./vite.config.ts";
+import { defineVersion, REACT_OPTIONS, TANSTACK_ROUTER_OPTIONS } from "./vite.config.ts";
 
 const instances: Array<{ browser: "chromium" | "firefox" | "webkit" }> = [];
 
@@ -44,7 +44,7 @@ export default defineConfig(async () => {
 	}
 
 	return {
-		plugins: [react(), tanstackRouter(TANSTACK_ROUTER_OPTIONS)],
+		plugins: [react(REACT_OPTIONS), tanstackRouter(TANSTACK_ROUTER_OPTIONS)],
 		define: {
 			version: await defineVersion(),
 		},
