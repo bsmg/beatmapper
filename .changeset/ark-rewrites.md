@@ -4,5 +4,5 @@
 
 ## Technical Changes
 
-- All hotkeys have been moved to Ark UI's command registration model, which should provide better handling and lay groundwork for future customizability.
-- The `DocsTableOfContents` component has been rewritten into a new Ark-based implementation, which replaces our original janky hacks around the scroll container.
+- All hotkeys have been moved to Ark UI's command registration model, which offers better handling for operating system behaviors and future customizability.
+- The `DocsTableOfContents` component has been rewritten to an Ark-based implementation, which should fix the janky hacks and inconsistencies around scroll containers.

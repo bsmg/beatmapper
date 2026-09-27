@@ -4,4 +4,8 @@
 
 ## Technical Changes
 
-The camera controls logic has been rewritten as a component-based model for better composability, as well as new support for pointer lock behavior during camera movement.
+- The camera logic has been rewritten as a component-based controller model for better composability and customizability.
+
+## Bugfixes
+
+- The camera now enforces pointer-lock behavior when rotation and movement controls are active.
