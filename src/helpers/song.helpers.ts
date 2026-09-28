@@ -92,10 +92,10 @@ export function getColorScheme<T extends Pick<App.ISong, "environment" | "diffic
 		if (vanillaOverrideScheme) {
 			const isNoteColorOverride = key === "colorLeft" || key === "colorRight" || key === "obstacleColor";
 
-			if (isNoteColorOverride && !!vanillaOverrideScheme.overrideNotes) {
+			if (isNoteColorOverride && vanillaOverrideScheme.overrideNotes) {
 				return vanillaOverrideScheme[key] as T;
 			}
-			if (!isNoteColorOverride && !!vanillaOverrideScheme.overrideLights) {
+			if (!isNoteColorOverride && vanillaOverrideScheme.overrideLights) {
 				return vanillaOverrideScheme[key] as T;
 			}
 		}

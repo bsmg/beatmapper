@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { RouterLink } from "$/components/ui/compositions";
-import { docs } from "$:content";
+import { allDocs } from "$:content";
 import { Divider, HStack, LinkOverlay, Stack, styled, Text } from "$:styled-system/jsx";
 
 interface NavProps {
@@ -39,8 +39,8 @@ interface Props {
 	next?: string;
 }
 function DocsNavigation({ prev: prevId, next: nextId }: Props) {
-	const previous = useMemo(() => docs.find((page) => page.id === prevId), [prevId]);
-	const next = useMemo(() => docs.find((page) => page.id === nextId), [nextId]);
+	const previous = useMemo(() => allDocs.find((page) => page.id === prevId), [prevId]);
+	const next = useMemo(() => allDocs.find((page) => page.id === nextId), [nextId]);
 
 	return (
 		<Stack gap={2}>

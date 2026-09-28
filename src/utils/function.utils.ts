@@ -35,17 +35,6 @@ export function createSingleton<T, TArgs extends unknown[]>(factory: (...args: T
 	};
 }
 
-// TODO: this will become native once the app targets ES2024
-export function withResolvers<T>() {
-	let resolve!: (value: T | PromiseLike<T>) => void;
-	let reject!: (reason?: unknown) => void;
-	const promise = new Promise<T>((res, rej) => {
-		resolve = res;
-		reject = rej;
-	});
-	return { promise, resolve, reject };
-}
-
 export function yieldValue<T, TReturn, TNext>(generator: Generator<T, TReturn, TNext>): Promise<T> {
 	return new Promise<T>((resolve, reject) => {
 		try {

@@ -1,5 +1,5 @@
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import { useStore } from "@tanstack/react-form";
+import { useSelector as useFormSelector } from "@tanstack/react-form";
 import { type CharacteristicName, CharacteristicNameSchema, type DifficultyName, DifficultyNameSchema, EnvironmentName, type EnvironmentV2Name, type EnvironmentV3Name } from "bsmap";
 import { useState } from "react";
 import { array, endsWith, file, type GenericSchema, gtValue, length, maxLength, minLength, minValue, number, object, pipe, string, transform } from "valibot";
@@ -110,8 +110,8 @@ function CreateMapForm({ dialog }: Props) {
 		},
 	});
 
-	const previewStartTime = useStore(Form.store, (state) => state.values.previewStartTime);
-	const previewDuration = useStore(Form.store, (state) => state.values.previewDuration);
+	const previewStartTime = useFormSelector(Form.store, (state) => state.values.previewStartTime);
+	const previewDuration = useFormSelector(Form.store, (state) => state.values.previewDuration);
 
 	const [showOptionalFields, setShowOptionalFields] = useState(false);
 

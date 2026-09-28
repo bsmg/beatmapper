@@ -1,8 +1,6 @@
 import { type DBSchema, deleteDB, type IDBPDatabase, type IDBPTransaction, openDB, type StoreKey, type StoreNames, type StoreValue } from "idb";
 import { defineDriver, type StorageValue } from "unstorage";
 
-import { withResolvers } from "$/utils";
-
 export interface IDBOptions<S extends DBSchema> {
 	/** The database name. */
 	name: string;
@@ -25,7 +23,7 @@ export class IDB<S extends DBSchema> {
 
 	constructor({ name, version, upgrade }: IDBOptions<S>) {
 		this.processing = false;
-		const migration = withResolvers<void>();
+		const migration = Promise.withResolvers<void>();
 		this.instance = openDB<S>(name, version, {
 			upgrade: async (_, oldVersion, newVersion, transaction) => {
 				this.processing = true;
