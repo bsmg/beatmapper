@@ -169,7 +169,7 @@ export const machine = createMachine<EventGridSchema>({
 			updateSelection: ({ refs, context, event }) => {
 				const origin = refs.get("mouseDownAt");
 
-				if (!origin || origin.button !== 0) {
+				if (origin?.button !== 0) {
 					return context.set("selectionBox", null);
 				}
 

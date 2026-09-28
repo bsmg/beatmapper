@@ -29,3 +29,5 @@ jobs:
         run: mise run setup
       - name: Run Vitest
         run: vitest run
+        env:
+          CI: true

@@ -7,40 +7,38 @@ import { defineConfig } from "vitest/config";
 
 import { defineVersion, REACT_OPTIONS, TANSTACK_ROUTER_OPTIONS } from "./vite.config.ts";
 
-const instances: Array<{ browser: "chromium" | "firefox" | "webkit" }> = [];
-
 export default defineConfig(async () => {
-	if (instances.length === 0) {
-		try {
-			const { chromium, firefox, webkit } = await import("playwright");
+	const instances: Array<{ browser: "chromium" | "firefox" | "webkit" }> = [];
 
-			const targets = [chromium, firefox, webkit];
+	try {
+		const { chromium, firefox, webkit } = await import("playwright");
 
-			for (const engine of targets) {
-				const name = engine.name() as "chromium" | "firefox" | "webkit";
+		const targets = [chromium, firefox, webkit];
 
-				try {
-					const execPath = engine.executablePath();
+		for (const engine of targets) {
+			const name = engine.name() as "chromium" | "firefox" | "webkit";
 
-					if (!execPath || !existsSync(execPath)) {
-						throw `Binary executable not found on disk (you may need to install it via playwright).`;
-					}
-					// we can skip a browser instance if it fails to launch (or is otherwise not supported) on the host's os.
-					await engine
-						.launch({ headless: true })
-						.then((browser) => browser.close())
-						.catch(() => {
-							throw `Cannot launch instance (you may be missing dependencies).`;
-						});
+			try {
+				const execPath = engine.executablePath();
 
-					instances.push({ browser: name });
-				} catch (error) {
-					console.error(`Skipping integration tests for "${name}" browser instance:`, error);
+				if (!execPath || !existsSync(execPath)) {
+					throw `Binary executable not found on disk (you may need to install it via playwright).`;
 				}
+				// we can skip a browser instance if it fails to launch (or is otherwise not supported) on the host's os.
+				await engine
+					.launch({ headless: true })
+					.then((browser) => browser.close())
+					.catch(() => {
+						throw `Cannot launch instance (you may be missing dependencies).`;
+					});
+
+				instances.push({ browser: name });
+			} catch (error) {
+				console.error(`Skipping integration tests for "${name}" browser instance:`, error);
 			}
-		} catch {
-			console.error(`Failed to import 'playwright'.`);
 		}
+	} catch {
+		console.error(`Failed to import 'playwright'.`);
 	}
 
 	return {
@@ -64,9 +62,13 @@ export default defineConfig(async () => {
 						name: "integration",
 						include: ["src/**/*.test.tsx"],
 						browser: {
-							instances: instances,
-							provider: playwright(),
 							enabled: true,
+							instances: instances,
+							provider: playwright({
+								launchOptions: {
+									args: process.env.CI ? ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu"] : [],
+								},
+							}),
 						},
 					},
 				},

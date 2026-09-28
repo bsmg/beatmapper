@@ -1,8 +1,6 @@
 import { type DBSchema, deleteDB, type IDBPDatabase, type IDBPTransaction, openDB, type StoreKey, type StoreNames, type StoreValue } from "idb";
 import { defineDriver, type StorageValue } from "unstorage";
 
-import { withResolvers } from "$/utils";
-
 export interface IDBOptions<S extends DBSchema> {
 	/** The database name. */
 	name: string;

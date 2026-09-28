@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /// <reference types="vitest/browser" />
 import { configureStore, createSlice } from "@reduxjs/toolkit";
 import { useLocation, useNavigate } from "@tanstack/react-router";
