@@ -64,11 +64,7 @@ export default defineConfig(async () => {
 						browser: {
 							enabled: true,
 							instances: instances,
-							provider: playwright({
-								launchOptions: {
-									args: process.env.CI ? ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu"] : [],
-								},
-							}),
+							provider: playwright(),
 						},
 					},
 				},
