@@ -241,6 +241,9 @@ importers:
       '@zag-js/core':
         specifier: ^1.44.0
         version: 1.44.0
+      '@zag-js/dom-query':
+        specifier: ^1.44.0
+        version: 1.44.0
       '@zag-js/file-utils':
         specifier: ^1.44.0
         version: 1.44.0
