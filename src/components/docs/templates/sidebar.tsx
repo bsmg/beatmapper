@@ -3,10 +3,10 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { Sidebar } from "$/components/docs/layouts";
 import { For } from "$/components/ui/atoms";
 import { Accordion } from "$/components/ui/compositions";
-import { docs } from "$:content";
+import { allDocs } from "$:content";
 
 function getDocsForCategory(category: string | null) {
-	return docs.filter((x) => x.category === category).sort((a, b) => a.order - b.order);
+	return allDocs.filter((x) => x.category === category).sort((a, b) => a.order - b.order);
 }
 
 function renderNavGroup(category: string | null) {

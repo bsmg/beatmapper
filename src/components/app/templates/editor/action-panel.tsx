@@ -1,8 +1,8 @@
+import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { ActionPanel } from "$/components/app/layouts";
-import { useOnKeydown } from "$/components/hooks/use-on-keydown";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { Match, Switch } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
@@ -28,11 +28,7 @@ function EditorActionPanel() {
 		}
 	}, [selectedBlocks.length + selectedMines.length + selectedObstacles.length]);
 
-	useOnKeydown("KeyG", () => {
-		if (isMappingExtensionsEnabled) {
-			setShowGridConfig((currentVal) => !currentVal);
-		}
-	}, [isMappingExtensionsEnabled]);
+	useHotkey({ hotkey: "G", enabled: () => isMappingExtensionsEnabled, action: () => setShowGridConfig((currentVal) => !currentVal) });
 
 	return (
 		<ActionPanel.Root>

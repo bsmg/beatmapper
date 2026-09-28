@@ -88,7 +88,7 @@ export function createEntityFactory<const TWrapper, const TSerials extends Seria
 			return container[version].deserialize(data, context);
 		},
 		validate: (data, version, context) => {
-			if (!validator || !validator[version]) {
+			if (!validator?.[version]) {
 				throw new Error(`Missing validator for data`, { cause: `${name}` });
 			}
 			const schema = validator[version].constructor(context) as StandardSchemaV1<TSerials[typeof version]>;

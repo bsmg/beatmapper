@@ -2,7 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { CirclePlusIcon, DownloadIcon, PackageOpenIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import { demoFileUrl, heroVideo } from "$/assets";
+import { default as heroVideo } from "$/assets/videos/hero-video.mp4";
+import { default as demoFileUrl } from "$/assets/zip/demo-map.zip?url";
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
 import { Button, Dialog, Heading } from "$/components/ui/compositions";
 import { addSongFromFile } from "$/store/actions";

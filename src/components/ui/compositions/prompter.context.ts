@@ -34,12 +34,6 @@ interface PrompterContextValue<TInput = unknown, TOutput = TInput> {
 
 export const PrompterContext = createContext<PrompterContextValue>({ register: () => {}, unregister: () => {}, open: () => {}, active: null });
 
-export function usePrompter() {
-	const { active } = useContext(PrompterContext);
-
-	return { isPromptActive: !!active };
-}
-
 export function usePrompt<TInput, TOutput>(data: IPrompt<TInput, TOutput>) {
 	const ctx = useContext(PrompterContext);
 
