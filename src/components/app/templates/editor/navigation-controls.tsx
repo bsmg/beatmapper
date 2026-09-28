@@ -1,4 +1,5 @@
 import { useListCollection } from "@ark-ui/react/collection";
+import { formatHotkey } from "@ark-ui/react/hotkeys";
 import { useParams } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 
@@ -9,7 +10,7 @@ import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/aud
 import { jumpBackwards, jumpForwards, jumpToEnd, jumpToStart, togglePlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
-import { getMetaKeyLabel, roundToNearest } from "$/utils";
+import { roundToNearest } from "$/utils";
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -39,7 +40,7 @@ function EditorNavigationControls() {
 	const { collection: SNAPPING_INCREMENT_LIST_COLLECTION } = useListCollection({
 		initialItems: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
 		itemToValue: (item) => item.value,
-		itemToString: (item) => (item.shortcutKey ? `${item.label} (${getMetaKeyLabel()}+${item.shortcutKey})` : item.label),
+		itemToString: (item) => (item.shortcutKey ? `${item.label} (${formatHotkey(`Mod+${item.shortcutKey}`, { separator: "+" })})` : item.label),
 	});
 
 	return (

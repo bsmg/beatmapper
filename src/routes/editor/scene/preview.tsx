@@ -5,6 +5,7 @@ import { Fragment } from "react/jsx-runtime";
 import { AppStore } from "$/_setup";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import { SURFACE_WIDTH } from "$/components/scene/constants";
+import { Controls } from "$/components/scene/templates/controls";
 import DefaultEnvironment from "$/components/scene/templates/environment";
 import MapVisualization from "$/components/scene/templates/visualization";
 import { useAppSelector } from "$/store/hooks";
@@ -40,6 +41,7 @@ function RouteComponent() {
 			<ReduxForwardingCanvas>
 				<MapVisualization timescale={(time) => timeProcessor.toRealTime(time)} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={false} />
 				<DefaultEnvironment surfaceDepth={surfaceDepth + fudgeFactor} />
+				<Controls />
 			</ReduxForwardingCanvas>
 		</Fragment>
 	);

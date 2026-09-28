@@ -19,6 +19,7 @@ export { table } from "./table";
 export { tabs } from "./tabs";
 export { tagsInput } from "./tags-input";
 export { toast } from "./toast";
+export { toc } from "./toc";
 export { toggle } from "./toggle";
 export { toggleGroup } from "./toggle-group";
 export { tooltip } from "./tooltip";

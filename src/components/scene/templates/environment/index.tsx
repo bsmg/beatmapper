@@ -1,4 +1,3 @@
-import { useControls } from "$/components/scene/hooks/use-controls";
 import { Environment } from "$/components/scene/layouts";
 import { useAppSelector } from "$/store/hooks";
 import { selectBloomEnabled } from "$/store/selectors";
@@ -12,8 +11,6 @@ interface Props {
 	surfaceDepth: number;
 }
 function DefaultEnvironment({ surfaceDepth }: Props) {
-	useControls();
-
 	const isBloomEnabled = useAppSelector(selectBloomEnabled);
 
 	return (

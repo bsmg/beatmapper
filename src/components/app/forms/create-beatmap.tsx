@@ -1,6 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import type { UseDialogContext } from "@ark-ui/react/dialog";
-import { useStore } from "@tanstack/react-form";
+import { useSelector as useFormSelector } from "@tanstack/react-form";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import type { CharacteristicName, DifficultyName } from "bsmap";
 import { CharacteristicNameSchema, DifficultyNameSchema } from "bsmap";
@@ -59,11 +59,11 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 		},
 	});
 
-	const beatmapId = useStore(Form.store, (state) => {
+	const beatmapId = useFormSelector(Form.store, (state) => {
 		if (!state.values.characteristic || !state.values.difficulty) return null;
 		return resolveBeatmapId(state.values);
 	});
-	const selectedCharacteristic = useStore(Form.store, (state) => state.values.characteristic);
+	const selectedCharacteristic = useFormSelector(Form.store, (state) => state.values.characteristic);
 
 	return (
 		<Form.AppForm>
