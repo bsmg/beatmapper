@@ -4,6 +4,7 @@ import { useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
+import { getHotkeyScopes } from "$/components/app/helpers";
 import { useToaster } from "$/components/context";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { usePrompt } from "$/components/ui/compositions";
@@ -40,7 +41,6 @@ import {
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCursorPositionInBeats, selectDemo, selectLoading, selectPacerWait } from "$/store/selectors";
 import { range } from "$/utils";
-import { getScopes } from "./helpers";
 
 function DefaultEditorShortcuts() {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -76,20 +76,21 @@ function DefaultEditorShortcuts() {
 		}),
 	);
 
+	const scopes = useMemo(() => getHotkeyScopes("editor"), []);
 	const isEnabled = useMemo(() => !isLoading, [isLoading]);
 
-	useHotkey({ hotkey: "Shift+F5", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(startLoadingMap({ songId: sid, beatmapId: bid })) });
-	useHotkey({ hotkey: "Space", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(togglePlayback()), options: { requireReset: true } });
-	useHotkey({ hotkey: "Escape", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(deselectAllEntities()) });
+	useHotkey({ hotkey: "Shift+F5", scopes: scopes, enabled: isEnabled, action: () => dispatch(startLoadingMap({ songId: sid, beatmapId: bid })) });
+	useHotkey({ hotkey: "Space", scopes: scopes, enabled: isEnabled, action: () => dispatch(togglePlayback()), options: { requireReset: true } });
+	useHotkey({ hotkey: "Escape", scopes: scopes, enabled: isEnabled, action: () => dispatch(deselectAllEntities()) });
 
-	useHotkey({ hotkey: "Tab", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(cycleToNextTool()) });
-	useHotkey({ hotkey: "Shift+Tab", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(cycleToPrevTool()) });
+	useHotkey({ hotkey: "Tab", scopes: scopes, enabled: isEnabled, action: () => dispatch(cycleToNextTool()) });
+	useHotkey({ hotkey: "Shift+Tab", scopes: scopes, enabled: isEnabled, action: () => dispatch(cycleToPrevTool()) });
 
 	useHotkeys({
 		commands: Array.from(range(1, 9)).map((num) => {
 			return {
 				hotkey: `Mod+${num}`,
-				scopes: getScopes(),
+				scopes: scopes,
 				enabled: isEnabled,
 				action: () => {
 					const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === num);
@@ -103,26 +104,26 @@ function DefaultEditorShortcuts() {
 		}),
 	});
 
-	useHotkey({ hotkey: "ArrowUp", scopes: getScopes(), enabled: isEnabled, action: () => handleScroll("forwards") });
-	useHotkey({ hotkey: "ArrowDown", scopes: getScopes(), enabled: isEnabled, action: () => handleScroll("backwards") });
+	useHotkey({ hotkey: "ArrowUp", scopes: scopes, enabled: isEnabled, action: () => handleScroll("forwards") });
+	useHotkey({ hotkey: "ArrowDown", scopes: scopes, enabled: isEnabled, action: () => handleScroll("backwards") });
 
-	useHotkey({ hotkey: "PageUp", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpForwards()) });
-	useHotkey({ hotkey: "PageDown", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpBackwards()) });
-	useHotkey({ hotkey: "Home", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpToStart()) });
-	useHotkey({ hotkey: "End", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(jumpToEnd()) });
+	useHotkey({ hotkey: "PageUp", scopes: scopes, enabled: isEnabled, action: () => dispatch(jumpForwards()) });
+	useHotkey({ hotkey: "PageDown", scopes: scopes, enabled: isEnabled, action: () => dispatch(jumpBackwards()) });
+	useHotkey({ hotkey: "Home", scopes: scopes, enabled: isEnabled, action: () => dispatch(jumpToStart()) });
+	useHotkey({ hotkey: "End", scopes: scopes, enabled: isEnabled, action: () => dispatch(jumpToEnd()) });
 
-	useHotkey({ hotkey: "Mod+-", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(decrementPlaybackRate()) });
-	useHotkey({ hotkey: "Mod+=", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(incrementPlaybackRate()) });
+	useHotkey({ hotkey: "Mod+-", scopes: scopes, enabled: isEnabled, action: () => dispatch(decrementPlaybackRate()) });
+	useHotkey({ hotkey: "Mod+=", scopes: scopes, enabled: isEnabled, action: () => dispatch(incrementPlaybackRate()) });
 
-	useHotkey({ hotkey: "Mod+X", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(cutSelection()) });
-	useHotkey({ hotkey: "Mod+C", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(copySelection()) });
-	useHotkey({ hotkey: "Mod+V", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(pasteSelection()) });
+	useHotkey({ hotkey: "Mod+X", scopes: scopes, enabled: isEnabled, action: () => dispatch(cutSelection()) });
+	useHotkey({ hotkey: "Mod+C", scopes: scopes, enabled: isEnabled, action: () => dispatch(copySelection()) });
+	useHotkey({ hotkey: "Mod+V", scopes: scopes, enabled: isEnabled, action: () => dispatch(pasteSelection()) });
 
-	useHotkey({ hotkey: "Mod+S", scopes: getScopes(), enabled: isEnabled, action: () => dispatch(saveMapFiles()) });
+	useHotkey({ hotkey: "Mod+S", scopes: scopes, enabled: isEnabled, action: () => dispatch(saveMapFiles()) });
 
 	useHotkey({
 		hotkey: "Mod+P",
-		scopes: getScopes(),
+		scopes: scopes,
 		enabled: isEnabled,
 		action: () => {
 			if (import.meta.env.PROD && isDemo) {
@@ -136,9 +137,9 @@ function DefaultEditorShortcuts() {
 		},
 	});
 
-	useHotkey({ hotkey: "Q", scopes: getScopes(), enabled: isEnabled, action: () => triggerQuickSelect() });
-	useHotkey({ hotkey: "J", scopes: getScopes(), enabled: isEnabled, action: () => triggerJumpToBeat() });
-	useHotkey({ hotkey: "Mod+B", scopes: getScopes(), enabled: isEnabled, action: () => triggerAddBookmark() });
+	useHotkey({ hotkey: "Q", scopes: scopes, enabled: isEnabled, action: () => triggerQuickSelect() });
+	useHotkey({ hotkey: "J", scopes: scopes, enabled: isEnabled, action: () => triggerJumpToBeat() });
+	useHotkey({ hotkey: "Mod+B", scopes: scopes, enabled: isEnabled, action: () => triggerAddBookmark() });
 
 	const isModKeyPressed = useIsKeyPressed({ hotkey: "Mod" });
 	const isAltKeyPressed = useIsKeyPressed({ hotkey: "Alt" });

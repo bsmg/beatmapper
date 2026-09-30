@@ -2,7 +2,7 @@ import { useHotkeyStore, useHotkeys } from "@ark-ui/react/hotkeys";
 import { useFrame } from "@react-three/fiber";
 import { useCallback, useRef } from "react";
 
-import { getScopes } from "$/components/app/templates/shortcuts/helpers";
+import { getHotkeyScopes } from "$/components/app/helpers";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { Controls as Service } from "$/services/controls.service";
 
@@ -36,13 +36,13 @@ export function Controls() {
 	// movement logic is handled by the controls service within the frame loop; we just need to register the hotkeys and bind them to their respective ids.
 	useHotkeys({
 		commands: [
-			{ id: "controls/forwards", hotkey: "Shift+W", scopes: getScopes(), action: noop },
-			{ id: "controls/backwards", hotkey: "Shift+S", scopes: getScopes(), action: noop },
-			{ id: "controls/left", hotkey: "Shift+A", scopes: getScopes(), action: noop },
-			{ id: "controls/right", hotkey: "Shift+D", scopes: getScopes(), action: noop },
-			{ id: "controls/up", hotkey: "Shift+R", scopes: getScopes(), action: noop },
-			{ id: "controls/down", hotkey: "Shift+F", scopes: getScopes(), action: noop },
-			{ id: "controls/reset", hotkey: "Shift+Backspace", scopes: getScopes(), action: noop },
+			{ id: "controls/forwards", hotkey: "Shift+W", scopes: getHotkeyScopes("editor"), action: noop },
+			{ id: "controls/backwards", hotkey: "Shift+S", scopes: getHotkeyScopes("editor"), action: noop },
+			{ id: "controls/left", hotkey: "Shift+A", scopes: getHotkeyScopes("editor"), action: noop },
+			{ id: "controls/right", hotkey: "Shift+D", scopes: getHotkeyScopes("editor"), action: noop },
+			{ id: "controls/up", hotkey: "Shift+R", scopes: getHotkeyScopes("editor"), action: noop },
+			{ id: "controls/down", hotkey: "Shift+F", scopes: getHotkeyScopes("editor"), action: noop },
+			{ id: "controls/reset", hotkey: "Shift+Backspace", scopes: getHotkeyScopes("editor"), action: noop },
 		],
 	});
 

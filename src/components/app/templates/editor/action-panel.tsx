@@ -1,7 +1,8 @@
 import { useHotkey } from "@ark-ui/react/hotkeys";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
+import { getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanel } from "$/components/app/layouts";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { Match, Switch } from "$/components/ui/atoms";
@@ -11,6 +12,7 @@ import { DefaultActionPanelGroup, GridActionPanelGroup, GridPresetsActionPanelGr
 
 function EditorActionPanel() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_/_scene/notes" });
 
 	const selectedBlocks = useAppSelector(selectAllSelectedColorNotes);
 	const selectedMines = useAppSelector(selectAllSelectedBombNotes);
@@ -28,7 +30,7 @@ function EditorActionPanel() {
 		}
 	}, [selectedBlocks.length + selectedMines.length + selectedObstacles.length]);
 
-	useHotkey({ hotkey: "G", enabled: () => isMappingExtensionsEnabled, action: () => setShowGridConfig((currentVal) => !currentVal) });
+	useHotkey({ hotkey: "G", scopes: getHotkeyScopes(view), enabled: () => isMappingExtensionsEnabled, action: () => setShowGridConfig((currentVal) => !currentVal) });
 
 	return (
 		<ActionPanel.Root>

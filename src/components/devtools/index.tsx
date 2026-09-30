@@ -4,7 +4,13 @@ import { PacerDevtoolsPanel } from "@tanstack/react-pacer-devtools";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import AppHotkeys from "$/components/app/templates/tables/hotkeys";
+
 const PLUGINS = [
+	{
+		name: "Ark UI Hotkeys",
+		render: <AppHotkeys />,
+	},
 	{
 		name: "TanStack Form",
 		render: <FormDevtoolsPanel />,
