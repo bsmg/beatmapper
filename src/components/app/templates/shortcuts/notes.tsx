@@ -3,11 +3,11 @@ import { useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { useMemo } from "react";
 
+import { getHotkeyScopes } from "$/components/app/helpers";
 import { mirrorSelection, redoObjects, removeAllSelectedObjects, undoObjects, updateNotesEditorDirection, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectLoading } from "$/store/selectors";
 import { ObjectTool } from "$/types";
-import { getScopes } from "./helpers";
 
 function NotesEditorShortcuts() {
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
@@ -15,23 +15,25 @@ function NotesEditorShortcuts() {
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
 
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const isEnabled = useMemo(() => !isLoading, [isLoading]);
 
-	useHotkey({ hotkey: "R", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE)) });
-	useHotkey({ hotkey: "B", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE)) });
+	useHotkey({ hotkey: "R", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE)) });
+	useHotkey({ hotkey: "B", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE)) });
 
-	useHotkey({ hotkey: "1", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE)) });
-	useHotkey({ hotkey: "2", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE)) });
-	useHotkey({ hotkey: "3", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.BOMB_NOTE)) });
-	useHotkey({ hotkey: "4", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.OBSTACLE)) });
+	useHotkey({ hotkey: "1", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE)) });
+	useHotkey({ hotkey: "2", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE)) });
+	useHotkey({ hotkey: "3", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.BOMB_NOTE)) });
+	useHotkey({ hotkey: "4", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorTool(ObjectTool.OBSTACLE)) });
 
-	useHotkey({ hotkey: "H", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(mirrorSelection({ axis: "horizontal" })) });
-	useHotkey({ hotkey: "V", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(mirrorSelection({ axis: "vertical" })) });
+	useHotkey({ hotkey: "H", scopes: scopes, enabled: isEnabled, action: () => dispatch(mirrorSelection({ axis: "horizontal" })) });
+	useHotkey({ hotkey: "V", scopes: scopes, enabled: isEnabled, action: () => dispatch(mirrorSelection({ axis: "vertical" })) });
 
 	const pressed = usePressedKeys();
 
 	useHotkey({
 		hotkey: "W",
+		scopes: scopes,
 		enabled: isEnabled,
 		action: () => {
 			if (pressed.includes("A")) return dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT));
@@ -41,6 +43,7 @@ function NotesEditorShortcuts() {
 	});
 	useHotkey({
 		hotkey: "S",
+		scopes: scopes,
 		enabled: isEnabled,
 		action: () => {
 			if (pressed.includes("A")) return dispatch(updateNotesEditorDirection(NoteDirection.DOWN_LEFT));
@@ -50,6 +53,7 @@ function NotesEditorShortcuts() {
 	});
 	useHotkey({
 		hotkey: "A",
+		scopes: scopes,
 		enabled: isEnabled,
 		action: () => {
 			if (pressed.includes("W")) return dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT));
@@ -59,6 +63,7 @@ function NotesEditorShortcuts() {
 	});
 	useHotkey({
 		hotkey: "D",
+		scopes: scopes,
 		enabled: isEnabled,
 		action: () => {
 			if (pressed.includes("W")) return dispatch(updateNotesEditorDirection(NoteDirection.UP_RIGHT));
@@ -67,12 +72,12 @@ function NotesEditorShortcuts() {
 		},
 	});
 
-	useHotkey({ hotkey: "F", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(updateNotesEditorDirection(NoteDirection.ANY)) });
+	useHotkey({ hotkey: "F", scopes: scopes, enabled: isEnabled, action: () => dispatch(updateNotesEditorDirection(NoteDirection.ANY)) });
 
-	useHotkey({ hotkey: "Delete", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(removeAllSelectedObjects()) });
+	useHotkey({ hotkey: "Delete", scopes: scopes, enabled: isEnabled, action: () => dispatch(removeAllSelectedObjects()) });
 
-	useHotkey({ hotkey: "Mod+Z", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(undoObjects()) });
-	useHotkey({ hotkey: "Mod+Shift+Z", scopes: getScopes(view), enabled: isEnabled, action: () => dispatch(redoObjects()) });
+	useHotkey({ hotkey: "Mod+Z", scopes: scopes, enabled: isEnabled, action: () => dispatch(undoObjects()) });
+	useHotkey({ hotkey: "Mod+Shift+Z", scopes: scopes, enabled: isEnabled, action: () => dispatch(redoObjects()) });
 
 	return null;
 }
