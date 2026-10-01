@@ -77,8 +77,8 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			undo: history.undo,
-			redo: history.redo,
+			undo: api.reducer<{ shouldJump?: boolean }>(history.undo),
+			redo: api.reducer<{ shouldJump?: boolean }>(history.redo),
 			clearHistory: history.clearHistory,
 			addColorNote: api.reducer<IWrapColorNote>(
 				history.undoable((state, action) => {
