@@ -2,6 +2,7 @@ import type { Assign } from "@ark-ui/react";
 import { animated, useSpring } from "@react-spring/three";
 import type { PropsWithChildren } from "react";
 
+import { MOVEMENT_SPRING } from "$/components/scene/constants";
 import { useVisualizationContext } from "./context";
 
 interface Props {
@@ -14,7 +15,7 @@ function VisualizationMover({ children, immediate }: Assign<PropsWithChildren, P
 		return {
 			zPosition: cursorPosition * beatDepth,
 			immediate: immediate,
-			config: { tension: 360, friction: 22, mass: 0.4 },
+			config: MOVEMENT_SPRING,
 		};
 	}, [cursorPosition, beatDepth]);
 

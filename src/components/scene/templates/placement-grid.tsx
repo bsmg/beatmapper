@@ -1,7 +1,8 @@
 import type { Assign } from "@ark-ui/react";
+import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useMemo } from "react";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
@@ -13,9 +14,8 @@ import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/h
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectDefaultObstacleDuration, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectSnap } from "$/store/selectors";
+import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectSnap } from "$/store/selectors";
 import { ObjectTool } from "$/types";
-import { roundToNearest } from "$/utils";
 
 function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -23,26 +23,37 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const snapTo = useAppSelector(selectSnap);
 	const notePlacementMode = useAppSelector((state) => selectNotePlacementMode(state, sid));
 	const obstaclePlacementMode = useAppSelector((state) => selectObstaclePlacementMode(state, sid));
 	const grid = useAppSelector((state) => selectGridSize(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectNotesEditorTool);
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
-	const defaultObstacleDuration = useAppSelector(selectDefaultObstacleDuration);
 	const beatDepth = useAppSelector(selectBeatDepth);
+
+	const hotkeys = useHotkeyStore();
 
 	const service = useMachine(PlacementGrid.machine, {
 		notePlacementMode,
 		obstaclePlacementMode,
 		grid,
-		onCellPointerDown,
-		onCellWheel,
+		cursorPositionInBeats,
+		shouldLockCursor: selectedTool !== ObjectTool.OBSTACLE,
+		onCellPointerDown: (ev, ctx) => {
+			if (selectionMode) return;
+
+			if (selectedTool !== ObjectTool.OBSTACLE) {
+				hotkeys.removeScope("navigation");
+			}
+
+			return onCellPointerDown?.(ev, ctx);
+		},
 		onPointerUp: (_, ctx) => {
 			if (selectionMode) return;
 
-			const time = roundToNearest(cursorPositionInBeats, snapTo);
+			if (!hotkeys.getActiveScopes().includes("navigation")) {
+				hotkeys.addScope("navigation");
+			}
 
 			switch (selectedTool) {
 				case ObjectTool.LEFT_NOTE:
@@ -51,23 +62,22 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 						color: Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1,
 						direction: Math.round(ctx.direction ?? selectedDirection),
 					});
-					if (note) return dispatch(addColorNote({ ...note, time }));
+					if (note) return dispatch(addColorNote(note));
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
 					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid);
-					if (note) return dispatch(addBombNote({ ...note, time }));
+					if (note) return dispatch(addBombNote(note));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
-					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, {
-						duration: defaultObstacleDuration,
-					});
-					if (obstacle) return dispatch(addObstacle({ ...obstacle, time }));
+					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid);
+					if (obstacle) return dispatch(addObstacle(obstacle));
 					break;
 				}
 			}
 		},
+		onCellWheel,
 	});
 
 	return (
@@ -85,7 +95,7 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && selectedTool === ObjectTool.OBSTACLE}>
-					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid, { duration: defaultObstacleDuration })}>
+					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid)}>
 						{(data) => <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>

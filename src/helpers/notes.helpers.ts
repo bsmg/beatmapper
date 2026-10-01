@@ -20,7 +20,7 @@ export function resolveNoteId<T extends Pick<IWrapBaseNote, "time" | "posX" | "p
 }
 
 export function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: Partial<IWrapBaseNote>) => T) {
-	return ({ cellDownAt }: Pick<IPlacementContext, "cellDownAt">, mode: NotePlacementMode, grid: IGrid = DEFAULT_GRID, data: Partial<T> = {}) => {
+	return ({ cellDownAt, time }: Pick<IPlacementContext, "cellDownAt" | "time">, mode: NotePlacementMode, grid: IGrid = DEFAULT_GRID, data: Partial<T> = {}) => {
 		if (!cellDownAt) return null;
 
 		const isExtended = mode === NotePlacementMode.EXTENSIONS;
@@ -28,6 +28,7 @@ export function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: 
 		const { colIndex, rowIndex } = convertGridCell(cellDownAt, grid);
 
 		return createNote({
+			time: time ?? 0,
 			posX: serializeCoordinate(colIndex, isExtended),
 			posY: serializeCoordinate(rowIndex, isExtended),
 			...data,
