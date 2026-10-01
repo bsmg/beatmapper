@@ -1,7 +1,7 @@
 import { createObstacle, type IWrapObstacle } from "bsmap";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
-import { DEFAULT_GRID } from "$/constants";
+import { DEFAULT_GRID, HIGHEST_PRECISION } from "$/constants";
 import { type IGrid, ObstaclePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
@@ -48,7 +48,7 @@ export function clampObstacle<T extends Pick<IWrapObstacle, "posX" | "posY" | "w
 	return obstacle;
 }
 
-export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: Pick<IPlacementContext, "cellDownAt" | "cellOverAt">, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid = DEFAULT_GRID, data: Partial<IWrapObstacle> = {}) {
+export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt, time, duration }: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "time" | "duration">, mode: ObstaclePlacementMode, { numCols, numRows, colWidth, rowHeight, colOffset, rowOffset }: IGrid = DEFAULT_GRID, data: Partial<IWrapObstacle> = {}) {
 	if (!cellDownAt || !cellOverAt) return null;
 
 	const minColIndex = Math.min(cellDownAt.colIndex, cellOverAt.colIndex);
@@ -61,7 +61,7 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt }: Pick<IP
 	const rawWidth = maxColIndex - minColIndex + 1;
 	const rawHeight = maxRowIndex - minRowIndex + 1;
 
-	const obstacle = createObstacle({ posX: colIndex, width: rawWidth, ...data });
+	const obstacle = createObstacle({ time: time ?? 0, duration: Math.max(duration ?? 0, HIGHEST_PRECISION), posX: colIndex, width: rawWidth, ...data });
 
 	switch (mode) {
 		case ObstaclePlacementMode.LEGACY: {
