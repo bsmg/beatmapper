@@ -60,8 +60,10 @@ function RouteComponent() {
 	const store = useHotkeyStore();
 
 	useEffect(() => {
+		store.addScope("navigation");
 		store.addScope(view);
 		return () => {
+			store.addScope("navigation");
 			store.removeScope(view);
 		};
 	});
