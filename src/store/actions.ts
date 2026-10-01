@@ -1,5 +1,5 @@
 export { cycleToNextTool, cycleToPrevTool, deselectAllEntities, finishLoadingMap, leaveEditor, loadAudioDataContents, loadBeatmapContents, loadSongFile, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "./features/actions";
-export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelection, updateNotesEditorDefaultObstacleDuration, updateNotesEditorDirection, updateNotesEditorTool, upsertGridPreset, upsertGridPresets } from "./features/beatmap.slice";
+export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelection, updateNotesEditorDirection, updateNotesEditorTool, upsertGridPreset, upsertGridPresets } from "./features/beatmap.slice";
 export { addBookmark, removeBookmark } from "./features/bookmarks.slice";
 export { setClipboardData } from "./features/clipboard.slice";
 export { loadGridPreset, saveGridPreset } from "./features/editor.thunks";
