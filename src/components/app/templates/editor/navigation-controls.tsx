@@ -1,9 +1,9 @@
 import { useListCollection } from "@ark-ui/react/collection";
-import { formatHotkey, useHotkey, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
+import { formatHotkey, useHotkey, useHotkeyRegistrations, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
@@ -52,9 +52,11 @@ function EditorNavigationControls() {
 		itemToString: (item) => (item.shortcutKey ? `${item.label} (${formatHotkey(`Mod+${item.shortcutKey}`, { separator: "+" })})` : item.label),
 	});
 
+	const hotkeys = useHotkeyStore();
+
 	const scopes = useMemo(() => getHotkeyScopes("editor", "navigation"), []);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
-	const enabled = useMemo(() => !isLoadingSong, [isLoadingSong]);
+	const enabled = useCallback(() => !isLoadingSong && hotkeys.getActiveScopes().includes("navigation"), [isLoadingSong, hotkeys.getActiveScopes]);
 
 	useHotkeys({
 		commands: Array.from(range(1, 9)).map((num) => {
@@ -117,8 +119,10 @@ function EditorNavigationControls() {
 	// This handler handles mousewheel events.
 	const handleScroll = useThrottledCallback(
 		(direction: "forwards" | "backwards") => {
-			// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
+			if (!hotkeys.getActiveScopes().includes("navigation")) return;
+
 			if (isModKeyPressed) {
+				// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
 				return dispatch((direction === "forwards" ? decrementSnap : incrementSnap)());
 			}
 			dispatch((direction === "forwards" ? moveForwards : moveBackwards)());
