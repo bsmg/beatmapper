@@ -13,3 +13,19 @@ export function getHotkeyScopes(...rest: (string | undefined)[]): string[] {
 
 	return Array.from(scopes).filter((x) => !!x) as string[];
 }
+
+export function getHotkeyCategory(scopes: string[]): string | undefined {
+	if (scopes.includes(View.BEATMAP)) {
+		return "Beatmap View";
+	}
+	if (scopes.includes(View.LIGHTSHOW)) {
+		return "Lightshow View";
+	}
+	if (scopes.includes("navigation")) {
+		return "Navigation";
+	}
+	if (scopes.includes("camera")) {
+		return "Camera";
+	}
+	return undefined;
+}

@@ -3,7 +3,6 @@ import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
 
 import { EditorActionPanel } from "$/components/app/templates/editor";
-import { NotesEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import { AmbientLight, Runway } from "$/components/scene/compositions";
 import { Controls } from "$/components/scene/templates/controls";
@@ -32,7 +31,6 @@ function RouteComponent() {
 				<fogExp2 attach="fog" args={[getComputedToken("colors.bg.contrast"), 0.02]} />
 			</ReduxForwardingCanvas>
 			<EditorActionPanel />
-			<NotesEditorShortcuts />
 		</Fragment>
 	);
 }

@@ -1,20 +1,35 @@
-import { useParams } from "@tanstack/react-router";
+import { useHotkey } from "@ark-ui/react/hotkeys";
+import { useParams, useRouteContext } from "@tanstack/react-router";
+import { useMemo } from "react";
 
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { BombNoteIcon, ColorNoteIcon, ObstacleIcon } from "$/components/icons";
 import { Button, Tooltip } from "$/components/ui/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
-import { updateNotesEditorTool } from "$/store/actions";
+import { cycleToNextTool, cycleToPrevTool, updateNotesEditorTool } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectNotesEditorTool } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function NoteToolActionPanelGroup() {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_/_scene/notes" });
 
 	const dispatch = useAppDispatch();
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectNotesEditorTool);
+
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Pick Left Color Note Tool", hotkey: "1", action: () => dispatch(updateNotesEditorTool(ObjectTool.LEFT_NOTE)) });
+	useHotkey({ scopes, category, label: "Pick Right Color Note Tool", hotkey: "2", action: () => dispatch(updateNotesEditorTool(ObjectTool.RIGHT_NOTE)) });
+	useHotkey({ scopes, category, label: "Pick Bomb Note Tool", hotkey: "3", action: () => dispatch(updateNotesEditorTool(ObjectTool.BOMB_NOTE)) });
+	useHotkey({ scopes, category, label: "Pick Obstacle Tool", hotkey: "4", action: () => dispatch(updateNotesEditorTool(ObjectTool.OBSTACLE)) });
+
+	useHotkey({ scopes, category, label: "Cycle to Next Tool", hotkey: "Tab", action: () => dispatch(cycleToNextTool()) });
+	useHotkey({ scopes, category, label: "Cycle to Previous Tool", hotkey: "Shift+Tab", action: () => dispatch(cycleToPrevTool()) });
 
 	return (
 		<ActionPanelGroup.Root label="Items">
