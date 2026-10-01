@@ -1,9 +1,26 @@
+import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
 import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
+import { useMemo } from "react";
 
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { StatusBar } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
-import { updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTrackScale } from "$/store/actions";
+import {
+	decrementPlaybackRate,
+	decrementSongVolume,
+	decrementTickVolume,
+	incrementPlaybackRate,
+	incrementSongVolume,
+	incrementTickVolume,
+	updateEventsEditorPreview,
+	updateEventsEditorTrackHeight,
+	updateEventsEditorTrackOpacity,
+	updatePlaybackRate,
+	updateSongVolume,
+	updateTickVolume,
+	updateTrackScale,
+} from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalBombNotes, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
 import { View } from "$/types";
@@ -26,6 +43,18 @@ function EditorStatusBar() {
 	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
 	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
 	const noteDensity = useAppSelector(selectNoteDensity);
+
+	const scopes = useMemo(() => getHotkeyScopes("editor"), []);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Decrement Playback Speed", hotkey: "Mod+-", action: () => dispatch(decrementPlaybackRate()) });
+	useHotkey({ scopes, category, label: "Increment Playback Speed", hotkey: "Mod+=", action: () => dispatch(incrementPlaybackRate()) });
+
+	useHotkey({ scopes, category, label: "Decrement Song Volume", hotkey: "Alt+-", action: () => dispatch(decrementSongVolume()) });
+	useHotkey({ scopes, category, label: "Increment Song Volume", hotkey: "Alt+=", action: () => dispatch(incrementSongVolume()) });
+
+	useHotkey({ scopes, category, label: "Decrement Tick Volume", hotkey: "Alt+Shift+-", action: () => dispatch(decrementTickVolume()) });
+	useHotkey({ scopes, category, label: "Increment Tick Volume", hotkey: "Alt+Shift+=", action: () => dispatch(incrementTickVolume()) });
 
 	return (
 		<Wrapper onWheel={(ev) => ev.stopPropagation()}>
