@@ -1,4 +1,4 @@
-import { useHotkey } from "@ark-ui/react/hotkeys";
+import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { type MouseEventHandler, useMemo } from "react";
 
@@ -47,8 +47,10 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
 
-	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoObjects()) });
-	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoObjects()) });
+	const hotkeys = useHotkeyStore();
+
+	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoObjects({ shouldJump: hotkeys.getActiveScopes().includes("navigation") })) });
+	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoObjects({ shouldJump: hotkeys.getActiveScopes().includes("navigation") })) });
 
 	useHotkey({ scopes, category, label: "Cut Selection", hotkey: "Mod+X", action: () => dispatch(cutSelection()) });
 	useHotkey({ scopes, category, label: "Copy Selection", hotkey: "Mod+C", action: () => dispatch(copySelection()) });
@@ -57,10 +59,10 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	return (
 		<ActionPanelGroup.Root label="Actions">
 			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnPress onClick={() => dispatch(undoObjects())}>
+				<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnPress onClick={() => dispatch(undoObjects({ shouldJump: hotkeys.getActiveScopes().includes("navigation") }))}>
 					Undo
 				</Button>
-				<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnPress onClick={() => dispatch(redoObjects())}>
+				<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnPress onClick={() => dispatch(redoObjects({ shouldJump: hotkeys.getActiveScopes().includes("navigation") }))}>
 					Redo
 				</Button>
 			</ActionPanelGroup.ActionGroup>
