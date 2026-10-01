@@ -1,8 +1,7 @@
-import { createListenerMiddleware, isAnyOf, type PayloadAction } from "@reduxjs/toolkit";
+import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
-import { addSong, addSongFromFile, loadAudioDataContents, updateAllSelectedObstacles, updateBeatmap, updateNew, updateNotesEditorDefaultObstacleDuration, updateObstacle, updateProcessingImport, updateSong, updateUsername } from "$/store/actions";
+import { addSong, addSongFromFile, loadAudioDataContents, updateBeatmap, updateNew, updateProcessingImport, updateSong, updateUsername } from "$/store/actions";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
-import type { App } from "$/types";
 
 interface Options {
 	extra: Pick<AppExtraArgs, never>;
@@ -37,14 +36,6 @@ export default function createSharedMiddleware({ extra }: Options) {
 		effect: (action, api) => {
 			if (action.payload.changes.mappers) {
 				api.dispatch(updateUsername(action.payload.changes.mappers[0]));
-			}
-		},
-	});
-	instance.startListening({
-		matcher: isAnyOf(updateObstacle, updateAllSelectedObstacles),
-		effect: (action: PayloadAction<{ changes: Partial<App.IObstacle> }>, api) => {
-			if (action.payload.changes.duration) {
-				api.dispatch(updateNotesEditorDefaultObstacleDuration(action.payload.changes.duration));
 			}
 		},
 	});
