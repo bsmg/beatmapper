@@ -20,7 +20,6 @@ import {
 	updateEventsEditorWindowLock,
 	updateEventsEditorZoomLevel,
 	updateNew,
-	updateNotesEditorDefaultObstacleDuration,
 	updateNotesEditorDirection,
 	updateNotesEditorTool,
 	updateObstaclePlacementMode,
@@ -41,7 +40,6 @@ import {
 	selectAnnouncements,
 	selectBeatDepth,
 	selectBloomEnabled,
-	selectDefaultObstacleDuration,
 	selectEventsEditorColor,
 	selectEventsEditorEditMode,
 	selectEventsEditorMirrorLock,
@@ -222,10 +220,6 @@ export function createAppEnhancers() {
 			"notes.direction": {
 				selectValue: selectNotesEditorDirection,
 				hydrateValue: updateNotesEditorDirection,
-			},
-			"notes.duration": {
-				selectValue: selectDefaultObstacleDuration,
-				hydrateValue: updateNotesEditorDefaultObstacleDuration,
 			},
 			"events.mode": createEnumerableStorageObserver(EventEditMode, {
 				selectValue: selectEventsEditorEditMode,
