@@ -64,48 +64,56 @@ export default function createHistoryMiddleware({ extra }: Options) {
 	});
 	instance.startListening({
 		actionCreator: undoObjects,
-		effect: (_, api) => {
+		effect: (action, api) => {
 			const state = api.getState();
 
-			jumpToEarliestObject(api, {
-				notes: { before: selectFutureColorNotes(state), after: selectAllColorNotes(state) },
-				bombs: { before: selectFutureBombNotes(state), after: selectAllBombNotes(state) },
-				obstacles: { before: selectFutureObstacles(state), after: selectAllObstacles(state) },
-			});
+			if (action.payload.shouldJump) {
+				jumpToEarliestObject(api, {
+					notes: { before: selectFutureColorNotes(state), after: selectAllColorNotes(state) },
+					bombs: { before: selectFutureBombNotes(state), after: selectAllBombNotes(state) },
+					obstacles: { before: selectFutureObstacles(state), after: selectAllObstacles(state) },
+				});
+			}
 		},
 	});
 	instance.startListening({
 		actionCreator: redoObjects,
-		effect: (_, api) => {
+		effect: (action, api) => {
 			const state = api.getState();
 
-			jumpToEarliestObject(api, {
-				notes: { before: selectPastColorNotes(state), after: selectAllColorNotes(state) },
-				bombs: { before: selectPastBombNotes(state), after: selectAllBombNotes(state) },
-				obstacles: { before: selectPastObstacles(state), after: selectAllObstacles(state) },
-			});
+			if (action.payload.shouldJump) {
+				jumpToEarliestObject(api, {
+					notes: { before: selectPastColorNotes(state), after: selectAllColorNotes(state) },
+					bombs: { before: selectPastBombNotes(state), after: selectAllBombNotes(state) },
+					obstacles: { before: selectPastObstacles(state), after: selectAllObstacles(state) },
+				});
+			}
 		},
 	});
 	instance.startListening({
 		actionCreator: undoEvents,
-		effect: (_, api) => {
+		effect: (action, api) => {
 			const state = api.getState();
 
-			jumpToEarliestEvent(api, {
-				basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
-				boostEvents: { before: selectFutureBoostEvents(state), after: selectAllBoostEvents(state) },
-			});
+			if (action.payload.shouldJump) {
+				jumpToEarliestEvent(api, {
+					basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
+					boostEvents: { before: selectFutureBoostEvents(state), after: selectAllBoostEvents(state) },
+				});
+			}
 		},
 	});
 	instance.startListening({
 		actionCreator: redoEvents,
-		effect: (_, api) => {
+		effect: (action, api) => {
 			const state = api.getState();
 
-			jumpToEarliestEvent(api, {
-				basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
-				boostEvents: { before: selectPastBoostEvents(state), after: selectAllBoostEvents(state) },
-			});
+			if (action.payload.shouldJump) {
+				jumpToEarliestEvent(api, {
+					basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
+					boostEvents: { before: selectPastBoostEvents(state), after: selectAllBoostEvents(state) },
+				});
+			}
 		},
 	});
 

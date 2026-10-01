@@ -1,5 +1,5 @@
 import { createListCollection } from "@ark-ui/react/collection";
-import { useHotkey } from "@ark-ui/react/hotkeys";
+import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { type ComponentProps, type CSSProperties, useMemo } from "react";
@@ -116,8 +116,10 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
 	useHotkey({ scopes, category, label: "Delete Selection", hotkey: "Delete", action: () => dispatch(removeAllSelectedEvents()) });
 
-	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoEvents()) });
-	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoEvents()) });
+	const hotkeys = useHotkeyStore();
+
+	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoEvents({ shouldJump: hotkeys.getActiveScopes().includes("navigation") })) });
+	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoEvents({ shouldJump: hotkeys.getActiveScopes().includes("navigation") })) });
 
 	return (
 		<Wrapper {...rest}>
