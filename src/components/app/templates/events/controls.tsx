@@ -2,7 +2,7 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
-import { type ComponentProps, type CSSProperties, useMemo } from "react";
+import { type ComponentProps, type CSSProperties, useCallback, useMemo } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { EventEffectIcon } from "$/components/icons";
@@ -80,21 +80,25 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ colorScheme }), [colorScheme]);
 	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ colorScheme, selectedColor }), [colorScheme, selectedColor]);
 
+	const hotkeys = useHotkeyStore();
+
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
 
-	useHotkey({ scopes, category, label: "Toggle Place Mode", hotkey: "A", action: () => dispatch(updateEventsEditorEditMode(EventEditMode.PLACE)) });
-	useHotkey({ scopes, category, label: "Toggle Select Mode", hotkey: "S", action: () => dispatch(updateEventsEditorEditMode(EventEditMode.SELECT)) });
+	const enabled = useCallback(() => !hotkeys.getActiveScopes().includes("camera"), [hotkeys.getActiveScopes]);
 
-	useHotkey({ scopes, category, label: "Pick Primary Color", hotkey: "R", action: () => dispatch(updateEventsEditorColor(EventColor.PRIMARY)) });
-	useHotkey({ scopes, category, label: "Pick Secondary Color", hotkey: "B", action: () => dispatch(updateEventsEditorColor(EventColor.SECONDARY)) });
-	useHotkey({ scopes, category, label: "Pick White Color", hotkey: "W", action: () => dispatch(updateEventsEditorColor(EventColor.WHITE)) });
+	useHotkey({ scopes, category, enabled, label: "Toggle Place Mode", hotkey: "A", action: () => dispatch(updateEventsEditorEditMode(EventEditMode.PLACE)) });
+	useHotkey({ scopes, category, enabled, label: "Toggle Select Mode", hotkey: "S", action: () => dispatch(updateEventsEditorEditMode(EventEditMode.SELECT)) });
 
-	useHotkey({ scopes, category, label: "Pick On Effect", hotkey: "1", action: () => dispatch(updateEventsEditorTool(EventTool.ON)) });
-	useHotkey({ scopes, category, label: "Pick Off Effect", hotkey: "2", action: () => dispatch(updateEventsEditorTool(EventTool.OFF)) });
-	useHotkey({ scopes, category, label: "Pick Flash Effect", hotkey: "3", action: () => dispatch(updateEventsEditorTool(EventTool.FLASH)) });
-	useHotkey({ scopes, category, label: "Pick Fade Effect", hotkey: "4", action: () => dispatch(updateEventsEditorTool(EventTool.FADE)) });
-	useHotkey({ scopes, category, label: "Pick Transition Effect", hotkey: "5", action: () => dispatch(updateEventsEditorTool(EventTool.TRANSITION)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Primary Color", hotkey: "R", action: () => dispatch(updateEventsEditorColor(EventColor.PRIMARY)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Secondary Color", hotkey: "B", action: () => dispatch(updateEventsEditorColor(EventColor.SECONDARY)) });
+	useHotkey({ scopes, category, enabled, label: "Pick White Color", hotkey: "W", action: () => dispatch(updateEventsEditorColor(EventColor.WHITE)) });
+
+	useHotkey({ scopes, category, enabled, label: "Pick On Effect", hotkey: "1", action: () => dispatch(updateEventsEditorTool(EventTool.ON)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Off Effect", hotkey: "2", action: () => dispatch(updateEventsEditorTool(EventTool.OFF)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Flash Effect", hotkey: "3", action: () => dispatch(updateEventsEditorTool(EventTool.FLASH)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Fade Effect", hotkey: "4", action: () => dispatch(updateEventsEditorTool(EventTool.FADE)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Transition Effect", hotkey: "5", action: () => dispatch(updateEventsEditorTool(EventTool.TRANSITION)) });
 
 	useHotkey({ scopes, category, label: "Cycle to Next Effect", hotkey: "Tab", action: () => dispatch(cycleToNextTool()) });
 	useHotkey({ scopes, category, label: "Cycle to Previous Effect", hotkey: "Shift+Tab", action: () => dispatch(cycleToPrevTool()) });
@@ -115,8 +119,6 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 	useHotkey({ scopes, category, label: "Select All Objects", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
 	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
 	useHotkey({ scopes, category, label: "Delete Selection", hotkey: "Delete", action: () => dispatch(removeAllSelectedEvents()) });
-
-	const hotkeys = useHotkeyStore();
 
 	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoEvents({ shouldJump: hotkeys.getActiveScopes().includes("navigation") })) });
 	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoEvents({ shouldJump: hotkeys.getActiveScopes().includes("navigation") })) });
