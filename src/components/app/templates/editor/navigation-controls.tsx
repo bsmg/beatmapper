@@ -110,8 +110,8 @@ function EditorNavigationControls() {
 	useHotkey({ scopes, category, enabled, label: "Jump to Start", hotkey: "Home", action: () => dispatch(jumpToStart()) });
 	useHotkey({ scopes, category, enabled, label: "Jump to End", hotkey: "End", action: () => dispatch(jumpToEnd()) });
 
-	useHotkey({ scopes, category, enabled, label: "Quick Select", hotkey: "Q", action: () => triggerQuickSelect() });
-	useHotkey({ scopes, category, enabled, label: "Jump to Beat", hotkey: "J", action: () => triggerJumpToBeat() });
+	useHotkey({ scopes, category, enabled, label: "Quick Select", hotkey: "Mod+F", action: () => triggerQuickSelect() });
+	useHotkey({ scopes, category, enabled, label: "Jump to Beat", hotkey: "Mod+G", action: () => triggerJumpToBeat() });
 	useHotkey({ scopes, category, enabled, label: "Add Bookmark", hotkey: "Mod+B", action: () => triggerAddBookmark() });
 
 	const isModKeyPressed = useIsKeyPressed({ hotkey: "Mod" });

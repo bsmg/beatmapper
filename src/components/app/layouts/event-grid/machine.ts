@@ -258,6 +258,11 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 			return normalize.element({
 				...getProps(scope, "root"),
 				"aria-busy": prop("loading"),
+				onPointerDown: (e) => e.stopPropagation(),
+				onPointerMove: (e) => e.stopPropagation(),
+				onPointerUp: (e) => e.stopPropagation(),
+				onWheel: (e) => e.stopPropagation(),
+				onContextMenu: (e) => e.stopPropagation(),
 			});
 		},
 		getTimelineProps: () => {

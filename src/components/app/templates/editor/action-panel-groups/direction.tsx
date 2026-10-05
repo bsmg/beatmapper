@@ -1,8 +1,8 @@
-import { useHotkey, usePressedKeys } from "@ark-ui/react/hotkeys";
+import { useHotkey, useHotkeyStore, usePressedKeys } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
 import { NoteDirection } from "bsmap";
 import { ArrowDownIcon, ArrowDownLeftIcon, ArrowDownRightIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, ArrowUpLeftIcon, ArrowUpRightIcon, CircleIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
@@ -22,14 +22,19 @@ function NoteDirectionActionPanelGroup() {
 
 	const isDisabled = useMemo(() => selectedNoteTool !== ObjectTool.LEFT_NOTE && selectedNoteTool !== ObjectTool.RIGHT_NOTE, [selectedNoteTool]);
 
+	const hotkeys = useHotkeyStore();
+
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	const enabled = useCallback(() => !hotkeys.getActiveScopes().includes("camera"), [hotkeys.getActiveScopes]);
 
 	const pressedKeys = usePressedKeys();
 
 	useHotkey({
 		scopes,
 		category,
+		enabled,
 		label: "Pick Up Direction",
 		hotkey: "W",
 		action: () => {
@@ -41,6 +46,7 @@ function NoteDirectionActionPanelGroup() {
 	useHotkey({
 		scopes,
 		category,
+		enabled,
 		label: "Pick Down Direction",
 		hotkey: "S",
 		action: () => {
@@ -52,6 +58,7 @@ function NoteDirectionActionPanelGroup() {
 	useHotkey({
 		scopes,
 		category,
+		enabled,
 		label: "Pick Left Direction",
 		hotkey: "A",
 		action: () => {
@@ -63,6 +70,7 @@ function NoteDirectionActionPanelGroup() {
 	useHotkey({
 		scopes,
 		category,
+		enabled,
 		label: "Pick Right Direction",
 		hotkey: "D",
 		action: () => {
@@ -72,7 +80,7 @@ function NoteDirectionActionPanelGroup() {
 		},
 	});
 
-	useHotkey({ scopes, category, label: "Pick Any Direction", hotkey: "F", action: () => dispatch(updateNotesEditorDirection(NoteDirection.ANY)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Any Direction", hotkey: "F", action: () => dispatch(updateNotesEditorDirection(NoteDirection.ANY)) });
 
 	return (
 		<ActionPanelGroup.Root label="Notes">
