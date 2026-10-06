@@ -1,44 +1,36 @@
-import { Fragment, useCallback, useMemo } from "react";
+import { useMemo } from "react";
 
 import { For } from "$/components/ui/atoms";
-import { range } from "$/utils";
+import { useAppSelector } from "$/store/hooks";
+import { selectSnap } from "$/store/selectors";
+import { normalize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 import { token } from "$:styled-system/tokens";
 import { useEventGridContext } from "./context";
 
 function EventGridMarkers() {
-	const { snapDivision, numOfBeatsToShow, dimensions } = useEventGridContext();
+	const snapTo = useAppSelector(selectSnap);
 
-	const segmentWidth = useMemo(() => dimensions.width / numOfBeatsToShow, [dimensions.width, numOfBeatsToShow]);
+	const { startBeat, endBeat, dimensions } = useEventGridContext();
 
-	const renderBeatLine = useCallback(
-		(beat: number) => {
-			// No line necessary for the right edge of the grid
-			if (beat === numOfBeatsToShow - 1) return null;
-			return <line key={beat} x1={(beat + 1) * segmentWidth} y1={-6} x2={(beat + 1) * segmentWidth} y2={dimensions.height} stroke={token.var("colors.border.default")} strokeWidth={1} />;
-		},
-		[numOfBeatsToShow, dimensions.height, segmentWidth],
-	);
+	const markers = useMemo(() => {
+		const lines: { key: string; x: number; isPrimary: boolean }[] = [];
+		const firstLine = Math.ceil(startBeat / snapTo) * snapTo;
 
-	const renderPrimaryLine = useCallback(
-		(beat: number, segmentIndex: number) => {
-			if (beat === 0) return null;
-			const subSegmentWidth = segmentWidth / snapDivision;
-			return <line key={beat} x1={segmentIndex * segmentWidth + beat * subSegmentWidth} y1={0} x2={segmentIndex * segmentWidth + beat * subSegmentWidth} y2={dimensions.height} stroke={token.var("colors.border.subtle")} strokeWidth={1} />;
-		},
-		[snapDivision, dimensions.height, segmentWidth],
-	);
+		for (let b = firstLine; b < endBeat; b += snapTo) {
+			const x = normalize(b, startBeat, endBeat, 0, dimensions.width);
+
+			const remainder = Math.abs(b % 1);
+			const isPrimary = remainder < 0.001 || Math.abs(remainder - 1) < 0.001;
+
+			lines.push({ key: b.toFixed(4), x, isPrimary });
+		}
+		return lines;
+	}, [startBeat, endBeat, snapTo, dimensions.width]);
 
 	return (
 		<Wrapper role="presentation" width={dimensions.width} height={dimensions.height}>
-			<For each={Array.from(range(numOfBeatsToShow))}>
-				{(beat, index) => (
-					<Fragment key={beat}>
-						{renderBeatLine(beat)}
-						<For each={Array.from(range(snapDivision))}>{(n) => renderPrimaryLine(n, index)}</For>
-					</Fragment>
-				)}
-			</For>
+			<For each={markers}>{({ key, x, isPrimary }) => <line key={key} x1={x} y1={isPrimary ? -6 : 0} x2={x} y2={dimensions.height} stroke={token.var(isPrimary ? "colors.border.default" : "colors.border.subtle")} strokeWidth={1} />}</For>
 		</Wrapper>
 	);
 }

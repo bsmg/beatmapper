@@ -1,8 +1,8 @@
 import { createAction, createSlice } from "@reduxjs/toolkit";
 
-import { SNAPPING_INCREMENT_VALUES } from "$/constants/editor.constants";
+import { HIGHEST_PRECISION } from "$/constants";
 import type { AppThunkApiConfig } from "$/store/types";
-import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
+import { createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { clamp } from "$/utils";
 import { leaveEditor, loadSongFile } from "./actions";
 
@@ -92,11 +92,24 @@ export const tick = createAction("tick", (args: { cursorPosition: number; lastBe
 	return { payload: { ...args } };
 });
 
+function calculateNextSnap(currentSnap: number, options: { delta: number }): number {
+	const nextSnap = options.delta > 0 ? currentSnap * 2 : currentSnap / 2;
+
+	if (options.delta < 0 && (currentSnap <= HIGHEST_PRECISION || nextSnap < HIGHEST_PRECISION)) {
+		return currentSnap;
+	}
+	return clamp(nextSnap, HIGHEST_PRECISION, 1);
+}
+
 export const incrementSnap = createThunk("incrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: 1 }, api);
+	const currentSnap = selectSnap(api.getState());
+	const nextSnap = calculateNextSnap(currentSnap, { delta: 1 });
+	return api.dispatch(updateSnap(nextSnap));
 });
 export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: -1 }, api);
+	const currentSnap = selectSnap(api.getState());
+	const nextSnap = calculateNextSnap(currentSnap, { delta: -1 });
+	return api.dispatch(updateSnap(nextSnap));
 });
 
 export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {

@@ -7,7 +7,6 @@ export const stat = defineSlotRecipe({
 		root: {
 			display: "flex",
 			flexDirection: "column",
-			alignItems: "center",
 			gap: 0,
 		},
 		label: {
@@ -25,8 +24,14 @@ export const stat = defineSlotRecipe({
 			sm: { label: { fontSize: "0.75rem" } },
 			md: { label: { fontSize: "1rem" } },
 		},
+		align: {
+			start: { root: { alignItems: "start" } },
+			center: { root: { alignItems: "center" } },
+			end: { root: { alignItems: "end" } },
+		},
 	},
 	defaultVariants: {
 		size: "sm",
+		align: "start",
 	},
 });
