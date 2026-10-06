@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { For } from "$/components/ui/atoms";
+import { normalize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
 import { flex } from "$:styled-system/patterns";
 import { useEventGridContext } from "./context";
@@ -9,7 +10,7 @@ interface Props {
 	onScrubHeader?: (details: { beat: number }) => void;
 }
 function EventGridTimeline({ onScrubHeader }: Props) {
-	const { pointer: selectedBeat, beatNums } = useEventGridContext();
+	const { pointer: selectedBeat, startBeat, endBeat, snapTo } = useEventGridContext();
 
 	const [isScrubbing, setIsScrubbing] = useState(false);
 	const lastActionDispatchedFor = useRef<number | null>(null);
@@ -37,12 +38,31 @@ function EventGridTimeline({ onScrubHeader }: Props) {
 		}
 	}, [onScrubHeader, selectedBeat, isScrubbing]);
 
+	const cells = useMemo(() => {
+		const cells: { key: string; left: number; width: number; beatNumber: number | null }[] = [];
+		const firstCell = Math.ceil(startBeat / snapTo) * snapTo;
+
+		for (let b = firstCell; b < endBeat; b += snapTo) {
+			const nextB = b + snapTo;
+			const left = normalize(b, startBeat, endBeat, 0, 100);
+			const right = normalize(nextB, startBeat, endBeat, 0, 100);
+			const width = right - left;
+
+			const remainder = Math.abs(b % 1);
+			const isPrimary = remainder < 0.001 || Math.abs(remainder - 1) < 0.001;
+			const beatNumber = isPrimary ? Math.round(b) : null;
+
+			cells.push({ key: b.toFixed(4), left, width, beatNumber });
+		}
+		return cells;
+	}, [startBeat, endBeat, snapTo]);
+
 	return (
 		<Header onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerMove={handlePointerMove}>
-			<For each={beatNums}>
-				{(num) => (
-					<HeaderCell key={num}>
-						<BeatNums>{num}</BeatNums>
+			<For each={cells}>
+				{({ key, left, width, beatNumber }) => (
+					<HeaderCell key={key} style={{ left: `${left}%`, width: `${width}%` }}>
+						{beatNumber !== null && <BeatNums>{beatNumber}</BeatNums>}
 					</HeaderCell>
 				)}
 			</For>
@@ -54,6 +74,7 @@ const Header = styled("div", {
 	base: {
 		position: "relative",
 		width: "100%",
+		height: "32px",
 		display: "flex",
 		cursor: "col-resize",
 	},
@@ -61,6 +82,8 @@ const Header = styled("div", {
 
 const HeaderCell = styled("div", {
 	base: flex.raw({
+		position: "absolute",
+		inset: 0,
 		align: "flex-end",
 		flex: 1,
 	}),
