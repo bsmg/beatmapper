@@ -1,5 +1,4 @@
-import { useListCollection } from "@ark-ui/react/collection";
-import { formatHotkey, useHotkey, useHotkeyRegistrations, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
+import { useHotkey, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
@@ -9,15 +8,15 @@ import { createAddBookmarkPrompt, createJumpToBeatPrompt, createQuickSelectPromp
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { NavigationPanel } from "$/components/app/layouts";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { Button, Select, Stat, usePrompt } from "$/components/ui/compositions";
-import { SNAPPING_INCREMENTS } from "$/constants";
+import { Button, Input, Stat, usePrompt } from "$/components/ui/compositions";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
 import { addBookmark, decrementSnap, incrementSnap, jumpBackwards, jumpForwards, jumpToBeat, jumpToEnd, jumpToStart, moveBackwards, moveForwards, selectAllEntitiesInRange, togglePlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectSnap } from "$/store/selectors";
-import { range, roundToNearest } from "$/utils";
+import { clamp, range, roundToNearest } from "$/utils";
+import { Text } from "$:styled-system/jsx";
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -46,37 +45,6 @@ function EditorNavigationControls() {
 		return formatCursorPositionInBeats(roundedCursorPosition);
 	});
 
-	const { collection: SNAPPING_INCREMENT_LIST_COLLECTION } = useListCollection({
-		initialItems: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
-		itemToValue: (item) => item.value,
-		itemToString: (item) => (item.shortcutKey ? `${item.label} (${formatHotkey(`Mod+${item.shortcutKey}`, { separator: "+" })})` : item.label),
-	});
-
-	const hotkeys = useHotkeyStore();
-
-	const scopes = useMemo(() => getHotkeyScopes("editor", "navigation"), []);
-	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
-	const enabled = useCallback(() => !isLoadingSong && hotkeys.getActiveScopes().includes("navigation"), [isLoadingSong, hotkeys.getActiveScopes]);
-
-	useHotkeys({
-		commands: Array.from(range(1, 9)).map((num) => {
-			const newSnappingIncrement = SNAPPING_INCREMENTS.find((increment) => increment.shortcutKey === num);
-			if (!newSnappingIncrement) throw new Error(`Invalid value supplied for snap interval: ${num}`);
-			return {
-				scopes,
-				category,
-				label: `Snap to ${newSnappingIncrement.label}`,
-				hotkey: `Mod+${num}`,
-				action: () => {
-					return dispatch(updateSnap(newSnappingIncrement.value));
-				},
-				options: {
-					preventDefault: true,
-				},
-			};
-		}),
-	});
-
 	const { trigger: triggerQuickSelect } = usePrompt(
 		createQuickSelectPrompt({
 			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
@@ -100,6 +68,13 @@ function EditorNavigationControls() {
 		}),
 	);
 
+	const hotkeys = useHotkeyStore();
+
+	const scopes = useMemo(() => getHotkeyScopes("editor", "navigation"), []);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	const enabled = useCallback(() => !isLoadingSong && hotkeys.getActiveScopes().includes("navigation"), [isLoadingSong, hotkeys.getActiveScopes]);
+
 	useHotkey({ scopes, category, enabled, label: "Toggle Playback", hotkey: "Space", action: () => dispatch(togglePlayback()), options: { requireReset: true } });
 
 	useHotkey({ scopes, category, enabled, label: "Move Cursor Forwards", hotkey: "ArrowUp", action: () => handleScroll("forwards") });
@@ -113,6 +88,12 @@ function EditorNavigationControls() {
 	useHotkey({ scopes, category, enabled, label: "Quick Select", hotkey: "Mod+F", action: () => triggerQuickSelect() });
 	useHotkey({ scopes, category, enabled, label: "Jump to Beat", hotkey: "Mod+G", action: () => triggerJumpToBeat() });
 	useHotkey({ scopes, category, enabled, label: "Add Bookmark", hotkey: "Mod+B", action: () => triggerAddBookmark() });
+
+	useHotkeys({
+		commands: Array.from(range(1, 9)).map((num) => {
+			return { scopes, category, label: `Snap to 1/${num}`, hotkey: `Mod+${num}`, action: () => dispatch(updateSnap(1 / num)), options: { preventDefault: true } };
+		}),
+	});
 
 	const isModKeyPressed = useIsKeyPressed({ hotkey: "Mod" });
 
@@ -139,10 +120,19 @@ function EditorNavigationControls() {
 		{ options: { passive: false } },
 	);
 
+	const getDenominator = useCallback((x: number) => 1 / x, []);
+
+	const inputStyles = useMemo(() => ({ maxWidth: `calc(8.5ch + ${String(getDenominator(snapTo)).length}ch)` }), [snapTo, getDenominator]);
+
 	return (
 		<NavigationPanel.Section>
 			<NavigationPanel.Column>
-				<Select label="Snap to" unfocusOnPress collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap(Number.parseFloat(ev.value[0])))} />
+				<Stat label="Snap to">
+					<Text>1</Text>
+					<Text>/</Text>
+					<Input unstyled style={inputStyles} type="number" min={1} max={32} step={"any"} value={getDenominator(snapTo)} onValueChange={(details) => dispatch(updateSnap(getDenominator(Number.isNaN(details.valueAsNumber) ? 1 : clamp(details.valueAsNumber, 1, 32))))} />
+					<Text style={{ pointerEvents: "none", marginInlineStart: `-7.5ch` }}>Beats</Text>
+				</Stat>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
 				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToStart())}>
@@ -162,8 +152,12 @@ function EditorNavigationControls() {
 				</Button>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
-				<Stat label="Time">{timeDisplayText}</Stat>
-				<Stat label="Beat">{beatDisplayText}</Stat>
+				<Stat label="Time" align="end">
+					{timeDisplayText}
+				</Stat>
+				<Stat label="Beat" align="end">
+					{beatDisplayText}
+				</Stat>
 			</NavigationPanel.Column>
 		</NavigationPanel.Section>
 	);
