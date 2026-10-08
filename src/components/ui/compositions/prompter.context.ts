@@ -1,3 +1,4 @@
+import type { UseDialogContext } from "@ark-ui/react/dialog";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { createContext, type ReactNode, useContext, useEffect, useId } from "react";
 
@@ -7,22 +8,30 @@ import type { useAppForm } from "./form";
 type AppFormApi<TFormData> = ReturnType<typeof useAppForm<TFormData, any, any, any, any, any, any, any, any, any, any, any>>;
 
 interface IPromptDetails<TInput, TOutput> {
-	title: string;
+	title?: string;
 	description?: string;
 	validate?: StandardSchemaV1<TInput, TOutput>;
 	defaultValues?: TInput;
 }
-interface IPromptHandlers<TInput, TOutput> {
-	render: (ctx: { form: AppFormApi<TInput> }) => ReactNode;
+
+interface IPromptHandlersWithSubmit<TInput, TOutput> {
+	render: (ctx: { dialog: UseDialogContext; form: AppFormApi<TInput> }) => ReactNode;
 	onSubmit: (ctx: { value: TOutput }) => void;
 }
+interface IPromptHandlersWithoutSubmit {
+	render: (ctx: { dialog: UseDialogContext }) => ReactNode;
+	onSubmit?: never;
+}
 
-export interface IPrompt<TInput = unknown, TOutput = TInput> extends IPromptDetails<TInput, TOutput>, IPromptHandlers<TInput, TOutput> {}
+export type IPrompt<TInput = unknown, TOutput = TInput> = IPromptDetails<TInput, TOutput> & (IPromptHandlersWithSubmit<TInput, TOutput> | IPromptHandlersWithoutSubmit);
 
 export function createPromptFactory<TInput = unknown, TOutput = TInput>(details: IPromptDetails<TInput, TOutput>) {
-	return (handlers: IPromptHandlers<TInput, TOutput>): IPrompt<TInput, TOutput> => {
+	function factory(handlers: IPromptHandlersWithSubmit<TInput, TOutput>): IPrompt<TInput, TOutput>;
+	function factory(handlers: IPromptHandlersWithoutSubmit): IPrompt<TInput, TOutput>;
+	function factory(handlers: IPromptHandlersWithSubmit<TInput, TOutput> | IPromptHandlersWithoutSubmit): IPrompt<TInput, TOutput> {
 		return { ...details, ...handlers };
-	};
+	}
+	return factory;
 }
 
 interface PrompterContextValue<TInput = unknown, TOutput = TInput> {

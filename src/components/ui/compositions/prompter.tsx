@@ -11,7 +11,7 @@ export function Prompter({ children }: PropsWithChildren) {
 	const [active, setActive] = useState<(IPrompt & { id: string }) | null>(null);
 	const [registry] = useState(() => new Map<string, IPrompt & { id: string }>());
 
-	const dialog = useDialog({ role: "dialog", modal: false });
+	const dialog = useDialog({ role: "dialog", modal: false, trapFocus: true });
 
 	const register = useCallback(
 		(state: IPrompt & { id: string }) => {
@@ -53,7 +53,15 @@ export function Prompter({ children }: PropsWithChildren) {
 	);
 }
 
-function Contents({ validate, defaultValues, render, onSubmit }: IPrompt) {
+function Contents(props: IPrompt) {
+	const dialog = useDialogContext();
+
+	if (!props.onSubmit) {
+		return props.render({ dialog });
+	}
+	return <FormContents {...props} />;
+}
+function FormContents({ validate, defaultValues, render, onSubmit }: IPrompt & { onSubmit: NonNullable<IPrompt["onSubmit"]> }) {
 	const dialog = useDialogContext();
 
 	const form = useAppForm({
@@ -87,7 +95,7 @@ function Contents({ validate, defaultValues, render, onSubmit }: IPrompt) {
 		<form.AppForm>
 			<form onSubmit={handleSubmit}>
 				<form.Root>
-					{render({ form })}
+					{render({ dialog, form })}
 					<HStack>
 						<form.Submit variant="subtle" size="md" colorPalette="green" stretch onClick={handleSubmit}>
 							Ok

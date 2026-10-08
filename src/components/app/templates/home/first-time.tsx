@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import { default as heroVideo } from "$/assets/videos/hero-video.mp4";
 import { default as demoFileUrl } from "$/assets/zip/demo-map.zip?url";
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
-import { Button, Dialog, Heading } from "$/components/ui/compositions";
+import { Button, Heading, usePrompt } from "$/components/ui/compositions";
 import { addSongFromFile } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
@@ -28,6 +28,17 @@ function FirstTimeHome() {
 		setIsLoadingDemo(false);
 	}, [dispatch, navigate]);
 
+	const { trigger: triggerCreate } = usePrompt({
+		title: "Create new map",
+		description: "Build a new map from scratch, using music from your computer",
+		render: (ctx) => <CreateMapForm dialog={ctx.dialog} />,
+	});
+	const { trigger: triggerImport } = usePrompt({
+		title: "Import existing map",
+		description: "Edit an existing map by selecting it from your computer",
+		render: (ctx) => <ImportMapForm dialog={ctx.dialog} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />,
+	});
+
 	return (
 		<VStack gap={8}>
 			<Title rank={1}>Beatmapper is a web-based level editor for Beat Saber™</Title>
@@ -43,18 +54,14 @@ function FirstTimeHome() {
 						</Button>
 					</OptionColumn>
 					<OptionColumn icon={CirclePlusIcon} title="Create new map" description="Build a new map from scratch, using music from your computer">
-						<Dialog title="Create new map" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
-							<Button variant="solid" size="md">
-								Create from scratch
-							</Button>
-						</Dialog>
+						<Button variant="solid" size="md" onClick={triggerCreate}>
+							Create from scratch
+						</Button>
 					</OptionColumn>
 					<OptionColumn icon={DownloadIcon} title="Import existing map" description="Edit an existing map by selecting it from your computer">
-						<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
-							<Button variant="solid" size="md">
-								Import map
-							</Button>
-						</Dialog>
+						<Button variant="solid" size="md" onClick={triggerImport}>
+							Import map
+						</Button>
 					</OptionColumn>
 				</Wrap>
 			</VStack>

@@ -5,7 +5,7 @@ import { Fragment } from "react";
 import PendingBoundary from "$/components/app/templates/pending-boundary";
 import { useToaster } from "$/components/context";
 import Devtools from "$/components/devtools";
-import { Toaster } from "$/components/ui/compositions";
+import { Prompter, Toaster } from "$/components/ui/compositions";
 import { useAppSelector } from "$/store/hooks";
 import { selectInitialized } from "$/store/selectors";
 
@@ -35,7 +35,9 @@ function RootComponent() {
 	return (
 		<Fragment>
 			<HeadContent />
-			<Outlet />
+			<Prompter>
+				<Outlet />
+			</Prompter>
 			<Toaster toaster={toaster} />
 			<Devtools position="top-right" triggerMode="fixed" hideUntilHover openHotkey={[`\``]} />
 		</Fragment>

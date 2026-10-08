@@ -1,6 +1,6 @@
 import { CreateMapForm, ImportMapForm } from "$/components/app/forms";
 import { SongsDataTable } from "$/components/app/templates/tables";
-import { Button, Dialog, Heading } from "$/components/ui/compositions";
+import { Button, Heading, usePrompt } from "$/components/ui/compositions";
 import { addSongFromFile } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSongIds } from "$/store/selectors";
@@ -11,6 +11,17 @@ function ReturningHome() {
 	const dispatch = useAppDispatch();
 	const songIds = useAppSelector(selectSongIds);
 
+	const { trigger: triggerCreate } = usePrompt({
+		title: "Create new map",
+		description: "Build a new map from scratch, using music from your computer",
+		render: (ctx) => <CreateMapForm dialog={ctx.dialog} />,
+	});
+	const { trigger: triggerImport } = usePrompt({
+		title: "Import existing map",
+		description: "Edit an existing map by selecting it from your computer",
+		render: (ctx) => <ImportMapForm dialog={ctx.dialog} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />,
+	});
+
 	return (
 		<Wrapper>
 			<Heading rank={1}>Select map to edit</Heading>
@@ -19,16 +30,12 @@ function ReturningHome() {
 					<SongsDataTable />
 				</MainColumn>
 				<SideColumn>
-					<Dialog title="Create new map" description="Build a new map from scratch, using music from your computer" unmountOnExit render={(ctx) => <CreateMapForm dialog={ctx} />}>
-						<Button variant="solid" size="md">
-							Create new map
-						</Button>
-					</Dialog>
-					<Dialog title="Import existing map" description="Edit an existing map by selecting it from your computer" unmountOnExit render={(ctx) => <ImportMapForm dialog={ctx} onAccept={(files) => files.forEach((file) => void dispatch(addSongFromFile({ file, options: { currentSongIds: songIds } })))} />}>
-						<Button variant="solid" size="md">
-							Import existing map
-						</Button>
-					</Dialog>
+					<Button variant="solid" size="md" onClick={triggerCreate}>
+						Create new map
+					</Button>
+					<Button variant="solid" size="md" onClick={triggerImport}>
+						Import existing map
+					</Button>
 				</SideColumn>
 			</Contents>
 		</Wrapper>

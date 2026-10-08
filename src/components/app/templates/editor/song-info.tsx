@@ -6,7 +6,7 @@ import { memo, useCallback, useMemo } from "react";
 
 import { CoverArtFile } from "$/components/app/compositions";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { Button, Dialog, Select } from "$/components/ui/compositions";
+import { Button, Select, usePrompt } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -46,6 +46,16 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 		[dispatch, navigate, sid, view],
 	);
 
+	const { trigger: triggerCreateBeatmap } = usePrompt({
+		title: "Create Beatmap",
+		description: "Add a new beatmap file to the mapset.",
+		render: (ctx) => (
+			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
+				{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
+			</CreateBeatmapForm>
+		),
+	});
+
 	return (
 		<OuterWrapper gap={1.5}>
 			<CoverArtFile filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} boxSize={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
@@ -61,21 +71,9 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 				{showDifficultySelector && (
 					<HStack gap={0.5}>
 						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
-						<Dialog
-							title="Create New Beatmap"
-							description="Add a new beatmap file to the mapset."
-							lazyMount
-							unmountOnExit
-							render={(ctx) => (
-								<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
-									{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
-								</CreateBeatmapForm>
-							)}
-						>
-							<Button variant="ghost" size="sm">
-								<PlusIcon size={16} />
-							</Button>
-						</Dialog>
+						<Button variant="ghost" size="sm" onClick={triggerCreateBeatmap}>
+							<PlusIcon size={16} />
+						</Button>
 					</HStack>
 				)}
 			</Stack>

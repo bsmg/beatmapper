@@ -7,7 +7,7 @@ import { useCallback } from "react";
 import { createAddColorSchemePrompt } from "$/components/app/constants";
 import { CreateBeatmapForm, UpdateSongForm } from "$/components/app/forms";
 import { Match, Switch } from "$/components/ui/atoms";
-import { Button, Dialog, Heading, Tabs, usePrompt } from "$/components/ui/compositions";
+import { Button, Heading, Tabs, usePrompt } from "$/components/ui/compositions";
 import { getColorSchemePresets } from "$/helpers/colors.helpers";
 import { addBeatmap, addColorScheme } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
@@ -30,6 +30,15 @@ function SongDetails() {
 		initialItems: Object.keys(getColorSchemePresets()),
 	});
 
+	const { trigger: triggerCreateBeatmap } = usePrompt({
+		title: "Create Beatmap",
+		description: "Add a new beatmap file to the mapset.",
+		render: (ctx) => (
+			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
+				{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
+			</CreateBeatmapForm>
+		),
+	});
 	const { trigger: triggerAddColorScheme } = usePrompt(
 		createAddColorSchemePrompt({
 			render: ({ form }) => (
@@ -53,21 +62,9 @@ function SongDetails() {
 					<Match when={item === "Beatmaps"}>
 						<HStack gap={2}>
 							<Heading rank={2}>Beatmaps</Heading>
-							<Dialog
-								title="Create New Beatmap"
-								description="Add a new beatmap file to the mapset."
-								lazyMount
-								unmountOnExit
-								render={(ctx) => (
-									<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
-										{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
-									</CreateBeatmapForm>
-								)}
-							>
-								<Button variant={"subtle"} size={"sm"}>
-									<PlusIcon size={16} />
-								</Button>
-							</Dialog>
+							<Button variant={"subtle"} size={"sm"} onClick={triggerCreateBeatmap}>
+								<PlusIcon size={16} />
+							</Button>
 						</HStack>
 						<BeatmapDetails />
 					</Match>
@@ -87,7 +84,7 @@ function SongDetails() {
 				</Stack>
 			</Switch>
 		),
-		[dispatch, sid, triggerAddColorScheme],
+		[triggerCreateBeatmap, triggerAddColorScheme],
 	);
 
 	return (
