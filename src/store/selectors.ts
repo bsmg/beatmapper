@@ -16,7 +16,7 @@ export {
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
 } from "./features/lightshow.slice";
-export { selectAnimateEnvironment, selectAnimateTrack, selectBeatDepth, selectCursorPosition, selectDuration, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume } from "./features/navigation.slice";
+export { selectAnimateEnvironment, selectAnimateTrack, selectBeatDepth, selectCursorPosition, selectDuration, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectWindowSize } from "./features/navigation.slice";
 export {
 	selectAllBombNotes,
 	selectAllColorNotes,
@@ -38,6 +38,7 @@ export {
 	selectTotalObstacles,
 } from "./features/objects.slice";
 export {
+	selectActiveWindowSize,
 	selectAllVisibleBombs,
 	selectAllVisibleNotes,
 	selectAllVisibleObstacles,

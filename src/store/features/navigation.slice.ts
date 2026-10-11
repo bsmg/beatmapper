@@ -11,6 +11,7 @@ const initialState = {
 	cursorPosition: 0,
 	duration: null as number | null,
 	snapTo: 0.5,
+	windowSize: 32,
 	beatDepth: 9,
 	animateBlockMotion: true,
 	animateRingMotion: true,
@@ -28,6 +29,7 @@ const slice = createSlice({
 		selectCursorPosition: (state) => state.cursorPosition,
 		selectDuration: (state) => state.duration,
 		selectSnap: (state) => state.snapTo,
+		selectWindowSize: (state) => state.windowSize,
 		selectBeatDepth: (state) => state.beatDepth,
 		selectAnimateTrack: (state) => state.animateBlockMotion,
 		selectAnimateEnvironment: (state) => state.animateRingMotion,
@@ -52,6 +54,9 @@ const slice = createSlice({
 			}),
 			updateSnap: api.reducer<number>((state, action) => {
 				return { ...state, snapTo: action.payload };
+			}),
+			updateWindowSize: api.reducer<number>((state, action) => {
+				return { ...state, windowSize: action.payload };
 			}),
 			updateTrackScale: api.reducer<number>((state, action) => {
 				return { ...state, beatDepth: action.payload };
@@ -84,9 +89,9 @@ const slice = createSlice({
 	},
 });
 
-export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectWindowSize, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
 
-export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap } = slice.actions;
+export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateWindowSize } = slice.actions;
 
 export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
 	return { payload: { ...args } };

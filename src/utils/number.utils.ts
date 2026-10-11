@@ -5,8 +5,8 @@ export function clamp(val: number, min = 0, max = 1) {
 export function roundTo(number: number, places = 0) {
 	return Math.round(number * 10 ** places) / 10 ** places;
 }
-export function roundToNearest(number: number, nearest: number) {
-	return Math.round(number / nearest) * nearest;
+export function roundToNearest(number: number, nearest: number, round = Math.round) {
+	return round(number / nearest) * nearest;
 }
 export function roundAwayFloatingPointNonsense(n: number) {
 	return roundToNearest(n, 1 / 1000000);

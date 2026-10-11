@@ -30,7 +30,7 @@ import {
 	updateEventsEditorWindowLock,
 } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel } from "$/store/selectors";
+import { selectActiveWindowSize, selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel, selectSnap } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
 import { HStack, styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
@@ -76,6 +76,8 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 	const isLockedToCurrentWindow = useAppSelector(selectEventsEditorWindowLock);
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 	const zoomLevel = useAppSelector(selectEventsEditorZoomLevel);
+	const snapTo = useAppSelector(selectSnap);
+	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
 
 	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ colorScheme }), [colorScheme]);
 	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ colorScheme, selectedColor }), [colorScheme, selectedColor]);
@@ -113,8 +115,11 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 	useHotkey({ scopes, category, label: "Copy Selection", hotkey: "Mod+C", action: () => dispatch(copySelection()) });
 	useHotkey({ scopes, category, label: "Paste Selection", hotkey: "Mod+V", action: () => dispatch(pasteSelection()) });
 
-	useHotkey({ scopes, category, label: "Nudge Selection Forwards", hotkey: "Alt+ArrowUp", action: () => dispatch(nudgeSelection({ direction: "forwards" })) });
-	useHotkey({ scopes, category, label: "Nudge Selection Backwards", hotkey: "Alt+ArrowDown", action: () => dispatch(nudgeSelection({ direction: "backwards" })) });
+	useHotkey({ scopes, category, label: "Nudge Selection Forwards", hotkey: "Alt+ArrowUp", action: () => dispatch(nudgeSelection({ direction: "forwards", amount: snapTo })) });
+	useHotkey({ scopes, category, label: "Nudge Selection Backwards", hotkey: "Alt+ArrowDown", action: () => dispatch(nudgeSelection({ direction: "backwards", amount: snapTo })) });
+
+	useHotkey({ scopes, category, label: "Nudge Selection to Next Window", hotkey: "Alt+PageUp", action: () => dispatch(nudgeSelection({ direction: "forwards", amount: windowSize })) });
+	useHotkey({ scopes, category, label: "Nudge Selection to Previous Window", hotkey: "Alt+PageDown", action: () => dispatch(nudgeSelection({ direction: "backwards", amount: windowSize })) });
 
 	useHotkey({ scopes, category, label: "Select All Objects", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
 	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
