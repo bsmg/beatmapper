@@ -58,6 +58,7 @@ export {
 	updateTickType,
 	updateTickVolume,
 	updateTrackScale,
+	updateWindowSize,
 } from "./features/navigation.slice";
 export {
 	addBombNote,
@@ -85,14 +86,12 @@ export {
 	upsertObjects,
 } from "./features/objects.slice";
 export {
-	jumpBackwards,
-	jumpForwards,
 	jumpToBeat,
-	jumpToEnd,
-	jumpToStart,
+	jumpToNextMarker,
+	jumpToNextWindow,
+	jumpToPrevMarker,
+	jumpToPrevWindow,
 	jumpToTime,
-	moveBackwards,
-	moveForwards,
 	togglePlayback,
 } from "./features/playback.thunks";
 export { addBeatmap, addColorScheme, addSong, addSongFromFile, copyBeatmap, removeBeatmap, removeColorScheme, removeSong, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSelectedBeatmap, updateSong, upsertSongs } from "./features/songs.slice";

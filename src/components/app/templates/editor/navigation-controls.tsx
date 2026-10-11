@@ -1,6 +1,6 @@
 import { useHotkey, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
 import { useCallback, useMemo } from "react";
 
@@ -12,19 +12,21 @@ import { Button, Input, Stat, usePrompt } from "$/components/ui/compositions";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
-import { addBookmark, decrementSnap, incrementSnap, jumpBackwards, jumpForwards, jumpToBeat, jumpToEnd, jumpToStart, moveBackwards, moveForwards, selectAllEntitiesInRange, togglePlayback, updateSnap } from "$/store/actions";
+import { addBookmark, decrementSnap, incrementSnap, jumpToBeat, jumpToNextMarker, jumpToNextWindow, jumpToPrevMarker, jumpToPrevWindow, selectAllEntitiesInRange, togglePlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectSnap } from "$/store/selectors";
+import { selectActiveWindowSize, selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectSnap } from "$/store/selectors";
 import { clamp, range, roundToNearest } from "$/utils";
 import { Text } from "$:styled-system/jsx";
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const isPlaying = useAppSelector(selectPlaying);
 	const isLoadingSong = useAppSelector(selectLoading);
 	const snapTo = useAppSelector(selectSnap);
+	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
@@ -77,13 +79,14 @@ function EditorNavigationControls() {
 
 	useHotkey({ scopes, category, enabled, label: "Toggle Playback", hotkey: "Space", action: () => dispatch(togglePlayback()), options: { requireReset: true } });
 
-	useHotkey({ scopes, category, enabled, label: "Move Cursor Forwards", hotkey: "ArrowUp", action: () => handleScroll("forwards") });
-	useHotkey({ scopes, category, enabled, label: "Move Cursor Backwards", hotkey: "ArrowDown", action: () => handleScroll("backwards") });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor Forwards", hotkey: "ArrowUp", action: () => dispatch(jumpToNextWindow({ windowSize: snapTo })) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor Backwards", hotkey: "ArrowDown", action: () => dispatch(jumpToPrevWindow({ windowSize: snapTo })) });
 
-	useHotkey({ scopes, category, enabled, label: "Jump to Next Window", hotkey: "PageUp", action: () => dispatch(jumpForwards()) });
-	useHotkey({ scopes, category, enabled, label: "Jump to Previous Window", hotkey: "PageDown", action: () => dispatch(jumpBackwards()) });
-	useHotkey({ scopes, category, enabled, label: "Jump to Start", hotkey: "Home", action: () => dispatch(jumpToStart()) });
-	useHotkey({ scopes, category, enabled, label: "Jump to End", hotkey: "End", action: () => dispatch(jumpToEnd()) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Next Window", hotkey: "PageUp", action: () => dispatch(jumpToNextWindow({ windowSize })) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Previous Window", hotkey: "PageDown", action: () => dispatch(jumpToPrevWindow({ windowSize })) });
+
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Next Marker", hotkey: "Home", action: () => dispatch(jumpToNextMarker()) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Previous Marker", hotkey: "End", action: () => dispatch(jumpToPrevMarker()) });
 
 	useHotkey({ scopes, category, enabled, label: "Quick Select", hotkey: "Mod+F", action: () => triggerQuickSelect() });
 	useHotkey({ scopes, category, enabled, label: "Jump to Beat", hotkey: "Mod+G", action: () => triggerJumpToBeat() });
@@ -106,7 +109,7 @@ function EditorNavigationControls() {
 				// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
 				return dispatch((direction === "forwards" ? decrementSnap : incrementSnap)());
 			}
-			dispatch((direction === "forwards" ? moveForwards : moveBackwards)());
+			dispatch((direction === "forwards" ? jumpToNextWindow : jumpToPrevWindow)({ windowSize: snapTo }));
 		},
 		{ enabled: enabled, wait: wait },
 	);
@@ -135,19 +138,19 @@ function EditorNavigationControls() {
 				</Stat>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToStart())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevMarker())}>
 					<SkipBackIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpBackwards())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
 					<RewindIcon />
 				</Button>
 				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(togglePlayback())}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpForwards())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
 					<FastForwardIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToEnd())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextMarker())}>
 					<SkipForwardIcon />
 				</Button>
 			</NavigationPanel.Column>

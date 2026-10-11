@@ -32,6 +32,7 @@ import {
 	updateTickVolume,
 	updateTrackScale,
 	updateUsername,
+	updateWindowSize,
 	upsertGridPresets,
 	upsertSongs,
 } from "$/store/actions";
@@ -64,6 +65,7 @@ import {
 	selectTickVolume,
 	selectUsername,
 	selectUserObstaclePlacementMode,
+	selectWindowSize,
 } from "$/store/selectors";
 import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
 import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./storage.enhancer";
@@ -179,6 +181,10 @@ export function createAppEnhancers() {
 				selectValue: selectUserObstaclePlacementMode,
 				hydrateValue: updateObstaclePlacementMode,
 			}),
+			"controls.window": {
+				selectValue: selectWindowSize,
+				hydrateValue: updateWindowSize,
+			},
 			"advanced.wait": {
 				selectValue: selectPacerWait,
 				hydrateValue: updatePacerWait,

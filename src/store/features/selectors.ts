@@ -14,7 +14,7 @@ import { selectNotesEditorTool } from "./beatmap.slice";
 import { selectAllBookmarks } from "./bookmarks.slice";
 import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
-import { selectCursorPosition, selectDuration } from "./navigation.slice";
+import { selectCursorPosition, selectDuration, selectWindowSize } from "./navigation.slice";
 import { selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
 import { selectBpm, selectEditorOffset, selectEventTracksForEnvironment, selectSongById } from "./songs.slice";
 import { selectTimescale } from "./timeline.slice";
@@ -74,6 +74,10 @@ export const selectGridSize = createAppSelector(selectNotesEditorTool, selectNot
 export const selectEventsEditorStartAndEndBeat = createSelector(selectCursorPositionInBeats, selectEventsEditorBeatsPerZoomLevel, (cursorPositionInBeats, beatsPerZoomLevel) => {
 	const startBeat = floorToNearest(cursorPositionInBeats ?? 0, beatsPerZoomLevel);
 	return { startBeat: startBeat, numOfBeatsToShow: beatsPerZoomLevel, endBeat: startBeat + beatsPerZoomLevel };
+});
+
+export const selectActiveWindowSize = createAppSelector([selectWindowSize, selectEventsEditorBeatsPerZoomLevel, (_1, view?: View) => view], (windowSize, beatsPerZoomLevel, view) => {
+	return view === View.LIGHTSHOW ? beatsPerZoomLevel : windowSize;
 });
 
 export const selectNoteDensity = createSelector(selectAllColorNotes, selectDuration, (notes, duration) => {
