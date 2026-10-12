@@ -2,7 +2,7 @@ import type { Assign } from "@ark-ui/react";
 import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useRef } from "react";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
@@ -33,33 +33,38 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 
 	const hotkeys = useHotkeyStore();
 
+	const activeTool = useRef<ObjectTool>(null);
+
 	const service = useMachine(PlacementGrid.machine, {
 		notePlacementMode,
 		obstaclePlacementMode,
 		grid,
 		cursorPositionInBeats,
-		shouldLockCursor: selectedTool !== ObjectTool.OBSTACLE,
-		onCellPointerDown: (ev, ctx) => {
+		selectedTool,
+		shouldLockCursor: (tool) => tool !== ObjectTool.OBSTACLE,
+		onCellPointerDown: (ev, ctx, { tool }) => {
 			if (selectionMode) return;
 
-			if (selectedTool !== ObjectTool.OBSTACLE) {
+			if (tool !== ObjectTool.OBSTACLE) {
 				hotkeys.removeScope("navigation");
 			}
 
-			return onCellPointerDown?.(ev, ctx);
+			activeTool.current = tool;
+
+			return onCellPointerDown?.(ev, ctx, { tool });
 		},
-		onPointerUp: (_, ctx) => {
+		onPointerUp: (_, ctx, { tool }) => {
 			if (selectionMode) return;
 
 			if (!hotkeys.getActiveScopes().includes("navigation")) {
 				hotkeys.addScope("navigation");
 			}
 
-			switch (selectedTool) {
+			switch (tool) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
 					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, {
-						color: Object.values(ObjectTool).indexOf(selectedTool) as 0 | 1,
+						color: Object.values(ObjectTool).indexOf(tool) as 0 | 1,
 						direction: Math.round(ctx.direction ?? selectedDirection),
 					});
 					if (note) return dispatch(addColorNote(note));
@@ -84,19 +89,19 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 		<PlacementGrid.Root {...rest} service={service}>
 			<PlacementGrid.Layout>{(cell) => <PlacementGrid.Cell key={`${cell.colIndex}-${cell.rowIndex}`} data={cell} layers={!selectionMode ? 1 : 2} />}</PlacementGrid.Layout>
 			<Switch>
-				<Match when={!selectionMode && (selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE)}>
+				<Match when={!selectionMode && (activeTool.current === ObjectTool.LEFT_NOTE || activeTool.current === ObjectTool.RIGHT_NOTE)}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createColorNoteFromMouseEvent(ctx, mode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) })}>
-						{(data) => <ColorNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
+						{(data) => activeTool.current && <ColorNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(activeTool.current, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
-				<Match when={!selectionMode && selectedTool === ObjectTool.BOMB_NOTE}>
+				<Match when={!selectionMode && activeTool.current === ObjectTool.BOMB_NOTE}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createBombNoteFromMouseEvent(ctx, mode, grid)}>
-						{(data) => <BombNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
+						{(data) => activeTool.current && <BombNote data={data} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(activeTool.current, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
-				<Match when={!selectionMode && selectedTool === ObjectTool.OBSTACLE}>
+				<Match when={!selectionMode && activeTool.current === ObjectTool.OBSTACLE}>
 					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid)}>
-						{(data) => <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(selectedTool, { colorScheme })} />}
+						{(data) => activeTool.current && <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(activeTool.current, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 			</Switch>
