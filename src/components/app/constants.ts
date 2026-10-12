@@ -2,7 +2,7 @@ import { createListCollection } from "@ark-ui/react/collection";
 import type { FileMimeType } from "@zag-js/file-utils";
 import { CharacteristicName, CharacteristicRename, DifficultyName, DifficultyRename, EnvironmentName, is360Environment, isV2Environment, isV3Environment } from "bsmap";
 import { EnvironmentRename } from "bsmap/environment";
-import { nonEmpty, null_, number, object, pipe, regex, string, union } from "valibot";
+import { nonEmpty, null_, object, pipe, string, union } from "valibot";
 
 import { createPromptFactory } from "$/components/ui/compositions";
 import type { App } from "$/types";
@@ -60,32 +60,6 @@ export function createBeatmapDifficultyListCollection({ beatmaps, characteristic
 		},
 	});
 }
-
-export const createQuickSelectPrompt = createPromptFactory({
-	title: "Quick Select",
-	description: "Select all objects within the provided range of beats.",
-	defaultValues: { range: "" },
-	validate: object({
-		range: pipe(
-			string(),
-			regex(/^[+-]?\d+(?:\.\d+)?(-\d+(?:\.\d+)?)?$/, (issue) => `Invalid format: Expected a range ("3-6") or delta ("+3", "-3") but received "${issue.input}"`),
-		),
-	}),
-});
-
-export const createJumpToBeatPrompt = createPromptFactory({
-	title: "Jump to Beat",
-	description: "Move the cursor to the provided beat number.",
-	defaultValues: { beatNum: 0 },
-	validate: object({ beatNum: number() }),
-});
-
-export const createAddBookmarkPrompt = createPromptFactory({
-	title: "Add Bookmark",
-	description: "Create a new bookmark at the current beat.",
-	defaultValues: { name: "" },
-	validate: object({ name: pipe(string(), nonEmpty()) }),
-});
 
 export const createAddColorSchemePrompt = createPromptFactory({
 	title: "Add Color Scheme",
