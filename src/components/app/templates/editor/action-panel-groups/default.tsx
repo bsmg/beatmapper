@@ -2,15 +2,13 @@ import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { type MouseEventHandler, useMemo } from "react";
 
-import { createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
-import { Button, Tooltip, usePrompt } from "$/components/ui/compositions";
-import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
-import { copySelection, cutSelection, jumpToBeat, pasteSelection, redoObjects, selectAllEntitiesInRange, toggleSelectAllEntities, undoObjects } from "$/store/actions";
+import { Button, Tooltip } from "$/components/ui/compositions";
+import { copySelection, cutSelection, pasteSelection, redoObjects, toggleSelectAllEntities, undoObjects } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAnySelectedObjects, selectClipboardHasObjects, selectCursorPositionInBeats, selectModuleEnabled, selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
+import { selectAnySelectedObjects, selectClipboardHasObjects, selectModuleEnabled, selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
 
 interface Props {
 	handleGridConfigClick?: MouseEventHandler;
@@ -24,25 +22,7 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	const canRedo = useAppSelector(selectObjectsCanRedo);
 	const isAnythingSelected = useAppSelector(selectAnySelectedObjects);
 	const hasCopiedNotes = useAppSelector(selectClipboardHasObjects);
-	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const mappingExtensionsEnabled = useAppSelector((state) => selectModuleEnabled(state, sid, "mappingExtensions"));
-
-	const { trigger: triggerQuickSelect } = usePrompt(
-		createQuickSelectPrompt({
-			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
-			onSubmit: ({ value: { range } }) => {
-				const [startBeat, endBeat] = calculateQuickSelectRange(range, cursorPositionInBeats, 0.01);
-				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
-				dispatch(jumpToBeat({ value: startBeat }));
-			},
-		}),
-	);
-	const { trigger: triggerJumpToBeat } = usePrompt(
-		createJumpToBeatPrompt({
-			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
-			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
-		}),
-	);
 
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
@@ -80,16 +60,6 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 				</Button>
 			</ActionPanelGroup.ActionGroup>
 			<ActionPanelGroup.ActionGroup>
-				<Tooltip render={() => "Select everything over a time period"}>
-					<Button variant="subtle" size="sm" unfocusOnPress onClick={triggerQuickSelect}>
-						Quick-select
-					</Button>
-				</Tooltip>
-				<Tooltip render={() => "Jump to a specific beat number"}>
-					<Button variant="subtle" size="sm" unfocusOnPress onClick={triggerJumpToBeat}>
-						Jump to Beat
-					</Button>
-				</Tooltip>
 				<Show when={mappingExtensionsEnabled}>
 					<Tooltip render={() => "Change the number of columns/rows"}>
 						<Button variant="subtle" size="sm" unfocusOnPress onClick={handleGridConfigClick}>
