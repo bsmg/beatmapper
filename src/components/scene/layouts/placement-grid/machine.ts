@@ -2,7 +2,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { createMachine, type MachineSchema, type Service } from "@zag-js/core";
 
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
-import { type IGrid, type IGridCell, NotePlacementMode, type ObstaclePlacementMode } from "$/types";
+import { type IGrid, type IGridCell, NotePlacementMode, type ObjectTool, type ObstaclePlacementMode } from "$/types";
 import type { ThreeProps } from "$/types/vendor";
 import { isModKeyPressed } from "$/utils";
 import { resolveNoteDirectionForPlacementMode } from "./direction.helpers";
@@ -21,14 +21,16 @@ export interface PlacementGridSchema extends MachineSchema {
 		obstaclePlacementMode: ObstaclePlacementMode;
 		grid: IGrid;
 		cursorPositionInBeats: number;
-		shouldLockCursor: boolean;
-		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "direction" | "time" | "duration">) => void;
-		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "cellDownAt" | "time" | "duration">) => void;
+		selectedTool: ObjectTool;
+		shouldLockCursor: (tool: ObjectTool | null) => boolean;
+		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "direction" | "time" | "duration">, cached: { tool: ObjectTool | null }) => void;
+		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "cellDownAt" | "time" | "duration">, cached: { tool: ObjectTool | null }) => void;
 		onCellWheel?: (event: ThreeEvent<WheelEvent>, payload: Pick<IPlacementContext, "cellOverAt">) => void;
 	};
 	refs: {
 		mouseDownAt: { x: number; y: number; button: number } | null;
 		anchorBeat: number | null;
+		activeTool: ObjectTool | null;
 	};
 	context: IPlacementContext & {
 		hoveredCell: IGridCell | null;
@@ -48,6 +50,7 @@ export const machine = createMachine<PlacementGridSchema>({
 	refs: () => ({
 		mouseDownAt: null,
 		anchorBeat: null,
+		activeTool: null,
 	}),
 	context: ({ bindable }) => ({
 		cellDownAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
@@ -101,6 +104,9 @@ export const machine = createMachine<PlacementGridSchema>({
 		actions: {
 			handlePointerDown: ({ context, refs, prop, event }) => {
 				const { event: pointerEvent, currentCell } = event;
+
+				refs.set("activeTool", prop("selectedTool"));
+
 				refs.set("mouseDownAt", { x: pointerEvent.pageX, y: pointerEvent.pageY, button: pointerEvent.button });
 				context.set("cellDownAt", currentCell);
 
@@ -109,11 +115,15 @@ export const machine = createMachine<PlacementGridSchema>({
 				context.set("time", currentBeat);
 				context.set("duration", null);
 
-				prop("onCellPointerDown")?.(pointerEvent, {
-					cellDownAt: currentCell,
-					time: context.get("time"),
-					duration: context.get("duration"),
-				});
+				prop("onCellPointerDown")?.(
+					pointerEvent,
+					{
+						cellDownAt: currentCell,
+						time: context.get("time"),
+						duration: context.get("duration"),
+					},
+					{ tool: refs.get("activeTool") },
+				);
 			},
 			handlePointerOver: ({ context, event }) => {
 				context.set("cellOverAt", event.currentCell);
@@ -134,7 +144,7 @@ export const machine = createMachine<PlacementGridSchema>({
 			handlePointerMoveDragging: ({ context, refs, prop, event }) => {
 				const pointerEvent = event.event;
 				const anchorBeat = refs.get("anchorBeat");
-				const shouldLockCursor = prop("shouldLockCursor");
+				const shouldLockCursor = prop("shouldLockCursor")(refs.get("activeTool"));
 
 				if (anchorBeat !== null) {
 					if (!shouldLockCursor) {
@@ -161,7 +171,7 @@ export const machine = createMachine<PlacementGridSchema>({
 			handlePointerUp: ({ context, refs, prop, event }) => {
 				const pointerEvent = event.event;
 				const anchorBeat = refs.get("anchorBeat");
-				const shouldLockCursor = prop("shouldLockCursor");
+				const shouldLockCursor = prop("shouldLockCursor")(refs.get("activeTool"));
 
 				if (anchorBeat !== null) {
 					if (!shouldLockCursor) {
@@ -176,17 +186,22 @@ export const machine = createMachine<PlacementGridSchema>({
 
 				const currentMouseDownAt = refs.get("mouseDownAt");
 				if (currentMouseDownAt) {
-					prop("onPointerUp")?.(pointerEvent, {
-						cellDownAt: context.get("cellDownAt"),
-						cellOverAt: context.get("cellOverAt"),
-						direction: context.get("direction"),
-						duration: context.get("duration"),
-						time: context.get("time"),
-					});
+					prop("onPointerUp")?.(
+						pointerEvent,
+						{
+							cellDownAt: context.get("cellDownAt"),
+							cellOverAt: context.get("cellOverAt"),
+							direction: context.get("direction"),
+							duration: context.get("duration"),
+							time: context.get("time"),
+						},
+						{ tool: refs.get("activeTool") },
+					);
 				}
 
 				refs.set("mouseDownAt", null);
 				refs.set("anchorBeat", null);
+				refs.set("activeTool", null);
 				context.set("cellDownAt", null);
 				context.set("direction", null);
 				context.set("duration", null);
@@ -223,8 +238,9 @@ export function connect({ prop, context, refs, send }: Service<PlacementGridSche
 		updateAnchoredValues: () => {
 			const anchorBeat = refs.get("anchorBeat");
 			if (anchorBeat === null) return;
+			const shouldLockCursor = prop("shouldLockCursor")(refs.get("activeTool"));
 
-			if (!prop("shouldLockCursor")) {
+			if (!shouldLockCursor) {
 				const currentBeat = prop("cursorPositionInBeats");
 				context.set("time", Math.min(anchorBeat, currentBeat));
 				context.set("duration", Math.abs(currentBeat - anchorBeat));
