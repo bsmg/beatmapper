@@ -7,7 +7,7 @@ import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip } from "$/components/ui/compositions";
-import { deselectAllEntities, deselectAllObjectsOfType, mirrorSelection, nudgeSelection, removeAllSelectedObjects, toggleSelectAllEntities } from "$/store/actions";
+import { deselectAllEntities, deselectAllObjectsOfType, mirrorSelection, nudgeSelection, removeAllSelectedObjects } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveWindowSize, selectSelectedBeatmapEntities, selectSnap } from "$/store/selectors";
 import { ObjectType } from "$/types";
@@ -51,7 +51,6 @@ function SelectionActionPanelGroup() {
 	useHotkey({ scopes, category, label: "Nudge Selection to Next Window", hotkey: "Alt+PageUp", action: () => dispatch(nudgeSelection({ direction: "forwards", amount: windowSize })) });
 	useHotkey({ scopes, category, label: "Nudge Selection to Previous Window", hotkey: "Alt+PageDown", action: () => dispatch(nudgeSelection({ direction: "backwards", amount: windowSize })) });
 
-	useHotkey({ scopes, category, label: "Select All Objects", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
 	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
 	useHotkey({ scopes, category, label: "Delete Selection", hotkey: "Delete", action: () => dispatch(removeAllSelectedObjects()) });
 

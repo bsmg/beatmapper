@@ -2,7 +2,7 @@ import type { Assign } from "@ark-ui/react";
 import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
-import { type ComponentProps, useMemo } from "react";
+import type { ComponentProps } from "react";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
@@ -14,7 +14,7 @@ import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/h
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectSnap } from "$/store/selectors";
+import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {

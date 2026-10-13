@@ -8,7 +8,7 @@ import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip, usePrompt } from "$/components/ui/compositions";
 import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
-import { copySelection, cutSelection, jumpToBeat, pasteSelection, redoObjects, selectAllEntitiesInRange, undoObjects } from "$/store/actions";
+import { copySelection, cutSelection, jumpToBeat, pasteSelection, redoObjects, selectAllEntitiesInRange, toggleSelectAllEntities, undoObjects } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAnySelectedObjects, selectClipboardHasObjects, selectCursorPositionInBeats, selectModuleEnabled, selectObjectsCanRedo, selectObjectsCanUndo } from "$/store/selectors";
 
@@ -55,6 +55,8 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	useHotkey({ scopes, category, label: "Cut Selection", hotkey: "Mod+X", action: () => dispatch(cutSelection()) });
 	useHotkey({ scopes, category, label: "Copy Selection", hotkey: "Mod+C", action: () => dispatch(copySelection()) });
 	useHotkey({ scopes, category, label: "Paste Selection", hotkey: "Mod+V", action: () => dispatch(pasteSelection()) });
+
+	useHotkey({ scopes, category, label: "Select All Objects", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
 
 	return (
 		<ActionPanelGroup.Root label="Actions">

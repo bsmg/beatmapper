@@ -262,7 +262,6 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 				onPointerDown: (e) => e.stopPropagation(),
 				onPointerMove: (e) => e.stopPropagation(),
 				onPointerUp: (e) => e.stopPropagation(),
-				onWheel: (e) => e.stopPropagation(),
 				onContextMenu: (e) => e.stopPropagation(),
 			});
 		},
