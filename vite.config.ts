@@ -66,10 +66,7 @@ export const VITE_PWA_OPTIONS: Partial<VitePWAOptions> = {
 
 export const TANSTACK_DEVTOOLS_OPTIONS: TanStackDevtoolsViteConfig = {
 	injectSource: {
-		enabled: true,
-		ignore: {
-			files: ["node_modules", /.*\.test\.(js|ts|jsx|tsx)$/, "src/components/scene/**/*.tsx", "src/components/app/logo.tsx"],
-		},
+		enabled: false,
 	},
 };
 
