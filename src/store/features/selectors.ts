@@ -51,15 +51,22 @@ export const selectObstaclePlacementMode = createAppSelector(selectSongById, sel
 	return userPlacementMode;
 });
 
-export const selectGridSize = createAppSelector(selectSongById, selectNotesEditorTool, selectObstaclePlacementMode, (song, tool, obstaclePlacementMode) => {
+export const selectNoteGridSize = createAppSelector(selectSongById, (song) => {
+	return getGridSize(song);
+});
+export const selectObstacleGridSize = createAppSelector(selectSongById, selectObstaclePlacementMode, (song, obstaclePlacementMode) => {
+	const visualGridSize = { ...DEFAULT_GRID, numCols: 8, numRows: 5, rowOffset: -0.5 };
+	if (obstaclePlacementMode === ObstaclePlacementMode.VISUAL) return getGridSize(song, visualGridSize);
+	return getGridSize(song);
+});
+
+export const selectGridSize = createAppSelector(selectNotesEditorTool, selectNoteGridSize, selectObstacleGridSize, (tool, noteGrid, obstacleGrid) => {
 	switch (tool) {
 		case ObjectTool.OBSTACLE: {
-			const visualGridSize = { ...DEFAULT_GRID, numCols: 8, numRows: 5, rowOffset: -0.5 };
-			if (obstaclePlacementMode === ObstaclePlacementMode.VISUAL) return getGridSize(song, visualGridSize);
-			return getGridSize(song);
+			return obstacleGrid;
 		}
 		default: {
-			return getGridSize(song);
+			return noteGrid;
 		}
 	}
 });
