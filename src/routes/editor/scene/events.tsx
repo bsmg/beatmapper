@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useMemo } from "react";
 
 import { EventGridControls, EventGridEditor } from "$/components/app/templates/events";
-import { EventsEditorShortcuts } from "$/components/app/templates/shortcuts";
 import { ReduxForwardingCanvas } from "$/components/scene/atoms";
 import { Controls } from "$/components/scene/templates/controls";
 import DefaultEnvironment from "$/components/scene/templates/environment";
@@ -36,7 +35,6 @@ function RouteComponent() {
 			<Wrapper>
 				<EventGridControls style={bgStyle} />
 				<EventGridEditor style={bgStyle} />
-				<EventsEditorShortcuts />
 			</Wrapper>
 		</Fragment>
 	);

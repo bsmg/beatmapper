@@ -1,13 +1,34 @@
 import { createListCollection } from "@ark-ui/react/collection";
-import { useParams } from "@tanstack/react-router";
+import { useHotkey } from "@ark-ui/react/hotkeys";
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { LockIcon, RepeatIcon, SquareDashedIcon, SquarePlusIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { type ComponentProps, type CSSProperties, useMemo } from "react";
 
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { EventEffectIcon } from "$/components/icons";
 import { Button, Field, Toggle, ToggleGroup, Tooltip } from "$/components/ui/compositions";
 import { ZOOM_LEVEL_MAX, ZOOM_LEVEL_MIN } from "$/constants";
 import type { ColorResolverOptions } from "$/helpers/colors.helpers";
-import { decrementEventsEditorZoomLevel, incrementEventsEditorZoomLevel, updateEventsEditorColor, updateEventsEditorEditMode, updateEventsEditorMirrorLock, updateEventsEditorTool, updateEventsEditorWindowLock } from "$/store/actions";
+import {
+	copySelection,
+	cutSelection,
+	cycleToNextTool,
+	cycleToPrevTool,
+	decrementEventsEditorZoomLevel,
+	deselectAllEntities,
+	incrementEventsEditorZoomLevel,
+	nudgeSelection,
+	pasteSelection,
+	redoEvents,
+	removeAllSelectedEvents,
+	toggleSelectAllEntities,
+	undoEvents,
+	updateEventsEditorColor,
+	updateEventsEditorEditMode,
+	updateEventsEditorMirrorLock,
+	updateEventsEditorTool,
+	updateEventsEditorWindowLock,
+} from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectEventsEditorColor, selectEventsEditorEditMode, selectEventsEditorMirrorLock, selectEventsEditorTool, selectEventsEditorWindowLock, selectEventsEditorZoomLevel } from "$/store/selectors";
 import { EventColor, EventEditMode, EventTool } from "$/types";
@@ -45,6 +66,7 @@ function createEventEffectListCollection({ selectedColor, colorScheme }: ColorRe
 
 function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ strict: false });
 
 	const dispatch = useAppDispatch();
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
@@ -57,6 +79,45 @@ function EventGridControls({ ...rest }: ComponentProps<typeof Wrapper>) {
 
 	const COLOR_LIST_COLLECTION = useMemo(() => createEventColorListCollection({ colorScheme }), [colorScheme]);
 	const EFFECT_LIST_COLLECTION = useMemo(() => createEventEffectListCollection({ colorScheme, selectedColor }), [colorScheme, selectedColor]);
+
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Toggle Place Mode", hotkey: "A", action: () => dispatch(updateEventsEditorEditMode(EventEditMode.PLACE)) });
+	useHotkey({ scopes, category, label: "Toggle Select Mode", hotkey: "S", action: () => dispatch(updateEventsEditorEditMode(EventEditMode.SELECT)) });
+
+	useHotkey({ scopes, category, label: "Pick Primary Color", hotkey: "R", action: () => dispatch(updateEventsEditorColor(EventColor.PRIMARY)) });
+	useHotkey({ scopes, category, label: "Pick Secondary Color", hotkey: "B", action: () => dispatch(updateEventsEditorColor(EventColor.SECONDARY)) });
+	useHotkey({ scopes, category, label: "Pick White Color", hotkey: "W", action: () => dispatch(updateEventsEditorColor(EventColor.WHITE)) });
+
+	useHotkey({ scopes, category, label: "Pick On Effect", hotkey: "1", action: () => dispatch(updateEventsEditorTool(EventTool.ON)) });
+	useHotkey({ scopes, category, label: "Pick Off Effect", hotkey: "2", action: () => dispatch(updateEventsEditorTool(EventTool.OFF)) });
+	useHotkey({ scopes, category, label: "Pick Flash Effect", hotkey: "3", action: () => dispatch(updateEventsEditorTool(EventTool.FLASH)) });
+	useHotkey({ scopes, category, label: "Pick Fade Effect", hotkey: "4", action: () => dispatch(updateEventsEditorTool(EventTool.FADE)) });
+	useHotkey({ scopes, category, label: "Pick Transition Effect", hotkey: "5", action: () => dispatch(updateEventsEditorTool(EventTool.TRANSITION)) });
+
+	useHotkey({ scopes, category, label: "Cycle to Next Effect", hotkey: "Tab", action: () => dispatch(cycleToNextTool()) });
+	useHotkey({ scopes, category, label: "Cycle to Previous Effect", hotkey: "Shift+Tab", action: () => dispatch(cycleToPrevTool()) });
+
+	useHotkey({ scopes, category, label: "Toggle Window Lock", hotkey: "Z", action: () => dispatch(updateEventsEditorWindowLock()) });
+	useHotkey({ scopes, category, label: "Toggle Mirror Lock", hotkey: "X", action: () => dispatch(updateEventsEditorMirrorLock()) });
+
+	useHotkey({ scopes, category, label: "Decrement Zoom Level", hotkey: "-", action: () => dispatch(decrementEventsEditorZoomLevel()) });
+	useHotkey({ scopes, category, label: "Increment Zoom Level", hotkey: "=", action: () => dispatch(incrementEventsEditorZoomLevel()) });
+
+	useHotkey({ scopes, category, label: "Cut Selection", hotkey: "Mod+X", action: () => dispatch(cutSelection()) });
+	useHotkey({ scopes, category, label: "Copy Selection", hotkey: "Mod+C", action: () => dispatch(copySelection()) });
+	useHotkey({ scopes, category, label: "Paste Selection", hotkey: "Mod+V", action: () => dispatch(pasteSelection()) });
+
+	useHotkey({ scopes, category, label: "Nudge Selection Forwards", hotkey: "Alt+ArrowUp", action: () => dispatch(nudgeSelection({ direction: "forwards" })) });
+	useHotkey({ scopes, category, label: "Nudge Selection Backwards", hotkey: "Alt+ArrowDown", action: () => dispatch(nudgeSelection({ direction: "backwards" })) });
+
+	useHotkey({ scopes, category, label: "Select All Objects", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
+	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
+	useHotkey({ scopes, category, label: "Delete Selection", hotkey: "Delete", action: () => dispatch(removeAllSelectedEvents()) });
+
+	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoEvents()) });
+	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoEvents()) });
 
 	return (
 		<Wrapper {...rest}>
