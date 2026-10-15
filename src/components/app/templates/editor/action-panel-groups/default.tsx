@@ -1,7 +1,9 @@
-import { useParams } from "@tanstack/react-router";
-import type { MouseEventHandler } from "react";
+import { useHotkey } from "@ark-ui/react/hotkeys";
+import { useParams, useRouteContext } from "@tanstack/react-router";
+import { type MouseEventHandler, useMemo } from "react";
 
 import { createJumpToBeatPrompt, createQuickSelectPrompt } from "$/components/app/constants";
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip, usePrompt } from "$/components/ui/compositions";
@@ -15,6 +17,7 @@ interface Props {
 }
 function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_/_scene/notes" });
 
 	const dispatch = useAppDispatch();
 	const canUndo = useAppSelector(selectObjectsCanUndo);
@@ -40,6 +43,16 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
 		}),
 	);
+
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Undo History Step", hotkey: "Mod+Z", action: () => dispatch(undoObjects()) });
+	useHotkey({ scopes, category, label: "Redo History Step", hotkey: "Mod+Shift+Z", action: () => dispatch(redoObjects()) });
+
+	useHotkey({ scopes, category, label: "Cut Selection", hotkey: "Mod+X", action: () => dispatch(cutSelection()) });
+	useHotkey({ scopes, category, label: "Copy Selection", hotkey: "Mod+C", action: () => dispatch(copySelection()) });
+	useHotkey({ scopes, category, label: "Paste Selection", hotkey: "Mod+V", action: () => dispatch(pasteSelection()) });
 
 	return (
 		<ActionPanelGroup.Root label="Actions">

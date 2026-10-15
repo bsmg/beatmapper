@@ -1,11 +1,13 @@
+import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
 import { ArrowDownToLineIcon, ArrowUpToLineIcon, FlipHorizontal2Icon, FlipVertical2Icon } from "lucide-react";
 import { type MouseEventHandler, useMemo } from "react";
 
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
 import { Button, Tooltip } from "$/components/ui/compositions";
-import { deselectAllEntities, deselectAllObjectsOfType, mirrorSelection, nudgeSelection } from "$/store/actions";
+import { deselectAllEntities, deselectAllObjectsOfType, mirrorSelection, nudgeSelection, removeAllSelectedObjects, toggleSelectAllEntities } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectSelectedBeatmapEntities } from "$/store/selectors";
 import { ObjectType } from "$/types";
@@ -34,6 +36,19 @@ function SelectionActionPanelGroup() {
 
 	const dispatch = useAppDispatch();
 	const selectedEntities = useAppSelector((state) => selectSelectedBeatmapEntities(state, view));
+
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Mirror Selection Horizontally", hotkey: "H", action: () => dispatch(mirrorSelection({ axis: "horizontal" })) });
+	useHotkey({ scopes, category, label: "Mirror Selection Vertically", hotkey: "V", action: () => dispatch(mirrorSelection({ axis: "vertical" })) });
+
+	useHotkey({ scopes, category, label: "Nudge Selection Forwards", hotkey: "Alt+ArrowUp", action: () => dispatch(nudgeSelection({ direction: "forwards" })) });
+	useHotkey({ scopes, category, label: "Nudge Selection Backwards", hotkey: "Alt+ArrowDown", action: () => dispatch(nudgeSelection({ direction: "backwards" })) });
+
+	useHotkey({ scopes, category, label: "Select All Objects", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
+	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
+	useHotkey({ scopes, category, label: "Delete Selection", hotkey: "Delete", action: () => dispatch(removeAllSelectedObjects()) });
 
 	return (
 		<ActionPanelGroup.Root label="Selection">

@@ -2,7 +2,7 @@ import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-import { getHotkeyScopes } from "$/components/app/helpers";
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanel } from "$/components/app/layouts";
 import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { Match, Switch } from "$/components/ui/atoms";
@@ -30,7 +30,10 @@ function EditorActionPanel() {
 		}
 	}, [selectedBlocks.length + selectedMines.length + selectedObstacles.length]);
 
-	useHotkey({ hotkey: "G", scopes: getHotkeyScopes(view), enabled: () => isMappingExtensionsEnabled, action: () => setShowGridConfig((currentVal) => !currentVal) });
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Customize Grid (Mapping Extensions)", hotkey: "G", enabled: () => isMappingExtensionsEnabled, action: () => setShowGridConfig((currentVal) => !currentVal) });
 
 	return (
 		<ActionPanel.Root>
