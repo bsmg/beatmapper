@@ -3,12 +3,12 @@ import { createToaster } from "@ark-ui/react/toast";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
-import { forwardRef, useEffect } from "react";
+import { Fragment, forwardRef, useEffect } from "react";
 
 import { AppStore } from "$/_setup";
 import { EditorSidebar } from "$/components/app/templates/editor";
 import { MDX } from "$/components/ui/atoms";
-import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/compositions";
+import { AnchorLink, List, Shortcut, Toaster } from "$/components/ui/compositions";
 import { leaveEditor, startLoadingMap, updateAnnouncements, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
@@ -124,13 +124,13 @@ function RouteComponent() {
 	});
 
 	return (
-		<Prompter>
+		<Fragment>
 			<EditorSidebar />
 			<Wrapper>
 				<Outlet />
 			</Wrapper>
 			<Toaster toaster={EDITOR_TOASTER} />
-		</Prompter>
+		</Fragment>
 	);
 }
 

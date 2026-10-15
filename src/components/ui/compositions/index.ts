@@ -6,7 +6,7 @@ export { Clipboard } from "./clipboard";
 export { Collapsible } from "./collapsible";
 export { ColorPicker } from "./color-picker";
 export { Combobox } from "./combobox";
-export { AlertDialogProvider, Dialog, DialogProvider } from "./dialog";
+export { Dialog, DialogProvider } from "./dialog";
 export { Field } from "./field";
 export { FileUpload } from "./file-upload";
 export { useAppForm } from "./form";

@@ -1,17 +1,16 @@
 import { createListCollection } from "@ark-ui/react/collection";
-import { useDialog } from "@ark-ui/react/dialog";
 import { useSelector as useFormSelector } from "@tanstack/react-form";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename, type EnvironmentName, EnvironmentSchemeName, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { array, endsWith, type GenericSchema, gtValue, null_, number, object, pipe, string, transform, union } from "valibot";
 
 import { ENVIRONMENT_OVERRIDE_COLLECTION } from "$/components/app/constants";
 import { CreateBeatmapForm } from "$/components/app/forms";
 import { useToaster } from "$/components/context";
 import { Interleave } from "$/components/ui/atoms";
-import { AlertDialogProvider, Button, Collapsible, Dialog, Heading, RouterLink, Stat, useAppForm } from "$/components/ui/compositions";
+import { Button, Collapsible, Heading, RouterLink, Stat, useAppForm, usePrompt } from "$/components/ui/compositions";
 import { addColorScheme, copyBeatmap, removeBeatmap, updateBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmapById, selectBeatmaps, selectBpm, selectColorSchemeIds, selectLightshowIds } from "$/store/selectors";
@@ -99,27 +98,38 @@ function UpdateBeatmapForm({ bid }: Props) {
 
 	const environmentName = useFormSelector(Form.store, (state) => state.values.environmentName);
 
-	const deleteAlert = useDialog({ role: "alertdialog" });
+	const { trigger: triggerCopy } = usePrompt({
+		title: "Copy Beatmap",
+		description: `Clone the contents of the "${bid}" beatmap to a new beatmap file.`,
+		render: (ctx) => (
+			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))}>
+				{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
+			</CreateBeatmapForm>
+		),
+	});
 
-	const handleDeleteBeatmap = useCallback(() => {
-		// Delete our working state
-		const mutableDifficultiesCopy = { ...beatmaps };
-		delete mutableDifficultiesCopy[bid];
+	const { trigger: triggerDelete } = usePrompt({
+		render: () => <Text textStyle={"paragraph"}>Are you sure you want to do this? This action cannot be undone.</Text>,
+		onSubmit: () => {
+			// Delete our working state
+			const mutableDifficultiesCopy = { ...beatmaps };
+			delete mutableDifficultiesCopy[bid];
 
-		// Don't let the user delete the last difficulty!
-		const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
-		if (remainingDifficultyIds.length === 0) {
-			return toaster.error({
-				id: "last-difficulty",
-				description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
-			});
-		}
+			// Don't let the user delete the last difficulty!
+			const remainingDifficultyIds = Object.keys(mutableDifficultiesCopy);
+			if (remainingDifficultyIds.length === 0) {
+				return toaster.error({
+					id: "last-difficulty",
+					description: "Sorry, you cannot delete the only remaining difficulty! Please create another difficulty first.",
+				});
+			}
 
-		dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
-		// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
-		const nextDifficultyId = remainingDifficultyIds.includes(abid.toString()) ? abid : remainingDifficultyIds[0];
-		return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
-	}, [dispatch, navigate, toaster, sid, bid, abid, view, beatmaps]);
+			dispatch(removeBeatmap({ songId: sid, beatmapId: bid }));
+			// If the user is currently editing the difficulty that they're trying to delete, let's redirect them to the next difficulty.
+			const nextDifficultyId = remainingDifficultyIds.includes(abid.toString()) ? abid : remainingDifficultyIds[0];
+			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: nextDifficultyId.toString() } });
+		},
+	});
 
 	return (
 		<Form.AppForm>
@@ -187,26 +197,12 @@ function UpdateBeatmapForm({ bid }: Props) {
 					<Form.Submit variant="subtle" size="sm">
 						Save
 					</Form.Submit>
-					<Dialog
-						title="Copy Beatmap"
-						description={`Clone the contents of the "${bid}" beatmap to a new beatmap file.`}
-						lazyMount
-						unmountOnExit
-						render={(ctx) => (
-							<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))}>
-								{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
-							</CreateBeatmapForm>
-						)}
-					>
-						<Button variant="subtle" size="sm">
-							Copy
-						</Button>
-					</Dialog>
-					<AlertDialogProvider value={deleteAlert} render={() => <Text textStyle={"paragraph"}>Are you sure you want to do this? This action cannot be undone.</Text>} onSubmit={handleDeleteBeatmap}>
-						<Button variant="subtle" size="sm" colorPalette="red">
-							Delete
-						</Button>
-					</AlertDialogProvider>
+					<Button variant="subtle" size="sm" onClick={triggerCopy}>
+						Copy
+					</Button>
+					<Button variant="subtle" size="sm" colorPalette="red" onClick={triggerDelete}>
+						Delete
+					</Button>
 				</Wrap>
 			</Form.Root>
 		</Form.AppForm>

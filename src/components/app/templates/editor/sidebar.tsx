@@ -1,18 +1,22 @@
 import { Link, useMatchRoute, useParams } from "@tanstack/react-router";
 import { BookOpenIcon, BoxIcon, DownloadIcon, HomeIcon, ListIcon, PlayIcon, SettingsIcon, ZapIcon } from "lucide-react";
+import { useCallback } from "react";
 
 import { AppSettingsForm } from "$/components/app/forms";
 import { Sidebar } from "$/components/app/layouts";
-import { Dialog } from "$/components/ui/compositions";
+import { Button, usePrompt } from "$/components/ui/compositions";
 import type { View } from "$/types";
 
 function EditorSidebar() {
 	const params = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const matchRoute = useMatchRoute();
 
-	const isView = (to: View) => {
-		return !!matchRoute({ to: `/edit/$sid/$bid/${to}`, params, fuzzy: true });
-	};
+	const isView = useCallback((to: View) => !!matchRoute({ to: `/edit/$sid/$bid/${to}`, params, fuzzy: true }), [matchRoute, params]);
+
+	const { trigger: triggerSettings } = usePrompt({
+		title: "App Settings",
+		render: () => <AppSettingsForm />,
+	});
 
 	return (
 		<Sidebar.Root onWheel={(ev) => ev.stopPropagation()}>
@@ -57,11 +61,7 @@ function EditorSidebar() {
 			</Sidebar.Section>
 			<Sidebar.Section>
 				<Sidebar.Item tooltip="Settings" icon={SettingsIcon} active={false}>
-					{(children) => (
-						<Dialog title="App Settings" render={() => <AppSettingsForm />}>
-							{children}
-						</Dialog>
-					)}
+					{(children) => <Button onClick={triggerSettings}>{children}</Button>}
 				</Sidebar.Item>
 				<Sidebar.Item tooltip="Documentation" icon={BookOpenIcon}>
 					{(children) => (
