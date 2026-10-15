@@ -3,7 +3,6 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { NavigationPanel } from "$/components/app/layouts";
 import { EditorAudioVisualizer, EditorNavigationControls, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
 import { DefaultEditorShortcuts } from "$/components/app/templates/shortcuts";
-import { View } from "$/types";
 import { styled } from "$:styled-system/jsx";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene")({
@@ -15,7 +14,7 @@ function RouteComponent() {
 
 	return (
 		<Wrapper>
-			<EditorSongInfo showDifficultySelector={view !== View.LIGHTSHOW} />
+			<EditorSongInfo />
 			<Outlet />
 			<NavigationPanel.Root>
 				<EditorNavigationControls />
