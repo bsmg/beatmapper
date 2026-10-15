@@ -20,11 +20,8 @@ function RouteComponent() {
 	const { sid, bid } = Route.useParams();
 	const { view } = Route.useRouteContext();
 
-	const toaster = useToaster();
-
 	const dispatch = useAppDispatch();
 	const isLoading = useAppSelector(selectLoading);
-	const isDemo = useAppSelector((state) => selectDemo(state, sid));
 
 	const scopes = useMemo(() => getHotkeyScopes("editor"), []);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
@@ -33,23 +30,6 @@ function RouteComponent() {
 	useHotkey({ scopes, category, label: "Reload Map", hotkey: "Shift+F5", action: () => dispatch(startLoadingMap({ songId: sid, beatmapId: bid })) });
 
 	useHotkey({ scopes, category, label: "Save Map", hotkey: "Mod+S", action: () => dispatch(saveMapFiles()) });
-
-	useHotkey({
-		scopes,
-		category,
-		label: "Download Map",
-		hotkey: "Mod+P",
-		action: () => {
-			if (import.meta.env.PROD && isDemo) {
-				return toaster.create({
-					id: "demo-download-blocker",
-					type: "info",
-					description: "Unfortunately, the demo map is not available for download.",
-				});
-			}
-			return dispatch(downloadMapFiles({ songId: sid, options: { version: null } }));
-		},
-	});
 
 	useGlobalEventListener("beforeunload", () => {
 		if (!enabled) return;

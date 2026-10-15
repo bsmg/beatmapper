@@ -8,7 +8,7 @@ import { AmbientLight, Runway } from "$/components/scene/compositions";
 import { Controls } from "$/components/scene/templates/controls";
 import MapVisualization from "$/components/scene/templates/visualization";
 import { useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectSurfaceDepth } from "$/store/selectors";
+import { selectSurfaceDepth, selectTrackScale } from "$/store/selectors";
 import { getComputedToken } from "$/styles/helpers";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/notes")({
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene/notes")({
 });
 
 function RouteComponent() {
-	const beatDepth = useAppSelector(selectBeatDepth);
+	const beatDepth = useAppSelector(selectTrackScale);
 	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 
 	const timescale = useCallback((time: number) => time, []);

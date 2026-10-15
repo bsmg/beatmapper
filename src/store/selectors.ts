@@ -29,7 +29,7 @@ export {
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
 } from "./features/lightshow.slice";
-export { selectAnimateEnvironment, selectAnimateTrack, selectBeatDepth, selectCursorPosition, selectDuration, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectWindowSize } from "./features/navigation.slice";
+export { selectAnimateEnvironment, selectAnimateTrack, selectCursorPosition, selectDuration, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectTrackScale, selectWindowSize } from "./features/navigation.slice";
 export {
 	selectAllBombNotes,
 	selectAllColorNotes,

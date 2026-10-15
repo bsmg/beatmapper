@@ -21,6 +21,8 @@
 	- As a side effect of these changes, the "Left Note" tool will now be inaccessible in beatmaps set to the "One Saber" characteristic to better align with base-game behavior.
 - New interactive buttons have been added to the event grid to better illustrate supported controls and make the editor more pointer-driveable.
 	- These changes also introduce new dedicated actions for mirroring the light color for a selection of basic events. 
+- The "Download Map" action has been consolidated into a prompt as opposed to a dedicated page, which better illustrates the action as an effectful operation.
+	- This change also allows customization options to be accessible when triggering the action via hotkey. 
 
 ## Technical Changes
 

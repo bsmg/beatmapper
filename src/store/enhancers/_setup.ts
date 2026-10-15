@@ -39,7 +39,6 @@ import {
 import {
 	selectAllGridPresetIds,
 	selectAnnouncements,
-	selectBeatDepth,
 	selectBloomEnabled,
 	selectEventsEditorColor,
 	selectEventsEditorEditMode,
@@ -63,6 +62,7 @@ import {
 	selectSongVolume,
 	selectTickType,
 	selectTickVolume,
+	selectTrackScale,
 	selectUsername,
 	selectUserObstaclePlacementMode,
 	selectWindowSize,
@@ -200,7 +200,7 @@ export function createAppEnhancers() {
 				hydrateValue: updateSnap,
 			},
 			"track.spacing": {
-				selectValue: selectBeatDepth,
+				selectValue: selectTrackScale,
 				hydrateValue: updateTrackScale,
 			},
 			"playback.rate": {
