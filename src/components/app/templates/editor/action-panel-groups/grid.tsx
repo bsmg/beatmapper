@@ -31,38 +31,35 @@ function GridActionPanelGroup({ finishTweakingGrid }: Props) {
 
 	return (
 		<ActionPanelGroup.Root label="Customize Grid">
-			<ActionPanelGroup.ActionGroup />
-			<ActionPanelGroup.ActionGroup gap="lg">
+			<Button variant="subtle" size="sm" unfocusOnPress onClick={() => dispatch(updateGridSize({ songId: sid, changes: DEFAULT_GRID }))}>
+				Revert to Default
+			</Button>
+			<ActionPanelGroup.Section gap="lg">
 				<Field label="Columns">
-					<FieldInput type="number" min={1} value={numCols} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { numCols: details.valueAsNumber } }))} />
+					<FieldInput type="number" min={1} value={numCols} onValueChange={(details) => dispatch(updateGridSize({ songId: sid, changes: { numCols: details.valueAsNumber } }))} />
 				</Field>
 				<Field label="Rows">
-					<FieldInput type="number" min={1} value={numRows} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { numRows: details.valueAsNumber } }))} />
+					<FieldInput type="number" min={1} value={numRows} onValueChange={(details) => dispatch(updateGridSize({ songId: sid, changes: { numRows: details.valueAsNumber } }))} />
 				</Field>
-				<Field label="Cell Width">
-					<FieldInput type="number" min={0.1} step={0.1} value={colWidth} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { colWidth: details.valueAsNumber } }))} />
+				<Field label="Width">
+					<FieldInput type="number" min={0.1} step={0.1} value={colWidth} onValueChange={(details) => dispatch(updateGridSize({ songId: sid, changes: { colWidth: details.valueAsNumber } }))} />
 				</Field>
-				<Field label="Cell Height">
-					<FieldInput type="number" min={0.1} step={0.1} value={rowHeight} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { rowHeight: details.valueAsNumber } }))} />
+				<Field label="Height">
+					<FieldInput type="number" min={0.1} step={0.1} value={rowHeight} onValueChange={(details) => dispatch(updateGridSize({ songId: sid, changes: { rowHeight: details.valueAsNumber } }))} />
 				</Field>
 				<Field label="X Offset">
-					<FieldInput type="number" step={0.25} value={colOffset} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { colOffset: details.valueAsNumber } }))} />
+					<FieldInput type="number" step={0.25} value={colOffset} onValueChange={(details) => dispatch(updateGridSize({ songId: sid, changes: { colOffset: details.valueAsNumber } }))} />
 				</Field>
 				<Field label="Y Offset">
-					<FieldInput type="number" step={0.25} value={rowOffset} onKeyDown={(ev) => ev.stopPropagation()} onValueChange={(details) => sid && dispatch(updateGridSize({ songId: sid, changes: { rowOffset: details.valueAsNumber } }))} />
+					<FieldInput type="number" step={0.25} value={rowOffset} onValueChange={(details) => dispatch(updateGridSize({ songId: sid, changes: { rowOffset: details.valueAsNumber } }))} />
 				</Field>
-			</ActionPanelGroup.ActionGroup>
-			<ActionPanelGroup.ActionGroup>
-				<Button variant="subtle" size="sm" unfocusOnPress onClick={triggerSaveGridPreset}>
-					Save as Preset
-				</Button>
-				<Button variant="subtle" size="sm" unfocusOnPress onClick={() => sid && dispatch(updateGridSize({ songId: sid, changes: DEFAULT_GRID }))}>
-					Reset Grid
-				</Button>
-				<Button variant="subtle" size="sm" unfocusOnPress onClick={finishTweakingGrid}>
-					Finish Customizing
-				</Button>
-			</ActionPanelGroup.ActionGroup>
+			</ActionPanelGroup.Section>
+			<Button variant="subtle" size="sm" unfocusOnPress onClick={triggerSaveGridPreset}>
+				Save to Preset
+			</Button>
+			<Button variant="subtle" size="sm" unfocusOnPress onClick={finishTweakingGrid}>
+				Finish Customizing
+			</Button>
 		</ActionPanelGroup.Root>
 	);
 }

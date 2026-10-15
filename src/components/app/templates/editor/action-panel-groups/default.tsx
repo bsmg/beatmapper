@@ -40,15 +40,15 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 
 	return (
 		<ActionPanelGroup.Root label="Actions">
-			<ActionPanelGroup.ActionGroup>
+			<ActionPanelGroup.Section>
 				<Button variant="subtle" size="sm" disabled={!canUndo} unfocusOnPress onClick={() => dispatch(undoObjects({ shouldJump: hotkeys.getActiveScopes().includes("navigation") }))}>
 					Undo
 				</Button>
 				<Button variant="subtle" size="sm" disabled={!canRedo} unfocusOnPress onClick={() => dispatch(redoObjects({ shouldJump: hotkeys.getActiveScopes().includes("navigation") }))}>
 					Redo
 				</Button>
-			</ActionPanelGroup.ActionGroup>
-			<ActionPanelGroup.ActionGroup>
+			</ActionPanelGroup.Section>
+			<ActionPanelGroup.Section>
 				<Button variant="subtle" size="sm" disabled={!isAnythingSelected} unfocusOnPress onClick={() => dispatch(cutSelection())}>
 					Cut
 				</Button>
@@ -58,16 +58,16 @@ function DefaultActionPanelGroup({ handleGridConfigClick }: Props) {
 				<Button variant="subtle" size="sm" disabled={!hasCopiedNotes} unfocusOnPress onClick={() => dispatch(pasteSelection())}>
 					Paste Selection
 				</Button>
-			</ActionPanelGroup.ActionGroup>
-			<ActionPanelGroup.ActionGroup>
-				<Show when={mappingExtensionsEnabled}>
+			</ActionPanelGroup.Section>
+			<Show when={mappingExtensionsEnabled}>
+				<ActionPanelGroup.Section>
 					<Tooltip render={() => "Change the number of columns/rows"}>
 						<Button variant="subtle" size="sm" unfocusOnPress onClick={handleGridConfigClick}>
 							Customize Grid
 						</Button>
 					</Tooltip>
-				</Show>
-			</ActionPanelGroup.ActionGroup>
+				</ActionPanelGroup.Section>
+			</Show>
 		</ActionPanelGroup.Root>
 	);
 }

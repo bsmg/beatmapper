@@ -83,7 +83,7 @@ function NoteDirectionActionPanelGroup() {
 	useHotkey({ scopes, category, enabled, label: "Pick Any Direction", hotkey: "F", action: () => dispatch(updateNotesEditorDirection(NoteDirection.ANY)) });
 
 	return (
-		<ActionPanelGroup.Root label="Notes">
+		<ActionPanelGroup.Root label="Direction">
 			<Grid columns={3} gap={0.5}>
 				<Button variant="ghost" size="icon" disabled={isDisabled} aria-pressed={selectedDirection === NoteDirection.UP_LEFT} unfocusOnPress onClick={() => dispatch(updateNotesEditorDirection(NoteDirection.UP_LEFT))}>
 					<ArrowUpLeftIcon />

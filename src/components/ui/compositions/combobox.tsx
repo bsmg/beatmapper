@@ -87,12 +87,12 @@ export function Combobox({ collection: original, value, onValueCreate, onValueCh
 		filter: contains,
 		itemToValue: (item) => {
 			const value = original.getItemValue(item);
-			if (!value) return item;
+			if (value !== null) return item.toString();
 			return value;
 		},
 		itemToString: (item) => {
 			const label = original.stringifyItem(item);
-			if (!label) return item;
+			if (label !== null) return item.toString();
 			return label;
 		},
 	});
@@ -152,7 +152,7 @@ export function Combobox({ collection: original, value, onValueCreate, onValueCh
 	);
 
 	return (
-		<Builder.Root {...rest} collection={collection} onInputValueChange={handleInputChange} onOpenChange={handleOpenChange} value={selectedValue} onValueChange={handleValueChange} allowCustomValue>
+		<Builder.Root {...rest} collection={collection} onInputValueChange={handleInputChange} onOpenChange={handleOpenChange} value={selectedValue} onValueChange={handleValueChange} allowCustomValue={creatable}>
 			{label && <Builder.Label>{label}</Builder.Label>}
 			<Builder.Control className={css({ colorPalette })}>
 				<Builder.Input placeholder={placeholder} />
@@ -171,7 +171,16 @@ export function ComboboxDataField({ label, helperText, ...delegated }: Assign<Co
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Combobox {...delegated} id={id} inputValue={field.state.value ?? ""} value={field.state.value ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
+			<Combobox {...delegated} id={id} value={field.state.value !== null ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
+		</Field>
+	);
+}
+export function NumberComboboxDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Combobox>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<number | null>(delegated);
+
+	return (
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Combobox {...delegated} id={id} value={field.state.value !== null ? [field.state.value.toString()] : []} onValueChange={(details) => field.handleChange(details.value.length ? Number(details.value[0]) : null)} />
 		</Field>
 	);
 }

@@ -29,3 +29,12 @@ export function getHotkeyCategory(scopes: string[]): string | undefined {
 	}
 	return undefined;
 }
+
+export function getDynamicInputValue<T, K extends keyof T>(items: T[] | undefined, key: K): T[K] | null {
+	if (!items || items.length === 0) return null;
+	const firstValue = items[0][key];
+	return items.every((item) => item[key] === firstValue) && firstValue !== undefined ? firstValue : null;
+}
+export function cleanObjectData<T extends Record<string, unknown>>(obj: T): Partial<{ [key in keyof T]: NonNullable<T[key]> }> {
+	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null)) as Partial<{ [key in keyof T]: NonNullable<T[key]> }>;
+}

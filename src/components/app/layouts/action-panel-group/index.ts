@@ -3,7 +3,7 @@ import { wrap } from "$:styled-system/patterns";
 
 export { default as Root } from "./root";
 
-export const ActionGroup = styled("div", {
+export const Section = styled("div", {
 	base: wrap.raw({
 		align: "center",
 		justify: "center",
@@ -13,7 +13,7 @@ export const ActionGroup = styled("div", {
 		gap: {
 			sm: { gap: 0.5 },
 			md: { gap: 1 },
-			lg: { gap: 2 },
+			lg: { gap: 1.5 },
 		},
 	},
 	defaultVariants: {
