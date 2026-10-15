@@ -1,7 +1,20 @@
 export { selectAllGridPresetIds, selectGridPresetById, selectGridPresets, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool } from "./features/beatmap.slice";
 export { selectAllBookmarks } from "./features/bookmarks.slice";
 export { selectClipboardData, selectClipboardHasObjects, selectEarliestBeat } from "./features/clipboard.slice";
-export { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectAnySelectedEvents, selectColorBoostAtBeat, selectFutureBasicEvents, selectFutureBoostEvents, selectPastBasicEvents, selectPastBoostEvents } from "./features/events.slice";
+export {
+	selectAllBasicEvents,
+	selectAllBasicEventsForTrack,
+	selectAllBoostEvents,
+	selectAllSelectedEvents,
+	selectAnySelectedEvents,
+	selectColorBoostAtBeat,
+	selectEventsCanRedo,
+	selectEventsCanUndo,
+	selectFutureBasicEvents,
+	selectFutureBoostEvents,
+	selectPastBasicEvents,
+	selectPastBoostEvents,
+} from "./features/events.slice";
 export { selectInitialized, selectLoading, selectProcessingImport } from "./features/global.slice";
 export {
 	selectEventsEditorBeatsPerZoomLevel,

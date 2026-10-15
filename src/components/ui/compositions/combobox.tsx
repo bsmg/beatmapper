@@ -184,3 +184,14 @@ export function NumberComboboxDataField({ label, helperText, ...delegated }: Ass
 		</Field>
 	);
 }
+export function BooleanComboboxDataField({ label, helperText, ...delegated }: Assign<Omit<ComponentProps<typeof Combobox>, "collection">, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<boolean | null>(delegated);
+
+	const { collection } = useListCollection({ initialItems: [true, false] });
+
+	return (
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Combobox {...delegated} id={id} collection={collection} value={field.state.value !== null ? [field.state.value.toString()] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] === "true" : null)} />
+		</Field>
+	);
+}

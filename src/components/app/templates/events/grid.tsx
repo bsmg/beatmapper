@@ -1,14 +1,16 @@
+import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import type { AnyFormApi } from "@tanstack/react-form";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
 import type { IBasicTrack, ITrackDefinitions } from "bsmap";
 import { type ComponentProps, memo, useCallback, useMemo, useState } from "react";
 import { boolean, record, string } from "valibot";
 
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { EventGrid } from "$/components/app/layouts";
 import { useMousePositionOverElement } from "$/components/hooks/use-mouse-position-over-element";
 import { For, Show } from "$/components/ui/atoms";
-import { Button, usePrompt } from "$/components/ui/compositions";
+import { Button, createPromptFactory, usePrompt } from "$/components/ui/compositions";
 import { BasicTrackGroups } from "$/constants";
 import { isLightTrack, isTrackGroupable, isTriggerTrack, isValueTrack, sortBasicTracks } from "$/helpers/events.helpers";
 import { drawEventSelectionBox, jumpToBeat, updateEventsEditorCursor, updateEventsEditorTrackHeight } from "$/store/actions";
@@ -33,8 +35,15 @@ import { Stack, Text, Wrap } from "$:styled-system/jsx";
 import BasicEventTrack from "./basic-track";
 import BoostEventTrack from "./boost-track";
 
+const createTrackFilterPrompt = createPromptFactory({
+	title: "Track Visibility",
+	description: "Toggle the visibility of basic event tracks within the editor.",
+	validate: record(string(), boolean()),
+});
+
 function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>, "service">) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_/_scene/events" });
 
 	const dispatch = useAppDispatch();
 	const wait = useAppSelector(selectPacerWait);
@@ -116,58 +125,66 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 		[tracks],
 	);
 
-	const { trigger: triggerTrackVisibilityPrompt } = usePrompt({
-		title: "Track Visibility",
-		description: "Toggle the visibility of basic event tracks within the editor.",
-		validate: record(string(), boolean()),
-		defaultValues: Object.keys(tracks).reduce((acc: { [key: string]: boolean }, id) => {
-			acc[id] = filter.includes(id);
-			return acc;
-		}, {}),
-		render: ({ form }) => (
-			<Stack gap={2}>
-				<Wrap gap={1} align={"center"}>
-					<Text textStyle="heading">Types: </Text>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form)}>
-						All
-					</Button>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isLightTrack(x.id, tracks))}>
-						Light
-					</Button>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isTriggerTrack(x.id, tracks))}>
-						Trigger
-					</Button>
-					<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isValueTrack(x.id, tracks))}>
-						Value
-					</Button>
-				</Wrap>
-				<Show when={!isObjectEmpty(trackGroups)}>
+	const { trigger: triggerTrackVisibilityPrompt } = usePrompt(
+		createTrackFilterPrompt({
+			defaultValues: Object.keys(tracks).reduce((acc: { [key: string]: boolean }, id) => {
+				acc[id] = filter.includes(id);
+				return acc;
+			}, {}),
+			render: ({ form }) => (
+				<Stack gap={2}>
 					<Wrap gap={1} align={"center"}>
-						<Text textStyle="heading">Groups: </Text>
-						<For each={Object.keys(trackGroups)}>
-							{(group) => (
-								<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => trackGroups[group].some((id) => x.id === id))}>
-									{group}
-								</Button>
-							)}
-						</For>
+						<Text textStyle="heading">Types: </Text>
+						<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form)}>
+							All
+						</Button>
+						<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isLightTrack(x.id, tracks))}>
+							Light
+						</Button>
+						<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isTriggerTrack(x.id, tracks))}>
+							Trigger
+						</Button>
+						<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => isValueTrack(x.id, tracks))}>
+							Value
+						</Button>
 					</Wrap>
-				</Show>
-				<For each={allTracks}>
-					{(track) => {
-						return <form.AppField name={track.id.toString()}>{(ctx) => <ctx.Checkbox checkboxLabel={track.name} orientation={"horizontal"} />}</form.AppField>;
-					}}
-				</For>
-			</Stack>
-		),
-		onSubmit: ({ value }) =>
-			setFilter(
-				Object.keys(value).reduce((acc: string[], id) => {
-					if (value[id]) acc.push(id);
-					return acc;
-				}, []),
+					<Show when={!isObjectEmpty(trackGroups)}>
+						<Wrap gap={1} align={"center"}>
+							<Text textStyle="heading">Groups: </Text>
+							<For each={Object.keys(trackGroups)}>
+								{(group) => (
+									<Button type="button" variant={"subtle"} size={"sm"} onClick={() => handleFilterUpdate(form, (x) => trackGroups[group].some((id) => x.id === id))}>
+										{group}
+									</Button>
+								)}
+							</For>
+						</Wrap>
+					</Show>
+					<For each={allTracks}>
+						{(track) => {
+							return <form.AppField name={track.id.toString()}>{(ctx) => <ctx.Checkbox checkboxLabel={track.name} orientation={"horizontal"} />}</form.AppField>;
+						}}
+					</For>
+				</Stack>
 			),
-	});
+			onSubmit: ({ value }) =>
+				setFilter(
+					Object.keys(value).reduce((acc: string[], id) => {
+						if (value[id]) acc.push(id);
+						return acc;
+					}, []),
+				),
+		}),
+	);
+
+	const hotkeys = useHotkeyStore();
+
+	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	const enabled = useCallback(() => !hotkeys.getActiveScopes().includes("camera"), [hotkeys.getActiveScopes]);
+
+	useHotkey({ scopes, category, label: "Open Track Visibility Prompt", enabled, hotkey: "T", action: () => triggerTrackVisibilityPrompt() });
 
 	return (
 		<EventGrid.Root {...api.getRootProps()} {...rest} service={service}>
