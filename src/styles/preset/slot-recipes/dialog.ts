@@ -3,6 +3,7 @@ import { defineSlotRecipe } from "@pandacss/dev";
 
 export const dialog = defineSlotRecipe({
 	className: "dialog",
+	jsx: ["Prompter"],
 	slots: dialogAnatomy.keys(),
 	base: {
 		trigger: {
