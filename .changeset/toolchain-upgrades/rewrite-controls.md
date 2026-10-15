@@ -14,6 +14,11 @@
 	- You can now customize the window size for "Jump Forwards/Backwards" actions within views that support object visualization.
 	- The distance for the "Nudge Selection" actions are now unified with the "Jump Forwards/Backwards" actions, which now offers the ability to nudge selected objects across window ranges.
 	- The "Jump to Start/End" actions will now jump between your active bookmarks (as well as the first and last measured beats of your song).
+- A dedicated "form editor" is now available for bulk modification of object properties. You can trigger this prompt via `Mod+E` or associated buttons while objects are selected.
+	- When multiple types of objects are selected, the form editor will only display the properties that are shared between objects.
+	- Any property fields left blank will preserve the original values set for each object.
+- The "Color Note" tool has been consolidated into a single button, where you can now middle click the button (or press `1` again) to swap the active color set. This change will better inform the workflows for upcoming feature additions using a more consistent control scheme.
+	- As a side effect of these changes, the "Left Note" tool will now be inaccessible in beatmaps set to the "One Saber" characteristic to better align with base-game behavior.
 
 ## Technical Changes
 

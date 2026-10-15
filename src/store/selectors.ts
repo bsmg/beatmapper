@@ -23,6 +23,7 @@ export {
 	selectAllObstacles,
 	selectAllSelectedBombNotes,
 	selectAllSelectedColorNotes,
+	selectAllSelectedObjects,
 	selectAllSelectedObstacles,
 	selectAnySelectedObjects,
 	selectFutureBombNotes,

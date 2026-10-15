@@ -22,20 +22,29 @@ export function FieldInput({ ...rest }: ComponentProps<typeof Input>) {
 }
 
 export function InputDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Input>, FieldProps>) {
-	const [field, { id, required, invalid, errorText }] = useFieldData<string>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<string | null>(delegated);
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldInput {...delegated} id={id} value={field.state.value} onValueChange={(details) => field.handleChange(details.valueAsString)} />
+			<FieldInput {...delegated} id={id} value={field.state.value ?? ""} onValueChange={(details) => field.handleChange(details.valueAsString)} />
 		</Field>
 	);
 }
 export function NumberInputDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Input>, FieldProps>) {
-	const [field, { id, required, invalid, errorText }] = useFieldData<number>(delegated);
+	const [field, { id, required, invalid, errorText }] = useFieldData<number | null>(delegated);
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<FieldInput {...delegated} id={id} type="number" step={delegated.step ?? "any"} value={field.state.value.toString()} onValueChange={(details) => field.handleChange(details.valueAsNumber)} />
+			<FieldInput
+				{...delegated}
+				id={id}
+				type="number"
+				step={delegated.step ?? "any"}
+				value={field.state.value != null ? field.state.value.toString() : ""}
+				onValueChange={(details) => {
+					field.handleChange(details.value === "" ? null : details.valueAsNumber);
+				}}
+			/>
 		</Field>
 	);
 }

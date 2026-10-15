@@ -1,3 +1,4 @@
+import type { Assign } from "@ark-ui/react";
 import type { UseDialogContext } from "@ark-ui/react/dialog";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { createContext, type ReactNode, useContext, useEffect, useId } from "react";
@@ -23,13 +24,13 @@ interface IPromptHandlersWithoutSubmit {
 	onSubmit?: never;
 }
 
-export type IPrompt<TInput = unknown, TOutput = TInput> = IPromptDetails<TInput, TOutput> & (IPromptHandlersWithSubmit<TInput, TOutput> | IPromptHandlersWithoutSubmit);
+export type IPrompt<TInput = unknown, TOutput = TInput> = Assign<IPromptDetails<TInput, TOutput>, IPromptHandlersWithSubmit<TInput, TOutput> | IPromptHandlersWithoutSubmit>;
 
 export function createPromptFactory<TInput = unknown, TOutput = TInput>(details: IPromptDetails<TInput, TOutput>) {
-	function factory(handlers: IPromptHandlersWithSubmit<TInput, TOutput>): IPrompt<TInput, TOutput>;
-	function factory(handlers: IPromptHandlersWithoutSubmit): IPrompt<TInput, TOutput>;
-	function factory(handlers: IPromptHandlersWithSubmit<TInput, TOutput> | IPromptHandlersWithoutSubmit): IPrompt<TInput, TOutput> {
-		return { ...details, ...handlers };
+	function factory(handlers: Pick<IPromptDetails<TInput, TOutput>, "defaultValues"> & IPromptHandlersWithSubmit<TInput, TOutput>): IPrompt<TInput, TOutput>;
+	function factory(handlers: Pick<IPromptDetails<TInput, TOutput>, "defaultValues"> & IPromptHandlersWithoutSubmit): IPrompt<TInput, TOutput>;
+	function factory(handlers: (Pick<IPromptDetails<TInput, TOutput>, "defaultValues"> & IPromptHandlersWithSubmit<TInput, TOutput>) | IPromptHandlersWithoutSubmit): IPrompt<TInput, TOutput> {
+		return { ...details, ...handlers } as IPrompt<TInput, TOutput>;
 	}
 	return factory;
 }

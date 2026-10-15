@@ -8,7 +8,7 @@ import { useUpdateEffect } from "$/components/hooks/use-update-effect";
 import { Match, Switch } from "$/components/ui/atoms";
 import { useAppSelector } from "$/store/hooks";
 import { selectAllSelectedBombNotes, selectAllSelectedColorNotes, selectAllSelectedObstacles, selectModuleEnabled } from "$/store/selectors";
-import { DefaultActionPanelGroup, GridActionPanelGroup, GridPresetsActionPanelGroup, NoteDirectionActionPanelGroup, NoteToolActionPanelGroup, ObstaclesActionPanelGroup, SelectionActionPanelGroup } from "./action-panel-groups";
+import { DefaultActionPanelGroup, GridActionPanelGroup, GridPresetsActionPanelGroup, NoteDirectionActionPanelGroup, NoteToolActionPanelGroup, SelectionActionPanelGroup } from "./action-panel-groups";
 
 function EditorActionPanel() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -38,10 +38,6 @@ function EditorActionPanel() {
 	return (
 		<ActionPanel.Root>
 			<Switch>
-				<Match when={showGridConfig}>
-					<GridPresetsActionPanelGroup />
-					<GridActionPanelGroup finishTweakingGrid={() => setShowGridConfig(false)} />
-				</Match>
 				<Match when={!isAnythingSelected}>
 					<NoteToolActionPanelGroup />
 					<NoteDirectionActionPanelGroup />
@@ -49,8 +45,11 @@ function EditorActionPanel() {
 				</Match>
 				<Match when={isAnythingSelected}>
 					<SelectionActionPanelGroup />
-					<ObstaclesActionPanelGroup />
 					<DefaultActionPanelGroup handleGridConfigClick={() => setShowGridConfig(true)} />
+				</Match>
+				<Match when={showGridConfig}>
+					<GridPresetsActionPanelGroup />
+					<GridActionPanelGroup finishTweakingGrid={() => setShowGridConfig(false)} />
 				</Match>
 			</Switch>
 		</ActionPanel.Root>
