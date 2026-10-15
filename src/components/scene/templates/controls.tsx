@@ -45,7 +45,6 @@ export function Controls() {
 			{ id: "controls/right", scopes, category, label: "Move Right", hotkey: "D", action: noop },
 			{ id: "controls/up", scopes, category, label: "Move Up", hotkey: "E", action: noop },
 			{ id: "controls/down", scopes, category, label: "Move Down", hotkey: "Q", action: noop },
-			{ id: "controls/reset", scopes, category, label: "Reset", hotkey: "Backspace", action: noop },
 		],
 	});
 

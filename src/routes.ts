@@ -10,7 +10,6 @@ export const routes = rootRoute("root.tsx", [
 	layout("/edit/$sid/$bid/_", "editor/layout.tsx", [
 		layout("page", "editor/page/layout.tsx", [
 			route("details", "editor/page/details.tsx"),
-			route("download", "editor/page/download.tsx"),
 			//
 		]),
 		layout("scene", "editor/scene/layout.tsx", [

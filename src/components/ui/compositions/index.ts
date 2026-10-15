@@ -20,7 +20,7 @@ export { Prompter } from "./prompter";
 export { createPromptFactory, usePrompt } from "./prompter.context";
 export { RadioButtonGroup } from "./radio-button-group";
 export { RadioGroup } from "./radio-group";
-export { Select } from "./select";
+export { Select, SelectProvider } from "./select";
 export { Shortcut } from "./shortcut";
 export { Slider } from "./slider";
 export { Spinner } from "./spinner";

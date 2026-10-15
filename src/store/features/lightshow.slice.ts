@@ -115,6 +115,20 @@ export const {
 	updateMirrorLock: updateEventsEditorMirrorLock,
 } = slice.actions;
 
+export const incrementEventsEditorTrackHeight = createThunk("incrementTrackHeight", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([25, 50], selectEventsEditorTrackHeight, updateEventsEditorTrackHeight)({ delta: 2.5 }, api);
+});
+export const decrementEventsEditorTrackHeight = createThunk("decrementTrackHeight", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([25, 50], selectEventsEditorTrackHeight, updateEventsEditorTrackHeight)({ delta: -2.5 }, api);
+});
+
+export const incrementEventsEditorTrackOpacity = createThunk("incrementTrackOpacity", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0.2, 1], selectEventsEditorTrackOpacity, updateEventsEditorTrackOpacity)({ delta: 0.1 }, api);
+});
+export const decrementEventsEditorTrackOpacity = createThunk("decrementTrackOpacity", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([0.2, 1], selectEventsEditorTrackOpacity, updateEventsEditorTrackOpacity)({ delta: -0.1 }, api);
+});
+
 export const incrementEventsEditorZoomLevel = createThunk("incrementZoomLevel", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
 	return createIncrementByValuePayloadActionCreator([ZOOM_LEVEL_MIN, ZOOM_LEVEL_MAX], selectEventsEditorZoomLevel, updateEventsEditorZoomLevel)({ delta: 1 }, api);
 });

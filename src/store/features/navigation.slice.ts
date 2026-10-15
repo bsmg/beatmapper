@@ -30,7 +30,7 @@ const slice = createSlice({
 		selectDuration: (state) => state.duration,
 		selectSnap: (state) => state.snapTo,
 		selectWindowSize: (state) => state.windowSize,
-		selectBeatDepth: (state) => state.beatDepth,
+		selectTrackScale: (state) => state.beatDepth,
 		selectAnimateTrack: (state) => state.animateBlockMotion,
 		selectAnimateEnvironment: (state) => state.animateRingMotion,
 		selectPlaybackRate: (state) => state.playbackRate,
@@ -89,7 +89,7 @@ const slice = createSlice({
 	},
 });
 
-export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectWindowSize, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectWindowSize, selectTrackScale, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
 
 export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateWindowSize } = slice.actions;
 
@@ -115,6 +115,13 @@ export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThu
 	const currentSnap = selectSnap(api.getState());
 	const nextSnap = calculateNextSnap(currentSnap, { delta: -1 });
 	return api.dispatch(updateSnap(nextSnap));
+});
+
+export const incrementTrackScale = createThunk("incrementTrackScale", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([5, 25], selectTrackScale, updateTrackScale)({ delta: 1 }, api);
+});
+export const decrementTrackScale = createThunk("decrementTrackScale", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([5, 25], selectTrackScale, updateTrackScale)({ delta: -1 }, api);
 });
 
 export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {

@@ -1,42 +1,42 @@
 import { createListCollection } from "@ark-ui/react/collection";
-import type { SelectValueChangeDetails } from "@ark-ui/react/select";
+import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
+import { type SelectValueChangeDetails, useSelect } from "@ark-ui/react/select";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { memo, useCallback, useMemo } from "react";
 
 import { CoverArtFile } from "$/components/app/compositions";
 import { CreateBeatmapForm } from "$/components/app/forms";
-import { Button, Select, usePrompt } from "$/components/ui/compositions";
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
+import { Button, SelectProvider, usePrompt } from "$/components/ui/compositions";
 import { BeatmapFilestore } from "$/services/file.service";
 import { addBeatmap, updateSelectedBeatmap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmaps, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
+import { selectBeatmaps, selectLoading, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
 function EditorSongInfo() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
+	const navigate = useNavigate();
 
 	const dispatch = useAppDispatch();
-	const navigate = useNavigate();
+	const isLoading = useAppSelector(selectLoading);
 	const metadata = useAppSelector((state) => selectSongMetadata(state, sid));
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, sid));
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, sid));
 
-	const BEATMAP_LIST_COLLECTION = useMemo(() => {
-		return createListCollection({
+	const beatmapSelect = useSelect<unknown>({
+		collection: createListCollection<unknown>({
 			items: Object.keys(beatmaps),
-			itemToString: (beatmapId) => beatmaps[beatmapId].customLabel ?? beatmapId,
-		});
-	}, [beatmaps]);
-
-	const handleBeatmapSelect = useCallback(
-		(details: SelectValueChangeDetails) => {
+			itemToString: (beatmapId) => beatmaps[beatmapId as string].customLabel ?? (beatmapId as string),
+		}),
+		value: [selectedBeatmap.toString()],
+		onValueChange: (details: SelectValueChangeDetails) => {
 			dispatch(updateSelectedBeatmap({ songId: sid, beatmapId: details.value[0] }));
 			return navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: details.value[0] } });
 		},
-		[dispatch, navigate, sid, view],
-	);
+	});
 
 	const { trigger: triggerCreateBeatmap } = usePrompt({
 		title: "Create Beatmap",
@@ -47,6 +47,16 @@ function EditorSongInfo() {
 			</CreateBeatmapForm>
 		),
 	});
+
+	const hotkeys = useHotkeyStore();
+
+	const scopes = useMemo(() => getHotkeyScopes("editor"), []);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	const enabled = useCallback(() => !isLoading && hotkeys.getActiveScopes().includes("navigation"), [isLoading, hotkeys.getActiveScopes]);
+
+	useHotkey({ scopes, category, enabled, label: "Open Beatmap Selector", hotkey: "Mod+O", action: () => beatmapSelect.setOpen(true) });
+	useHotkey({ scopes, category, enabled, label: "Create New Beatmap", hotkey: "Mod+N", action: () => triggerCreateBeatmap() });
 
 	return (
 		<OuterWrapper gap={1.5}>
@@ -61,7 +71,7 @@ function EditorSongInfo() {
 					</Text>
 				</Stack>
 				<HStack gap={0.5}>
-					<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
+					<SelectProvider unfocusOnPress value={beatmapSelect} size="sm" />
 					<Button variant="ghost" size="sm" onClick={triggerCreateBeatmap}>
 						<PlusIcon size={16} />
 					</Button>

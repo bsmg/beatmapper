@@ -27,7 +27,11 @@ export {
 } from "./features/events.slice";
 export { init, updateProcessingImport } from "./features/global.slice";
 export {
+	decrementEventsEditorTrackHeight,
+	decrementEventsEditorTrackOpacity,
 	decrementEventsEditorZoomLevel,
+	incrementEventsEditorTrackHeight,
+	incrementEventsEditorTrackOpacity,
 	incrementEventsEditorZoomLevel,
 	updateEventsEditorColor,
 	updateEventsEditorCursor,
@@ -45,10 +49,12 @@ export {
 	decrementSnap,
 	decrementSongVolume,
 	decrementTickVolume,
+	decrementTrackScale,
 	incrementPlaybackRate,
 	incrementSnap,
 	incrementSongVolume,
 	incrementTickVolume,
+	incrementTrackScale,
 	pausePlayback,
 	startPlayback,
 	stopPlayback,

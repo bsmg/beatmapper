@@ -1,95 +1,26 @@
-import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
-import { BellIcon, BellOffIcon, BoxIcon, CuboidIcon, EyeClosedIcon, EyeIcon, FastForwardIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon, RewindIcon, Volume2Icon, VolumeXIcon, ZapIcon, ZapOffIcon } from "lucide-react";
-import { useMemo } from "react";
 
-import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { StatusBar } from "$/components/app/layouts";
 import { Show } from "$/components/ui/atoms";
-import {
-	decrementPlaybackRate,
-	decrementSongVolume,
-	decrementTickVolume,
-	incrementPlaybackRate,
-	incrementSongVolume,
-	incrementTickVolume,
-	updateEventsEditorPreview,
-	updateEventsEditorTrackHeight,
-	updateEventsEditorTrackOpacity,
-	updatePlaybackRate,
-	updateSongVolume,
-	updateTickVolume,
-	updateTrackScale,
-} from "$/store/actions";
-import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectNoteDensity, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTotalBombNotes, selectTotalColorNotes, selectTotalObstacles } from "$/store/selectors";
 import { View } from "$/types";
-import { pluralize } from "$/utils";
 import { styled } from "$:styled-system/jsx";
+import { DefaultEditorStatusBar, EventsEditorStatusBar, NotesEditorStatusBar, PreviewEditorStatusBar } from "./status-bar-groups";
 
 function EditorStatusBar() {
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
-	const dispatch = useAppDispatch();
-	const isLoading = useAppSelector(selectLoading);
-	const playbackRate = useAppSelector(selectPlaybackRate);
-	const beatDepth = useAppSelector(selectBeatDepth);
-	const songVolume = useAppSelector(selectSongVolume);
-	const tickVolume = useAppSelector(selectTickVolume);
-	const numOfBlocks = useAppSelector(selectTotalColorNotes);
-	const numOfMines = useAppSelector(selectTotalBombNotes);
-	const numOfObstacles = useAppSelector(selectTotalObstacles);
-	const showLightingPreview = useAppSelector(selectEventsEditorPreview);
-	const rowHeight = useAppSelector(selectEventsEditorTrackHeight);
-	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
-	const noteDensity = useAppSelector(selectNoteDensity);
-
-	const scopes = useMemo(() => getHotkeyScopes("editor"), []);
-	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
-
-	useHotkey({ scopes, category, label: "Decrement Playback Speed", hotkey: "Mod+-", action: () => dispatch(decrementPlaybackRate()) });
-	useHotkey({ scopes, category, label: "Increment Playback Speed", hotkey: "Mod+=", action: () => dispatch(incrementPlaybackRate()) });
-
-	useHotkey({ scopes, category, label: "Decrement Song Volume", hotkey: "Alt+-", action: () => dispatch(decrementSongVolume()) });
-	useHotkey({ scopes, category, label: "Increment Song Volume", hotkey: "Alt+=", action: () => dispatch(incrementSongVolume()) });
-
-	useHotkey({ scopes, category, label: "Decrement Tick Volume", hotkey: "Alt+Shift+-", action: () => dispatch(decrementTickVolume()) });
-	useHotkey({ scopes, category, label: "Increment Tick Volume", hotkey: "Alt+Shift+=", action: () => dispatch(incrementTickVolume()) });
-
 	return (
 		<Wrapper onWheel={(ev) => ev.stopPropagation()}>
-			<StatusBar.Section>
-				<Show when={view === View.BEATMAP}>
-					<StatusBar.Group>
-						<StatusBar.Indicator label={`${numOfBlocks} ${pluralize(numOfBlocks, "note")}`} icon={BoxIcon}>
-							{numOfBlocks}
-						</StatusBar.Indicator>
-						<StatusBar.Indicator label={`${numOfMines} ${pluralize(numOfMines, "bomb")}`} icon={GlobeIcon}>
-							{numOfMines}
-						</StatusBar.Indicator>
-						<StatusBar.Indicator label={`${numOfObstacles} ${pluralize(numOfObstacles, "obstacle")}`} icon={CuboidIcon}>
-							{numOfObstacles}
-						</StatusBar.Indicator>
-					</StatusBar.Group>
-					<StatusBar.Indicator label={"Notes per second"} icon={GaugeIcon}>
-						{noteDensity.toFixed(2)}
-					</StatusBar.Indicator>
-					<StatusBar.Range label={"Beat depth"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={5} max={25} value={[beatDepth]} onValueChange={(details) => dispatch(updateTrackScale(details.value[0]))} />
-					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume(details.value[0]))} />
-				</Show>
-				<Show when={view === View.LIGHTSHOW}>
-					<StatusBar.Toggle label={"Show environment"} disabled={isLoading} checked={showLightingPreview} onIcon={ZapIcon} offIcon={ZapOffIcon} onCheckedChange={(details) => dispatch(updateEventsEditorPreview(details.checked))} />
-					<StatusBar.Range label={"Track height"} disabled={isLoading} minIcon={Minimize2Icon} maxIcon={Maximize2Icon} min={25} max={50} step={1} value={[rowHeight]} onValueChange={(details) => dispatch(updateEventsEditorTrackHeight(details.value[0]))} />
-					<StatusBar.Range label={"Track opacity"} disabled={isLoading} minIcon={EyeClosedIcon} maxIcon={EyeIcon} min={0.3} max={1} step={0.02} value={[backgroundOpacity]} onValueChange={(details) => dispatch(updateEventsEditorTrackOpacity(details.value[0]))} />
-				</Show>
-				<Show when={view === View.PREVIEW}>
-					<StatusBar.Range label={"Note tick volume"} disabled={isLoading} minIcon={BellOffIcon} maxIcon={BellIcon} min={0} max={1} step={0.1} value={[tickVolume]} onValueChange={(details) => dispatch(updateTickVolume(details.value[0]))} />
-				</Show>
-			</StatusBar.Section>
-			<StatusBar.Section>
-				<StatusBar.Range label={"Playback rate"} marks={[1]} disabled={isLoading} minIcon={RewindIcon} maxIcon={FastForwardIcon} min={0} max={2} step={0.1} value={[playbackRate]} onValueChange={(details) => dispatch(updatePlaybackRate(details.value[0]))} />
-				<StatusBar.Range label={"Song volume"} disabled={isLoading} minIcon={VolumeXIcon} maxIcon={Volume2Icon} min={0} max={1} step={0.1} value={[songVolume]} onValueChange={(details) => dispatch(updateSongVolume(details.value[0]))} />
-			</StatusBar.Section>
+			<Show when={view === View.BEATMAP}>
+				<NotesEditorStatusBar />
+			</Show>
+			<Show when={view === View.LIGHTSHOW}>
+				<EventsEditorStatusBar />
+			</Show>
+			<Show when={view === View.PREVIEW}>
+				<PreviewEditorStatusBar />
+			</Show>
+			<DefaultEditorStatusBar />
 		</Wrapper>
 	);
 }

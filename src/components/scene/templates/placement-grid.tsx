@@ -14,7 +14,7 @@ import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/h
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatDepth, selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode } from "$/store/selectors";
+import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {
@@ -29,7 +29,7 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 	const selectedTool = useAppSelector(selectNotesEditorTool);
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
-	const beatDepth = useAppSelector(selectBeatDepth);
+	const beatDepth = useAppSelector(selectTrackScale);
 
 	const hotkeys = useHotkeyStore();
 
