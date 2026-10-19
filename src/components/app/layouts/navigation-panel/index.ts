@@ -14,6 +14,7 @@ export const Section = styled("div", {
 
 export const Column = styled("div", {
 	base: hstack.raw({
+		width: { base: "fit-content", _first: undefined, _last: undefined },
 		justify: { base: "center", _first: "flex-start", _last: "flex-end" },
 		flex: 1,
 		gap: { base: 1, _first: 4, _last: 4 },

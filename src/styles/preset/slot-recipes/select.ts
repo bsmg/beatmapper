@@ -32,6 +32,7 @@ export const select = defineSlotRecipe({
 			display: "flex",
 			alignItems: "center",
 			gap: 1,
+			paddingBlock: 0.5,
 			paddingInline: 1,
 			width: "100%",
 			fontSize: "14px",

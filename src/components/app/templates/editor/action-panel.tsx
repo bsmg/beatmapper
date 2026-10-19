@@ -21,7 +21,7 @@ function EditorActionPanel() {
 
 	const isAnythingSelected = useMemo(() => selectedBlocks.length > 0 || selectedObstacles.length > 0 || selectedMines.length > 0, [selectedBlocks, selectedObstacles, selectedMines]);
 
-	const [showGridConfig, setShowGridConfig] = useState(false);
+	const [showGridConfig, setShowGridConfig] = useState(true);
 
 	useUpdateEffect(() => {
 		if (showGridConfig && isAnythingSelected) {
@@ -38,6 +38,10 @@ function EditorActionPanel() {
 	return (
 		<ActionPanel.Root>
 			<Switch>
+				<Match when={showGridConfig}>
+					<GridPresetsActionPanelGroup />
+					<GridActionPanelGroup finishTweakingGrid={() => setShowGridConfig(false)} />
+				</Match>
 				<Match when={!isAnythingSelected}>
 					<NoteToolActionPanelGroup />
 					<NoteDirectionActionPanelGroup />
@@ -46,10 +50,6 @@ function EditorActionPanel() {
 				<Match when={isAnythingSelected}>
 					<SelectionActionPanelGroup />
 					<DefaultActionPanelGroup handleGridConfigClick={() => setShowGridConfig(true)} />
-				</Match>
-				<Match when={showGridConfig}>
-					<GridPresetsActionPanelGroup />
-					<GridActionPanelGroup finishTweakingGrid={() => setShowGridConfig(false)} />
 				</Match>
 			</Switch>
 		</ActionPanel.Root>
