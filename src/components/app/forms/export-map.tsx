@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
 import { useToaster } from "$/components/context";
-import { Heading, useAppForm } from "$/components/ui/compositions";
+import { useAppForm } from "$/components/ui/compositions";
 import type { SubmitButton } from "$/components/ui/compositions/button";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import { Stack, styled, Text, VStack } from "$:styled-system/jsx";

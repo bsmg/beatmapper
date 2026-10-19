@@ -2,13 +2,13 @@ import { useHotkey, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { ArrowRightToLineIcon, FastForwardIcon, FlagIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon, UnfoldHorizontalIcon } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { type CSSProperties, useCallback, useMemo } from "react";
 import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { NavigationPanel } from "$/components/app/layouts";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { Button, Input, Stat, Tooltip, usePrompt } from "$/components/ui/compositions";
+import { Button, createPromptFactory, Input, Stat, Tooltip, usePrompt } from "$/components/ui/compositions";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
@@ -16,7 +16,28 @@ import { addBookmark, decrementSnap, incrementSnap, jumpToBeat, jumpToNextMarker
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveWindowSize, selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectSnap } from "$/store/selectors";
 import { clamp, range, roundToNearest } from "$/utils";
-import { Text, Wrap } from "$:styled-system/jsx";
+import { HStack, Text } from "$:styled-system/jsx";
+
+const createQuickSelectPrompt = createPromptFactory({
+	title: "Quick-Select",
+	description: "Select all objects within the specified range of beats.",
+	validate: object({
+		range: pipe(
+			string(),
+			regex(/^[+-]?\d+(?:\.\d+)?(-\d+(?:\.\d+)?)?$/, (issue) => `Invalid format: Expected a number ("4"), range ("3-6"), or delta ("+3", "-3") but received "${issue.input}"`),
+		),
+	}),
+});
+const createJumpToBeatPrompt = createPromptFactory({
+	title: "Jump to Beat",
+	description: "Move the cursor to the specified beat.",
+	validate: object({ beatNum: number() }),
+});
+const createAddBookmarkPrompt = createPromptFactory({
+	title: "Add Bookmark",
+	description: "Create a new bookmark at the current beat.",
+	validate: object({ name: pipe(string(), nonEmpty()) }),
+});
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -47,39 +68,31 @@ function EditorNavigationControls() {
 		return formatCursorPositionInBeats(roundedCursorPosition);
 	});
 
-	const { trigger: triggerQuickSelect } = usePrompt({
-		title: "Quick-Select",
-		description: "Select all objects within the specified range of beats.",
-		defaultValues: { range: "" },
-		validate: object({
-			range: pipe(
-				string(),
-				regex(/^[+-]?\d+(?:\.\d+)?(-\d+(?:\.\d+)?)?$/, (issue) => `Invalid format: Expected a number ("4"), range ("3-6"), or delta ("+3", "-3") but received "${issue.input}"`),
-			),
+	const { trigger: triggerQuickSelect } = usePrompt(
+		createQuickSelectPrompt({
+			defaultValues: { range: "" },
+			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
+			onSubmit: ({ value: { range } }) => {
+				const [startBeat, endBeat] = calculateQuickSelectRange(range, cursorPositionInBeats, 0.01);
+				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
+				dispatch(jumpToBeat({ value: startBeat }));
+			},
 		}),
-		render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
-		onSubmit: ({ value: { range } }) => {
-			const [startBeat, endBeat] = calculateQuickSelectRange(range, cursorPositionInBeats, 0.01);
-			dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
-			dispatch(jumpToBeat({ value: startBeat }));
-		},
-	});
-	const { trigger: triggerJumpToBeat } = usePrompt({
-		title: "Jump to Beat",
-		description: "Move the cursor to the specified beat.",
-		defaultValues: { beatNum: 0 },
-		validate: object({ beatNum: number() }),
-		render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
-		onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
-	});
-	const { trigger: triggerAddBookmark } = usePrompt({
-		title: "Add Bookmark",
-		description: "Create a new bookmark at the current beat.",
-		defaultValues: { name: "" },
-		validate: object({ name: pipe(string(), nonEmpty()) }),
-		render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" />}</form.AppField>,
-		onSubmit: ({ value }) => dispatch(addBookmark({ time: cursorPositionInBeats, name: value.name, color: resolveColorForBookmark(value.name) })),
-	});
+	);
+	const { trigger: triggerJumpToBeat } = usePrompt(
+		createJumpToBeatPrompt({
+			defaultValues: { beatNum: cursorPositionInBeats },
+			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
+		}),
+	);
+	const { trigger: triggerAddBookmark } = usePrompt(
+		createAddBookmarkPrompt({
+			defaultValues: { name: "" },
+			render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" />}</form.AppField>,
+			onSubmit: ({ value }) => dispatch(addBookmark({ time: cursorPositionInBeats, name: value.name, color: resolveColorForBookmark(value.name) })),
+		}),
+	);
 
 	const hotkeys = useHotkeyStore();
 
@@ -136,18 +149,19 @@ function EditorNavigationControls() {
 
 	const getDenominator = useCallback((x: number) => 1 / x, []);
 
-	const inputStyles = useMemo(() => ({ maxWidth: `calc(8.5ch + ${String(getDenominator(snapTo)).length}ch)` }), [snapTo, getDenominator]);
+	const formattedValue = useMemo(() => Number(getDenominator(snapTo).toFixed(3)), [snapTo, getDenominator]);
+	const inputStyles = useMemo(() => ({ maxWidth: `calc(8.5ch + ${String(formattedValue).length}ch)` }) as CSSProperties, [formattedValue]);
 
 	return (
 		<NavigationPanel.Section>
 			<NavigationPanel.Column>
-				<Stat label="Snap to">
+				<Stat label="Snap to" style={{ width: "12ch" }}>
 					<Text>1</Text>
 					<Text>/</Text>
-					<Input unstyled style={inputStyles} type="number" min={1} max={32} step={"any"} value={getDenominator(snapTo)} onValueChange={(details) => dispatch(updateSnap(getDenominator(Number.isNaN(details.valueAsNumber) ? 1 : clamp(details.valueAsNumber, 1, 32))))} />
-					<Text style={{ pointerEvents: "none", marginInlineStart: `-7.5ch` }}>Beats</Text>
+					<Input unstyled style={inputStyles} type="number" min={1} max={32} step={"any"} maxLength={6} value={formattedValue} onValueChange={(details) => dispatch(updateSnap(getDenominator(Number.isNaN(details.valueAsNumber) ? 1 : clamp(details.valueAsNumber, 1, 32))))} />
+					<Text style={{ pointerEvents: "none", marginInlineStart: `calc(-7.5ch)` }}>Beats</Text>
 				</Stat>
-				<Wrap gap={1}>
+				<HStack gap={0.5}>
 					<Tooltip render={() => "Quick-select"}>
 						<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => triggerQuickSelect()}>
 							<UnfoldHorizontalIcon />
@@ -163,9 +177,9 @@ function EditorNavigationControls() {
 							<FlagIcon />
 						</Button>
 					</Tooltip>
-				</Wrap>
+				</HStack>
 			</NavigationPanel.Column>
-			<NavigationPanel.Column>
+			<NavigationPanel.Column style={{ maxWidth: "fit-content" }}>
 				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevMarker())}>
 					<SkipBackIcon />
 				</Button>

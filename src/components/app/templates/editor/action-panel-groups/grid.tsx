@@ -3,11 +3,17 @@ import type { MouseEventHandler } from "react";
 import { nonEmpty, object, pipe, string } from "valibot";
 
 import { ActionPanelGroup } from "$/components/app/layouts";
-import { Button, Field, FieldInput, usePrompt } from "$/components/ui/compositions";
+import { Button, createPromptFactory, Field, FieldInput, usePrompt } from "$/components/ui/compositions";
 import { DEFAULT_GRID } from "$/constants";
 import { saveGridPreset, updateGridSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectGridSize } from "$/store/selectors";
+
+const createSaveGridPresetPrompt = createPromptFactory({
+	title: "Save Grid Preset",
+	description: "Saves your current grid settings to a preset.",
+	validate: object({ slot: pipe(string(), nonEmpty()) }),
+});
 
 interface Props {
 	finishTweakingGrid: MouseEventHandler;
@@ -18,16 +24,15 @@ function GridActionPanelGroup({ finishTweakingGrid }: Props) {
 	const dispatch = useAppDispatch();
 	const { numRows, numCols, colWidth, rowHeight, colOffset, rowOffset } = useAppSelector((state) => selectGridSize(state, sid));
 
-	const { trigger: triggerSaveGridPreset } = usePrompt({
-		title: "Save Grid Preset",
-		description: "Saves your current grid settings to a preset.",
-		defaultValues: { slot: "" },
-		validate: object({ slot: pipe(string(), nonEmpty()) }),
-		render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Input label="Preset Name" />}</form.AppField>,
-		onSubmit: ({ value }) => {
-			return dispatch(saveGridPreset({ slot: value.slot }));
-		},
-	});
+	const { trigger: triggerSaveGridPreset } = usePrompt(
+		createSaveGridPresetPrompt({
+			defaultValues: { slot: "" },
+			render: ({ form }) => <form.AppField name="slot">{(ctx) => <ctx.Input label="Preset Name" />}</form.AppField>,
+			onSubmit: ({ value }) => {
+				return dispatch(saveGridPreset({ slot: value.slot }));
+			},
+		}),
+	);
 
 	return (
 		<ActionPanelGroup.Root label="Customize Grid">

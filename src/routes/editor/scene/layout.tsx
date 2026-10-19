@@ -5,11 +5,10 @@ import { useEffect, useMemo } from "react";
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { NavigationPanel } from "$/components/app/layouts";
 import { EditorAudioVisualizer, EditorNavigationControls, EditorSongInfo, EditorStatusBar } from "$/components/app/templates/editor";
-import { useToaster } from "$/components/context";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
-import { downloadMapFiles, saveMapFiles, startLoadingMap } from "$/store/actions";
+import { saveMapFiles, startLoadingMap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectDemo, selectLoading } from "$/store/selectors";
+import { selectLoading } from "$/store/selectors";
 import { styled } from "$:styled-system/jsx";
 
 export const Route = createFileRoute("/_/edit/$sid/$bid/_/_scene")({
