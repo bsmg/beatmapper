@@ -21,7 +21,7 @@ function EditorActionPanel() {
 
 	const isAnythingSelected = useMemo(() => selectedBlocks.length > 0 || selectedObstacles.length > 0 || selectedMines.length > 0, [selectedBlocks, selectedObstacles, selectedMines]);
 
-	const [showGridConfig, setShowGridConfig] = useState(true);
+	const [showGridConfig, setShowGridConfig] = useState(false);
 
 	useUpdateEffect(() => {
 		if (showGridConfig && isAnythingSelected) {

@@ -1,7 +1,7 @@
 import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useMatchRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { BookOpenIcon, BoxIcon, DownloadIcon, HomeIcon, ListIcon, PlayIcon, SettingsIcon, ZapIcon } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import { AppSettingsForm, ExportMapForm } from "$/components/app/forms";
 import { Sidebar } from "$/components/app/layouts";
@@ -11,6 +11,8 @@ import { downloadMapFiles } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectDemo } from "$/store/selectors";
 import type { View } from "$/types";
+import { getHotkeyCategory, getHotkeyScopes } from "../../helpers";
+import AppHotkeys from "../tables/hotkeys";
 
 function EditorSidebar() {
 	const params = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -24,10 +26,13 @@ function EditorSidebar() {
 
 	const isView = useCallback((to: View) => !!matchRoute({ to: `/edit/$sid/$bid/${to}`, params, fuzzy: true }), [matchRoute, params]);
 
-	useHotkey({ label: "Go to Beatmap View", hotkey: "F1", action: () => navigate({ to: "/edit/$sid/$bid/notes", params, replace: true }) });
-	useHotkey({ label: "Go to Lightshow View", hotkey: "F2", action: () => navigate({ to: "/edit/$sid/$bid/events", params, replace: true }) });
-	useHotkey({ label: "Go to Preview View", hotkey: "F3", action: () => navigate({ to: "/edit/$sid/$bid/preview", params, replace: true }) });
-	useHotkey({ label: "Go to Details View", hotkey: "F4", action: () => navigate({ to: "/edit/$sid/$bid/details", params, replace: true }) });
+	const scopes = useMemo(() => getHotkeyScopes("editor"), []);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	useHotkey({ scopes, category, label: "Go to Beatmap View", hotkey: "F1", action: () => navigate({ to: "/edit/$sid/$bid/notes", params, replace: true }) });
+	useHotkey({ scopes, category, label: "Go to Lightshow View", hotkey: "F2", action: () => navigate({ to: "/edit/$sid/$bid/events", params, replace: true }) });
+	useHotkey({ scopes, category, label: "Go to Preview View", hotkey: "F3", action: () => navigate({ to: "/edit/$sid/$bid/preview", params, replace: true }) });
+	useHotkey({ scopes, category, label: "Go to Details View", hotkey: "F4", action: () => navigate({ to: "/edit/$sid/$bid/details", params, replace: true }) });
 
 	const { trigger: triggerDownloadPrompt } = usePrompt({
 		title: "Download Map",
@@ -45,15 +50,20 @@ function EditorSidebar() {
 		return triggerDownloadPrompt();
 	}, [isReadonly, toaster, triggerDownloadPrompt]);
 
-	useHotkey({ label: "Download Map", hotkey: "Mod+P", action: () => triggerDownload() });
+	useHotkey({ scopes, category, label: "Download Map", hotkey: "Mod+P", action: () => triggerDownload() });
 
 	const { trigger: triggerSettings } = usePrompt({
 		title: "App Settings",
 		render: () => <AppSettingsForm />,
 	});
+	const { trigger: triggerHotkeys } = usePrompt({
+		title: "App Hotkeys",
+		render: () => <AppHotkeys />,
+	});
 
-	useHotkey({ label: "View Settings", hotkey: "Mod+,", action: () => triggerSettings() });
-	useHotkey({ label: "View Documentation", hotkey: "?", action: () => navigate({ to: "/docs" }) });
+	useHotkey({ scopes, category, label: "View Settings", hotkey: "Mod+,", action: () => triggerSettings() });
+	useHotkey({ scopes, category, label: "View Hotkeys", hotkey: "Mod+.", action: () => triggerHotkeys() });
+	useHotkey({ scopes, category, label: "View Documentation", hotkey: "?", action: () => navigate({ to: "/docs" }) });
 
 	return (
 		<Sidebar.Root onWheel={(ev) => ev.stopPropagation()}>

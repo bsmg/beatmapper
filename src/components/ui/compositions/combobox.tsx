@@ -86,14 +86,14 @@ export function Combobox({ collection: original, value, onValueCreate, onValueCh
 		initialItems: original.items,
 		filter: contains,
 		itemToValue: (item) => {
-			const value = original.getItemValue(item);
-			if (value !== null) return item.toString();
-			return value;
+			const itemValue = original.getItemValue(item);
+			if (itemValue !== null) return itemValue;
+			return item?.toString();
 		},
 		itemToString: (item) => {
-			const label = original.stringifyItem(item);
-			if (label !== null) return item.toString();
-			return label;
+			const itemLabel = original.stringifyItem(item);
+			if (itemLabel !== null) return itemLabel;
+			return item?.toString();
 		},
 	});
 

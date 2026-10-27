@@ -20,7 +20,7 @@ import { selectActiveWindowSize, selectAllSelectedObjects, selectSelectedBeatmap
 import { ObjectType } from "$/types";
 import { StrikethroughOnHover, Text } from "$:styled-system/jsx";
 
-const NOTE_COLOR_COLLECTION = createListCollection({ items: [NoteColor.RED, NoteColor.BLUE] });
+const NOTE_COLOR_COLLECTION = createListCollection({ items: [NoteColor.RED, NoteColor.BLUE], itemToValue: (x) => x.toString(), itemToString: (i) => ["Left", "Right"][i] });
 
 const createModifyObjectsPrompt = createPromptFactory({
 	title: "Modify All Selected Objects",

@@ -36,6 +36,9 @@ function DefaultControls() {
 
 	useHotkey({ scopes, category, label: "Select All Events", hotkey: "Mod+A", action: () => dispatch(toggleSelectAllEntities()) });
 
+	useHotkey({ scopes, category, label: "Zoom Out", hotkey: "-", action: () => dispatch(decrementEventsEditorZoomLevel()) });
+	useHotkey({ scopes, category, label: "Zoom In", hotkey: "=", action: () => dispatch(incrementEventsEditorZoomLevel()) });
+
 	return (
 		<Fragment>
 			<Field cosmetic size="sm" label="History" align="end">
