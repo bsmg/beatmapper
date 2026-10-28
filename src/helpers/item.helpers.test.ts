@@ -1,4 +1,4 @@
-import { randomIntegerBetween } from "@std/random";
+import { randomIntegerBetween } from "@std/random/integer-between";
 import { describe, expect, it } from "vitest";
 
 import { mirrorCoordinate } from "./item.helpers";

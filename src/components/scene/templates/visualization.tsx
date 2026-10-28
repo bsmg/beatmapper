@@ -8,7 +8,6 @@ import type { Object3D } from "three";
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { calculateInlineRotations, resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
-import { useControls } from "$/components/scene/hooks/use-controls";
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
 import { Visualization } from "$/components/scene/layouts";
 import { HIGHEST_PRECISION } from "$/constants";
@@ -36,8 +35,6 @@ interface Props {
  */
 function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: Props) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
-
-	useControls();
 
 	const isDispatchingEvent = useRef(false);
 

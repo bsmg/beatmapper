@@ -66,7 +66,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const handlePointerUp = useCallback(
 		(event: PointerEvent) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 
 			if (activePointerIdRef.current !== null && activePointerIdRef.current !== event.pointerId) {
 				return;

@@ -8,3 +8,5 @@ export type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 export type Member<T> = T extends Readonly<Array<unknown>> ? T[number] : T extends Readonly<Record<PropertyKey, unknown>> ? T[keyof T] : never;
 
 export type RequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+
+export type UnionToIntersection<U> = Expand<(U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never>;

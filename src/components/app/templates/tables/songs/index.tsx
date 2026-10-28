@@ -1,6 +1,6 @@
 import { useListCollection } from "@ark-ui/react/collection";
 import { Link } from "@tanstack/react-router";
-import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { createColumnHelper, type StockFeatures, stockFeatures, useTable } from "@tanstack/react-table";
 import { ArrowRightToLineIcon } from "lucide-react";
 import { Fragment, useCallback } from "react";
 
@@ -16,7 +16,7 @@ import { HStack, styled } from "$:styled-system/jsx";
 import { center } from "$:styled-system/patterns";
 import SongsDataTableActions from "./actions";
 
-const helper = createColumnHelper<App.ISong>();
+const helper = createColumnHelper<StockFeatures, App.ISong>();
 
 interface Props {
 	songId: SongId;
@@ -68,39 +68,40 @@ function SongsDataTable() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: force rerender when songs change
 	const getColumns = useCallback(
-		() => [
-			helper.accessor((data) => resolveSongId(data), {
-				id: "cover",
-				size: 40,
-				header: () => null,
-				cell: (ctx) => <CoverArtFile filename={BeatmapFilestore.resolveFilename(ctx.getValue(), "cover", {})} boxSize={40} />,
-			}),
-			helper.accessor((data) => resolveSongId(data), {
-				id: "metadata",
-				size: 240,
-				header: () => "Title",
-				cell: (ctx) => <Metadata songId={ctx.getValue()} />,
-			}),
-			helper.accessor((data) => resolveSongId(data), {
-				id: "beatmaps",
-				size: 120,
-				header: () => "Beatmaps",
-				cell: (ctx) => <Beatmaps songId={ctx.getValue()} />,
-			}),
-			helper.accessor((data) => resolveSongId(data), {
-				id: "actions",
-				size: 80,
-				header: () => "Actions",
-				cell: (ctx) => <Actions songId={ctx.getValue()} />,
-			}),
-		],
+		() =>
+			helper.columns([
+				helper.accessor((data) => resolveSongId(data), {
+					id: "cover",
+					size: 40,
+					header: () => null,
+					cell: (ctx) => <CoverArtFile filename={BeatmapFilestore.resolveFilename(ctx.getValue(), "cover", {})} boxSize={40} />,
+				}),
+				helper.accessor((data) => resolveSongId(data), {
+					id: "metadata",
+					size: 240,
+					header: () => "Title",
+					cell: (ctx) => <Metadata songId={ctx.getValue()} />,
+				}),
+				helper.accessor((data) => resolveSongId(data), {
+					id: "beatmaps",
+					size: 120,
+					header: () => "Beatmaps",
+					cell: (ctx) => <Beatmaps songId={ctx.getValue()} />,
+				}),
+				helper.accessor((data) => resolveSongId(data), {
+					id: "actions",
+					size: 80,
+					header: () => "Actions",
+					cell: (ctx) => <Actions songId={ctx.getValue()} />,
+				}),
+			]),
 		[songs],
 	);
 
-	const table = useReactTable({
+	const table = useTable({
+		features: stockFeatures,
 		columns: getColumns(),
 		data: songs,
-		getCoreRowModel: getCoreRowModel(),
 	});
 
 	return (

@@ -1,12 +1,12 @@
 import { Canvas, type RootState } from "@react-three/fiber";
 import { type ComponentProps, forwardRef, useCallback } from "react";
 import { Provider, ReactReduxContext } from "react-redux";
-import { PCFSoftShadowMap } from "three";
+import { PCFShadowMap } from "three";
 
 export const ReduxForwardingCanvas = forwardRef<HTMLCanvasElement, ComponentProps<"div">>(({ children, ...forwarded }, ref) => {
 	const handleCreated = useCallback(({ gl, camera, raycaster }: RootState) => {
 		gl.shadowMap.enabled = true;
-		gl.shadowMap.type = PCFSoftShadowMap;
+		gl.shadowMap.type = PCFShadowMap;
 		camera.layers.enableAll();
 		raycaster.layers.disableAll();
 		raycaster.layers.enable(1);

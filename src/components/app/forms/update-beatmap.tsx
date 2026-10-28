@@ -1,6 +1,6 @@
 import { createListCollection } from "@ark-ui/react/collection";
 import { useDialog } from "@ark-ui/react/dialog";
-import { useStore } from "@tanstack/react-form";
+import { useSelector as useFormSelector } from "@tanstack/react-form";
 import { useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
 import { CharacteristicRename, DifficultyRename, type EnvironmentName, EnvironmentSchemeName, NoteJumpSpeed } from "bsmap";
 import { DotIcon } from "lucide-react";
@@ -92,12 +92,12 @@ function UpdateBeatmapForm({ bid }: Props) {
 		},
 	});
 
-	const jumpSpeed = useStore(Form.store, (state) => state.values.noteJumpSpeed);
-	const jumpOffset = useStore(Form.store, (state) => state.values.startBeatOffset);
+	const jumpSpeed = useFormSelector(Form.store, (state) => state.values.noteJumpSpeed);
+	const jumpOffset = useFormSelector(Form.store, (state) => state.values.startBeatOffset);
 
 	const njs = useMemo(() => NoteJumpSpeed.create(bpm, jumpSpeed, jumpOffset), [bpm, jumpSpeed, jumpOffset]);
 
-	const environmentName = useStore(Form.store, (state) => state.values.environmentName);
+	const environmentName = useFormSelector(Form.store, (state) => state.values.environmentName);
 
 	const deleteAlert = useDialog({ role: "alertdialog" });
 
