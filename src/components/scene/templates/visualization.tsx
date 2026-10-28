@@ -1,7 +1,8 @@
-import { type ThreeEvent, useThree } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
+import type { EntityId } from "@reduxjs/toolkit";
 import { useParams } from "@tanstack/react-router";
 import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, NoteDirection } from "bsmap";
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import type { Object3D } from "three";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
@@ -10,6 +11,7 @@ import { calculateInlineRotations, resolvePositionForGridObject, resolvePosition
 import { useControls } from "$/components/scene/hooks/use-controls";
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
 import { Visualization } from "$/components/scene/layouts";
+import { HIGHEST_PRECISION } from "$/constants";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
@@ -17,6 +19,7 @@ import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, 
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
+import { roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
 import EditorPlacementGrid from "./placement-grid";
 
@@ -36,9 +39,8 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 
 	useControls();
 
-	const { raycaster, scene } = useThree((state) => state);
-
 	const isDispatchingEvent = useRef(false);
+
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
@@ -82,10 +84,9 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 		onItemDeselect: (_, id) => dispatch(deselectObstacle({ id })),
 		onItemDelete: (_, id) => dispatch(removeObstacle({ id })),
 		onItemWheel: (x, id, delta) => {
-			const newDuration = x.duration + snapTo * delta;
+			const newDuration = roundToNearest(x.duration + snapTo * delta, HIGHEST_PRECISION);
 			// the new duration value should never create an invalid obstacle.
-			if (newDuration <= 0 || Math.abs(newDuration) < 0.01) return;
-			dispatch(updateObstacle({ id, changes: { duration: x.duration + snapTo * delta } }));
+			dispatch(updateObstacle({ id, changes: { duration: Math.max(newDuration, HIGHEST_PRECISION) } }));
 		},
 	});
 
@@ -107,23 +108,21 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 			// ignore left click, since we don't want passthrough to take priority over placements
 			if (event.button === 0) return;
 
-			const intersects = raycaster.intersectObjects(scene.children, true);
+			const target = event.intersections.find(({ object }) => isColorNote(object.userData) || isBombNote(object.userData) || isObstacle(object.userData));
 
-			if (intersects.length > 1) {
-				const target = intersects[1].object;
-
+			if (target) {
 				isDispatchingEvent.current = true;
 				try {
-					const data = deriveUserDataFromTarget(target);
-					if (isColorNote(data)) return noteActions.handlePointerDown(event.nativeEvent, data);
-					if (isBombNote(data)) return bombActions.handlePointerDown(event.nativeEvent, data);
-					if (isObstacle(data)) return obstacleActions.handlePointerDown(event.nativeEvent, data);
+					const data = deriveUserDataFromTarget(target.object);
+					if (isColorNote(data)) return noteActions.handlePointerDown(event, data);
+					if (isBombNote(data)) return bombActions.handlePointerDown(event, data);
+					if (isObstacle(data)) return obstacleActions.handlePointerDown(event, data);
 				} finally {
 					isDispatchingEvent.current = false;
 				}
 			}
 		},
-		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handlePointerDown, bombActions.handlePointerDown, obstacleActions.handlePointerDown],
+		[selectionMode, deriveUserDataFromTarget, noteActions.handlePointerDown, bombActions.handlePointerDown, obstacleActions.handlePointerDown],
 	);
 
 	const handleCellWheel = useCallback(
@@ -131,74 +130,113 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 			if (selectionMode) return;
 			if (isDispatchingEvent.current) return;
 
-			const intersects = raycaster.intersectObjects(scene.children, true);
+			const target = event.intersections.find(({ object }) => isColorNote(object.userData) || isBombNote(object.userData) || isObstacle(object.userData));
 
-			if (intersects.length > 1) {
-				const target = intersects[1].object;
-
+			if (target) {
 				isDispatchingEvent.current = true;
 				try {
-					const data = deriveUserDataFromTarget(target);
-					if (isColorNote(data)) return noteActions.handleWheel(event.nativeEvent, data);
-					if (isBombNote(data)) return bombActions.handleWheel(event.nativeEvent, data);
-					if (isObstacle(data)) return obstacleActions.handleWheel(event.nativeEvent, data);
+					const data = deriveUserDataFromTarget(target.object);
+					if (isColorNote(data)) return noteActions.handleWheel(event, data);
+					if (isBombNote(data)) return bombActions.handleWheel(event, data);
+					if (isObstacle(data)) return obstacleActions.handleWheel(event, data);
 					return;
 				} finally {
 					isDispatchingEvent.current = false;
 				}
 			}
 		},
-		[raycaster, scene, selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, bombActions.handleWheel, obstacleActions.handleWheel],
+		[selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, bombActions.handleWheel, obstacleActions.handleWheel],
 	);
 
 	const rotationOverrides = useMemo(() => {
 		if (interactive) {
-			return new Map<string, number>();
+			return new Map<EntityId, number>();
 		}
 		return calculateInlineRotations(notes);
 	}, [notes, interactive]);
+
+	const [hoveredId, setHoveredId] = useState<EntityId | null>(null);
 
 	return (
 		<Visualization.Root cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
 			<Visualization.Mover immediate={!animateTrack}>
 				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
-				<Visualization.ForGridObjects objects={notes} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
-					{(data, props) => (
+				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+					{(data, id, props) => (
 						<ColorNote
-							key={resolveNoteId(data)}
+							key={id}
 							{...props}
-							rotationOffset={rotationOverrides.get(resolveNoteId(data))}
-							onPointerDown={(e) => noteActions.handlePointerDown(e.nativeEvent, data)}
-							onPointerOver={(e) => noteActions.handlePointerOver(e.nativeEvent, data)}
-							onPointerOut={(e) => noteActions.handlePointerOut(e.nativeEvent, data)}
-							onWheel={(e) => noteActions.handleWheel(e.nativeEvent, data)}
+							rotationOffset={rotationOverrides.get(id)}
+							onPointerOver={(e) => {
+								e.stopPropagation();
+								setHoveredId(id);
+								noteActions.handlePointerOver(e, data);
+							}}
+							onPointerOut={(e) => {
+								setHoveredId(null);
+								noteActions.handlePointerOut(e, data);
+							}}
+							onPointerDown={(e) => {
+								if (hoveredId !== id) return;
+								noteActions.handlePointerDown(e, data);
+							}}
+							onWheel={(e) => {
+								if (hoveredId !== id) return;
+								noteActions.handleWheel(e, data);
+							}}
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={bombs} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
-					{(data, props) => (
+				<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
+					{(data, id, props) => (
 						<BombNote
-							key={resolveNoteId(data)}
+							key={id}
 							{...props}
-							onPointerDown={(e) => bombActions.handlePointerDown(e.nativeEvent, data)}
-							onPointerOver={(e) => bombActions.handlePointerOver(e.nativeEvent, data)}
-							onPointerOut={(e) => bombActions.handlePointerOut(e.nativeEvent, data)}
-							onWheel={(e) => bombActions.handleWheel(e.nativeEvent, data)}
+							onPointerOver={(e) => {
+								e.stopPropagation();
+								setHoveredId(id);
+								bombActions.handlePointerOver(e, data);
+							}}
+							onPointerOut={(e) => {
+								setHoveredId(null);
+								bombActions.handlePointerOut(e, data);
+							}}
+							onPointerDown={(e) => {
+								if (hoveredId !== id) return;
+								bombActions.handlePointerDown(e, data);
+							}}
+							onWheel={(e) => {
+								if (hoveredId !== id) return;
+								bombActions.handleWheel(e, data);
+							}}
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={obstacles} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
-					{(data, props) => (
+				<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
+					{(data, id, props) => (
 						<Obstacle
-							key={resolveObstacleId(data)}
+							key={id}
 							layers={1}
 							timescale={timescale}
 							beatDepth={beatDepth}
 							{...props}
-							onPointerDown={(e) => obstacleActions.handlePointerDown(e.nativeEvent, data)}
-							onPointerOver={(e) => obstacleActions.handlePointerOver(e.nativeEvent, data)}
-							onPointerOut={(e) => obstacleActions.handlePointerOut(e.nativeEvent, data)}
-							onWheel={(e) => obstacleActions.handleWheel(e.nativeEvent, data)}
+							onPointerOver={(e) => {
+								e.stopPropagation();
+								setHoveredId(id);
+								obstacleActions.handlePointerOver(e, data);
+							}}
+							onPointerOut={(e) => {
+								setHoveredId(null);
+								obstacleActions.handlePointerOut(e, data);
+							}}
+							onPointerDown={(e) => {
+								if (hoveredId !== id) return;
+								obstacleActions.handlePointerDown(e, data);
+							}}
+							onWheel={(e) => {
+								if (hoveredId !== id) return;
+								obstacleActions.handleWheel(e, data);
+							}}
 						/>
 					)}
 				</Visualization.ForGridObjects>

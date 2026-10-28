@@ -32,7 +32,7 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, ar
 	const relevantObstacles = difference(args.obstacles.before, args.obstacles.after, resolveObstacleId);
 
 	const relevantEntities = [...relevantNotes, ...relevantBombs, ...relevantObstacles].sort(sortObjectFn);
-	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
+	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0]?.time ?? 0);
 
 	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
@@ -42,7 +42,7 @@ function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, arg
 	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after, resolveEventId);
 
 	const relevantEntities = [...relevantBasicEvents, ...relevantBoostEvents].sort(sortObjectFn);
-	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
+	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0]?.time ?? 0);
 
 	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
