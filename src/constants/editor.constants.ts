@@ -13,8 +13,6 @@ export const DEFAULT_GRID = {
 	rowOffset: 0,
 } as const;
 
-export const HIGHEST_PRECISION = 0.03125; // 1/32;
-
 export const BEATS_PER_ZOOM_LEVEL = [32, 16, 8, 4, 2] as const;
 
 export const ZOOM_LEVEL_MIN = 0;

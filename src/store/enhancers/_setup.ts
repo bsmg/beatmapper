@@ -19,6 +19,7 @@ import {
 	updateEventsEditorTrackOpacity,
 	updateEventsEditorWindowLock,
 	updateEventsEditorZoomLevel,
+	updateHighestPrecision,
 	updateNew,
 	updateNotesEditorDirection,
 	updateNotesEditorTool,
@@ -50,6 +51,7 @@ import {
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
 	selectGridPresetById,
+	selectHighestPrecision,
 	selectNew,
 	selectNotesEditorDirection,
 	selectNotesEditorTool,
@@ -184,6 +186,10 @@ export function createAppEnhancers() {
 			"controls.window": {
 				selectValue: selectWindowSize,
 				hydrateValue: updateWindowSize,
+			},
+			"controls.precision": {
+				selectValue: selectHighestPrecision,
+				hydrateValue: updateHighestPrecision,
 			},
 			"advanced.wait": {
 				selectValue: selectPacerWait,

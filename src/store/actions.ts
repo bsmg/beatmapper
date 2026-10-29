@@ -60,6 +60,7 @@ export {
 	stopPlayback,
 	tick,
 	updateCursorPosition,
+	updateHighestPrecision,
 	updatePlaybackRate,
 	updateSnap,
 	updateSongVolume,

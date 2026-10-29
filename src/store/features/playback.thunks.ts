@@ -1,9 +1,8 @@
-import { HIGHEST_PRECISION } from "$/constants";
 import { selectActiveSongId } from "$/store/helpers/route.helpers";
 import type { AppThunkApiConfig } from "$/store/types";
 import { createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { selectAllBookmarks } from "./bookmarks.slice";
-import { pausePlayback, selectCursorPosition, selectDuration, selectPlaying, startPlayback, updateCursorPosition } from "./navigation.slice";
+import { pausePlayback, selectCursorPosition, selectDuration, selectHighestPrecision, selectPlaying, startPlayback, updateCursorPosition } from "./navigation.slice";
 import { selectBeatForTime, selectTimeForBeat } from "./selectors";
 
 export const togglePlayback = createThunk("togglePlayback", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
@@ -31,6 +30,7 @@ export const jumpToBeat = createThunk("jumpToBeat", (args: { value: number }, ap
 function calculateWindowJumpTarget(api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>, delta: number, overrideWindowSize?: number): number {
 	const state = api.getState();
 	const songId = selectActiveSongId(api.extra.getRouter());
+	const highestPrecision = selectHighestPrecision(state);
 
 	const cursorPositionInBeats = selectBeatForTime(state, songId, selectCursorPosition(state));
 	const durationInBeats = selectBeatForTime(state, songId, selectDuration(state) ?? 0);
@@ -38,9 +38,9 @@ function calculateWindowJumpTarget(api: GetShallowThunkAPI<AppThunkApiConfig<"ge
 	const windowSize = overrideWindowSize ?? durationInBeats;
 
 	if (delta > 0) {
-		return Math.ceil((cursorPositionInBeats + HIGHEST_PRECISION) / windowSize) * windowSize;
+		return Math.ceil((cursorPositionInBeats + highestPrecision) / windowSize) * windowSize;
 	} else {
-		return Math.floor((cursorPositionInBeats - HIGHEST_PRECISION) / windowSize) * windowSize;
+		return Math.floor((cursorPositionInBeats - highestPrecision) / windowSize) * windowSize;
 	}
 }
 

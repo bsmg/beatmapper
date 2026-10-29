@@ -14,7 +14,7 @@ import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/h
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
+import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectHighestPrecision, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {
@@ -30,6 +30,7 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 	const selectedTool = useAppSelector(selectNotesEditorTool);
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
 	const beatDepth = useAppSelector(selectTrackScale);
+	const highestPrecision = useAppSelector(selectHighestPrecision);
 
 	const hotkeys = useHotkeyStore();
 
@@ -76,7 +77,7 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
-					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid);
+					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, { duration: Math.max(ctx.duration ?? 0, highestPrecision) });
 					if (obstacle) return dispatch(addObstacle(obstacle));
 					break;
 				}
@@ -100,7 +101,7 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && activeTool.current === ObjectTool.OBSTACLE}>
-					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid)}>
+					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid, { duration: Math.max(ctx.duration ?? 0, highestPrecision) })}>
 						{(data) => activeTool.current && <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(activeTool.current, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>

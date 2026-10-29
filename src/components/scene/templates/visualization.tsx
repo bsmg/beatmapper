@@ -10,13 +10,12 @@ import { SONG_OFFSET } from "$/components/scene/constants";
 import { calculateInlineRotations, resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
 import { Visualization } from "$/components/scene/layouts";
-import { HIGHEST_PRECISION } from "$/constants";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
+import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import { roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -42,6 +41,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 	const snapTo = useAppSelector(selectSnap);
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const animateTrack = useAppSelector(selectAnimateTrack);
+	const highestPrecision = useAppSelector(selectHighestPrecision);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
@@ -81,9 +81,9 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 		onItemDeselect: (_, id) => dispatch(deselectObstacle({ id })),
 		onItemDelete: (_, id) => dispatch(removeObstacle({ id })),
 		onItemWheel: (x, id, delta) => {
-			const newDuration = roundToNearest(x.duration + snapTo * delta, HIGHEST_PRECISION);
+			const newDuration = roundToNearest(x.duration + snapTo * delta, highestPrecision);
 			// the new duration value should never create an invalid obstacle.
-			dispatch(updateObstacle({ id, changes: { duration: Math.max(newDuration, HIGHEST_PRECISION) } }));
+			dispatch(updateObstacle({ id, changes: { duration: Math.max(newDuration, highestPrecision) } }));
 		},
 	});
 

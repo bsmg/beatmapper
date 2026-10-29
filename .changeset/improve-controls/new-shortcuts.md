@@ -7,7 +7,8 @@
 - The toggle for camera movement/rotation has been changed to right click (as opposed to shift) to allow camera controls to align more closely with traditional workflows from other editors.
 - Certain hotkeys have been remapped to more intuitive combinations and sequences to reduce collisions and align with traditional layouts and intents.
 - The "snap precision" selector has been changed to an input-based field to allow greater customization of precision values.
-	- `CTRL+{1-9}` will update the snap precision to `1/{1-9}` respectively, and each base will now support up to 5 steps of precision between `1/1` and `1/32`.
+	- You can customize the highest precision used for snap calculations, as well as other placement and navigation controls.
+	- `CTRL+{1-9}` will update the snap precision to `1/{1-9}` respectively, and each base will now support incremental steps of precision between `1/1` and the highest precision.
 - The jump navigation shortcuts have been streamlined to a more unified control scheme:
 	- The buttons for "Jump Forwards/Backwards" will now advance by your active snap precision and will only jump larger distances when holding down the `Mod` key.
 	- The hotkeys for "Jump Forwards/Backwards" actions have been inverted for consistency with other navigation hotkeys.

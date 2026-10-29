@@ -1,7 +1,7 @@
 import { createObstacle, type IWrapObstacle } from "bsmap";
 
 import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
-import { DEFAULT_GRID, HIGHEST_PRECISION } from "$/constants";
+import { DEFAULT_GRID } from "$/constants";
 import { type IGrid, ObstaclePlacementMode } from "$/types";
 import { convertGridCell } from "./grid.helpers";
 import { serializeCoordinate } from "./item.helpers";
@@ -61,7 +61,7 @@ export function createObstacleFromMouseEvent({ cellDownAt, cellOverAt, time, dur
 	const rawWidth = maxColIndex - minColIndex + 1;
 	const rawHeight = maxRowIndex - minRowIndex + 1;
 
-	const obstacle = createObstacle({ time: time ?? 0, duration: Math.max(duration ?? 0, HIGHEST_PRECISION), posX: colIndex, width: rawWidth, ...data });
+	const obstacle = createObstacle({ time: time ?? 0, duration: duration ?? 0, posX: colIndex, width: rawWidth, ...data });
 
 	switch (mode) {
 		case ObstaclePlacementMode.LEGACY: {
