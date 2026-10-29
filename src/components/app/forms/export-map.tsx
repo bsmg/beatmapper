@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import { boolean, null_, object, picklist, union } from "valibot";
 
 import { useToaster } from "$/components/context";
-import { Heading, useAppForm } from "$/components/ui/compositions";
+import { useAppForm } from "$/components/ui/compositions";
 import type { SubmitButton } from "$/components/ui/compositions/button";
 import type { ExportMapArchiveOptions } from "$/services/packaging.service";
 import { Stack, styled, Text, VStack } from "$:styled-system/jsx";
@@ -55,17 +55,12 @@ function ExportMapForm({ onSubmit, ...rest }: Assign<ComponentProps<typeof Submi
 	return (
 		<Form.AppForm>
 			<Form.Root>
-				<Panel gap={6}>
-					<VStack gap={2}>
-						<Text textStyle={"paragraph"}>Click to download a .zip containing all of the files needed to transfer your map onto a device for testing, or to submit for uploading.</Text>
-						<Form.Submit variant="solid" size="md" {...rest}>
-							Download map files
-						</Form.Submit>
-					</VStack>
+				<Panel gap={2}>
+					<Text textStyle={"paragraph"}>Click to download a .zip containing all of the files needed to transfer your map onto your device for testing or publishing.</Text>
+					<Form.Submit variant="solid" size="md" {...rest}>
+						Download map files
+					</Form.Submit>
 				</Panel>
-				<Stack>
-					<Heading rank={2}>Options</Heading>
-				</Stack>
 				<Form.Row>
 					<Form.AppField name="version">
 						{(ctx) => (
@@ -89,9 +84,9 @@ function ExportMapForm({ onSubmit, ...rest }: Assign<ComponentProps<typeof Submi
 
 const Panel = styled(VStack, {
 	base: {
-		layerStyle: "fill.surface",
+		layerStyle: "fill.panel",
 		colorPalette: "slate",
-		padding: 4,
+		padding: 3,
 		textAlign: "center",
 	},
 });

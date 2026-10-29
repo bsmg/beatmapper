@@ -1,3 +1,4 @@
+import { usePressedKeys } from "@ark-ui/react/hotkeys";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { EntityId } from "@reduxjs/toolkit";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
@@ -15,16 +16,19 @@ interface UseObjectSelectionOptions<T extends App.IEditorObject> {
 	onItemSelect?: (item: T, id: EntityId) => void;
 	onItemDeselect?: (item: T, id: EntityId) => void;
 	onItemDelete?: (item: T, id: EntityId) => void;
-	onItemModify?: (item: T, id: EntityId) => void;
-	onItemWheel?: (item: T, id: EntityId, delta: number) => void;
+	onItemModifyClick?: (item: T, id: EntityId, shiftKey: boolean) => void;
+	onItemModifyWheel?: (item: T, id: EntityId, delta: number, shiftKey: boolean) => void;
+	onItemModifyKeys?: (item: T, id: EntityId, keys: string[], shiftKey: boolean) => void;
 }
 
-export function useObjectPlacement<T extends App.IEditorObject>({ interactive, selectId, onItemSelect, onItemDeselect, onItemDelete, onItemModify, onItemWheel }: UseObjectSelectionOptions<T>) {
+export function useObjectPlacement<T extends App.IEditorObject>({ interactive, selectId, onItemSelect, onItemDeselect, onItemDelete, onItemModifyClick, onItemModifyKeys, onItemModifyWheel }: UseObjectSelectionOptions<T>) {
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const wait = useAppSelector(selectPacerWait);
+	const pressedKeys = usePressedKeys();
 
 	const activePointerIdRef = useRef<number | null>(null);
+	const hoveredItemRef = useRef<{ item: T; id: EntityId } | null>(null);
 
 	const handlePointerDown = useCallback(
 		(event: ThreeEvent<PointerEvent>, data: T) => {
@@ -47,7 +51,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 				}
 				case 1: {
 					newSelectionMode = null;
-					onItemModify?.(data, id);
+					onItemModifyClick?.(data, id, event.shiftKey);
 					break;
 				}
 				case 2: {
@@ -61,7 +65,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 				dispatch(startManagingNoteSelection({ selectionMode: newSelectionMode }));
 			}
 		},
-		[interactive, dispatch, selectId, onItemSelect, onItemDeselect, onItemDelete, onItemModify],
+		[interactive, dispatch, selectId, onItemSelect, onItemDeselect, onItemDelete, onItemModifyClick],
 	);
 
 	const handlePointerUp = useCallback(
@@ -88,9 +92,10 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 			if (!interactive) return;
 			event.nativeEvent.stopPropagation();
 
-			if (!selectionMode) return;
-
 			const id = selectId(data);
+			hoveredItemRef.current = { item: data, id };
+
+			if (!selectionMode) return;
 
 			switch (selectionMode) {
 				case ObjectSelectionMode.SELECT:
@@ -118,9 +123,21 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 		(event: ThreeEvent<PointerEvent>, _data: T) => {
 			if (!interactive) return;
 			event.nativeEvent.stopPropagation();
+			hoveredItemRef.current = null;
 		},
 		[interactive],
 	);
+
+	const handleKeyDown = useCallback(
+		(event: KeyboardEvent) => {
+			if (!interactive || !hoveredItemRef.current) return;
+			const { item, id } = hoveredItemRef.current;
+			onItemModifyKeys?.(item, id, pressedKeys, event.shiftKey);
+		},
+		[interactive, onItemModifyKeys, pressedKeys],
+	);
+
+	useGlobalEventListener("keydown", handleKeyDown, { shouldFire: interactive && hoveredItemRef.current !== null });
 
 	const resolveWheelAction = useThrottledCallback(
 		(event: ThreeEvent<WheelEvent>, data: T) => {
@@ -130,7 +147,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 			const id = selectId(data);
 			const delta = event.deltaY > 0 ? -1 : 1;
 
-			onItemWheel?.(data, id, delta);
+			onItemModifyWheel?.(data, id, delta, event.shiftKey);
 		},
 		{ wait: wait },
 	);

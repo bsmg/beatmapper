@@ -1,9 +1,8 @@
-import { selectActiveSongId, selectActiveView } from "$/store/helpers/route.helpers";
+import { selectActiveSongId } from "$/store/helpers/route.helpers";
 import type { AppThunkApiConfig } from "$/store/types";
 import { createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
-import { View } from "$/types";
-import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
-import { pausePlayback, selectCursorPosition, selectDuration, selectPlaying, selectSnap, startPlayback, updateCursorPosition } from "./navigation.slice";
+import { selectAllBookmarks } from "./bookmarks.slice";
+import { pausePlayback, selectCursorPosition, selectDuration, selectHighestPrecision, selectPlaying, startPlayback, updateCursorPosition } from "./navigation.slice";
 import { selectBeatForTime, selectTimeForBeat } from "./selectors";
 
 export const togglePlayback = createThunk("togglePlayback", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
@@ -13,29 +12,6 @@ export const togglePlayback = createThunk("togglePlayback", (_, api: GetShallowT
 		api.dispatch(startPlayback());
 	}
 });
-
-function calculateJumpTargetBeat(api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>, delta: number, overrideWindowSize?: number): number {
-	const state = api.getState();
-	const songId = selectActiveSongId(api.extra.getRouter());
-
-	const durationInBeats = selectBeatForTime(state, songId, selectDuration(state) ?? 0);
-	const cursorPositionInBeats = selectBeatForTime(state, songId, selectCursorPosition(state));
-
-	const windowSize = overrideWindowSize ?? durationInBeats;
-
-	if (!Number.isFinite(delta)) {
-		return delta < 0 ? 0 : durationInBeats;
-	}
-
-	if (delta > 0) {
-		const nextBoundary = Math.ceil((cursorPositionInBeats + 0.0001) / windowSize) * windowSize;
-		const target = Math.abs(nextBoundary - cursorPositionInBeats) < 0.0001 ? cursorPositionInBeats + windowSize : nextBoundary;
-		return Math.min(target, durationInBeats);
-	} else {
-		const prevBoundary = Math.floor((cursorPositionInBeats - 0.0001) / windowSize) * windowSize;
-		return Math.abs(prevBoundary - cursorPositionInBeats) < 0.0001 ? cursorPositionInBeats - windowSize : prevBoundary;
-	}
-}
 
 export const jumpToTime = createThunk("jumpToTime", (args: { value: number }, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const state = api.getState();
@@ -51,53 +27,66 @@ export const jumpToBeat = createThunk("jumpToBeat", (args: { value: number }, ap
 	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, args.value)));
 });
 
-export const moveForwards = createThunk("moveForwards", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+function calculateWindowJumpTarget(api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>, delta: number, overrideWindowSize?: number): number {
+	const state = api.getState();
+	const songId = selectActiveSongId(api.extra.getRouter());
+	const highestPrecision = selectHighestPrecision(state);
+
+	const cursorPositionInBeats = selectBeatForTime(state, songId, selectCursorPosition(state));
+	const durationInBeats = selectBeatForTime(state, songId, selectDuration(state) ?? 0);
+
+	const windowSize = overrideWindowSize ?? durationInBeats;
+
+	if (delta > 0) {
+		return Math.ceil((cursorPositionInBeats + highestPrecision) / windowSize) * windowSize;
+	} else {
+		return Math.floor((cursorPositionInBeats - highestPrecision) / windowSize) * windowSize;
+	}
+}
+
+export const jumpToPrevWindow = createThunk("jumpToPrevWindow", (args: { windowSize?: number }, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const state = api.getState();
 	const songId = selectActiveSongId(api.extra.getRouter());
 
-	const snapTo = selectSnap(state);
-	const targetBeat = calculateJumpTargetBeat(api, 1, snapTo);
+	const targetBeat = calculateWindowJumpTarget(api, -1, args.windowSize);
 	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, targetBeat)));
 });
-export const moveBackwards = createThunk("moveBackwards", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+export const jumpToNextWindow = createThunk("jumpToNextWindow", (args: { windowSize?: number }, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const state = api.getState();
 	const songId = selectActiveSongId(api.extra.getRouter());
 
-	const snapTo = selectSnap(state);
-	const targetBeat = calculateJumpTargetBeat(api, -1, snapTo);
-	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, targetBeat)));
-});
-
-export const jumpForwards = createThunk("jumpForwards", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
-	const state = api.getState();
-	const songId = selectActiveSongId(api.extra.getRouter());
-	const view = selectActiveView(api.extra.getRouter());
-
-	const windowSize = view === View.LIGHTSHOW ? selectEventsEditorBeatsPerZoomLevel(state) : 32;
-	const targetBeat = calculateJumpTargetBeat(api, 1, windowSize);
-	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, targetBeat)));
-});
-export const jumpBackwards = createThunk("jumpBackwards", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
-	const state = api.getState();
-	const songId = selectActiveSongId(api.extra.getRouter());
-	const view = selectActiveView(api.extra.getRouter());
-
-	const windowSize = view === View.LIGHTSHOW ? selectEventsEditorBeatsPerZoomLevel(state) : 32;
-	const targetBeat = calculateJumpTargetBeat(api, -1, windowSize);
+	const targetBeat = calculateWindowJumpTarget(api, 1, args.windowSize);
 	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, targetBeat)));
 });
 
-export const jumpToStart = createThunk("jumpToStart", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+function calculateMarkerJumpTarget(api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>, direction: number): number {
 	const state = api.getState();
 	const songId = selectActiveSongId(api.extra.getRouter());
 
-	const targetBeat = calculateJumpTargetBeat(api, -Infinity);
+	const cursorPositionInBeats = selectBeatForTime(state, songId, selectCursorPosition(state));
+	const durationInBeats = selectBeatForTime(state, songId, selectDuration(state) ?? 0);
+
+	const bookmarks = selectAllBookmarks(state);
+	const markers = Array.from(new Set([0, Math.floor(durationInBeats), ...bookmarks.map((b) => b.time)])).sort((a, b) => a - b);
+
+	if (direction > 0) {
+		return markers.find((m) => m > cursorPositionInBeats) ?? Math.floor(durationInBeats);
+	} else {
+		return markers.toReversed().find((m) => m < cursorPositionInBeats) ?? 0;
+	}
+}
+
+export const jumpToPrevMarker = createThunk("jumpToPrevMarker", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	const state = api.getState();
+	const songId = selectActiveSongId(api.extra.getRouter());
+
+	const targetBeat = calculateMarkerJumpTarget(api, -1);
 	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, targetBeat)));
 });
-export const jumpToEnd = createThunk("jumpToEnd", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+export const jumpToNextMarker = createThunk("jumpToNextMarker", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const state = api.getState();
 	const songId = selectActiveSongId(api.extra.getRouter());
 
-	const targetBeat = calculateJumpTargetBeat(api, Infinity);
+	const targetBeat = calculateMarkerJumpTarget(api, 1);
 	api.dispatch(updateCursorPosition(selectTimeForBeat(state, songId, targetBeat)));
 });

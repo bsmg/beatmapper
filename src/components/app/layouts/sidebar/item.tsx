@@ -63,7 +63,9 @@ const Contents = styled("div", {
 });
 
 const Overlay = styled("div", {
-	base: linkOverlay.raw(),
+	base: linkOverlay.raw({
+		cursor: "pointer",
+	}),
 });
 
 export default AppSidebarNavItem;

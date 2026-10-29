@@ -1,7 +1,20 @@
-export { selectAllGridPresetIds, selectDefaultObstacleDuration, selectGridPresetById, selectGridPresets, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool } from "./features/beatmap.slice";
+export { selectAllGridPresetIds, selectGridPresetById, selectGridPresets, selectNotesEditorAngleOffsetStep, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool } from "./features/beatmap.slice";
 export { selectAllBookmarks } from "./features/bookmarks.slice";
 export { selectClipboardData, selectClipboardHasObjects, selectEarliestBeat } from "./features/clipboard.slice";
-export { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectAnySelectedEvents, selectColorBoostAtBeat, selectFutureBasicEvents, selectFutureBoostEvents, selectPastBasicEvents, selectPastBoostEvents } from "./features/events.slice";
+export {
+	selectAllBasicEvents,
+	selectAllBasicEventsForTrack,
+	selectAllBoostEvents,
+	selectAllSelectedEvents,
+	selectAnySelectedEvents,
+	selectColorBoostAtBeat,
+	selectEventsCanRedo,
+	selectEventsCanUndo,
+	selectFutureBasicEvents,
+	selectFutureBoostEvents,
+	selectPastBasicEvents,
+	selectPastBoostEvents,
+} from "./features/events.slice";
 export { selectInitialized, selectLoading, selectProcessingImport } from "./features/global.slice";
 export {
 	selectEventsEditorBeatsPerZoomLevel,
@@ -16,13 +29,14 @@ export {
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
 } from "./features/lightshow.slice";
-export { selectAnimateEnvironment, selectAnimateTrack, selectBeatDepth, selectCursorPosition, selectDuration, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume } from "./features/navigation.slice";
+export { selectAnimateEnvironment, selectAnimateTrack, selectCursorPosition, selectDuration, selectHighestPrecision, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectTrackScale, selectWindowSize } from "./features/navigation.slice";
 export {
 	selectAllBombNotes,
 	selectAllColorNotes,
 	selectAllObstacles,
 	selectAllSelectedBombNotes,
 	selectAllSelectedColorNotes,
+	selectAllSelectedObjects,
 	selectAllSelectedObstacles,
 	selectAnySelectedObjects,
 	selectFutureBombNotes,
@@ -38,6 +52,7 @@ export {
 	selectTotalObstacles,
 } from "./features/objects.slice";
 export {
+	selectActiveWindowSize,
 	selectAllVisibleBombs,
 	selectAllVisibleNotes,
 	selectAllVisibleObstacles,

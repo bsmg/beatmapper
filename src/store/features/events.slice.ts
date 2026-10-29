@@ -74,11 +74,16 @@ const slice = createSlice({
 			const boostEvents = boostSelectors.selectAll(state.boostEvents).filter((data) => !!data.selected);
 			return basicEvents.length + boostEvents.length > 0;
 		}),
+		selectAllSelectedEvents: createDraftSafeSelector(selectPresent, (state) => {
+			const basicEvents = basicSelectors.selectAll(state.basicEvents).filter((data) => !!data.selected);
+			const boostEvents = boostSelectors.selectAll(state.boostEvents).filter((data) => !!data.selected);
+			return [...basicEvents, ...boostEvents];
+		}),
 	},
 	reducers: (api) => {
 		return {
-			undo: history.undo,
-			redo: history.redo,
+			undo: api.reducer<{ shouldJump?: boolean }>(history.undo),
+			redo: api.reducer<{ shouldJump?: boolean }>(history.redo),
 			clearHistory: history.clearHistory,
 			addBasicEvent: api.reducer<{ data: IWrapBasicEvent; overwrite?: boolean; environment: EnvironmentName; areLasersLocked?: boolean }>(
 				history.undoable((state, action) => {
@@ -155,6 +160,19 @@ const slice = createSlice({
 					if (action.payload.boostEvents) {
 						boostEvents.upsertMany(state.boostEvents, action.payload.boostEvents);
 					}
+				}),
+			),
+			updateAllSelectedEvents: api.reducer<{ basicEventChanges: Partial<App.IBasicEvent>; boostEventChanges: Partial<App.IBoostEvent> }>(
+				history.undoable((state, action) => {
+					basicReducers.updateAllSelected(state.basicEvents, () => ({ ...action.payload.basicEventChanges }));
+					boostReducers.updateAllSelected(state.boostEvents, () => ({ ...action.payload.boostEventChanges }));
+				}),
+			),
+			mirrorAllSelectedEvents: api.reducer(
+				history.undoable((state) => {
+					basicReducers.updateAllSelected(state.basicEvents, (x) => {
+						return { value: x.value >= 1 && x.value <= 8 ? (x.value > 4 ? x.value - 4 : x.value + 4) : x.value };
+					});
 				}),
 			),
 			nudgeAllSelectedEvents: api.reducer<{ direction: "forwards" | "backwards"; amount: number }>(
@@ -239,6 +257,8 @@ const slice = createSlice({
 });
 
 export const {
+	selectCanUndo: selectEventsCanUndo,
+	selectCanRedo: selectEventsCanRedo,
 	selectAllBasicEvents,
 	selectAllSelectedBasicEvents,
 	selectAllBasicEventsForTrack,
@@ -247,6 +267,7 @@ export const {
 	selectFutureBasicEvents,
 	selectAllBoostEvents,
 	selectAllSelectedBoostEvents,
+	selectAllSelectedEvents,
 	selectColorBoostAtBeat,
 	selectPastBoostEvents,
 	selectFutureBoostEvents,
@@ -254,7 +275,7 @@ export const {
 	selectAnySelectedEvents,
 } = slice.getSelectors(slice.selectSlice);
 
-export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHistory, upsertEvents, nudgeAllSelectedEvents, removeAllSelectedEvents } = slice.actions;
+export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHistory, upsertEvents, updateAllSelectedEvents, mirrorAllSelectedEvents, nudgeAllSelectedEvents, removeAllSelectedEvents } = slice.actions;
 export const { addBasicEvent, updateBasicEvent, selectBasicEvent, deselectBasicEvent, removeBasicEvent } = slice.actions;
 export const { addBoostEvent, updateBoostEvent, selectBoostEvent, deselectBoostEvent, removeBoostEvent } = slice.actions;
 

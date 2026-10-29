@@ -9,8 +9,8 @@ const NOTE_TOOLS = Object.values(ObjectTool);
 const initialState = {
 	selectedTool: NOTE_TOOLS[0],
 	selectedDirection: 8 as NoteDirection,
+	angleOffsetStep: 15,
 	selectionMode: null as ObjectSelectionMode | null, // null | 'select' | 'deselect' | 'delete'.
-	defaultObstacleDuration: 4,
 	gridPresets: {} as IGridPresets,
 };
 
@@ -20,8 +20,8 @@ const slice = createSlice({
 	selectors: {
 		selectTool: (state) => state.selectedTool,
 		selectDirection: (state) => state.selectedDirection,
+		selectAngleOffsetStep: (state) => state.angleOffsetStep,
 		selectSelectionMode: (state) => state.selectionMode,
-		selectDefaultObstacleDuration: (state) => state.defaultObstacleDuration,
 		selectGridPresets: (state) => state.gridPresets,
 		selectAllGridPresetIds: (state) => Object.keys(state.gridPresets),
 		selectGridPresetById: (state, id: string) => state.gridPresets[id],
@@ -34,8 +34,8 @@ const slice = createSlice({
 			updateDirection: api.reducer<NoteDirection>((state, action) => {
 				return { ...state, selectedDirection: action.payload };
 			}),
-			updateDefaultObstacleDuration: api.reducer<number>((state, action) => {
-				return { ...state, defaultObstacleDuration: action.payload };
+			updateAngleOffsetStep: api.reducer<number>((state, action) => {
+				return { ...state, angleOffsetStep: action.payload };
 			}),
 			upsertGridPresets: api.reducer<Record<string, IGrid>>((state, action) => {
 				return { ...state, gridPresets: action.payload };
@@ -71,9 +71,9 @@ const slice = createSlice({
 	},
 });
 
-export const { selectTool: selectNotesEditorTool, selectDirection: selectNotesEditorDirection, selectSelectionMode: selectNotesEditorSelectionMode, selectDefaultObstacleDuration, selectGridPresets, selectAllGridPresetIds, selectGridPresetById } = slice.getSelectors(slice.selectSlice);
+export const { selectTool: selectNotesEditorTool, selectDirection: selectNotesEditorDirection, selectAngleOffsetStep: selectNotesEditorAngleOffsetStep, selectSelectionMode: selectNotesEditorSelectionMode, selectGridPresets, selectAllGridPresetIds, selectGridPresetById } = slice.getSelectors(slice.selectSlice);
 
-export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateDefaultObstacleDuration: updateNotesEditorDefaultObstacleDuration, upsertGridPresets, upsertGridPreset, removeGridPreset } = slice.actions;
+export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, updateAngleOffsetStep: updateNotesEditorAngleOffsetStep, upsertGridPresets, upsertGridPreset, removeGridPreset } = slice.actions;
 
 export const startManagingNoteSelection = createAction("startManagingNoteSelection", (args: { selectionMode: ObjectSelectionMode }) => {
 	return { payload: { ...args } };

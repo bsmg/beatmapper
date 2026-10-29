@@ -5,7 +5,8 @@ import type { Vector3Tuple } from "three";
 
 import { SONG_OFFSET } from "$/components/scene/constants";
 import type { ObjectResolverOptions } from "$/components/scene/helpers";
-import { HIGHEST_PRECISION } from "$/constants";
+import { useAppSelector } from "$/store/hooks";
+import { selectHighestPrecision } from "$/store/selectors";
 import { useVisualizationContext } from "./context";
 
 interface Props<T extends IWrapGridObject, Id extends EntityId> {
@@ -18,9 +19,10 @@ interface Props<T extends IWrapGridObject, Id extends EntityId> {
 function VisualizationForGridObjects<T extends IWrapGridObject, Id extends EntityId>({ objects, resolveId, resolvePosition, resolveColor, children }: Props<T, Id>) {
 	const { cursorPosition, timescale, beatDepth } = useVisualizationContext();
 
-	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPosition ?? 0) * beatDepth, [cursorPosition, beatDepth]);
+	const highestPrecision = useAppSelector(selectHighestPrecision);
 
-	const adjustment = useMemo(() => beatDepth * HIGHEST_PRECISION, [beatDepth]);
+	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPosition ?? 0) * beatDepth, [cursorPosition, beatDepth]);
+	const adjustment = useMemo(() => beatDepth * highestPrecision, [beatDepth, highestPrecision]);
 
 	return objects.map((data) => {
 		const id = resolveId(data);

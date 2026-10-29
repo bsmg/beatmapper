@@ -7,7 +7,7 @@ import { stack, wrap } from "$:styled-system/patterns";
 import { SubmitButton } from "./button";
 import { CheckboxDataField } from "./checkbox";
 import { ColorPickerDataField } from "./color-picker";
-import { ComboboxDataField } from "./combobox";
+import { BooleanComboboxDataField, ComboboxDataField, NumberComboboxDataField } from "./combobox";
 import { FileUploadDataField } from "./file-upload";
 import { InputDataField, NumberInputDataField } from "./input";
 import { SelectDataField } from "./native-select";
@@ -29,6 +29,8 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
 		Checkbox: CheckboxDataField,
 		ColorPicker: ColorPickerDataField,
 		Combobox: ComboboxDataField,
+		NumberCombobox: NumberComboboxDataField,
+		BooleanCombobox: BooleanComboboxDataField,
 		FileUpload: FileUploadDataField,
 		RadioGroup: RadioGroupDataField,
 		RadioButtonGroup: RadioButtonGroupDataField,

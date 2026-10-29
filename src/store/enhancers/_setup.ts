@@ -19,8 +19,9 @@ import {
 	updateEventsEditorTrackOpacity,
 	updateEventsEditorWindowLock,
 	updateEventsEditorZoomLevel,
+	updateHighestPrecision,
 	updateNew,
-	updateNotesEditorDefaultObstacleDuration,
+	updateNotesEditorAngleOffsetStep,
 	updateNotesEditorDirection,
 	updateNotesEditorTool,
 	updateObstaclePlacementMode,
@@ -33,15 +34,14 @@ import {
 	updateTickVolume,
 	updateTrackScale,
 	updateUsername,
+	updateWindowSize,
 	upsertGridPresets,
 	upsertSongs,
 } from "$/store/actions";
 import {
 	selectAllGridPresetIds,
 	selectAnnouncements,
-	selectBeatDepth,
 	selectBloomEnabled,
-	selectDefaultObstacleDuration,
 	selectEventsEditorColor,
 	selectEventsEditorEditMode,
 	selectEventsEditorMirrorLock,
@@ -52,7 +52,9 @@ import {
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
 	selectGridPresetById,
+	selectHighestPrecision,
 	selectNew,
+	selectNotesEditorAngleOffsetStep,
 	selectNotesEditorDirection,
 	selectNotesEditorTool,
 	selectPacerWait,
@@ -64,8 +66,10 @@ import {
 	selectSongVolume,
 	selectTickType,
 	selectTickVolume,
+	selectTrackScale,
 	selectUsername,
 	selectUserObstaclePlacementMode,
+	selectWindowSize,
 } from "$/store/selectors";
 import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
 import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./storage.enhancer";
@@ -181,6 +185,18 @@ export function createAppEnhancers() {
 				selectValue: selectUserObstaclePlacementMode,
 				hydrateValue: updateObstaclePlacementMode,
 			}),
+			"controls.window": {
+				selectValue: selectWindowSize,
+				hydrateValue: updateWindowSize,
+			},
+			"controls.precision": {
+				selectValue: selectHighestPrecision,
+				hydrateValue: updateHighestPrecision,
+			},
+			"controls.angleOffset": {
+				selectValue: selectNotesEditorAngleOffsetStep,
+				hydrateValue: updateNotesEditorAngleOffsetStep,
+			},
 			"advanced.wait": {
 				selectValue: selectPacerWait,
 				hydrateValue: updatePacerWait,
@@ -196,7 +212,7 @@ export function createAppEnhancers() {
 				hydrateValue: updateSnap,
 			},
 			"track.spacing": {
-				selectValue: selectBeatDepth,
+				selectValue: selectTrackScale,
 				hydrateValue: updateTrackScale,
 			},
 			"playback.rate": {
@@ -222,10 +238,6 @@ export function createAppEnhancers() {
 			"notes.direction": {
 				selectValue: selectNotesEditorDirection,
 				hydrateValue: updateNotesEditorDirection,
-			},
-			"notes.duration": {
-				selectValue: selectDefaultObstacleDuration,
-				hydrateValue: updateNotesEditorDefaultObstacleDuration,
 			},
 			"events.mode": createEnumerableStorageObserver(EventEditMode, {
 				selectValue: selectEventsEditorEditMode,

@@ -1,8 +1,7 @@
 import { createAction, createSlice } from "@reduxjs/toolkit";
 
-import { SNAPPING_INCREMENT_VALUES } from "$/constants/editor.constants";
 import type { AppThunkApiConfig } from "$/store/types";
-import { createIncrementByIndexPayloadActionCreator, createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
+import { createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { clamp } from "$/utils";
 import { leaveEditor, loadSongFile } from "./actions";
 
@@ -11,6 +10,8 @@ const initialState = {
 	cursorPosition: 0,
 	duration: null as number | null,
 	snapTo: 0.5,
+	highestPrecision: 0.03125, // 1/32
+	windowSize: 32,
 	beatDepth: 9,
 	animateBlockMotion: true,
 	animateRingMotion: true,
@@ -28,7 +29,9 @@ const slice = createSlice({
 		selectCursorPosition: (state) => state.cursorPosition,
 		selectDuration: (state) => state.duration,
 		selectSnap: (state) => state.snapTo,
-		selectBeatDepth: (state) => state.beatDepth,
+		selectHighestPrecision: (state) => state.highestPrecision,
+		selectWindowSize: (state) => state.windowSize,
+		selectTrackScale: (state) => state.beatDepth,
 		selectAnimateTrack: (state) => state.animateBlockMotion,
 		selectAnimateEnvironment: (state) => state.animateRingMotion,
 		selectPlaybackRate: (state) => state.playbackRate,
@@ -52,6 +55,12 @@ const slice = createSlice({
 			}),
 			updateSnap: api.reducer<number>((state, action) => {
 				return { ...state, snapTo: action.payload };
+			}),
+			updateHighestPrecision: api.reducer<number>((state, action) => {
+				return { ...state, highestPrecision: action.payload };
+			}),
+			updateWindowSize: api.reducer<number>((state, action) => {
+				return { ...state, windowSize: action.payload };
 			}),
 			updateTrackScale: api.reducer<number>((state, action) => {
 				return { ...state, beatDepth: action.payload };
@@ -84,19 +93,41 @@ const slice = createSlice({
 	},
 });
 
-export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectBeatDepth, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectHighestPrecision, selectWindowSize, selectTrackScale, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
 
-export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap } = slice.actions;
+export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateHighestPrecision, updateWindowSize } = slice.actions;
 
 export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
 	return { payload: { ...args } };
 });
 
+function calculateNextSnap(currentSnap: number, options: { delta: number; highestPrecision: number }): number {
+	const nextSnap = options.delta > 0 ? currentSnap * 2 : currentSnap / 2;
+
+	if (options.delta < 0 && (currentSnap <= options.highestPrecision || nextSnap < options.highestPrecision)) {
+		return currentSnap;
+	}
+	return clamp(nextSnap, options.highestPrecision, 1);
+}
+
 export const incrementSnap = createThunk("incrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: 1 }, api);
+	const currentSnap = selectSnap(api.getState());
+	const highestPrecision = selectHighestPrecision(api.getState());
+	const nextSnap = calculateNextSnap(currentSnap, { delta: 1, highestPrecision });
+	return api.dispatch(updateSnap(nextSnap));
 });
 export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
-	return createIncrementByIndexPayloadActionCreator(SNAPPING_INCREMENT_VALUES, selectSnap, updateSnap)({ delta: -1 }, api);
+	const currentSnap = selectSnap(api.getState());
+	const highestPrecision = selectHighestPrecision(api.getState());
+	const nextSnap = calculateNextSnap(currentSnap, { delta: -1, highestPrecision });
+	return api.dispatch(updateSnap(nextSnap));
+});
+
+export const incrementTrackScale = createThunk("incrementTrackScale", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([5, 25], selectTrackScale, updateTrackScale)({ delta: 1 }, api);
+});
+export const decrementTrackScale = createThunk("decrementTrackScale", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	return createIncrementByValuePayloadActionCreator([5, 25], selectTrackScale, updateTrackScale)({ delta: -1 }, api);
 });
 
 export const incrementPlaybackRate = createThunk("incrementPlaybackRate", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {

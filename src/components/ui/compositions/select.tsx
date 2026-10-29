@@ -77,3 +77,18 @@ export const Select = forwardRef<HTMLSelectElement, Assign<ComponentProps<typeof
 		</Builder.Root>
 	);
 });
+export const SelectProvider = forwardRef<HTMLSelectElement, Assign<ComponentProps<typeof Builder.RootProvider>, SelectProps>>(function Select({ value, children, label, placeholder, clearable, portalled, portalRef, unfocusOnPress, ...rest }, ref) {
+	const { handlePress } = useInteractable({ unfocusOnPress });
+
+	return (
+		<Builder.RootProvider {...rest} value={value}>
+			{label && <Builder.Label>{label}</Builder.Label>}
+			<Builder.Control onClickCapture={handlePress} onKeyDownCapture={handlePress}>
+				<Trigger placeholder={placeholder} />
+				<ClearTrigger clearable={clearable} />
+			</Builder.Control>
+			<Builder.Context>{(ctx) => <Overlay collection={ctx.collection} portalled={portalled} portalRef={portalRef} />}</Builder.Context>
+			<Builder.HiddenSelect ref={ref} />
+		</Builder.RootProvider>
+	);
+});

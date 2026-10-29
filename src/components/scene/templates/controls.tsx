@@ -1,8 +1,8 @@
 import { useHotkeyStore, useHotkeys } from "@ark-ui/react/hotkeys";
 import { useFrame } from "@react-three/fiber";
-import { useCallback, useRef } from "react";
+import { useEffect, useRef } from "react";
 
-import { getScopes } from "$/components/app/templates/shortcuts/helpers";
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { Controls as Service } from "$/services/controls.service";
 
@@ -12,17 +12,17 @@ export function Controls() {
 	const hotkeys = useHotkeyStore();
 	const controls = useRef<Service | null>(null);
 
-	const isEnabled = useCallback(() => hotkeys.isPressed("Shift"), [hotkeys]);
+	const isEnabled = useRef<boolean>(false);
 
 	useFrame(({ gl, scene, camera }) => {
 		if (!controls.current) {
-			controls.current = new Service({ camera, hotkeys, isEnabled });
+			controls.current = new Service({ camera, hotkeys, isEnabled: () => isEnabled.current });
 			scene.add(controls.current.getObject());
 		} else {
 			controls.current.update();
 		}
 
-		if (isEnabled()) {
+		if (isEnabled.current) {
 			if (document.pointerLockElement !== gl.domElement) {
 				gl.domElement.requestPointerLock();
 			}
@@ -33,22 +33,43 @@ export function Controls() {
 		}
 	});
 
+	const scopes = getHotkeyScopes("editor", "camera");
+	const category = getHotkeyCategory(scopes);
+
 	// movement logic is handled by the controls service within the frame loop; we just need to register the hotkeys and bind them to their respective ids.
 	useHotkeys({
 		commands: [
-			{ id: "controls/forwards", hotkey: "Shift+W", scopes: getScopes(), action: noop },
-			{ id: "controls/backwards", hotkey: "Shift+S", scopes: getScopes(), action: noop },
-			{ id: "controls/left", hotkey: "Shift+A", scopes: getScopes(), action: noop },
-			{ id: "controls/right", hotkey: "Shift+D", scopes: getScopes(), action: noop },
-			{ id: "controls/up", hotkey: "Shift+R", scopes: getScopes(), action: noop },
-			{ id: "controls/down", hotkey: "Shift+F", scopes: getScopes(), action: noop },
-			{ id: "controls/reset", hotkey: "Shift+Backspace", scopes: getScopes(), action: noop },
+			{ id: "controls/forwards", scopes, category, label: "Move Forwards", hotkey: "W", action: noop },
+			{ id: "controls/backwards", scopes, category, label: "Move Backwards", hotkey: "S", action: noop },
+			{ id: "controls/left", scopes, category, label: "Move Left", hotkey: "A", action: noop },
+			{ id: "controls/right", scopes, category, label: "Move Right", hotkey: "D", action: noop },
+			{ id: "controls/up", scopes, category, label: "Move Up", hotkey: "E", action: noop },
+			{ id: "controls/down", scopes, category, label: "Move Down", hotkey: "Q", action: noop },
 		],
+	});
+
+	useGlobalEventListener("pointerdown", (ev) => {
+		if (ev.button === 2) {
+			isEnabled.current = true;
+			hotkeys.addScope("camera");
+		}
+	});
+	useGlobalEventListener("pointerup", (ev) => {
+		if (ev.button === 2) {
+			isEnabled.current = false;
+			hotkeys.removeScope("camera");
+		}
 	});
 
 	useGlobalEventListener("mousemove", (ev) => {
 		if (!controls.current) return;
 		return controls.current.handleMouseMove(ev);
+	});
+
+	useEffect(() => {
+		return () => {
+			hotkeys.removeScope("camera");
+		};
 	});
 
 	return null;

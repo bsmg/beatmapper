@@ -1,24 +1,55 @@
-import { useListCollection } from "@ark-ui/react/collection";
-import { formatHotkey } from "@ark-ui/react/hotkeys";
-import { useParams } from "@tanstack/react-router";
-import { FastForwardIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon } from "lucide-react";
+import { useHotkey, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
+import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
+import { useParams, useRouteContext } from "@tanstack/react-router";
+import { ArrowRightToLineIcon, FastForwardIcon, FlagIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon, UnfoldHorizontalIcon } from "lucide-react";
+import { type CSSProperties, useCallback, useMemo } from "react";
+import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
+import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { NavigationPanel } from "$/components/app/layouts";
-import { Button, Select, Stat } from "$/components/ui/compositions";
-import { SNAPPING_INCREMENTS } from "$/constants";
+import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { Button, createPromptFactory, Input, Stat, Tooltip, usePrompt } from "$/components/ui/compositions";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
-import { jumpBackwards, jumpForwards, jumpToEnd, jumpToStart, togglePlayback, updateSnap } from "$/store/actions";
+import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
+import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
+import { addBookmark, decrementSnap, incrementSnap, jumpToBeat, jumpToNextMarker, jumpToNextWindow, jumpToPrevMarker, jumpToPrevWindow, selectAllEntitiesInRange, togglePlayback, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPlaying, selectSnap } from "$/store/selectors";
-import { roundToNearest } from "$/utils";
+import { selectActiveWindowSize, selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectSnap } from "$/store/selectors";
+import { clamp, range, roundToNearest } from "$/utils";
+import { HStack, Text } from "$:styled-system/jsx";
+
+const createQuickSelectPrompt = createPromptFactory({
+	title: "Quick-Select",
+	description: "Select all objects within the specified range of beats.",
+	validate: object({
+		range: pipe(
+			string(),
+			regex(/^[+-]?\d+(?:\.\d+)?(-\d+(?:\.\d+)?)?$/, (issue) => `Invalid format: Expected a number ("4"), range ("3-6"), or delta ("+3", "-3") but received "${issue.input}"`),
+		),
+	}),
+});
+const createJumpToBeatPrompt = createPromptFactory({
+	title: "Jump to Beat",
+	description: "Move the cursor to the specified beat.",
+	validate: object({ beatNum: number() }),
+});
+const createAddBookmarkPrompt = createPromptFactory({
+	title: "Add Bookmark",
+	description: "Create a new bookmark at the current beat.",
+	validate: object({ name: pipe(string(), nonEmpty()) }),
+});
 
 function EditorNavigationControls() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
 	const isPlaying = useAppSelector(selectPlaying);
 	const isLoadingSong = useAppSelector(selectLoading);
 	const snapTo = useAppSelector(selectSnap);
+	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
+	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const wait = useAppSelector(selectPacerWait);
 
 	const timeDisplayText = useAppSelector((state) => {
 		const cursorPosition = selectCursorPosition(state);
@@ -37,37 +68,141 @@ function EditorNavigationControls() {
 		return formatCursorPositionInBeats(roundedCursorPosition);
 	});
 
-	const { collection: SNAPPING_INCREMENT_LIST_COLLECTION } = useListCollection({
-		initialItems: SNAPPING_INCREMENTS.map((x) => ({ ...x, value: x.value.toString() })),
-		itemToValue: (item) => item.value,
-		itemToString: (item) => (item.shortcutKey ? `${item.label} (${formatHotkey(`Mod+${item.shortcutKey}`, { separator: "+" })})` : item.label),
+	const { trigger: triggerQuickSelect } = usePrompt(
+		createQuickSelectPrompt({
+			defaultValues: { range: "" },
+			render: ({ form }) => <form.AppField name="range">{(ctx) => <ctx.Input autoFocus label="Range" placeholder="8-12" />}</form.AppField>,
+			onSubmit: ({ value: { range } }) => {
+				const [startBeat, endBeat] = calculateQuickSelectRange(range, cursorPositionInBeats, 0.01);
+				dispatch(selectAllEntitiesInRange({ startBeat, endBeat }));
+				dispatch(jumpToBeat({ value: startBeat }));
+			},
+		}),
+	);
+	const { trigger: triggerJumpToBeat } = usePrompt(
+		createJumpToBeatPrompt({
+			defaultValues: { beatNum: cursorPositionInBeats },
+			render: ({ form }) => <form.AppField name="beatNum">{(ctx) => <ctx.NumberInput autoFocus label="Beat" placeholder="4" />}</form.AppField>,
+			onSubmit: ({ value: { beatNum } }) => dispatch(jumpToBeat({ value: beatNum })),
+		}),
+	);
+	const { trigger: triggerAddBookmark } = usePrompt(
+		createAddBookmarkPrompt({
+			defaultValues: { name: "" },
+			render: ({ form }) => <form.AppField name="name">{(ctx) => <ctx.Input autoFocus label="Name" />}</form.AppField>,
+			onSubmit: ({ value }) => dispatch(addBookmark({ time: cursorPositionInBeats, name: value.name, color: resolveColorForBookmark(value.name) })),
+		}),
+	);
+
+	const hotkeys = useHotkeyStore();
+
+	const scopes = useMemo(() => getHotkeyScopes("editor", "navigation"), []);
+	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
+
+	const enabled = useCallback(() => !isLoadingSong && hotkeys.getActiveScopes().includes("navigation"), [isLoadingSong, hotkeys.getActiveScopes]);
+
+	useHotkey({ scopes, category, enabled, label: "Toggle Playback", hotkey: "Space", action: () => dispatch(togglePlayback()), options: { requireReset: true } });
+
+	useHotkey({ scopes, category, enabled, label: "Move Cursor Forwards", hotkey: "ArrowUp", action: () => dispatch(jumpToNextWindow({ windowSize: snapTo })) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor Backwards", hotkey: "ArrowDown", action: () => dispatch(jumpToPrevWindow({ windowSize: snapTo })) });
+
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Next Window", hotkey: "PageUp", action: () => dispatch(jumpToNextWindow({ windowSize })) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Previous Window", hotkey: "PageDown", action: () => dispatch(jumpToPrevWindow({ windowSize })) });
+
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Next Marker", hotkey: "Home", action: () => dispatch(jumpToNextMarker()) });
+	useHotkey({ scopes, category, enabled, label: "Move Cursor to Previous Marker", hotkey: "End", action: () => dispatch(jumpToPrevMarker()) });
+
+	useHotkey({ scopes, category, enabled, label: "Quick Select", hotkey: "Mod+F", action: () => triggerQuickSelect() });
+	useHotkey({ scopes, category, enabled, label: "Jump to Beat", hotkey: "Mod+G", action: () => triggerJumpToBeat() });
+	useHotkey({ scopes, category, enabled, label: "Add Bookmark", hotkey: "Mod+B", action: () => triggerAddBookmark() });
+
+	useHotkeys({
+		commands: Array.from(range(1, 9)).map((num) => {
+			return { scopes, category, label: `Snap to 1/${num}`, hotkey: `Mod+${num}`, action: () => dispatch(updateSnap(1 / num)), options: { preventDefault: true } };
+		}),
 	});
+
+	const isModKeyPressed = useIsKeyPressed({ hotkey: "Mod" });
+
+	// This handler handles mousewheel events.
+	const handleScroll = useThrottledCallback(
+		(direction: "forwards" | "backwards") => {
+			if (!hotkeys.getActiveScopes().includes("navigation")) return;
+
+			if (isModKeyPressed) {
+				// If the user is holding Cmd/ctrl, we should scroll through snapping increments instead of the song.
+				return dispatch((direction === "forwards" ? decrementSnap : incrementSnap)());
+			}
+			dispatch((direction === "forwards" ? jumpToNextWindow : jumpToPrevWindow)({ windowSize: snapTo }));
+		},
+		{ enabled: enabled, wait: wait },
+	);
+
+	useGlobalEventListener(
+		"wheel",
+		(event) => {
+			event.preventDefault();
+			return handleScroll(event.deltaY > 0 ? "backwards" : "forwards");
+		},
+		{ options: { passive: false } },
+	);
+
+	const getDenominator = useCallback((x: number) => 1 / x, []);
+
+	const formattedValue = useMemo(() => Number(getDenominator(snapTo).toFixed(3)), [snapTo, getDenominator]);
+	const inputStyles = useMemo(() => ({ maxWidth: `calc(8.5ch + ${String(formattedValue).length}ch)` }) as CSSProperties, [formattedValue]);
 
 	return (
 		<NavigationPanel.Section>
 			<NavigationPanel.Column>
-				<Select label="Snap to" unfocusOnPress collection={SNAPPING_INCREMENT_LIST_COLLECTION} value={[snapTo.toString()]} onValueChange={(ev) => dispatch(updateSnap(Number.parseFloat(ev.value[0])))} />
+				<Stat label="Snap to" style={{ width: "12ch" }}>
+					<Text>1</Text>
+					<Text>/</Text>
+					<Input unstyled style={inputStyles} type="number" min={1} max={32} step={"any"} maxLength={6} value={formattedValue} onValueChange={(details) => dispatch(updateSnap(getDenominator(Number.isNaN(details.valueAsNumber) ? 1 : clamp(details.valueAsNumber, 1, 32))))} />
+					<Text style={{ pointerEvents: "none", marginInlineStart: `calc(-7.5ch)` }}>Beats</Text>
+				</Stat>
+				<HStack gap={0.5}>
+					<Tooltip render={() => "Quick-select"}>
+						<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => triggerQuickSelect()}>
+							<UnfoldHorizontalIcon />
+						</Button>
+					</Tooltip>
+					<Tooltip render={() => "Jump to beat"}>
+						<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => triggerJumpToBeat()}>
+							<ArrowRightToLineIcon />
+						</Button>
+					</Tooltip>
+					<Tooltip render={() => "Add bookmark"}>
+						<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => triggerAddBookmark()}>
+							<FlagIcon />
+						</Button>
+					</Tooltip>
+				</HStack>
 			</NavigationPanel.Column>
-			<NavigationPanel.Column>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpToStart())}>
+			<NavigationPanel.Column style={{ maxWidth: "fit-content" }}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevMarker())}>
 					<SkipBackIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpBackwards())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
 					<RewindIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(togglePlayback())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(togglePlayback())}>
 					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpForwards())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
 					<FastForwardIcon />
 				</Button>
-				<Button variant="ghost" size="icon" disabled={isLoadingSong} unfocusOnPress onClick={() => dispatch(jumpToEnd())}>
+				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextMarker())}>
 					<SkipForwardIcon />
 				</Button>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
-				<Stat label="Time">{timeDisplayText}</Stat>
-				<Stat label="Beat">{beatDisplayText}</Stat>
+				<Stat label="Time" align="end">
+					{timeDisplayText}
+				</Stat>
+				<Stat label="Beat" align="end">
+					{beatDisplayText}
+				</Stat>
 			</NavigationPanel.Column>
 		</NavigationPanel.Section>
 	);

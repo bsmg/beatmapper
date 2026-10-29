@@ -2,7 +2,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { createMachine, type MachineSchema, type Service } from "@zag-js/core";
 
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
-import { type IGrid, type IGridCell, NotePlacementMode, type ObstaclePlacementMode } from "$/types";
+import { type IGrid, type IGridCell, NotePlacementMode, type ObjectTool, type ObstaclePlacementMode } from "$/types";
 import type { ThreeProps } from "$/types/vendor";
 import { isModKeyPressed } from "$/utils";
 import { resolveNoteDirectionForPlacementMode } from "./direction.helpers";
@@ -11,6 +11,8 @@ export interface IPlacementContext {
 	cellDownAt: IGridCell | null;
 	cellOverAt: IGridCell | null;
 	direction: number | null;
+	time: number | null;
+	duration: number | null;
 }
 
 export interface PlacementGridSchema extends MachineSchema {
@@ -18,41 +20,201 @@ export interface PlacementGridSchema extends MachineSchema {
 		notePlacementMode: NotePlacementMode;
 		obstaclePlacementMode: ObstaclePlacementMode;
 		grid: IGrid;
-		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "direction">) => void;
-		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "cellDownAt">) => void;
+		cursorPositionInBeats: number;
+		selectedTool: ObjectTool;
+		shouldLockCursor: (tool: ObjectTool | null) => boolean;
+		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "direction" | "time" | "duration">, cached: { tool: ObjectTool | null }) => void;
+		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "cellDownAt" | "time" | "duration">, cached: { tool: ObjectTool | null }) => void;
 		onCellWheel?: (event: ThreeEvent<WheelEvent>, payload: Pick<IPlacementContext, "cellOverAt">) => void;
 	};
 	refs: {
 		mouseDownAt: { x: number; y: number; button: number } | null;
+		anchorBeat: number | null;
+		activeTool: ObjectTool | null;
 	};
 	context: IPlacementContext & {
 		hoveredCell: IGridCell | null;
 	};
+	event:
+		| { type: "POINTER_DOWN"; event: ThreeEvent<PointerEvent>; currentCell: IGridCell }
+		| { type: "POINTER_MOVE"; event: PointerEvent | ThreeEvent<PointerEvent>; currentCell?: IGridCell }
+		| { type: "POINTER_OVER"; currentCell: IGridCell }
+		| { type: "POINTER_OUT"; currentCell: IGridCell }
+		| { type: "POINTER_UP"; event: PointerEvent };
+	guard: "isLeftClick";
+	action: "handlePointerDown" | "handlePointerUp" | "handlePointerMoveIdle" | "handlePointerMoveDragging" | "handlePointerOver" | "handlePointerOut";
 }
 
 export const machine = createMachine<PlacementGridSchema>({
 	initialState: () => "idle",
-	refs: () => {
-		return {
-			mouseDownAt: null,
-		};
+	refs: () => ({
+		mouseDownAt: null,
+		anchorBeat: null,
+		activeTool: null,
+	}),
+	context: ({ bindable }) => ({
+		cellDownAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
+		cellOverAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
+		direction: bindable<number | null>(() => ({ defaultValue: null })),
+		time: bindable<number | null>(() => ({ defaultValue: null })),
+		duration: bindable<number | null>(() => ({ defaultValue: null })),
+		hoveredCell: bindable<IGridCell | null>(() => ({ defaultValue: null })),
+	}),
+	states: {
+		idle: {
+			on: {
+				POINTER_DOWN: {
+					target: "dragging",
+					guard: "isLeftClick",
+					actions: ["handlePointerDown"],
+				},
+				POINTER_OVER: {
+					actions: ["handlePointerOver"],
+				},
+				POINTER_OUT: {
+					actions: ["handlePointerOut"],
+				},
+				POINTER_MOVE: {
+					actions: ["handlePointerMoveIdle"],
+				},
+			},
+		},
+		dragging: {
+			on: {
+				POINTER_UP: {
+					target: "idle",
+					actions: ["handlePointerUp"],
+				},
+				POINTER_OVER: {
+					actions: ["handlePointerOver"],
+				},
+				POINTER_OUT: {
+					actions: ["handlePointerOut"],
+				},
+				POINTER_MOVE: {
+					actions: ["handlePointerMoveDragging"],
+				},
+			},
+		},
 	},
-	context: ({ bindable }) => {
-		return {
-			cellDownAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
-			cellOverAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
-			direction: bindable<number | null>(() => ({ defaultValue: null })),
-			hoveredCell: bindable<IGridCell | null>(() => ({ defaultValue: null })),
-		};
+	implementations: {
+		guards: {
+			isLeftClick: ({ event }) => event.event.button === 0,
+		},
+		actions: {
+			handlePointerDown: ({ context, refs, prop, event }) => {
+				const { event: pointerEvent, currentCell } = event;
+
+				refs.set("activeTool", prop("selectedTool"));
+
+				refs.set("mouseDownAt", { x: pointerEvent.pageX, y: pointerEvent.pageY, button: pointerEvent.button });
+				context.set("cellDownAt", currentCell);
+
+				const currentBeat = prop("cursorPositionInBeats");
+				refs.set("anchorBeat", currentBeat);
+				context.set("time", currentBeat);
+				context.set("duration", null);
+
+				prop("onCellPointerDown")?.(
+					pointerEvent,
+					{
+						cellDownAt: currentCell,
+						time: context.get("time"),
+						duration: context.get("duration"),
+					},
+					{ tool: refs.get("activeTool") },
+				);
+			},
+			handlePointerOver: ({ context, event }) => {
+				context.set("cellOverAt", event.currentCell);
+				if (!context.get("cellDownAt")) {
+					context.set("hoveredCell", event.currentCell);
+				}
+			},
+			handlePointerOut: ({ context }) => {
+				if (!context.get("cellDownAt")) {
+					context.set("hoveredCell", null);
+				}
+			},
+			handlePointerMoveIdle: ({ context, event }) => {
+				if (event.currentCell && context.get("hoveredCell") !== event.currentCell) {
+					context.set("hoveredCell", event.currentCell);
+				}
+			},
+			handlePointerMoveDragging: ({ context, refs, prop, event }) => {
+				const pointerEvent = event.event;
+				const anchorBeat = refs.get("anchorBeat");
+				const shouldLockCursor = prop("shouldLockCursor")(refs.get("activeTool"));
+
+				if (anchorBeat !== null) {
+					if (!shouldLockCursor) {
+						const currentBeat = prop("cursorPositionInBeats");
+						context.set("time", Math.min(anchorBeat, currentBeat));
+						context.set("duration", Math.abs(currentBeat - anchorBeat));
+					} else {
+						context.set("time", anchorBeat);
+						context.set("duration", null);
+					}
+				}
+
+				const currentMouseDownAt = refs.get("mouseDownAt");
+				if (!currentMouseDownAt) return;
+
+				const notePlacementMode = prop("notePlacementMode");
+				const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isModKeyPressed(pointerEvent as PointerEvent);
+				const currentDir = resolveNoteDirectionForPlacementMode(currentMouseDownAt, { x: (pointerEvent as PointerEvent).pageX, y: (pointerEvent as PointerEvent).pageY }, { usePrecisionPlacement });
+
+				if (currentDir !== context.get("direction")) {
+					context.set("direction", currentDir);
+				}
+			},
+			handlePointerUp: ({ context, refs, prop, event }) => {
+				const pointerEvent = event.event;
+				const anchorBeat = refs.get("anchorBeat");
+				const shouldLockCursor = prop("shouldLockCursor")(refs.get("activeTool"));
+
+				if (anchorBeat !== null) {
+					if (!shouldLockCursor) {
+						const currentBeat = prop("cursorPositionInBeats");
+						context.set("time", Math.min(anchorBeat, currentBeat));
+						context.set("duration", Math.abs(currentBeat - anchorBeat));
+					} else {
+						context.set("time", anchorBeat);
+						context.set("duration", null);
+					}
+				}
+
+				const currentMouseDownAt = refs.get("mouseDownAt");
+				if (currentMouseDownAt) {
+					prop("onPointerUp")?.(
+						pointerEvent,
+						{
+							cellDownAt: context.get("cellDownAt"),
+							cellOverAt: context.get("cellOverAt"),
+							direction: context.get("direction"),
+							duration: context.get("duration"),
+							time: context.get("time"),
+						},
+						{ tool: refs.get("activeTool") },
+					);
+				}
+
+				refs.set("mouseDownAt", null);
+				refs.set("anchorBeat", null);
+				refs.set("activeTool", null);
+				context.set("cellDownAt", null);
+				context.set("direction", null);
+				context.set("duration", null);
+				context.set("time", null);
+			},
+		},
 	},
-	states: {},
 });
 
-export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
+export function connect({ prop, context, refs, send }: Service<PlacementGridSchema>) {
 	const notePlacementMode = prop("notePlacementMode");
 	const obstaclePlacementMode = prop("obstaclePlacementMode");
 	const grid = prop("grid");
-	const mouseDownAt = refs.get("mouseDownAt");
 
 	const scaleIndex = (value: number) => value * BLOCK_CELL_SIZE;
 
@@ -60,11 +222,33 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 		notePlacementMode,
 		obstaclePlacementMode,
 		grid,
-		mouseDownAt,
+		get mouseDownAt() {
+			return refs.get("mouseDownAt");
+		},
+		get anchorBeat() {
+			return refs.get("anchorBeat");
+		},
 		cellDownAt: context.get("cellDownAt"),
 		cellOverAt: context.get("cellOverAt"),
 		direction: context.get("direction"),
+		time: context.get("time"),
+		duration: context.get("duration"),
+		scaleIndex: scaleIndex,
 
+		updateAnchoredValues: () => {
+			const anchorBeat = refs.get("anchorBeat");
+			if (anchorBeat === null) return;
+			const shouldLockCursor = prop("shouldLockCursor")(refs.get("activeTool"));
+
+			if (!shouldLockCursor) {
+				const currentBeat = prop("cursorPositionInBeats");
+				context.set("time", Math.min(anchorBeat, currentBeat));
+				context.set("duration", Math.abs(currentBeat - anchorBeat));
+			} else {
+				context.set("time", anchorBeat);
+				context.set("duration", null);
+			}
+		},
 		getCellProps: ({ colIndex, rowIndex }: IGridCell): ThreeProps<"group"> => {
 			const currentCell = { colIndex, rowIndex };
 
@@ -76,79 +260,39 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 				"position-y": y,
 				onPointerDown: (event) => {
 					if (document.pointerLockElement) return;
-
-					refs.set("mouseDownAt", { x: event.pageX, y: event.pageY, button: event.button });
-					context.set("cellDownAt", currentCell);
-
-					if (event.button === 0) {
-						event.stopPropagation();
-						prop("onCellPointerDown")?.(event, { cellDownAt: currentCell });
-					}
+					send({ type: "POINTER_DOWN", event, currentCell });
 				},
-				onPointerMove: () => {
+				onPointerMove: (event) => {
 					if (document.pointerLockElement) {
 						context.set("hoveredCell", null);
 						return;
 					}
-					if (mouseDownAt) return;
-
-					if (context.get("hoveredCell") !== currentCell) {
-						context.set("hoveredCell", currentCell);
-					}
+					send({ type: "POINTER_MOVE", event, currentCell });
 				},
 				onPointerOver: () => {
 					if (document.pointerLockElement) {
 						context.set("hoveredCell", null);
 						return;
 					}
-
-					context.set("cellOverAt", currentCell);
-
-					if (!context.get("cellDownAt")) {
-						context.set("hoveredCell", currentCell);
-					}
+					send({ type: "POINTER_OVER", currentCell });
 				},
 				onPointerOut: () => {
 					if (document.pointerLockElement) {
 						context.set("hoveredCell", null);
 						return;
 					}
-
-					if (!context.get("cellDownAt")) {
-						context.set("hoveredCell", null);
-					}
+					send({ type: "POINTER_OUT", currentCell });
 				},
 			};
 		},
-
 		createGlobalHandlers: () => {
 			return {
 				onPointerMove: (event: PointerEvent) => {
 					if (document.pointerLockElement) return;
-					if (!mouseDownAt) return;
-
-					const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isModKeyPressed(event);
-					const currentDir = resolveNoteDirectionForPlacementMode(mouseDownAt, { x: event.pageX, y: event.pageY }, { usePrecisionPlacement });
-
-					if (currentDir !== context.get("direction")) {
-						context.set("direction", currentDir);
-					}
+					send({ type: "POINTER_MOVE", event });
 				},
 				onPointerUp: (event: PointerEvent) => {
-					if (document.pointerLockElement) return;
-					if (!mouseDownAt) return;
-
-					if (event.button === 0) {
-						prop("onPointerUp")?.(event, {
-							cellDownAt: context.get("cellDownAt"),
-							cellOverAt: context.get("cellOverAt"),
-							direction: context.get("direction"),
-						});
-					}
-					refs.set("mouseDownAt", null);
-
-					context.set("cellDownAt", null);
-					context.set("direction", null);
+					send({ type: "POINTER_UP", event });
 				},
 			};
 		},
@@ -156,6 +300,5 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 			const hoveredCell = context.get("hoveredCell");
 			return !!(hoveredCell && hoveredCell.rowIndex === rowIndex && hoveredCell.colIndex === colIndex);
 		},
-		scaleIndex: scaleIndex,
 	};
 }

@@ -86,14 +86,14 @@ export function Combobox({ collection: original, value, onValueCreate, onValueCh
 		initialItems: original.items,
 		filter: contains,
 		itemToValue: (item) => {
-			const value = original.getItemValue(item);
-			if (!value) return item;
-			return value;
+			const itemValue = original.getItemValue(item);
+			if (itemValue !== null) return itemValue;
+			return item?.toString();
 		},
 		itemToString: (item) => {
-			const label = original.stringifyItem(item);
-			if (!label) return item;
-			return label;
+			const itemLabel = original.stringifyItem(item);
+			if (itemLabel !== null) return itemLabel;
+			return item?.toString();
 		},
 	});
 
@@ -152,7 +152,7 @@ export function Combobox({ collection: original, value, onValueCreate, onValueCh
 	);
 
 	return (
-		<Builder.Root {...rest} collection={collection} onInputValueChange={handleInputChange} onOpenChange={handleOpenChange} value={selectedValue} onValueChange={handleValueChange} allowCustomValue>
+		<Builder.Root {...rest} collection={collection} onInputValueChange={handleInputChange} onOpenChange={handleOpenChange} value={selectedValue} onValueChange={handleValueChange} allowCustomValue={creatable}>
 			{label && <Builder.Label>{label}</Builder.Label>}
 			<Builder.Control className={css({ colorPalette })}>
 				<Builder.Input placeholder={placeholder} />
@@ -171,7 +171,27 @@ export function ComboboxDataField({ label, helperText, ...delegated }: Assign<Co
 
 	return (
 		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
-			<Combobox {...delegated} id={id} inputValue={field.state.value ?? ""} value={field.state.value ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
+			<Combobox {...delegated} id={id} value={field.state.value !== null ? [field.state.value] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] : null)} />
+		</Field>
+	);
+}
+export function NumberComboboxDataField({ label, helperText, ...delegated }: Assign<ComponentProps<typeof Combobox>, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<number | null>(delegated);
+
+	return (
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Combobox {...delegated} id={id} value={field.state.value !== null ? [field.state.value.toString()] : []} onValueChange={(details) => field.handleChange(details.value.length ? Number(details.value[0]) : null)} />
+		</Field>
+	);
+}
+export function BooleanComboboxDataField({ label, helperText, ...delegated }: Assign<Omit<ComponentProps<typeof Combobox>, "collection">, FieldProps>) {
+	const [field, { id, required, invalid, errorText }] = useFieldData<boolean | null>(delegated);
+
+	const { collection } = useListCollection({ initialItems: [true, false] });
+
+	return (
+		<Field id={id} label={label} helperText={helperText} required={required} invalid={invalid} errorText={errorText}>
+			<Combobox {...delegated} id={id} collection={collection} value={field.state.value !== null ? [field.state.value.toString()] : []} onValueChange={(details) => field.handleChange(details.value.length ? details.value[0] === "true" : null)} />
 		</Field>
 	);
 }

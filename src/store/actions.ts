@@ -1,9 +1,9 @@
 export { cycleToNextTool, cycleToPrevTool, deselectAllEntities, finishLoadingMap, leaveEditor, loadAudioDataContents, loadBeatmapContents, loadSongFile, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "./features/actions";
-export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelection, updateNotesEditorDefaultObstacleDuration, updateNotesEditorDirection, updateNotesEditorTool, upsertGridPreset, upsertGridPresets } from "./features/beatmap.slice";
+export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelection, updateNotesEditorAngleOffsetStep, updateNotesEditorDirection, updateNotesEditorTool, upsertGridPreset, upsertGridPresets } from "./features/beatmap.slice";
 export { addBookmark, removeBookmark } from "./features/bookmarks.slice";
 export { setClipboardData } from "./features/clipboard.slice";
 export { loadGridPreset, saveGridPreset } from "./features/editor.thunks";
-export { copySelection, cutSelection, mirrorSelection, nudgeSelection, pasteSelection, toggleSelectAllEntities } from "./features/entities.thunks";
+export { copySelection, cutSelection, nudgeSelection, pasteSelection, toggleSelectAllEntities } from "./features/entities.thunks";
 export {
 	addBasicEvent,
 	addBoostEvent,
@@ -11,6 +11,7 @@ export {
 	deselectBasicEvent,
 	deselectBoostEvent,
 	drawEventSelectionBox,
+	mirrorAllSelectedEvents,
 	nudgeAllSelectedEvents,
 	redoEvents,
 	removeAllSelectedEvents,
@@ -19,13 +20,18 @@ export {
 	selectBasicEvent,
 	selectBoostEvent,
 	undoEvents,
+	updateAllSelectedEvents,
 	updateBasicEvent,
 	updateBoostEvent,
 	upsertEvents,
 } from "./features/events.slice";
 export { init, updateProcessingImport } from "./features/global.slice";
 export {
+	decrementEventsEditorTrackHeight,
+	decrementEventsEditorTrackOpacity,
 	decrementEventsEditorZoomLevel,
+	incrementEventsEditorTrackHeight,
+	incrementEventsEditorTrackOpacity,
 	incrementEventsEditorZoomLevel,
 	updateEventsEditorColor,
 	updateEventsEditorCursor,
@@ -43,21 +49,25 @@ export {
 	decrementSnap,
 	decrementSongVolume,
 	decrementTickVolume,
+	decrementTrackScale,
 	incrementPlaybackRate,
 	incrementSnap,
 	incrementSongVolume,
 	incrementTickVolume,
+	incrementTrackScale,
 	pausePlayback,
 	startPlayback,
 	stopPlayback,
 	tick,
 	updateCursorPosition,
+	updateHighestPrecision,
 	updatePlaybackRate,
 	updateSnap,
 	updateSongVolume,
 	updateTickType,
 	updateTickVolume,
 	updateTrackScale,
+	updateWindowSize,
 } from "./features/navigation.slice";
 export {
 	addBombNote,
@@ -79,20 +89,18 @@ export {
 	selectColorNote,
 	selectObstacle,
 	undoObjects,
-	updateAllSelectedObstacles,
+	updateAllSelectedObjects,
 	updateColorNote,
 	updateObstacle,
 	upsertObjects,
 } from "./features/objects.slice";
 export {
-	jumpBackwards,
-	jumpForwards,
 	jumpToBeat,
-	jumpToEnd,
-	jumpToStart,
+	jumpToNextMarker,
+	jumpToNextWindow,
+	jumpToPrevMarker,
+	jumpToPrevWindow,
 	jumpToTime,
-	moveBackwards,
-	moveForwards,
 	togglePlayback,
 } from "./features/playback.thunks";
 export { addBeatmap, addColorScheme, addSong, addSongFromFile, copyBeatmap, removeBeatmap, removeColorScheme, removeSong, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSelectedBeatmap, updateSong, upsertSongs } from "./features/songs.slice";

@@ -74,11 +74,17 @@ const slice = createSlice({
 			const obstacles = obstacleSelectors.selectAll(state.obstacles).filter((data) => !!data.selected);
 			return notes.length + bombs.length + obstacles.length > 0;
 		}),
+		selectAllSelectedObjects: createSelector(selectPresent, (state) => {
+			const notes = noteSelectors.selectAll(state.notes).filter((data) => !!data.selected);
+			const bombs = bombSelectors.selectAll(state.bombs).filter((data) => !!data.selected);
+			const obstacles = obstacleSelectors.selectAll(state.obstacles).filter((data) => !!data.selected);
+			return [...notes, ...bombs, ...obstacles];
+		}),
 	},
 	reducers: (api) => {
 		return {
-			undo: history.undo,
-			redo: history.redo,
+			undo: api.reducer<{ shouldJump?: boolean }>(history.undo),
+			redo: api.reducer<{ shouldJump?: boolean }>(history.redo),
 			clearHistory: history.clearHistory,
 			addColorNote: api.reducer<IWrapColorNote>(
 				history.undoable((state, action) => {
@@ -144,11 +150,6 @@ const slice = createSlice({
 			deselectObstacle: api.reducer<{ id: EntityId }>((state, action) => {
 				obstacles.updateOne(state.present.obstacles, { id: action.payload.id, changes: { selected: false } });
 			}),
-			updateAllSelectedObstacles: api.reducer<{ changes: Partial<IWrapObstacle> }>(
-				history.undoable((state, action) => {
-					obstacleReducers.updateAllSelected(state.obstacles, () => action.payload.changes);
-				}),
-			),
 			upsertObjects: api.reducer<Partial<App.IBeatmapEntities>>(
 				history.undoable((state, action) => {
 					if (action.payload.notes) {
@@ -160,6 +161,13 @@ const slice = createSlice({
 					if (action.payload.obstacles) {
 						obstacles.upsertMany(state.obstacles, action.payload.obstacles);
 					}
+				}),
+			),
+			updateAllSelectedObjects: api.reducer<{ noteChanges: Partial<IWrapColorNote>; bombChanges: Partial<IWrapBombNote>; obstacleChanges: Partial<IWrapObstacle> }>(
+				history.undoable((state, action) => {
+					noteReducers.updateAllSelected(state.notes, () => action.payload.noteChanges);
+					bombReducers.updateAllSelected(state.bombs, () => action.payload.bombChanges);
+					obstacleReducers.updateAllSelected(state.obstacles, () => action.payload.obstacleChanges);
 				}),
 			),
 			mirrorAllSelectedObjects: api.reducer<{ axis: "horizontal" | "vertical"; noteGrid?: IGrid; obstacleGrid?: IGrid }>(
@@ -262,12 +270,13 @@ export const {
 	selectFutureObstacles,
 	selectSelectedObjects,
 	selectAnySelectedObjects,
+	selectAllSelectedObjects,
 } = slice.getSelectors(slice.selectSlice);
 
 export const { undo: undoObjects, redo: redoObjects, clearHistory: clearObjectHistory, upsertObjects, mirrorAllSelectedObjects, nudgeAllSelectedObjects, removeAllSelectedObjects } = slice.actions;
 export const { addColorNote, updateColorNote, selectColorNote, deselectColorNote, removeColorNote } = slice.actions;
 export const { addBombNote, selectBombNote, deselectBombNote, removeBombNote } = slice.actions;
-export const { addObstacle, updateObstacle, selectObstacle, deselectObstacle, updateAllSelectedObstacles, removeObstacle } = slice.actions;
+export const { addObstacle, updateObstacle, selectObstacle, deselectObstacle, updateAllSelectedObjects, removeObstacle } = slice.actions;
 
 export const deselectAllObjectsOfType = createAction("deselectAllObjectsOfType", (args: { itemType: ObjectType }) => {
 	return { payload: { ...args } };
