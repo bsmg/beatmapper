@@ -125,7 +125,7 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 	const resolveWheelAction = useThrottledCallback(
 		(event: ThreeEvent<WheelEvent>, data: T) => {
 			if (!interactive) return;
-			event.nativeEvent.stopPropagation();
+			event.stopPropagation();
 
 			const id = selectId(data);
 			const delta = event.deltaY > 0 ? -1 : 1;
