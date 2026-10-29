@@ -1,6 +1,6 @@
 import { useHotkeyStore, useHotkeys } from "@ark-ui/react/hotkeys";
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
@@ -64,6 +64,12 @@ export function Controls() {
 	useGlobalEventListener("mousemove", (ev) => {
 		if (!controls.current) return;
 		return controls.current.handleMouseMove(ev);
+	});
+
+	useEffect(() => {
+		return () => {
+			hotkeys.removeScope("camera");
+		};
 	});
 
 	return null;

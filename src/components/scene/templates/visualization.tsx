@@ -15,9 +15,9 @@ import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers"
 import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
+import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
-import { roundToNearest } from "$/utils";
+import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
 import EditorPlacementGrid from "./placement-grid";
 
@@ -42,6 +42,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const animateTrack = useAppSelector(selectAnimateTrack);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const angleOffsetStep = useAppSelector(selectNotesEditorAngleOffsetStep);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
@@ -57,11 +58,46 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 		onItemSelect: (_, id) => dispatch(selectColorNote({ id })),
 		onItemDeselect: (_, id) => dispatch(deselectColorNote({ id })),
 		onItemDelete: (_, id) => dispatch(removeColorNote({ id })),
-		onItemModify: (data, id) => dispatch(updateColorNote({ id, changes: { color: mirrorNoteColor(data.color) } })),
-		onItemWheel: (data, id, delta) => {
-			const step = 15 / delta;
-			if (Object.values<number>(NoteDirection).includes(data.direction)) {
-				return dispatch(updateColorNote({ id, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
+		onItemModifyClick: (data, id) => {
+			return dispatch(updateColorNote({ id, changes: { color: mirrorNoteColor(data.color) } }));
+		},
+		onItemModifyKeys: (data, id, keys) => {
+			if (keys.includes("W")) {
+				if (keys.includes("A")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.UP_LEFT, angleOffset: 0 } }));
+				if (keys.includes("D")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.UP_RIGHT, angleOffset: 0 } }));
+				return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.UP, angleOffset: 0 } }));
+			}
+			if (keys.includes("S")) {
+				if (keys.includes("A")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.DOWN_LEFT, angleOffset: 0 } }));
+				if (keys.includes("D")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.DOWN_RIGHT, angleOffset: 0 } }));
+				return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.DOWN, angleOffset: 0 } }));
+			}
+			if (keys.includes("A")) {
+				if (keys.includes("W")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.UP_LEFT, angleOffset: 0 } }));
+				if (keys.includes("S")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.DOWN_LEFT, angleOffset: 0 } }));
+				return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.LEFT, angleOffset: 0 } }));
+			}
+			if (keys.includes("D")) {
+				if (keys.includes("W")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.UP_RIGHT, angleOffset: 0 } }));
+				if (keys.includes("S")) return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.DOWN_RIGHT, angleOffset: 0 } }));
+				return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.RIGHT, angleOffset: 0 } }));
+			}
+			if (keys.includes("F")) {
+				if (data.direction === NoteDirection.ANY) return dispatch(updateColorNote({ id, changes: { angleOffset: data.angleOffset === 0 ? 45 : 0 } }));
+				return dispatch(updateColorNote({ id, changes: { direction: NoteDirection.ANY, angleOffset: 0 } }));
+			}
+		},
+		onItemModifyWheel: (data, id, delta, modifierKey) => {
+			if (modifierKey) {
+				const step = angleOffsetStep / delta;
+				if (Object.values<number>(NoteDirection).includes(data.direction)) {
+					return dispatch(updateColorNote({ id, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
+				}
+			} else {
+				const values: number[] = [NoteDirection.UP, NoteDirection.UP_LEFT, NoteDirection.LEFT, NoteDirection.DOWN_LEFT, NoteDirection.DOWN, NoteDirection.DOWN_RIGHT, NoteDirection.RIGHT, NoteDirection.UP_RIGHT];
+				if (values.includes(data.direction)) {
+					return dispatch(updateColorNote({ id, changes: { direction: cycle(values, data.direction, delta > 0 ? 1 : -1), angleOffset: 0 } }));
+				}
 			}
 		},
 	});
@@ -80,7 +116,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 		onItemSelect: (_, id) => dispatch(selectObstacle({ id })),
 		onItemDeselect: (_, id) => dispatch(deselectObstacle({ id })),
 		onItemDelete: (_, id) => dispatch(removeObstacle({ id })),
-		onItemWheel: (x, id, delta) => {
+		onItemModifyWheel: (x, id, delta) => {
 			const newDuration = roundToNearest(x.duration + snapTo * delta, highestPrecision);
 			// the new duration value should never create an invalid obstacle.
 			dispatch(updateObstacle({ id, changes: { duration: Math.max(newDuration, highestPrecision) } }));
