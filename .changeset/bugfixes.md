@@ -12,3 +12,4 @@
 - The "mirror selection" action for objects now applies the correct grid dimensions between notes and obstacles.
 - Hovering the cursor over multiple objects will now properly block event propagation at the first targeted object.
 - Firing object modification actions via scroll wheel will no longer duplicate history events due to faulty propagation.
+- Undo/redo actions will now incorporate comparisons for all object properties rather than strictly by IDs, since the latter made it difficult to track history for non-indexed properties (i.e. note color and direction, obstacle duration, etc).

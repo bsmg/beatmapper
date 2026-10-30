@@ -27,22 +27,24 @@ import type { App } from "$/types";
 import { difference } from "$/utils";
 
 function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
-	const relevantNotes = difference(args.notes.before, args.notes.after, resolveNoteId);
-	const relevantBombs = difference(args.bombs.before, args.bombs.after, resolveNoteId);
-	const relevantObstacles = difference(args.obstacles.before, args.obstacles.after, resolveObstacleId);
+	const relevantNotes = difference(args.notes.before, args.notes.after);
+	const relevantBombs = difference(args.bombs.before, args.bombs.after);
+	const relevantObstacles = difference(args.obstacles.before, args.obstacles.after);
 
 	const relevantEntities = [...relevantNotes, ...relevantBombs, ...relevantObstacles].sort(sortObjectFn);
-	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0]?.time ?? 0);
+	if (!relevantEntities.length) return;
+	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
 	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
 
 function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
-	const relevantBasicEvents = difference(args.basicEvents.before, args.basicEvents.after, resolveEventId);
-	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after, resolveEventId);
+	const relevantBasicEvents = difference(args.basicEvents.before, args.basicEvents.after);
+	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after);
 
 	const relevantEntities = [...relevantBasicEvents, ...relevantBoostEvents].sort(sortObjectFn);
-	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0]?.time ?? 0);
+	if (!relevantEntities.length) return;
+	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
 	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
