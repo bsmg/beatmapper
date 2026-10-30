@@ -162,14 +162,14 @@ const slice = createSlice({
 					}
 				}),
 			),
-			mirrorAllSelectedObjects: api.reducer<{ axis: "horizontal" | "vertical"; grid?: IGrid }>(
+			mirrorAllSelectedObjects: api.reducer<{ axis: "horizontal" | "vertical"; noteGrid?: IGrid; obstacleGrid?: IGrid }>(
 				history.undoable((state, action) => {
-					const { axis, grid } = action.payload;
-					noteReducers.replaceAllSelected(state.notes, mirrorGridObjectProperties(axis, grid, 0));
+					const { axis, noteGrid, obstacleGrid } = action.payload;
+					noteReducers.replaceAllSelected(state.notes, mirrorGridObjectProperties(axis, noteGrid, 0));
 					noteReducers.replaceAllSelected(state.notes, mirrorBaseNoteProperties(axis));
-					bombReducers.replaceAllSelected(state.bombs, mirrorGridObjectProperties(axis, grid, 0));
+					bombReducers.replaceAllSelected(state.bombs, mirrorGridObjectProperties(axis, noteGrid, 0));
 					if (axis === "horizontal") {
-						obstacleReducers.replaceAllSelected(state.obstacles, mirrorGridObjectProperties(axis, grid, 0));
+						obstacleReducers.replaceAllSelected(state.obstacles, mirrorGridObjectProperties(axis, obstacleGrid, 0));
 					}
 				}),
 			),

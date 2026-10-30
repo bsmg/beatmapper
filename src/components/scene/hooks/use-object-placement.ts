@@ -1,10 +1,12 @@
+import type { ThreeEvent } from "@react-three/fiber";
 import type { EntityId } from "@reduxjs/toolkit";
+import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useCallback, useRef } from "react";
 
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
 import { finishManagingNoteSelection, startManagingNoteSelection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectNotesEditorSelectionMode } from "$/store/selectors";
+import { selectNotesEditorSelectionMode, selectPacerWait } from "$/store/selectors";
 import { type App, ObjectSelectionMode } from "$/types";
 
 interface UseObjectSelectionOptions<T extends App.IEditorObject> {
@@ -20,17 +22,18 @@ interface UseObjectSelectionOptions<T extends App.IEditorObject> {
 export function useObjectPlacement<T extends App.IEditorObject>({ interactive, selectId, onItemSelect, onItemDeselect, onItemDelete, onItemModify, onItemWheel }: UseObjectSelectionOptions<T>) {
 	const dispatch = useAppDispatch();
 	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
+	const wait = useAppSelector(selectPacerWait);
 
 	const activePointerIdRef = useRef<number | null>(null);
 
 	const handlePointerDown = useCallback(
-		(event: PointerEvent, data: T) => {
+		(event: ThreeEvent<PointerEvent>, data: T) => {
 			if (!interactive) return;
 
 			if (activePointerIdRef.current === event.pointerId) return;
 			activePointerIdRef.current = event.pointerId;
 
-			event.stopPropagation();
+			event.nativeEvent.stopPropagation();
 
 			const id = selectId(data);
 			let newSelectionMode: ObjectSelectionMode | null = null;
@@ -81,9 +84,9 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 	useGlobalEventListener("pointercancel", handlePointerUp, { shouldFire: !!selectionMode || activePointerIdRef.current !== null });
 
 	const handlePointerOver = useCallback(
-		(event: PointerEvent, data: T) => {
+		(event: ThreeEvent<PointerEvent>, data: T) => {
 			if (!interactive) return;
-			event.stopPropagation();
+			event.nativeEvent.stopPropagation();
 
 			if (!selectionMode) return;
 
@@ -112,15 +115,15 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 	);
 
 	const handlePointerOut = useCallback(
-		(event: PointerEvent, _data: T) => {
+		(event: ThreeEvent<PointerEvent>, _data: T) => {
 			if (!interactive) return;
-			event.stopPropagation();
+			event.nativeEvent.stopPropagation();
 		},
 		[interactive],
 	);
 
-	const resolveWheelAction = useCallback(
-		(event: WheelEvent, data: T) => {
+	const resolveWheelAction = useThrottledCallback(
+		(event: ThreeEvent<WheelEvent>, data: T) => {
 			if (!interactive) return;
 			event.stopPropagation();
 
@@ -129,12 +132,13 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 			onItemWheel?.(data, id, delta);
 		},
-		[interactive, selectId, onItemWheel],
+		{ wait: wait },
 	);
 
 	const handleWheel = useCallback(
-		(event: WheelEvent, data: T) => {
+		(event: ThreeEvent<WheelEvent>, data: T) => {
 			if (event.altKey) {
+				event.nativeEvent.stopPropagation();
 				resolveWheelAction(event, data);
 			}
 		},

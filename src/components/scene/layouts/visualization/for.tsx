@@ -1,3 +1,4 @@
+import type { EntityId } from "@reduxjs/toolkit";
 import type { IWrapGridObject } from "bsmap";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { Vector3Tuple } from "three";
@@ -7,13 +8,14 @@ import type { ObjectResolverOptions } from "$/components/scene/helpers";
 import { HIGHEST_PRECISION } from "$/constants";
 import { useVisualizationContext } from "./context";
 
-interface Props<T extends IWrapGridObject> {
+interface Props<T extends IWrapGridObject, Id extends EntityId> {
 	objects: T[];
+	resolveId: (model: T) => Id;
 	resolvePosition: (model: T, ctx: ObjectResolverOptions) => Vector3Tuple;
 	resolveColor: (model: T) => string;
-	children: (model: T, ctx: Pick<ComponentProps<"group">, "position" | "layers"> & { data: T; transparent: boolean; color: string }) => ReactNode;
+	children: (model: T, id: Id, ctx: Pick<ComponentProps<"group">, "position" | "layers"> & { data: T; transparent: boolean; color: string }) => ReactNode;
 }
-function VisualizationForGridObjects<T extends IWrapGridObject>({ objects, resolvePosition, resolveColor, children }: Props<T>) {
+function VisualizationForGridObjects<T extends IWrapGridObject, Id extends EntityId>({ objects, resolveId, resolvePosition, resolveColor, children }: Props<T, Id>) {
 	const { cursorPosition, timescale, beatDepth } = useVisualizationContext();
 
 	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPosition ?? 0) * beatDepth, [cursorPosition, beatDepth]);
@@ -21,9 +23,10 @@ function VisualizationForGridObjects<T extends IWrapGridObject>({ objects, resol
 	const adjustment = useMemo(() => beatDepth * HIGHEST_PRECISION, [beatDepth]);
 
 	return objects.map((data) => {
+		const id = resolveId(data);
 		const position = resolvePosition(data, { timescale, beatDepth });
 		const noteZPosition = zPosition + position[2] - adjustment;
-		return children(data, {
+		return children(data, id, {
 			data,
 			position,
 			layers: 1,

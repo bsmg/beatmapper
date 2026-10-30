@@ -1,9 +1,10 @@
 import { deselectAllEntities, mirrorAllSelectedObjects, nudgeAllSelectedEvents, nudgeAllSelectedObjects, removeAllSelectedEvents, removeAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, setClipboardData, upsertEvents, upsertObjects } from "$/store/actions";
 import { selectActiveSongId, selectActiveView } from "$/store/helpers/route.helpers";
-import { selectAnySelectedEvents, selectAnySelectedObjects, selectClipboardData, selectCursorPositionInBeats, selectEarliestBeat, selectEventsEditorCursor, selectEventsEditorStartAndEndBeat, selectGridSize, selectSelectedBeatmapEntities, selectSnap } from "$/store/selectors";
+import { selectAnySelectedEvents, selectAnySelectedObjects, selectClipboardData, selectCursorPositionInBeats, selectEarliestBeat, selectEventsEditorCursor, selectEventsEditorStartAndEndBeat, selectSelectedBeatmapEntities, selectSnap } from "$/store/selectors";
 import type { AppThunkApiConfig } from "$/store/types";
 import { createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { View } from "$/types";
+import { selectNoteGridSize, selectObstacleGridSize } from "./selectors";
 
 export const toggleSelectAllEntities = createThunk("toggleSelectAllEntities", (_, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
 	const songId = selectActiveSongId(api.extra.getRouter());
@@ -32,8 +33,9 @@ export const mirrorSelection = createThunk("mirrorSelection", (args: { axis: "ho
 
 	switch (view) {
 		case View.BEATMAP: {
-			const grid = selectGridSize(api.getState(), songId);
-			return api.dispatch(mirrorAllSelectedObjects({ ...args, grid }));
+			const noteGrid = selectNoteGridSize(api.getState(), songId);
+			const obstacleGrid = selectObstacleGridSize(api.getState(), songId);
+			return api.dispatch(mirrorAllSelectedObjects({ ...args, noteGrid, obstacleGrid }));
 		}
 	}
 });

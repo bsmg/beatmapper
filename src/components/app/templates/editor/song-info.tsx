@@ -13,15 +13,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectBeatmaps, selectSelectedBeatmap, selectSongMetadata } from "$/store/selectors";
 import { HStack, Stack, styled, Text } from "$:styled-system/jsx";
 
-const COVER_ART_SIZES = {
-	medium: 75,
-	small: 50,
-};
-
-interface Props {
-	showDifficultySelector: boolean;
-}
-function EditorSongInfo({ showDifficultySelector }: Props) {
+function EditorSongInfo() {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
@@ -48,7 +40,7 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 
 	return (
 		<OuterWrapper gap={1.5}>
-			<CoverArtFile filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} boxSize={COVER_ART_SIZES[showDifficultySelector ? "medium" : "small"]} />
+			<CoverArtFile filename={BeatmapFilestore.resolveFilename(sid, "cover", {})} boxSize={75} />
 			<Stack gap={1}>
 				<Stack gap={0.5}>
 					<Text color={"fg.default"} fontSize={"20px"} fontWeight={400} lineHeight={1}>
@@ -58,26 +50,24 @@ function EditorSongInfo({ showDifficultySelector }: Props) {
 						{metadata.artist}
 					</Text>
 				</Stack>
-				{showDifficultySelector && (
-					<HStack gap={0.5}>
-						<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
-						<Dialog
-							title="Create New Beatmap"
-							description="Add a new beatmap file to the mapset."
-							lazyMount
-							unmountOnExit
-							render={(ctx) => (
-								<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
-									{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
-								</CreateBeatmapForm>
-							)}
-						>
-							<Button variant="ghost" size="sm">
-								<PlusIcon size={16} />
-							</Button>
-						</Dialog>
-					</HStack>
-				)}
+				<HStack gap={0.5}>
+					<Select unfocusOnPress size="sm" collection={BEATMAP_LIST_COLLECTION} value={[selectedBeatmap.toString()]} onValueChange={handleBeatmapSelect} />
+					<Dialog
+						title="Create New Beatmap"
+						description="Add a new beatmap file to the mapset."
+						lazyMount
+						unmountOnExit
+						render={(ctx) => (
+							<CreateBeatmapForm dialog={ctx} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
+								{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
+							</CreateBeatmapForm>
+						)}
+					>
+						<Button variant="ghost" size="sm">
+							<PlusIcon size={16} />
+						</Button>
+					</Dialog>
+				</HStack>
 			</Stack>
 		</OuterWrapper>
 	);

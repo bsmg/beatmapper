@@ -269,6 +269,9 @@ export function connect({ scope, send, prop, context, refs, computed }: Service<
 			return normalize.element({
 				...getProps(scope, "trigger"),
 				onPointerDown: (event) => {
+					if (!isPlaceMode) {
+						event.currentTarget.setPointerCapture(event.pointerId);
+					}
 					const rect = event.currentTarget.getBoundingClientRect();
 					return send({ type: "trigger/down", x: event.clientX - rect.left, y: event.clientY - rect.top, button: event.button });
 				},

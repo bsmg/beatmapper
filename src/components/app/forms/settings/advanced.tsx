@@ -12,7 +12,7 @@ function AppAdvancedSettings() {
 		<Stack gap={4}>
 			<Wrap gap={2}>
 				<Field label="Event update rate" helperText="Controls how often debounced/throttled events will fire (in milliseconds). A lower value will make certain elements more responsive, with the trade-off being a greater impact on performance.">
-					<FieldInput type="number" value={wait} onValueChange={(x) => dispatch(updatePacerWait({ value: x.valueAsNumber }))} />
+					<FieldInput type="number" value={wait} onValueChange={(x) => dispatch(updatePacerWait(x.valueAsNumber))} />
 				</Field>
 			</Wrap>
 		</Stack>
