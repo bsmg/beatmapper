@@ -1,8 +1,9 @@
+import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { createToaster } from "@ark-ui/react/toast";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { MDXComponents } from "mdx/types";
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 
 import { AppStore } from "$/_setup";
 import { EditorSidebar } from "$/components/app/templates/editor";
@@ -11,7 +12,7 @@ import { AnchorLink, List, Prompter, Shortcut, Toaster } from "$/components/ui/c
 import { leaveEditor, startLoadingMap, updateAnnouncements, updateCursorPosition } from "$/store/actions";
 import { selectAnnouncements, selectEditorOffset } from "$/store/selectors";
 import type { View } from "$/types";
-import { prompts } from "$:content";
+import { allPrompts } from "$:content";
 import { css, cx } from "$:styled-system/css";
 import { styled, Text } from "$:styled-system/jsx";
 
@@ -74,7 +75,7 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 
 		return {
 			view: toPascalCase(context.view),
-			unseenPrompt: prompts.find((prompt) => !announcements.includes(prompt.id)),
+			unseenPrompt: allPrompts.find((prompt) => !announcements.includes(prompt.id)),
 		};
 	},
 	head: ({ params, loaderData }) => {
@@ -113,6 +114,15 @@ export const Route = createFileRoute("/_/edit/$sid/$bid/_")({
 });
 
 function RouteComponent() {
+	const store = useHotkeyStore();
+
+	useEffect(() => {
+		store.addScope("editor");
+		return () => {
+			store.removeScope("editor");
+		};
+	});
+
 	return (
 		<Prompter>
 			<EditorSidebar />

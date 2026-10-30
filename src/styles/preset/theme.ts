@@ -185,6 +185,7 @@ export const textStyles = defineTextStyles({
 			textDecoration: { _hover: "underline" },
 			color: {
 				"&[target]": { _light: "colorPalette.700", _dark: "colorPalette.300" },
+				_active: { _light: "colorPalette.700", _dark: "colorPalette.300" },
 				_current: { _light: "colorPalette.700", _dark: "colorPalette.300" },
 				_currentPage: { _light: "colorPalette.700", _dark: "colorPalette.300" },
 			},

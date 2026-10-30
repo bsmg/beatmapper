@@ -6,4 +6,5 @@ minimumReleaseAgeExclude:
   - bsmap
 
 publicHoistPattern:
+  - '*playwright*'
   - "*workbox*"

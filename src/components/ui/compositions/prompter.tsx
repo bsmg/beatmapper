@@ -1,5 +1,5 @@
 import { useDialog, useDialogContext } from "@ark-ui/react/dialog";
-import { type FormEvent, type MouseEvent, type PropsWithChildren, useCallback, useMemo, useState } from "react";
+import { type MouseEvent, type PropsWithChildren, type SubmitEvent, useCallback, useMemo, useState } from "react";
 
 import { HStack } from "$:styled-system/jsx";
 import { Button } from "./button";
@@ -29,6 +29,8 @@ export function Prompter({ children }: PropsWithChildren) {
 
 	const open = useCallback(
 		(id: string) => {
+			if (active) return;
+
 			const entry = registry.get(id);
 
 			if (entry) {
@@ -36,7 +38,7 @@ export function Prompter({ children }: PropsWithChildren) {
 				dialog.setOpen(true);
 			}
 		},
-		[registry, dialog],
+		[registry, dialog, active],
 	);
 
 	const contextValue = useMemo(() => {
@@ -61,7 +63,7 @@ function Contents({ validate, defaultValues, render, onSubmit }: IPrompt) {
 	});
 
 	const handleSubmit = useCallback(
-		(e: MouseEvent<HTMLButtonElement> | FormEvent<HTMLFormElement>) => {
+		(e: MouseEvent<HTMLButtonElement> | SubmitEvent<HTMLFormElement>) => {
 			e.preventDefault();
 			form.handleSubmit().then(() => {
 				if (Object.keys(form.state.errors).length === 0) {

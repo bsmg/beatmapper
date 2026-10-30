@@ -4,7 +4,7 @@ import { createMachine, type MachineSchema, type Service } from "@zag-js/core";
 import { BLOCK_CELL_SIZE } from "$/components/scene/constants";
 import { type IGrid, type IGridCell, NotePlacementMode, type ObstaclePlacementMode } from "$/types";
 import type { ThreeProps } from "$/types/vendor";
-import { isMetaKeyPressed } from "$/utils";
+import { isModKeyPressed } from "$/utils";
 import { resolveNoteDirectionForPlacementMode } from "./direction.helpers";
 
 export interface IPlacementContext {
@@ -75,6 +75,8 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 				"position-x": x,
 				"position-y": y,
 				onPointerDown: (event) => {
+					if (document.pointerLockElement) return;
+
 					refs.set("mouseDownAt", { x: event.pageX, y: event.pageY, button: event.button });
 					context.set("cellDownAt", currentCell);
 
@@ -84,6 +86,10 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 					}
 				},
 				onPointerMove: () => {
+					if (document.pointerLockElement) {
+						context.set("hoveredCell", null);
+						return;
+					}
 					if (mouseDownAt) return;
 
 					if (context.get("hoveredCell") !== currentCell) {
@@ -91,6 +97,11 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 					}
 				},
 				onPointerOver: () => {
+					if (document.pointerLockElement) {
+						context.set("hoveredCell", null);
+						return;
+					}
+
 					context.set("cellOverAt", currentCell);
 
 					if (!context.get("cellDownAt")) {
@@ -98,6 +109,11 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 					}
 				},
 				onPointerOut: () => {
+					if (document.pointerLockElement) {
+						context.set("hoveredCell", null);
+						return;
+					}
+
 					if (!context.get("cellDownAt")) {
 						context.set("hoveredCell", null);
 					}
@@ -108,9 +124,10 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 		createGlobalHandlers: () => {
 			return {
 				onPointerMove: (event: PointerEvent) => {
+					if (document.pointerLockElement) return;
 					if (!mouseDownAt) return;
 
-					const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isMetaKeyPressed(event);
+					const usePrecisionPlacement = notePlacementMode === NotePlacementMode.EXTENSIONS && isModKeyPressed(event);
 					const currentDir = resolveNoteDirectionForPlacementMode(mouseDownAt, { x: event.pageX, y: event.pageY }, { usePrecisionPlacement });
 
 					if (currentDir !== context.get("direction")) {
@@ -118,6 +135,7 @@ export function connect({ prop, context, refs }: Service<PlacementGridSchema>) {
 					}
 				},
 				onPointerUp: (event: PointerEvent) => {
+					if (document.pointerLockElement) return;
 					if (!mouseDownAt) return;
 
 					if (event.button === 0) {

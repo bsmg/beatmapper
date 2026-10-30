@@ -11,26 +11,26 @@ You can make maps without learning any of them, but your life will be much easie
 These shortcuts can be used either in the "Beatmap" view or the "Lightshow" view.
 
 <ShortcutTable>
-  <ShortcutItem title="Save map" keys={[["META", "S"]]}>
+  <ShortcutItem title="Save map" keys={[["MOD", "S"]]}>
     Save the current contents of the map to disk. Do this frequently!
   </ShortcutItem>
-  <ShortcutItem title="Download map" keys={[["META", "P"]]}>
+  <ShortcutItem title="Download map" keys={[["MOD", "P"]]}>
     Export a copy of the current map.
   </ShortcutItem>
   <ShortcutItem title="Play / pause the music" keys={[["Space"]]}>
     Play / pause the music.
     Will snap to the nearest beat when pausing
   </ShortcutItem>
-  <ShortcutItem title="Seek forwards" keys={[["↑"], ["→"]]}>
+  <ShortcutItem title="Seek forwards" keys={[["↑"], ["SCROLL"]]}>
     Advance the cursor by the "Snapping interval" selected
   </ShortcutItem>
-  <ShortcutItem title="Seek backwards" keys={[["↓"], ["←"]]}>
+  <ShortcutItem title="Seek backwards" keys={[["↓"], ["SCROLL"]]}>
     Rewind the cursor by the "Snapping interval" selected
   </ShortcutItem>
-   <ShortcutItem title="Increment playback rate" keys={[["META", "="]]}>
+   <ShortcutItem title="Increment playback rate" keys={[["MOD", "="]]}>
     Increase the playback rate of the song by 0.25x. Caps at 0x speed.
   </ShortcutItem>
-  <ShortcutItem title="Decrement playback rate" keys={[["META", "-"]]}>
+  <ShortcutItem title="Decrement playback rate" keys={[["MOD", "-"]]}>
     Decrease the playback rate of the song by 0.25x. Caps at 2x speed.
   </ShortcutItem>
   <ShortcutItem title="Quick-select" keys={[["Q"]]}>
@@ -41,14 +41,14 @@ These shortcuts can be used either in the "Beatmap" view or the "Lightshow" view
   <ShortcutItem title="Jump to a specific beat" keys={[["J"]]}>
     Moves the cursor to the user-inputted beat number.
   </ShortcutItem>
-  <ShortcutItem title="Cut selection" keys={[["META", "X"]]}>
+  <ShortcutItem title="Cut selection" keys={[["MOD", "X"]]}>
     Copies the active selection to the clipboard, and deletes the selected
     entities
   </ShortcutItem>
-  <ShortcutItem title="Copy selection" keys={[["META", "C"]]}>
+  <ShortcutItem title="Copy selection" keys={[["MOD", "C"]]}>
     Copies the active selection to the clipboard
   </ShortcutItem>
-  <ShortcutItem title="Paste selection" keys={[["META", "V"]]}>
+  <ShortcutItem title="Paste selection" keys={[["MOD", "V"]]}>
     Inserts the clipboard data into the entity collections.
   </ShortcutItem>
   <ShortcutItem title="Delete selection"  keys={[["Del"]]}>
@@ -60,26 +60,26 @@ These shortcuts can be used either in the "Beatmap" view or the "Lightshow" view
   <ShortcutItem title="Skip to the end" keys={[["End"]]}>
     Moves the cursor to the last beat of the song.
   </ShortcutItem>
-  <ShortcutItem title="Undo" keys={[["META", "Z"]]}>
+  <ShortcutItem title="Undo" keys={[["MOD", "Z"]]}>
     Undoes the last action
   </ShortcutItem>
-  <ShortcutItem title="Redo" keys={[["Shift", "META", "Z"]]}>
+  <ShortcutItem title="Redo" keys={[["Shift", "MOD", "Z"]]}>
     Redo
     Reverts the last undo
   </ShortcutItem>
-  <ShortcutItem title="Switch snapping interval" keys={[["META", "1"], ["META", "9"]]} separator="through">
-    Set the snapping interval to a new value, ranging from <Shortcut size="small">meta+1</Shortcut>
-    for 1/16th beat, to <Shortcut size="small">meta+9</Shortcut>
+  <ShortcutItem title="Switch snapping interval" keys={[["MOD", "1"], ["MOD", "9"]]} separator="through">
+    Set the snapping interval to a new value, ranging from <Shortcut size="small">MOD+1</Shortcut>
+    for 1/16th beat, to <Shortcut size="small">MOD+9</Shortcut>
     for 4 bars
   </ShortcutItem>
-  <ShortcutItem title="Scroll through snapping intervals" keys={[["META", "SCROLL"], ["META", "↓"], ["META", "↑"]]}>
-    Sweep through available snapping intervals by holding <Shortcut size="small">meta</Shortcut>
+  <ShortcutItem title="Scroll through snapping intervals" keys={[["MOD", "SCROLL"], ["MOD", "↓"], ["MOD", "↑"]]}>
+    Sweep through available snapping intervals by holding <Shortcut size="small">MOD</Shortcut>
     and either spinning the mousewheel or using the arrow keys
   </ShortcutItem>
   <ShortcutItem title="Clears selection" keys={[["Esc"]]}>
     Clears the current selection
   </ShortcutItem>
-  <ShortcutItem title="Create bookmark" keys={[["META", "B"]]}>
+  <ShortcutItem title="Create bookmark" keys={[["MOD", "B"]]}>
     Bookmarks add little flags to the waveform that let you quickly jump to
     different points in the map. You can right-click to delete existing
     bookmarks.
@@ -114,7 +114,7 @@ These shortcuts are exclusive to placing blocks, mines, and obstacles in the "Be
   <ShortcutItem title="Reset view" keys={[["SHIFT", "Backspace"]]}>
     Jump back to the original camera position
   </ShortcutItem>
-  <ShortcutItem title="Select / Deselect all" keys={[["META", "A"]]}>
+  <ShortcutItem title="Select / Deselect all" keys={[["MOD", "A"]]}>
     Select all notes/mines/obstacles. Can also be used to deselect everything,
     if a current selection exists
   </ShortcutItem>
@@ -240,7 +240,7 @@ These shortcuts are used for placing lighting and ring events in the "Lightshow"
   <ShortcutItem title="Jump to end" keys={[["Page Down"]]}>
     Jump to the start of the next window.
   </ShortcutItem>
-  <ShortcutItem title="Select / deselect all" keys={[["META", "A"]]}>
+  <ShortcutItem title="Select / deselect all" keys={[["MOD", "A"]]}>
     Select all events <strong>within the current window</strong>. Unlike in
     "Beatmap" view, this shortcut only selects what is visible.
     <br />

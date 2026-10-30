@@ -9,7 +9,7 @@ import * as Builder from "$/components/ui/styled/radio-button-group";
 import { Field, type FieldProps } from "./field";
 
 function getItemStyles(item: CollectionItem): CSSProperties {
-	return { ["--current-color" as keyof CSSProperties]: typeof item === "object" && !!item && "color" in item ? item.color : undefined };
+	return { ["--current-color" as keyof CSSProperties]: typeof item === "object" && item && "color" in item ? item.color : undefined };
 }
 
 export interface RadioButtonProps {

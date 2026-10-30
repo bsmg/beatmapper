@@ -3,7 +3,7 @@ import { Text3D } from "@react-three/drei";
 import { type ComponentProps, memo } from "react";
 import type { ColorRepresentation } from "three";
 
-import { oswaldGlyphsUrl } from "$/assets";
+import { default as oswaldGlyphsUrl } from "$/assets/fonts/oswald.json?url";
 import { BLOCK_CELL_SIZE, SURFACE_WIDTH } from "$/components/scene/constants";
 import { DEFAULT_NUM_ROWS } from "$/constants";
 import { getComputedToken } from "$/styles/helpers";
