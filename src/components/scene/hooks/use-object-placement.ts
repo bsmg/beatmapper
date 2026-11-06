@@ -32,9 +32,9 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const handlePointerDown = useCallback(
 		(event: ThreeEvent<PointerEvent>, data: T) => {
-			if (!interactive) return;
+			if (!interactive || document.pointerLockElement) return;
 
-			if (activePointerIdRef.current === event.pointerId) return;
+			if (activePointerIdRef.current !== null && activePointerIdRef.current === event.pointerId) return;
 			activePointerIdRef.current = event.pointerId;
 
 			event.nativeEvent.stopPropagation();
@@ -72,14 +72,14 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 		(event: PointerEvent) => {
 			if (!interactive || document.pointerLockElement) return;
 
-			if (activePointerIdRef.current !== null && activePointerIdRef.current !== event.pointerId) {
-				return;
-			}
-
-			event.stopPropagation();
+			if (activePointerIdRef.current !== null && activePointerIdRef.current !== event.pointerId) return;
 			activePointerIdRef.current = null;
 
-			window.requestAnimationFrame(() => dispatch(finishManagingNoteSelection()));
+			event.stopPropagation();
+
+			window.requestAnimationFrame(() => {
+				return dispatch(finishManagingNoteSelection());
+			});
 		},
 		[dispatch, interactive],
 	);
@@ -88,14 +88,11 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 	useGlobalEventListener("pointercancel", handlePointerUp, { shouldFire: !!selectionMode || activePointerIdRef.current !== null });
 
 	const handlePointerOver = useCallback(
-		(event: ThreeEvent<PointerEvent>, data: T) => {
-			if (!interactive) return;
-			event.nativeEvent.stopPropagation();
+		(_: ThreeEvent<PointerEvent>, data: T) => {
+			if (!interactive || document.pointerLockElement) return;
 
 			const id = selectId(data);
 			hoveredItemRef.current = { item: data, id };
-
-			if (!selectionMode) return;
 
 			switch (selectionMode) {
 				case ObjectSelectionMode.SELECT:
@@ -112,17 +109,14 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 					onItemDelete?.(data, id);
 					break;
 				}
-				default:
-					break;
 			}
 		},
 		[interactive, selectionMode, selectId, onItemSelect, onItemDeselect, onItemDelete],
 	);
 
 	const handlePointerOut = useCallback(
-		(event: ThreeEvent<PointerEvent>, _data: T) => {
-			if (!interactive) return;
-			event.nativeEvent.stopPropagation();
+		(_: ThreeEvent<PointerEvent>, _data: T) => {
+			if (!interactive || document.pointerLockElement) return;
 			hoveredItemRef.current = null;
 		},
 		[interactive],
@@ -131,8 +125,12 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
 			if (!interactive || !hoveredItemRef.current) return;
-			const { item, id } = hoveredItemRef.current;
-			onItemModifyKeys?.(item, id, pressedKeys, event.shiftKey);
+
+			if (event.altKey) {
+				event.stopPropagation();
+				const { item, id } = hoveredItemRef.current;
+				onItemModifyKeys?.(item, id, pressedKeys, event.shiftKey);
+			}
 		},
 		[interactive, onItemModifyKeys, pressedKeys],
 	);
@@ -141,13 +139,13 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 
 	const resolveWheelAction = useThrottledCallback(
 		(event: ThreeEvent<WheelEvent>, data: T) => {
-			if (!interactive) return;
-			event.stopPropagation();
+			if (!interactive || !hoveredItemRef.current) return;
 
-			const id = selectId(data);
-			const delta = event.deltaY > 0 ? -1 : 1;
-
-			onItemModifyWheel?.(data, id, delta, event.shiftKey);
+			if (event.altKey) {
+				event.stopPropagation();
+				const { id } = hoveredItemRef.current;
+				onItemModifyWheel?.(data, id, event.deltaY > 0 ? -1 : 1, event.shiftKey);
+			}
 		},
 		{ wait: wait },
 	);
@@ -156,8 +154,8 @@ export function useObjectPlacement<T extends App.IEditorObject>({ interactive, s
 		(event: ThreeEvent<WheelEvent>, data: T) => {
 			if (event.altKey) {
 				event.nativeEvent.stopPropagation();
-				resolveWheelAction(event, data);
 			}
+			resolveWheelAction(event, data);
 		},
 		[resolveWheelAction],
 	);

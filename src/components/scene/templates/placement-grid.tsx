@@ -1,5 +1,5 @@
-import type { Assign } from "@ark-ui/react";
 import { useHotkeyStore } from "@ark-ui/react/hotkeys";
+import type { ThreeEvent } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
 import { type ComponentProps, useRef } from "react";
@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectHighestPrecision, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
-function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign<ComponentProps<"group">, Pick<PlacementGrid.Schema["props"], "onCellPointerDown" | "onCellWheel">>) {
+function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
@@ -43,7 +43,7 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 		cursorPositionInBeats,
 		selectedTool,
 		shouldLockCursor: (tool) => tool !== ObjectTool.OBSTACLE,
-		onCellPointerDown: (ev, ctx, { tool }) => {
+		onCellPointerDown: (_, _ctx, { tool }) => {
 			if (selectionMode) return;
 
 			if (tool !== ObjectTool.OBSTACLE) {
@@ -51,8 +51,6 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 			}
 
 			activeTool.current = tool;
-
-			return onCellPointerDown?.(ev, ctx, { tool });
 		},
 		onPointerUp: (_, ctx, { tool }) => {
 			if (selectionMode) return;
@@ -83,12 +81,18 @@ function EditorPlacementGrid({ onCellPointerDown, onCellWheel, ...rest }: Assign
 				}
 			}
 		},
-		onCellWheel,
 	});
 
+	const handleGridPointerDown = (event: ThreeEvent<PointerEvent>) => {
+		// ignore left click, since we don't want passthrough to take priority over placements
+		if (event.button === 0) {
+			event.stopPropagation();
+		}
+	};
+
 	return (
-		<PlacementGrid.Root {...rest} service={service}>
-			<PlacementGrid.Layout>{(cell) => <PlacementGrid.Cell key={`${cell.colIndex}-${cell.rowIndex}`} data={cell} layers={!selectionMode ? 1 : 2} />}</PlacementGrid.Layout>
+		<PlacementGrid.Root onPointerDown={handleGridPointerDown} {...rest} service={service}>
+			<PlacementGrid.Layout>{(cell) => <PlacementGrid.Cell key={`${cell.colIndex}-${cell.rowIndex}`} data={cell} layers={!selectionMode ? 1 : 0} />}</PlacementGrid.Layout>
 			<Switch>
 				<Match when={!selectionMode && (activeTool.current === ObjectTool.LEFT_NOTE || activeTool.current === ObjectTool.RIGHT_NOTE)}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createColorNoteFromMouseEvent(ctx, mode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) })}>

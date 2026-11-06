@@ -1,9 +1,7 @@
-import type { ThreeEvent } from "@react-three/fiber";
 import type { EntityId } from "@reduxjs/toolkit";
 import { useParams } from "@tanstack/react-router";
 import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, NoteDirection } from "bsmap";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
-import type { Object3D } from "three";
+import { memo, useMemo, useState } from "react";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
@@ -11,11 +9,11 @@ import { calculateInlineRotations, resolvePositionForGridObject, resolvePosition
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
 import { Visualization } from "$/components/scene/layouts";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
-import { isBombNote, isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
-import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
+import { resolveNoteId } from "$/helpers/notes.helpers";
+import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectNotesEditorSelectionMode, selectSnap } from "$/store/selectors";
+import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -35,11 +33,8 @@ interface Props {
 function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: Props) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
-	const isDispatchingEvent = useRef(false);
-
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
-	const selectionMode = useAppSelector(selectNotesEditorSelectionMode);
 	const animateTrack = useAppSelector(selectAnimateTrack);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 	const angleOffsetStep = useAppSelector(selectNotesEditorAngleOffsetStep);
@@ -123,64 +118,6 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 		},
 	});
 
-	const deriveUserDataFromTarget = useCallback(<T extends object>(object: Object3D) => {
-		let userData = {} as T;
-		let current: Object3D | null = object;
-		while (current !== null) {
-			userData = { ...current.userData, ...userData };
-			current = current.parent;
-		}
-		return userData;
-	}, []);
-
-	// pointer events should pass through when we're not in bulk selection mode.
-	const handleCellPointerDown = useCallback(
-		(event: ThreeEvent<PointerEvent>) => {
-			if (selectionMode) return;
-			if (isDispatchingEvent.current) return;
-			// ignore left click, since we don't want passthrough to take priority over placements
-			if (event.button === 0) return;
-
-			const target = event.intersections.find(({ object }) => isColorNote(object.userData) || isBombNote(object.userData) || isObstacle(object.userData));
-
-			if (target) {
-				isDispatchingEvent.current = true;
-				try {
-					const data = deriveUserDataFromTarget(target.object);
-					if (isColorNote(data)) return noteActions.handlePointerDown(event, data);
-					if (isBombNote(data)) return bombActions.handlePointerDown(event, data);
-					if (isObstacle(data)) return obstacleActions.handlePointerDown(event, data);
-				} finally {
-					isDispatchingEvent.current = false;
-				}
-			}
-		},
-		[selectionMode, deriveUserDataFromTarget, noteActions.handlePointerDown, bombActions.handlePointerDown, obstacleActions.handlePointerDown],
-	);
-
-	const handleCellWheel = useCallback(
-		(event: ThreeEvent<WheelEvent>) => {
-			if (selectionMode) return;
-			if (isDispatchingEvent.current) return;
-
-			const target = event.intersections.find(({ object }) => isColorNote(object.userData) || isBombNote(object.userData) || isObstacle(object.userData));
-
-			if (target) {
-				isDispatchingEvent.current = true;
-				try {
-					const data = deriveUserDataFromTarget(target.object);
-					if (isColorNote(data)) return noteActions.handleWheel(event, data);
-					if (isBombNote(data)) return bombActions.handleWheel(event, data);
-					if (isObstacle(data)) return obstacleActions.handleWheel(event, data);
-					return;
-				} finally {
-					isDispatchingEvent.current = false;
-				}
-			}
-		},
-		[selectionMode, deriveUserDataFromTarget, noteActions.handleWheel, bombActions.handleWheel, obstacleActions.handleWheel],
-	);
-
 	const rotationOverrides = useMemo(() => {
 		if (interactive) {
 			return new Map<EntityId, number>();
@@ -210,12 +147,14 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 								noteActions.handlePointerOut(e, data);
 							}}
 							onPointerDown={(e) => {
-								if (hoveredId !== id) return;
-								noteActions.handlePointerDown(e, data);
+								if (hoveredId === id) {
+									return noteActions.handlePointerDown(e, data);
+								}
 							}}
 							onWheel={(e) => {
-								if (hoveredId !== id) return;
-								noteActions.handleWheel(e, data);
+								if (hoveredId === id) {
+									return noteActions.handleWheel(e, data);
+								}
 							}}
 						/>
 					)}
@@ -235,12 +174,14 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 								bombActions.handlePointerOut(e, data);
 							}}
 							onPointerDown={(e) => {
-								if (hoveredId !== id) return;
-								bombActions.handlePointerDown(e, data);
+								if (hoveredId === id) {
+									return bombActions.handlePointerDown(e, data);
+								}
 							}}
 							onWheel={(e) => {
-								if (hoveredId !== id) return;
-								bombActions.handleWheel(e, data);
+								if (hoveredId === id) {
+									return bombActions.handleWheel(e, data);
+								}
 							}}
 						/>
 					)}
@@ -249,10 +190,9 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 					{(data, id, props) => (
 						<Obstacle
 							key={id}
-							layers={1}
+							{...props}
 							timescale={timescale}
 							beatDepth={beatDepth}
-							{...props}
 							onPointerOver={(e) => {
 								e.stopPropagation();
 								setHoveredId(id);
@@ -263,18 +203,20 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 								obstacleActions.handlePointerOut(e, data);
 							}}
 							onPointerDown={(e) => {
-								if (hoveredId !== id) return;
-								obstacleActions.handlePointerDown(e, data);
+								if (hoveredId === id) {
+									return obstacleActions.handlePointerDown(e, data);
+								}
 							}}
 							onWheel={(e) => {
-								if (hoveredId !== id) return;
-								obstacleActions.handleWheel(e, data);
+								if (hoveredId === id) {
+									return obstacleActions.handleWheel(e, data);
+								}
 							}}
 						/>
 					)}
 				</Visualization.ForGridObjects>
 			</Visualization.Mover>
-			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} onCellPointerDown={handleCellPointerDown} onCellWheel={handleCellWheel} />}
+			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} />}
 		</Visualization.Root>
 	);
 }
