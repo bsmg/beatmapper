@@ -1,16 +1,16 @@
 import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { ActionPanelGroup } from "$/components/app/layouts";
 import { BombNoteIcon, ColorNoteIcon, ObstacleIcon } from "$/components/icons";
 import { Button, Tooltip } from "$/components/ui/compositions";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
-import { updateNotesEditorTool } from "$/store/actions";
+import { updateNotesEditorColor, updateNotesEditorType } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectBeatmapById, selectColorScheme, selectNotesEditorTool } from "$/store/selectors";
-import { ObjectTool } from "$/types";
+import { selectBeatmapById, selectColorScheme, selectNotesEditorColor, selectNotesEditorType } from "$/store/selectors";
+import { ColorSchemeKey, ObjectColor, ObjectType } from "$/types";
 import { cycle } from "$/utils";
 
 function NoteToolActionPanelGroup() {
@@ -20,39 +20,37 @@ function NoteToolActionPanelGroup() {
 	const dispatch = useAppDispatch();
 	const beatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
-	const selectedTool = useAppSelector(selectNotesEditorTool);
-
-	const [lastSelectedNoteTool, setLastSelectedNoteTool] = useState<ObjectTool>(ObjectTool.RIGHT_NOTE);
-
-	useEffect(() => {
-		if (selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) {
-			setLastSelectedNoteTool(selectedTool);
-		}
-	}, [selectedTool]);
+	const selectedType = useAppSelector(selectNotesEditorType);
+	const selectedColor = useAppSelector(selectNotesEditorColor);
 
 	const isOneSaber = useMemo(() => beatmap.characteristic === "OneSaber", [beatmap.characteristic]);
-	const selectedNoteTool = useMemo(() => (isOneSaber ? ObjectTool.RIGHT_NOTE : lastSelectedNoteTool), [isOneSaber, lastSelectedNoteTool]);
+	const hasColorProperty = useMemo(() => selectedType === ObjectType.NOTE, [selectedType]);
 
-	const handleCycleNoteColor = useCallback(() => {
+	useEffect(() => {
+		if (isOneSaber) {
+			dispatch(updateNotesEditorColor(ObjectColor.RIGHT));
+		}
+	}, [dispatch, isOneSaber]);
+
+	const handleCycleColor = useCallback(() => {
 		if (isOneSaber) return;
 
-		const nextNoteTool = cycle([ObjectTool.LEFT_NOTE, ObjectTool.RIGHT_NOTE], lastSelectedNoteTool);
-		setLastSelectedNoteTool(nextNoteTool);
-
-		if (selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE) {
-			dispatch(updateNotesEditorTool(nextNoteTool));
+		if (hasColorProperty) {
+			const nextColor = cycle([ObjectColor.LEFT, ObjectColor.RIGHT], selectedColor);
+			dispatch(updateNotesEditorColor(nextColor));
 		}
-	}, [dispatch, isOneSaber, selectedTool, lastSelectedNoteTool]);
+	}, [dispatch, isOneSaber, hasColorProperty, selectedColor]);
 
-	const updateNoteTool = useCallback(() => {
-		const isCurrentNoteTool = selectedTool === ObjectTool.LEFT_NOTE || selectedTool === ObjectTool.RIGHT_NOTE;
-
-		if (isCurrentNoteTool) {
-			handleCycleNoteColor();
-		} else {
-			dispatch(updateNotesEditorTool(selectedNoteTool));
-		}
-	}, [selectedTool, selectedNoteTool, handleCycleNoteColor, dispatch]);
+	const handleUpdateTool = useCallback(
+		(type: ObjectType) => {
+			if (type === selectedType && hasColorProperty) {
+				handleCycleColor();
+			} else {
+				dispatch(updateNotesEditorType(type));
+			}
+		},
+		[dispatch, selectedType, hasColorProperty, handleCycleColor],
+	);
 
 	const hotkeys = useHotkeyStore();
 
@@ -61,27 +59,26 @@ function NoteToolActionPanelGroup() {
 
 	const enabled = useCallback(() => !hotkeys.getActiveScopes().includes("camera"), [hotkeys.getActiveScopes]);
 
-	useHotkey({ scopes, category, enabled, label: "Pick / Cycle Color Note Tool", hotkey: "1", action: () => updateNoteTool() });
-
-	useHotkey({ scopes, category, enabled, label: "Pick Bomb Note Tool", hotkey: "2", action: () => dispatch(updateNotesEditorTool(ObjectTool.BOMB_NOTE)) });
-	useHotkey({ scopes, category, enabled, label: "Pick Obstacle Tool", hotkey: "3", action: () => dispatch(updateNotesEditorTool(ObjectTool.OBSTACLE)) });
+	useHotkey({ scopes, category, enabled, label: "Pick Color Note Tool", hotkey: "1", action: () => handleUpdateTool(ObjectType.NOTE) });
+	useHotkey({ scopes, category, enabled, label: "Pick Bomb Note Tool", hotkey: "2", action: () => handleUpdateTool(ObjectType.BOMB) });
+	useHotkey({ scopes, category, enabled, label: "Pick Obstacle Tool", hotkey: "3", action: () => handleUpdateTool(ObjectType.OBSTACLE) });
 
 	return (
 		<ActionPanelGroup.Root label="Tool">
 			<ActionPanelGroup.Section>
 				<Tooltip render={() => "Color Note"}>
-					<Button variant="ghost" size="icon" aria-pressed={selectedTool === selectedNoteTool} unfocusOnPress onClick={() => dispatch(updateNotesEditorTool(selectedNoteTool))} onAuxClick={handleCycleNoteColor}>
-						<ColorNoteIcon size={20} color={resolveColorForItem(selectedNoteTool, { colorScheme })} />
+					<Button variant="ghost" size="icon" aria-pressed={selectedType === ObjectType.NOTE} unfocusOnPress onClick={() => dispatch(updateNotesEditorType(ObjectType.NOTE))} onAuxClick={handleCycleColor}>
+						<ColorNoteIcon size={20} color={resolveColorForItem(selectedColor === ObjectColor.LEFT ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Bomb Note"}>
-					<Button variant="ghost" size="icon" aria-pressed={selectedTool === ObjectTool.BOMB_NOTE} unfocusOnPress onClick={() => dispatch(updateNotesEditorTool(ObjectTool.BOMB_NOTE))}>
+					<Button variant="ghost" size="icon" aria-pressed={selectedType === ObjectType.BOMB} unfocusOnPress onClick={() => dispatch(updateNotesEditorType(ObjectType.BOMB))}>
 						<BombNoteIcon size={20} />
 					</Button>
 				</Tooltip>
 				<Tooltip render={() => "Obstacle"}>
-					<Button variant="ghost" size="icon" aria-pressed={selectedTool === ObjectTool.OBSTACLE} unfocusOnPress onClick={() => dispatch(updateNotesEditorTool(ObjectTool.OBSTACLE))}>
-						<ObstacleIcon size={20} color={resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })} />
+					<Button variant="ghost" size="icon" aria-pressed={selectedType === ObjectType.OBSTACLE} unfocusOnPress onClick={() => dispatch(updateNotesEditorType(ObjectType.OBSTACLE))}>
+						<ObstacleIcon size={20} color={resolveColorForItem(ObjectType.OBSTACLE, { colorScheme })} />
 					</Button>
 				</Tooltip>
 			</ActionPanelGroup.Section>
