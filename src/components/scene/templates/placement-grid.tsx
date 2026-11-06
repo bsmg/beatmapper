@@ -2,20 +2,24 @@ import { useHotkeyStore } from "@ark-ui/react/hotkeys";
 import type { ThreeEvent } from "@react-three/fiber";
 import { useParams } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
-import { type ComponentProps, useRef } from "react";
+import { NoteDirection } from "bsmap";
+import { type ComponentProps, useCallback, useRef } from "react";
 
-import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
+import { Arc, BombNote, Chain, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
 import { PlacementGrid } from "$/components/scene/layouts";
+import type { IPlacementContext } from "$/components/scene/layouts/placement-grid/machine";
 import { Match, Switch } from "$/components/ui/atoms";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/helpers/notes.helpers";
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
-import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
+import { createArcFromMouseEvent, createChainFromMouseEvent } from "$/helpers/sliders.helpers";
+import { addArc, addBombNote, addChain, addColorNote, addObstacle } from "$/store/actions";
+import { selectAllNotes } from "$/store/features/objects.slice";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectHighestPrecision, selectNotePlacementMode, selectNotesEditorColor, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorType, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
-import { ColorSchemeKey, ObjectColor, ObjectType } from "$/types";
+import { ColorSchemeKey, type IGrid, type NotePlacementMode, ObjectColor, ObjectType } from "$/types";
 
 function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
@@ -30,6 +34,7 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 	const selectedType = useAppSelector(selectNotesEditorType);
 	const selectedColor = useAppSelector(selectNotesEditorColor);
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
+	const notes = useAppSelector(selectAllNotes);
 	const beatDepth = useAppSelector(selectTrackScale);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 
@@ -37,17 +42,53 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 
 	const activeType = useRef<ObjectType>(null);
 
+	const shouldLockCursor = (type: ObjectType | null): boolean => {
+		return type !== ObjectType.OBSTACLE && type !== ObjectType.ARC && type !== ObjectType.CHAIN;
+	};
+
+	const handleCreateArc = useCallback(
+		(ctx: Pick<IPlacementContext, "anchorBeat" | "cellDownAt" | "cellOverAt" | "time" | "duration">, mode: NotePlacementMode, grid: IGrid) => {
+			const headTime = ctx.anchorBeat ?? 0;
+			const headNote = notes.find((x) => x.time === headTime && x.posX === ctx.cellDownAt?.colIndex && x.posY === ctx.cellDownAt?.rowIndex);
+			const tailTime = headTime + (ctx.duration ?? 0);
+			const tailNote = notes.find((x) => x.time === tailTime && x.posX === ctx.cellOverAt?.colIndex && x.posY === ctx.cellOverAt?.rowIndex);
+
+			const data = createArcFromMouseEvent(ctx, mode, grid, {
+				color: headNote?.color ?? (selectedColor === ObjectColor.LEFT ? 0 : 1),
+				direction: headNote?.direction ?? NoteDirection.ANY,
+				tailDirection: tailNote?.direction ?? selectedDirection,
+			});
+
+			return data;
+		},
+		[notes, selectedColor, selectedDirection],
+	);
+
+	const handleCreateChain = useCallback(
+		(ctx: Pick<IPlacementContext, "anchorBeat" | "cellDownAt" | "cellOverAt" | "time" | "duration">, mode: NotePlacementMode, grid: IGrid) => {
+			const headTime = ctx.anchorBeat ?? 0;
+			const headNote = notes.find((x) => x.time === headTime && x.posX === ctx.cellDownAt?.colIndex && x.posY === ctx.cellDownAt?.rowIndex);
+
+			const data = createChainFromMouseEvent(ctx, mode, grid, {
+				color: headNote?.color ?? (selectedColor === ObjectColor.LEFT ? 0 : 1),
+				direction: headNote?.direction ?? NoteDirection.ANY,
+			});
+			return data;
+		},
+		[notes, selectedColor],
+	);
+
 	const service = useMachine(PlacementGrid.machine, {
 		notePlacementMode,
 		obstaclePlacementMode,
 		grid,
 		cursorPositionInBeats,
 		selectedType,
-		shouldLockCursor: (type) => type !== ObjectType.OBSTACLE,
+		shouldLockCursor,
 		onCellPointerDown: (_, _ctx, { type }) => {
 			if (selectionMode) return;
 
-			if (type !== ObjectType.OBSTACLE) {
+			if (shouldLockCursor(type)) {
 				hotkeys.removeScope("navigation");
 			}
 
@@ -79,6 +120,16 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 					if (obstacle) return dispatch(addObstacle(obstacle));
 					break;
 				}
+				case ObjectType.ARC: {
+					const arc = handleCreateArc(ctx, notePlacementMode, grid);
+					if (arc) return dispatch(addArc(arc));
+					break;
+				}
+				case ObjectType.CHAIN: {
+					const chain = handleCreateChain(ctx, notePlacementMode, grid);
+					if (chain) return dispatch(addChain(chain));
+					break;
+				}
 			}
 		},
 	});
@@ -107,6 +158,16 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 				<Match when={!selectionMode && activeType.current === ObjectType.OBSTACLE}>
 					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid, { duration: Math.max(ctx.duration ?? 0, highestPrecision) })}>
 						{(data) => activeType.current && <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(activeType.current, { colorScheme })} />}
+					</PlacementGrid.TentativeObject>
+				</Match>
+				<Match when={!selectionMode && activeType.current === ObjectType.ARC}>
+					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => handleCreateArc(ctx, mode, grid)}>
+						{(data) => activeType.current && <Arc data={data} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
+					</PlacementGrid.TentativeObject>
+				</Match>
+				<Match when={!selectionMode && activeType.current === ObjectType.CHAIN}>
+					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => handleCreateChain(ctx, mode, grid)}>
+						{(data) => activeType.current && <Chain data={data} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth, zOffset: SONG_OFFSET })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 			</Switch>
