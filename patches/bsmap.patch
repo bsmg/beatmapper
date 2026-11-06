@@ -1,0 +1,41 @@
+diff --git a/esm/beatmap/helpers/core/arc.js b/esm/beatmap/helpers/core/arc.js
+index e4fa9400543849866d56b3597d54399b0645b58a..23b557a2f63460321cb16696ec5ace75287b84db 100755
+--- a/esm/beatmap/helpers/core/arc.js
++++ b/esm/beatmap/helpers/core/arc.js
+@@ -7,8 +7,13 @@ export function mirrorArcMidAnchor(midAnchor) {
+     return cycle([SliderMidAnchorMode.CLOCKWISE, SliderMidAnchorMode.COUNTER_CLOCKWISE], midAnchor);
+ }
+ export function midAnchorCondition(arc) {
+-    return (arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
+-        arc.direction !== NoteDirection.ANY &&
+-        arc.posX === arc.posX &&
+-        nearEqual(lowestDifferenceMod(resolveNoteAngle(arc.direction), resolveNoteAngle(arc.tailDirection), 360), 180));
++	return (
++		arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
++		arc.direction !== NoteDirection.ANY &&
++		arc.posX === arc.tailPosX &&
++		(
++			arc.direction === arc.tailDirection ||
++			nearEqual(lowestDifferenceMod(resolveNoteAngle(arc.direction), resolveNoteAngle(arc.tailDirection), 360), 180)
++		)
++  );
+ }
+diff --git a/esm/beatmap/misc/remaps.js b/esm/beatmap/misc/remaps.js
+index 68976df20ed5f0e33f59e14f729a44a0b5280695..3672b9aac8c300a098a73d0f4dbda4ae4be0afe7 100755
+--- a/esm/beatmap/misc/remaps.js
++++ b/esm/beatmap/misc/remaps.js
+@@ -81,10 +81,10 @@ export const NoteDirectionSpace = {
+     [1]: [0, -1],
+     [2]: [-1, 0],
+     [3]: [1, 0],
+-    [4]: [-1, 1],
+-    [5]: [1, 1],
+-    [6]: [-1, -1],
+-    [7]: [1, -1],
++    [4]: [-0.70710678, 0.70710678],
++    [5]: [0.70710678, 0.70710678],
++    [6]: [-0.70710678, -0.70710678],
++    [7]: [0.70710678, -0.70710678],
+     [8]: [0, 0],
+ };
+ /** Unused as of beatmap v3, useful for conversion reason. */

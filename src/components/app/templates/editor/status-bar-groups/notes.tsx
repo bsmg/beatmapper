@@ -1,13 +1,13 @@
 import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
-import { BoxIcon, CuboidIcon, GaugeIcon, GlobeIcon, Maximize2Icon, Minimize2Icon } from "lucide-react";
+import { BoxIcon, CuboidIcon, GaugeIcon, GlobeIcon, Layers3Icon, Maximize2Icon, Minimize2Icon, SplineIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { StatusBar } from "$/components/app/layouts";
 import { decrementTrackScale, incrementTrackScale, updateTrackScale } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectLoading, selectNoteDensity, selectTotalBombNotes, selectTotalColorNotes, selectTotalObstacles, selectTrackScale } from "$/store/selectors";
+import { selectLoading, selectNoteDensity, selectTotalArcs, selectTotalBombNotes, selectTotalChains, selectTotalColorNotes, selectTotalObstacles, selectTrackScale } from "$/store/selectors";
 import { pluralize } from "$/utils";
 
 function NotesEditorStatusBar() {
@@ -19,6 +19,8 @@ function NotesEditorStatusBar() {
 	const numOfBlocks = useAppSelector(selectTotalColorNotes);
 	const numOfMines = useAppSelector(selectTotalBombNotes);
 	const numOfObstacles = useAppSelector(selectTotalObstacles);
+	const numOfArcs = useAppSelector(selectTotalArcs);
+	const numOfChains = useAppSelector(selectTotalChains);
 	const noteDensity = useAppSelector(selectNoteDensity);
 
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
@@ -38,6 +40,12 @@ function NotesEditorStatusBar() {
 				</StatusBar.Indicator>
 				<StatusBar.Indicator label={`${numOfObstacles} ${pluralize(numOfObstacles, "obstacle")}`} icon={CuboidIcon}>
 					{numOfObstacles}
+				</StatusBar.Indicator>
+				<StatusBar.Indicator label={`${numOfArcs} ${pluralize(numOfArcs, "arc")}`} icon={SplineIcon}>
+					{numOfArcs}
+				</StatusBar.Indicator>
+				<StatusBar.Indicator label={`${numOfChains} ${pluralize(numOfChains, "chain")}`} icon={Layers3Icon}>
+					{numOfChains}
 				</StatusBar.Indicator>
 			</StatusBar.Group>
 			<StatusBar.Indicator label={"Notes per second"} icon={GaugeIcon}>

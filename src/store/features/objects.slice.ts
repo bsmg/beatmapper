@@ -1,10 +1,11 @@
 import { createAction, createDraftSafeSelector, createEntityAdapter, createSelector, createSlice, type EntityId, type Update } from "@reduxjs/toolkit";
-import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, sortObjectFn } from "bsmap";
+import { type IWrapArc, type IWrapBombNote, type IWrapChain, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, sortObjectFn } from "bsmap";
 import { createHistoryAdapter } from "history-adapter/redux";
 
 import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
+import { resolveSliderId } from "$/helpers/sliders.helpers";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, type IGrid, ObjectType, View } from "$/types";
@@ -13,10 +14,14 @@ import { deselectAllEntities, leaveEditor, loadBeatmapContents, selectAllEntitie
 const notes = createEntityAdapter<App.IWrapEditorObject<IWrapColorNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
 const bombs = createEntityAdapter<App.IWrapEditorObject<IWrapBombNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
 const obstacles = createEntityAdapter<App.IWrapEditorObject<IWrapObstacle>, EntityId>({ selectId: resolveObstacleId, sortComparer: sortObjectFn });
+const arcs = createEntityAdapter<App.IWrapEditorObject<IWrapArc>, EntityId>({ selectId: resolveSliderId, sortComparer: sortObjectFn });
+const chains = createEntityAdapter<App.IWrapEditorObject<IWrapChain>, EntityId>({ selectId: resolveSliderId, sortComparer: sortObjectFn });
 
 const noteSelectors = notes.getSelectors();
 const bombSelectors = bombs.getSelectors();
 const obstacleSelectors = obstacles.getSelectors();
+const arcSelectors = arcs.getSelectors();
+const chainSelectors = chains.getSelectors();
 
 const noteReducers = createEditorObjectAdapter(notes);
 const bombReducers = createEditorObjectAdapter(bombs);
@@ -26,6 +31,8 @@ interface State {
 	notes: ReturnType<typeof notes.getInitialState>;
 	bombs: ReturnType<typeof bombs.getInitialState>;
 	obstacles: ReturnType<typeof obstacles.getInitialState>;
+	arcs: ReturnType<typeof arcs.getInitialState>;
+	chains: ReturnType<typeof chains.getInitialState>;
 }
 
 const history = createHistoryAdapter<State>({ limit: 100 });
@@ -38,6 +45,8 @@ const slice = createSlice({
 		notes: notes.getInitialState(),
 		bombs: bombs.getInitialState(),
 		obstacles: obstacles.getInitialState(),
+		arcs: arcs.getInitialState(),
+		chains: chains.getInitialState(),
 	}),
 	selectors: {
 		selectCanRedo,
@@ -58,27 +67,45 @@ const slice = createSlice({
 		selectTotalObstacles: (state) => obstacleSelectors.selectTotal(state.present.obstacles),
 		selectPastObstacles: createDraftSafeSelector(selectPrevSnapshot, (state) => obstacleSelectors.selectAll(state.obstacles)),
 		selectFutureObstacles: createDraftSafeSelector(selectNextSnapshot, (state) => obstacleSelectors.selectAll(state.obstacles)),
+		selectAllArcs: createDraftSafeSelector(selectPresent, (state) => arcSelectors.selectAll(state.arcs)),
+		selectAllSelectedArcs: createDraftSafeSelector(selectPresent, (state) => arcSelectors.selectAll(state.arcs).filter((data) => !!data.selected)),
+		selectTotalArcs: (state) => arcSelectors.selectTotal(state.present.arcs),
+		selectPastArcs: createDraftSafeSelector(selectPrevSnapshot, (state) => arcSelectors.selectAll(state.arcs)),
+		selectFutureArcs: createDraftSafeSelector(selectNextSnapshot, (state) => arcSelectors.selectAll(state.arcs)),
+		selectAllChains: createDraftSafeSelector(selectPresent, (state) => chainSelectors.selectAll(state.chains)),
+		selectAllSelectedChains: createDraftSafeSelector(selectPresent, (state) => chainSelectors.selectAll(state.chains).filter((data) => !!data.selected)),
+		selectTotalChains: (state) => chainSelectors.selectTotal(state.present.chains),
+		selectPastChains: createDraftSafeSelector(selectPrevSnapshot, (state) => chainSelectors.selectAll(state.chains)),
+		selectFutureChains: createDraftSafeSelector(selectNextSnapshot, (state) => chainSelectors.selectAll(state.chains)),
 		selectSelectedObjects: createSelector(selectPresent, (state) => {
 			const notes = noteSelectors.selectAll(state.notes).filter((data) => !!data.selected);
 			const bombs = bombSelectors.selectAll(state.bombs).filter((data) => !!data.selected);
 			const obstacles = obstacleSelectors.selectAll(state.obstacles).filter((data) => !!data.selected);
+			const arcs = arcSelectors.selectAll(state.arcs).filter((data) => !!data.selected);
+			const chains = chainSelectors.selectAll(state.chains).filter((data) => !!data.selected);
 			return {
 				notes: notes.length > 0 ? notes : undefined,
 				bombs: bombs.length > 0 ? bombs : undefined,
 				obstacles: obstacles.length > 0 ? obstacles : undefined,
+				arcs: arcs.length > 0 ? arcs : undefined,
+				chains: chains.length > 0 ? chains : undefined,
 			};
 		}),
 		selectAnySelectedObjects: createSelector(selectPresent, (state) => {
 			const notes = noteSelectors.selectAll(state.notes).filter((data) => !!data.selected);
 			const bombs = bombSelectors.selectAll(state.bombs).filter((data) => !!data.selected);
 			const obstacles = obstacleSelectors.selectAll(state.obstacles).filter((data) => !!data.selected);
-			return notes.length + bombs.length + obstacles.length > 0;
+			const arcs = arcSelectors.selectAll(state.arcs).filter((data) => !!data.selected);
+			const chains = chainSelectors.selectAll(state.chains).filter((data) => !!data.selected);
+			return notes.length + bombs.length + obstacles.length + arcs.length + chains.length > 0;
 		}),
 		selectAllSelectedObjects: createSelector(selectPresent, (state) => {
 			const notes = noteSelectors.selectAll(state.notes).filter((data) => !!data.selected);
 			const bombs = bombSelectors.selectAll(state.bombs).filter((data) => !!data.selected);
 			const obstacles = obstacleSelectors.selectAll(state.obstacles).filter((data) => !!data.selected);
-			return [...notes, ...bombs, ...obstacles];
+			const arcs = arcSelectors.selectAll(state.arcs).filter((data) => !!data.selected);
+			const chains = chainSelectors.selectAll(state.chains).filter((data) => !!data.selected);
+			return [...notes, ...bombs, ...obstacles, ...arcs, ...chains];
 		}),
 	},
 	reducers: (api) => {
@@ -203,12 +230,16 @@ const slice = createSlice({
 			notes.setAll(state.present.notes, action.payload.entities.notes ?? []);
 			bombs.setAll(state.present.bombs, action.payload.entities.bombs ?? []);
 			obstacles.setAll(state.present.obstacles, action.payload.entities.obstacles ?? []);
+			arcs.setAll(state.present.arcs, action.payload.entities.arcs ?? []);
+			chains.setAll(state.present.chains, action.payload.entities.chains ?? []);
 		});
 		builder.addCase(leaveEditor, () => {
 			return history.getInitialState({
 				notes: notes.getInitialState(),
 				bombs: bombs.getInitialState(),
 				obstacles: obstacles.getInitialState(),
+				arcs: arcs.getInitialState(),
+				chains: chains.getInitialState(),
 			});
 		});
 		builder.addCase(selectAllEntities, (state, action) => {
@@ -268,6 +299,16 @@ export const {
 	selectTotalObstacles,
 	selectPastObstacles,
 	selectFutureObstacles,
+	selectAllArcs,
+	selectPastArcs,
+	selectTotalArcs,
+	selectFutureArcs,
+	selectAllSelectedArcs,
+	selectAllChains,
+	selectPastChains,
+	selectTotalChains,
+	selectFutureChains,
+	selectAllSelectedChains,
 	selectSelectedObjects,
 	selectAnySelectedObjects,
 	selectAllSelectedObjects,

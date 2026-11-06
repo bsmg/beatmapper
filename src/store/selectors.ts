@@ -47,13 +47,17 @@ export {
 	selectPastBombNotes,
 	selectPastColorNotes,
 	selectPastObstacles,
+	selectTotalArcs,
 	selectTotalBombNotes,
+	selectTotalChains,
 	selectTotalColorNotes,
 	selectTotalObstacles,
 } from "./features/objects.slice";
 export {
 	selectActiveWindowSize,
+	selectAllVisibleArcs,
 	selectAllVisibleBombs,
+	selectAllVisibleChains,
 	selectAllVisibleNotes,
 	selectAllVisibleObstacles,
 	selectBeatForTime,
