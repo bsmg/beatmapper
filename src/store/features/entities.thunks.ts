@@ -81,6 +81,8 @@ export const pasteSelection = createThunk("pasteSelection", (_, api: GetShallowT
 					notes: data.notes?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 					bombs: data.bombs?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 					obstacles: data.obstacles?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
+					arcs: data.arcs?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods, tailTime: x.tailTime + deltaBetweenPeriods })),
+					chains: data.chains?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods, tailTime: x.tailTime + deltaBetweenPeriods })),
 				}),
 			);
 		}

@@ -4,6 +4,8 @@ export const ObjectType = {
 	NOTE: "block",
 	BOMB: "mine",
 	OBSTACLE: "obstacle",
+	ARC: "arc",
+	CHAIN: "chain",
 } as const;
 export type ObjectType = Member<typeof ObjectType>;
 
