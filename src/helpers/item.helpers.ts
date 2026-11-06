@@ -26,7 +26,7 @@ export function mirrorCoordinate(coordinate: number, count: number, offset?: num
 	return serializeCoordinate(mirrored, isExtendedCoordinate(coordinate));
 }
 
-export function mirrorGridObjectProperties<T extends IWrapGridObject>(axis: "horizontal" | "vertical", grid?: IGrid, offset?: number) {
+export function mirrorGridObjectProperties<T extends Pick<IWrapGridObject, "posX" | "posY">>(axis: "horizontal" | "vertical", grid?: IGrid, offset?: number) {
 	return (data: T): Partial<T> => {
 		return {
 			posX: axis === "horizontal" ? mirrorCoordinate(data.posX, DEFAULT_NUM_COLS, offset) : data.posX,
@@ -34,7 +34,7 @@ export function mirrorGridObjectProperties<T extends IWrapGridObject>(axis: "hor
 		} as Partial<T>;
 	};
 }
-export function mirrorBaseNoteProperties<T extends IWrapBaseNote>(axis: "horizontal" | "vertical") {
+export function mirrorBaseNoteProperties<T extends Pick<IWrapBaseNote, "color" | "direction">>(axis: "horizontal" | "vertical") {
 	const resolveDirection = axis === "horizontal" ? mirrorNoteDirectionHorizontally : mirrorNoteDirectionVertically;
 
 	return (data: T): Partial<T> => {
