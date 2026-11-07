@@ -1,5 +1,5 @@
 import type { Assign } from "@ark-ui/react";
-import { type IWrapArc, type IWrapBaseSlider, type IWrapChain, midAnchorCondition, SliderMidAnchorMode } from "bsmap";
+import { type IWrapArc, type IWrapBaseSlider, type IWrapChain, midAnchorCondition, NoteDirection, SliderMidAnchorMode } from "bsmap";
 import { type ComponentProps, Fragment, type ReactNode, useMemo } from "react";
 import { type ColorRepresentation, CubicBezierCurve3, CurvePath, QuadraticBezierCurve, Quaternion, Vector2, Vector3, type Vector3Tuple } from "three";
 
@@ -65,8 +65,16 @@ export interface ArcProps extends Omit<ComponentProps<typeof BaseSlider<IWrapArc
 export function Arc({ data, timescale, beatDepth, interactive, children, ...rest }: ArcProps) {
 	const ARC_CONTROL_POINT_SCALE = 5;
 
-	const headRotation = useMemo(() => resolveRotationVectorForNote({ direction: data.direction }), [data.direction]);
-	const tailRotation = useMemo(() => resolveRotationVectorForNote({ direction: data.tailDirection }), [data.tailDirection]);
+	const tailPosition = useMemo(() => resolveTailPositionForSlider(data, { timescale, beatDepth }), [data, timescale, beatDepth]);
+
+	const headRotation = useMemo(() => {
+		if (data.direction === NoteDirection.ANY) return new Vector3(...tailPosition).normalize().toArray();
+		return resolveRotationVectorForNote({ direction: data.direction });
+	}, [data.direction, tailPosition]);
+	const tailRotation = useMemo(() => {
+		if (data.tailDirection === NoteDirection.ANY) return new Vector3(...tailPosition).negate().normalize().toArray();
+		return resolveRotationVectorForNote({ direction: data.tailDirection });
+	}, [data.tailDirection, tailPosition]);
 
 	const color = useMemo(() => lerpColor(rest.color?.toString() ?? null, "#ffffff", 0.25), [rest.color]);
 
@@ -76,11 +84,11 @@ export function Arc({ data, timescale, beatDepth, interactive, children, ...rest
 				const startPoint = new Vector3(0, 0, 0);
 				const endPoint = new Vector3(...tailPosition);
 
-				const headDirection = new Vector3(...headRotation).normalize();
-				const tailDirection = new Vector3(...tailRotation).normalize();
+				const headDirection = new Vector3(...headRotation);
+				const tailDirection = new Vector3(...tailRotation);
 
 				const headControlPoint = startPoint.clone().addScaledVector(headDirection, data.lengthMultiplier * ARC_CONTROL_POINT_SCALE);
-				const tailControlPoint = endPoint.clone().addScaledVector(tailDirection, -data.tailLengthMultiplier * ARC_CONTROL_POINT_SCALE);
+				const tailControlPoint = endPoint.clone().addScaledVector(data.tailDirection === NoteDirection.ANY ? tailDirection.clone() : tailDirection.clone().negate(), data.tailLengthMultiplier * ARC_CONTROL_POINT_SCALE);
 
 				const curvePath = new CurvePath<Vector3>();
 
@@ -89,7 +97,7 @@ export function Arc({ data, timescale, beatDepth, interactive, children, ...rest
 					const direction = new Vector3(headDirection.x * Math.cos(angle) - headDirection.y * Math.sin(angle), headDirection.x * Math.sin(angle) + headDirection.y * Math.cos(angle), 0);
 
 					const midAnchor = startPoint.clone().add(endPoint).multiplyScalar(0.5);
-					midAnchor.addScaledVector(direction, ARC_CONTROL_POINT_SCALE * (Math.PI / 2));
+					midAnchor.addScaledVector(direction, ARC_CONTROL_POINT_SCALE * (Math.PI / 3.25));
 
 					const headDelta = headControlPoint.clone().sub(midAnchor);
 					const tailDelta = tailControlPoint.clone().sub(midAnchor);
@@ -121,10 +129,10 @@ export function Arc({ data, timescale, beatDepth, interactive, children, ...rest
 				);
 
 				const HeadControlPoint = (props: Partial<SliderControlPointProps>) => {
-					return <SliderControlPoint rotation={headRotation} offset={1} shape="cone" color={rest.color} transparent={rest.transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} {...props} />;
+					return <SliderControlPoint rotation={headRotation} offset={data.direction === NoteDirection.ANY ? -1 : 1} shape="cone" color={rest.color} transparent={rest.transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} {...props} />;
 				};
 				const TailControlPoint = (props: Partial<SliderControlPointProps>) => {
-					return <SliderControlPoint position={tailPosition} rotation={tailRotation} offset={-1} shape="cone" color={rest.color} transparent={rest.transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} {...props} />;
+					return <SliderControlPoint position={tailPosition} rotation={tailRotation} offset={data.tailDirection === NoteDirection.ANY ? 1 : -1} shape="cone" color={rest.color} transparent={rest.transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} {...props} />;
 				};
 
 				return (
@@ -144,9 +152,7 @@ export interface ChainProps extends Omit<ComponentProps<typeof BaseSlider<IWrapC
 	children?: (ctx: { TailControlPoint: (props: Partial<SliderControlPointProps>) => ReactNode }) => ReactNode;
 }
 export function Chain({ data, timescale, beatDepth, interactive, children, ...rest }: ChainProps) {
-	const CHAIN_BEZIER_SCALE = 1.25;
-
-	const headRotation = useMemo(() => resolveRotationVectorForNote({ direction: data.direction }), [data.direction]);
+	const headRotation = useMemo(() => resolveRotationVectorForNote({ direction: data.direction === NoteDirection.ANY ? NoteDirection.DOWN : data.direction }), [data.direction]);
 
 	return (
 		<BaseSlider {...rest} interactive={interactive} data={data} timescale={timescale} beatDepth={beatDepth}>
@@ -155,21 +161,21 @@ export function Chain({ data, timescale, beatDepth, interactive, children, ...re
 				const links: { id: number; position: Vector3Tuple; rotation: number }[] = [];
 
 				const startPoint = new Vector3(0, 0, 0);
-				const endPoint = new Vector3(...tailPosition).clone().multiplyScalar(data.squish);
+				const endPoint = new Vector3(...tailPosition);
 
 				const headDirection = new Vector3(...headRotation).normalize();
 
-				const controlOffset = headDirection.clone().multiplyScalar(CHAIN_BEZIER_SCALE * Math.max(0.1, data.squish));
+				const tailXYLength = Math.hypot(tailPosition[0], tailPosition[1]);
+				const controlOffset = headDirection.clone().multiplyScalar(tailXYLength * 0.5);
 				const controlPoint = new Vector2(startPoint.x + controlOffset.x, startPoint.y + controlOffset.y);
 
 				const curve = new QuadraticBezierCurve(new Vector2(startPoint.x, startPoint.y), controlPoint, new Vector2(endPoint.x, endPoint.y));
 
 				for (let i = 1; i < count; i++) {
-					const t = i / (count - 1);
-					const u = curve.getUtoTmapping(t, 0);
+					const t = (i / (count - 1)) * data.squish;
 
-					const { x, y } = curve.getPoint(u);
-					const { x: tx, y: ty } = curve.getTangent(u);
+					const { x, y } = curve.getPoint(t);
+					const { x: tx, y: ty } = curve.getTangent(t);
 
 					links.push({
 						id: i,
