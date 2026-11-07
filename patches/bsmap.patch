@@ -13,7 +13,7 @@ index e4fa9400543849866d56b3597d54399b0645b58a..23b557a2f63460321cb16696ec5ace75
 +	return (
 +		arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
 +		arc.direction !== NoteDirection.ANY &&
-+		arc.posX === arc.tailPosX &&
++		(arc.posX === arc.tailPosX || arc.posY === arc.tailPosY) &&
 +		(
 +			arc.direction === arc.tailDirection ||
 +			nearEqual(lowestDifferenceMod(resolveNoteAngle(arc.direction), resolveNoteAngle(arc.tailDirection), 360), 180)
