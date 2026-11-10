@@ -122,17 +122,21 @@ export const { serialize: serializeBasicEventValue, deserialize: deserializeBasi
 	},
 });
 
-export function sortBasicTracks<T extends { id: number }>(environment: EnvironmentName) {
-	const order = BasicTrackOrder[environment];
+export function sortEventTracks<T extends { id: number }>(environment: EnvironmentName) {
+	const universal = [5, 14, 15, 100, 1000];
+	const order = BasicTrackOrder[environment] ?? [];
 
-	if (!order) return () => 0;
+	const getPriority = (id: number) => {
+		const envIndex = order.indexOf(id);
+		if (envIndex !== -1) return envIndex;
+		const stdIndex = universal.indexOf(id);
+		if (stdIndex !== -1) return order.length + 1000 + stdIndex;
+		return order.length;
+	};
 
 	return (a: T, b: T) => {
-		const indexA = order.indexOf(a.id);
-		const indexB = order.indexOf(b.id);
-
-		const priorityA = indexA === -1 ? Infinity : indexA;
-		const priorityB = indexB === -1 ? Infinity : indexB;
+		const priorityA = getPriority(a.id);
+		const priorityB = getPriority(b.id);
 
 		return priorityA - priorityB;
 	};

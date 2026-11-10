@@ -2,7 +2,7 @@ import { createAction, createDraftSafeSelector, createEntityAdapter, createSlice
 import { type EnvironmentName, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
 import { createHistoryAdapter, type HistoryState } from "history-adapter/redux";
 
-import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent } from "$/helpers/events.helpers";
+import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent, sortEventTracks } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
@@ -217,9 +217,9 @@ const slice = createSlice({
 			boostReducers.updateAll(state.present.boostEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
 		});
 		builder.addCase(drawEventSelectionBox, (state, action) => {
-			const { window, tracks, selectionBoxInBeats } = action.payload;
+			const { window, environment, tracks, selectionBoxInBeats } = action.payload;
 
-			const allTracks = Object.keys(tracks).concat("5");
+			const allTracks = Object.values(tracks).sort(sortEventTracks(environment));
 			const allBasicEvents = basicSelectors.selectAll(state.present.basicEvents);
 			const allBoostEvents = boostSelectors.selectAll(state.present.boostEvents);
 
@@ -241,7 +241,7 @@ const slice = createSlice({
 			});
 
 			for (const event of allVisibleEvents) {
-				const eventTrackIndex = allTracks.findIndex((id) => Number.parseInt(id, 10) === resolveTrackIdForEvent(event));
+				const eventTrackIndex = allTracks.findIndex((track) => Number.parseInt(track.id, 10) === resolveTrackIdForEvent(event));
 				const isInSelectionBox = eventTrackIndex >= selectionBoxInBeats.startTrackIndex && eventTrackIndex <= selectionBoxInBeats.endTrackIndex;
 
 				if (isBasicEvent<App.IWrapEditorObject<IWrapBasicEvent>>(event)) {
@@ -279,7 +279,7 @@ export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHisto
 export const { addBasicEvent, updateBasicEvent, selectBasicEvent, deselectBasicEvent, removeBasicEvent } = slice.actions;
 export const { addBoostEvent, updateBoostEvent, selectBoostEvent, deselectBoostEvent, removeBoostEvent } = slice.actions;
 
-export const drawEventSelectionBox = createAction("drawEventSelectionBox", (args: { window: { startBeat: number; endBeat: number }; tracks: ITrackDefinitions<unknown>; selectionBoxInBeats: ISelectionBoxInBeats }) => {
+export const drawEventSelectionBox = createAction("drawEventSelectionBox", (args: { window: { startBeat: number; endBeat: number }; environment: EnvironmentName; tracks: ITrackDefinitions<{ id: number }>; selectionBoxInBeats: ISelectionBoxInBeats }) => {
 	return { payload: { ...args } };
 });
 
