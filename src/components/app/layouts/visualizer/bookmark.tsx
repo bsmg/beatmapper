@@ -1,4 +1,4 @@
-import { type ComponentProps, Fragment, type MouseEvent, memo, useMemo, useState } from "react";
+import { type ComponentProps, Fragment, type MouseEvent, memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "$/components/ui/compositions";
 import type { App } from "$/types";
@@ -28,7 +28,7 @@ function EditorBookmark({ bookmark, offset, onMarkerClick, ...rest }: Props) {
 	return (
 		<Fragment>
 			<ThinStrip style={sharedStyles} />
-			<Button {...rest} as={Flag} unfocusOnPress style={sharedStyles} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)} onMouseUp={(ev) => onMarkerClick(ev, bookmark.time)} onContextMenu={(ev) => ev.preventDefault()}>
+			<Button {...rest} as={Flag} unfocusOnPress style={sharedStyles} onPointerDown={(ev) => ev.stopPropagation()} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)} onMouseUp={(ev) => onMarkerClick(ev, bookmark.time)} onContextMenu={(ev) => ev.preventDefault()}>
 				<HStack gap={1}>
 					<BeatNum>{bookmark.time} </BeatNum>
 					<Name data-hover={isHovering ? "true" : undefined}>{bookmark.name}</Name>
