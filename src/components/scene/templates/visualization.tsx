@@ -1,9 +1,9 @@
 import type { EntityId } from "@reduxjs/toolkit";
 import { useParams } from "@tanstack/react-router";
 import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, NoteDirection } from "bsmap";
-import { memo, useMemo, useState } from "react";
+import { Fragment, memo, useMemo, useState } from "react";
 
-import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
+import { Arc, BombNote, Chain, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import { calculateInlineRotations, resolvePositionForGridObject, resolvePositionForObstacle } from "$/components/scene/helpers";
 import { useObjectPlacement } from "$/components/scene/hooks/use-object-placement";
@@ -11,9 +11,10 @@ import { Visualization } from "$/components/scene/layouts";
 import { resolveColorForItem } from "$/helpers/colors.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
+import { resolveSliderId } from "$/helpers/sliders.helpers";
 import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectSnap } from "$/store/selectors";
+import { selectAllVisibleArcs, selectAllVisibleBombs, selectAllVisibleChains, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -46,6 +47,8 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 	const notes = useAppSelector((state) => selectAllVisibleNotes(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
 	const bombs = useAppSelector((state) => selectAllVisibleBombs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
+	const arcs = useAppSelector((state) => selectAllVisibleArcs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
+	const chains = useAppSelector((state) => selectAllVisibleChains(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
 
 	const noteActions = useObjectPlacement<App.IWrapEditorObject<IWrapColorNote>>({
 		interactive,
@@ -213,6 +216,25 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 								}
 							}}
 						/>
+					)}
+				</Visualization.ForGridObjects>
+				<Visualization.ForGridObjects objects={arcs} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+					{(_, id, props) => (
+						<Arc interactive={interactive} key={id} {...props} timescale={timescale} beatDepth={beatDepth}>
+							{({ HeadControlPoint, TailControlPoint }) => (
+								<Fragment>
+									{interactive && <HeadControlPoint />}
+									{interactive && <TailControlPoint />}
+								</Fragment>
+							)}
+						</Arc>
+					)}
+				</Visualization.ForGridObjects>
+				<Visualization.ForGridObjects objects={chains} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+					{(_, id, props) => (
+						<Chain interactive={interactive} key={id} {...props} timescale={timescale} beatDepth={beatDepth}>
+							{({ TailControlPoint }) => <Fragment>{interactive && <TailControlPoint />}</Fragment>}
+						</Chain>
 					)}
 				</Visualization.ForGridObjects>
 			</Visualization.Mover>

@@ -1,4 +1,4 @@
-import { type IWrapBaseNote, type IWrapColorNote, type IWrapGridObject, type IWrapObstacle, isInline, resolveNoteAngle } from "bsmap";
+import { type IWrapBaseNote, type IWrapBaseSlider, type IWrapColorNote, type IWrapGridObject, type IWrapObstacle, isInline, type NoteDirection, NoteDirectionSpace, resolveNoteAngle } from "bsmap";
 import type { Vector3Tuple } from "three";
 
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
@@ -27,12 +27,21 @@ export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T,
 	return position;
 }
 
-export function resolveRotationForNote<T extends IWrapBaseNote>(data: T) {
+export function resolveRotationForNote<T extends Pick<IWrapBaseNote, "direction">>(data: T) {
 	if (isExtendedCoordinate(data.direction)) {
 		return convertDegreesToRadians(180 - (data.direction % 1000));
 	}
 	const angleOffset = isColorNote(data) ? data.angleOffset : 0;
 	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
+}
+
+export function resolveRotationVectorForNote<T extends Pick<IWrapBaseNote, "direction">>(data: T): Vector3Tuple {
+	if (isExtendedCoordinate(data.direction)) {
+		const angle = resolveRotationForNote(data);
+		return [Math.sin(angle), Math.cos(angle), 0];
+	} else {
+		return [...NoteDirectionSpace[data.direction as NoteDirection], 0];
+	}
 }
 
 export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale = (time) => time, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
@@ -65,6 +74,12 @@ export function resolveDimensionsForObstacle<T extends IWrapObstacle>(data: T, {
 	dimensions[2] = Math.max(dimensions[2], 0.01);
 
 	return dimensions;
+}
+
+export function resolveTailPositionForSlider<T extends IWrapBaseSlider>(data: T, options: Pick<ObjectResolverOptions, "timescale" | "beatDepth">): Vector3Tuple {
+	const [hx, hy, hz] = resolvePositionForGridObject({ ...data, posX: data.posX, posY: data.posY, time: data.time }, options);
+	const [tx, ty, tz] = resolvePositionForGridObject({ ...data, posX: data.tailPosX, posY: data.tailPosY, time: data.tailTime }, options);
+	return [tx - hx, ty - hy, tz - hz];
 }
 
 export function calculateInlineRotations<T extends IWrapColorNote>(notes: T[], lapping: number = Math.hypot(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS), tolerance: number = Math.PI / 2): Map<string, number> {
