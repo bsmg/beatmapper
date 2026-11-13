@@ -22,6 +22,13 @@ function isAssignable(item: unknown): item is Record<string, unknown> {
 	return !!(item && typeof item === "object" && !Array.isArray(item));
 }
 
+function isEmptyValue(value: unknown): boolean {
+	if (value === undefined || value === null) return true;
+	if (Array.isArray(value)) return value.length === 0;
+	if (typeof value === "object") return Object.keys(value).length === 0;
+	return false;
+}
+
 // biome-ignore lint/suspicious/noExplicitAny: valid use case
 export function deepAssign<T extends { [k: string]: any }>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
 	if (!sources.length) return target;
@@ -34,10 +41,20 @@ export function deepAssign<T extends { [k: string]: any }>(target: T, ...sources
 		const mergeSource = source as { [k: string]: never };
 		for (const key in mergeSource) {
 			if (Object.hasOwn(mergeSource, key)) {
-				const targetValue = output[key] as T[Extract<keyof T, typeof key>];
 				const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
-				if (key in output && isAssignable(targetValue) && isAssignable(sourceValue) && Object.keys(sourceValue).length > 0) {
-					output[key as keyof T] = deepAssign(targetValue, sourceValue);
+
+				if (isEmptyValue(sourceValue)) {
+					continue;
+				}
+
+				const targetValue = output[key] as T[Extract<keyof T, typeof key>];
+
+				if (key in output && isAssignable(targetValue) && isAssignable(sourceValue)) {
+					if (Array.isArray(sourceValue)) {
+						output[key as keyof T] = sourceValue;
+					} else {
+						output[key as keyof T] = deepAssign(targetValue, sourceValue);
+					}
 				} else {
 					output[key as keyof T] = sourceValue;
 				}
