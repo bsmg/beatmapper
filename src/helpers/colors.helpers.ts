@@ -1,6 +1,6 @@
 import { ColorScheme, ColorSchemeVariant, colorToHex, type EnvironmentName, EnvironmentSchemeName, type IColor, type IV2ColorScheme } from "bsmap";
 
-import { BasicEventEffect, ColorSchemeKey, type IColorScheme, ObjectTool } from "$/types";
+import { BasicEventEffect, ColorSchemeKey, type IColorScheme, ObjectType } from "$/types";
 import { token } from "$:styled-system/tokens";
 
 export const DEFAULT_COLOR_SCHEME: Required<IV2ColorScheme> = {
@@ -20,16 +20,16 @@ export interface ColorResolverOptions {
 }
 export function resolveColorForItem<T extends string | number>(item: T | undefined, { colorScheme }: ColorResolverOptions) {
 	switch (item) {
-		case ObjectTool.LEFT_NOTE: {
+		case ColorSchemeKey.SABER_LEFT: {
 			return colorScheme.colorLeft ?? colorToHex(DEFAULT_COLOR_SCHEME._colorLeft).slice(0, 7);
 		}
-		case ObjectTool.RIGHT_NOTE: {
+		case ColorSchemeKey.SABER_RIGHT: {
 			return colorScheme.colorRight ?? colorToHex(DEFAULT_COLOR_SCHEME._colorRight).slice(0, 7);
 		}
-		case ObjectTool.BOMB_NOTE: {
+		case ObjectType.BOMB: {
 			return "#687485";
 		}
-		case ObjectTool.OBSTACLE: {
+		case ObjectType.OBSTACLE: {
 			return colorScheme.obstacleColor ?? colorToHex(DEFAULT_COLOR_SCHEME._obstacleColor).slice(0, 7);
 		}
 		case ColorSchemeKey.ENV_LEFT: {
