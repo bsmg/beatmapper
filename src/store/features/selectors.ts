@@ -9,12 +9,12 @@ import { getGridSize } from "$/helpers/song.helpers";
 import { createAppDraftSafeSelector, createAppSelector } from "$/store/helpers/selectors";
 import type { RootState } from "$/store/types";
 import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
-import { floorToNearest } from "$/utils";
+import { floorToNearest, roundToNearest } from "$/utils";
 import { selectNotesEditorTool } from "./beatmap.slice";
 import { selectAllBookmarks } from "./bookmarks.slice";
 import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
-import { selectCursorPosition, selectDuration, selectWindowSize } from "./navigation.slice";
+import { selectCursorPosition, selectDuration, selectHighestPrecision, selectWindowSize } from "./navigation.slice";
 import { selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
 import { selectBpm, selectEditorOffset, selectEventTracksForEnvironment, selectSongById } from "./songs.slice";
 import { selectTimescale } from "./timeline.slice";
@@ -31,8 +31,8 @@ export const selectTimeForBeat = createAppDraftSafeSelector([selectTimeProcessor
 	return timeProcessor.toRealTime(beat) + offset;
 });
 
-export const selectCursorPositionInBeats = createSelector([selectTimeProcessor, selectCursorPosition, selectEditorOffset], (timeProcessor, cursorPosition, offset) => {
-	return timeProcessor.toBeatTime(cursorPosition - offset);
+export const selectCursorPositionInBeats = createSelector([selectTimeProcessor, selectCursorPosition, selectEditorOffset, selectHighestPrecision], (timeProcessor, cursorPosition, offset, highestPrecision) => {
+	return roundToNearest(timeProcessor.toBeatTime(cursorPosition - offset), highestPrecision);
 });
 export const selectDurationInBeats = createSelector([selectTimeProcessor, selectDuration], (timeProcessor, duration) => {
 	if (duration === null) return null;
