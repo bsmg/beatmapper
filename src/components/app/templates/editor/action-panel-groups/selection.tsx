@@ -30,7 +30,7 @@ const createModifyObjectsPrompt = createPromptFactory({
 			time: nullable(number()),
 			posX: nullable(number()),
 			posY: nullable(number()),
-			laneRotation: nullable(number()),
+			laneRotation: nullable(pipe(number(), integer())),
 		}),
 		noteData: object({
 			color: nullable(
@@ -97,6 +97,7 @@ function SelectionActionPanelGroup() {
 							<form.AppField name="objectData.time">{(ctx) => <ctx.NumberInput label="Time" placeholder="*" />}</form.AppField>
 							<form.AppField name="objectData.posX">{(ctx) => <ctx.NumberInput label="Line Index" placeholder="*" />}</form.AppField>
 							<form.AppField name="objectData.posY">{(ctx) => <ctx.NumberInput label="Line Layer" placeholder="*" />}</form.AppField>
+							<form.AppField name="objectData.laneRotation">{(ctx) => <ctx.NumberInput label="Lane Rotation" placeholder="*" />}</form.AppField>
 						</form.Row>
 						<Show when={objects.every(isColorNote)}>
 							<form.Row>

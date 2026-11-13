@@ -6,8 +6,10 @@ import type { Vector3Tuple } from "three";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import type { ObjectResolverOptions } from "$/components/scene/helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectHighestPrecision } from "$/store/selectors";
+import { selectAnimateTrack, selectHighestPrecision } from "$/store/selectors";
+import { convertDegreesToRadians } from "$/utils";
 import { useVisualizationContext } from "./context";
+import VisualizationMover from "./mover";
 
 interface Props<T extends IWrapGridObject, Id extends EntityId> {
 	objects: T[];
@@ -19,22 +21,33 @@ interface Props<T extends IWrapGridObject, Id extends EntityId> {
 function VisualizationForGridObjects<T extends IWrapGridObject, Id extends EntityId>({ objects, resolveId, resolvePosition, resolveColor, children }: Props<T, Id>) {
 	const { cursorPosition, timescale, beatDepth } = useVisualizationContext();
 
+	const animateTrack = useAppSelector(selectAnimateTrack);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 
 	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPosition ?? 0) * beatDepth, [cursorPosition, beatDepth]);
 	const adjustment = useMemo(() => beatDepth * highestPrecision, [beatDepth, highestPrecision]);
 
-	return objects.map((data) => {
-		const id = resolveId(data);
-		const position = resolvePosition(data, { timescale, beatDepth });
-		const noteZPosition = zPosition + position[2] - adjustment;
-		return children(data, id, {
-			data,
-			position,
-			layers: 1,
-			transparent: noteZPosition > -SONG_OFFSET * 2,
-			color: resolveColor(data),
-		});
+	const lanes = useMemo(() => Array.from(Map.groupBy(objects, (obj) => obj.laneRotation)), [objects]);
+
+	return lanes.map(([yaw, objects]) => {
+		return (
+			<group key={`lane-${yaw}`} rotation-y={-convertDegreesToRadians(yaw)}>
+				<VisualizationMover immediate={!animateTrack}>
+					{objects.map((data) => {
+						const id = resolveId(data);
+						const position = resolvePosition(data, { timescale, beatDepth });
+						const noteZPosition = zPosition + position[2] - adjustment;
+						return children(data, id, {
+							data,
+							position,
+							layers: 1,
+							transparent: noteZPosition > -SONG_OFFSET * 2,
+							color: resolveColor(data),
+						});
+					})}
+				</VisualizationMover>
+			</group>
+		);
 	});
 }
 

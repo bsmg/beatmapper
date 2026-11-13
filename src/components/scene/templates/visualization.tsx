@@ -129,93 +129,91 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 
 	return (
 		<Visualization.Root cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
-			<Visualization.Mover immediate={!animateTrack}>
-				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
-				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
-					{(data, id, props) => (
-						<ColorNote
-							key={id}
-							{...props}
-							rotationOffset={rotationOverrides.get(id)}
-							onPointerOver={(e) => {
-								e.stopPropagation();
-								setHoveredId(id);
-								noteActions.handlePointerOver(e, data);
-							}}
-							onPointerOut={(e) => {
-								setHoveredId(null);
-								noteActions.handlePointerOut(e, data);
-							}}
-							onPointerDown={(e) => {
-								if (hoveredId === id) {
-									return noteActions.handlePointerDown(e, data);
-								}
-							}}
-							onWheel={(e) => {
-								if (hoveredId === id) {
-									return noteActions.handleWheel(e, data);
-								}
-							}}
-						/>
-					)}
-				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
-					{(data, id, props) => (
-						<BombNote
-							key={id}
-							{...props}
-							onPointerOver={(e) => {
-								e.stopPropagation();
-								setHoveredId(id);
-								bombActions.handlePointerOver(e, data);
-							}}
-							onPointerOut={(e) => {
-								setHoveredId(null);
-								bombActions.handlePointerOut(e, data);
-							}}
-							onPointerDown={(e) => {
-								if (hoveredId === id) {
-									return bombActions.handlePointerDown(e, data);
-								}
-							}}
-							onWheel={(e) => {
-								if (hoveredId === id) {
-									return bombActions.handleWheel(e, data);
-								}
-							}}
-						/>
-					)}
-				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
-					{(data, id, props) => (
-						<Obstacle
-							key={id}
-							{...props}
-							timescale={timescale}
-							beatDepth={beatDepth}
-							onPointerOver={(e) => {
-								e.stopPropagation();
-								setHoveredId(id);
-								obstacleActions.handlePointerOver(e, data);
-							}}
-							onPointerOut={(e) => {
-								setHoveredId(null);
-								obstacleActions.handlePointerOut(e, data);
-							}}
-							onPointerDown={(e) => {
-								if (hoveredId === id) {
-									return obstacleActions.handlePointerDown(e, data);
-								}
-							}}
-							onWheel={(e) => {
-								if (hoveredId === id) {
-									return obstacleActions.handleWheel(e, data);
-								}
-							}}
-						/>
-					)}
-				</Visualization.ForGridObjects>
-			</Visualization.Mover>
+			<Visualization.Mover immediate={!animateTrack}>{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}</Visualization.Mover>
+			<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+				{(data, id, props) => (
+					<ColorNote
+						key={id}
+						{...props}
+						rotationOffset={rotationOverrides.get(id)}
+						onPointerOver={(e) => {
+							e.stopPropagation();
+							setHoveredId(id);
+							noteActions.handlePointerOver(e, data);
+						}}
+						onPointerOut={(e) => {
+							setHoveredId(null);
+							noteActions.handlePointerOut(e, data);
+						}}
+						onPointerDown={(e) => {
+							if (hoveredId === id) {
+								return noteActions.handlePointerDown(e, data);
+							}
+						}}
+						onWheel={(e) => {
+							if (hoveredId === id) {
+								return noteActions.handleWheel(e, data);
+							}
+						}}
+					/>
+				)}
+			</Visualization.ForGridObjects>
+			<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
+				{(data, id, props) => (
+					<BombNote
+						key={id}
+						{...props}
+						onPointerOver={(e) => {
+							e.stopPropagation();
+							setHoveredId(id);
+							bombActions.handlePointerOver(e, data);
+						}}
+						onPointerOut={(e) => {
+							setHoveredId(null);
+							bombActions.handlePointerOut(e, data);
+						}}
+						onPointerDown={(e) => {
+							if (hoveredId === id) {
+								return bombActions.handlePointerDown(e, data);
+							}
+						}}
+						onWheel={(e) => {
+							if (hoveredId === id) {
+								return bombActions.handleWheel(e, data);
+							}
+						}}
+					/>
+				)}
+			</Visualization.ForGridObjects>
+			<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
+				{(data, id, props) => (
+					<Obstacle
+						key={id}
+						{...props}
+						timescale={timescale}
+						beatDepth={beatDepth}
+						onPointerOver={(e) => {
+							e.stopPropagation();
+							setHoveredId(id);
+							obstacleActions.handlePointerOver(e, data);
+						}}
+						onPointerOut={(e) => {
+							setHoveredId(null);
+							obstacleActions.handlePointerOut(e, data);
+						}}
+						onPointerDown={(e) => {
+							if (hoveredId === id) {
+								return obstacleActions.handlePointerDown(e, data);
+							}
+						}}
+						onWheel={(e) => {
+							if (hoveredId === id) {
+								return obstacleActions.handleWheel(e, data);
+							}
+						}}
+					/>
+				)}
+			</Visualization.ForGridObjects>
 			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} />}
 		</Visualization.Root>
 	);

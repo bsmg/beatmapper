@@ -15,8 +15,8 @@ export function isBombNote(data: unknown): data is IWrapBombNote {
 	return "direction" in data;
 }
 
-export function resolveNoteId<T extends Pick<IWrapBaseNote, "time" | "posX" | "posY">>(x: T) {
-	return `${x.time}/${x.posX}/${x.posY}`;
+export function resolveNoteId<T extends Pick<IWrapBaseNote, "time" | "laneRotation" | "posX" | "posY">>(x: T) {
+	return `${x.time}/${x.laneRotation}/${x.posX}/${x.posY}`;
 }
 
 export function createNotePlacementFactory<T extends IWrapBaseNote>(createNote: (data: Partial<IWrapBaseNote>) => T) {

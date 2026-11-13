@@ -11,8 +11,8 @@ export function isObstacle(data: unknown): data is IWrapObstacle {
 	return "duration" in data;
 }
 
-export function resolveObstacleId<T extends Pick<IWrapObstacle, "time" | "posX" | "posY" | "width" | "height">>(x: T) {
-	return `${x.time}/${x.posX}/${x.width}/${x.posY}/${x.height}`;
+export function resolveObstacleId<T extends Pick<IWrapObstacle, "time" | "laneRotation" | "posX" | "posY" | "width" | "height">>(x: T) {
+	return `${x.time}/${x.laneRotation}/${x.posX}/${x.width}/${x.posY}/${x.height}`;
 }
 
 export function isDodgeObstacle<T extends Pick<IWrapObstacle, "posY" | "height">>({ posY, height }: T) {
