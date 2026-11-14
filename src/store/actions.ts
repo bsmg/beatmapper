@@ -3,7 +3,7 @@ export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelecti
 export { addBookmark, removeBookmark } from "./features/bookmarks.slice";
 export { setClipboardData } from "./features/clipboard.slice";
 export { loadGridPreset, saveGridPreset } from "./features/editor.thunks";
-export { copySelection, cutSelection, nudgeSelection, pasteSelection, toggleSelectAllEntities } from "./features/entities.thunks";
+export { copySelection, cutSelection, nudgeSelection, pasteSelection, rotateSelection, toggleSelectAllEntities } from "./features/entities.thunks";
 export {
 	addBasicEvent,
 	addBoostEvent,
@@ -88,6 +88,7 @@ export {
 	removeBombNote,
 	removeColorNote,
 	removeObstacle,
+	rotateAllSelectedObjects,
 	selectBombNote,
 	selectColorNote,
 	selectObstacle,

@@ -2,10 +2,19 @@ import { type IWrapBaseNote, type IWrapGridObject, mirrorNoteColor, mirrorNoteDi
 
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import type { IGrid } from "$/types";
+import { clamp, normalizeAngle } from "$/utils";
 
 export function nudgeItem<T extends { time: number }>(direction: "forwards" | "backwards", amount = 1) {
 	return (data: T): Partial<T> => {
 		return { time: data.time - amount * (direction === "backwards" ? 1 : -1) } as Partial<T>;
+	};
+}
+export function rotateItem<T extends { laneRotation: number }>(direction: "left" | "right", amount: number, limit: number) {
+	return (data: T): Partial<T> => {
+		const currentSigned = data.laneRotation > 180 ? data.laneRotation - 360 : data.laneRotation;
+		const delta = direction === "right" ? amount : -amount;
+		const nextSigned = limit < 180 ? clamp(currentSigned + delta, -limit, limit) : currentSigned + delta;
+		return { laneRotation: normalizeAngle(nextSigned) } as Partial<T>;
 	};
 }
 

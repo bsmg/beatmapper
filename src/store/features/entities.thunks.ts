@@ -1,4 +1,4 @@
-import { deselectAllEntities, nudgeAllSelectedEvents, nudgeAllSelectedObjects, removeAllSelectedEvents, removeAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, setClipboardData, upsertEvents, upsertObjects } from "$/store/actions";
+import { deselectAllEntities, nudgeAllSelectedEvents, nudgeAllSelectedObjects, removeAllSelectedEvents, removeAllSelectedObjects, rotateAllSelectedObjects, selectAllEntities, selectAllEntitiesInRange, setClipboardData, upsertEvents, upsertObjects } from "$/store/actions";
 import { selectActiveSongId, selectActiveView } from "$/store/helpers/route.helpers";
 import { selectAnySelectedEvents, selectAnySelectedObjects, selectClipboardData, selectCursorPositionInBeats, selectEarliestBeat, selectEventsEditorCursor, selectEventsEditorStartAndEndBeat, selectSelectedBeatmapEntities } from "$/store/selectors";
 import type { AppThunkApiConfig } from "$/store/types";
@@ -35,6 +35,15 @@ export const nudgeSelection = createThunk("nudgeSelection", (args: { direction: 
 		}
 		case View.LIGHTSHOW: {
 			return api.dispatch(nudgeAllSelectedEvents(args));
+		}
+	}
+});
+export const rotateSelection = createThunk("rotateSelection", (args: { direction: "left" | "right"; limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig<"getRouter">>) => {
+	const view = selectActiveView(api.extra.getRouter());
+
+	switch (view) {
+		case View.BEATMAP: {
+			return api.dispatch(rotateAllSelectedObjects({ ...args, amount: 15 }));
 		}
 	}
 });

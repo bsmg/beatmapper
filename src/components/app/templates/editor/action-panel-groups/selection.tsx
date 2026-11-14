@@ -12,11 +12,11 @@ import { Show } from "$/components/ui/atoms";
 import { Button, createPromptFactory, Tooltip, usePrompt } from "$/components/ui/compositions";
 import { isColorNote } from "$/helpers/notes.helpers";
 import { isObstacle } from "$/helpers/obstacles.helpers";
-import { deselectAllEntities, deselectAllObjectsOfType, mirrorAllSelectedObjects, nudgeSelection, removeAllSelectedObjects, updateAllSelectedObjects } from "$/store/actions";
+import { deselectAllEntities, deselectAllObjectsOfType, mirrorAllSelectedObjects, nudgeSelection, removeAllSelectedObjects, rotateSelection, updateAllSelectedObjects } from "$/store/actions";
 import { selectSelectedObjects } from "$/store/features/objects.slice";
 import { selectNoteGridSize, selectObstacleGridSize } from "$/store/features/selectors";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectActiveWindowSize, selectAllSelectedObjects, selectSelectedBeatmapEntities, selectSnap } from "$/store/selectors";
+import { selectActiveWindowSize, selectAllSelectedObjects, selectBeatmapById, selectSelectedBeatmapEntities, selectSnap } from "$/store/selectors";
 import { ObjectType } from "$/types";
 import { StrikethroughOnHover, Text } from "$:styled-system/jsx";
 
@@ -70,7 +70,7 @@ function SelectionCount({ num, label, onClick }: CountProps) {
 }
 
 function SelectionActionPanelGroup() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
@@ -79,6 +79,7 @@ function SelectionActionPanelGroup() {
 	const obstacleGrid = useAppSelector((state) => selectObstacleGridSize(state, sid));
 	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
 	const selectedEntities = useAppSelector((state) => selectSelectedBeatmapEntities(state, view));
+	const beatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 
 	const { notes, obstacles } = useAppSelector(selectSelectedObjects);
 	const objects = useAppSelector(selectAllSelectedObjects);
@@ -135,6 +136,9 @@ function SelectionActionPanelGroup() {
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
 
+	const isRotationSupported = useMemo(() => beatmap.characteristic === "360Degree" || beatmap.characteristic === "90Degree", [beatmap.characteristic]);
+	const is90Degree = useMemo(() => beatmap.characteristic === "90Degree", [beatmap.characteristic]);
+
 	useHotkey({ scopes, category, label: "Mirror Selection Horizontally", hotkey: "Shift+H", action: () => dispatch(mirrorAllSelectedObjects({ axis: "horizontal", noteGrid, obstacleGrid })) });
 	useHotkey({ scopes, category, label: "Mirror Selection Vertically", hotkey: "Shift+V", action: () => dispatch(mirrorAllSelectedObjects({ axis: "vertical", noteGrid, obstacleGrid })) });
 
@@ -143,6 +147,9 @@ function SelectionActionPanelGroup() {
 
 	useHotkey({ scopes, category, label: "Nudge Selection to Next Window", hotkey: "Shift+PageUp", action: () => dispatch(nudgeSelection({ direction: "forwards", amount: windowSize })) });
 	useHotkey({ scopes, category, label: "Nudge Selection to Previous Window", hotkey: "Shift+PageDown", action: () => dispatch(nudgeSelection({ direction: "backwards", amount: windowSize })) });
+
+	useHotkey({ scopes, category, label: "Rotate Selection Left", hotkey: "Shift+ArrowLeft", action: () => isRotationSupported && dispatch(rotateSelection({ direction: "left", limit: is90Degree ? 45 : 180 })) });
+	useHotkey({ scopes, category, label: "Rotate Selection Right", hotkey: "Shift+ArrowRight", action: () => isRotationSupported && dispatch(rotateSelection({ direction: "right", limit: is90Degree ? 45 : 180 })) });
 
 	useHotkey({ scopes, category, label: "Modify Selection", hotkey: "Mod+E", action: () => triggerModify() });
 	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });

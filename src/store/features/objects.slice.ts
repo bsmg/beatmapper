@@ -2,7 +2,7 @@ import { createAction, createDraftSafeSelector, createEntityAdapter, createSelec
 import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, sortObjectFn } from "bsmap";
 import { createHistoryAdapter } from "history-adapter/redux";
 
-import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
+import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem, rotateItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
@@ -189,6 +189,14 @@ const slice = createSlice({
 					obstacleReducers.updateAllSelected(state.obstacles, nudgeItem(direction, amount));
 				}),
 			),
+			rotateAllSelectedObjects: api.reducer<{ direction: "left" | "right"; amount: number; limit: number }>(
+				history.undoable((state, action) => {
+					const { direction, amount, limit } = action.payload;
+					noteReducers.updateAllSelected(state.notes, rotateItem(direction, amount, limit));
+					bombReducers.updateAllSelected(state.bombs, rotateItem(direction, amount, limit));
+					obstacleReducers.updateAllSelected(state.obstacles, rotateItem(direction, amount, limit));
+				}),
+			),
 			removeAllSelectedObjects: api.reducer(
 				history.undoable((state) => {
 					noteReducers.removeAllSelected(state.notes);
@@ -273,7 +281,7 @@ export const {
 	selectAllSelectedObjects,
 } = slice.getSelectors(slice.selectSlice);
 
-export const { undo: undoObjects, redo: redoObjects, clearHistory: clearObjectHistory, upsertObjects, mirrorAllSelectedObjects, nudgeAllSelectedObjects, removeAllSelectedObjects } = slice.actions;
+export const { undo: undoObjects, redo: redoObjects, clearHistory: clearObjectHistory, upsertObjects, mirrorAllSelectedObjects, nudgeAllSelectedObjects, rotateAllSelectedObjects, removeAllSelectedObjects } = slice.actions;
 export const { addColorNote, updateColorNote, selectColorNote, deselectColorNote, removeColorNote } = slice.actions;
 export const { addBombNote, selectBombNote, deselectBombNote, removeBombNote } = slice.actions;
 export const { addObstacle, updateObstacle, selectObstacle, deselectObstacle, updateAllSelectedObjects, removeObstacle } = slice.actions;
