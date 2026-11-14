@@ -2,12 +2,13 @@ import { createAction, createSlice } from "@reduxjs/toolkit";
 
 import type { AppThunkApiConfig } from "$/store/types";
 import { createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
-import { clamp } from "$/utils";
+import { clamp, normalizeAngle } from "$/utils";
 import { leaveEditor, loadSongFile } from "./actions";
 
 const initialState = {
 	isPlaying: false,
 	cursorPosition: 0,
+	rotationLane: 0,
 	duration: null as number | null,
 	snapTo: 0.5,
 	highestPrecision: 0.03125, // 1/32
@@ -27,6 +28,7 @@ const slice = createSlice({
 	selectors: {
 		selectPlaying: (state) => state.isPlaying,
 		selectCursorPosition: (state) => state.cursorPosition,
+		selectRotationLane: (state) => state.rotationLane,
 		selectDuration: (state) => state.duration,
 		selectSnap: (state) => state.snapTo,
 		selectHighestPrecision: (state) => state.highestPrecision,
@@ -43,6 +45,9 @@ const slice = createSlice({
 		return {
 			updateCursorPosition: api.reducer<number>((state, action) => {
 				return { ...state, cursorPosition: clamp(action.payload, 0, state.duration ?? action.payload), animateBlockMotion: true };
+			}),
+			updateRotationLane: api.reducer<number>((state, action) => {
+				return { ...state, rotationLane: normalizeAngle(action.payload) };
 			}),
 			startPlayback: api.reducer((state) => {
 				return { ...state, isPlaying: true, animateBlockMotion: false, animateRingMotion: true };
@@ -93,9 +98,9 @@ const slice = createSlice({
 	},
 });
 
-export const { selectPlaying, selectCursorPosition, selectDuration, selectSnap, selectHighestPrecision, selectWindowSize, selectTrackScale, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+export const { selectPlaying, selectCursorPosition, selectRotationLane, selectDuration, selectSnap, selectHighestPrecision, selectWindowSize, selectTrackScale, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
 
-export const { updateCursorPosition, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateHighestPrecision, updateWindowSize } = slice.actions;
+export const { updateCursorPosition, updateRotationLane, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateHighestPrecision, updateWindowSize } = slice.actions;
 
 export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
 	return { payload: { ...args } };
@@ -121,6 +126,21 @@ export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThu
 	const highestPrecision = selectHighestPrecision(api.getState());
 	const nextSnap = calculateNextSnap(currentSnap, { delta: -1, highestPrecision });
 	return api.dispatch(updateSnap(nextSnap));
+});
+
+export const incrementRotationLane = createThunk("incrementRotationLane", (args: { limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	const currentRotation = selectRotationLane(api.getState());
+	const currentSigned = currentRotation > 180 ? currentRotation - 360 : currentRotation;
+	const nextSigned = args.limit >= 180 ? currentSigned + 15 : Math.min(args.limit, currentSigned + 15);
+	const nextSnap = normalizeAngle(nextSigned);
+	return api.dispatch(updateRotationLane(nextSnap));
+});
+export const decrementRotationLane = createThunk("decrementRotationLane", (args: { limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
+	const currentRotation = selectRotationLane(api.getState());
+	const currentSigned = currentRotation > 180 ? currentRotation - 360 : currentRotation;
+	const nextSigned = args.limit >= 180 ? currentSigned - 15 : Math.max(-args.limit, currentSigned - 15);
+	const nextSnap = normalizeAngle(nextSigned);
+	return api.dispatch(updateRotationLane(nextSnap));
 });
 
 export const incrementTrackScale = createThunk("incrementTrackScale", (_, api: GetShallowThunkAPI<AppThunkApiConfig>) => {

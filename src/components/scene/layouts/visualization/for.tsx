@@ -6,8 +6,8 @@ import type { Vector3Tuple } from "three";
 import { SONG_OFFSET } from "$/components/scene/constants";
 import type { ObjectResolverOptions } from "$/components/scene/helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectAnimateTrack, selectHighestPrecision } from "$/store/selectors";
-import { convertDegreesToRadians } from "$/utils";
+import { selectAnimateTrack, selectHighestPrecision, selectRotationLane } from "$/store/selectors";
+import { convertDegreesToRadians, normalizeAngle } from "$/utils";
 import { useVisualizationContext } from "./context";
 import VisualizationMover from "./mover";
 
@@ -23,15 +23,16 @@ function VisualizationForGridObjects<T extends IWrapGridObject, Id extends Entit
 
 	const animateTrack = useAppSelector(selectAnimateTrack);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const rotationLane = useAppSelector(selectRotationLane);
 
 	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPosition ?? 0) * beatDepth, [cursorPosition, beatDepth]);
 	const adjustment = useMemo(() => beatDepth * highestPrecision, [beatDepth, highestPrecision]);
 
-	const lanes = useMemo(() => Array.from(Map.groupBy(objects, (obj) => obj.laneRotation)), [objects]);
+	const lanes = useMemo(() => Array.from(Map.groupBy(objects, (obj) => normalizeAngle(obj.laneRotation))), [objects]);
 
 	return lanes.map(([yaw, objects]) => {
 		return (
-			<group key={`lane-${yaw}`} rotation-y={-convertDegreesToRadians(yaw)}>
+			<group key={`lane-${yaw}`} rotation-y={-convertDegreesToRadians(yaw - rotationLane)}>
 				<VisualizationMover immediate={!animateTrack}>
 					{objects.map((data) => {
 						const id = resolveId(data);

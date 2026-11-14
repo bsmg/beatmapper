@@ -14,7 +14,7 @@ import { createBombNoteFromMouseEvent, createColorNoteFromMouseEvent } from "$/h
 import { createObstacleFromMouseEvent } from "$/helpers/obstacles.helpers";
 import { addBombNote, addColorNote, addObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectHighestPrecision, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
+import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectHighestPrecision, selectNotePlacementMode, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool, selectObstaclePlacementMode, selectRotationLane, selectTrackScale } from "$/store/selectors";
 import { ObjectTool } from "$/types";
 
 function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
@@ -31,6 +31,7 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
 	const beatDepth = useAppSelector(selectTrackScale);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const rotationLane = useAppSelector(selectRotationLane);
 
 	const hotkeys = useHotkeyStore();
 
@@ -63,6 +64,7 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 				case ObjectTool.LEFT_NOTE:
 				case ObjectTool.RIGHT_NOTE: {
 					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, {
+						laneRotation: rotationLane,
 						color: Object.values(ObjectTool).indexOf(tool) as 0 | 1,
 						direction: Math.round(ctx.direction ?? selectedDirection),
 					});
@@ -70,12 +72,17 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 					break;
 				}
 				case ObjectTool.BOMB_NOTE: {
-					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid);
+					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid, {
+						laneRotation: rotationLane,
+					});
 					if (note) return dispatch(addBombNote(note));
 					break;
 				}
 				case ObjectTool.OBSTACLE: {
-					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, { duration: Math.max(ctx.duration ?? 0, highestPrecision) });
+					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, {
+						laneRotation: rotationLane,
+						duration: Math.max(ctx.duration ?? 0, highestPrecision),
+					});
 					if (obstacle) return dispatch(addObstacle(obstacle));
 					break;
 				}
