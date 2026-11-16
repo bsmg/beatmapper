@@ -16,13 +16,15 @@ const slice = createSlice({
 			if (state.data.notes) return state.data.notes.length > 0;
 			if (state.data.bombs) return state.data.bombs.length > 0;
 			if (state.data.obstacles) return state.data.obstacles.length > 0;
+			if (state.data.arcs) return state.data.arcs.length > 0;
+			if (state.data.chains) return state.data.chains.length > 0;
 		},
 		selectHasEvents: (state) => {
 			if (state.data.basicEvents) return state.data.basicEvents.length > 0;
 			if (state.data.boostEvents) return state.data.boostEvents.length > 0;
 		},
 		selectEarliestBeat: (state) => {
-			return [...(state.data.notes ?? []), ...(state.data.bombs ?? []), ...(state.data.obstacles ?? []), ...(state.data.basicEvents ?? []), ...(state.data.boostEvents ?? [])].sort(sortObjectFn)[0].time;
+			return [...(state.data.notes ?? []), ...(state.data.bombs ?? []), ...(state.data.obstacles ?? []), ...(state.data.arcs ?? []), ...(state.data.chains ?? []), ...(state.data.basicEvents ?? []), ...(state.data.boostEvents ?? [])].sort(sortObjectFn)[0].time;
 		},
 	},
 	reducers: (api) => {
@@ -37,6 +39,8 @@ const slice = createSlice({
 						notes: data.notes?.sort(sortObjectFn),
 						bombs: data.bombs?.sort(sortObjectFn),
 						obstacles: data.obstacles?.sort(sortObjectFn),
+						arcs: data.arcs?.sort(sortObjectFn),
+						chains: data.chains?.sort(sortObjectFn),
 						basicEvents: data.basicEvents?.sort(sortObjectFn),
 						boostEvents: data.boostEvents?.sort(sortObjectFn),
 					},

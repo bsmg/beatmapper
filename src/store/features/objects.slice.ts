@@ -1,14 +1,15 @@
 import { createAction, createDraftSafeSelector, createEntityAdapter, createSelector, createSlice, type EntityId, type Update } from "@reduxjs/toolkit";
-import { type IWrapArc, type IWrapBombNote, type IWrapChain, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, sortObjectFn } from "bsmap";
+import { type IWrapArc, type IWrapBaseObject, type IWrapBombNote, type IWrapChain, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, SliderMidAnchorMode, sortObjectFn } from "bsmap";
 import { createHistoryAdapter } from "history-adapter/redux";
 
 import { mirrorBaseNoteProperties, mirrorGridObjectProperties, nudgeItem } from "$/helpers/item.helpers";
 import { resolveNoteId } from "$/helpers/notes.helpers";
-import { resolveObstacleId } from "$/helpers/obstacles.helpers";
-import { resolveSliderId } from "$/helpers/sliders.helpers";
+import { isObstacle, resolveObstacleId } from "$/helpers/obstacles.helpers";
+import { isArc, isChain, resolveSliderId } from "$/helpers/sliders.helpers";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
 import { type App, type IGrid, ObjectType, View } from "$/types";
+import { cycle } from "$/utils";
 import { deselectAllEntities, leaveEditor, loadBeatmapContents, selectAllEntities, selectAllEntitiesInRange } from "./actions";
 
 const notes = createEntityAdapter<App.IWrapEditorObject<IWrapColorNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
@@ -26,6 +27,8 @@ const chainSelectors = chains.getSelectors();
 const noteReducers = createEditorObjectAdapter(notes);
 const bombReducers = createEditorObjectAdapter(bombs);
 const obstacleReducers = createEditorObjectAdapter(obstacles);
+const arcReducers = createEditorObjectAdapter(arcs);
+const chainReducers = createEditorObjectAdapter(chains);
 
 interface State {
 	notes: ReturnType<typeof notes.getInitialState>;
@@ -177,6 +180,48 @@ const slice = createSlice({
 			deselectObstacle: api.reducer<{ id: EntityId }>((state, action) => {
 				obstacles.updateOne(state.present.obstacles, { id: action.payload.id, changes: { selected: false } });
 			}),
+			addArc: api.reducer<IWrapArc>(
+				history.undoable((state, action) => {
+					arcs.upsertOne(state.arcs, action.payload);
+				}),
+			),
+			updateArc: api.reducer<Update<IWrapArc, EntityId>>(
+				history.undoable((state, action) => {
+					arcs.updateOne(state.arcs, action.payload);
+				}),
+			),
+			removeArc: api.reducer<{ id: EntityId }>(
+				history.undoable((state, action) => {
+					arcs.removeOne(state.arcs, action.payload.id);
+				}),
+			),
+			selectArc: api.reducer<{ id: EntityId }>((state, action) => {
+				arcs.updateOne(state.present.arcs, { id: action.payload.id, changes: { selected: true } });
+			}),
+			deselectArc: api.reducer<{ id: EntityId }>((state, action) => {
+				arcs.updateOne(state.present.arcs, { id: action.payload.id, changes: { selected: false } });
+			}),
+			addChain: api.reducer<IWrapChain>(
+				history.undoable((state, action) => {
+					chains.upsertOne(state.chains, action.payload);
+				}),
+			),
+			updateChain: api.reducer<Update<IWrapChain, EntityId>>(
+				history.undoable((state, action) => {
+					chains.updateOne(state.chains, action.payload);
+				}),
+			),
+			removeChain: api.reducer<{ id: EntityId }>(
+				history.undoable((state, action) => {
+					chains.removeOne(state.chains, action.payload.id);
+				}),
+			),
+			selectChain: api.reducer<{ id: EntityId }>((state, action) => {
+				chains.updateOne(state.present.chains, { id: action.payload.id, changes: { selected: true } });
+			}),
+			deselectChain: api.reducer<{ id: EntityId }>((state, action) => {
+				chains.updateOne(state.present.chains, { id: action.payload.id, changes: { selected: false } });
+			}),
 			upsertObjects: api.reducer<Partial<App.IBeatmapEntities>>(
 				history.undoable((state, action) => {
 					if (action.payload.notes) {
@@ -188,13 +233,21 @@ const slice = createSlice({
 					if (action.payload.obstacles) {
 						obstacles.upsertMany(state.obstacles, action.payload.obstacles);
 					}
+					if (action.payload.arcs) {
+						arcs.upsertMany(state.arcs, action.payload.arcs);
+					}
+					if (action.payload.chains) {
+						chains.upsertMany(state.chains, action.payload.chains);
+					}
 				}),
 			),
-			updateAllSelectedObjects: api.reducer<{ noteChanges: Partial<IWrapColorNote>; bombChanges: Partial<IWrapBombNote>; obstacleChanges: Partial<IWrapObstacle> }>(
+			updateAllSelectedObjects: api.reducer<{ noteChanges: Partial<IWrapColorNote>; bombChanges: Partial<IWrapBombNote>; obstacleChanges: Partial<IWrapObstacle>; arcChanges: Partial<IWrapArc>; chainChanges: Partial<IWrapChain> }>(
 				history.undoable((state, action) => {
 					noteReducers.updateAllSelected(state.notes, () => action.payload.noteChanges);
 					bombReducers.updateAllSelected(state.bombs, () => action.payload.bombChanges);
 					obstacleReducers.updateAllSelected(state.obstacles, () => action.payload.obstacleChanges);
+					arcReducers.updateAllSelected(state.arcs, () => action.payload.arcChanges);
+					chainReducers.updateAllSelected(state.chains, () => action.payload.chainChanges);
 				}),
 			),
 			mirrorAllSelectedObjects: api.reducer<{ axis: "horizontal" | "vertical"; noteGrid?: IGrid; obstacleGrid?: IGrid }>(
@@ -203,6 +256,20 @@ const slice = createSlice({
 					noteReducers.replaceAllSelected(state.notes, mirrorGridObjectProperties(axis, noteGrid, 0));
 					noteReducers.replaceAllSelected(state.notes, mirrorBaseNoteProperties(axis));
 					bombReducers.replaceAllSelected(state.bombs, mirrorGridObjectProperties(axis, noteGrid, 0));
+					arcReducers.replaceAllSelected(state.arcs, (data) => {
+						const { posX, posY } = mirrorGridObjectProperties(axis, noteGrid, 0)(data);
+						const { color, direction } = mirrorBaseNoteProperties(axis)(data);
+						const { posX: tailPosX, posY: tailPosY } = mirrorGridObjectProperties(axis, noteGrid, 0)({ posX: data.tailPosX, posY: data.tailPosY });
+						const { direction: tailDirection } = mirrorBaseNoteProperties(axis)({ color: data.color, direction: data.tailDirection });
+						const midAnchor = data.midAnchor !== 0 ? cycle([SliderMidAnchorMode.CLOCKWISE, SliderMidAnchorMode.COUNTER_CLOCKWISE], data.midAnchor, 1) : data.midAnchor;
+						return { ...data, posX, posY, color, direction, tailPosX, tailPosY, tailDirection, midAnchor };
+					});
+					chainReducers.replaceAllSelected(state.chains, (data) => {
+						const { posX, posY } = mirrorGridObjectProperties(axis, noteGrid, 0)(data);
+						const { color, direction } = mirrorBaseNoteProperties(axis)(data);
+						const { posX: tailPosX, posY: tailPosY } = mirrorGridObjectProperties(axis, noteGrid, 0)({ posX: data.tailPosX, posY: data.tailPosY });
+						return { ...data, posX, posY, color, direction, tailPosX, tailPosY };
+					});
 					if (axis === "horizontal") {
 						obstacleReducers.replaceAllSelected(state.obstacles, mirrorGridObjectProperties(axis, obstacleGrid, 0));
 					}
@@ -214,6 +281,16 @@ const slice = createSlice({
 					noteReducers.updateAllSelected(state.notes, nudgeItem(direction, amount));
 					bombReducers.updateAllSelected(state.bombs, nudgeItem(direction, amount));
 					obstacleReducers.updateAllSelected(state.obstacles, nudgeItem(direction, amount));
+					arcReducers.updateAllSelected(state.arcs, (data) => {
+						const { time } = nudgeItem(direction, amount)(data);
+						const { time: tailTime } = nudgeItem(direction, amount)({ time: data.tailTime });
+						return { ...data, time, tailTime };
+					});
+					chainReducers.updateAllSelected(state.chains, (data) => {
+						const { time } = nudgeItem(direction, amount)(data);
+						const { time: tailTime } = nudgeItem(direction, amount)({ time: data.tailTime });
+						return { ...data, time, tailTime };
+					});
 				}),
 			),
 			removeAllSelectedObjects: api.reducer(
@@ -221,6 +298,8 @@ const slice = createSlice({
 					noteReducers.removeAllSelected(state.notes);
 					bombReducers.removeAllSelected(state.bombs);
 					obstacleReducers.removeAllSelected(state.obstacles);
+					arcReducers.removeAllSelected(state.arcs);
+					chainReducers.removeAllSelected(state.chains);
 				}),
 			),
 		};
@@ -247,18 +326,35 @@ const slice = createSlice({
 			noteReducers.updateAll(state.present.notes, () => ({ selected: true }));
 			bombReducers.updateAll(state.present.bombs, () => ({ selected: true }));
 			obstacleReducers.updateAll(state.present.obstacles, () => ({ selected: true }));
+			arcReducers.updateAll(state.present.arcs, () => ({ selected: true }));
+			chainReducers.updateAll(state.present.chains, () => ({ selected: true }));
 		});
 		builder.addCase(deselectAllEntities, (state, action) => {
 			if (action.payload.view !== View.BEATMAP) return state;
 			noteReducers.updateAll(state.present.notes, () => ({ selected: false }));
 			bombReducers.updateAll(state.present.bombs, () => ({ selected: false }));
 			obstacleReducers.updateAll(state.present.obstacles, () => ({ selected: false }));
+			arcReducers.updateAll(state.present.arcs, () => ({ selected: false }));
+			chainReducers.updateAll(state.present.chains, () => ({ selected: false }));
 		});
 		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			if (action.payload.view !== View.BEATMAP) return state;
-			noteReducers.updateAll(state.present.notes, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
-			bombReducers.updateAll(state.present.bombs, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
-			obstacleReducers.updateAll(state.present.obstacles, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
+
+			function isWithinRange<T extends IWrapBaseObject>(x: T) {
+				let endTime = x.time;
+				if (isArc(x) || isChain(x)) {
+					endTime = x.tailTime;
+				} else if (isObstacle(x)) {
+					endTime = x.time + x.duration;
+				}
+				return x.time < action.payload.endBeat && endTime >= action.payload.startBeat - 0.01;
+			}
+
+			noteReducers.updateAll(state.present.notes, (x) => ({ selected: isWithinRange(x) }));
+			bombReducers.updateAll(state.present.bombs, (x) => ({ selected: isWithinRange(x) }));
+			obstacleReducers.updateAll(state.present.obstacles, (x) => ({ selected: isWithinRange(x) }));
+			arcReducers.updateAll(state.present.arcs, (x) => ({ selected: isWithinRange(x) }));
+			chainReducers.updateAll(state.present.chains, (x) => ({ selected: isWithinRange(x) }));
 		});
 		builder.addCase(deselectAllObjectsOfType, (state, action) => {
 			switch (action.payload.itemType) {
@@ -272,6 +368,14 @@ const slice = createSlice({
 				}
 				case ObjectType.OBSTACLE: {
 					obstacleReducers.updateAll(state.present.obstacles, () => ({ selected: false }));
+					break;
+				}
+				case ObjectType.ARC: {
+					arcReducers.updateAll(state.present.arcs, () => ({ selected: false }));
+					break;
+				}
+				case ObjectType.CHAIN: {
+					chainReducers.updateAll(state.present.chains, () => ({ selected: false }));
 					break;
 				}
 			}
@@ -318,6 +422,8 @@ export const { undo: undoObjects, redo: redoObjects, clearHistory: clearObjectHi
 export const { addColorNote, updateColorNote, selectColorNote, deselectColorNote, removeColorNote } = slice.actions;
 export const { addBombNote, selectBombNote, deselectBombNote, removeBombNote } = slice.actions;
 export const { addObstacle, updateObstacle, selectObstacle, deselectObstacle, updateAllSelectedObjects, removeObstacle } = slice.actions;
+export const { addArc, updateArc, selectArc, deselectArc, removeArc } = slice.actions;
+export const { addChain, updateChain, selectChain, deselectChain, removeChain } = slice.actions;
 
 export const deselectAllObjectsOfType = createAction("deselectAllObjectsOfType", (args: { itemType: ObjectType }) => {
 	return { payload: { ...args } };
