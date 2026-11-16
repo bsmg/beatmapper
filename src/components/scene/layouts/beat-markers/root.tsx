@@ -1,7 +1,8 @@
 import { type ReactNode, useMemo } from "react";
 
-import { FUDGE_FACTOR } from "$/components/scene/constants";
 import { useVisualizationContext } from "$/components/scene/layouts/visualization";
+import { useAppSelector } from "$/store/hooks";
+import { selectHighestPrecision } from "$/store/selectors";
 
 interface Props {
 	marks: number[];
@@ -10,13 +11,14 @@ interface Props {
 function BeatMarkersRoot({ marks, children }: Props) {
 	const { cursorPosition, beatDepth, surfaceDepth } = useVisualizationContext();
 
+	const highestPrecision = useAppSelector(selectHighestPrecision);
 	const numToRender = useMemo(() => surfaceDepth / beatDepth, [surfaceDepth, beatDepth]);
 
 	const visibleMarkers = useMemo(() => {
-		const start = (cursorPosition ?? 0) - FUDGE_FACTOR;
-		const end = (cursorPosition ?? 0) + numToRender + FUDGE_FACTOR;
+		const start = cursorPosition;
+		const end = cursorPosition + numToRender + highestPrecision;
 		return marks.filter((beat) => beat >= start && beat < end);
-	}, [marks, cursorPosition, numToRender]);
+	}, [marks, cursorPosition, numToRender, highestPrecision]);
 
 	return visibleMarkers.map((beat) => children(beat, { isBeat: Number.isInteger(beat) }));
 }

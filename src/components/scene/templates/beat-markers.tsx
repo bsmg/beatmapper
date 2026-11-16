@@ -1,7 +1,6 @@
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { SONG_OFFSET } from "$/components/scene/constants";
 import { BeatMarkers } from "$/components/scene/layouts";
 import { useAppSelector } from "$/store/hooks";
 import { selectDurationInBeats, selectEditorOffsetInBeats, selectSnap } from "$/store/selectors";
@@ -25,7 +24,7 @@ function EditorBeatMarkers({ timescale, beatDepth }: Props) {
 		<BeatMarkers.Root marks={marks}>
 			{(beatNum, { isBeat }) => {
 				const color = isBeat ? getComputedToken("colors.fg.contrast") : getComputedToken(`colors.gray.${theme === "dark" ? 300 : 700}`);
-				const zPosition = -SONG_OFFSET - timescale(beatNum) * beatDepth;
+				const zPosition = -timescale(beatNum) * beatDepth;
 				return (
 					<BeatMarkers.Marker key={beatNum} type={isBeat ? "beat" : "sub-beat"} height={isBeat ? 0.2 : 0.08} overextendBy={isBeat ? 0.3 : 0} color={color} position-z={zPosition}>
 						{isBeat && beatNum}

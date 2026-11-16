@@ -5,14 +5,13 @@ import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import { deserializeCoordinate, isExtendedCoordinate } from "$/helpers/item.helpers";
 import { isColorNote, resolveNoteId } from "$/helpers/notes.helpers";
 import { convertDegreesToRadians } from "$/utils";
-import { BLOCK_CELL_SIZE, SONG_OFFSET } from "./constants";
+import { BLOCK_CELL_SIZE } from "./constants";
 
 export interface ObjectResolverOptions {
 	timescale?: (time: number) => number;
 	beatDepth: number;
-	zOffset?: number;
 }
-export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { timescale = (time) => time, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">): Vector3Tuple {
+export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T, { timescale = (time) => time, beatDepth }: Pick<ObjectResolverOptions, "timescale" | "beatDepth">): Vector3Tuple {
 	const position: Vector3Tuple = [0, 0, 0];
 
 	// ----------- X ------------
@@ -20,9 +19,7 @@ export function resolvePositionForGridObject<T extends IWrapGridObject>(data: T,
 	// ----------- Y ------------
 	position[1] = (deserializeCoordinate(data.posY) + -1) * BLOCK_CELL_SIZE;
 	// ----------- Z ------------
-	position[2] = -SONG_OFFSET + timescale(data.time) * beatDepth * -1;
-	// we may need to apply a manual offset for tentative objects
-	position[2] += zOffset;
+	position[2] = -timescale(data.time) * beatDepth;
 
 	return position;
 }
@@ -35,8 +32,8 @@ export function resolveRotationForNote<T extends IWrapBaseNote>(data: T) {
 	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
 }
 
-export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale = (time) => time, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
-	const position = resolvePositionForGridObject(data, { timescale, beatDepth, zOffset });
+export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale = (time) => time, beatDepth }: Pick<ObjectResolverOptions, "timescale" | "beatDepth">) {
+	const position = resolvePositionForGridObject(data, { timescale, beatDepth });
 
 	// ----------- X ------------
 	position[0] += (deserializeCoordinate(data.width) / 2 - 0.5) * BLOCK_CELL_SIZE;

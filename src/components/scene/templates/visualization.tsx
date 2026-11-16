@@ -1,7 +1,8 @@
+import type { Assign } from "@ark-ui/react";
 import type { EntityId } from "@reduxjs/toolkit";
 import { useParams } from "@tanstack/react-router";
 import { type IWrapBombNote, type IWrapColorNote, type IWrapObstacle, mirrorNoteColor, NoteDirection } from "bsmap";
-import { memo, useMemo, useState } from "react";
+import { type ComponentProps, memo, useMemo, useState } from "react";
 
 import { BombNote, ColorNote, Obstacle } from "$/components/scene/compositions";
 import { SONG_OFFSET } from "$/components/scene/constants";
@@ -30,7 +31,7 @@ interface Props {
  *
  * It does NOT include the 2D stuff like the toolbar or the track controls.
  */
-function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: Props) {
+function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...rest }: Assign<ComponentProps<"group">, Props>) {
 	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
@@ -128,7 +129,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 	const [hoveredId, setHoveredId] = useState<EntityId | null>(null);
 
 	return (
-		<Visualization.Root cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
+		<Visualization.Root position-z={-SONG_OFFSET} {...rest} cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
 			<Visualization.Mover immediate={!animateTrack}>
 				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
 				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
@@ -216,7 +217,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive }: P
 					)}
 				</Visualization.ForGridObjects>
 			</Visualization.Mover>
-			{interactive && <EditorPlacementGrid position-z={-SONG_OFFSET} />}
+			{interactive && <EditorPlacementGrid />}
 		</Visualization.Root>
 	);
 }

@@ -1,5 +1,6 @@
+import type { Assign } from "@ark-ui/react";
 import { useRouteContext } from "@tanstack/react-router";
-import { Fragment, useMemo } from "react";
+import { type ComponentProps, Fragment, useMemo } from "react";
 
 import { BLOCK_CELL_SIZE, SONG_OFFSET, SURFACE_HEIGHT, SURFACE_WIDTH } from "$/components/scene/constants";
 import { DEFAULT_NUM_ROWS } from "$/constants";
@@ -25,15 +26,15 @@ interface Props {
 	trackGridRows?: boolean;
 }
 
-export function Runway({ surfaceDepth, includeEdgeStrips }: Props) {
+export function Runway({ surfaceDepth, includeEdgeStrips, ...rest }: Assign<ComponentProps<"group">, Props>) {
 	const { theme } = useRouteContext({ from: "__root__" });
 
-	const surfaceZCenter = useMemo(() => surfaceDepth / 2 + SONG_OFFSET - 1, [surfaceDepth]);
+	const surfaceZCenter = useMemo(() => surfaceDepth / 2, [surfaceDepth]);
 	const pegDepth = useMemo(() => surfaceDepth - PEG_WIDTH * 4, [surfaceDepth]);
-	const stripZ = useMemo(() => -SONG_OFFSET - surfaceDepth / 2, [surfaceDepth]);
+	const stripZ = useMemo(() => -surfaceDepth / 2, [surfaceDepth]);
 
 	return (
-		<Fragment>
+		<group position-z={-SONG_OFFSET} {...rest}>
 			{/* Surface */}
 			<mesh position={[0, GRID_Y_BASE - SURFACE_HEIGHT / 2, -surfaceZCenter]} receiveShadow>
 				<boxGeometry attach="geometry" args={[SURFACE_WIDTH, SURFACE_HEIGHT, surfaceDepth]} />
@@ -61,7 +62,7 @@ export function Runway({ surfaceDepth, includeEdgeStrips }: Props) {
 					</mesh>
 				</Fragment>
 			)}
-		</Fragment>
+		</group>
 	);
 }
 

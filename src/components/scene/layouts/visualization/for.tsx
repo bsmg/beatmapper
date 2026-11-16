@@ -3,7 +3,6 @@ import type { IWrapGridObject } from "bsmap";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { Vector3Tuple } from "three";
 
-import { SONG_OFFSET } from "$/components/scene/constants";
 import type { ObjectResolverOptions } from "$/components/scene/helpers";
 import { useAppSelector } from "$/store/hooks";
 import { selectHighestPrecision } from "$/store/selectors";
@@ -21,7 +20,7 @@ function VisualizationForGridObjects<T extends IWrapGridObject, Id extends Entit
 
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 
-	const zPosition = useMemo(() => -SONG_OFFSET + (cursorPosition ?? 0) * beatDepth, [cursorPosition, beatDepth]);
+	const zPosition = useMemo(() => cursorPosition * beatDepth, [cursorPosition, beatDepth]);
 	const adjustment = useMemo(() => beatDepth * highestPrecision, [beatDepth, highestPrecision]);
 
 	return objects.map((data) => {
@@ -32,7 +31,7 @@ function VisualizationForGridObjects<T extends IWrapGridObject, Id extends Entit
 			data,
 			position,
 			layers: 1,
-			transparent: noteZPosition > -SONG_OFFSET * 2,
+			transparent: noteZPosition > 0,
 			color: resolveColor(data),
 		});
 	});
