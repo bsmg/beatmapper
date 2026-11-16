@@ -1,8 +1,8 @@
-import { useListCollection } from "@ark-ui/react/collection";
+import { createListCollection } from "@ark-ui/react/collection";
 import { Link } from "@tanstack/react-router";
 import { createColumnHelper, type StockFeatures, stockFeatures, useTable } from "@tanstack/react-table";
 import { ArrowRightToLineIcon } from "lucide-react";
-import { Fragment, useCallback } from "react";
+import { Fragment, useMemo } from "react";
 
 import { CoverArtFile } from "$/components/app/compositions";
 import { Button, DataTable, Select, Spinner } from "$/components/ui/compositions";
@@ -40,10 +40,12 @@ function Beatmaps({ songId }: Props) {
 	const selectedBeatmap = useAppSelector((state) => selectSelectedBeatmap(state, songId));
 	const beatmaps = useAppSelector((state) => selectBeatmaps(state, songId));
 
-	const { collection } = useListCollection({
-		initialItems: Object.keys(beatmaps),
-		itemToString: (beatmapId) => beatmaps[beatmapId].customLabel ?? beatmapId,
-	});
+	const collection = useMemo(() => {
+		return createListCollection({
+			items: Object.keys(beatmaps),
+			itemToString: (beatmapId) => beatmaps[beatmapId]?.customLabel ?? beatmapId,
+		});
+	}, [beatmaps]);
 
 	return <Select collection={collection} value={[selectedBeatmap.toString()]} onValueChange={(details) => dispatch(updateSelectedBeatmap({ songId, beatmapId: details.value[0] }))} />;
 }
@@ -66,41 +68,34 @@ function SongsDataTable() {
 	const songs = useAppSelector(selectAllSongs);
 	const isProcessingImport = useAppSelector(selectProcessingImport);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: force rerender when songs change
-	const getColumns = useCallback(
-		() =>
-			helper.columns([
-				helper.accessor((data) => resolveSongId(data), {
-					id: "cover",
-					size: 40,
-					header: () => null,
-					cell: (ctx) => <CoverArtFile filename={BeatmapFilestore.resolveFilename(ctx.getValue(), "cover", {})} boxSize={40} />,
-				}),
-				helper.accessor((data) => resolveSongId(data), {
-					id: "metadata",
-					size: 240,
-					header: () => "Title",
-					cell: (ctx) => <Metadata songId={ctx.getValue()} />,
-				}),
-				helper.accessor((data) => resolveSongId(data), {
-					id: "beatmaps",
-					size: 120,
-					header: () => "Beatmaps",
-					cell: (ctx) => <Beatmaps songId={ctx.getValue()} />,
-				}),
-				helper.accessor((data) => resolveSongId(data), {
-					id: "actions",
-					size: 80,
-					header: () => "Actions",
-					cell: (ctx) => <Actions songId={ctx.getValue()} />,
-				}),
-			]),
-		[songs],
-	);
-
 	const table = useTable({
 		features: stockFeatures,
-		columns: getColumns(),
+		columns: helper.columns([
+			helper.accessor((data) => resolveSongId(data), {
+				id: "cover",
+				size: 40,
+				header: () => null,
+				cell: (ctx) => <CoverArtFile filename={BeatmapFilestore.resolveFilename(ctx.getValue(), "cover", {})} boxSize={40} />,
+			}),
+			helper.accessor((data) => resolveSongId(data), {
+				id: "metadata",
+				size: 240,
+				header: () => "Title",
+				cell: (ctx) => <Metadata songId={ctx.getValue()} />,
+			}),
+			helper.accessor((data) => resolveSongId(data), {
+				id: "beatmaps",
+				size: 120,
+				header: () => "Beatmaps",
+				cell: (ctx) => <Beatmaps songId={ctx.getValue()} />,
+			}),
+			helper.accessor((data) => resolveSongId(data), {
+				id: "actions",
+				size: 80,
+				header: () => "Actions",
+				cell: (ctx) => <Actions songId={ctx.getValue()} />,
+			}),
+		]),
 		data: songs,
 	});
 
