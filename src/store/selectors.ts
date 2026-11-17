@@ -14,6 +14,8 @@ export {
 	selectFutureBoostEvents,
 	selectPastBasicEvents,
 	selectPastBoostEvents,
+	selectTotalBasicEvents,
+	selectTotalBoostEvents,
 } from "./features/events.slice";
 export { selectInitialized, selectLoading, selectProcessingImport } from "./features/global.slice";
 export {
