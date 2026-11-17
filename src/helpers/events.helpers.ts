@@ -1,4 +1,4 @@
-import { type EnvironmentName, type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, isBasicBtsTrack, isBasicCarTrack, isBasicFloatValueTrack, isBasicIntValueTrack, isBasicLightTrack, isBasicNoneTrack, isBasicToggleTrack } from "bsmap";
+import { type EnvironmentName, EventType, type IBasicTrack, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, type IWrapNJSEvent, isBasicBtsTrack, isBasicCarTrack, isBasicFloatValueTrack, isBasicIntValueTrack, isBasicLightTrack, isBasicNoneTrack, isBasicToggleTrack } from "bsmap";
 
 import { BasicTrackMirror, BasicTrackOrder } from "$/constants";
 import { BasicEventEffect, EventColor } from "$/types";
@@ -34,13 +34,18 @@ export function isBoostEvent<T extends IWrapColorBoostEvent>(data: unknown): dat
 	if (typeof data !== "object" || !data) return false;
 	return "toggle" in data;
 }
+export function isNJSEvent<T extends IWrapNJSEvent>(data: unknown): data is T {
+	if (typeof data !== "object" || !data) return false;
+	return "previous" in data;
+}
 export function resolveTrackIdForEvent(data: unknown) {
 	if (isBasicEvent(data)) return data.type;
 	if (isBoostEvent(data)) return 5;
+	if (isNJSEvent(data)) return 1000;
 	throw new Error("Invalid event data.", { cause: data });
 }
 
-export function resolveEventId<T extends Pick<IWrapBasicEvent, "time" | "type"> | Pick<IWrapColorBoostEvent, "time" | "toggle">>(x: T) {
+export function resolveEventId<T extends Pick<IWrapBasicEvent, "time" | "type"> | Pick<IWrapColorBoostEvent, "time" | "toggle"> | Pick<IWrapNJSEvent, "time" | "previous">>(x: T) {
 	return `${resolveTrackIdForEvent(x)}/${x.time}`;
 }
 

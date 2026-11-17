@@ -12,7 +12,7 @@ import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTo
 import { floorToNearest, roundToNearest } from "$/utils";
 import { selectNotesEditorTool } from "./beatmap.slice";
 import { selectAllBookmarks } from "./bookmarks.slice";
-import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectSelectedEvents } from "./events.slice";
+import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectAllNjsEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
 import { selectCursorPosition, selectDuration, selectHighestPrecision, selectWindowSize } from "./navigation.slice";
 import { selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
@@ -123,11 +123,12 @@ export const selectSelectedBeatmapEntities = createAppSelector([selectSelectedOb
 		notes: view === View.BEATMAP ? objects.notes : undefined,
 		bombs: view === View.BEATMAP ? objects.bombs : undefined,
 		obstacles: view === View.BEATMAP ? objects.obstacles : undefined,
+		njsEvents: view === View.BEATMAP ? events.njsEvents : undefined,
 		basicEvents: view === View.LIGHTSHOW ? events.basicEvents : undefined,
 		boostEvents: view === View.LIGHTSHOW ? events.boostEvents : undefined,
 	};
 });
 
-export const selectBeatmapEntities = createAppSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
-	return { notes, bombs, obstacles, basicEvents, boostEvents, bookmarks };
+export const selectBeatmapEntities = createAppSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllNjsEvents, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, njsEvents, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
+	return { notes, bombs, obstacles, njsEvents, basicEvents, boostEvents, bookmarks };
 });

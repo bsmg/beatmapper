@@ -5,6 +5,7 @@ export {
 	selectAllBasicEvents,
 	selectAllBasicEventsForTrack,
 	selectAllBoostEvents,
+	selectAllNjsEvents,
 	selectAllSelectedEvents,
 	selectAnySelectedEvents,
 	selectColorBoostAtBeat,
@@ -12,10 +13,13 @@ export {
 	selectEventsCanUndo,
 	selectFutureBasicEvents,
 	selectFutureBoostEvents,
+	selectFutureNjsEvents,
 	selectPastBasicEvents,
 	selectPastBoostEvents,
+	selectPastNjsEvents,
 	selectTotalBasicEvents,
 	selectTotalBoostEvents,
+	selectTotalNjsEvents,
 } from "./features/events.slice";
 export { selectInitialized, selectLoading, selectProcessingImport } from "./features/global.slice";
 export {

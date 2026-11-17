@@ -265,6 +265,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const notes = data.notes?.map(shiftByOffset({ editorOffsetInBeats }));
 			const bombs = data.bombs?.map(shiftByOffset({ editorOffsetInBeats }));
 			const obstacles = data.obstacles?.map(shiftByOffset({ editorOffsetInBeats }));
+			const njsEvents = data.njsEvents?.map(shiftByOffset({ editorOffsetInBeats }));
 			const basicEvents = data.basicEvents?.map(shiftByOffset({ editorOffsetInBeats }));
 			const boostEvents = data.boostEvents?.map(shiftByOffset({ editorOffsetInBeats }));
 			const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
@@ -274,6 +275,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 					colorNotes: notes,
 					bombNotes: bombs,
 					obstacles: obstacles,
+					njsEvents: njsEvents,
 					customData: ensureObject<IV2CustomDataDifficulty>({
 						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
 						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
@@ -296,6 +298,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const notes = data.difficulty.colorNotes;
 			const bombs = data.difficulty.bombNotes;
 			const obstacles = data.difficulty.obstacles;
+			const njsEvents = data.difficulty.njsEvents;
 			const basicEvents = data.lightshow.basicEvents;
 			const boostEvents = data.lightshow.colorBoostEvents;
 
@@ -313,6 +316,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 				notes: notes?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				bombs: bombs?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				obstacles: obstacles?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				njsEvents: njsEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				basicEvents: basicEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				boostEvents: boostEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				bookmarks: bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),

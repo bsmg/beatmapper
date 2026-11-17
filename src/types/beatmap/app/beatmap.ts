@@ -1,4 +1,4 @@
-import type { IWrapBaseNote, IWrapBasicEvent, IWrapBombNote, IWrapColorBoostEvent, IWrapColorNote, IWrapObstacle } from "bsmap";
+import type { IWrapBaseNote, IWrapBasicEvent, IWrapBombNote, IWrapColorBoostEvent, IWrapColorNote, IWrapNJSEvent, IWrapObstacle } from "bsmap";
 
 import type { IWrapEditorObject } from "./shared";
 
@@ -10,6 +10,7 @@ export type IObstacle = IWrapEditorObject<IWrapObstacle>;
 
 export type IBasicEvent = IWrapEditorObject<IWrapBasicEvent>;
 export type IBoostEvent = IWrapEditorObject<IWrapColorBoostEvent>;
+export type INJSEvent = IWrapEditorObject<IWrapNJSEvent>;
 
 export interface IBookmark {
 	time: number;
@@ -23,5 +24,6 @@ export interface IBeatmapEntities {
 	obstacles: IObstacle[];
 	basicEvents: IBasicEvent[];
 	boostEvents: IBoostEvent[];
+	njsEvents: INJSEvent[];
 	bookmarks: IBookmark[];
 }
