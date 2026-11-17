@@ -8,9 +8,9 @@ import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } 
 import { getGridSize } from "$/helpers/song.helpers";
 import { createAppDraftSafeSelector, createAppSelector } from "$/store/helpers/selectors";
 import type { RootState } from "$/store/types";
-import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
+import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectType, ObstaclePlacementMode, type SongId, View } from "$/types";
 import { floorToNearest, roundToNearest } from "$/utils";
-import { selectNotesEditorTool } from "./beatmap.slice";
+import { selectNotesEditorType } from "./beatmap.slice";
 import { selectAllBookmarks } from "./bookmarks.slice";
 import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
@@ -60,9 +60,9 @@ export const selectObstacleGridSize = createAppSelector(selectSongById, selectOb
 	return getGridSize(song);
 });
 
-export const selectGridSize = createAppSelector(selectNotesEditorTool, selectNoteGridSize, selectObstacleGridSize, (tool, noteGrid, obstacleGrid) => {
+export const selectGridSize = createAppSelector(selectNotesEditorType, selectNoteGridSize, selectObstacleGridSize, (tool, noteGrid, obstacleGrid) => {
 	switch (tool) {
-		case ObjectTool.OBSTACLE: {
+		case ObjectType.OBSTACLE: {
 			return obstacleGrid;
 		}
 		default: {
