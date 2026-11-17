@@ -15,7 +15,7 @@ import { selectAllBookmarks } from "./bookmarks.slice";
 import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
 import { selectCursorPosition, selectDuration, selectHighestPrecision, selectWindowSize } from "./navigation.slice";
-import { selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
+import { selectAllArcs, selectAllBombNotes, selectAllChains, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
 import { selectBpm, selectEditorOffset, selectEventTracksForEnvironment, selectSongById } from "./songs.slice";
 import { selectTimescale } from "./timeline.slice";
 import { selectUserObstaclePlacementMode } from "./user.slice";
@@ -104,6 +104,8 @@ function createVisibleObjectsSelector<T extends IWrapBaseObject>(selector: <Stat
 export const selectAllVisibleNotes = createVisibleObjectsSelector(selectAllColorNotes);
 export const selectAllVisibleBombs = createVisibleObjectsSelector(selectAllBombNotes);
 export const selectAllVisibleObstacles = createVisibleObjectsSelector(selectAllObstacles);
+export const selectAllVisibleArcs = createVisibleObjectsSelector(selectAllArcs);
+export const selectAllVisibleChains = createVisibleObjectsSelector(selectAllChains);
 
 export const selectCurrentLightStateForTrack = createAppDraftSafeSelector([selectEventsEditorStartAndEndBeat, selectEventTracksForEnvironment, (state, _songId: SongId, _beatmapId: BeatmapId, trackId: number) => selectAllBasicEventsForTrack(state, trackId)], ({ startBeat }, tracks, events): ILightState => {
 	const basicEventsInWindow = events.filter((event) => event.time <= startBeat);
@@ -123,11 +125,13 @@ export const selectSelectedBeatmapEntities = createAppSelector([selectSelectedOb
 		notes: view === View.BEATMAP ? objects.notes : undefined,
 		bombs: view === View.BEATMAP ? objects.bombs : undefined,
 		obstacles: view === View.BEATMAP ? objects.obstacles : undefined,
+		arcs: view === View.BEATMAP ? objects.arcs : undefined,
+		chains: view === View.BEATMAP ? objects.chains : undefined,
 		basicEvents: view === View.LIGHTSHOW ? events.basicEvents : undefined,
 		boostEvents: view === View.LIGHTSHOW ? events.boostEvents : undefined,
 	};
 });
 
-export const selectBeatmapEntities = createAppSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
-	return { notes, bombs, obstacles, basicEvents, boostEvents, bookmarks };
+export const selectBeatmapEntities = createAppSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllArcs, selectAllChains, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, arcs, chains, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
+	return { notes, bombs, obstacles, arcs, chains, basicEvents, boostEvents, bookmarks };
 });

@@ -109,7 +109,7 @@ export class BeatmapFilestore extends Filestore {
 			createBeatmap({
 				...contents,
 				// for difficulty data, we should remove all unsupported collections since those objects can cause issues the user would be unable to fix.
-				difficulty: pick({ ...contents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "customData"]),
+				difficulty: pick({ ...contents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "arcs", "chains", "customData"]),
 				// we can supply our own wrappers for editor-specific collections.
 				customData: ensureObject({
 					bookmarks: ensureArray<App.IBookmark>(contents.customData?.bookmarks ?? [])?.sort(sortObjectFn),

@@ -5,6 +5,9 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - bsmap
 
+patchedDependencies:
+  bsmap: patches/bsmap.patch
+
 publicHoistPattern:
   - '*playwright*'
   - "*workbox*"
