@@ -64,6 +64,7 @@ export {
 	selectAllVisibleObstacles,
 	selectBeatForTime,
 	selectBeatmapEntities,
+	selectCurrentJumpSpeed,
 	selectCurrentLightStateForTrack,
 	selectCursorPositionInBeats,
 	selectDurationInBeats,

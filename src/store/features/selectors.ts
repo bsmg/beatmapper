@@ -2,6 +2,7 @@ import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
 import { calculateNps, type IWrapBaseObject, TimeProcessor } from "bsmap";
 import { shallowEqual } from "react-redux";
 
+import { EASING_FNS } from "$/constants/easings.constants";
 import { DEFAULT_GRID } from "$/constants/editor.constants";
 import { calculateVisibleRange } from "$/helpers/editor.helpers";
 import { isLightEffectActive, resolveBasicEventColor, resolveBasicEventEffect } from "$/helpers/events.helpers";
@@ -9,14 +10,14 @@ import { getGridSize } from "$/helpers/song.helpers";
 import { createAppDraftSafeSelector, createAppSelector } from "$/store/helpers/selectors";
 import type { RootState } from "$/store/types";
 import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTool, ObstaclePlacementMode, type SongId, View } from "$/types";
-import { floorToNearest, roundToNearest } from "$/utils";
+import { clamp, floorToNearest, lerp, normalize, roundToNearest } from "$/utils";
 import { selectNotesEditorTool } from "./beatmap.slice";
 import { selectAllBookmarks } from "./bookmarks.slice";
 import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectAllNjsEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
 import { selectCursorPosition, selectDuration, selectHighestPrecision, selectWindowSize } from "./navigation.slice";
 import { selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
-import { selectBpm, selectEditorOffset, selectEventTracksForEnvironment, selectSongById } from "./songs.slice";
+import { selectBpm, selectEditorOffset, selectEventTracksForEnvironment, selectJumpSpeed, selectSongById } from "./songs.slice";
 import { selectTimescale } from "./timeline.slice";
 import { selectUserObstaclePlacementMode } from "./user.slice";
 
@@ -40,6 +41,29 @@ export const selectDurationInBeats = createSelector([selectTimeProcessor, select
 });
 export const selectEditorOffsetInBeats = createSelector([selectTimeProcessor, selectEditorOffset], (timeProcessor, offset) => {
 	return timeProcessor.toBeatTime(offset);
+});
+
+export const selectCurrentJumpSpeed = createSelector([selectJumpSpeed, selectAllNjsEvents, selectCursorPositionInBeats], (baseJumpSpeed, njsEvents, currentTime) => {
+	if (!njsEvents.length) return baseJumpSpeed;
+	if (currentTime < njsEvents[0].time) return baseJumpSpeed + njsEvents[0].value;
+
+	const lastEvent = njsEvents[njsEvents.length - 1];
+	if (currentTime >= lastEvent.time) return baseJumpSpeed + lastEvent.value;
+
+	const nextIdx = njsEvents.findIndex((ev) => ev.time > currentTime);
+	if (nextIdx <= 0) return baseJumpSpeed;
+
+	const prevEvent = njsEvents[nextIdx - 1];
+	const currEvent = njsEvents[nextIdx];
+
+	if (currEvent.previous === 1 || prevEvent.time === currEvent.time) {
+		return baseJumpSpeed + prevEvent.value;
+	}
+
+	const progress = clamp(normalize(currentTime, prevEvent.time, currEvent.time));
+	const easingFn = EASING_FNS[currEvent.easing];
+
+	return baseJumpSpeed + lerp(prevEvent.value, currEvent.value, easingFn(progress));
 });
 
 export const selectNotePlacementMode = createAppSelector(selectSongById, (song) => {
