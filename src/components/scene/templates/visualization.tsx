@@ -14,7 +14,7 @@ import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectAnimateTrack, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectSnap } from "$/store/selectors";
+import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -36,7 +36,6 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
-	const animateTrack = useAppSelector(selectAnimateTrack);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 	const angleOffsetStep = useAppSelector(selectNotesEditorAngleOffsetStep);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
@@ -130,7 +129,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 
 	return (
 		<Visualization.Root position-z={-SONG_OFFSET} {...rest} cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
-			<Visualization.Mover immediate={!animateTrack}>
+			<Visualization.Mover>
 				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
 				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
 					{(data, id, props) => (

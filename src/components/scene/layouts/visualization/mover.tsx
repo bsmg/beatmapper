@@ -1,25 +1,25 @@
-import type { Assign } from "@ark-ui/react";
 import { animated, useSpring } from "@react-spring/three";
 import type { PropsWithChildren } from "react";
 
 import { MOVEMENT_SPRING } from "$/components/scene/constants";
+import { useAppSelector } from "$/store/hooks";
+import { selectAnimateTrack } from "$/store/selectors";
 import { useVisualizationContext } from "./context";
 
-interface Props {
-	immediate?: boolean;
-}
-function VisualizationMover({ children, immediate }: Assign<PropsWithChildren, Props>) {
+function VisualizationMover({ children }: PropsWithChildren) {
 	const { cursorPosition, beatDepth } = useVisualizationContext();
 
-	const [spring] = useSpring<{ zPosition: number }>(() => {
+	const animateTrack = useAppSelector(selectAnimateTrack);
+
+	const [spring] = useSpring(() => {
 		return {
-			zPosition: cursorPosition * beatDepth,
-			immediate: immediate,
+			cursorPosition,
+			immediate: !animateTrack,
 			config: MOVEMENT_SPRING,
 		};
-	}, [cursorPosition, beatDepth]);
+	}, [cursorPosition, animateTrack]);
 
-	return <animated.group position-z={spring.zPosition}>{children}</animated.group>;
+	return <animated.group position-z={spring.cursorPosition.to((z) => z * beatDepth)}>{children}</animated.group>;
 }
 
 export default VisualizationMover;
