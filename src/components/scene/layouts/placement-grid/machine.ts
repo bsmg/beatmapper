@@ -8,6 +8,7 @@ import { isModKeyPressed } from "$/utils";
 import { resolveNoteDirectionForPlacementMode } from "./direction.helpers";
 
 export interface IPlacementContext {
+	anchorBeat: number | null;
 	cellDownAt: IGridCell | null;
 	cellOverAt: IGridCell | null;
 	direction: number | null;
@@ -23,8 +24,8 @@ export interface PlacementGridSchema extends MachineSchema {
 		cursorPositionInBeats: number;
 		selectedType: ObjectType;
 		shouldLockCursor: (type: ObjectType | null) => boolean;
-		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "cellDownAt" | "cellOverAt" | "direction" | "time" | "duration">, cached: { type: ObjectType | null }) => void;
-		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "cellDownAt" | "time" | "duration">, cached: { type: ObjectType | null }) => void;
+		onPointerUp?: (event: PointerEvent, payload: Pick<IPlacementContext, "anchorBeat" | "cellDownAt" | "cellOverAt" | "direction" | "time" | "duration">, cached: { type: ObjectType | null }) => void;
+		onCellPointerDown?: (event: ThreeEvent<PointerEvent>, payload: Pick<IPlacementContext, "anchorBeat" | "cellDownAt" | "time" | "duration">, cached: { type: ObjectType | null }) => void;
 		onCellWheel?: (event: ThreeEvent<WheelEvent>, payload: Pick<IPlacementContext, "cellOverAt">) => void;
 	};
 	refs: {
@@ -53,6 +54,7 @@ export const machine = createMachine<PlacementGridSchema>({
 		activeType: null,
 	}),
 	context: ({ bindable }) => ({
+		anchorBeat: bindable<number | null>(() => ({ defaultValue: null })),
 		cellDownAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
 		cellOverAt: bindable<IGridCell | null>(() => ({ defaultValue: null })),
 		direction: bindable<number | null>(() => ({ defaultValue: null })),
@@ -118,6 +120,7 @@ export const machine = createMachine<PlacementGridSchema>({
 				prop("onCellPointerDown")?.(
 					pointerEvent,
 					{
+						anchorBeat: currentBeat,
 						cellDownAt: currentCell,
 						time: context.get("time"),
 						duration: context.get("duration"),
@@ -189,6 +192,7 @@ export const machine = createMachine<PlacementGridSchema>({
 					prop("onPointerUp")?.(
 						pointerEvent,
 						{
+							anchorBeat: anchorBeat,
 							cellDownAt: context.get("cellDownAt"),
 							cellOverAt: context.get("cellOverAt"),
 							direction: context.get("direction"),
