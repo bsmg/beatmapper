@@ -155,13 +155,15 @@ function EditorNavigationControls() {
 	return (
 		<NavigationPanel.Section>
 			<NavigationPanel.Column>
-				<Stat label="Snap to" style={{ width: "12ch" }}>
-					<Text>1</Text>
-					<Text>/</Text>
-					<Input unstyled style={inputStyles} type="number" min={1} max={32} step={"any"} maxLength={6} value={formattedValue} onValueChange={(details) => dispatch(updateSnap(getDenominator(Number.isNaN(details.valueAsNumber) ? 1 : clamp(details.valueAsNumber, 1, 32))))} />
-					<Text style={{ pointerEvents: "none", marginInlineStart: `calc(-7.5ch)` }}>Beats</Text>
-				</Stat>
-				<HStack gap={0.5}>
+				<NavigationPanel.Group size="sm">
+					<Stat label="Snap to" style={{ width: "12ch" }}>
+						<Text>1</Text>
+						<Text>/</Text>
+						<Input unstyled style={inputStyles} type="number" min={1} max={32} step={"any"} maxLength={6} value={formattedValue} onValueChange={(details) => dispatch(updateSnap(getDenominator(Number.isNaN(details.valueAsNumber) ? 1 : clamp(details.valueAsNumber, 1, 32))))} />
+						<Text style={{ pointerEvents: "none", marginInlineStart: `calc(-7.5ch)` }}>Beats</Text>
+					</Stat>
+				</NavigationPanel.Group>
+				<NavigationPanel.Group size="sm">
 					<Tooltip render={() => "Quick-select"}>
 						<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => triggerQuickSelect()}>
 							<UnfoldHorizontalIcon />
@@ -177,32 +179,37 @@ function EditorNavigationControls() {
 							<FlagIcon />
 						</Button>
 					</Tooltip>
-				</HStack>
+				</NavigationPanel.Group>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column style={{ maxWidth: "fit-content" }}>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevMarker())}>
-					<SkipBackIcon />
-				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
-					<RewindIcon />
-				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(togglePlayback())}>
-					{isPlaying ? <PauseIcon /> : <PlayIcon />}
-				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
-					<FastForwardIcon />
-				</Button>
-				<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextMarker())}>
-					<SkipForwardIcon />
-				</Button>
+				<NavigationPanel.Group size="sm">
+					<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevMarker())}>
+						<SkipBackIcon />
+					</Button>
+					<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToPrevWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
+						<RewindIcon />
+					</Button>
+					<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(togglePlayback())}>
+						{isPlaying ? <PauseIcon /> : <PlayIcon />}
+					</Button>
+					<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextWindow({ windowSize: isModKeyPressed ? windowSize : snapTo }))}>
+						<FastForwardIcon />
+					</Button>
+					<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => dispatch(jumpToNextMarker())}>
+						<SkipForwardIcon />
+					</Button>
+				</NavigationPanel.Group>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
-				<Stat label="Time" align="end">
-					{timeDisplayText}
-				</Stat>
-				<Stat label="Beat" align="end">
-					{beatDisplayText}
-				</Stat>
+				<NavigationPanel.Group />
+				<NavigationPanel.Group size="md">
+					<Stat label="Time" align="end">
+						{timeDisplayText}
+					</Stat>
+					<Stat label="Beat" align="end">
+						{beatDisplayText}
+					</Stat>
+				</NavigationPanel.Group>
 			</NavigationPanel.Column>
 		</NavigationPanel.Section>
 	);

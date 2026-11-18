@@ -1,4 +1,4 @@
-import { styled } from "$:styled-system/jsx";
+import { HStack, styled } from "$:styled-system/jsx";
 import { hstack } from "$:styled-system/patterns";
 
 export { default as Root } from "./root";
@@ -14,9 +14,21 @@ export const Section = styled("div", {
 
 export const Column = styled("div", {
 	base: hstack.raw({
-		width: { base: "fit-content", _first: undefined, _last: undefined },
-		justify: { base: "center", _first: "flex-start", _last: "flex-end" },
+		width: "fit-content",
+		justify: "space-between",
 		flex: 1,
-		gap: { base: 1, _first: 4, _last: 4 },
+		gap: 4,
 	}),
+});
+
+export const Group = styled("div", {
+	base: hstack.raw({
+		justify: { _first: "flex-start", _last: "flex-end" },
+	}),
+	variants: {
+		size: {
+			sm: { gap: 1 },
+			md: { gap: 4 },
+		},
+	},
 });
