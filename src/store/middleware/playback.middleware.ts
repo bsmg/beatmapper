@@ -3,7 +3,7 @@ import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 import type { AudioSample } from "$/services/audio.service";
 import { jumpToBeat, jumpToTime, leaveEditor, pausePlayback, startPlayback, stopPlayback, tick, updateCursorPosition } from "$/store/actions";
 import { selectActiveSongId, selectActiveView } from "$/store/helpers/route.helpers";
-import { selectBeatForTime, selectCursorPosition, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaying, selectTimeForBeat } from "$/store/selectors";
+import { selectBeatForTime, selectCursorPosition, selectEventsEditorBeatsPerZoomLevel, selectEventsEditorWindowLock, selectPlaybackRate, selectPlaying, selectTimeForBeat, selectTimeProcessor } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { View } from "$/types";
 import { floorToNearest } from "$/utils";
@@ -54,9 +54,13 @@ export default function createPlaybackMiddleware({ songSample, extra }: Options)
 				const windowForLastBeat = floorToNearest(lastBeat, beatsPerZoomLevel);
 				const windowForCurrentBeat = floorToNearest(currentBeat, beatsPerZoomLevel);
 
-				const { baseLatency } = api.extra.getAudioContext();
+				const timeProcessor = selectTimeProcessor(state, songId);
+				const playbackRate = selectPlaybackRate(state);
 
-				if (windowForLastBeat < windowForCurrentBeat && currentBeatTime - lastBeatTime > baseLatency) {
+				const { baseLatency } = api.extra.getAudioContext();
+				const delayInBeats = timeProcessor.toBeatTime(baseLatency * playbackRate);
+
+				if (windowForLastBeat < windowForCurrentBeat && currentBeatTime - lastBeatTime > delayInBeats) {
 					const commandeeredPosition = selectTimeForBeat(state, songId, windowForLastBeat);
 					api.dispatch(updateCursorPosition(commandeeredPosition));
 				}

@@ -80,11 +80,12 @@ export default function createAudioMiddleware({ songSample, tickSample, extra }:
 		actionCreator: startPlayback,
 		effect: (_, api) => {
 			const state = api.getState();
+			const playbackRate = selectPlaybackRate(state);
 			const notes = selectAllColorNotes(state);
 			const songId = selectActiveSongId(api.extra.getRouter());
 			const timeProcessor = selectTimeProcessor(state, songId);
 			const { baseLatency } = api.extra.getAudioContext();
-			const delayInBeats = timeProcessor.toBeatTime(baseLatency);
+			const delayInBeats = timeProcessor.toBeatTime(baseLatency * playbackRate);
 
 			tickSchedule = notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
 		},

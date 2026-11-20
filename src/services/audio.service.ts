@@ -104,9 +104,13 @@ export class AudioSample {
 		this.#source = undefined;
 	}
 	trigger() {
-		this.pause();
-		this.setCurrentTime(0);
-		this.play();
+		if (!this.#buffer) return;
+
+		const source = this.#context.createBufferSource();
+		source.buffer = this.#buffer;
+		source.playbackRate.value = this.playbackRate;
+		source.connect(this.#gainNode);
+		source.start();
 	}
 
 	isBufferLoaded(): boolean {
