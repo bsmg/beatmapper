@@ -3,9 +3,10 @@ import type { IWrapGridObject } from "bsmap";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import type { Vector3Tuple } from "three";
 
+import { LANE_ROTATION_OFFSET } from "$/components/scene/constants";
 import type { ObjectResolverOptions } from "$/components/scene/helpers";
 import { useAppSelector } from "$/store/hooks";
-import { selectHighestPrecision, selectRotationLane } from "$/store/selectors";
+import { selectRotationLane } from "$/store/selectors";
 import { convertDegreesToRadians, normalizeAngle } from "$/utils";
 import { useVisualizationContext } from "./context";
 import VisualizationMover from "./mover";
@@ -20,22 +21,20 @@ interface Props<T extends IWrapGridObject, Id extends EntityId> {
 function VisualizationForGridObjects<T extends IWrapGridObject, Id extends EntityId>({ objects, resolveId, resolvePosition, resolveColor, children }: Props<T, Id>) {
 	const { cursorPosition, timescale, beatDepth } = useVisualizationContext();
 
-	const highestPrecision = useAppSelector(selectHighestPrecision);
 	const rotationLane = useAppSelector(selectRotationLane);
 
 	const zPosition = useMemo(() => cursorPosition * beatDepth, [cursorPosition, beatDepth]);
-	const adjustment = useMemo(() => beatDepth * highestPrecision, [beatDepth, highestPrecision]);
 
 	const lanes = useMemo(() => Array.from(Map.groupBy(objects, (obj) => normalizeAngle(obj.laneRotation))), [objects]);
 
 	return lanes.map(([yaw, objects]) => {
 		return (
-			<group key={`lane-${yaw}`} rotation-y={-convertDegreesToRadians(yaw - rotationLane)}>
+			<group key={`lane-${yaw}`} position-z={LANE_ROTATION_OFFSET} rotation-y={-convertDegreesToRadians(yaw - rotationLane)}>
 				<VisualizationMover>
 					{objects.map((data) => {
 						const id = resolveId(data);
-						const position = resolvePosition(data, { timescale, beatDepth });
-						const noteZPosition = Number(zPosition) + position[2] - adjustment;
+						const position = resolvePosition(data, { timescale, beatDepth, zOffset: LANE_ROTATION_OFFSET });
+						const noteZPosition = Number(zPosition) + position[2] + LANE_ROTATION_OFFSET;
 						return children(data, id, {
 							data,
 							position,
