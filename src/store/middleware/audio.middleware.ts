@@ -21,7 +21,7 @@ import {
 	updateTickVolume,
 } from "$/store/actions";
 import { selectActiveSongId, selectActiveView } from "$/store/helpers/route.helpers";
-import { selectAllColorNotes, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTimeProcessor } from "$/store/selectors";
+import { selectAllChains, selectAllColorNotes, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTimeProcessor } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { View } from "$/types";
 
@@ -84,13 +84,21 @@ export default function createAudioMiddleware({ songSample, tickSample, extra }:
 		effect: (_, api) => {
 			const state = api.getState();
 			const playbackRate = selectPlaybackRate(state);
-			const notes = selectAllColorNotes(state);
 			const songId = selectActiveSongId(api.extra.getRouter());
 			const timeProcessor = selectTimeProcessor(state, songId);
 			const { baseLatency } = api.extra.getAudioContext();
 			const delayInBeats = timeProcessor.toBeatTime(baseLatency * playbackRate);
 
-			tickSchedule = notes.map((note) => note.time - delayInBeats).sort((a, b) => a - b);
+			const noteTicks = selectAllColorNotes(state).map((note) => note.time);
+			const chainTicks = selectAllChains(state).flatMap((chain) => {
+				const { time, tailTime, sliceCount, squish = 1 } = chain;
+				if (sliceCount <= 1) return [time];
+				const span = (tailTime - time) * squish;
+				const step = span / (sliceCount - 1);
+				return Array.from({ length: sliceCount }, (_, i) => time + step * i);
+			});
+
+			tickSchedule = [...noteTicks, ...chainTicks].map((note) => note - delayInBeats).sort((a, b) => a - b);
 		},
 	});
 	instance.startListening({
