@@ -43,6 +43,9 @@ export default function createAudioMiddleware({ songSample, tickSample, extra }:
 			const filestore = api.extra.getFilestore();
 			const songFile = await filestore.loadSongFile(action.meta.arg.songId);
 			songSample.loadFromFile(songFile);
+			songSample.changePlaybackRate(selectPlaybackRate(api.getState()));
+			songSample.changeVolume(selectSongVolume(api.getState()));
+			tickSample.changeVolume(selectTickVolume(api.getState()));
 		},
 	});
 	instance.startListening({
