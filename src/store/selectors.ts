@@ -33,7 +33,9 @@ export {
 } from "./features/lightshow.slice";
 export { selectAnimateEnvironment, selectAnimateTrack, selectCursorPosition, selectDuration, selectHighestPrecision, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectTrackScale, selectWindowSize } from "./features/navigation.slice";
 export {
+	selectAllArcs,
 	selectAllBombNotes,
+	selectAllChains,
 	selectAllColorNotes,
 	selectAllObstacles,
 	selectAllSelectedBombNotes,
