@@ -15,7 +15,7 @@ import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { resolveSliderId } from "$/helpers/sliders.helpers";
 import { deselectArc, deselectBombNote, deselectChain, deselectColorNote, deselectObstacle, removeArc, removeBombNote, removeChain, removeColorNote, removeObstacle, selectArc, selectBombNote, selectChain, selectColorNote, selectObstacle, updateArc, updateChain, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleArcs, selectAllVisibleBombs, selectAllVisibleChains, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectNotesEditorType, selectSnap } from "$/store/selectors";
+import { selectAllVisibleArcs, selectAllVisibleBombs, selectAllVisibleChains, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectNotesEditorType, selectRenderScale, selectSnap } from "$/store/selectors";
 import { type App, ColorSchemeKey, ObjectType } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -38,6 +38,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const renderScale = useAppSelector(selectRenderScale);
 	const selectedType = useAppSelector(selectNotesEditorType);
 	const angleOffsetStep = useAppSelector(selectNotesEditorAngleOffsetStep);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
@@ -49,7 +50,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 	const bombs = useAppSelector((state) => selectAllVisibleBombs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const obstacles = useAppSelector((state) => selectAllVisibleObstacles(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 	const arcs = useAppSelector((state) => selectAllVisibleArcs(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
-	const chains = useAppSelector((state) => selectAllVisibleChains(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: interactive }));
+	const chains = useAppSelector((state) => selectAllVisibleChains(state, sid, { timescale, beatDepth, surfaceDepth, includeSpaceBeforeGrid: true }));
 
 	const handleUpdateColor = useCallback(
 		(data: App.IWrapEditorObject<IWrapColorNote>, id: EntityId, color: NoteColor) => {
@@ -325,7 +326,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 				</Visualization.ForGridObjects>
 				<Visualization.ForGridObjects objects={arcs} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
 					{(data, id, props) => (
-						<Arc interactive={interactive} key={id} {...props} timescale={timescale} beatDepth={beatDepth}>
+						<Arc key={id} time={cursorPositionInBeats - data.time} segments={Math.round(64 * renderScale)} interactive={interactive} {...props} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth}>
 							{({ HeadControlPoint, TailControlPoint }) => (
 								<Fragment>
 									{interactive && (
@@ -381,7 +382,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 				</Visualization.ForGridObjects>
 				<Visualization.ForGridObjects objects={chains} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
 					{(data, id, props) => (
-						<Chain interactive={interactive} key={id} {...props} timescale={timescale} beatDepth={beatDepth}>
+						<Chain key={id} time={cursorPositionInBeats - data.time} interactive={interactive} {...props} timescale={timescale} beatDepth={beatDepth}>
 							{({ TailControlPoint }) => (
 								<Fragment>
 									{interactive && (

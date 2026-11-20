@@ -92,7 +92,7 @@ function createVisibleObjectsSelector<T extends IWrapBaseObject>(selector: <Stat
 			const cursor = timescale(cursorPositionInBeats ?? 0);
 			return objects.filter((x) => {
 				const time = timescale(x.time);
-				const numOfBeatsBeforeGrid = timescale(("duration" in x && typeof x.duration === "number" ? x.duration : 0) + 0.01);
+				const numOfBeatsBeforeGrid = timescale(("duration" in x && typeof x.duration === "number" ? x.duration : "tailTime" in x && typeof x.tailTime === "number" ? x.tailTime - x.time : 0) + 0.01);
 				const [closeLimit, farLimit] = calculateVisibleRange(cursor, numOfBeatsInRange, includeSpaceBeforeGrid ? numOfBeatsBeforeGrid + numOfBeatsInRange : numOfBeatsBeforeGrid);
 				return time > closeLimit && time < farLimit;
 			});
