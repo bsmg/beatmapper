@@ -27,6 +27,7 @@ import {
 	updatePacerWait,
 	updatePlaybackRate,
 	updateRenderScale,
+	updateRotationStep,
 	updateSnap,
 	updateSongVolume,
 	updateTickType,
@@ -60,6 +61,7 @@ import {
 	selectPacerWait,
 	selectPlaybackRate,
 	selectRenderScale,
+	selectRotationStep,
 	selectSnap,
 	selectSongById,
 	selectSongIds,
@@ -196,6 +198,10 @@ export function createAppEnhancers() {
 			"controls.precision": {
 				selectValue: selectHighestPrecision,
 				hydrateValue: updateHighestPrecision,
+			},
+			"controls.rotation": {
+				selectValue: selectRotationStep,
+				hydrateValue: updateRotationStep,
 			},
 			"advanced.wait": {
 				selectValue: selectPacerWait,

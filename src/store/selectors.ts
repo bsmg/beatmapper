@@ -31,7 +31,23 @@ export {
 	selectEventsEditorWindowLock,
 	selectEventsEditorZoomLevel,
 } from "./features/lightshow.slice";
-export { selectAnimateEnvironment, selectAnimateTrack, selectCursorPosition, selectDuration, selectHighestPrecision, selectPlaybackRate, selectPlaying, selectRotationLane, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectTrackScale, selectWindowSize } from "./features/navigation.slice";
+export {
+	selectAnimateEnvironment,
+	selectAnimateTrack,
+	selectCursorPosition,
+	selectDuration,
+	selectHighestPrecision,
+	selectPlaybackRate,
+	selectPlaying,
+	selectRotationLane,
+	selectRotationStep,
+	selectSnap,
+	selectSongVolume,
+	selectTickType,
+	selectTickVolume,
+	selectTrackScale,
+	selectWindowSize,
+} from "./features/navigation.slice";
 export {
 	selectAllArcs,
 	selectAllBombNotes,

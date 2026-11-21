@@ -11,6 +11,7 @@ const initialState = {
 	rotationLane: 0,
 	duration: null as number | null,
 	snapTo: 0.5,
+	rotationStep: 15,
 	highestPrecision: 0.03125, // 1/32
 	windowSize: 32,
 	beatDepth: 9,
@@ -31,6 +32,7 @@ const slice = createSlice({
 		selectRotationLane: (state) => state.rotationLane,
 		selectDuration: (state) => state.duration,
 		selectSnap: (state) => state.snapTo,
+		selectRotationStep: (state) => state.rotationStep,
 		selectHighestPrecision: (state) => state.highestPrecision,
 		selectWindowSize: (state) => state.windowSize,
 		selectTrackScale: (state) => state.beatDepth,
@@ -60,6 +62,9 @@ const slice = createSlice({
 			}),
 			updateSnap: api.reducer<number>((state, action) => {
 				return { ...state, snapTo: action.payload };
+			}),
+			updateRotationStep: api.reducer<number>((state, action) => {
+				return { ...state, rotationStep: action.payload };
 			}),
 			updateHighestPrecision: api.reducer<number>((state, action) => {
 				return { ...state, highestPrecision: action.payload };
@@ -98,9 +103,11 @@ const slice = createSlice({
 	},
 });
 
-export const { selectPlaying, selectCursorPosition, selectRotationLane, selectDuration, selectSnap, selectHighestPrecision, selectWindowSize, selectTrackScale, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(slice.selectSlice);
+export const { selectPlaying, selectCursorPosition, selectRotationLane, selectDuration, selectSnap, selectRotationStep, selectHighestPrecision, selectWindowSize, selectTrackScale, selectAnimateTrack, selectAnimateEnvironment, selectPlaybackRate, selectSongVolume, selectTickVolume, selectTickType } = slice.getSelectors(
+	slice.selectSlice,
+);
 
-export const { updateCursorPosition, updateRotationLane, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateHighestPrecision, updateWindowSize } = slice.actions;
+export const { updateCursorPosition, updateRotationLane, startPlayback, pausePlayback, stopPlayback, updateTrackScale, updatePlaybackRate, updateSongVolume, updateTickVolume, updateTickType, updateSnap, updateRotationStep, updateHighestPrecision, updateWindowSize } = slice.actions;
 
 export const tick = createAction("tick", (args: { cursorPosition: number; lastBeat: number; currentBeat: number }) => {
 	return { payload: { ...args } };
@@ -130,15 +137,17 @@ export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThu
 
 export const incrementRotationLane = createThunk("incrementRotationLane", (args: { limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
 	const currentRotation = selectRotationLane(api.getState());
+	const rotationStep = selectRotationStep(api.getState());
 	const currentSigned = currentRotation > 180 ? currentRotation - 360 : currentRotation;
-	const nextSigned = args.limit >= 180 ? currentSigned + 15 : Math.min(args.limit, currentSigned + 15);
+	const nextSigned = args.limit >= 180 ? currentSigned + rotationStep : Math.min(args.limit, currentSigned + rotationStep);
 	const nextSnap = normalizeAngle(nextSigned);
 	return api.dispatch(updateRotationLane(nextSnap));
 });
 export const decrementRotationLane = createThunk("decrementRotationLane", (args: { limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
 	const currentRotation = selectRotationLane(api.getState());
+	const rotationStep = selectRotationStep(api.getState());
 	const currentSigned = currentRotation > 180 ? currentRotation - 360 : currentRotation;
-	const nextSigned = args.limit >= 180 ? currentSigned - 15 : Math.max(-args.limit, currentSigned - 15);
+	const nextSigned = args.limit >= 180 ? currentSigned - rotationStep : Math.max(-args.limit, currentSigned - rotationStep);
 	const nextSnap = normalizeAngle(nextSigned);
 	return api.dispatch(updateRotationLane(nextSnap));
 });

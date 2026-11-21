@@ -2,9 +2,9 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { toPascalCase } from "@std/text/to-pascal-case";
 
 import { Field, FieldInput, RadioGroup } from "$/components/ui/compositions";
-import { updateHighestPrecision, updateUserObstacleExtendedLanes, updateUserObstaclePlacementMode, updateWindowSize } from "$/store/actions";
+import { updateHighestPrecision, updateRotationStep, updateUserObstacleExtendedLanes, updateUserObstaclePlacementMode, updateWindowSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectHighestPrecision, selectUserObstacleExtendedLanes, selectUserObstaclePlacementMode, selectWindowSize } from "$/store/selectors";
+import { selectHighestPrecision, selectRotationStep, selectUserObstacleExtendedLanes, selectUserObstaclePlacementMode, selectWindowSize } from "$/store/selectors";
 import { ObstaclePlacementMode } from "$/types";
 import { Stack, Wrap } from "$:styled-system/jsx";
 
@@ -19,6 +19,7 @@ function AppControlsSettings() {
 	const obstacleExtendedLanes = useAppSelector(selectUserObstacleExtendedLanes);
 	const windowSize = useAppSelector(selectWindowSize);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const rotationSnap = useAppSelector(selectRotationStep);
 
 	return (
 		<Stack gap={4}>
@@ -28,6 +29,9 @@ function AppControlsSettings() {
 				</Field>
 				<Field label="Highest Precision" helperText="The smallest allowable beat subdivision to use for navigation and placement controls.">
 					<FieldInput type="number" min={0.015625} max={1} step="any" value={highestPrecision} onValueChange={(x) => dispatch(updateHighestPrecision(x.valueAsNumber))} />
+				</Field>
+				<Field label="Rotation Step" helperText="The step size used when rotating the active placement lane.">
+					<FieldInput type="number" min={0} max={45} step={1} value={rotationSnap} onValueChange={(x) => dispatch(updateRotationStep(x.valueAsNumber))} />
 				</Field>
 				<Field label="Obstacle Placement Mode" helperText="Determines the behavior of how obstacles are placed along the grid. [Learn more](/docs/manual/notes#obstacle-placement-modes)">
 					<RadioGroup collection={OBSTACLE_PLACEMENT_MODE_COLLECTION} value={obstaclePlacementMode} onValueChange={(x) => dispatch(updateUserObstaclePlacementMode(x.value as ObstaclePlacementMode))} />

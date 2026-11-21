@@ -65,6 +65,7 @@ export {
 	updateHighestPrecision,
 	updatePlaybackRate,
 	updateRotationLane,
+	updateRotationStep,
 	updateSnap,
 	updateSongVolume,
 	updateTickType,
