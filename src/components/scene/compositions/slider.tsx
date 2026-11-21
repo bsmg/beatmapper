@@ -139,7 +139,7 @@ export function Arc({ data, time, timescale, beatDepth, interactive, segments, s
 					<Fragment>
 						<ArcCurve
 							path={curvePath}
-							segments={Math.max(segments, Math.round(segments * duration))}
+							segments={Math.max(1, segments, Math.round(segments * duration))}
 							color={color}
 							selected={data.selected}
 							progress={duration > 0 ? Math.min(1, Math.max(0, time / duration)) : 0}

@@ -68,13 +68,11 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 			const tailTime = headTime + (ctx.duration ?? 0);
 			const tailNote = notes.find((x) => x.time === tailTime && x.posX === ctx.cellOverAt?.colIndex && x.posY === ctx.cellOverAt?.rowIndex);
 
-			const data = createArcFromMouseEvent(ctx, mode, grid, {
+			return createArcFromMouseEvent(ctx, mode, grid, {
 				color: headNote?.color ?? (selectedColor === ObjectColor.LEFT ? 0 : 1),
 				direction: headNote?.direction ?? NoteDirection.ANY,
 				tailDirection: tailNote?.direction ?? selectedDirection,
 			});
-
-			return data;
 		},
 		[notes, selectedColor, selectedDirection],
 	);
@@ -84,13 +82,14 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 			const headTime = ctx.anchorBeat ?? 0;
 			const headNote = notes.find((x) => x.time === headTime && x.posX === ctx.cellDownAt?.colIndex && x.posY === ctx.cellDownAt?.rowIndex);
 
-			const data = createChainFromMouseEvent(ctx, mode, grid, {
-				color: headNote?.color ?? (selectedColor === ObjectColor.LEFT ? 0 : 1),
-				direction: headNote?.direction ?? NoteDirection.ANY,
+			if (!headNote) return null;
+
+			return createChainFromMouseEvent(ctx, mode, grid, {
+				color: headNote.color,
+				direction: headNote.direction,
 			});
-			return data;
 		},
-		[notes, selectedColor],
+		[notes],
 	);
 
 	const service = useMachine(PlacementGrid.machine, {
@@ -162,39 +161,37 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 			<Switch>
 				<Match when={!selectionMode && activeType.current === ObjectType.NOTE}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createColorNoteFromMouseEvent(ctx, mode, grid, { direction: Math.round(ctx.direction ?? selectedDirection) })}>
-						{(data) => activeType.current && <ColorNote data={data} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(selectedColor === ObjectColor.LEFT ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
+						{(data) => <ColorNote data={data} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(selectedColor === ObjectColor.LEFT ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && activeType.current === ObjectType.BOMB}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => createBombNoteFromMouseEvent(ctx, mode, grid)}>
-						{(data) => activeType.current && <BombNote data={data} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(activeType.current, { colorScheme })} />}
+						{(data) => <BombNote data={data} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(ObjectType.BOMB, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && activeType.current === ObjectType.OBSTACLE}>
 					<PlacementGrid.TentativeObject mode={obstaclePlacementMode} createObject={(ctx, mode, grid) => createObstacleFromMouseEvent(ctx, mode, grid, { duration: Math.max(ctx.duration ?? 0, highestPrecision) })}>
-						{(data) => activeType.current && <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth })} color={resolveColorForItem(activeType.current, { colorScheme })} />}
+						{(data) => <Obstacle data={data} beatDepth={beatDepth} position={resolvePositionForObstacle(data, { beatDepth })} color={resolveColorForItem(ObjectType.OBSTACLE, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && activeType.current === ObjectType.ARC}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => handleCreateArc(ctx, mode, grid)}>
-						{(data) =>
-							activeType.current && (
-								<Arc
-									data={data}
-									time={data.tailTime}
-									segments={Math.round(64 * renderScale)}
-									beatDepth={beatDepth}
-									surfaceDepth={surfaceDepth}
-									position={resolvePositionForGridObject(data, { beatDepth })}
-									color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}
-								/>
-							)
-						}
+						{(data) => (
+							<Arc
+								data={data}
+								time={data.tailTime}
+								segments={Math.round(64 * renderScale)}
+								beatDepth={beatDepth}
+								surfaceDepth={surfaceDepth}
+								position={resolvePositionForGridObject(data, { beatDepth })}
+								color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}
+							/>
+						)}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && activeType.current === ObjectType.CHAIN}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => handleCreateChain(ctx, mode, grid)}>
-						{(data) => activeType.current && <Chain data={data} time={data.tailTime} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
+						{(data) => <Chain data={data} time={data.tailTime} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 			</Switch>
