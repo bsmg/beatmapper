@@ -23,7 +23,7 @@ const Wrapper = styled("div", {
 		height: "100%",
 		position: "absolute",
 		borderRadius: "full",
-		zIndex: 1,
+		zIndex: { base: 1, _hover: 2 },
 		transition: "unset",
 	}),
 });
