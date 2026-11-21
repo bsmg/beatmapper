@@ -11,4 +11,3 @@
 - New controls are available for in-place modification of objects based on common workflows from other editors:
 	- You can now hover over a note and press `ALT+W/S/A/D/F` to update the direction of the note in-place. This also supports the quality-of-life shortcuts used by other editors for angled dot notes as well as automatically resetting angle offset when the direction is updated.
 	- The behavior of `ALT+SCROLL` has been changed to modify cut direction for color notes, and `ALT+SHIFT+SCROLL` is the new shortcut for angle offset. This change should hopefully create more alignment with control schemes from other editors.
-	- You can now change the step size used for angle offset modification via a new dedicated setting in the Controls tab.

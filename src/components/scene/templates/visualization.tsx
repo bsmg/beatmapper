@@ -14,7 +14,7 @@ import { resolveNoteId } from "$/helpers/notes.helpers";
 import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { deselectBombNote, deselectColorNote, deselectObstacle, removeBombNote, removeColorNote, removeObstacle, selectBombNote, selectColorNote, selectObstacle, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorAngleOffsetStep, selectSnap } from "$/store/selectors";
+import { selectAllVisibleBombs, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectSnap } from "$/store/selectors";
 import { type App, ObjectTool } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -37,7 +37,6 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
-	const angleOffsetStep = useAppSelector(selectNotesEditorAngleOffsetStep);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
@@ -84,7 +83,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 		},
 		onItemModifyWheel: (data, id, delta, modifierKey) => {
 			if (modifierKey) {
-				const step = angleOffsetStep / delta;
+				const step = 15 / delta;
 				if (Object.values<number>(NoteDirection).includes(data.direction)) {
 					return dispatch(updateColorNote({ id, changes: { angleOffset: (data.angleOffset ?? 0) + step } }));
 				}

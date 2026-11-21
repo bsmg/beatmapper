@@ -21,7 +21,6 @@ import {
 	updateEventsEditorZoomLevel,
 	updateHighestPrecision,
 	updateNew,
-	updateNotesEditorAngleOffsetStep,
 	updateNotesEditorDirection,
 	updateNotesEditorTool,
 	updateObstaclePlacementMode,
@@ -54,7 +53,6 @@ import {
 	selectGridPresetById,
 	selectHighestPrecision,
 	selectNew,
-	selectNotesEditorAngleOffsetStep,
 	selectNotesEditorDirection,
 	selectNotesEditorTool,
 	selectPacerWait,
@@ -192,10 +190,6 @@ export function createAppEnhancers() {
 			"controls.precision": {
 				selectValue: selectHighestPrecision,
 				hydrateValue: updateHighestPrecision,
-			},
-			"controls.angleOffset": {
-				selectValue: selectNotesEditorAngleOffsetStep,
-				hydrateValue: updateNotesEditorAngleOffsetStep,
 			},
 			"advanced.wait": {
 				selectValue: selectPacerWait,
