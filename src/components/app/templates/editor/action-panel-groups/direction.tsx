@@ -9,8 +9,8 @@ import { ActionPanelGroup } from "$/components/app/layouts";
 import { Button } from "$/components/ui/compositions";
 import { updateNotesEditorDirection } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectNotesEditorDirection, selectNotesEditorTool } from "$/store/selectors";
-import { ObjectTool } from "$/types";
+import { selectNotesEditorDirection, selectNotesEditorType } from "$/store/selectors";
+import { ObjectType } from "$/types";
 import { Grid } from "$:styled-system/jsx";
 
 function NoteDirectionActionPanelGroup() {
@@ -18,9 +18,9 @@ function NoteDirectionActionPanelGroup() {
 
 	const dispatch = useAppDispatch();
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
-	const selectedNoteTool = useAppSelector(selectNotesEditorTool);
+	const selectedNoteType = useAppSelector(selectNotesEditorType);
 
-	const isDisabled = useMemo(() => selectedNoteTool !== ObjectTool.LEFT_NOTE && selectedNoteTool !== ObjectTool.RIGHT_NOTE, [selectedNoteTool]);
+	const isDisabled = useMemo(() => selectedNoteType === ObjectType.BOMB || selectedNoteType === ObjectType.OBSTACLE, [selectedNoteType]);
 
 	const hotkeys = useHotkeyStore();
 

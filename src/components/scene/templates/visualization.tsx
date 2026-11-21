@@ -16,7 +16,7 @@ import { resolveSliderId } from "$/helpers/sliders.helpers";
 import { deselectArc, deselectBombNote, deselectChain, deselectColorNote, deselectObstacle, removeArc, removeBombNote, removeChain, removeColorNote, removeObstacle, selectArc, selectBombNote, selectChain, selectColorNote, selectObstacle, updateArc, updateChain, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectAllVisibleArcs, selectAllVisibleBombs, selectAllVisibleChains, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectSnap } from "$/store/selectors";
-import { type App, ObjectTool } from "$/types";
+import { type App, ColorSchemeKey, ObjectType } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
 import EditorPlacementGrid from "./placement-grid";
@@ -230,7 +230,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 		<Visualization.Root position-z={-SONG_OFFSET} {...rest} cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
 			<Visualization.Mover>
 				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
-				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
 					{(data, id, props) => (
 						<ColorNote
 							key={id}
@@ -258,7 +258,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectTool.BOMB_NOTE, { colorScheme })}>
+				<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectType.BOMB, { colorScheme })}>
 					{(data, id, props) => (
 						<BombNote
 							key={id}
@@ -285,7 +285,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectTool.OBSTACLE, { colorScheme })}>
+				<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectType.OBSTACLE, { colorScheme })}>
 					{(data, id, props) => (
 						<Obstacle
 							key={id}
@@ -314,7 +314,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 						/>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={arcs} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+				<Visualization.ForGridObjects objects={arcs} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
 					{(data, id, props) => (
 						<Arc interactive={interactive} key={id} {...props} timescale={timescale} beatDepth={beatDepth}>
 							{({ HeadControlPoint, TailControlPoint }) => (
@@ -370,7 +370,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 						</Arc>
 					)}
 				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={chains} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(Object.values(ObjectTool)[data.color], { colorScheme })}>
+				<Visualization.ForGridObjects objects={chains} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
 					{(data, id, props) => (
 						<Chain interactive={interactive} key={id} {...props} timescale={timescale} beatDepth={beatDepth}>
 							{({ TailControlPoint }) => (
