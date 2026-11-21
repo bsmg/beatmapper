@@ -18,7 +18,7 @@ import { selectCursorPosition, selectDuration, selectHighestPrecision, selectWin
 import { selectAllBombNotes, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
 import { selectBpm, selectEditorOffset, selectEventTracksForEnvironment, selectSongById } from "./songs.slice";
 import { selectTimescale } from "./timeline.slice";
-import { selectUserObstaclePlacementMode } from "./user.slice";
+import { selectUserObstacleExtendedLanes, selectUserObstaclePlacementMode } from "./user.slice";
 
 export const selectTimeProcessor = createDraftSafeSelector([selectBpm, selectTimescale], (bpm, timeline) => {
 	return new TimeProcessor(bpm, timeline, 0);
@@ -54,10 +54,10 @@ export const selectObstaclePlacementMode = createAppSelector(selectSongById, sel
 export const selectNoteGridSize = createAppSelector(selectSongById, (song) => {
 	return getGridSize(song);
 });
-export const selectObstacleGridSize = createAppSelector(selectSongById, selectObstaclePlacementMode, (song, obstaclePlacementMode) => {
-	const visualGridSize = { ...DEFAULT_GRID, numCols: 8, numRows: 5, rowOffset: -0.5 };
-	if (obstaclePlacementMode === ObstaclePlacementMode.VISUAL) return getGridSize(song, visualGridSize);
-	return getGridSize(song);
+export const selectObstacleGridSize = createAppSelector(selectSongById, selectObstaclePlacementMode, selectUserObstacleExtendedLanes, (song, obstaclePlacementMode, extendedLanes) => {
+	const extendedGridSize = { ...DEFAULT_GRID, numCols: DEFAULT_GRID.numCols + extendedLanes * 2 };
+	if (obstaclePlacementMode === ObstaclePlacementMode.VISUAL) return getGridSize(song, { ...extendedGridSize, numRows: 5, rowOffset: -0.5 });
+	return getGridSize(song, { ...extendedGridSize });
 });
 
 export const selectGridSize = createAppSelector(selectNotesEditorTool, selectNoteGridSize, selectObstacleGridSize, (tool, noteGrid, obstacleGrid) => {

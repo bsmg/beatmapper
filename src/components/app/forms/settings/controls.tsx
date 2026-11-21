@@ -2,9 +2,9 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { toPascalCase } from "@std/text/to-pascal-case";
 
 import { Field, FieldInput, RadioGroup } from "$/components/ui/compositions";
-import { updateHighestPrecision, updateObstaclePlacementMode, updateWindowSize } from "$/store/actions";
+import { updateHighestPrecision, updateUserObstacleExtendedLanes, updateUserObstaclePlacementMode, updateWindowSize } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectHighestPrecision, selectUserObstaclePlacementMode, selectWindowSize } from "$/store/selectors";
+import { selectHighestPrecision, selectUserObstacleExtendedLanes, selectUserObstaclePlacementMode, selectWindowSize } from "$/store/selectors";
 import { ObstaclePlacementMode } from "$/types";
 import { Stack, Wrap } from "$:styled-system/jsx";
 
@@ -16,6 +16,7 @@ const OBSTACLE_PLACEMENT_MODE_COLLECTION = createListCollection({
 function AppControlsSettings() {
 	const dispatch = useAppDispatch();
 	const obstaclePlacementMode = useAppSelector(selectUserObstaclePlacementMode);
+	const obstacleExtendedLanes = useAppSelector(selectUserObstacleExtendedLanes);
 	const windowSize = useAppSelector(selectWindowSize);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 
@@ -29,7 +30,10 @@ function AppControlsSettings() {
 					<FieldInput type="number" min={0.015625} max={1} step="any" value={highestPrecision} onValueChange={(x) => dispatch(updateHighestPrecision(x.valueAsNumber))} />
 				</Field>
 				<Field label="Obstacle Placement Mode" helperText="Determines the behavior of how obstacles are placed along the grid. [Learn more](/docs/manual/notes#obstacle-placement-modes)">
-					<RadioGroup collection={OBSTACLE_PLACEMENT_MODE_COLLECTION} value={obstaclePlacementMode} onValueChange={(x) => dispatch(updateObstaclePlacementMode(x.value as ObstaclePlacementMode))} />
+					<RadioGroup collection={OBSTACLE_PLACEMENT_MODE_COLLECTION} value={obstaclePlacementMode} onValueChange={(x) => dispatch(updateUserObstaclePlacementMode(x.value as ObstaclePlacementMode))} />
+				</Field>
+				<Field label="Obstacle Extended Lanes" helperText="Extends the number of columns for vanilla-compatible obstacle placements.">
+					<FieldInput type="number" min={0} step={1} value={obstacleExtendedLanes} onValueChange={(x) => dispatch(updateUserObstacleExtendedLanes(x.valueAsNumber))} />
 				</Field>
 			</Wrap>
 		</Stack>

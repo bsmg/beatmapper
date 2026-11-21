@@ -23,7 +23,6 @@ import {
 	updateNew,
 	updateNotesEditorDirection,
 	updateNotesEditorTool,
-	updateObstaclePlacementMode,
 	updatePacerWait,
 	updatePlaybackRate,
 	updateRenderScale,
@@ -33,6 +32,7 @@ import {
 	updateTickVolume,
 	updateTrackScale,
 	updateUsername,
+	updateUserObstaclePlacementMode,
 	updateWindowSize,
 	upsertGridPresets,
 	upsertSongs,
@@ -179,9 +179,13 @@ export function createAppEnhancers() {
 				selectValue: selectBloomEnabled,
 				hydrateValue: updateBloomEnabled,
 			},
-			"controls.obstacles": createEnumerableStorageObserver(ObstaclePlacementMode, {
+			"controls.obstacles.mode": createEnumerableStorageObserver(ObstaclePlacementMode, {
 				selectValue: selectUserObstaclePlacementMode,
-				hydrateValue: updateObstaclePlacementMode,
+				hydrateValue: updateUserObstaclePlacementMode,
+			}),
+			"controls.obstacles.lanes": createEnumerableStorageObserver(ObstaclePlacementMode, {
+				selectValue: selectUserObstaclePlacementMode,
+				hydrateValue: updateUserObstaclePlacementMode,
 			}),
 			"controls.window": {
 				selectValue: selectWindowSize,

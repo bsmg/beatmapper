@@ -100,5 +100,5 @@ export {
 	selectSongMetadata,
 } from "./features/songs.slice";
 export { selectTimescale } from "./features/timeline.slice";
-export { selectAnnouncements, selectBloomEnabled, selectNew, selectPacerWait, selectRenderScale, selectSurfaceDepth, selectUsername, selectUserObstaclePlacementMode } from "./features/user.slice";
+export { selectAnnouncements, selectBloomEnabled, selectNew, selectPacerWait, selectRenderScale, selectSurfaceDepth, selectUsername, selectUserObstacleExtendedLanes, selectUserObstaclePlacementMode } from "./features/user.slice";
 export { selectWaveformData } from "./features/visualizer.slice";

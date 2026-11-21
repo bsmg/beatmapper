@@ -104,6 +104,6 @@ export {
 	togglePlayback,
 } from "./features/playback.thunks";
 export { addBeatmap, addColorScheme, addSong, addSongFromFile, copyBeatmap, removeBeatmap, removeColorScheme, removeSong, updateBeatmap, updateColorScheme, updateCustomColors, updateGridSize, updateModuleEnabled, updateSelectedBeatmap, updateSong, upsertSongs } from "./features/songs.slice";
-export { updateAnnouncements, updateBloomEnabled, updateNew, updateObstaclePlacementMode, updatePacerWait, updateRenderScale, updateUsername } from "./features/user.slice";
+export { updateAnnouncements, updateBloomEnabled, updateNew, updatePacerWait, updateRenderScale, updateUsername, updateUserObstacleExtendedLanes, updateUserObstaclePlacementMode } from "./features/user.slice";
 export { saveMapFiles } from "./middleware/backup.middleware";
 export { downloadMapFiles } from "./middleware/packaging.middleware";

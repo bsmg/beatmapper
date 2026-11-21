@@ -9,6 +9,7 @@ const initialState = {
 	renderScale: 1,
 	isBloomEnabled: true,
 	obstaclePlacementMode: ObstaclePlacementMode.LEGACY as ObstaclePlacementMode,
+	obstacleExtendedLanes: 0,
 	pacerWaitMs: 50,
 };
 
@@ -22,6 +23,7 @@ const slice = createSlice({
 		selectRenderScale: (state) => state.renderScale,
 		selectBloomEnabled: (state) => state.isBloomEnabled,
 		selectObstaclePlacementMode: (state) => state.obstaclePlacementMode,
+		selectObstacleExtendedLanes: (state) => state.obstacleExtendedLanes,
 		selectPacerWait: (state) => state.pacerWaitMs,
 	},
 	reducers: (api) => {
@@ -44,6 +46,9 @@ const slice = createSlice({
 			updateObstaclePlacementMode: api.reducer<ObstaclePlacementMode>((state, action) => {
 				return { ...state, obstaclePlacementMode: action.payload };
 			}),
+			updateObstacleExtendedLanes: api.reducer<number>((state, action) => {
+				return { ...state, obstacleExtendedLanes: action.payload };
+			}),
 			updatePacerWait: api.reducer<number>((state, action) => {
 				return { ...state, pacerWaitMs: action.payload };
 			}),
@@ -54,12 +59,12 @@ const slice = createSlice({
 	},
 });
 
-export const { selectNew, selectAnnouncements, selectUsername, selectRenderScale, selectBloomEnabled, selectObstaclePlacementMode: selectUserObstaclePlacementMode, selectPacerWait } = slice.getSelectors(slice.selectSlice);
+export const { selectNew, selectAnnouncements, selectUsername, selectRenderScale, selectBloomEnabled, selectObstaclePlacementMode: selectUserObstaclePlacementMode, selectObstacleExtendedLanes: selectUserObstacleExtendedLanes, selectPacerWait } = slice.getSelectors(slice.selectSlice);
 
 export const selectSurfaceDepth = createSelector(selectRenderScale, (renderScale) => {
 	return Math.max(renderScale * 75, 25);
 });
 
-export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode, updatePacerWait } = slice.actions;
+export const { updateNew, updateAnnouncements, updateUsername, updateRenderScale, updateBloomEnabled, updateObstaclePlacementMode: updateUserObstaclePlacementMode, updateObstacleExtendedLanes: updateUserObstacleExtendedLanes, updatePacerWait } = slice.actions;
 
 export default slice;
