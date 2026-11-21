@@ -2,7 +2,7 @@ import { useHotkey, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { ArrowRightToLineIcon, FastForwardIcon, FlagIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon, UnfoldHorizontalIcon } from "lucide-react";
-import { type CSSProperties, useCallback, useMemo } from "react";
+import { type CSSProperties, useCallback, useDeferredValue, useMemo } from "react";
 import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
@@ -48,25 +48,12 @@ function EditorNavigationControls() {
 	const isLoadingSong = useAppSelector(selectLoading);
 	const snapTo = useAppSelector(selectSnap);
 	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
+	const cursorPosition = useAppSelector(selectCursorPosition);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const wait = useAppSelector(selectPacerWait);
 
-	const timeDisplayText = useAppSelector((state) => {
-		const cursorPosition = selectCursorPosition(state);
-
-		return formatCursorPosition(cursorPosition);
-	});
-	const beatDisplayText = useAppSelector((state) => {
-		const cursorPositionInBeats = selectCursorPositionInBeats(state, sid);
-
-		if (cursorPositionInBeats === null) return "--";
-
-		// When the song is playing, this number will move incredibly quickly. It's a hot blurry mess.
-		// Instead of trying to debounce rendering, let's just round the value aggressively
-		const roundedCursorPosition = isPlaying ? roundToNearest(cursorPositionInBeats, 0.5) : cursorPositionInBeats;
-
-		return formatCursorPositionInBeats(roundedCursorPosition);
-	});
+	const timeDisplayText = useDeferredValue(formatCursorPosition(cursorPosition));
+	const beatDisplayText = useDeferredValue(formatCursorPositionInBeats(isPlaying ? roundToNearest(cursorPositionInBeats, snapTo, Math.floor) : cursorPositionInBeats));
 
 	const { trigger: triggerQuickSelect } = usePrompt(
 		createQuickSelectPrompt({
