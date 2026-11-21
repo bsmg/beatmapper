@@ -1,5 +1,6 @@
 import { useHotkey, useHotkeyStore } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
+import { Layers3Icon, SplineIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
@@ -24,7 +25,7 @@ function NoteToolActionPanelGroup() {
 	const selectedColor = useAppSelector(selectNotesEditorColor);
 
 	const isOneSaber = useMemo(() => beatmap.characteristic === "OneSaber", [beatmap.characteristic]);
-	const hasColorProperty = useMemo(() => selectedType === ObjectType.NOTE, [selectedType]);
+	const hasColorProperty = useMemo(() => selectedType === ObjectType.NOTE || selectedType === ObjectType.ARC || selectedType === ObjectType.CHAIN, [selectedType]);
 
 	useEffect(() => {
 		if (isOneSaber) {
@@ -62,6 +63,8 @@ function NoteToolActionPanelGroup() {
 	useHotkey({ scopes, category, enabled, label: "Pick Color Note Tool", hotkey: "1", action: () => handleUpdateTool(ObjectType.NOTE) });
 	useHotkey({ scopes, category, enabled, label: "Pick Bomb Note Tool", hotkey: "2", action: () => handleUpdateTool(ObjectType.BOMB) });
 	useHotkey({ scopes, category, enabled, label: "Pick Obstacle Tool", hotkey: "3", action: () => handleUpdateTool(ObjectType.OBSTACLE) });
+	useHotkey({ scopes, category, enabled, label: "Pick Arc Tool", hotkey: "4", action: () => handleUpdateTool(ObjectType.ARC) });
+	useHotkey({ scopes, category, enabled, label: "Pick Chain Tool", hotkey: "5", action: () => handleUpdateTool(ObjectType.CHAIN) });
 
 	return (
 		<ActionPanelGroup.Root label="Tool">
@@ -79,6 +82,16 @@ function NoteToolActionPanelGroup() {
 				<Tooltip render={() => "Obstacle"}>
 					<Button variant="ghost" size="icon" aria-pressed={selectedType === ObjectType.OBSTACLE} unfocusOnPress onClick={() => dispatch(updateNotesEditorType(ObjectType.OBSTACLE))}>
 						<ObstacleIcon size={20} color={resolveColorForItem(ObjectType.OBSTACLE, { colorScheme })} />
+					</Button>
+				</Tooltip>
+				<Tooltip render={() => "Arc"}>
+					<Button variant="ghost" size="icon" aria-pressed={selectedType === ObjectType.ARC} unfocusOnPress onClick={() => dispatch(updateNotesEditorType(ObjectType.ARC))}>
+						<SplineIcon size={20} />
+					</Button>
+				</Tooltip>
+				<Tooltip render={() => "Chain"}>
+					<Button variant="ghost" size="icon" aria-pressed={selectedType === ObjectType.CHAIN} unfocusOnPress onClick={() => dispatch(updateNotesEditorType(ObjectType.CHAIN))}>
+						<Layers3Icon size={20} />
 					</Button>
 				</Tooltip>
 			</ActionPanelGroup.Section>

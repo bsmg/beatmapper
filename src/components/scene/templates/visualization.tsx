@@ -15,7 +15,7 @@ import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { resolveSliderId } from "$/helpers/sliders.helpers";
 import { deselectArc, deselectBombNote, deselectChain, deselectColorNote, deselectObstacle, removeArc, removeBombNote, removeChain, removeColorNote, removeObstacle, selectArc, selectBombNote, selectChain, selectColorNote, selectObstacle, updateArc, updateChain, updateColorNote, updateObstacle } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectAllVisibleArcs, selectAllVisibleBombs, selectAllVisibleChains, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectSnap } from "$/store/selectors";
+import { selectAllVisibleArcs, selectAllVisibleBombs, selectAllVisibleChains, selectAllVisibleNotes, selectAllVisibleObstacles, selectColorScheme, selectCursorPositionInBeats, selectHighestPrecision, selectNotesEditorType, selectSnap } from "$/store/selectors";
 import { type App, ColorSchemeKey, ObjectType } from "$/types";
 import { cycle, roundToNearest } from "$/utils";
 import EditorBeatMarkers from "./beat-markers";
@@ -38,6 +38,7 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 	const dispatch = useAppDispatch();
 	const snapTo = useAppSelector(selectSnap);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const selectedType = useAppSelector(selectNotesEditorType);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
 	const colorScheme = useAppSelector((state) => selectColorScheme(state, sid, bid));
 
@@ -237,15 +238,22 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 							{...props}
 							rotationOffset={rotationOverrides.get(id)}
 							onPointerOver={(e) => {
-								e.stopPropagation();
-								setHoveredId(id);
-								noteActions.handlePointerOver(e, data);
+								if (selectedType !== ObjectType.ARC && selectedType !== ObjectType.CHAIN) {
+									e.stopPropagation();
+									setHoveredId(id);
+									noteActions.handlePointerOver(e, data);
+								}
 							}}
 							onPointerOut={(e) => {
-								setHoveredId(null);
-								noteActions.handlePointerOut(e, data);
+								if (selectedType !== ObjectType.ARC && selectedType !== ObjectType.CHAIN) {
+									setHoveredId(null);
+									noteActions.handlePointerOut(e, data);
+								}
 							}}
 							onPointerDown={(e) => {
+								if (selectedType === ObjectType.ARC || selectedType === ObjectType.CHAIN) {
+									if (e.button !== 0) return noteActions.handlePointerDown(e, data);
+								}
 								if (hoveredId === id) {
 									return noteActions.handlePointerDown(e, data);
 								}

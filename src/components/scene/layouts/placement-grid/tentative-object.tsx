@@ -25,7 +25,7 @@ function TentativeObject<T, TMode extends NotePlacementMode | ObstaclePlacementM
 		if (mouseDownAt?.button !== 0) return null;
 		const isAhead = (anchorBeat ?? 0) <= (time ?? 0);
 		const tentativeTime = duration !== null && isAhead ? 0 - duration : (time ?? 0) - cursorPositionInBeats;
-		return { ...createObject({ cellDownAt, cellOverAt, direction, time: tentativeTime, duration }, mode, grid), tentative: true } as T;
+		return { ...createObject({ anchorBeat, cellDownAt, cellOverAt, direction, time: tentativeTime, duration }, mode, grid), tentative: true } as T;
 	}, [createObject, mouseDownAt, cellDownAt, cellOverAt, direction, cursorPositionInBeats, anchorBeat, time, duration, mode, grid]);
 
 	if (!data) return null;
