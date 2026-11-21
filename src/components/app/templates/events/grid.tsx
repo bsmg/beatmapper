@@ -3,7 +3,7 @@ import type { AnyFormApi } from "@tanstack/react-form";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { useMachine } from "@zag-js/react";
 import { EventType, type ITrackDefinitions } from "bsmap";
-import { type ComponentProps, memo, useCallback, useMemo, useState } from "react";
+import { type ComponentProps, type MouseEvent, memo, useCallback, useMemo, useState } from "react";
 import { boolean, record, string } from "valibot";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
@@ -30,7 +30,7 @@ import {
 	selectPacerWait,
 	selectSnap,
 } from "$/store/selectors";
-import { clamp, isObjectEmpty } from "$/utils";
+import { clamp, isModKeyPressed, isObjectEmpty } from "$/utils";
 import { Stack, Text, Wrap } from "$:styled-system/jsx";
 import BasicEventTrack from "./basic-track";
 import BoostEventTrack from "./boost-track";
@@ -56,6 +56,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 	const basicTracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const selectedBeat = useAppSelector((state) => {
 		const selectedBeat = selectEventsEditorCursor(state);
 		const offsetInBeats = -selectEditorOffsetInBeats(state, sid);
@@ -72,6 +73,13 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 	const allFilteredTracks = useMemo(() => {
 		return allTracks.filter(({ id }) => filter.includes(id.toString()));
 	}, [allTracks, filter]);
+
+	const filteredTracks = useMemo(() => {
+		return allFilteredTracks.reduce((acc: ITrackDefinitions<{ id: number }>, track) => {
+			acc[track.id] = track;
+			return acc;
+		}, {});
+	}, [allFilteredTracks]);
 
 	const trackGroups = useMemo(() => ({ ...BasicTrackGroups[environment] }), [environment]);
 
@@ -90,10 +98,6 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 			return dispatch(updateEventsEditorTrackHeight(newHeight));
 		},
 		onSelectionCommit: ({ selectionBoxInBeats }) => {
-			const filteredTracks = allFilteredTracks.reduce((acc: ITrackDefinitions<{ id: number }>, track) => {
-				acc[track.id] = track;
-				return acc;
-			}, {});
 			return dispatch(drawEventSelectionBox({ window: { startBeat, endBeat }, environment, tracks: filteredTracks, selectionBoxInBeats: selectionBoxInBeats }));
 		},
 	});
@@ -186,6 +190,26 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 
 	useHotkey({ scopes, category, label: "Open Track Visibility Prompt", enabled, hotkey: "T", action: () => triggerTrackVisibilityPrompt() });
 
+	const handlePrefixClick = useCallback(
+		(event: MouseEvent<HTMLDivElement>, index: number) => {
+			dispatch(
+				drawEventSelectionBox({
+					window: { startBeat: 0, endBeat: durationInBeats ?? 0 },
+					environment: environment,
+					tracks: filteredTracks,
+					selectionBoxInBeats: {
+						startBeat: 0,
+						endBeat: durationInBeats ?? 0,
+						startTrackIndex: index >= 0 ? index : 0,
+						endTrackIndex: index >= 0 ? index : 0,
+						withPrevious: isModKeyPressed(event.nativeEvent),
+					},
+				}),
+			);
+		},
+		[dispatch, filteredTracks, environment, durationInBeats],
+	);
+
 	return (
 		<EventGrid.Root {...api.getRootProps()} {...rest} service={service}>
 			<EventGrid.Header>
@@ -199,8 +223,8 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 			<EventGrid.Body>
 				<EventGrid.PrefixGroup onWheel={(ev) => ev.stopPropagation()}>
 					<For each={allFilteredTracks}>
-						{(track) => (
-							<EventGrid.Prefix key={track.id} {...api.getPrefixProps(track.id, environment)} data-highlighted={isTrackDisabled(track.id)}>
+						{(track, index) => (
+							<EventGrid.Prefix key={track.id} {...api.getPrefixProps(track.id, environment)} data-highlighted={isTrackDisabled(track.id)} onClick={(ev) => handlePrefixClick(ev, index)}>
 								{track.name}
 							</EventGrid.Prefix>
 						)}
