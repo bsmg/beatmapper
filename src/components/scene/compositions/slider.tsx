@@ -8,9 +8,11 @@ import { Obj, useOBJ } from "$/components/scene/atoms";
 import { resolveRotationVectorForNote, resolveTailPositionForSlider } from "$/components/scene/helpers";
 import type { App } from "$/types";
 import { lerp, lerpColor } from "$/utils";
+import { ArcCurve } from "../atoms/curve";
 
 export interface BaseSliderProps<T extends IWrapBaseSlider> {
 	data: App.IWrapEditorObject<T>;
+	time: number;
 	timescale?: (time: number) => number;
 	beatDepth: number;
 	color?: ColorRepresentation;
@@ -36,6 +38,7 @@ export interface SliderControlPointProps extends ComponentProps<"mesh"> {
 	color?: ColorRepresentation;
 	emissive?: ColorRepresentation;
 	emissiveIntensity?: number;
+	opacity?: number;
 	transparent?: boolean;
 }
 export function SliderControlPoint({ position = [0, 0, 0], rotation, offset, shape = "cone", ...rest }: SliderControlPointProps) {
@@ -54,15 +57,17 @@ export function SliderControlPoint({ position = [0, 0, 0], rotation, offset, sha
 	return (
 		<mesh layers={1} position={offsetPosition} quaternion={shape === "cone" ? quaternion : undefined} rotation-x={shape === "sphere" ? Math.PI * 0.5 : undefined} {...rest}>
 			{shape === "cone" ? <coneGeometry args={[0.375, 0.75]} /> : <sphereGeometry args={[0.375]} />}
-			<meshToonMaterial color={color} transparent={true} emissive={rest.emissive} emissiveIntensity={rest.emissiveIntensity} opacity={1} />
+			<meshToonMaterial color={color} transparent={true} emissive={rest.emissive} emissiveIntensity={rest.emissiveIntensity} opacity={rest.opacity} />
 		</mesh>
 	);
 }
 
 export interface ArcProps extends Omit<ComponentProps<typeof BaseSlider<IWrapArc>>, "children"> {
+	segments: number;
+	surfaceDepth?: number;
 	children?: (ctx: { HeadControlPoint: (props: Partial<SliderControlPointProps>) => ReactNode; TailControlPoint: (props: Partial<SliderControlPointProps>) => ReactNode }) => ReactNode;
 }
-export function Arc({ data, timescale, beatDepth, interactive, children, ...rest }: ArcProps) {
+export function Arc({ data, time, timescale, beatDepth, interactive, segments, surfaceDepth, children, ...rest }: ArcProps) {
 	const ARC_CONTROL_POINT_SCALE = 5;
 
 	const tailPosition = useMemo(() => resolveTailPositionForSlider(data, { timescale, beatDepth }), [data, timescale, beatDepth]);
@@ -76,10 +81,10 @@ export function Arc({ data, timescale, beatDepth, interactive, children, ...rest
 		return resolveRotationVectorForNote({ direction: data.tailDirection });
 	}, [data.tailDirection, tailPosition]);
 
-	const color = useMemo(() => lerpColor(rest.color?.toString() ?? null, "#ffffff", 0.25), [rest.color]);
+	const color = useMemo(() => lerpColor(rest.color?.toString() ?? null, "#ffffff", 0.625), [rest.color]);
 
 	return (
-		<BaseSlider {...rest} interactive={interactive} data={data} timescale={timescale} beatDepth={beatDepth}>
+		<BaseSlider {...rest} time={time} interactive={interactive} data={data} timescale={timescale} beatDepth={beatDepth}>
 			{(_, { tailPosition }) => {
 				const startPoint = new Vector3(0, 0, 0);
 				const endPoint = new Vector3(...tailPosition);
@@ -121,13 +126,6 @@ export function Arc({ data, timescale, beatDepth, interactive, children, ...rest
 					curvePath.add(new CubicBezierCurve3(startPoint, headControlPoint, tailControlPoint, endPoint));
 				}
 
-				const Curve = (props: { path: CurvePath<Vector3>; segments?: number }) => (
-					<mesh>
-						<tubeGeometry args={[props.path, props.segments, 0.0625]} />
-						<meshLambertMaterial attach="material" color={color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={0.75} />
-					</mesh>
-				);
-
 				const HeadControlPoint = (props: Partial<SliderControlPointProps>) => {
 					return <SliderControlPoint rotation={headRotation} offset={data.direction === NoteDirection.ANY ? -1 : 1} shape="cone" color={rest.color} transparent={rest.transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} {...props} />;
 				};
@@ -135,9 +133,22 @@ export function Arc({ data, timescale, beatDepth, interactive, children, ...rest
 					return <SliderControlPoint position={tailPosition} rotation={tailRotation} offset={data.tailDirection === NoteDirection.ANY ? 1 : -1} shape="cone" color={rest.color} transparent={rest.transparent} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} {...props} />;
 				};
 
+				const duration = Math.max(0, data.tailTime - data.time);
+
 				return (
 					<Fragment>
-						<Curve path={curvePath} />
+						<ArcCurve
+							path={curvePath}
+							segments={Math.max(segments, Math.round(segments * duration))}
+							color={color}
+							selected={data.selected}
+							progress={duration > 0 ? Math.min(1, Math.max(0, time / duration)) : 0}
+							passedOpacity={interactive ? 0.25 : 0}
+							activeOpacity={0.75}
+							startZ={startPoint.z}
+							endZ={endPoint.z}
+							surfaceDepth={surfaceDepth}
+						/>
 						{children?.({ HeadControlPoint, TailControlPoint })}
 					</Fragment>
 				);
@@ -151,14 +162,14 @@ useOBJ.preload(blockCenterUrl);
 export interface ChainProps extends Omit<ComponentProps<typeof BaseSlider<IWrapChain>>, "children"> {
 	children?: (ctx: { TailControlPoint: (props: Partial<SliderControlPointProps>) => ReactNode }) => ReactNode;
 }
-export function Chain({ data, timescale, beatDepth, interactive, children, ...rest }: ChainProps) {
+export function Chain({ data, time, timescale, beatDepth, interactive, children, ...rest }: ChainProps) {
 	const headRotation = useMemo(() => resolveRotationVectorForNote({ direction: data.direction === NoteDirection.ANY ? NoteDirection.DOWN : data.direction }), [data.direction]);
 
 	return (
-		<BaseSlider {...rest} interactive={interactive} data={data} timescale={timescale} beatDepth={beatDepth}>
+		<BaseSlider {...rest} time={time} interactive={interactive} data={data} timescale={timescale} beatDepth={beatDepth}>
 			{(_, { tailPosition }) => {
 				const count = Math.max(1, data.sliceCount);
-				const links: { id: number; position: Vector3Tuple; rotation: number }[] = [];
+				const links: { id: number; time: number; position: Vector3Tuple; rotation: number; transparent: boolean }[] = [];
 
 				const startPoint = new Vector3(0, 0, 0);
 				const endPoint = new Vector3(...tailPosition);
@@ -171,27 +182,32 @@ export function Chain({ data, timescale, beatDepth, interactive, children, ...re
 
 				const curve = new QuadraticBezierCurve(new Vector2(startPoint.x, startPoint.y), controlPoint, new Vector2(endPoint.x, endPoint.y));
 
+				const duration = Math.max(0, data.tailTime - data.time);
+
 				for (let i = 1; i < count; i++) {
-					const t = (i / (count - 1)) * data.squish;
+					const t = count > 1 ? (i / (count - 1)) * data.squish : 0;
+					const linkElapsedTime = lerp(0, duration, t);
 
 					const { x, y } = curve.getPoint(t);
 					const { x: tx, y: ty } = curve.getTangent(t);
 
 					links.push({
 						id: i,
+						time: linkElapsedTime,
 						position: [x, y, lerp(startPoint.z, endPoint.z, t)] as const,
 						rotation: Math.atan2(ty, tx) + Math.PI * 0.5,
+						transparent: time > linkElapsedTime,
 					});
 				}
 
-				const Link = (props: { id: number; position: Vector3Tuple; rotation: number }) => (
+				const Link = (props: { id: number; time: number; position: Vector3Tuple; rotation: number; transparent: boolean }) => (
 					<group key={props.id} position={props.position} rotation-z={props.rotation}>
 						<Obj path={blockCenterUrl} castShadow scale={[0.5, 0.125, 0.5]}>
-							<meshStandardMaterial attach="material" metalness={0.5} roughness={0.4} color={rest.color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : rest.transparent ? 0.25 : 1} />
+							<meshStandardMaterial attach="material" metalness={0.5} roughness={0.4} color={rest.color} transparent={true} emissive={"yellow"} emissiveIntensity={data.selected ? 0.5 : 0} opacity={data.tentative ? 0.75 : props.transparent ? (interactive ? 0.25 : 0) : 1} />
 						</Obj>
 						<mesh layers={rest.layers} position-z={0.2}>
 							<planeGeometry attach="geometry" args={[0.5, 0.2]} />
-							<meshLambertMaterial attach="material" emissive={0xffffff} transparent={true} opacity={rest.transparent ? 0.25 : 1} />
+							<meshLambertMaterial attach="material" emissive={0xffffff} transparent={true} opacity={props.transparent ? (interactive ? 0.25 : 0) : 1} />
 						</mesh>
 					</group>
 				);
@@ -203,7 +219,7 @@ export function Chain({ data, timescale, beatDepth, interactive, children, ...re
 				return (
 					<Fragment>
 						{links.map((link) => (
-							<Link key={link.id} id={link.id} position={link.position} rotation={link.rotation} />
+							<Link key={link.id} time={link.time} id={link.id} position={link.position} rotation={link.rotation} transparent={link.transparent} />
 						))}
 						{children?.({ TailControlPoint })}
 					</Fragment>

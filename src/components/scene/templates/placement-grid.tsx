@@ -17,7 +17,21 @@ import { createArcFromMouseEvent, createChainFromMouseEvent } from "$/helpers/sl
 import { addArc, addBombNote, addChain, addColorNote, addObstacle } from "$/store/actions";
 import { selectAllNotes } from "$/store/features/objects.slice";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectColorScheme, selectCursorPositionInBeats, selectGridSize, selectHighestPrecision, selectNotePlacementMode, selectNotesEditorColor, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorType, selectObstaclePlacementMode, selectTrackScale } from "$/store/selectors";
+import {
+	selectColorScheme,
+	selectCursorPositionInBeats,
+	selectGridSize,
+	selectHighestPrecision,
+	selectNotePlacementMode,
+	selectNotesEditorColor,
+	selectNotesEditorDirection,
+	selectNotesEditorSelectionMode,
+	selectNotesEditorType,
+	selectObstaclePlacementMode,
+	selectRenderScale,
+	selectSurfaceDepth,
+	selectTrackScale,
+} from "$/store/selectors";
 import { ColorSchemeKey, type IGrid, type NotePlacementMode, ObjectColor, ObjectType } from "$/types";
 
 function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
@@ -35,7 +49,9 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 	const selectedDirection = useAppSelector(selectNotesEditorDirection);
 	const notes = useAppSelector(selectAllNotes);
 	const beatDepth = useAppSelector(selectTrackScale);
+	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
+	const renderScale = useAppSelector(selectRenderScale);
 
 	const hotkeys = useHotkeyStore();
 
@@ -161,12 +177,24 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 				</Match>
 				<Match when={!selectionMode && activeType.current === ObjectType.ARC}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => handleCreateArc(ctx, mode, grid)}>
-						{(data) => activeType.current && <Arc data={data} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
+						{(data) =>
+							activeType.current && (
+								<Arc
+									data={data}
+									time={data.tailTime}
+									segments={Math.round(64 * renderScale)}
+									beatDepth={beatDepth}
+									surfaceDepth={surfaceDepth}
+									position={resolvePositionForGridObject(data, { beatDepth })}
+									color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}
+								/>
+							)
+						}
 					</PlacementGrid.TentativeObject>
 				</Match>
 				<Match when={!selectionMode && activeType.current === ObjectType.CHAIN}>
 					<PlacementGrid.TentativeObject mode={notePlacementMode} createObject={(ctx, mode, grid) => handleCreateChain(ctx, mode, grid)}>
-						{(data) => activeType.current && <Chain data={data} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
+						{(data) => activeType.current && <Chain data={data} time={data.tailTime} beatDepth={beatDepth} position={resolvePositionForGridObject(data, { beatDepth })} color={resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })} />}
 					</PlacementGrid.TentativeObject>
 				</Match>
 			</Switch>
