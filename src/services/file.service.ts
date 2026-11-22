@@ -130,7 +130,7 @@ export class BeatmapFilestore extends Filestore {
 	async updateBeatmapContents(songId: SongId, beatmapId: BeatmapId, newContents: DeepPartial<IWrapBeatmap>) {
 		const savedContents = await this.loadBeatmapContents(songId, beatmapId).catch(() => createBeatmap({ ...newContents }));
 		const patchContents = omit(newContents, ["version", "filename"]);
-		patchContents.difficulty = this.#patchContents({ ...patchContents.difficulty }, ["colorNotes", "bombNotes", "obstacles"]);
+		patchContents.difficulty = this.#patchContents({ ...patchContents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "arcs", "chains"]);
 		patchContents.lightshow = this.#patchContents({ ...patchContents.lightshow }, ["basicEvents", "colorBoostEvents"]);
 		return await this.saveBeatmapContents(songId, beatmapId, createBeatmap(deepAssign(savedContents, patchContents)));
 	}
