@@ -140,7 +140,7 @@ function EditorNavigationControls() {
 	const inputStyles = useMemo(() => ({ maxWidth: `calc(8.5ch + ${String(formattedValue).length}ch)` }) as CSSProperties, [formattedValue]);
 
 	return (
-		<NavigationPanel.Section>
+		<NavigationPanel.Section onWheel={(ev) => ev.stopPropagation()}>
 			<NavigationPanel.Column>
 				<NavigationPanel.Group size="sm">
 					<Stat label="Snap to" style={{ width: "12ch" }}>
