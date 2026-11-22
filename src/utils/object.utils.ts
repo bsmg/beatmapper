@@ -21,45 +21,28 @@ export function hasKeys<T extends object, K extends keyof Required<T>>(obj: T, .
 function isAssignable(item: unknown): item is Record<string, unknown> {
 	return !!(item && typeof item === "object" && !Array.isArray(item));
 }
-
-function isEmptyValue(value: unknown): boolean {
-	if (value === undefined || value === null) return true;
-	if (Array.isArray(value)) return value.length === 0;
-	if (typeof value === "object") return Object.keys(value).length === 0;
-	return false;
-}
-
 // biome-ignore lint/suspicious/noExplicitAny: valid use case
-export function deepAssign<T extends { [k: string]: any }>(target: T, ...sources: NoInfer<DeepPartial<T>>[]): T {
-	if (!sources.length) return target;
-	const source = sources.shift() as NoInfer<DeepPartial<T>> | undefined;
-	if (source === undefined) return target;
+export function deepAssign<T extends Record<string, any>>(target: T, ...sources: DeepPartial<T>[]): T {
+	const output: Record<string, unknown> = { ...target };
 
-	const output: T = { ...target };
+	for (const source of sources) {
+		if (!isAssignable(source)) continue;
 
-	if (isAssignable(target) && isAssignable(source)) {
-		const mergeSource = source as { [k: string]: never };
-		for (const key in mergeSource) {
-			if (Object.hasOwn(mergeSource, key)) {
-				const sourceValue = mergeSource[key] as DeepPartial<T[Extract<keyof T, typeof key>]>;
+		for (const key of Object.keys(source)) {
+			const sourceValue = source[key];
+			if (sourceValue === undefined) continue;
 
-				if (isEmptyValue(sourceValue)) {
-					continue;
-				}
+			const targetValue = output[key];
 
-				const targetValue = output[key] as T[Extract<keyof T, typeof key>];
-
-				if (key in output && isAssignable(targetValue) && isAssignable(sourceValue)) {
-					if (Array.isArray(sourceValue)) {
-						output[key as keyof T] = sourceValue;
-					} else {
-						output[key as keyof T] = deepAssign(targetValue, sourceValue);
-					}
-				} else {
-					output[key as keyof T] = sourceValue;
-				}
+			if (Array.isArray(sourceValue)) {
+				output[key] = [...sourceValue];
+			} else if (isAssignable(sourceValue) && isAssignable(targetValue)) {
+				output[key] = deepAssign(targetValue, sourceValue);
+			} else {
+				output[key] = sourceValue;
 			}
 		}
 	}
-	return deepAssign(output, ...sources);
+
+	return output as T;
 }
