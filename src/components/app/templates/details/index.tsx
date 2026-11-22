@@ -34,7 +34,7 @@ function SongDetails() {
 		title: "Create Beatmap",
 		description: "Add a new beatmap file to the mapset.",
 		render: (ctx) => (
-			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))}>
+			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(addBeatmap({ songId: sid, beatmapId: id, data: { ...data, lightshowId: id } }))} withNavigate={false}>
 				{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 			</CreateBeatmapForm>
 		),

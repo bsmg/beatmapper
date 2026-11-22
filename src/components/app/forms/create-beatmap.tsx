@@ -23,9 +23,10 @@ const SCHEMA = object({
 interface Props {
 	dialog?: UseDialogContext;
 	onSubmit: (bid: BeatmapId, data: Parameters<typeof createAppBeatmap>[0]) => void;
+	withNavigate?: boolean;
 	children: (bid: BeatmapId | null) => ReactNode;
 }
-function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChildren, Props>) {
+function CreateBeatmapForm({ dialog, onSubmit, withNavigate = false, children }: Assign<PropsWithChildren, Props>) {
 	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
@@ -51,7 +52,7 @@ function CreateBeatmapForm({ dialog, onSubmit, children }: Assign<PropsWithChild
 				const mappers = username ? [username] : [];
 				onSubmit(beatmapId, { ...value, mappers: mappers, lighters: mappers });
 				if (dialog) dialog.setOpen(false);
-				navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: beatmapId } });
+				if (withNavigate) navigate({ to: `/edit/$sid/$bid/${view}`, params: { sid: sid.toString(), bid: beatmapId } });
 			} catch (error) {
 				toaster.error({ description: `Could not create beatmap: ${error instanceof Error ? error.message : "See console for more info."}` });
 				return console.error(error);

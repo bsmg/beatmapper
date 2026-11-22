@@ -102,7 +102,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 		title: "Copy Beatmap",
 		description: `Clone the contents of the "${bid}" beatmap to a new beatmap file.`,
 		render: (ctx) => (
-			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))}>
+			<CreateBeatmapForm dialog={ctx.dialog} onSubmit={(id, data) => dispatch(copyBeatmap({ songId: sid, sourceBeatmapId: bid, targetBeatmapId: id, changes: data }))} withNavigate={false}>
 				{(id) => (id ? `Create "${id}" beatmap` : `Create beatmap`)}
 			</CreateBeatmapForm>
 		),
