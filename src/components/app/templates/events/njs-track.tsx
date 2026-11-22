@@ -1,6 +1,6 @@
 import type { Assign } from "@ark-ui/react";
 import { useParams } from "@tanstack/react-router";
-import { createNJSEvent, type IWrapNJSEvent } from "bsmap";
+import { createNJSEvent, EaseType, type IWrapNJSEvent } from "bsmap";
 import { type ComponentProps, memo, useCallback, useMemo } from "react";
 
 import { EventGrid } from "$/components/app/layouts";
@@ -59,7 +59,14 @@ function NjsEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof EventG
 
 	const api = EventGrid.useContext();
 
-	const resolveEventData = useCallback((time: number) => createNJSEvent({ time, value: 0, previous: selectedTool === EventTool.TRANSITION ? 1 : undefined }), [selectedTool]);
+	const resolveEventData = useCallback(
+		(time: number, norm: number) => {
+			const previous = norm > 0.5 ? 1 : 0;
+			const easing = [EaseType.LINEAR, EaseType.NONE, EaseType.IN_QUAD, EaseType.OUT_QUAD, EaseType.INOUT_QUAD][Object.values(EventTool).indexOf(selectedTool)];
+			return createNJSEvent({ time, value: 0, previous, easing: previous ? EaseType.NONE : easing });
+		},
+		[selectedTool],
+	);
 
 	const actions = useMemo<EventGrid.IPlacementActions<IWrapNJSEvent>>(() => {
 		return {
