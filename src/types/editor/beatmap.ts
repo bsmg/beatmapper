@@ -4,16 +4,16 @@ export const ObjectType = {
 	NOTE: "block",
 	BOMB: "mine",
 	OBSTACLE: "obstacle",
+	ARC: "arc",
+	CHAIN: "chain",
 } as const;
 export type ObjectType = Member<typeof ObjectType>;
 
-export const ObjectTool = {
-	LEFT_NOTE: "left-block",
-	RIGHT_NOTE: "right-block",
-	BOMB_NOTE: "mine",
-	OBSTACLE: "obstacle",
+export const ObjectColor = {
+	LEFT: "left",
+	RIGHT: "right",
 } as const;
-export type ObjectTool = Member<typeof ObjectTool>;
+export type ObjectColor = Member<typeof ObjectColor>;
 
 export const ObjectSelectionMode = {
 	SELECT: "select",

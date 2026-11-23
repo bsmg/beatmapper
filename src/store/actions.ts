@@ -1,5 +1,5 @@
 export { cycleToNextTool, cycleToPrevTool, deselectAllEntities, finishLoadingMap, leaveEditor, loadAudioDataContents, loadBeatmapContents, loadSongFile, selectAllEntities, selectAllEntitiesInRange, startLoadingMap } from "./features/actions";
-export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelection, updateNotesEditorDirection, updateNotesEditorTool, upsertGridPreset, upsertGridPresets } from "./features/beatmap.slice";
+export { finishManagingNoteSelection, removeGridPreset, startManagingNoteSelection, updateNotesEditorColor, updateNotesEditorDirection, updateNotesEditorType, upsertGridPreset, upsertGridPresets } from "./features/beatmap.slice";
 export { addBookmark, removeBookmark } from "./features/bookmarks.slice";
 export { setClipboardData } from "./features/clipboard.slice";
 export { loadGridPreset, saveGridPreset } from "./features/editor.thunks";
@@ -70,26 +70,36 @@ export {
 	updateWindowSize,
 } from "./features/navigation.slice";
 export {
+	addArc,
 	addBombNote,
+	addChain,
 	addColorNote,
 	addObstacle,
 	clearObjectHistory,
 	deselectAllObjectsOfType,
+	deselectArc,
 	deselectBombNote,
+	deselectChain,
 	deselectColorNote,
 	deselectObstacle,
 	mirrorAllSelectedObjects,
 	nudgeAllSelectedObjects,
 	redoObjects,
 	removeAllSelectedObjects,
+	removeArc,
 	removeBombNote,
+	removeChain,
 	removeColorNote,
 	removeObstacle,
+	selectArc,
 	selectBombNote,
+	selectChain,
 	selectColorNote,
 	selectObstacle,
 	undoObjects,
 	updateAllSelectedObjects,
+	updateArc,
+	updateChain,
 	updateColorNote,
 	updateObstacle,
 	upsertObjects,

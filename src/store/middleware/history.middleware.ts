@@ -1,9 +1,6 @@
 import { createListenerMiddleware, type ListenerEffectAPI } from "@reduxjs/toolkit";
 import { sortObjectFn } from "bsmap";
 
-import { resolveEventId } from "$/helpers/events.helpers";
-import { resolveNoteId } from "$/helpers/notes.helpers";
-import { resolveObstacleId } from "$/helpers/obstacles.helpers";
 import { clearEventHistory, clearObjectHistory, jumpToBeat, leaveEditor, redoEvents, redoObjects, undoEvents, undoObjects } from "$/store/actions";
 import {
 	selectAllBasicEvents,
@@ -25,13 +22,16 @@ import {
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import type { App } from "$/types";
 import { difference } from "$/utils";
+import { selectAllArcs, selectAllChains, selectFutureArcs, selectFutureChains, selectPastArcs, selectPastChains } from "../features/objects.slice";
 
-function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "notes" | "bombs" | "obstacles"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "notes" | "bombs" | "obstacles" | "arcs" | "chains"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantNotes = difference(args.notes.before, args.notes.after);
 	const relevantBombs = difference(args.bombs.before, args.bombs.after);
 	const relevantObstacles = difference(args.obstacles.before, args.obstacles.after);
+	const relevantArcs = difference(args.arcs.before, args.arcs.after);
+	const relevantChains = difference(args.chains.before, args.chains.after);
 
-	const relevantEntities = [...relevantNotes, ...relevantBombs, ...relevantObstacles].sort(sortObjectFn);
+	const relevantEntities = [...relevantNotes, ...relevantBombs, ...relevantObstacles, ...relevantArcs, ...relevantChains].sort(sortObjectFn);
 	if (!relevantEntities.length) return;
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
@@ -74,6 +74,8 @@ export default function createHistoryMiddleware({ extra }: Options) {
 					notes: { before: selectFutureColorNotes(state), after: selectAllColorNotes(state) },
 					bombs: { before: selectFutureBombNotes(state), after: selectAllBombNotes(state) },
 					obstacles: { before: selectFutureObstacles(state), after: selectAllObstacles(state) },
+					arcs: { before: selectFutureArcs(state), after: selectAllArcs(state) },
+					chains: { before: selectFutureChains(state), after: selectAllChains(state) },
 				});
 			}
 		},
@@ -88,6 +90,8 @@ export default function createHistoryMiddleware({ extra }: Options) {
 					notes: { before: selectPastColorNotes(state), after: selectAllColorNotes(state) },
 					bombs: { before: selectPastBombNotes(state), after: selectAllBombNotes(state) },
 					obstacles: { before: selectPastObstacles(state), after: selectAllObstacles(state) },
+					arcs: { before: selectPastArcs(state), after: selectAllArcs(state) },
+					chains: { before: selectPastChains(state), after: selectAllChains(state) },
 				});
 			}
 		},

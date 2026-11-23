@@ -1,4 +1,4 @@
-export { selectAllGridPresetIds, selectGridPresetById, selectGridPresets, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorTool } from "./features/beatmap.slice";
+export { selectAllGridPresetIds, selectGridPresetById, selectGridPresets, selectNotesEditorColor, selectNotesEditorDirection, selectNotesEditorSelectionMode, selectNotesEditorType } from "./features/beatmap.slice";
 export { selectAllBookmarks } from "./features/bookmarks.slice";
 export { selectClipboardData, selectClipboardHasObjects, selectEarliestBeat } from "./features/clipboard.slice";
 export {
@@ -33,7 +33,9 @@ export {
 } from "./features/lightshow.slice";
 export { selectAnimateEnvironment, selectAnimateTrack, selectCursorPosition, selectDuration, selectHighestPrecision, selectPlaybackRate, selectPlaying, selectSnap, selectSongVolume, selectTickType, selectTickVolume, selectTrackScale, selectWindowSize } from "./features/navigation.slice";
 export {
+	selectAllArcs,
 	selectAllBombNotes,
+	selectAllChains,
 	selectAllColorNotes,
 	selectAllObstacles,
 	selectAllSelectedBombNotes,
@@ -49,13 +51,17 @@ export {
 	selectPastBombNotes,
 	selectPastColorNotes,
 	selectPastObstacles,
+	selectTotalArcs,
 	selectTotalBombNotes,
+	selectTotalChains,
 	selectTotalColorNotes,
 	selectTotalObstacles,
 } from "./features/objects.slice";
 export {
 	selectActiveWindowSize,
+	selectAllVisibleArcs,
 	selectAllVisibleBombs,
+	selectAllVisibleChains,
 	selectAllVisibleNotes,
 	selectAllVisibleObstacles,
 	selectBeatForTime,

@@ -1,13 +1,14 @@
 import { createAction, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type { NoteDirection } from "bsmap";
 
-import { type IGrid, type IGridPresets, type ObjectSelectionMode, ObjectTool, type SongId, View } from "$/types";
+import { type IGrid, type IGridPresets, ObjectColor, type ObjectSelectionMode, ObjectType, type SongId, View } from "$/types";
 import { cycleToNextTool, cycleToPrevTool } from "./actions";
 
-const NOTE_TOOLS = Object.values(ObjectTool);
+const NOTE_TOOLS = Object.values(ObjectType);
 
 const initialState = {
-	selectedTool: NOTE_TOOLS[0],
+	selectedType: ObjectType.NOTE as ObjectType,
+	selectedColor: ObjectColor.LEFT as ObjectColor,
 	selectedDirection: 8 as NoteDirection,
 	selectionMode: null as ObjectSelectionMode | null, // null | 'select' | 'deselect' | 'delete'.
 	gridPresets: {} as IGridPresets,
@@ -17,7 +18,8 @@ const slice = createSlice({
 	name: "beatmap",
 	initialState: initialState,
 	selectors: {
-		selectTool: (state) => state.selectedTool,
+		selectType: (state) => state.selectedType,
+		selectColor: (state) => state.selectedColor,
 		selectDirection: (state) => state.selectedDirection,
 		selectSelectionMode: (state) => state.selectionMode,
 		selectGridPresets: (state) => state.gridPresets,
@@ -26,8 +28,11 @@ const slice = createSlice({
 	},
 	reducers: (api) => {
 		return {
-			updateTool: api.reducer<ObjectTool>((state, action) => {
-				return { ...state, selectedTool: action.payload };
+			updateType: api.reducer<ObjectType>((state, action) => {
+				return { ...state, selectedType: action.payload };
+			}),
+			updateColor: api.reducer<ObjectColor>((state, action) => {
+				return { ...state, selectedColor: action.payload };
 			}),
 			updateDirection: api.reducer<NoteDirection>((state, action) => {
 				return { ...state, selectedDirection: action.payload };
@@ -56,19 +61,19 @@ const slice = createSlice({
 		builder.addMatcher(isAnyOf(cycleToNextTool, cycleToPrevTool), (state, action) => {
 			const { view } = action.payload;
 			if (view !== View.BEATMAP) return state;
-			const currentlySelectedTool = state.selectedTool;
+			const currentlySelectedTool = state.selectedType;
 			const incrementBy = cycleToNextTool.match(action) ? +1 : -1;
 			const currentToolIndex = NOTE_TOOLS.indexOf(currentlySelectedTool);
-			const nextTool = NOTE_TOOLS[(currentToolIndex + NOTE_TOOLS.length + incrementBy) % NOTE_TOOLS.length];
-			return { ...state, selectedTool: nextTool };
+			const nextType = NOTE_TOOLS[(currentToolIndex + NOTE_TOOLS.length + incrementBy) % NOTE_TOOLS.length];
+			return { ...state, selectedType: nextType };
 		});
 		builder.addDefaultCase((state) => state);
 	},
 });
 
-export const { selectTool: selectNotesEditorTool, selectDirection: selectNotesEditorDirection, selectSelectionMode: selectNotesEditorSelectionMode, selectGridPresets, selectAllGridPresetIds, selectGridPresetById } = slice.getSelectors(slice.selectSlice);
+export const { selectType: selectNotesEditorType, selectColor: selectNotesEditorColor, selectDirection: selectNotesEditorDirection, selectSelectionMode: selectNotesEditorSelectionMode, selectGridPresets, selectAllGridPresetIds, selectGridPresetById } = slice.getSelectors(slice.selectSlice);
 
-export const { updateTool: updateNotesEditorTool, updateDirection: updateNotesEditorDirection, upsertGridPresets, upsertGridPreset, removeGridPreset } = slice.actions;
+export const { updateType: updateNotesEditorType, updateColor: updateNotesEditorColor, updateDirection: updateNotesEditorDirection, upsertGridPresets, upsertGridPreset, removeGridPreset } = slice.actions;
 
 export const startManagingNoteSelection = createAction("startManagingNoteSelection", (args: { selectionMode: ObjectSelectionMode }) => {
 	return { payload: { ...args } };

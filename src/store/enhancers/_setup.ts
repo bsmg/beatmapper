@@ -21,8 +21,9 @@ import {
 	updateEventsEditorZoomLevel,
 	updateHighestPrecision,
 	updateNew,
+	updateNotesEditorColor,
 	updateNotesEditorDirection,
-	updateNotesEditorTool,
+	updateNotesEditorType,
 	updatePacerWait,
 	updatePlaybackRate,
 	updateRenderScale,
@@ -53,8 +54,9 @@ import {
 	selectGridPresetById,
 	selectHighestPrecision,
 	selectNew,
+	selectNotesEditorColor,
 	selectNotesEditorDirection,
-	selectNotesEditorTool,
+	selectNotesEditorType,
 	selectPacerWait,
 	selectPlaybackRate,
 	selectRenderScale,
@@ -69,7 +71,7 @@ import {
 	selectUserObstaclePlacementMode,
 	selectWindowSize,
 } from "$/store/selectors";
-import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectTool, ObstaclePlacementMode } from "$/types";
+import { type App, type BeatmapId, EventColor, EventEditMode, EventTool, type IGridPresets, type Member, ObjectColor, ObjectType, ObstaclePlacementMode } from "$/types";
 import { createEntityStorageStrategy, createEnumerableStorageObserver, createKeyValueStorageStrategy, createStorageEnhancer } from "./storage.enhancer";
 
 const STORAGE_PREFIX = location.hostname === "localhost" ? "beatmapper" : "";
@@ -229,9 +231,13 @@ export function createAppEnhancers() {
 				selectValue: selectTickType,
 				hydrateValue: updateTickType,
 			},
-			"notes.tool": createEnumerableStorageObserver(ObjectTool, {
-				selectValue: selectNotesEditorTool,
-				hydrateValue: updateNotesEditorTool,
+			"notes.type": createEnumerableStorageObserver(ObjectType, {
+				selectValue: selectNotesEditorType,
+				hydrateValue: updateNotesEditorType,
+			}),
+			"notes.color": createEnumerableStorageObserver(ObjectColor, {
+				selectValue: selectNotesEditorColor,
+				hydrateValue: updateNotesEditorColor,
 			}),
 			"notes.direction": {
 				selectValue: selectNotesEditorDirection,
