@@ -32,7 +32,7 @@ const createModifyObjectsPrompt = createPromptFactory({
 			time: nullable(number()),
 			posX: nullable(number()),
 			posY: nullable(number()),
-			laneRotation: nullable(number()),
+			laneRotation: nullable(pipe(number(), integer())),
 		}),
 		noteData: object({
 			color: nullable(
@@ -62,7 +62,7 @@ const createModifyObjectsPrompt = createPromptFactory({
 			tailTime: nullable(number()),
 			tailPosX: nullable(number()),
 			tailPosY: nullable(number()),
-			tailLaneRotation: nullable(number()),
+			tailLaneRotation: nullable(pipe(number(), integer())),
 		}),
 		arcData: object({
 			tailDirection: nullable(union([NoteDirectionSchema, pipe(number(), minValue(1000), maxValue(1360)), pipe(number(), minValue(2000), maxValue(2360))])),
@@ -138,6 +138,7 @@ function SelectionActionPanelGroup() {
 							<form.AppField name="objectData.time">{(ctx) => <ctx.NumberInput label="Time" placeholder="*" />}</form.AppField>
 							<form.AppField name="objectData.posX">{(ctx) => <ctx.NumberInput label="Line Index" placeholder="*" />}</form.AppField>
 							<form.AppField name="objectData.posY">{(ctx) => <ctx.NumberInput label="Line Layer" placeholder="*" />}</form.AppField>
+							<form.AppField name="objectData.laneRotation">{(ctx) => <ctx.NumberInput label="Lane Rotation" placeholder="*" />}</form.AppField>
 						</form.Row>
 						<Show when={objects.every(isColorNote)}>
 							<form.Row>
@@ -163,6 +164,7 @@ function SelectionActionPanelGroup() {
 								<form.AppField name="sliderData.tailTime">{(ctx) => <ctx.NumberInput label="Tail Time" placeholder="*" />}</form.AppField>
 								<form.AppField name="sliderData.tailPosX">{(ctx) => <ctx.NumberInput label="Tail Line Index" placeholder="*" />}</form.AppField>
 								<form.AppField name="sliderData.tailPosY">{(ctx) => <ctx.NumberInput label="Tail Line Layer" placeholder="*" />}</form.AppField>
+								<form.AppField name="sliderData.tailLaneRotation">{(ctx) => <ctx.NumberInput label="Tail Lane Rotation" placeholder="*" />}</form.AppField>
 							</form.Row>
 							<form.Row>
 								<form.AppField name="arcData.tailDirection">{(ctx) => <ctx.NumberInput label="Tail Direction" placeholder="*" />}</form.AppField>
@@ -179,6 +181,7 @@ function SelectionActionPanelGroup() {
 								<form.AppField name="sliderData.tailTime">{(ctx) => <ctx.NumberInput label="Tail Time" placeholder="*" />}</form.AppField>
 								<form.AppField name="sliderData.tailPosX">{(ctx) => <ctx.NumberInput label="Tail Line Index" placeholder="*" />}</form.AppField>
 								<form.AppField name="sliderData.tailPosY">{(ctx) => <ctx.NumberInput label="Tail Line Layer" placeholder="*" />}</form.AppField>
+								<form.AppField name="sliderData.tailLaneRotation">{(ctx) => <ctx.NumberInput label="Tail Lane Rotation" placeholder="*" />}</form.AppField>
 							</form.Row>
 							<form.Row>
 								<form.AppField name="chainData.sliceCount">{(ctx) => <ctx.NumberInput label="Slice Count" placeholder="*" />}</form.AppField>

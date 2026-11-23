@@ -15,9 +15,9 @@ export function isChain(data: unknown): data is IWrapChain {
 	return "sliceCount" in data;
 }
 
-export function resolveSliderId<T extends Pick<IWrapBaseSlider, "time" | "posX" | "posY" | "tailTime" | "tailPosX" | "tailPosY">>(x: T) {
-	let baseId = `${x.time}/${x.posX}/${x.posY}`;
-	if (isArc(x)) baseId += `/${x.tailTime}/${x.tailPosX}/${x.tailPosY}/${x.lengthMultiplier}/${x.tailLengthMultiplier}`;
+export function resolveSliderId<T extends Pick<IWrapBaseSlider, "time" | "posX" | "posY" | "laneRotation" | "tailTime" | "tailPosX" | "tailPosY" | "tailLaneRotation">>(x: T) {
+	let baseId = `${x.time}/${x.posX}/${x.posY}/${x.laneRotation}`;
+	if (isArc(x)) baseId += `/${x.tailTime}/${x.tailPosX}/${x.tailPosY}/${x.tailLaneRotation}/${x.lengthMultiplier}/${x.tailLengthMultiplier}`;
 	return baseId;
 }
 

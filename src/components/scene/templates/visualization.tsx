@@ -58,12 +58,12 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 			const arcWithMatchedHeadNote = arcs.find((x) => x.time === data.time && x.posX === data.posX && x.posY === data.posY);
 			if (arcWithMatchedHeadNote && arcWithMatchedHeadNote.color !== color) {
 				dispatch(updateArc({ id: resolveSliderId(arcWithMatchedHeadNote), changes: { color } }));
-				dispatch(updateColorNote({ id: resolveNoteId({ time: arcWithMatchedHeadNote.tailTime, posX: arcWithMatchedHeadNote.tailPosX, posY: arcWithMatchedHeadNote.tailPosY }), changes: { color } }));
+				dispatch(updateColorNote({ id: resolveNoteId({ time: arcWithMatchedHeadNote.tailTime, posX: arcWithMatchedHeadNote.tailPosX, posY: arcWithMatchedHeadNote.tailPosY, laneRotation: arcWithMatchedHeadNote.tailLaneRotation }), changes: { color } }));
 			}
 			const arcWithMatchedTailNote = arcs.find((x) => x.tailTime === data.time && x.tailPosX === data.posX && x.tailPosY === data.posY);
 			if (arcWithMatchedTailNote && arcWithMatchedTailNote.color !== color) {
 				dispatch(updateArc({ id: resolveSliderId(arcWithMatchedTailNote), changes: { color } }));
-				dispatch(updateColorNote({ id: resolveNoteId({ time: arcWithMatchedTailNote.time, posX: arcWithMatchedTailNote.posX, posY: arcWithMatchedTailNote.posY }), changes: { color } }));
+				dispatch(updateColorNote({ id: resolveNoteId({ time: arcWithMatchedTailNote.time, posX: arcWithMatchedTailNote.posX, posY: arcWithMatchedTailNote.posY, laneRotation: arcWithMatchedTailNote.laneRotation }), changes: { color } }));
 			}
 			const chainWithMatchedHeadNote = chains.find((x) => x.time === data.time && x.posX === data.posX && x.posY === data.posY);
 			if (chainWithMatchedHeadNote) {
@@ -230,189 +230,187 @@ function MapVisualization({ timescale, beatDepth, surfaceDepth, interactive, ...
 
 	return (
 		<Visualization.Root position-z={-SONG_OFFSET} {...rest} cursorPosition={cursorPosition} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth} interactive={!!interactive}>
-			<Visualization.Mover>
-				{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}
-				<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
-					{(data, id, props) => (
-						<ColorNote
-							key={id}
-							{...props}
-							rotationOffset={rotationOverrides.get(id)}
-							onPointerOver={(e) => {
-								if (selectedType !== ObjectType.ARC && selectedType !== ObjectType.CHAIN) {
-									e.stopPropagation();
-									setHoveredId(id);
-									noteActions.handlePointerOver(e, data);
-								}
-							}}
-							onPointerOut={(e) => {
-								if (selectedType !== ObjectType.ARC && selectedType !== ObjectType.CHAIN) {
-									setHoveredId(null);
-									noteActions.handlePointerOut(e, data);
-								}
-							}}
-							onPointerDown={(e) => {
-								if (selectedType === ObjectType.ARC || selectedType === ObjectType.CHAIN) {
-									if (e.button !== 0) return noteActions.handlePointerDown(e, data);
-								}
-								if (hoveredId === id) {
-									return noteActions.handlePointerDown(e, data);
-								}
-							}}
-							onWheel={(e) => {
-								if (hoveredId === id) {
-									return noteActions.handleWheel(e, data);
-								}
-							}}
-						/>
-					)}
-				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectType.BOMB, { colorScheme })}>
-					{(data, id, props) => (
-						<BombNote
-							key={id}
-							{...props}
-							onPointerOver={(e) => {
+			<Visualization.Mover>{interactive && <EditorBeatMarkers timescale={timescale} beatDepth={beatDepth} />}</Visualization.Mover>
+			<Visualization.ForGridObjects objects={notes} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
+				{(data, id, props) => (
+					<ColorNote
+						key={id}
+						{...props}
+						rotationOffset={rotationOverrides.get(id)}
+						onPointerOver={(e) => {
+							if (selectedType !== ObjectType.ARC && selectedType !== ObjectType.CHAIN) {
 								e.stopPropagation();
 								setHoveredId(id);
-								bombActions.handlePointerOver(e, data);
-							}}
-							onPointerOut={(e) => {
+								noteActions.handlePointerOver(e, data);
+							}
+						}}
+						onPointerOut={(e) => {
+							if (selectedType !== ObjectType.ARC && selectedType !== ObjectType.CHAIN) {
 								setHoveredId(null);
-								bombActions.handlePointerOut(e, data);
-							}}
-							onPointerDown={(e) => {
-								if (hoveredId === id) {
-									return bombActions.handlePointerDown(e, data);
-								}
-							}}
-							onWheel={(e) => {
-								if (hoveredId === id) {
-									return bombActions.handleWheel(e, data);
-								}
-							}}
-						/>
-					)}
-				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectType.OBSTACLE, { colorScheme })}>
-					{(data, id, props) => (
-						<Obstacle
-							key={id}
-							{...props}
-							timescale={timescale}
-							beatDepth={beatDepth}
-							onPointerOver={(e) => {
-								e.stopPropagation();
-								setHoveredId(id);
-								obstacleActions.handlePointerOver(e, data);
-							}}
-							onPointerOut={(e) => {
-								setHoveredId(null);
-								obstacleActions.handlePointerOut(e, data);
-							}}
-							onPointerDown={(e) => {
-								if (hoveredId === id) {
-									return obstacleActions.handlePointerDown(e, data);
-								}
-							}}
-							onWheel={(e) => {
-								if (hoveredId === id) {
-									return obstacleActions.handleWheel(e, data);
-								}
-							}}
-						/>
-					)}
-				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={arcs} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
-					{(data, id, props) => (
-						<Arc key={id} time={cursorPositionInBeats - data.time} segments={Math.round(64 * renderScale)} interactive={interactive} {...props} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth}>
-							{({ HeadControlPoint, TailControlPoint }) => (
-								<Fragment>
-									{interactive && (
-										<HeadControlPoint
-											onPointerOver={(e) => {
-												e.stopPropagation();
-												setHoveredId(id);
-												arcActions.handlePointerOver(e, data);
-											}}
-											onPointerOut={(e) => {
-												setHoveredId(null);
-												arcActions.handlePointerOut(e, data);
-											}}
-											onPointerDown={(e) => {
-												if (hoveredId === id) {
-													return arcActions.handlePointerDown(e, data);
-												}
-											}}
-											onWheel={(e) => {
-												if (hoveredId === id) {
-													return arcActions.handleWheel(e, data);
-												}
-											}}
-										/>
-									)}
-									{interactive && (
-										<TailControlPoint
-											onPointerOver={(e) => {
-												e.stopPropagation();
-												setHoveredId(id);
-												arcActions.handlePointerOver(e, data);
-											}}
-											onPointerOut={(e) => {
-												setHoveredId(null);
-												arcActions.handlePointerOut(e, data);
-											}}
-											onPointerDown={(e) => {
-												if (hoveredId === id) {
-													return arcActions.handlePointerDown(e, data);
-												}
-											}}
-											onWheel={(e) => {
-												if (hoveredId !== id) {
-													return arcActions.handleWheel(e, data);
-												}
-											}}
-										/>
-									)}
-								</Fragment>
-							)}
-						</Arc>
-					)}
-				</Visualization.ForGridObjects>
-				<Visualization.ForGridObjects objects={chains} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
-					{(data, id, props) => (
-						<Chain key={id} time={cursorPositionInBeats - data.time} interactive={interactive} {...props} timescale={timescale} beatDepth={beatDepth}>
-							{({ TailControlPoint }) => (
-								<Fragment>
-									{interactive && (
-										<TailControlPoint
-											onPointerOver={(e) => {
-												e.stopPropagation();
-												setHoveredId(id);
-												chainActions.handlePointerOver(e, data);
-											}}
-											onPointerOut={(e) => {
-												setHoveredId(null);
-												chainActions.handlePointerOut(e, data);
-											}}
-											onPointerDown={(e) => {
-												if (hoveredId === id) {
-													return chainActions.handlePointerDown(e, data);
-												}
-											}}
-											onWheel={(e) => {
-												if (hoveredId === id) {
-													return chainActions.handleWheel(e, data);
-												}
-											}}
-										/>
-									)}
-								</Fragment>
-							)}
-						</Chain>
-					)}
-				</Visualization.ForGridObjects>
-			</Visualization.Mover>
+								noteActions.handlePointerOut(e, data);
+							}
+						}}
+						onPointerDown={(e) => {
+							if (selectedType === ObjectType.ARC || selectedType === ObjectType.CHAIN) {
+								if (e.button !== 0) return noteActions.handlePointerDown(e, data);
+							}
+							if (hoveredId === id) {
+								return noteActions.handlePointerDown(e, data);
+							}
+						}}
+						onWheel={(e) => {
+							if (hoveredId === id) {
+								return noteActions.handleWheel(e, data);
+							}
+						}}
+					/>
+				)}
+			</Visualization.ForGridObjects>
+			<Visualization.ForGridObjects objects={bombs} resolveId={resolveNoteId} resolvePosition={resolvePositionForGridObject} resolveColor={() => resolveColorForItem(ObjectType.BOMB, { colorScheme })}>
+				{(data, id, props) => (
+					<BombNote
+						key={id}
+						{...props}
+						onPointerOver={(e) => {
+							e.stopPropagation();
+							setHoveredId(id);
+							bombActions.handlePointerOver(e, data);
+						}}
+						onPointerOut={(e) => {
+							setHoveredId(null);
+							bombActions.handlePointerOut(e, data);
+						}}
+						onPointerDown={(e) => {
+							if (hoveredId === id) {
+								return bombActions.handlePointerDown(e, data);
+							}
+						}}
+						onWheel={(e) => {
+							if (hoveredId === id) {
+								return bombActions.handleWheel(e, data);
+							}
+						}}
+					/>
+				)}
+			</Visualization.ForGridObjects>
+			<Visualization.ForGridObjects objects={obstacles} resolveId={resolveObstacleId} resolvePosition={resolvePositionForObstacle} resolveColor={() => resolveColorForItem(ObjectType.OBSTACLE, { colorScheme })}>
+				{(data, id, props) => (
+					<Obstacle
+						key={id}
+						{...props}
+						timescale={timescale}
+						beatDepth={beatDepth}
+						onPointerOver={(e) => {
+							e.stopPropagation();
+							setHoveredId(id);
+							obstacleActions.handlePointerOver(e, data);
+						}}
+						onPointerOut={(e) => {
+							setHoveredId(null);
+							obstacleActions.handlePointerOut(e, data);
+						}}
+						onPointerDown={(e) => {
+							if (hoveredId === id) {
+								return obstacleActions.handlePointerDown(e, data);
+							}
+						}}
+						onWheel={(e) => {
+							if (hoveredId === id) {
+								return obstacleActions.handleWheel(e, data);
+							}
+						}}
+					/>
+				)}
+			</Visualization.ForGridObjects>
+			<Visualization.ForGridObjects objects={arcs} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
+				{(data, id, props) => (
+					<Arc key={id} time={cursorPositionInBeats - data.time} segments={Math.round(64 * renderScale)} interactive={interactive} {...props} timescale={timescale} beatDepth={beatDepth} surfaceDepth={surfaceDepth}>
+						{({ HeadControlPoint, TailControlPoint }) => (
+							<Fragment>
+								{interactive && (
+									<HeadControlPoint
+										onPointerOver={(e) => {
+											e.stopPropagation();
+											setHoveredId(id);
+											arcActions.handlePointerOver(e, data);
+										}}
+										onPointerOut={(e) => {
+											setHoveredId(null);
+											arcActions.handlePointerOut(e, data);
+										}}
+										onPointerDown={(e) => {
+											if (hoveredId === id) {
+												return arcActions.handlePointerDown(e, data);
+											}
+										}}
+										onWheel={(e) => {
+											if (hoveredId === id) {
+												return arcActions.handleWheel(e, data);
+											}
+										}}
+									/>
+								)}
+								{interactive && (
+									<TailControlPoint
+										onPointerOver={(e) => {
+											e.stopPropagation();
+											setHoveredId(id);
+											arcActions.handlePointerOver(e, data);
+										}}
+										onPointerOut={(e) => {
+											setHoveredId(null);
+											arcActions.handlePointerOut(e, data);
+										}}
+										onPointerDown={(e) => {
+											if (hoveredId === id) {
+												return arcActions.handlePointerDown(e, data);
+											}
+										}}
+										onWheel={(e) => {
+											if (hoveredId !== id) {
+												return arcActions.handleWheel(e, data);
+											}
+										}}
+									/>
+								)}
+							</Fragment>
+						)}
+					</Arc>
+				)}
+			</Visualization.ForGridObjects>
+			<Visualization.ForGridObjects objects={chains} resolveId={resolveSliderId} resolvePosition={resolvePositionForGridObject} resolveColor={(data) => resolveColorForItem(data.color === 0 ? ColorSchemeKey.SABER_LEFT : ColorSchemeKey.SABER_RIGHT, { colorScheme })}>
+				{(data, id, props) => (
+					<Chain key={id} time={cursorPositionInBeats - data.time} interactive={interactive} {...props} timescale={timescale} beatDepth={beatDepth}>
+						{({ TailControlPoint }) => (
+							<Fragment>
+								{interactive && (
+									<TailControlPoint
+										onPointerOver={(e) => {
+											e.stopPropagation();
+											setHoveredId(id);
+											chainActions.handlePointerOver(e, data);
+										}}
+										onPointerOut={(e) => {
+											setHoveredId(null);
+											chainActions.handlePointerOut(e, data);
+										}}
+										onPointerDown={(e) => {
+											if (hoveredId === id) {
+												return chainActions.handlePointerDown(e, data);
+											}
+										}}
+										onWheel={(e) => {
+											if (hoveredId === id) {
+												return chainActions.handleWheel(e, data);
+											}
+										}}
+									/>
+								)}
+							</Fragment>
+						)}
+					</Chain>
+				)}
+			</Visualization.ForGridObjects>
 			{interactive && <EditorPlacementGrid />}
 		</Visualization.Root>
 	);
