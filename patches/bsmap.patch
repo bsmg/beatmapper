@@ -39,3 +39,959 @@ index 68976df20ed5f0e33f59e14f729a44a0b5280695..3672b9aac8c300a098a73d0f4dbda4ae
      [8]: [0, 0],
  };
  /** Unused as of beatmap v3, useful for conversion reason. */
+diff --git a/esm/beatmap/converter/_rotation.js b/esm/beatmap/converter/_rotation.js
+index f2de040537bb9d9560ced1a4d9ef2c61f6d6fd14..0724e166c3a44bf5fd4696528e9c9394548331a1 100644
+--- a/esm/beatmap/converter/_rotation.js
++++ b/esm/beatmap/converter/_rotation.js
+@@ -4,7 +4,7 @@ function sameLane(a, b) {
+ }
+ // Internal v4 downgrade planner. No object is changed until every required
+ // endpoint is known to be representable by one global timeline.
+-export function convertV4Rotation(bm, overrideKey) {
++export function convertV4Rotation(bm) {
+     if (bm.difficulty.rotationEvents.length) {
+         assertLegacyRotationOnly(bm);
+         return;
+@@ -20,10 +20,6 @@ export function convertV4Rotation(bm, overrideKey) {
+     const samples = [];
+     for (let i = 0; i < objects.length; i++) {
+         const obj = objects[i];
+-        // Neither spelling of an existing absolute override is a native constraint.
+-        if (obj.customData[overrideKey] !== undefined || obj.customData.worldRotation !== undefined) {
+-            continue;
+-        }
+         samples.push(obj);
+         if ('tailLaneRotation' in obj) {
+             samples.push({ time: obj.tailTime, laneRotation: obj.tailLaneRotation });
+@@ -31,7 +27,7 @@ export function convertV4Rotation(bm, overrideKey) {
+     }
+     samples.sort((a, b) => a.time - b.time);
+     let conflict = false;
+-    let lanes = {};
++    const lanes = {};
+     for (let i = 0; i < samples.length; i++) {
+         const { time, laneRotation } = samples[i];
+         if (!(time in lanes)) {
+@@ -39,74 +35,9 @@ export function convertV4Rotation(bm, overrideKey) {
+         }
+         else if (!sameLane(lanes[time], laneRotation)) {
+             conflict = true;
+-            break;
+-        }
+-    }
+-    if (conflict) {
+-        lanes = {};
+-        let hasRequiredEndpoints = false;
+-        // Transferred indexed metadata can be shared by several objects. A
+-        // single absolute override can represent that alias group only when all
+-        // of its endpoints have the same orientation.
+-        const sharedLanes = new Map();
+-        for (let i = 0; i < objects.length; i++) {
+-            const obj = objects[i];
+-            if (obj.customData[overrideKey] !== undefined || obj.customData.worldRotation !== undefined) {
+-                continue;
+-            }
+-            const lane = sharedLanes.get(obj.customData);
+-            if (lane === null || (lane !== undefined && !sameLane(lane, obj.laneRotation)) ||
+-                ('tailLaneRotation' in obj && !sameLane(obj.laneRotation, obj.tailLaneRotation))) {
+-                sharedLanes.set(obj.customData, null);
+-            }
+-            else {
+-                sharedLanes.set(obj.customData, obj.laneRotation);
+-            }
+-        }
+-        for (let i = 0; i < objects.length; i++) {
+-            const obj = objects[i];
+-            if (sharedLanes.get(obj.customData) !== null)
+-                continue;
+-            hasRequiredEndpoints = true;
+-            const endpoints = [[obj.time, obj.laneRotation]];
+-            if ('tailLaneRotation' in obj)
+-                endpoints.push([obj.tailTime, obj.tailLaneRotation]);
+-            for (const [time, rotation] of endpoints) {
+-                if (time in lanes && !sameLane(lanes[time], rotation)) {
+-                    throw new Error(`Cannot convert conflicting rotation constraints at beat ${time}: ` +
+-                        `lanes ${lanes[time]} and ${rotation} require different global rotations ` +
+-                        'to preserve unequal slider endpoints or shared custom data.');
+-                }
+-                if (!(time in lanes))
+-                    lanes[time] = rotation;
+-            }
+-        }
+-        // Preserve the established all-override fallback when there are no
+-        // unequal endpoints. Otherwise their hard constraints take precedence;
+-        // notes and equal-ended sliders can use independent absolute overrides.
+-        if (hasRequiredEndpoints) {
+-            for (let i = 0; i < samples.length; i++) {
+-                const { time, laneRotation } = samples[i];
+-                if (!(time in lanes))
+-                    lanes[time] = laneRotation;
+-            }
+-        }
+-        for (let i = 0; i < objects.length; i++) {
+-            const obj = objects[i];
+-            if (obj.customData[overrideKey] !== undefined || obj.customData.worldRotation !== undefined) {
+-                continue;
+-            }
+-            const needsOverride = hasRequiredEndpoints
+-                ? !sameLane(obj.laneRotation, lanes[obj.time]) ||
+-                    ('tailLaneRotation' in obj && !sameLane(obj.tailLaneRotation, lanes[obj.tailTime]))
+-                : !!obj.laneRotation;
+-            if (needsOverride) {
+-                // Zero is also an absolute override when the timeline is nonzero.
+-                obj.customData[overrideKey] = obj.laneRotation;
+-            }
++            throw new Error(`Cannot convert conflicting rotation constraints at beat ${time}: ` +
++                `lanes ${lanes[time]} and ${laneRotation} require different global rotations.`);
+         }
+-        if (!hasRequiredEndpoints)
+-            samples.length = 0;
+     }
+     if (samples.length || !conflict) {
+         bm.difficulty.rotationEvents = [];
+diff --git a/esm/beatmap/converter/toV2/beatmap.js b/esm/beatmap/converter/toV2/beatmap.js
+index d36c51bc0cc7f85ca9ebc1ed3ec0bd8bd9557fa7..f718ba82c0c15da48df992f043f9b212b9c84a77 100644
+--- a/esm/beatmap/converter/toV2/beatmap.js
++++ b/esm/beatmap/converter/toV2/beatmap.js
+@@ -2,11 +2,11 @@ import { getLogger } from '../../../logger.js';
+ import { hasNoodleExtensionsNoteV2 } from '../../helpers/modded/has.js';
+ import { NoteDirectionAngle } from '../../misc/remaps.js';
+ import { vectorMul } from '../../../utils/math/vector.js';
+-import { convertV4Rotation } from '../_rotation.js';
+ import eventToV2 from '../customData/eventToV2.js';
+ import objectToV2 from '../customData/objectToV2.js';
+ import { renameCustomDataKey } from '../customData/_helpers.js';
+ import { trackAnimationToV2 } from '../customData/trackAnimation.js';
++import { convertV4Rotation } from '../../helpers/rotation.js';
+ function tag(name) {
+     return ['convert', 'toV2Beatmap', name];
+ }
+@@ -316,5 +316,5 @@ function fromV3(bm) {
+     }
+ }
+ function fromV4(bm) {
+-    convertV4Rotation(bm, '_rotation');
++    convertV4Rotation(bm);
+ }
+diff --git a/esm/beatmap/converter/toV3/beatmap.js b/esm/beatmap/converter/toV3/beatmap.js
+index 677f1f86a2e3c93ab0cd2bf37d604658b13e6a94..0d9ffbda4ab11ae369e10885fdf68c3bd4025d4e 100644
+--- a/esm/beatmap/converter/toV3/beatmap.js
++++ b/esm/beatmap/converter/toV3/beatmap.js
+@@ -1,11 +1,11 @@
+ import { getLogger } from '../../../logger.js';
+ import { clamp } from '../../../utils/math/helpers.js';
+ import { vectorMul } from '../../../utils/math/vector.js';
+-import { convertV4Rotation } from '../_rotation.js';
+ import eventToV3 from '../customData/eventToV3.js';
+ import objectToV3 from '../customData/objectToV3.js';
+ import { renameCustomDataKey } from '../customData/_helpers.js';
+ import { trackAnimationToV3 } from '../customData/trackAnimation.js';
++import { convertV4Rotation } from '../../helpers/rotation.js';
+ function tag(name) {
+     return ['convert', 'toV3Beatmap', name];
+ }
+@@ -410,5 +410,5 @@ function fromV2(bm) {
+     bm.lightshow.useNormalEventsAsCompatibleEvents = true;
+ }
+ function fromV4(bm) {
+-    convertV4Rotation(bm, 'worldRotation');
++    convertV4Rotation(bm);
+ }
+diff --git a/esm/beatmap/converter/toV4/beatmap.js b/esm/beatmap/converter/toV4/beatmap.js
+index 3848630b7d25964bc62978e152ce189b9620d482..47f3de49a3a2a2ad04f815dc22a0d8dc8497c9de 100644
+--- a/esm/beatmap/converter/toV4/beatmap.js
++++ b/esm/beatmap/converter/toV4/beatmap.js
+@@ -1,6 +1,7 @@
+ import { getLogger } from '../../../logger.js';
+ import { toV3Beatmap } from '../toV3/beatmap.js';
+-import { createRotationLaneLookup, legacyRotationLaneAt } from '../../schema/v4/_legacyRotation.js';
++import { legacyRotationLaneAt } from '../../schema/v4/_legacyRotation.js';
++import { createRotationLaneLookup } from '../../helpers/rotation.js';
+ function assignTimelineRotations(objects, laneAt, skipHoles) {
+     for (let i = 0; i < objects.length; i++) {
+         if (skipHoles && !(i in objects))
+@@ -13,32 +14,6 @@ function assignTimelineRotations(objects, laneAt, skipHoles) {
+         }
+     }
+ }
+-function consumeScalarRotationOverrides(objects) {
+-    let consumed = false;
+-    for (let i = 0; i < objects.length; i++) {
+-        if (!(i in objects))
+-            continue;
+-        const object = objects[i];
+-        if (typeof object.customData.worldRotation === 'number') {
+-            consumed = true;
+-            object.laneRotation = Math.round(object.customData.worldRotation);
+-            if ('tailLaneRotation' in object) {
+-                object.tailLaneRotation = object.laneRotation;
+-            }
+-        }
+-    }
+-    return consumed;
+-}
+-function removeScalarRotationOverrides(objects) {
+-    for (let i = 0; i < objects.length; i++) {
+-        if (!(i in objects))
+-            continue;
+-        const object = objects[i];
+-        if (typeof object.customData.worldRotation === 'number') {
+-            delete object.customData.worldRotation;
+-        }
+-    }
+-}
+ function tag(name) {
+     return ['convert', 'toV4Beatmap', name];
+ }
+@@ -96,21 +71,5 @@ export function toV4Beatmap(data, fromVersion = data.version) {
+         assignTimelineRotations(waypoints, laneAt, true);
+         data.difficulty.rotationEvents = [];
+     }
+-    let consumedScalarOverride = consumeScalarRotationOverrides(arcs);
+-    consumedScalarOverride = consumeScalarRotationOverrides(bombNotes) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(chains) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(colorNotes) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(obstacles) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(waypoints) || consumedScalarOverride;
+-    // Indexed metadata can be shared in transfer mode. Every object must consume
+-    // the override before its removal, without replacing any custom-data alias.
+-    if (consumedScalarOverride) {
+-        removeScalarRotationOverrides(arcs);
+-        removeScalarRotationOverrides(bombNotes);
+-        removeScalarRotationOverrides(chains);
+-        removeScalarRotationOverrides(colorNotes);
+-        removeScalarRotationOverrides(obstacles);
+-        removeScalarRotationOverrides(waypoints);
+-    }
+     return data;
+ }
+diff --git a/esm/beatmap/helpers/mod.js b/esm/beatmap/helpers/mod.js
+index 80c854832e87e70f1126347f6a2ec0009daac07a..13c648a1ef180adc5cc9b1dada11eaa0724a36cd 100755
+--- a/esm/beatmap/helpers/mod.js
++++ b/esm/beatmap/helpers/mod.js
+@@ -5,6 +5,7 @@ export * from './convert.js';
+ export * from './environment.js';
+ export * from './njs.js';
+ export * from './optimize.js';
++export * from './rotation.js';
+ export * from './score.js';
+ export * from './sort.js';
+ export * from './timeProcessor.js';
+diff --git a/esm/beatmap/helpers/rotation.js b/esm/beatmap/helpers/rotation.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ed05851a6f418c131e9014754baafcaffda9acf
+--- /dev/null
++++ b/esm/beatmap/helpers/rotation.js
+@@ -0,0 +1,102 @@
++import { assertLegacyRotationOnly } from '../schema/v4/_legacyRotation.js';
++/** Creates a mapper function that derives lane rotation properties from grid objects based on legacy rotation events. */
++export function createRotationLaneLookup(rotationEvents) {
++    const events = [...rotationEvents].sort((a, b) => a.time - b.time || a.executionTime - b.executionTime);
++    let rotation = 0;
++    const rotations = events.map((event) => {
++        rotation += event.rotation;
++        return Math.round(rotation % 360);
++    });
++    // Binary search allows serializers to retain their authored object order.
++    // The cumulative sum stays unrounded; only the final i32 lane is quantized.
++    return (beat) => {
++        let low = 0;
++        let high = events.length;
++        while (low < high) {
++            const mid = (low + high) >>> 1;
++            const event = events[mid];
++            if (event.time < beat || (event.time === beat && event.executionTime === 0)) {
++                low = mid + 1;
++            }
++            else {
++                high = mid;
++            }
++        }
++        return low ? rotations[low - 1] : 0;
++    };
++}
++/** Mutably applies lane rotation properties to object collections based on a mapper function. */
++export function assignTimelineRotations(objects, laneAt, skipHoles) {
++    for (let i = 0; i < objects.length; i++) {
++        if (skipHoles && !(i in objects))
++            continue;
++        const object = objects[i];
++        object.laneRotation = laneAt(object.time);
++        if ('tailLaneRotation' in object) {
++            // The v3 game loader samples BeatToRotation independently for each endpoint.
++            object.tailLaneRotation = laneAt(object.tailTime);
++        }
++    }
++}
++function sameLane(a, b) {
++    return a === b || (a - b) % 360 === 0;
++}
++/** Backports lane rotation object properties to a global timeline of rotation events. */
++export function convertV4Rotation(bm) {
++    if (bm.difficulty.rotationEvents.length) {
++        assertLegacyRotationOnly(bm);
++        return;
++    }
++    const objects = [
++        bm.difficulty.arcs,
++        bm.difficulty.bombNotes,
++        bm.difficulty.chains,
++        bm.difficulty.colorNotes,
++        bm.difficulty.obstacles,
++        bm.lightshow.waypoints,
++    ].flat();
++    const samples = [];
++    for (let i = 0; i < objects.length; i++) {
++        const obj = objects[i];
++        samples.push(obj);
++        if ('tailLaneRotation' in obj) {
++            samples.push({ time: obj.tailTime, laneRotation: obj.tailLaneRotation });
++        }
++    }
++    samples.sort((a, b) => a.time - b.time);
++    const lanes = {};
++    for (let i = 0; i < samples.length; i++) {
++        const { time, laneRotation } = samples[i];
++        if (!(time in lanes)) {
++            lanes[time] = laneRotation;
++        }
++        else if (!sameLane(lanes[time], laneRotation)) {
++            throw new Error(`Cannot convert conflicting rotation constraints at beat ${time}: ` +
++                `lanes ${lanes[time]} and ${laneRotation} require different global rotations.`);
++        }
++    }
++    if (samples.length) {
++        bm.difficulty.rotationEvents = [];
++        let currentRotation = 0;
++        for (let i = 0; i < samples.length; i++) {
++            const { time } = samples[i];
++            const laneRotation = lanes[time];
++            const difference = laneRotation - currentRotation;
++            if (difference === 0)
++                continue;
++            currentRotation = laneRotation;
++            bm.difficulty.rotationEvents.push({
++                time,
++                rotation: difference,
++                executionTime: 0,
++                customData: {},
++            });
++        }
++    }
++    for (let i = 0; i < objects.length; i++) {
++        const obj = objects[i];
++        obj.laneRotation = 0;
++        if ('tailLaneRotation' in obj)
++            obj.tailLaneRotation = 0;
++    }
++}
+diff --git a/esm/beatmap/schema/v2/rotationEvent.js b/esm/beatmap/schema/v2/rotationEvent.js
+index e55b2fd751dc98627217ae562737a9851126c1c0..0831cd746572d12cbc82eaf32694b9195c04639f 100644
+--- a/esm/beatmap/schema/v2/rotationEvent.js
++++ b/esm/beatmap/schema/v2/rotationEvent.js
+@@ -7,12 +7,10 @@ import { EventLaneRotationValue, RotationValueEventValue } from '../../misc/rema
+  */
+ export function serializeRotationEvent(data) {
+     let r = data.rotation % 360;
+-    const customData = deepCopy(data.customData);
+     if (r >= -60 && r <= 60 && r % 15 === 0 && r / 15 !== 0) {
+         r = RotationValueEventValue[r] || r + 1360;
+     }
+     else {
+-        customData._rotation = r;
+         r += 1360;
+     }
+     return {
+@@ -20,7 +18,7 @@ export function serializeRotationEvent(data) {
+         _type: data.executionTime === 1 ? 15 : 14,
+         _value: r,
+         _floatValue: 0,
+-        _customData: customData,
++        _customData: deepCopy(data.customData),
+     };
+ }
+ /** Deserialize schema object into beatmap v2 `Rotation Event` object.
+@@ -33,11 +31,7 @@ export function deserializeRotationEvent(data, options) {
+     return createRotationEvent({
+         time: data._time,
+         executionTime: data._type === 15 ? 1 : 0,
+-        rotation: typeof data._customData?._rotation === 'number'
+-            ? data._customData._rotation
+-            : value >= 1000
+-                ? (value - 1360) % 360
+-                : EventLaneRotationValue[value],
++        rotation: value >= 1000 ? (value - 1360) % 360 : EventLaneRotationValue[value],
+         customData: data._customData,
+     }, options);
+ }
+diff --git a/esm/beatmap/schema/v4/_legacyRotation.js b/esm/beatmap/schema/v4/_legacyRotation.js
+index b350017cb4b7317ac5b1406b437456903155d941..0ae667de81933d495bdb37fc6b949b7824edac45 100644
+--- a/esm/beatmap/schema/v4/_legacyRotation.js
++++ b/esm/beatmap/schema/v4/_legacyRotation.js
+@@ -1,3 +1,4 @@
++import { createRotationLaneLookup } from '../../helpers/rotation.js';
+ // Internal to legacy-v4 migration. Keep the schema path independent of the
+ // version converters; serialization only changes its new output records.
+ export function legacyRotationLaneAt(data) {
+@@ -23,28 +24,3 @@ function assertNoNativeLanes(objects) {
+         }
+     }
+ }
+-export function createRotationLaneLookup(rotationEvents) {
+-    const events = [...rotationEvents].sort((a, b) => a.time - b.time || a.executionTime - b.executionTime);
+-    let rotation = 0;
+-    const rotations = events.map((event) => {
+-        rotation += event.rotation;
+-        return Math.round(rotation % 360);
+-    });
+-    // Binary search allows serializers to retain their authored object order.
+-    // The cumulative sum stays unrounded; only the final i32 lane is quantized.
+-    return (beat) => {
+-        let low = 0;
+-        let high = events.length;
+-        while (low < high) {
+-            const mid = (low + high) >>> 1;
+-            const event = events[mid];
+-            if (event.time < beat || (event.time === beat && event.executionTime === 0)) {
+-                low = mid + 1;
+-            }
+-            else {
+-                high = mid;
+-            }
+-        }
+-        return low ? rotations[low - 1] : 0;
+-    };
+-}
+diff --git a/esm/patch/dataCorrection/beatmap.js b/esm/patch/dataCorrection/beatmap.js
+index 408050aadce6826e64486ccfa9ebef76cfeea28d..002ad1ab4f1498d4af3c9b7eb0106057e74151c6 100644
+--- a/esm/patch/dataCorrection/beatmap.js
++++ b/esm/patch/dataCorrection/beatmap.js
+@@ -327,12 +327,11 @@ export function patchBeatmap(data) {
+             const laneRotationEvent = {
+                 time: ev.time,
+                 executionTime: ev.type == 15 ? ExecutionTime.LATE : ExecutionTime.EARLY,
+-                rotation: ev.customData._rotation ??
+-                    (ev.value >= 1000 && ev.value <= 1720
+-                        ? ev.value - 1360
+-                        : ev.value >= 0 && ev.value <= 7
+-                            ? EventLaneRotationValue[ev.value]
+-                            : 0),
++                rotation: ev.value >= 1000 && ev.value <= 1720
++                    ? ev.value - 1360
++                    : ev.value >= 0 && ev.value <= 7
++                        ? EventLaneRotationValue[ev.value]
++                        : 0,
+                 customData: {},
+             };
+             if (laneRotationEvents)
+diff --git a/script/beatmap/converter/_rotation.js b/script/beatmap/converter/_rotation.js
+index 4f1fa23cde5c9eb4698b96dda3cbc42bf5da0da5..647a21add814e58256f49bb5466e04a8decf7bf7 100644
+--- a/script/beatmap/converter/_rotation.js
++++ b/script/beatmap/converter/_rotation.js
+@@ -7,7 +7,7 @@ function sameLane(a, b) {
+ }
+ // Internal v4 downgrade planner. No object is changed until every required
+ // endpoint is known to be representable by one global timeline.
+-function convertV4Rotation(bm, overrideKey) {
++function convertV4Rotation(bm) {
+     if (bm.difficulty.rotationEvents.length) {
+         (0, _legacyRotation_js_1.assertLegacyRotationOnly)(bm);
+         return;
+@@ -23,10 +23,6 @@ function convertV4Rotation(bm, overrideKey) {
+     const samples = [];
+     for (let i = 0; i < objects.length; i++) {
+         const obj = objects[i];
+-        // Neither spelling of an existing absolute override is a native constraint.
+-        if (obj.customData[overrideKey] !== undefined || obj.customData.worldRotation !== undefined) {
+-            continue;
+-        }
+         samples.push(obj);
+         if ('tailLaneRotation' in obj) {
+             samples.push({ time: obj.tailTime, laneRotation: obj.tailLaneRotation });
+@@ -34,7 +30,7 @@ function convertV4Rotation(bm, overrideKey) {
+     }
+     samples.sort((a, b) => a.time - b.time);
+     let conflict = false;
+-    let lanes = {};
++    const lanes = {};
+     for (let i = 0; i < samples.length; i++) {
+         const { time, laneRotation } = samples[i];
+         if (!(time in lanes)) {
+@@ -42,74 +38,9 @@ function convertV4Rotation(bm, overrideKey) {
+         }
+         else if (!sameLane(lanes[time], laneRotation)) {
+             conflict = true;
+-            break;
+-        }
+-    }
+-    if (conflict) {
+-        lanes = {};
+-        let hasRequiredEndpoints = false;
+-        // Transferred indexed metadata can be shared by several objects. A
+-        // single absolute override can represent that alias group only when all
+-        // of its endpoints have the same orientation.
+-        const sharedLanes = new Map();
+-        for (let i = 0; i < objects.length; i++) {
+-            const obj = objects[i];
+-            if (obj.customData[overrideKey] !== undefined || obj.customData.worldRotation !== undefined) {
+-                continue;
+-            }
+-            const lane = sharedLanes.get(obj.customData);
+-            if (lane === null || (lane !== undefined && !sameLane(lane, obj.laneRotation)) ||
+-                ('tailLaneRotation' in obj && !sameLane(obj.laneRotation, obj.tailLaneRotation))) {
+-                sharedLanes.set(obj.customData, null);
+-            }
+-            else {
+-                sharedLanes.set(obj.customData, obj.laneRotation);
+-            }
+-        }
+-        for (let i = 0; i < objects.length; i++) {
+-            const obj = objects[i];
+-            if (sharedLanes.get(obj.customData) !== null)
+-                continue;
+-            hasRequiredEndpoints = true;
+-            const endpoints = [[obj.time, obj.laneRotation]];
+-            if ('tailLaneRotation' in obj)
+-                endpoints.push([obj.tailTime, obj.tailLaneRotation]);
+-            for (const [time, rotation] of endpoints) {
+-                if (time in lanes && !sameLane(lanes[time], rotation)) {
+-                    throw new Error(`Cannot convert conflicting rotation constraints at beat ${time}: ` +
+-                        `lanes ${lanes[time]} and ${rotation} require different global rotations ` +
+-                        'to preserve unequal slider endpoints or shared custom data.');
+-                }
+-                if (!(time in lanes))
+-                    lanes[time] = rotation;
+-            }
+-        }
+-        // Preserve the established all-override fallback when there are no
+-        // unequal endpoints. Otherwise their hard constraints take precedence;
+-        // notes and equal-ended sliders can use independent absolute overrides.
+-        if (hasRequiredEndpoints) {
+-            for (let i = 0; i < samples.length; i++) {
+-                const { time, laneRotation } = samples[i];
+-                if (!(time in lanes))
+-                    lanes[time] = laneRotation;
+-            }
+-        }
+-        for (let i = 0; i < objects.length; i++) {
+-            const obj = objects[i];
+-            if (obj.customData[overrideKey] !== undefined || obj.customData.worldRotation !== undefined) {
+-                continue;
+-            }
+-            const needsOverride = hasRequiredEndpoints
+-                ? !sameLane(obj.laneRotation, lanes[obj.time]) ||
+-                    ('tailLaneRotation' in obj && !sameLane(obj.tailLaneRotation, lanes[obj.tailTime]))
+-                : !!obj.laneRotation;
+-            if (needsOverride) {
+-                // Zero is also an absolute override when the timeline is nonzero.
+-                obj.customData[overrideKey] = obj.laneRotation;
+-            }
++            throw new Error(`Cannot convert conflicting rotation constraints at beat ${time}: ` +
++                `lanes ${lanes[time]} and ${laneRotation} require different global rotations.`);
+         }
+-        if (!hasRequiredEndpoints)
+-            samples.length = 0;
+     }
+     if (samples.length || !conflict) {
+         bm.difficulty.rotationEvents = [];
+diff --git a/script/beatmap/converter/toV2/beatmap.js b/script/beatmap/converter/toV2/beatmap.js
+index 7c0a7e16482e871964090eb25c0ef1b205e0ff33..3f3e6ab449744aad4fb290e16c00877d128fe206 100644
+--- a/script/beatmap/converter/toV2/beatmap.js
++++ b/script/beatmap/converter/toV2/beatmap.js
+@@ -8,11 +8,11 @@ const logger_js_1 = require("../../../logger.js");
+ const has_js_1 = require("../../helpers/modded/has.js");
+ const remaps_js_1 = require("../../misc/remaps.js");
+ const vector_js_1 = require("../../../utils/math/vector.js");
+-const _rotation_js_1 = require("../_rotation.js");
+ const eventToV2_js_1 = __importDefault(require("../customData/eventToV2.js"));
+ const objectToV2_js_1 = __importDefault(require("../customData/objectToV2.js"));
+ const _helpers_js_1 = require("../customData/_helpers.js");
+ const trackAnimation_js_1 = require("../customData/trackAnimation.js");
++const rotation_js_1 = require("../../helpers/rotation.js");
+ function tag(name) {
+     return ['convert', 'toV2Beatmap', name];
+ }
+@@ -322,5 +322,5 @@ function fromV3(bm) {
+     }
+ }
+ function fromV4(bm) {
+-    (0, _rotation_js_1.convertV4Rotation)(bm, '_rotation');
++    (0, rotation_js_1.convertV4Rotation)(bm);
+ }
+diff --git a/script/beatmap/converter/toV3/beatmap.js b/script/beatmap/converter/toV3/beatmap.js
+index fc80f91fce3cfaf9a2eadd8d057901092816b863..792676542e3d3747046c6c97f1955f2cab9a9a86 100644
+--- a/script/beatmap/converter/toV3/beatmap.js
++++ b/script/beatmap/converter/toV3/beatmap.js
+@@ -7,11 +7,11 @@ exports.toV3Beatmap = toV3Beatmap;
+ const logger_js_1 = require("../../../logger.js");
+ const helpers_js_1 = require("../../../utils/math/helpers.js");
+ const vector_js_1 = require("../../../utils/math/vector.js");
+-const _rotation_js_1 = require("../_rotation.js");
+ const eventToV3_js_1 = __importDefault(require("../customData/eventToV3.js"));
+ const objectToV3_js_1 = __importDefault(require("../customData/objectToV3.js"));
+ const _helpers_js_1 = require("../customData/_helpers.js");
+ const trackAnimation_js_1 = require("../customData/trackAnimation.js");
++const rotation_js_1 = require("../../helpers/rotation.js");
+ function tag(name) {
+     return ['convert', 'toV3Beatmap', name];
+ }
+@@ -416,5 +416,5 @@ function fromV2(bm) {
+     bm.lightshow.useNormalEventsAsCompatibleEvents = true;
+ }
+ function fromV4(bm) {
+-    (0, _rotation_js_1.convertV4Rotation)(bm, 'worldRotation');
++    (0, rotation_js_1.convertV4Rotation)(bm);
+ }
+diff --git a/script/beatmap/converter/toV4/beatmap.js b/script/beatmap/converter/toV4/beatmap.js
+index 7b674f6ce86c3e0c1bf2128051897227dd3c4998..f162dbaa4e3cff15194ce342dc2b288b1ae35f32 100644
+--- a/script/beatmap/converter/toV4/beatmap.js
++++ b/script/beatmap/converter/toV4/beatmap.js
+@@ -4,6 +4,7 @@ exports.toV4Beatmap = toV4Beatmap;
+ const logger_js_1 = require("../../../logger.js");
+ const beatmap_js_1 = require("../toV3/beatmap.js");
+ const _legacyRotation_js_1 = require("../../schema/v4/_legacyRotation.js");
++const rotation_js_1 = require("../../helpers/rotation.js");
+ function assignTimelineRotations(objects, laneAt, skipHoles) {
+     for (let i = 0; i < objects.length; i++) {
+         if (skipHoles && !(i in objects))
+@@ -16,32 +17,6 @@ function assignTimelineRotations(objects, laneAt, skipHoles) {
+         }
+     }
+ }
+-function consumeScalarRotationOverrides(objects) {
+-    let consumed = false;
+-    for (let i = 0; i < objects.length; i++) {
+-        if (!(i in objects))
+-            continue;
+-        const object = objects[i];
+-        if (typeof object.customData.worldRotation === 'number') {
+-            consumed = true;
+-            object.laneRotation = Math.round(object.customData.worldRotation);
+-            if ('tailLaneRotation' in object) {
+-                object.tailLaneRotation = object.laneRotation;
+-            }
+-        }
+-    }
+-    return consumed;
+-}
+-function removeScalarRotationOverrides(objects) {
+-    for (let i = 0; i < objects.length; i++) {
+-        if (!(i in objects))
+-            continue;
+-        const object = objects[i];
+-        if (typeof object.customData.worldRotation === 'number') {
+-            delete object.customData.worldRotation;
+-        }
+-    }
+-}
+ function tag(name) {
+     return ['convert', 'toV4Beatmap', name];
+ }
+@@ -90,7 +65,7 @@ function toV4Beatmap(data, fromVersion = data.version) {
+     const obstacles = data.difficulty.obstacles;
+     const waypoints = data.lightshow.waypoints;
+     if (data.difficulty.rotationEvents.length) {
+-        const laneAt = (0, _legacyRotation_js_1.createRotationLaneLookup)(data.difficulty.rotationEvents);
++        const laneAt = (0, rotation_js_1.createRotationLaneLookup)(data.difficulty.rotationEvents);
+         assignTimelineRotations(arcs, laneAt, true);
+         assignTimelineRotations(bombNotes, laneAt, true);
+         assignTimelineRotations(chains, laneAt, true);
+@@ -99,21 +74,5 @@ function toV4Beatmap(data, fromVersion = data.version) {
+         assignTimelineRotations(waypoints, laneAt, true);
+         data.difficulty.rotationEvents = [];
+     }
+-    let consumedScalarOverride = consumeScalarRotationOverrides(arcs);
+-    consumedScalarOverride = consumeScalarRotationOverrides(bombNotes) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(chains) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(colorNotes) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(obstacles) || consumedScalarOverride;
+-    consumedScalarOverride = consumeScalarRotationOverrides(waypoints) || consumedScalarOverride;
+-    // Indexed metadata can be shared in transfer mode. Every object must consume
+-    // the override before its removal, without replacing any custom-data alias.
+-    if (consumedScalarOverride) {
+-        removeScalarRotationOverrides(arcs);
+-        removeScalarRotationOverrides(bombNotes);
+-        removeScalarRotationOverrides(chains);
+-        removeScalarRotationOverrides(colorNotes);
+-        removeScalarRotationOverrides(obstacles);
+-        removeScalarRotationOverrides(waypoints);
+-    }
+     return data;
+ }
+diff --git a/script/beatmap/helpers/mod.js b/script/beatmap/helpers/mod.js
+index acfc5d3a19bc7fc46efa6068dddcb0d4185b40ea..4fee2f4ffe09fe2281e62d38aca1380423e0bfa4 100755
+--- a/script/beatmap/helpers/mod.js
++++ b/script/beatmap/helpers/mod.js
+@@ -21,6 +21,7 @@ __exportStar(require("./convert.js"), exports);
+ __exportStar(require("./environment.js"), exports);
+ __exportStar(require("./njs.js"), exports);
+ __exportStar(require("./optimize.js"), exports);
++__exportStar(require("./rotation.js"), exports);
+ __exportStar(require("./score.js"), exports);
+ __exportStar(require("./sort.js"), exports);
+ __exportStar(require("./timeProcessor.js"), exports);
+diff --git a/script/beatmap/helpers/rotation.js b/script/beatmap/helpers/rotation.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..89294f6104d89726a782a862ceb178f7e77e683f
+--- /dev/null
++++ b/script/beatmap/helpers/rotation.js
+@@ -0,0 +1,107 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.createRotationLaneLookup = createRotationLaneLookup;
++exports.assignTimelineRotations = assignTimelineRotations;
++exports.convertV4Rotation = convertV4Rotation;
++const _legacyRotation_js_1 = require("../schema/v4/_legacyRotation.js");
++/** Creates a mapper function that derives lane rotation properties from grid objects based on legacy rotation events. */
++function createRotationLaneLookup(rotationEvents) {
++    const events = [...rotationEvents].sort((a, b) => a.time - b.time || a.executionTime - b.executionTime);
++    let rotation = 0;
++    const rotations = events.map((event) => {
++        rotation += event.rotation;
++        return Math.round(rotation % 360);
++    });
++    // Binary search allows serializers to retain their authored object order.
++    // The cumulative sum stays unrounded; only the final i32 lane is quantized.
++    return (beat) => {
++        let low = 0;
++        let high = events.length;
++        while (low < high) {
++            const mid = (low + high) >>> 1;
++            const event = events[mid];
++            if (event.time < beat || (event.time === beat && event.executionTime === 0)) {
++                low = mid + 1;
++            }
++            else {
++                high = mid;
++            }
++        }
++        return low ? rotations[low - 1] : 0;
++    };
++}
++/** Mutably applies lane rotation properties to object collections based on a mapper function. */
++function assignTimelineRotations(objects, laneAt, skipHoles) {
++    for (let i = 0; i < objects.length; i++) {
++        if (skipHoles && !(i in objects))
++            continue;
++        const object = objects[i];
++        object.laneRotation = laneAt(object.time);
++        if ('tailLaneRotation' in object) {
++            // The v3 game loader samples BeatToRotation independently for each endpoint.
++            object.tailLaneRotation = laneAt(object.tailTime);
++        }
++    }
++}
++function sameLane(a, b) {
++    return a === b || (a - b) % 360 === 0;
++}
++/** Backports lane rotation object properties to a global timeline of rotation events. */
++function convertV4Rotation(bm) {
++    if (bm.difficulty.rotationEvents.length) {
++        (0, _legacyRotation_js_1.assertLegacyRotationOnly)(bm);
++        return;
++    }
++    const objects = [
++        bm.difficulty.arcs,
++        bm.difficulty.bombNotes,
++        bm.difficulty.chains,
++        bm.difficulty.colorNotes,
++        bm.difficulty.obstacles,
++        bm.lightshow.waypoints,
++    ].flat();
++    const samples = [];
++    for (let i = 0; i < objects.length; i++) {
++        const obj = objects[i];
++        samples.push(obj);
++        if ('tailLaneRotation' in obj) {
++            samples.push({ time: obj.tailTime, laneRotation: obj.tailLaneRotation });
++        }
++    }
++    samples.sort((a, b) => a.time - b.time);
++    const lanes = {};
++    for (let i = 0; i < samples.length; i++) {
++        const { time, laneRotation } = samples[i];
++        if (!(time in lanes)) {
++            lanes[time] = laneRotation;
++        }
++        else if (!sameLane(lanes[time], laneRotation)) {
++            throw new Error(`Cannot convert conflicting rotation constraints at beat ${time}: ` +
++                `lanes ${lanes[time]} and ${laneRotation} require different global rotations.`);
++        }
++    }
++    if (samples.length) {
++        bm.difficulty.rotationEvents = [];
++        let currentRotation = 0;
++        for (let i = 0; i < samples.length; i++) {
++            const { time } = samples[i];
++            const laneRotation = lanes[time];
++            const difference = laneRotation - currentRotation;
++            if (difference === 0)
++                continue;
++            currentRotation = laneRotation;
++            bm.difficulty.rotationEvents.push({
++                time,
++                rotation: difference,
++                executionTime: 0,
++                customData: {},
++            });
++        }
++    }
++    for (let i = 0; i < objects.length; i++) {
++        const obj = objects[i];
++        obj.laneRotation = 0;
++        if ('tailLaneRotation' in obj)
++            obj.tailLaneRotation = 0;
++    }
++}
+diff --git a/script/beatmap/schema/v2/rotationEvent.js b/script/beatmap/schema/v2/rotationEvent.js
+index 19e1cc5f78c1f73b9e4c2ec4c19236d9dad000a7..c06111d9c04cd889d6c28d219c02c0685521b414 100644
+--- a/script/beatmap/schema/v2/rotationEvent.js
++++ b/script/beatmap/schema/v2/rotationEvent.js
+@@ -11,12 +11,10 @@ const remaps_js_1 = require("../../misc/remaps.js");
+  */
+ function serializeRotationEvent(data) {
+     let r = data.rotation % 360;
+-    const customData = (0, json_js_1.deepCopy)(data.customData);
+     if (r >= -60 && r <= 60 && r % 15 === 0 && r / 15 !== 0) {
+         r = remaps_js_1.RotationValueEventValue[r] || r + 1360;
+     }
+     else {
+-        customData._rotation = r;
+         r += 1360;
+     }
+     return {
+@@ -24,7 +22,7 @@ function serializeRotationEvent(data) {
+         _type: data.executionTime === 1 ? 15 : 14,
+         _value: r,
+         _floatValue: 0,
+-        _customData: customData,
++        _customData: (0, json_js_1.deepCopy)(data.customData),
+     };
+ }
+ /** Deserialize schema object into beatmap v2 `Rotation Event` object.
+@@ -37,11 +35,7 @@ function deserializeRotationEvent(data, options) {
+     return (0, rotationEvent_js_1.createRotationEvent)({
+         time: data._time,
+         executionTime: data._type === 15 ? 1 : 0,
+-        rotation: typeof data._customData?._rotation === 'number'
+-            ? data._customData._rotation
+-            : value >= 1000
+-                ? (value - 1360) % 360
+-                : remaps_js_1.EventLaneRotationValue[value],
++        rotation: value >= 1000 ? (value - 1360) % 360 : remaps_js_1.EventLaneRotationValue[value],
+         customData: data._customData,
+     }, options);
+ }
+diff --git a/script/beatmap/schema/v4/_legacyRotation.js b/script/beatmap/schema/v4/_legacyRotation.js
+index 90b40b50e9e2fdbd88a421e0f328b6d312778736..e8131117015c13f4637f13ff456904bb01c76812 100644
+--- a/script/beatmap/schema/v4/_legacyRotation.js
++++ b/script/beatmap/schema/v4/_legacyRotation.js
+@@ -2,12 +2,12 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.legacyRotationLaneAt = legacyRotationLaneAt;
+ exports.assertLegacyRotationOnly = assertLegacyRotationOnly;
+-exports.createRotationLaneLookup = createRotationLaneLookup;
++const rotation_js_1 = require("../../helpers/rotation.js");
+ // Internal to legacy-v4 migration. Keep the schema path independent of the
+ // version converters; serialization only changes its new output records.
+ function legacyRotationLaneAt(data) {
+     assertLegacyRotationOnly(data);
+-    return createRotationLaneLookup(data.difficulty.rotationEvents);
++    return (0, rotation_js_1.createRotationLaneLookup)(data.difficulty.rotationEvents);
+ }
+ // Unsupported legacy tables have no defined precedence over native lanes.
+ // Reject mixed data during optional cleanup rather than choose an orientation.
+@@ -28,28 +28,3 @@ function assertNoNativeLanes(objects) {
+         }
+     }
+ }
+-function createRotationLaneLookup(rotationEvents) {
+-    const events = [...rotationEvents].sort((a, b) => a.time - b.time || a.executionTime - b.executionTime);
+-    let rotation = 0;
+-    const rotations = events.map((event) => {
+-        rotation += event.rotation;
+-        return Math.round(rotation % 360);
+-    });
+-    // Binary search allows serializers to retain their authored object order.
+-    // The cumulative sum stays unrounded; only the final i32 lane is quantized.
+-    return (beat) => {
+-        let low = 0;
+-        let high = events.length;
+-        while (low < high) {
+-            const mid = (low + high) >>> 1;
+-            const event = events[mid];
+-            if (event.time < beat || (event.time === beat && event.executionTime === 0)) {
+-                low = mid + 1;
+-            }
+-            else {
+-                high = mid;
+-            }
+-        }
+-        return low ? rotations[low - 1] : 0;
+-    };
+-}
+diff --git a/script/patch/dataCorrection/beatmap.js b/script/patch/dataCorrection/beatmap.js
+index 21b68378356c8ffd311f2593f6788f00dca08acc..765d7ad8de6c52dcee7519829255ee6aa937aea5 100644
+--- a/script/patch/dataCorrection/beatmap.js
++++ b/script/patch/dataCorrection/beatmap.js
+@@ -330,12 +330,11 @@ function patchBeatmap(data) {
+             const laneRotationEvent = {
+                 time: ev.time,
+                 executionTime: ev.type == 15 ? constants_js_1.ExecutionTime.LATE : constants_js_1.ExecutionTime.EARLY,
+-                rotation: ev.customData._rotation ??
+-                    (ev.value >= 1000 && ev.value <= 1720
+-                        ? ev.value - 1360
+-                        : ev.value >= 0 && ev.value <= 7
+-                            ? remaps_js_1.EventLaneRotationValue[ev.value]
+-                            : 0),
++                rotation: ev.value >= 1000 && ev.value <= 1720
++                    ? ev.value - 1360
++                    : ev.value >= 0 && ev.value <= 7
++                        ? remaps_js_1.EventLaneRotationValue[ev.value]
++                        : 0,
+                 customData: {},
+             };
+             if (laneRotationEvents)
+diff --git a/types/beatmap/converter/_rotation.d.ts b/types/beatmap/converter/_rotation.d.ts
+index 27bef949963cecc6eed38c1f67ac7bfeab778942..8a271f4ca1570ea0f7dac84d192aa5483f1a631c 100644
+--- a/types/beatmap/converter/_rotation.d.ts
++++ b/types/beatmap/converter/_rotation.d.ts
+@@ -1,2 +1,2 @@
+ import type { IWrapBeatmap } from '../schema/wrapper/types/beatmap.js';
+-export declare function convertV4Rotation(bm: IWrapBeatmap, overrideKey: 'worldRotation' | '_rotation'): void;
++export declare function convertV4Rotation(bm: IWrapBeatmap): void;
+diff --git a/types/beatmap/helpers/mod.d.ts b/types/beatmap/helpers/mod.d.ts
+index 80c854832e87e70f1126347f6a2ec0009daac07a..13c648a1ef180adc5cc9b1dada11eaa0724a36cd 100755
+--- a/types/beatmap/helpers/mod.d.ts
++++ b/types/beatmap/helpers/mod.d.ts
+@@ -5,6 +5,7 @@ export * from './convert.js';
+ export * from './environment.js';
+ export * from './njs.js';
+ export * from './optimize.js';
++export * from './rotation.js';
+ export * from './score.js';
+ export * from './sort.js';
+ export * from './timeProcessor.js';
+diff --git a/types/beatmap/helpers/rotation.d.ts b/types/beatmap/helpers/rotation.d.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad847a10e4713af93b14eb94629e537ffb16e2b7
+--- /dev/null
++++ b/types/beatmap/helpers/rotation.d.ts
+@@ -0,0 +1,7 @@
++import type { IWrapBaseSlider, IWrapBeatmap, IWrapGridObject, IWrapRotationEvent } from '../schema/wrapper/types/mod.js';
++/** Creates a mapper function that derives lane rotation properties from grid objects based on legacy rotation events. */
++export declare function createRotationLaneLookup<T extends IWrapRotationEvent>(rotationEvents: readonly T[]): (beat: number) => number;
++/** Mutably applies lane rotation properties to object collections based on a mapper function. */
++export declare function assignTimelineRotations<T extends IWrapGridObject | IWrapBaseSlider>(objects: readonly T[], laneAt: (beat: number) => number, skipHoles: boolean): void;
++/** Backports lane rotation object properties to a global timeline of rotation events. */
++export declare function convertV4Rotation<T extends IWrapBeatmap>(bm: T): void;
+diff --git a/types/beatmap/schema/v4/_legacyRotation.d.ts b/types/beatmap/schema/v4/_legacyRotation.d.ts
+index 1dfa9c604f09516e264f3af83a26fe5286dfbb44..fad35f9940b371083bb1a84c19fb9b103a8e75e8 100644
+--- a/types/beatmap/schema/v4/_legacyRotation.d.ts
++++ b/types/beatmap/schema/v4/_legacyRotation.d.ts
+@@ -1,5 +1,3 @@
+ import type { IWrapBeatmap } from '../wrapper/types/beatmap.js';
+-import type { IWrapRotationEvent } from '../wrapper/types/rotationEvent.js';
+ export declare function legacyRotationLaneAt(data: IWrapBeatmap): (beat: number) => number;
+ export declare function assertLegacyRotationOnly(data: IWrapBeatmap): void;
+-export declare function createRotationLaneLookup(rotationEvents: readonly IWrapRotationEvent[]): (beat: number) => number;

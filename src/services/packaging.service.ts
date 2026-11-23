@@ -2,10 +2,13 @@ import { typeByExtension } from "@std/media-types/type-by-extension";
 import { extname } from "@std/path/extname";
 import { toPascalCase } from "@std/text/to-pascal-case";
 import {
+	assignTimelineRotations,
 	type BeatmapFileType,
 	compatibilityCheck,
+	convertV4Rotation,
 	createAudioData,
 	createBeatmap,
+	createRotationLaneLookup,
 	type ILoadOptions,
 	type InferBeatmapVersion,
 	type ISaveOptions,
@@ -70,9 +73,10 @@ export interface MapArchiveContents {
 
 export interface ImportMapArchiveOptions {
 	loadOptions?: Omit<ILoadOptions<BeatmapFileType, InferBeatmapVersion>, "preprocess" | "postprocess">;
+	forceCompatibility?: boolean;
 }
 
-export async function importMapArchive(archive: Uint8Array, audioContext: AudioContext, { loadOptions }: ImportMapArchiveOptions): Promise<MapArchiveContents> {
+export async function importMapArchive(archive: Uint8Array, audioContext: AudioContext, { loadOptions, forceCompatibility }: ImportMapArchiveOptions): Promise<MapArchiveContents> {
 	const unzipped = await new Promise<Unzipped>((resolve, reject) =>
 		unzip(archive, (err, data) => {
 			if (err) return reject(err);
@@ -116,6 +120,22 @@ export async function importMapArchive(archive: Uint8Array, audioContext: AudioC
 					}),
 			]);
 
+			if (forceCompatibility) {
+				if (difficultyContents.difficulty.rotationEvents.length) {
+					const laneAt = createRotationLaneLookup(difficultyContents.difficulty.rotationEvents);
+					assignTimelineRotations(difficultyContents.difficulty.colorNotes, laneAt, true);
+					assignTimelineRotations(difficultyContents.difficulty.bombNotes, laneAt, true);
+					assignTimelineRotations(difficultyContents.difficulty.obstacles, laneAt, true);
+					assignTimelineRotations(difficultyContents.difficulty.arcs, laneAt, true);
+					assignTimelineRotations(difficultyContents.difficulty.chains, laneAt, true);
+					assignTimelineRotations(difficultyContents.lightshow.waypoints, laneAt, true);
+					if (lightshowContents.lightshow) {
+						assignTimelineRotations(lightshowContents.lightshow.waypoints, laneAt, true);
+					}
+				}
+				difficultyContents.difficulty.rotationEvents = [];
+			}
+
 			return createBeatmap({
 				version: difficultyContents.version,
 				difficulty: difficultyContents.difficulty,
@@ -140,7 +160,7 @@ export async function importMapArchive(archive: Uint8Array, audioContext: AudioC
 }
 
 export async function importMapArchiveToFilestore(archive: Uint8Array, audioContext: AudioContext, filestore: BeatmapFilestore, { currentSongIds = [], readonly, ...options }: ImportMapArchiveOptions & { currentSongIds?: SongId[] } & Parameters<typeof deserializeInfoContents>[1]): Promise<App.ISong> {
-	const { songFile, coverArtFile, info, audioData, beatmaps } = await importMapArchive(archive, audioContext, options);
+	const { songFile, coverArtFile, info, audioData, beatmaps } = await importMapArchive(archive, audioContext, { ...options, forceCompatibility: true });
 
 	const song = deserializeInfoContents(info, { readonly });
 
@@ -215,6 +235,7 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 					}
 					if (version && version < 4) {
 						data.bpmEvents = createBpmEventsFromAudioData(audioData);
+						convertV4Rotation({ ...beatmap, difficulty: data });
 					}
 					return createBeatmap({ ...beatmap, difficulty: data });
 				},
@@ -225,7 +246,14 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 		if (beatmapVersion === 4) {
 			const serialLightshow = saveLightshow(beatmap.lightshow, beatmapVersion, {
 				...saveOptions,
-				preprocess: [(data) => createBeatmap({ ...beatmap, lightshow: data })],
+				preprocess: [
+					(data) => {
+						if (version && version < 4) {
+							convertV4Rotation({ ...beatmap, lightshow: data });
+						}
+						return createBeatmap({ ...beatmap, lightshow: data });
+					},
+				],
 			});
 			zippable[beatmap.lightshowFilename] = encoder.encode(JSON.stringify(serialLightshow, null, format));
 		}
