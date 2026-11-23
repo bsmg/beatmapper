@@ -46,11 +46,13 @@ export {
 } from "./features/lightshow.slice";
 export {
 	decrementPlaybackRate,
+	decrementRotationLane,
 	decrementSnap,
 	decrementSongVolume,
 	decrementTickVolume,
 	decrementTrackScale,
 	incrementPlaybackRate,
+	incrementRotationLane,
 	incrementSnap,
 	incrementSongVolume,
 	incrementTickVolume,
@@ -62,6 +64,7 @@ export {
 	updateCursorPosition,
 	updateHighestPrecision,
 	updatePlaybackRate,
+	updateRotationLane,
 	updateSnap,
 	updateSongVolume,
 	updateTickType,

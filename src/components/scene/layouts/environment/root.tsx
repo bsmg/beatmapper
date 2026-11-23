@@ -1,18 +1,19 @@
-import { Fragment, type PropsWithChildren } from "react";
+import type { Assign } from "@ark-ui/react";
+import type { ComponentProps } from "react";
 
 import { AmbientLight, Bloom, Runway } from "$/components/scene/compositions";
 
-interface Props extends PropsWithChildren {
+interface Props {
 	surfaceDepth: number;
 	isBloomEnabled?: boolean;
 }
-function EnvironmentRoot({ surfaceDepth, isBloomEnabled, children }: Props) {
+function EnvironmentRoot({ surfaceDepth, isBloomEnabled, children, ...rest }: Assign<ComponentProps<"group">, Props>) {
 	return (
-		<Fragment>
+		<group {...rest}>
 			<Bloom enabled={isBloomEnabled}>{children}</Bloom>
 			<Runway surfaceDepth={surfaceDepth} />
 			<AmbientLight />
-		</Fragment>
+		</group>
 	);
 }
 
