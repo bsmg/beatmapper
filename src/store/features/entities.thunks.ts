@@ -105,6 +105,7 @@ export const pasteSelection = createThunk("pasteSelection", (_, api: GetShallowT
 				upsertEvents({
 					basicEvents: data.basicEvents?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 					boostEvents: data.boostEvents?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
+					njsEvents: data.njsEvents?.map((x) => ({ ...x, selected: true, time: x.time + deltaBetweenPeriods })),
 				}),
 			);
 		}

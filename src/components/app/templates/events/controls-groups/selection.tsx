@@ -1,19 +1,24 @@
+import { createListCollection } from "@ark-ui/react/collection";
 import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
-import { EventType } from "bsmap";
+import { EaseType, EaseTypeSchema, EventType } from "bsmap";
 import { ArrowLeftToLineIcon, ArrowRightToLineIcon, EditIcon, FlipHorizontalIcon, TrashIcon } from "lucide-react";
 import { useMemo } from "react";
-import { boolean, integer, minValue, nullable, number, object, pipe, values } from "valibot";
+import { boolean, integer, minValue, nullable, number, object, picklist, pipe, values } from "valibot";
 
 import { cleanObjectData, getDynamicInputValue, getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { Show } from "$/components/ui/atoms";
 import { Button, createPromptFactory, Field, Tooltip, usePrompt } from "$/components/ui/compositions";
-import { isBasicEvent, isBoostEvent } from "$/helpers/events.helpers";
+import { EaseTypeRename } from "$/constants/rename.constants";
+import { isBasicEvent, isBoostEvent, isNJSEvent } from "$/helpers/events.helpers";
 import { deselectAllEntities, mirrorAllSelectedEvents, nudgeSelection, removeAllSelectedEvents, updateAllSelectedEvents } from "$/store/actions";
 import { selectSelectedEvents } from "$/store/features/events.slice";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
 import { selectActiveWindowSize, selectAllSelectedEvents, selectSnap } from "$/store/selectors";
 import { HStack } from "$:styled-system/jsx";
+
+const BOOLEAN_COLLECTION = createListCollection({ items: [0, 1], itemToValue: (x) => x.toString(), itemToString: (x) => ["false", "true"][x] });
+const EASING_COLLECTION = createListCollection({ items: Object.values(EaseType), itemToValue: (x) => x.toString(), itemToString: (x) => EaseTypeRename[x] });
 
 const createModifyEventsPrompt = createPromptFactory({
 	title: "Modify All Selected Events",
@@ -30,6 +35,11 @@ const createModifyEventsPrompt = createPromptFactory({
 		boostEventData: object({
 			toggle: nullable(boolean()),
 		}),
+		njsEventData: object({
+			value: nullable(number()),
+			previous: nullable(picklist([0, 1])),
+			easing: nullable(EaseTypeSchema),
+		}),
 	}),
 });
 
@@ -40,7 +50,7 @@ function SelectionControls() {
 	const snapTo = useAppSelector(selectSnap);
 	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
 
-	const { basicEvents, boostEvents } = useAppSelector(selectSelectedEvents);
+	const { basicEvents, boostEvents, njsEvents } = useAppSelector(selectSelectedEvents);
 	const events = useAppSelector(selectAllSelectedEvents);
 
 	const { trigger: triggerModify } = usePrompt(
@@ -49,6 +59,7 @@ function SelectionControls() {
 				eventData: { time: getDynamicInputValue(events, "time") },
 				basicEventData: { type: getDynamicInputValue(basicEvents, "type"), value: getDynamicInputValue(basicEvents, "value"), floatValue: getDynamicInputValue(basicEvents, "floatValue") },
 				boostEventData: { toggle: getDynamicInputValue(boostEvents, "toggle") },
+				njsEventData: { value: getDynamicInputValue(njsEvents, "value"), previous: getDynamicInputValue(njsEvents, "previous"), easing: getDynamicInputValue(njsEvents, "easing") },
 			},
 			render: ({ form }) => {
 				return (
@@ -68,18 +79,27 @@ function SelectionControls() {
 								<form.AppField name="boostEventData.toggle">{(ctx) => <ctx.BooleanCombobox label="Toggle Color Boost" placeholder="*" clearable />}</form.AppField>
 							</form.Row>
 						</Show>
+						<Show when={events.every(isNJSEvent)}>
+							<form.Row>
+								<form.AppField name="njsEventData.value">{(ctx) => <ctx.NumberInput label="Relative NJS Value" placeholder="*" />}</form.AppField>
+								<form.AppField name="njsEventData.previous">{(ctx) => <ctx.NumberCombobox label="Extend (Use Previous Value)" placeholder="*" collection={BOOLEAN_COLLECTION} clearable />}</form.AppField>
+								<form.AppField name="njsEventData.easing">{(ctx) => <ctx.NumberCombobox label="Easing Type" placeholder="*" collection={EASING_COLLECTION} clearable />}</form.AppField>
+							</form.Row>
+						</Show>
 					</form.Root>
 				);
 			},
-			onSubmit: ({ value: { eventData, basicEventData, boostEventData } }) => {
+			onSubmit: ({ value: { eventData, basicEventData, boostEventData, njsEventData } }) => {
 				const eventChanges = cleanObjectData(eventData);
 				const basicEventChanges = cleanObjectData(basicEventData);
 				const boostEventChanges = cleanObjectData(boostEventData);
+				const njsEventChanges = cleanObjectData(njsEventData);
 
 				return dispatch(
 					updateAllSelectedEvents({
 						basicEventChanges: { ...eventChanges, ...basicEventChanges },
 						boostEventChanges: { ...eventChanges, ...boostEventChanges },
+						njsEventChanges: { ...eventChanges, ...njsEventChanges },
 					}),
 				);
 			},

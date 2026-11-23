@@ -1,13 +1,13 @@
 import { useHotkey } from "@ark-ui/react/hotkeys";
 import { useRouteContext } from "@tanstack/react-router";
-import { BlendIcon, EyeClosedIcon, EyeIcon, Maximize2Icon, Minimize2Icon, PlayIcon, PlayOffIcon, ZapIcon } from "lucide-react";
+import { BlendIcon, EyeClosedIcon, EyeIcon, GaugeIcon, Maximize2Icon, Minimize2Icon, PlayIcon, PlayOffIcon, ZapIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { StatusBar } from "$/components/app/layouts";
 import { decrementEventsEditorTrackHeight, decrementEventsEditorTrackOpacity, incrementEventsEditorTrackHeight, incrementEventsEditorTrackOpacity, updateEventsEditorPreview, updateEventsEditorTrackHeight, updateEventsEditorTrackOpacity } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectTotalBasicEvents, selectTotalBoostEvents } from "$/store/selectors";
+import { selectEventsEditorPreview, selectEventsEditorTrackHeight, selectEventsEditorTrackOpacity, selectLoading, selectTotalBasicEvents, selectTotalBoostEvents, selectTotalNjsEvents } from "$/store/selectors";
 import { pluralize } from "$/utils";
 
 function EventsEditorStatusBar() {
@@ -20,6 +20,7 @@ function EventsEditorStatusBar() {
 	const backgroundOpacity = useAppSelector(selectEventsEditorTrackOpacity);
 	const numOfBasicEvents = useAppSelector(selectTotalBasicEvents);
 	const numOfBoostEvents = useAppSelector(selectTotalBoostEvents);
+	const numOfNjsEvents = useAppSelector(selectTotalNjsEvents);
 
 	const scopes = useMemo(() => getHotkeyScopes(view), [view]);
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
@@ -40,6 +41,9 @@ function EventsEditorStatusBar() {
 				</StatusBar.Indicator>
 				<StatusBar.Indicator label={`${numOfBoostEvents} ${pluralize(numOfBoostEvents, "boost event")}`} icon={BlendIcon}>
 					{numOfBoostEvents}
+				</StatusBar.Indicator>
+				<StatusBar.Indicator label={`${numOfNjsEvents} ${pluralize(numOfNjsEvents, "NJS event")}`} icon={GaugeIcon}>
+					{numOfNjsEvents}
 				</StatusBar.Indicator>
 			</StatusBar.Group>
 			<StatusBar.Toggle label={"Show environment"} disabled={isLoading} checked={showLightingPreview} onIcon={PlayIcon} offIcon={PlayOffIcon} onCheckedChange={(details) => dispatch(updateEventsEditorPreview(details.checked))} />

@@ -34,6 +34,7 @@ import { clamp, isModKeyPressed, isObjectEmpty } from "$/utils";
 import { Stack, Text, Wrap } from "$:styled-system/jsx";
 import BasicEventTrack from "./basic-track";
 import BoostEventTrack from "./boost-track";
+import NjsEventTrack from "./njs-track";
 
 const createTrackFilterPrompt = createPromptFactory({
 	title: "Track Visibility",
@@ -65,7 +66,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 	});
 
 	const allTracks = useMemo(() => {
-		return [...Object.values(basicTracks), { id: EventType.COLOR_BOOST, name: "Color Boost" }].sort(sortEventTracks(environment));
+		return [...Object.values(basicTracks), { id: EventType.COLOR_BOOST, name: "Color Boost" }, { id: EventType.NJS_CHANGE, name: "NJS Change" }].sort(sortEventTracks(environment));
 	}, [basicTracks, environment]);
 
 	const [filter, setFilter] = useState<string[]>(() => allTracks.map((t) => t.id.toString()));
@@ -236,6 +237,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 						<For each={allFilteredTracks}>
 							{(track) => {
 								if (track.id === EventType.COLOR_BOOST) return <BoostEventTrack key={track.id} trackId={track.id} data-highlighted={isTrackDisabled(track.id)} />;
+								if (track.id === EventType.NJS_CHANGE) return <NjsEventTrack key={track.id} trackId={track.id} data-highlighted={isTrackDisabled(track.id)} />;
 								return <BasicEventTrack key={track.id} trackId={track.id} data-highlighted={isTrackDisabled(track.id)} />;
 							}}
 						</For>

@@ -12,7 +12,7 @@ import { type App, type BeatmapId, type ILightState, NotePlacementMode, ObjectTy
 import { floorToNearest, roundToNearest } from "$/utils";
 import { selectNotesEditorType } from "./beatmap.slice";
 import { selectAllBookmarks } from "./bookmarks.slice";
-import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectSelectedEvents } from "./events.slice";
+import { selectAllBasicEvents, selectAllBasicEventsForTrack, selectAllBoostEvents, selectAllNjsEvents, selectSelectedEvents } from "./events.slice";
 import { selectEventsEditorBeatsPerZoomLevel } from "./lightshow.slice";
 import { selectCursorPosition, selectDuration, selectHighestPrecision, selectWindowSize } from "./navigation.slice";
 import { selectAllArcs, selectAllBombNotes, selectAllChains, selectAllColorNotes, selectAllObstacles, selectSelectedObjects } from "./objects.slice";
@@ -129,9 +129,13 @@ export const selectSelectedBeatmapEntities = createAppSelector([selectSelectedOb
 		chains: view === View.BEATMAP ? objects.chains : undefined,
 		basicEvents: view === View.LIGHTSHOW ? events.basicEvents : undefined,
 		boostEvents: view === View.LIGHTSHOW ? events.boostEvents : undefined,
+		njsEvents: view === View.LIGHTSHOW ? events.njsEvents : undefined,
 	};
 });
 
-export const selectBeatmapEntities = createAppSelector([selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllArcs, selectAllChains, selectAllBasicEvents, selectAllBoostEvents, selectAllBookmarks], (notes, bombs, obstacles, arcs, chains, basicEvents, boostEvents, bookmarks): App.IBeatmapEntities => {
-	return { notes, bombs, obstacles, arcs, chains, basicEvents, boostEvents, bookmarks };
-});
+export const selectBeatmapEntities = createAppSelector(
+	[selectAllColorNotes, selectAllBombNotes, selectAllObstacles, selectAllArcs, selectAllChains, selectAllBasicEvents, selectAllBoostEvents, selectAllNjsEvents, selectAllBookmarks],
+	(notes, bombs, obstacles, arcs, chains, basicEvents, boostEvents, njsEvents, bookmarks): App.IBeatmapEntities => {
+		return { notes, bombs, obstacles, arcs, chains, basicEvents, boostEvents, njsEvents, bookmarks };
+	},
+);
