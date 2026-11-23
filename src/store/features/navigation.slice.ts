@@ -1,5 +1,6 @@
 import { createAction, createSlice } from "@reduxjs/toolkit";
 
+import { calculateRotationStep } from "$/helpers/editor.helpers";
 import type { AppThunkApiConfig } from "$/store/types";
 import { createIncrementByValuePayloadActionCreator, createThunk, type GetShallowThunkAPI } from "$/store/utils/thunk.utils";
 import { clamp, normalizeAngle } from "$/utils";
@@ -138,17 +139,13 @@ export const decrementSnap = createThunk("decrementSnap", (_, api: GetShallowThu
 export const incrementRotationLane = createThunk("incrementRotationLane", (args: { limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
 	const currentRotation = selectRotationLane(api.getState());
 	const rotationStep = selectRotationStep(api.getState());
-	const currentSigned = currentRotation > 180 ? currentRotation - 360 : currentRotation;
-	const nextSigned = args.limit >= 180 ? currentSigned + rotationStep : Math.min(args.limit, currentSigned + rotationStep);
-	const nextSnap = normalizeAngle(nextSigned);
+	const nextSnap = calculateRotationStep(currentRotation, rotationStep, args.limit);
 	return api.dispatch(updateRotationLane(nextSnap));
 });
 export const decrementRotationLane = createThunk("decrementRotationLane", (args: { limit: number }, api: GetShallowThunkAPI<AppThunkApiConfig>) => {
 	const currentRotation = selectRotationLane(api.getState());
 	const rotationStep = selectRotationStep(api.getState());
-	const currentSigned = currentRotation > 180 ? currentRotation - 360 : currentRotation;
-	const nextSigned = args.limit >= 180 ? currentSigned - rotationStep : Math.max(-args.limit, currentSigned - rotationStep);
-	const nextSnap = normalizeAngle(nextSigned);
+	const nextSnap = calculateRotationStep(currentRotation, -rotationStep, args.limit);
 	return api.dispatch(updateRotationLane(nextSnap));
 });
 

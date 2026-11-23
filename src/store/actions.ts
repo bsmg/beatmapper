@@ -95,6 +95,7 @@ export {
 	removeChain,
 	removeColorNote,
 	removeObstacle,
+	rotateAllSelectedObjects,
 	selectArc,
 	selectBombNote,
 	selectChain,

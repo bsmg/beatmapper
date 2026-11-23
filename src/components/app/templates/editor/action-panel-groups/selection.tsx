@@ -2,7 +2,7 @@ import { createListCollection } from "@ark-ui/react/collection";
 import { useHotkey, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useParams, useRouteContext } from "@tanstack/react-router";
 import { type IWrapArc, type IWrapChain, NoteColor, NoteDirectionSchema, SliderMidAnchorMode, SliderMidAnchorModeSchema, sortObjectFn } from "bsmap";
-import { ArrowDownToLineIcon, ArrowUpToLineIcon, EditIcon, FlipHorizontal2Icon, FlipVertical2Icon, TrashIcon } from "lucide-react";
+import { ArrowDownToLineIcon, ArrowUpToLineIcon, EditIcon, FlipHorizontal2Icon, FlipVertical2Icon, RotateCcwIcon, RotateCwIcon, TrashIcon } from "lucide-react";
 import { type MouseEventHandler, useMemo } from "react";
 import { gtValue, guard, integer, maxValue, minValue, nullable, number, object, pipe, union, values } from "valibot";
 
@@ -14,10 +14,11 @@ import { isColorNote } from "$/helpers/notes.helpers";
 import { isObstacle } from "$/helpers/obstacles.helpers";
 import { isArc, isChain } from "$/helpers/sliders.helpers";
 import { deselectAllEntities, deselectAllObjectsOfType, mirrorAllSelectedObjects, nudgeSelection, removeAllSelectedObjects, updateAllSelectedObjects } from "$/store/actions";
+import { rotateSelection } from "$/store/features/entities.thunks";
 import { selectSelectedObjects } from "$/store/features/objects.slice";
 import { selectNoteGridSize, selectObstacleGridSize } from "$/store/features/selectors";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectActiveWindowSize, selectAllSelectedObjects, selectSnap } from "$/store/selectors";
+import { selectActiveWindowSize, selectAllSelectedObjects, selectBeatmapById, selectRotationStep, selectSnap } from "$/store/selectors";
 import { ObjectType } from "$/types";
 import { StrikethroughOnHover, Text } from "$:styled-system/jsx";
 
@@ -96,7 +97,7 @@ function SelectionCount({ num, label, onClick }: CountProps) {
 }
 
 function SelectionActionPanelGroup() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
@@ -104,6 +105,8 @@ function SelectionActionPanelGroup() {
 	const noteGrid = useAppSelector((state) => selectNoteGridSize(state, sid));
 	const obstacleGrid = useAppSelector((state) => selectObstacleGridSize(state, sid));
 	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
+	const beatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
+	const rotationStep = useAppSelector(selectRotationStep);
 
 	const objects = useAppSelector(selectAllSelectedObjects);
 	const { notes, bombs, obstacles, arcs, chains } = useAppSelector(selectSelectedObjects);
@@ -224,6 +227,12 @@ function SelectionActionPanelGroup() {
 	useHotkey({ scopes, category, label: "Nudge Selection to Next Window", hotkey: "Shift+PageUp", action: () => dispatch(nudgeSelection({ direction: "forwards", amount: windowSize })) });
 	useHotkey({ scopes, category, label: "Nudge Selection to Previous Window", hotkey: "Shift+PageDown", action: () => dispatch(nudgeSelection({ direction: "backwards", amount: windowSize })) });
 
+	const isRotationSupported = useMemo(() => beatmap.characteristic === "360Degree" || beatmap.characteristic === "90Degree", [beatmap.characteristic]);
+	const is90Degree = useMemo(() => beatmap.characteristic === "90Degree", [beatmap.characteristic]);
+
+	useHotkey({ scopes, category, label: "Rotate Selection Left", hotkey: "Shift+ArrowLeft", action: () => isRotationSupported && dispatch(rotateSelection({ direction: "left", amount: rotationStep, limit: is90Degree ? 45 : 180 })) });
+	useHotkey({ scopes, category, label: "Rotate Selection Right", hotkey: "Shift+ArrowRight", action: () => isRotationSupported && dispatch(rotateSelection({ direction: "right", amount: rotationStep, limit: is90Degree ? 45 : 180 })) });
+
 	useHotkey({ scopes, category, label: "Modify Selection", hotkey: "Mod+E", action: () => triggerModify() });
 	useHotkey({ scopes, category, label: "Deselect All Objects", hotkey: "Escape", action: () => dispatch(deselectAllEntities()) });
 	useHotkey({ scopes, category, label: "Delete Selection", hotkey: "Delete", action: () => dispatch(removeAllSelectedObjects()) });
@@ -273,6 +282,18 @@ function SelectionActionPanelGroup() {
 						<TrashIcon />
 					</Button>
 				</Tooltip>
+				<Show when={isRotationSupported}>
+					<Tooltip render={() => "Rotate selection left"}>
+						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => isRotationSupported && dispatch(rotateSelection({ direction: "left", amount: rotationStep, limit: is90Degree ? 45 : 180 }))}>
+							<RotateCcwIcon />
+						</Button>
+					</Tooltip>
+					<Tooltip render={() => "Rotate selection right"}>
+						<Button variant="ghost" size="icon" unfocusOnPress onClick={() => isRotationSupported && dispatch(rotateSelection({ direction: "right", amount: rotationStep, limit: is90Degree ? 45 : 180 }))}>
+							<RotateCwIcon />
+						</Button>
+					</Tooltip>
+				</Show>
 			</ActionPanelGroup.Section>
 		</ActionPanelGroup.Root>
 	);

@@ -1,3 +1,5 @@
+import { normalizeAngle, toSignedAngle } from "$/utils";
+
 /**
  * This function provides the range of visible beats, from the placement grid to the far edge of the available space.
  */
@@ -52,4 +54,10 @@ export function calculateQuickSelectRange(range: string, currentBeat: number, fu
 	}
 
 	return [startBeat, endBeat] as const;
+}
+
+export function calculateRotationStep(currentAngle: number, delta: number, limit: number): number {
+	const target = toSignedAngle(currentAngle + delta);
+	const boundedAngle = limit >= 180 ? target : Math.max(-limit, Math.min(limit, target));
+	return normalizeAngle(boundedAngle);
 }

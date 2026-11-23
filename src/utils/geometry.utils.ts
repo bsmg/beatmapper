@@ -24,6 +24,10 @@ export function convertDegreesToRadians(angle: number) {
 export function normalizeAngle(angle: number): number {
 	return ((angle % 360) + 360) % 360;
 }
+export function toSignedAngle(angle: number): number {
+	const wrapped = normalizeAngle(angle);
+	return wrapped > 180 ? wrapped - 360 : wrapped;
+}
 
 export function getQuadrantForPoint({ x, y }: Vector2Like) {
 	if (x >= 0 && y >= 0) {
