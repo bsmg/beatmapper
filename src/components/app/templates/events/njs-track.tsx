@@ -1,4 +1,5 @@
 import type { Assign } from "@ark-ui/react";
+import { useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useParams } from "@tanstack/react-router";
 import { createNJSEvent, EaseType, type IWrapNJSEvent } from "bsmap";
 import { type ComponentProps, memo, useCallback, useMemo } from "react";
@@ -52,6 +53,7 @@ function NjsEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof EventG
 	const selectedTool = useAppSelector(selectEventsEditorTool);
 	const areLasersLocked = useAppSelector(selectEventsEditorMirrorLock);
 	const { startBeat, endBeat } = useAppSelector((state) => selectEventsEditorStartAndEndBeat(state, sid));
+	const jumpSpeed = useAppSelector((state) => selectJumpSpeed(state, sid, bid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const njsEvents = useAppSelector((state) => selectAllNjsEvents(state));
 
@@ -59,13 +61,15 @@ function NjsEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof EventG
 
 	const api = EventGrid.useContext();
 
+	const isAltKeyPressed = useIsKeyPressed({ hotkey: "Alt" });
+
 	const resolveEventData = useCallback(
-		(time: number, norm: number) => {
-			const previous = norm > 0.5 ? 1 : 0;
+		(time: number) => {
+			const previous = isAltKeyPressed ? 1 : 0;
 			const easing = [EaseType.LINEAR, EaseType.NONE, EaseType.IN_QUAD, EaseType.OUT_QUAD, EaseType.INOUT_QUAD][Object.values(EventTool).indexOf(selectedTool)];
 			return createNJSEvent({ time, value: 0, previous, easing: previous ? EaseType.NONE : easing });
 		},
-		[selectedTool],
+		[selectedTool, isAltKeyPressed],
 	);
 
 	const actions = useMemo<EventGrid.IPlacementActions<IWrapNJSEvent>>(() => {
@@ -79,11 +83,12 @@ function NjsEventTrack({ trackId, ...rest }: Assign<ComponentProps<typeof EventG
 			onWheel: (data, id, delta) => {
 				if (data.previous === 0) {
 					const step = 1 / delta;
-					return dispatch(updateNjsEvent({ id, environment, areLasersLocked, changes: { value: data.value + step } }));
+					const value = Math.max(-jumpSpeed, data.value + step);
+					return dispatch(updateNjsEvent({ id, environment, areLasersLocked, changes: { value } }));
 				}
 			},
 		};
-	}, [dispatch, resolveEventData, environment, areLasersLocked]);
+	}, [dispatch, resolveEventData, jumpSpeed, environment, areLasersLocked]);
 
 	return (
 		<EventGrid.Track {...api.getTrackProps(trackId, environment, actions)} {...rest}>

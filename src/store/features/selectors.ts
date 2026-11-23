@@ -1,5 +1,5 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
-import { calculateNps, type IWrapBaseObject, TimeProcessor } from "bsmap";
+import { calculateNps, createNJSEvent, type IWrapBaseObject, TimeProcessor } from "bsmap";
 import { shallowEqual } from "react-redux";
 
 import { EASING_FNS } from "$/constants/easings.constants";
@@ -43,18 +43,21 @@ export const selectEditorOffsetInBeats = createSelector([selectTimeProcessor, se
 	return timeProcessor.toBeatTime(offset);
 });
 
-export const selectCurrentJumpSpeed = createSelector([selectJumpSpeed, selectAllNjsEvents, selectCursorPositionInBeats], (baseJumpSpeed, njsEvents, currentTime) => {
+export const selectCurrentJumpSpeed = createSelector([selectJumpSpeed, selectAllNjsEvents, selectCursorPositionInBeats, selectEditorOffsetInBeats], (baseJumpSpeed, njsEvents, currentTime, editorOffsetInBeats) => {
 	if (!njsEvents.length) return baseJumpSpeed;
-	if (currentTime < njsEvents[0].time) return baseJumpSpeed + njsEvents[0].value;
 
-	const lastEvent = njsEvents[njsEvents.length - 1];
+	const events = njsEvents[0].time > 0 ? [createNJSEvent({ time: -editorOffsetInBeats, value: 0, previous: 1, easing: 0 }), ...njsEvents] : njsEvents;
+
+	if (currentTime < events[0].time) return baseJumpSpeed + events[0].value;
+
+	const lastEvent = events[events.length - 1];
 	if (currentTime >= lastEvent.time) return baseJumpSpeed + lastEvent.value;
 
-	const nextIdx = njsEvents.findIndex((ev) => ev.time > currentTime);
+	const nextIdx = events.findIndex((ev) => ev.time > currentTime);
 	if (nextIdx <= 0) return baseJumpSpeed;
 
-	const prevEvent = njsEvents[nextIdx - 1];
-	const currEvent = njsEvents[nextIdx];
+	const prevEvent = events[nextIdx - 1];
+	const currEvent = events[nextIdx];
 
 	if (currEvent.previous === 1 || prevEvent.time === currEvent.time) {
 		return baseJumpSpeed + prevEvent.value;
