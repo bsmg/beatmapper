@@ -1,8 +1,8 @@
 import { createAction, createDraftSafeSelector, createEntityAdapter, createSlice, type EntityId } from "@reduxjs/toolkit";
-import { type EnvironmentName, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, sortObjectFn } from "bsmap";
+import { type EnvironmentName, type ITrackDefinitions, type IWrapBasicEvent, type IWrapColorBoostEvent, type IWrapNJSEvent, sortObjectFn } from "bsmap";
 import { createHistoryAdapter, type HistoryState } from "history-adapter/redux";
 
-import { isBasicEvent, isBoostEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent, sortEventTracks } from "$/helpers/events.helpers";
+import { isBasicEvent, isBoostEvent, isNJSEvent, isTrackGroupable, resolveEventId, resolveGroupTrackIds, resolveTrackIdForEvent, sortEventTracks } from "$/helpers/events.helpers";
 import { nudgeItem } from "$/helpers/item.helpers";
 import { createEditorObjectAdapter } from "$/store/helpers/editor.helpers";
 import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selectors";
@@ -11,16 +11,20 @@ import { deselectAllEntities, leaveEditor, loadBeatmapContents, selectAllEntitie
 
 const basicEvents = createEntityAdapter<App.IWrapEditorObject<IWrapBasicEvent>, EntityId>({ selectId: resolveEventId, sortComparer: sortObjectFn });
 const boostEvents = createEntityAdapter<App.IWrapEditorObject<IWrapColorBoostEvent>, EntityId>({ selectId: resolveEventId, sortComparer: sortObjectFn });
+const njsEvents = createEntityAdapter<App.IWrapEditorObject<IWrapNJSEvent>, EntityId>({ selectId: resolveEventId, sortComparer: sortObjectFn });
 
 const basicSelectors = basicEvents.getSelectors();
 const boostSelectors = boostEvents.getSelectors();
+const njsSelectors = njsEvents.getSelectors();
 
 const basicReducers = createEditorObjectAdapter(basicEvents);
 const boostReducers = createEditorObjectAdapter(boostEvents);
+const njsReducers = createEditorObjectAdapter(njsEvents);
 
 interface State {
 	basicEvents: ReturnType<typeof basicEvents.getInitialState>;
 	boostEvents: ReturnType<typeof boostEvents.getInitialState>;
+	njsEvents: ReturnType<typeof njsEvents.getInitialState>;
 }
 
 const history = createHistoryAdapter<State>({ limit: 100 });
@@ -32,6 +36,7 @@ const slice = createSlice({
 	initialState: history.getInitialState({
 		basicEvents: basicEvents.getInitialState(),
 		boostEvents: boostEvents.getInitialState(),
+		njsEvents: njsEvents.getInitialState(),
 	}),
 	selectors: {
 		selectCanRedo,
@@ -49,6 +54,11 @@ const slice = createSlice({
 		selectTotalBoostEvents: (state) => boostSelectors.selectTotal(state.present.boostEvents),
 		selectPastBoostEvents: createDraftSafeSelector(selectPrevSnapshot, (state) => boostSelectors.selectAll(state.boostEvents)),
 		selectFutureBoostEvents: createDraftSafeSelector(selectNextSnapshot, (state) => boostSelectors.selectAll(state.boostEvents)),
+		selectAllNjsEvents: createDraftSafeSelector(selectPresent, (state) => njsSelectors.selectAll(state.njsEvents)),
+		selectAllSelectedNjsEvents: createDraftSafeSelector(selectPresent, (state) => njsSelectors.selectAll(state.njsEvents).filter((data) => !!data.selected)),
+		selectTotalNjsEvents: (state) => njsSelectors.selectTotal(state.present.njsEvents),
+		selectPastNjsEvents: createDraftSafeSelector(selectPrevSnapshot, (state) => njsSelectors.selectAll(state.njsEvents)),
+		selectFutureNjsEvents: createDraftSafeSelector(selectNextSnapshot, (state) => njsSelectors.selectAll(state.njsEvents)),
 		selectValueForTrackAtBeat: createDraftSafeSelector([selectPresent, (_: HistoryState<State>, options: { trackId: number; beforeBeat: number }) => options], (state, options) => {
 			const events = basicSelectors.selectAll(state.basicEvents).filter((x) => {
 				return x.time < options.beforeBeat && resolveTrackIdForEvent(x) === options.trackId;
@@ -64,20 +74,24 @@ const slice = createSlice({
 		selectSelectedEvents: createDraftSafeSelector(selectPresent, (state) => {
 			const basicEvents = basicSelectors.selectAll(state.basicEvents).filter((data) => !!data.selected);
 			const boostEvents = boostSelectors.selectAll(state.boostEvents).filter((data) => !!data.selected);
+			const njsEvents = njsSelectors.selectAll(state.njsEvents).filter((data) => !!data.selected);
 			return {
 				basicEvents: basicEvents.length > 0 ? basicEvents : undefined,
 				boostEvents: boostEvents.length > 0 ? boostEvents : undefined,
+				njsEvents: njsEvents.length > 0 ? njsEvents : undefined,
 			};
 		}),
 		selectAnySelectedEvents: createDraftSafeSelector(selectPresent, (state) => {
 			const basicEvents = basicSelectors.selectAll(state.basicEvents).filter((data) => !!data.selected);
 			const boostEvents = boostSelectors.selectAll(state.boostEvents).filter((data) => !!data.selected);
-			return basicEvents.length + boostEvents.length > 0;
+			const njsEvents = njsSelectors.selectAll(state.njsEvents).filter((data) => !!data.selected);
+			return basicEvents.length + boostEvents.length + njsEvents.length > 0;
 		}),
 		selectAllSelectedEvents: createDraftSafeSelector(selectPresent, (state) => {
 			const basicEvents = basicSelectors.selectAll(state.basicEvents).filter((data) => !!data.selected);
 			const boostEvents = boostSelectors.selectAll(state.boostEvents).filter((data) => !!data.selected);
-			return [...basicEvents, ...boostEvents];
+			const njsEvents = njsSelectors.selectAll(state.njsEvents).filter((data) => !!data.selected);
+			return [...basicEvents, ...boostEvents, ...njsEvents];
 		}),
 	},
 	reducers: (api) => {
@@ -152,6 +166,27 @@ const slice = createSlice({
 			deselectBoostEvent: api.reducer<{ id: EntityId; environment: EnvironmentName; areLasersLocked?: boolean }>((state, action) => {
 				boostEvents.updateOne(state.present.boostEvents, { id: action.payload.id, changes: { selected: false } });
 			}),
+			addNjsEvent: api.reducer<{ data: IWrapNJSEvent; overwrite?: boolean; environment: EnvironmentName; areLasersLocked?: boolean }>(
+				history.undoable((state, action) => {
+					njsEvents.upsertOne(state.njsEvents, action.payload.data);
+				}),
+			),
+			updateNjsEvent: api.reducer<{ id: EntityId; changes: Partial<IWrapNJSEvent>; environment: EnvironmentName; areLasersLocked?: boolean }>(
+				history.undoable((state, action) => {
+					njsEvents.updateOne(state.njsEvents, action.payload);
+				}),
+			),
+			removeNjsEvent: api.reducer<{ id: EntityId; environment: EnvironmentName; areLasersLocked?: boolean }>(
+				history.undoable((state, action) => {
+					njsEvents.removeOne(state.njsEvents, action.payload.id);
+				}),
+			),
+			selectNjsEvent: api.reducer<{ id: EntityId; environment: EnvironmentName; areLasersLocked?: boolean }>((state, action) => {
+				njsEvents.updateOne(state.present.njsEvents, { id: action.payload.id, changes: { selected: true } });
+			}),
+			deselectNjsEvent: api.reducer<{ id: EntityId; environment: EnvironmentName; areLasersLocked?: boolean }>((state, action) => {
+				njsEvents.updateOne(state.present.njsEvents, { id: action.payload.id, changes: { selected: false } });
+			}),
 			upsertEvents: api.reducer<Partial<App.IBeatmapEntities>>(
 				history.undoable((state, action) => {
 					if (action.payload.basicEvents) {
@@ -160,12 +195,16 @@ const slice = createSlice({
 					if (action.payload.boostEvents) {
 						boostEvents.upsertMany(state.boostEvents, action.payload.boostEvents);
 					}
+					if (action.payload.njsEvents) {
+						njsEvents.upsertMany(state.njsEvents, action.payload.njsEvents);
+					}
 				}),
 			),
-			updateAllSelectedEvents: api.reducer<{ basicEventChanges: Partial<App.IBasicEvent>; boostEventChanges: Partial<App.IBoostEvent> }>(
+			updateAllSelectedEvents: api.reducer<{ basicEventChanges: Partial<App.IBasicEvent>; boostEventChanges: Partial<App.IBoostEvent>; njsEventChanges: Partial<App.INJSEvent> }>(
 				history.undoable((state, action) => {
 					basicReducers.updateAllSelected(state.basicEvents, () => ({ ...action.payload.basicEventChanges }));
 					boostReducers.updateAllSelected(state.boostEvents, () => ({ ...action.payload.boostEventChanges }));
+					njsReducers.updateAllSelected(state.njsEvents, () => ({ ...action.payload.njsEventChanges }));
 				}),
 			),
 			mirrorAllSelectedEvents: api.reducer(
@@ -180,12 +219,14 @@ const slice = createSlice({
 					const { direction, amount } = action.payload;
 					basicReducers.updateAllSelected(state.basicEvents, nudgeItem(direction, amount));
 					boostReducers.updateAllSelected(state.boostEvents, nudgeItem(direction, amount));
+					njsReducers.updateAllSelected(state.njsEvents, nudgeItem(direction, amount));
 				}),
 			),
 			removeAllSelectedEvents: api.reducer(
 				history.undoable((state) => {
 					basicReducers.removeAllSelected(state.basicEvents);
 					boostReducers.removeAllSelected(state.boostEvents);
+					njsReducers.removeAllSelected(state.njsEvents);
 				}),
 			),
 		};
@@ -194,27 +235,32 @@ const slice = createSlice({
 		builder.addCase(loadBeatmapContents.fulfilled, (state, action) => {
 			basicEvents.setAll(state.present.basicEvents, action.payload.entities.basicEvents ?? []);
 			boostEvents.setAll(state.present.boostEvents, action.payload.entities.boostEvents ?? []);
+			njsEvents.setAll(state.present.njsEvents, action.payload.entities.njsEvents ?? []);
 		});
 		builder.addCase(leaveEditor, () => {
 			return history.getInitialState({
 				basicEvents: basicEvents.getInitialState(),
 				boostEvents: boostEvents.getInitialState(),
+				njsEvents: njsEvents.getInitialState(),
 			});
 		});
 		builder.addCase(selectAllEntities, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
 			basicReducers.updateAll(state.present.basicEvents, () => ({ selected: true }));
 			boostReducers.updateAll(state.present.boostEvents, () => ({ selected: true }));
+			njsReducers.updateAll(state.present.njsEvents, () => ({ selected: true }));
 		});
 		builder.addCase(deselectAllEntities, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
 			basicReducers.updateAll(state.present.basicEvents, () => ({ selected: false }));
 			boostReducers.updateAll(state.present.boostEvents, () => ({ selected: false }));
+			njsReducers.updateAll(state.present.njsEvents, () => ({ selected: false }));
 		});
 		builder.addCase(selectAllEntitiesInRange, (state, action) => {
 			if (action.payload.view !== View.LIGHTSHOW) return state;
 			basicReducers.updateAll(state.present.basicEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
 			boostReducers.updateAll(state.present.boostEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
+			njsReducers.updateAll(state.present.njsEvents, (x) => ({ selected: x.time >= action.payload.startBeat - 0.01 && x.time < action.payload.endBeat }));
 		});
 		builder.addCase(drawEventSelectionBox, (state, action) => {
 			const { window, environment, tracks, selectionBoxInBeats } = action.payload;
@@ -222,6 +268,7 @@ const slice = createSlice({
 			const allTracks = Object.values(tracks).sort(sortEventTracks(environment));
 			const allBasicEvents = basicSelectors.selectAll(state.present.basicEvents);
 			const allBoostEvents = boostSelectors.selectAll(state.present.boostEvents);
+			const allNjsEvents = njsSelectors.selectAll(state.present.njsEvents);
 
 			if (!selectionBoxInBeats.withPrevious) {
 				basicEvents.updateMany(
@@ -232,9 +279,13 @@ const slice = createSlice({
 					state.present.boostEvents,
 					allBoostEvents.filter((x) => x.selected).map((x) => ({ id: boostEvents.selectId(x), changes: { selected: false } })),
 				);
+				njsEvents.updateMany(
+					state.present.njsEvents,
+					allNjsEvents.filter((x) => x.selected).map((x) => ({ id: njsEvents.selectId(x), changes: { selected: false } })),
+				);
 			}
 
-			const allVisibleEvents = [...allBasicEvents, ...allBoostEvents].filter((x) => {
+			const allVisibleEvents = [...allBasicEvents, ...allBoostEvents, ...allNjsEvents].filter((x) => {
 				const isInWindow = x.time >= window.startBeat && x.time <= window.endBeat;
 				const isInVisibleTracks = x.time >= selectionBoxInBeats.startBeat && x.time <= selectionBoxInBeats.endBeat;
 				return isInWindow && isInVisibleTracks;
@@ -249,6 +300,9 @@ const slice = createSlice({
 				}
 				if (isBoostEvent<App.IWrapEditorObject<IWrapColorBoostEvent>>(event)) {
 					boostEvents.updateOne(state.present.boostEvents, { id: boostEvents.selectId(event), changes: { selected: isInSelectionBox || (selectionBoxInBeats.withPrevious && event.selected) } });
+				}
+				if (isNJSEvent<App.IWrapEditorObject<IWrapNJSEvent>>(event)) {
+					njsEvents.updateOne(state.present.njsEvents, { id: njsEvents.selectId(event), changes: { selected: isInSelectionBox || (selectionBoxInBeats.withPrevious && event.selected) } });
 				}
 			}
 		});
@@ -269,17 +323,23 @@ export const {
 	selectAllBoostEvents,
 	selectAllSelectedBoostEvents,
 	selectTotalBoostEvents,
-	selectAllSelectedEvents,
 	selectColorBoostAtBeat,
 	selectPastBoostEvents,
 	selectFutureBoostEvents,
+	selectAllNjsEvents,
+	selectAllSelectedNjsEvents,
+	selectTotalNjsEvents,
+	selectPastNjsEvents,
+	selectFutureNjsEvents,
 	selectSelectedEvents,
+	selectAllSelectedEvents,
 	selectAnySelectedEvents,
 } = slice.getSelectors(slice.selectSlice);
 
 export const { undo: undoEvents, redo: redoEvents, clearHistory: clearEventHistory, upsertEvents, updateAllSelectedEvents, mirrorAllSelectedEvents, nudgeAllSelectedEvents, removeAllSelectedEvents } = slice.actions;
 export const { addBasicEvent, updateBasicEvent, selectBasicEvent, deselectBasicEvent, removeBasicEvent } = slice.actions;
 export const { addBoostEvent, updateBoostEvent, selectBoostEvent, deselectBoostEvent, removeBoostEvent } = slice.actions;
+export const { addNjsEvent, updateNjsEvent, selectNjsEvent, deselectNjsEvent, removeNjsEvent } = slice.actions;
 
 export const drawEventSelectionBox = createAction("drawEventSelectionBox", (args: { window: { startBeat: number; endBeat: number }; environment: EnvironmentName; tracks: ITrackDefinitions<{ id: number }>; selectionBoxInBeats: ISelectionBoxInBeats }) => {
 	return { payload: { ...args } };

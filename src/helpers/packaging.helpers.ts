@@ -269,6 +269,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const chains = data.chains?.map(shiftByOffset({ editorOffsetInBeats }));
 			const basicEvents = data.basicEvents?.map(shiftByOffset({ editorOffsetInBeats }));
 			const boostEvents = data.boostEvents?.map(shiftByOffset({ editorOffsetInBeats }));
+			const njsEvents = data.njsEvents?.map(shiftByOffset({ editorOffsetInBeats }));
 			const bookmarks = data.bookmarks?.map(shiftByOffset({ editorOffsetInBeats }));
 
 			return createBeatmap({
@@ -278,6 +279,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 					obstacles: obstacles,
 					arcs: arcs,
 					chains: chains,
+					njsEvents: njsEvents,
 					customData: ensureObject<IV2CustomDataDifficulty>({
 						_bookmarks: version === 2 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV2ObjectFn) ?? []) : undefined,
 						bookmarks: version === 3 ? ensureArray(bookmarks?.map((x) => serializeCustomBookmark(x, version, {})).sort(sortV3ObjectFn) ?? []) : undefined,
@@ -302,6 +304,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 			const obstacles = data.difficulty.obstacles;
 			const arcs = data.difficulty.arcs;
 			const chains = data.difficulty.chains;
+			const njsEvents = data.difficulty.njsEvents;
 			const basicEvents = data.lightshow.basicEvents;
 			const boostEvents = data.lightshow.colorBoostEvents;
 
@@ -323,6 +326,7 @@ export const { serialize: serializeBeatmapContents, deserialize: deserializeBeat
 				chains: chains?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				basicEvents: basicEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				boostEvents: boostEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
+				njsEvents: njsEvents?.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 				bookmarks: bookmarks.map(shiftByOffset({ editorOffsetInBeats: -editorOffsetInBeats })),
 			};
 		},

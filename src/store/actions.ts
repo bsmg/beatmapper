@@ -7,9 +7,11 @@ export { copySelection, cutSelection, nudgeSelection, pasteSelection, toggleSele
 export {
 	addBasicEvent,
 	addBoostEvent,
+	addNjsEvent,
 	clearEventHistory,
 	deselectBasicEvent,
 	deselectBoostEvent,
+	deselectNjsEvent,
 	drawEventSelectionBox,
 	mirrorAllSelectedEvents,
 	nudgeAllSelectedEvents,
@@ -17,12 +19,15 @@ export {
 	removeAllSelectedEvents,
 	removeBasicEvent,
 	removeBoostEvent,
+	removeNjsEvent,
 	selectBasicEvent,
 	selectBoostEvent,
+	selectNjsEvent,
 	undoEvents,
 	updateAllSelectedEvents,
 	updateBasicEvent,
 	updateBoostEvent,
+	updateNjsEvent,
 	upsertEvents,
 } from "./features/events.slice";
 export { init, updateProcessingImport } from "./features/global.slice";

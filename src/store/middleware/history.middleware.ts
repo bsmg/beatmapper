@@ -7,16 +7,19 @@ import {
 	selectAllBombNotes,
 	selectAllBoostEvents,
 	selectAllColorNotes,
+	selectAllNjsEvents,
 	selectAllObstacles,
 	selectFutureBasicEvents,
 	selectFutureBombNotes,
 	selectFutureBoostEvents,
 	selectFutureColorNotes,
+	selectFutureNjsEvents,
 	selectFutureObstacles,
 	selectPastBasicEvents,
 	selectPastBombNotes,
 	selectPastBoostEvents,
 	selectPastColorNotes,
+	selectPastNjsEvents,
 	selectPastObstacles,
 } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
@@ -38,11 +41,12 @@ function jumpToEarliestObject(api: ListenerEffectAPI<RootState, AppDispatch>, ar
 	api.dispatch(jumpToBeat({ value: earliestBeat }));
 }
 
-function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "basicEvents" | "boostEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
+function jumpToEarliestEvent(api: ListenerEffectAPI<RootState, AppDispatch>, args: { [K in "basicEvents" | "boostEvents" | "njsEvents"]: { before: App.IBeatmapEntities[K]; after: App.IBeatmapEntities[K] } }) {
 	const relevantBasicEvents = difference(args.basicEvents.before, args.basicEvents.after);
 	const relevantBoostEvents = difference(args.boostEvents.before, args.boostEvents.after);
+	const relevantNjsEvents = difference(args.njsEvents.before, args.njsEvents.after);
 
-	const relevantEntities = [...relevantBasicEvents, ...relevantBoostEvents].sort(sortObjectFn);
+	const relevantEntities = [...relevantBasicEvents, ...relevantBoostEvents, ...relevantNjsEvents].sort(sortObjectFn);
 	if (!relevantEntities.length) return;
 	const earliestBeat = relevantEntities.reduce((beat, entity) => Math.min(beat, entity.time), relevantEntities[0].time);
 
@@ -105,6 +109,7 @@ export default function createHistoryMiddleware({ extra }: Options) {
 				jumpToEarliestEvent(api, {
 					basicEvents: { before: selectFutureBasicEvents(state), after: selectAllBasicEvents(state) },
 					boostEvents: { before: selectFutureBoostEvents(state), after: selectAllBoostEvents(state) },
+					njsEvents: { before: selectFutureNjsEvents(state), after: selectAllNjsEvents(state) },
 				});
 			}
 		},
@@ -118,6 +123,7 @@ export default function createHistoryMiddleware({ extra }: Options) {
 				jumpToEarliestEvent(api, {
 					basicEvents: { before: selectPastBasicEvents(state), after: selectAllBasicEvents(state) },
 					boostEvents: { before: selectPastBoostEvents(state), after: selectAllBoostEvents(state) },
+					njsEvents: { before: selectPastNjsEvents(state), after: selectAllNjsEvents(state) },
 				});
 			}
 		},

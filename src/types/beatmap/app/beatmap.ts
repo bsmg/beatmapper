@@ -1,4 +1,4 @@
-import type { IWrapArc, IWrapBaseNote, IWrapBasicEvent, IWrapBombNote, IWrapChain, IWrapColorBoostEvent, IWrapColorNote, IWrapObstacle } from "bsmap";
+import type { IWrapArc, IWrapBaseNote, IWrapBasicEvent, IWrapBombNote, IWrapChain, IWrapColorBoostEvent, IWrapColorNote, IWrapNJSEvent, IWrapObstacle } from "bsmap";
 
 import type { IWrapEditorObject } from "./shared";
 
@@ -12,6 +12,7 @@ export type IChain = IWrapEditorObject<IWrapChain>;
 
 export type IBasicEvent = IWrapEditorObject<IWrapBasicEvent>;
 export type IBoostEvent = IWrapEditorObject<IWrapColorBoostEvent>;
+export type INJSEvent = IWrapEditorObject<IWrapNJSEvent>;
 
 export interface IBookmark {
 	time: number;
@@ -27,5 +28,6 @@ export interface IBeatmapEntities {
 	chains: IChain[];
 	basicEvents: IBasicEvent[];
 	boostEvents: IBoostEvent[];
+	njsEvents: INJSEvent[];
 	bookmarks: IBookmark[];
 }
