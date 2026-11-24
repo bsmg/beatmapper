@@ -29,6 +29,7 @@ import {
 	selectNotesEditorType,
 	selectObstaclePlacementMode,
 	selectRenderScale,
+	selectRotationLane,
 	selectSurfaceDepth,
 	selectTrackScale,
 } from "$/store/selectors";
@@ -52,6 +53,7 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 	const surfaceDepth = useAppSelector(selectSurfaceDepth);
 	const highestPrecision = useAppSelector(selectHighestPrecision);
 	const renderScale = useAppSelector(selectRenderScale);
+	const rotationLane = useAppSelector(selectRotationLane);
 
 	const hotkeys = useHotkeyStore();
 
@@ -69,12 +71,14 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 			const tailNote = notes.find((x) => x.time === tailTime && x.posX === ctx.cellOverAt?.colIndex && x.posY === ctx.cellOverAt?.rowIndex);
 
 			return createArcFromMouseEvent(ctx, mode, grid, {
+				laneRotation: rotationLane,
 				color: headNote?.color ?? (selectedColor === ObjectColor.LEFT ? 0 : 1),
 				direction: headNote?.direction ?? NoteDirection.ANY,
+				tailLaneRotation: rotationLane,
 				tailDirection: tailNote?.direction ?? selectedDirection,
 			});
 		},
-		[notes, selectedColor, selectedDirection],
+		[notes, rotationLane, selectedColor, selectedDirection],
 	);
 
 	const handleCreateChain = useCallback(
@@ -85,11 +89,13 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 			if (!headNote) return null;
 
 			return createChainFromMouseEvent(ctx, mode, grid, {
+				laneRotation: rotationLane,
 				color: headNote.color,
 				direction: headNote.direction,
+				tailLaneRotation: rotationLane,
 			});
 		},
-		[notes],
+		[notes, rotationLane],
 	);
 
 	const service = useMachine(PlacementGrid.machine, {
@@ -118,6 +124,7 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 			switch (type) {
 				case ObjectType.NOTE: {
 					const note = createColorNoteFromMouseEvent(ctx, notePlacementMode, grid, {
+						laneRotation: rotationLane,
 						color: selectedColor === ObjectColor.LEFT ? 0 : 1,
 						direction: Math.round(ctx.direction ?? selectedDirection),
 					});
@@ -125,12 +132,17 @@ function EditorPlacementGrid({ ...rest }: ComponentProps<"group">) {
 					break;
 				}
 				case ObjectType.BOMB: {
-					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid);
+					const note = createBombNoteFromMouseEvent(ctx, notePlacementMode, grid, {
+						laneRotation: rotationLane,
+					});
 					if (note) return dispatch(addBombNote(note));
 					break;
 				}
 				case ObjectType.OBSTACLE: {
-					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, { duration: Math.max(ctx.duration ?? 0, highestPrecision) });
+					const obstacle = createObstacleFromMouseEvent(ctx, obstaclePlacementMode, grid, {
+						laneRotation: rotationLane,
+						duration: Math.max(ctx.duration ?? 0, highestPrecision),
+					});
 					if (obstacle) return dispatch(addObstacle(obstacle));
 					break;
 				}

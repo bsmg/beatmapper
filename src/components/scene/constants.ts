@@ -3,6 +3,7 @@ import type { SpringConfig } from "@react-spring/three";
 export const BLOCK_SIZE = 1;
 export const BLOCK_CELL_SIZE = 1.175; // BLOCK_SIZE * 1.175;
 export const SONG_OFFSET = 6;
+export const LANE_ROTATION_OFFSET = 2;
 
 // How wide is the platform the notes float above?
 export const SURFACE_WIDTH = 6.5;

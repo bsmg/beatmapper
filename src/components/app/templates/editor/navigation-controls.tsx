@@ -1,20 +1,21 @@
 import { useHotkey, useHotkeyStore, useHotkeys, useIsKeyPressed } from "@ark-ui/react/hotkeys";
 import { useThrottledCallback } from "@tanstack/react-pacer/throttler";
 import { useParams, useRouteContext } from "@tanstack/react-router";
-import { ArrowRightToLineIcon, FastForwardIcon, FlagIcon, PauseIcon, PlayIcon, RewindIcon, SkipBackIcon, SkipForwardIcon, UnfoldHorizontalIcon } from "lucide-react";
+import { ArrowRightToLineIcon, CircleDotIcon, FastForwardIcon, FlagIcon, PauseIcon, PlayIcon, RewindIcon, RotateCcwIcon, RotateCwIcon, SkipBackIcon, SkipForwardIcon, UnfoldHorizontalIcon } from "lucide-react";
 import { type CSSProperties, useCallback, useDeferredValue, useMemo } from "react";
 import { nonEmpty, number, object, pipe, regex, string } from "valibot";
 
 import { getHotkeyCategory, getHotkeyScopes } from "$/components/app/helpers";
 import { NavigationPanel } from "$/components/app/layouts";
 import { useGlobalEventListener } from "$/components/hooks/use-global-event-listener";
+import { Show } from "$/components/ui/atoms";
 import { Button, createPromptFactory, Input, Stat, Tooltip, usePrompt } from "$/components/ui/compositions";
 import { formatCursorPosition, formatCursorPositionInBeats } from "$/helpers/audio.helpers";
 import { resolveColorForBookmark } from "$/helpers/bookmarks.helpers";
 import { calculateQuickSelectRange } from "$/helpers/editor.helpers";
-import { addBookmark, decrementSnap, incrementSnap, jumpToBeat, jumpToNextMarker, jumpToNextWindow, jumpToPrevMarker, jumpToPrevWindow, selectAllEntitiesInRange, togglePlayback, updateSnap } from "$/store/actions";
+import { addBookmark, decrementRotationLane, decrementSnap, incrementRotationLane, incrementSnap, jumpToBeat, jumpToNextMarker, jumpToNextWindow, jumpToPrevMarker, jumpToPrevWindow, selectAllEntitiesInRange, togglePlayback, updateRotationLane, updateSnap } from "$/store/actions";
 import { useAppDispatch, useAppSelector } from "$/store/hooks";
-import { selectActiveWindowSize, selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectSnap } from "$/store/selectors";
+import { selectActiveWindowSize, selectBeatmapById, selectCursorPosition, selectCursorPositionInBeats, selectLoading, selectPacerWait, selectPlaying, selectRotationLane, selectSnap } from "$/store/selectors";
 import { clamp, range, roundToNearest } from "$/utils";
 import { HStack, Text } from "$:styled-system/jsx";
 
@@ -40,7 +41,7 @@ const createAddBookmarkPrompt = createPromptFactory({
 });
 
 function EditorNavigationControls() {
-	const { sid } = useParams({ from: "/_/edit/$sid/$bid/_" });
+	const { sid, bid } = useParams({ from: "/_/edit/$sid/$bid/_" });
 	const { view } = useRouteContext({ from: "/_/edit/$sid/$bid/_" });
 
 	const dispatch = useAppDispatch();
@@ -50,10 +51,13 @@ function EditorNavigationControls() {
 	const windowSize = useAppSelector((state) => selectActiveWindowSize(state, view));
 	const cursorPosition = useAppSelector(selectCursorPosition);
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
+	const rotationLane = useAppSelector(selectRotationLane);
+	const beatmap = useAppSelector((state) => selectBeatmapById(state, sid, bid));
 	const wait = useAppSelector(selectPacerWait);
 
 	const timeDisplayText = useDeferredValue(formatCursorPosition(cursorPosition));
 	const beatDisplayText = useDeferredValue(formatCursorPositionInBeats(isPlaying ? roundToNearest(cursorPositionInBeats, snapTo, Math.floor) : cursorPositionInBeats));
+	const rotationDisplayText = useDeferredValue(`${rotationLane}°`);
 
 	const { trigger: triggerQuickSelect } = usePrompt(
 		createQuickSelectPrompt({
@@ -87,6 +91,8 @@ function EditorNavigationControls() {
 	const category = useMemo(() => getHotkeyCategory(scopes), [scopes]);
 
 	const enabled = useCallback(() => !isLoadingSong && hotkeys.getActiveScopes().includes("navigation"), [isLoadingSong, hotkeys.getActiveScopes]);
+	const isRotationSupported = useMemo(() => beatmap.characteristic === "360Degree" || beatmap.characteristic === "90Degree", [beatmap.characteristic]);
+	const is90Degree = useMemo(() => beatmap.characteristic === "90Degree", [beatmap.characteristic]);
 
 	useHotkey({ scopes, category, enabled, label: "Toggle Playback", hotkey: "Space", action: () => dispatch(togglePlayback()), options: { requireReset: true } });
 
@@ -98,6 +104,9 @@ function EditorNavigationControls() {
 
 	useHotkey({ scopes, category, enabled, label: "Move Cursor to Next Marker", hotkey: "Home", action: () => dispatch(jumpToNextMarker()) });
 	useHotkey({ scopes, category, enabled, label: "Move Cursor to Previous Marker", hotkey: "End", action: () => dispatch(jumpToPrevMarker()) });
+
+	useHotkey({ scopes, category, enabled, label: "Rotate Cursor Left", hotkey: "ArrowLeft", action: () => isRotationSupported && dispatch(decrementRotationLane({ limit: is90Degree ? 45 : 180 })) });
+	useHotkey({ scopes, category, enabled, label: "Rotate Cursor Right", hotkey: "ArrowRight", action: () => isRotationSupported && dispatch(incrementRotationLane({ limit: is90Degree ? 45 : 180 })) });
 
 	useHotkey({ scopes, category, enabled, label: "Quick Select", hotkey: "Mod+F", action: () => triggerQuickSelect() });
 	useHotkey({ scopes, category, enabled, label: "Jump to Beat", hotkey: "Mod+G", action: () => triggerJumpToBeat() });
@@ -188,8 +197,31 @@ function EditorNavigationControls() {
 				</NavigationPanel.Group>
 			</NavigationPanel.Column>
 			<NavigationPanel.Column>
-				<NavigationPanel.Group />
+				<Show when={isRotationSupported} fallback={<NavigationPanel.Group />}>
+					<NavigationPanel.Group>
+						<Tooltip render={() => "Rotate left"}>
+							<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => isRotationSupported && dispatch(decrementRotationLane({ limit: is90Degree ? 45 : 180 }))}>
+								<RotateCcwIcon />
+							</Button>
+						</Tooltip>
+						<Tooltip render={() => "Reset rotation"}>
+							<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => isRotationSupported && dispatch(updateRotationLane(0))}>
+								<CircleDotIcon />
+							</Button>
+						</Tooltip>
+						<Tooltip render={() => "Rotate right"}>
+							<Button variant="ghost" size="icon" disabled={!enabled} unfocusOnPress onClick={() => isRotationSupported && dispatch(incrementRotationLane({ limit: is90Degree ? 45 : 180 }))}>
+								<RotateCwIcon />
+							</Button>
+						</Tooltip>
+					</NavigationPanel.Group>
+				</Show>
 				<NavigationPanel.Group size="md">
+					<Show when={isRotationSupported}>
+						<Stat label="Rotation" align="end">
+							{rotationDisplayText}
+						</Stat>
+					</Show>
 					<Stat label="Time" align="end">
 						{timeDisplayText}
 					</Stat>

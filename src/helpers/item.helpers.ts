@@ -2,10 +2,16 @@ import { type IWrapBaseNote, type IWrapGridObject, mirrorNoteColor, mirrorNoteDi
 
 import { DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS } from "$/constants";
 import type { IGrid } from "$/types";
+import { calculateRotationStep } from "./editor.helpers";
 
 export function nudgeItem<T extends { time: number }>(direction: "forwards" | "backwards", amount = 1) {
 	return (data: T): Partial<T> => {
 		return { time: data.time - amount * (direction === "backwards" ? 1 : -1) } as Partial<T>;
+	};
+}
+export function rotateItem<T extends { laneRotation: number }>(direction: "left" | "right", amount = 15, limit = 180) {
+	return (data: T): Partial<T> => {
+		return { laneRotation: calculateRotationStep(data.laneRotation, direction === "right" ? amount : -amount, limit) } as Partial<T>;
 	};
 }
 
