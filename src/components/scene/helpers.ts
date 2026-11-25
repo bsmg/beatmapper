@@ -33,12 +33,8 @@ export function resolveRotationForNote<T extends Pick<IWrapBaseNote, "direction"
 	return convertDegreesToRadians(resolveNoteAngle(data.direction) + angleOffset);
 }
 export function resolveRotationVectorForNote<T extends Pick<IWrapBaseNote, "direction">>(data: T): Vector3Tuple {
-	if (isExtendedCoordinate(data.direction)) {
-		const angle = resolveRotationForNote(data);
-		return [Math.sin(angle), Math.cos(angle), 0];
-	} else {
-		return [...NoteDirectionSpace[data.direction as NoteDirection], 0];
-	}
+	const angle = resolveRotationForNote(data);
+	return [Math.sin(angle), -Math.cos(angle), 0];
 }
 
 export function resolvePositionForObstacle<T extends IWrapObstacle>(data: T, { timescale = (time) => time, beatDepth, zOffset = 0 }: Pick<ObjectResolverOptions, "timescale" | "beatDepth" | "zOffset">) {
