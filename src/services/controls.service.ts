@@ -58,7 +58,8 @@ export class Controls {
 			const movementX = event.movementX || 0;
 			const movementY = event.movementY || 0;
 
-			this.#pitchObject.rotation.x -= movementY * 0.004;
+			const maxPitch = Math.PI / 2 - 0.01;
+			this.#pitchObject.rotation.x = Math.max(-maxPitch, Math.min(maxPitch, this.#pitchObject.rotation.x - movementY * 0.004));
 			this.#yawObject.rotation.y -= movementX * 0.004;
 		}
 	};
@@ -67,36 +68,40 @@ export class Controls {
 		const currentTime = performance.now();
 		const delta = (currentTime - this.#time) / 1000;
 
-		this.#velocity.x -= this.#velocity.x * 10.0 * delta;
-		this.#velocity.y -= this.#velocity.y * 10.0 * delta;
-		this.#velocity.z -= this.#velocity.z * 10.0 * delta;
+		this.#velocity.multiplyScalar(Math.max(0, 1 - 10.0 * delta));
 
-		const SPEED_MULTIPLIER = 200;
-		const distance = SPEED_MULTIPLIER * this.#speed * delta;
+		const distance = 200 * this.#speed * delta;
 
 		if (this.enabled) {
-			const verticalDistance = Math.tan(this.#pitchObject.rotation.x) * distance;
+			const input = new Vector3();
+			const pitch = this.#pitchObject.rotation.x;
 
 			if (this.#isCommandActive("controls/forwards")) {
-				this.#velocity.z -= distance;
-				this.#velocity.y += verticalDistance;
+				input.z -= Math.cos(pitch);
+				input.y += Math.sin(pitch);
 			}
 			if (this.#isCommandActive("controls/backwards")) {
-				this.#velocity.z += distance;
-				this.#velocity.y -= verticalDistance;
+				input.z += Math.cos(pitch);
+				input.y -= Math.sin(pitch);
 			}
 			if (this.#isCommandActive("controls/left")) {
-				this.#velocity.x -= distance;
+				input.x -= 1;
 			}
 			if (this.#isCommandActive("controls/right")) {
-				this.#velocity.x += distance;
+				input.x += 1;
 			}
 			if (this.#isCommandActive("controls/down")) {
-				this.#velocity.y -= distance;
+				input.y -= 1;
 			}
 			if (this.#isCommandActive("controls/up")) {
-				this.#velocity.y += distance;
+				input.y += 1;
 			}
+
+			if (input.lengthSq() > 0) {
+				input.normalize().multiplyScalar(distance);
+				this.#velocity.add(input);
+			}
+
 			if (this.#isCommandActive("controls/reset")) {
 				this.#velocity.set(0, 0, 0);
 				this.#yawObject.position.set(...this.#initialPosition);
@@ -105,11 +110,13 @@ export class Controls {
 			}
 		}
 
-		const container = this.getObject();
+		const speed = this.#velocity.length();
 
-		container.translateX(this.#velocity.x * delta);
-		container.translateY(this.#velocity.y * delta);
-		container.translateZ(this.#velocity.z * delta);
+		if (speed > 0) {
+			const container = this.getObject();
+			const direction = this.#velocity.clone().divideScalar(speed);
+			container.translateOnAxis(direction, speed * delta);
+		}
 
 		this.#time = currentTime;
 	};
