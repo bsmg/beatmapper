@@ -11,6 +11,7 @@ import { selectNextSnapshot, selectPrevSnapshot } from "$/store/helpers/selector
 import { type App, type IGrid, ObjectType, View } from "$/types";
 import { cycle } from "$/utils";
 import { deselectAllEntities, leaveEditor, loadBeatmapContents, selectAllEntities, selectAllEntitiesInRange } from "./actions";
+import { DEFAULT_GRID } from "$/constants";
 
 const notes = createEntityAdapter<App.IWrapEditorObject<IWrapColorNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
 const bombs = createEntityAdapter<App.IWrapEditorObject<IWrapBombNote>, EntityId>({ selectId: resolveNoteId, sortComparer: sortObjectFn });
@@ -252,9 +253,10 @@ const slice = createSlice({
 			),
 			mirrorAllSelectedObjects: api.reducer<{ axis: "horizontal" | "vertical"; noteGrid?: IGrid; obstacleGrid?: IGrid }>(
 				history.undoable((state, action) => {
-					const { axis, noteGrid, obstacleGrid } = action.payload;
+					const { axis, noteGrid = DEFAULT_GRID, obstacleGrid = DEFAULT_GRID } = action.payload;
 					noteReducers.replaceAllSelected(state.notes, mirrorGridObjectProperties(axis, noteGrid, 0));
 					noteReducers.replaceAllSelected(state.notes, mirrorBaseNoteProperties(axis));
+					obstacleReducers.replaceAllSelected(state.obstacles, (data) => mirrorGridObjectProperties(axis, { ...obstacleGrid, numRows: 5 }, axis === "horizontal" ? data.width : data.height)(data));
 					bombReducers.replaceAllSelected(state.bombs, mirrorGridObjectProperties(axis, noteGrid, 0));
 					arcReducers.replaceAllSelected(state.arcs, (data) => {
 						const { posX, posY } = mirrorGridObjectProperties(axis, noteGrid, 0)(data);
@@ -270,9 +272,6 @@ const slice = createSlice({
 						const { posX: tailPosX, posY: tailPosY } = mirrorGridObjectProperties(axis, noteGrid, 0)({ posX: data.tailPosX, posY: data.tailPosY });
 						return { ...data, posX, posY, color, direction, tailPosX, tailPosY };
 					});
-					if (axis === "horizontal") {
-						obstacleReducers.replaceAllSelected(state.obstacles, mirrorGridObjectProperties(axis, obstacleGrid, 0));
-					}
 				}),
 			),
 			nudgeAllSelectedObjects: api.reducer<{ direction: "forwards" | "backwards"; amount: number }>(

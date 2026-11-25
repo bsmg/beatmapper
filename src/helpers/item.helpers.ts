@@ -32,11 +32,11 @@ export function mirrorCoordinate(coordinate: number, count: number, offset?: num
 	return serializeCoordinate(mirrored, isExtendedCoordinate(coordinate));
 }
 
-export function mirrorGridObjectProperties<T extends Pick<IWrapGridObject, "posX" | "posY">>(axis: "horizontal" | "vertical", grid?: IGrid, offset?: number) {
+export function mirrorGridObjectProperties<T extends Pick<IWrapGridObject, "posX" | "posY">>(axis: "horizontal" | "vertical", grid: Partial<IGrid>, offset?: number) {
 	return (data: T): Partial<T> => {
 		return {
 			posX: axis === "horizontal" ? mirrorCoordinate(data.posX, DEFAULT_NUM_COLS, offset) : data.posX,
-			posY: axis === "vertical" ? mirrorCoordinate(data.posY, grid?.numRows ?? DEFAULT_NUM_ROWS, offset) : data.posY,
+			posY: axis === "vertical" ? mirrorCoordinate(data.posY, grid.numRows ?? DEFAULT_NUM_ROWS, offset) : data.posY,
 		} as Partial<T>;
 	};
 }
