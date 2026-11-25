@@ -1,5 +1,5 @@
 import { createDraftSafeSelector, createSelector } from "@reduxjs/toolkit";
-import { calculateNps, createNJSEvent, type IWrapBaseObject, TimeProcessor } from "bsmap";
+import { calculateNps, createNJSEvent, type IWrapBaseObject, type IWrapNJSEvent, sortObjectFn, TimeProcessor } from "bsmap";
 import { shallowEqual } from "react-redux";
 
 import { EASING_FNS } from "$/constants/easings.constants";
@@ -43,30 +43,25 @@ export const selectEditorOffsetInBeats = createSelector([selectTimeProcessor, se
 	return timeProcessor.toBeatTime(offset);
 });
 
+function getJumpSpeed(events: IWrapNJSEvent[], i: number) {
+	while (i >= 0 && events[i].previous) i--;
+	return i >= 0 ? events[i].value : 0;
+}
 export const selectCurrentJumpSpeed = createSelector([selectJumpSpeed, selectAllNjsEvents, selectCursorPositionInBeats, selectEditorOffsetInBeats], (baseJumpSpeed, njsEvents, currentTime, editorOffsetInBeats) => {
-	if (!njsEvents.length) return baseJumpSpeed;
+	const events = [createNJSEvent({ time: -editorOffsetInBeats, value: 0, previous: 1, easing: 0 }), ...njsEvents].sort(sortObjectFn);
+	// when we reach the last event, return its value (no interpolation necessary).
+	if (currentTime >= events[events.length - 1].time) return baseJumpSpeed + getJumpSpeed(events, events.length - 1);
 
-	const events = njsEvents[0].time > 0 ? [createNJSEvent({ time: -editorOffsetInBeats, value: 0, previous: 1, easing: 0 }), ...njsEvents] : njsEvents;
+	const i = events.findIndex((ev) => ev.time > currentTime);
+	// cache the previous value (necessary for extend events)
+	const prevValue = getJumpSpeed(events, i - 1);
+	// when previous is active, extend the value derived from the previous event (no interpolation necessary).
+	if (events[i].previous === 1) return baseJumpSpeed + prevValue;
 
-	if (currentTime < events[0].time) return baseJumpSpeed + events[0].value;
-
-	const lastEvent = events[events.length - 1];
-	if (currentTime >= lastEvent.time) return baseJumpSpeed + lastEvent.value;
-
-	const nextIdx = events.findIndex((ev) => ev.time > currentTime);
-	if (nextIdx <= 0) return baseJumpSpeed;
-
-	const prevEvent = events[nextIdx - 1];
-	const currEvent = events[nextIdx];
-
-	if (currEvent.previous === 1 || prevEvent.time === currEvent.time) {
-		return baseJumpSpeed + prevEvent.value;
-	}
-
-	const progress = clamp(normalize(currentTime, prevEvent.time, currEvent.time));
-	const easingFn = EASING_FNS[currEvent.easing];
-
-	return baseJumpSpeed + lerp(prevEvent.value, currEvent.value, easingFn(progress));
+	const progress = clamp(normalize(currentTime, events[i - 1].time, events[i].time));
+	const easingFn = EASING_FNS[events[i].easing];
+	// interpolate from the previous value
+	return baseJumpSpeed + lerp(prevValue, events[i].value, easingFn(progress));
 });
 
 export const selectNotePlacementMode = createAppSelector(selectSongById, (song) => {
