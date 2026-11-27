@@ -48,11 +48,12 @@ export function patchEnvironmentName<T extends EnvironmentName>(environment: str
 export function getEditorSettings(data: IWrapInfo): IEditorData {
 	const { editorSettings } = {
 		...(data.customData._editors?.Beatmapper as IV2EditorInfo & { editorSettings?: IEditorData }),
+		...(data.customData.editors?.Beatmapper as IV2EditorInfo & { editorSettings?: IEditorData }),
 	};
 
 	const activeCustomColors = Object.values(ColorSchemeKey).reduce(
 		(acc, key) => {
-			const color = data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
+			const color = data.difficulties.find((x) => x.customData[`${key}`])?.customData[`${key}`] ?? data.difficulties.find((x) => x.customData[`_${key}`])?.customData[`_${key}`];
 			acc[key as ColorSchemeKey] = color ? colorToHex(color).slice(0, 7) : null;
 			return acc;
 		},
@@ -60,7 +61,27 @@ export function getEditorSettings(data: IWrapInfo): IEditorData {
 	);
 
 	const isCustomColorsEnabled = data.difficulties.some((beatmap) => {
-		return hasKeys(beatmap.customData, "_colorLeft", "_colorRight", "_envColorLeft", "_envColorRight", "_envColorWhite", "_envColorLeftBoost", "_envColorRightBoost", "_envColorWhiteBoost", "_obstacleColor");
+		return hasKeys(
+			beatmap.customData,
+			"colorLeft",
+			"colorRight",
+			"envColorLeft",
+			"envColorRight",
+			"envColorWhite",
+			"envColorLeftBoost",
+			"envColorRightBoost",
+			"envColorWhiteBoost",
+			"obstacleColor",
+			"_colorLeft",
+			"_colorRight",
+			"_envColorLeft",
+			"_envColorRight",
+			"_envColorWhite",
+			"_envColorLeftBoost",
+			"_envColorRightBoost",
+			"_envColorWhiteBoost",
+			"_obstacleColor",
+		);
 	});
 
 	const customColors = ensureObject({
@@ -89,36 +110,31 @@ export function createInfoEditorData(data: Omit<App.ISong, "id">) {
 	const mappingExtensions = data.modSettings.mappingExtensions;
 
 	return {
-		_editors: {
-			_lastEditedBy: "Beatmapper",
-			Beatmapper: {
-				version: version,
-				editorSettings: {
-					id: createSongId(data),
-					readonly: data.demo,
-					createdAt: data.createdAt,
-					lastOpenedAt: data.lastOpenedAt,
-					lastOpenedBeatmapId: data.selectedDifficulty,
-					modSettings: ensureObject({
-						mappingExtensions: ensureObject({
-							isEnabled: mappingExtensions?.isEnabled ? true : undefined,
-							numCols: mappingExtensions?.numCols !== DEFAULT_GRID.numCols ? mappingExtensions?.numCols : undefined,
-							numRows: mappingExtensions?.numRows !== DEFAULT_GRID.numRows ? mappingExtensions?.numRows : undefined,
-							colWidth: mappingExtensions?.colWidth !== DEFAULT_GRID.colWidth ? mappingExtensions?.colWidth : undefined,
-							rowHeight: mappingExtensions?.rowHeight !== DEFAULT_GRID.rowHeight ? mappingExtensions?.rowHeight : undefined,
-							colOffset: mappingExtensions?.colOffset !== DEFAULT_GRID.colOffset ? mappingExtensions?.colOffset : undefined,
-							rowOffset: mappingExtensions?.rowOffset !== DEFAULT_GRID.rowOffset ? mappingExtensions?.rowOffset : undefined,
-						}),
-					}),
-				},
-			},
+		version: version,
+		editorSettings: {
+			id: createSongId(data),
+			readonly: data.demo,
+			createdAt: data.createdAt,
+			lastOpenedAt: data.lastOpenedAt,
+			lastOpenedBeatmapId: data.selectedDifficulty,
+			modSettings: ensureObject({
+				mappingExtensions: ensureObject({
+					isEnabled: mappingExtensions?.isEnabled ? true : undefined,
+					numCols: mappingExtensions?.numCols !== DEFAULT_GRID.numCols ? mappingExtensions?.numCols : undefined,
+					numRows: mappingExtensions?.numRows !== DEFAULT_GRID.numRows ? mappingExtensions?.numRows : undefined,
+					colWidth: mappingExtensions?.colWidth !== DEFAULT_GRID.colWidth ? mappingExtensions?.colWidth : undefined,
+					rowHeight: mappingExtensions?.rowHeight !== DEFAULT_GRID.rowHeight ? mappingExtensions?.rowHeight : undefined,
+					colOffset: mappingExtensions?.colOffset !== DEFAULT_GRID.colOffset ? mappingExtensions?.colOffset : undefined,
+					rowOffset: mappingExtensions?.rowOffset !== DEFAULT_GRID.rowOffset ? mappingExtensions?.rowOffset : undefined,
+				}),
+			}),
 		},
 	};
 }
 
 export const { serialize: serializeInfoContents, deserialize: deserializeInfoContents } = createDataFactory({
 	container: {
-		serialize: function serializeInfoContents(data: Omit<App.ISong, "id">, options: { songDuration?: number | null }) {
+		serialize: function serializeInfoContents(data: Omit<App.ISong, "id">, { version, songDuration }: { version: number; songDuration?: number | null }) {
 			const envColorScheme = deriveColorSchemeFromEnvironment(data.environment);
 
 			const allColorSchemes = Object.entries(data.colorSchemesById).map(([name, scheme]): IWrapInfoColorScheme => {
@@ -152,7 +168,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 					filename: data.songFilename,
 					audioDataFilename: "AudioData.dat",
 					bpm: data.bpm,
-					duration: options.songDuration ?? undefined,
+					duration: songDuration ?? undefined,
 					previewStartTime: data.previewStartTime,
 					previewDuration: data.previewDuration,
 				},
@@ -178,21 +194,35 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 							lighters: beatmap.lighters.filter((x) => x.length > 0),
 						},
 						customData: ensureObject<IV2CustomDataInfoDifficulty>({
-							_colorLeft: customColors?.isEnabled && customColors?.colorLeft ? toColorObject(customColors.colorLeft) : undefined,
-							_colorRight: customColors?.isEnabled && customColors?.colorRight ? toColorObject(customColors.colorRight) : undefined,
-							_obstacleColor: customColors?.isEnabled && customColors?.obstacleColor ? toColorObject(customColors.obstacleColor) : undefined,
-							_envColorLeft: customColors?.isEnabled && customColors?.envColorLeft ? toColorObject(customColors.envColorLeft) : undefined,
-							_envColorRight: customColors?.isEnabled && customColors?.envColorRight ? toColorObject(customColors.envColorRight) : undefined,
-							_envColorWhite: customColors?.isEnabled && customColors?.envColorWhite ? toColorObject(customColors.envColorWhite) : undefined,
-							_envColorLeftBoost: customColors?.isEnabled && customColors?.envColorLeftBoost ? toColorObject(customColors.envColorLeftBoost) : undefined,
-							_envColorRightBoost: customColors?.isEnabled && customColors?.envColorRightBoost ? toColorObject(customColors.envColorRightBoost) : undefined,
-							_envColorWhiteBoost: customColors?.isEnabled && customColors?.envColorWhiteBoost ? toColorObject(customColors.envColorWhiteBoost) : undefined,
-							_difficultyLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
-							_editorOffset: data.offset !== 0 ? data.offset : undefined,
+							_colorLeft: version <= 3 && customColors?.isEnabled && customColors?.colorLeft ? toColorObject(customColors.colorLeft) : undefined,
+							colorLeft: version >= 4 && customColors?.isEnabled && customColors?.colorLeft ? toColorObject(customColors.colorLeft) : undefined,
+							_colorRight: version <= 3 && customColors?.isEnabled && customColors?.colorRight ? toColorObject(customColors.colorRight) : undefined,
+							colorRight: version >= 4 && customColors?.isEnabled && customColors?.colorRight ? toColorObject(customColors.colorRight) : undefined,
+							_obstacleColor: version <= 3 && customColors?.isEnabled && customColors?.obstacleColor ? toColorObject(customColors.obstacleColor) : undefined,
+							obstacleColor: version >= 4 && customColors?.isEnabled && customColors?.obstacleColor ? toColorObject(customColors.obstacleColor) : undefined,
+							_envColorLeft: version <= 3 && customColors?.isEnabled && customColors?.envColorLeft ? toColorObject(customColors.envColorLeft) : undefined,
+							envColorLeft: version >= 4 && customColors?.isEnabled && customColors?.envColorLeft ? toColorObject(customColors.envColorLeft) : undefined,
+							_envColorRight: version <= 3 && customColors?.isEnabled && customColors?.envColorRight ? toColorObject(customColors.envColorRight) : undefined,
+							envColorRight: version >= 4 && customColors?.isEnabled && customColors?.envColorRight ? toColorObject(customColors.envColorRight) : undefined,
+							_envColorWhite: version <= 3 && customColors?.isEnabled && customColors?.envColorWhite ? toColorObject(customColors.envColorWhite) : undefined,
+							envColorWhite: version >= 4 && customColors?.isEnabled && customColors?.envColorWhite ? toColorObject(customColors.envColorWhite) : undefined,
+							_envColorLeftBoost: version <= 3 && customColors?.isEnabled && customColors?.envColorLeftBoost ? toColorObject(customColors.envColorLeftBoost) : undefined,
+							envColorLeftBoost: version >= 4 && customColors?.isEnabled && customColors?.envColorLeftBoost ? toColorObject(customColors.envColorLeftBoost) : undefined,
+							_envColorRightBoost: version <= 3 && customColors?.isEnabled && customColors?.envColorRightBoost ? toColorObject(customColors.envColorRightBoost) : undefined,
+							envColorRightBoost: version >= 4 && customColors?.isEnabled && customColors?.envColorRightBoost ? toColorObject(customColors.envColorRightBoost) : undefined,
+							_envColorWhiteBoost: version <= 3 && customColors?.isEnabled && customColors?.envColorWhiteBoost ? toColorObject(customColors.envColorWhiteBoost) : undefined,
+							envColorWhiteBoost: version >= 4 && customColors?.isEnabled && customColors?.envColorWhiteBoost ? toColorObject(customColors.envColorWhiteBoost) : undefined,
+							_difficultyLabel: version <= 3 ? (beatmap.customLabel !== "" ? beatmap.customLabel : undefined) : undefined,
+							difficultyLabel: version >= 4 ? (beatmap.customLabel !== "" ? beatmap.customLabel : undefined) : undefined,
+							_editorOffset: version <= 3 ? (data.offset !== 0 ? data.offset : undefined) : undefined,
+							editorOffset: version >= 4 ? (data.offset !== 0 ? data.offset : undefined) : undefined,
 						}),
 					});
 				}),
-				customData: createInfoEditorData(data),
+				customData: {
+					_editors: version <= 3 ? { _lastEditedBy: "Beatmapper", Beatmapper: createInfoEditorData(data) } : undefined,
+					editors: version >= 4 ? { lastEditedBy: "Beatmapper", Beatmapper: createInfoEditorData(data) } : undefined,
+				},
 			});
 		},
 		deserialize: function deserializeInfoContents(data: IWrapInfo, options: { readonly?: boolean }): Omit<App.ISong, "id"> {
@@ -226,7 +256,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 					colorSchemeName: beatmap.colorSchemeId >= 0 ? data.colorSchemes.map((x) => x.name)[beatmap.colorSchemeId] : null,
 					mappers: beatmap.authors.mappers.filter((x) => x.length > 0),
 					lighters: beatmap.authors.lighters.filter((x) => x.length > 0),
-					customLabel: beatmap.customData?._difficultyLabel,
+					customLabel: beatmap.customData?.difficultyLabel ?? beatmap.customData?._difficultyLabel,
 				});
 				return acc;
 			}, {});
@@ -239,7 +269,7 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 				subName: data.song.subTitle,
 				artistName: data.song.author,
 				bpm: data.audio.bpm,
-				offset: data.difficulties[0]?.customData._editorOffset,
+				offset: data.difficulties[0]?.customData?.editorOffset ?? data.difficulties[0]?.customData?._editorOffset,
 				previewStartTime: data.audio.previewStartTime,
 				previewDuration: data.audio.previewDuration,
 				environment: patchEnvironmentName<EnvironmentV2Name | EnvironmentV3Name>(data.environmentNames[0] ?? data.environmentBase.normal ?? EnvironmentName[0]),

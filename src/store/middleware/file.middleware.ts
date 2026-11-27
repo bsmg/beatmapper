@@ -48,6 +48,7 @@ export default function createFileMiddleware({ extra }: Options) {
 			const state = api.getState();
 
 			const infoContents = serializeInfoContents(selectSongById(state, songId), {
+				version: 4,
 				songDuration: selectDuration(state),
 			});
 			const audioDataContents = await createAudioDataContentsFromFile(songFile, api.extra.getAudioContext(), { bpm: selectBpm(state, songId) });

@@ -24,6 +24,7 @@ export const saveInfoContents = createAsyncThunk("saveInfoContents", async (args
 	const song = selectSongById(state, args.songId);
 
 	const info = serializeInfoContents(song, {
+		version: await filestore.loadImplicitVersion(args.songId),
 		songDuration: selectDuration(state),
 	});
 

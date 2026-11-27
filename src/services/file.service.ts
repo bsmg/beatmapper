@@ -80,9 +80,9 @@ export class BeatmapFilestore extends Filestore {
 		const filename = BeatmapFilestore.resolveFilename(songId, "beatmap", { id: beatmapId });
 		return this.loadFile<IWrapBeatmap>(filename);
 	}
-	async loadImplicitVersion(songId: SongId, beatmapId: BeatmapId) {
-		const beatmap = await this.loadBeatmapContents(songId, beatmapId);
-		return beatmap.version as InferBeatmapVersion;
+	async loadImplicitVersion(songId: SongId, beatmapId?: BeatmapId) {
+		const contents = beatmapId ? await this.loadBeatmapContents(songId, beatmapId) : await this.loadInfoContents(songId);
+		return contents.version as InferBeatmapVersion;
 	}
 
 	async saveSongFile<T extends File>(songId: SongId, contents: T) {

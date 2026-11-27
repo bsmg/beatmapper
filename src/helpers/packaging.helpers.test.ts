@@ -14,7 +14,7 @@ describe("info serialization", () => {
 				songFilename: "song.ogg",
 				coverArtFilename: "cover.jpg",
 			});
-			const result = serializeInfoContents(mock, { songDuration: 1000 });
+			const result = serializeInfoContents(mock, { version: 2, songDuration: 1000 });
 			expect(Object.keys({ ...result.customData._editors })).toContain("Beatmapper");
 			expect(result.customData._editors?._lastEditedBy).toBe("Beatmapper");
 			expect(result.customData._editors?.Beatmapper).toMatchObject({ editorSettings: {} });
