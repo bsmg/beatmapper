@@ -4,8 +4,8 @@ import { createBeatmap } from "bsmap";
 import { createAudioDataContentsFromFile } from "$/helpers/audio.helpers";
 import { createInfoEditorData, serializeInfoContents } from "$/helpers/packaging.helpers";
 import { BeatmapFilestore } from "$/services/file.service";
-import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, loadAudioDataContents, loadBeatmapContents, loadSongFile, removeBeatmap, removeSong, startLoadingMap, updateBeatmap } from "$/store/actions";
-import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
+import { addBeatmap, addSong, copyBeatmap, finishLoadingMap, loadAudioDataContents, loadBeatmapContents, loadSongFile, removeBeatmap, removeSong, startLoadingMap, updateBeatmap, updateSong } from "$/store/actions";
+import { selectBeatmapIdsWithLightshowId, selectBpm, selectDuration, selectEditorOffset, selectEditorOffsetInBeats, selectLightshowIdForBeatmap, selectSelectedBeatmap, selectSongById } from "$/store/selectors";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 import { deepAssign } from "$/utils";
 import { hydrateSongs, selectAllSongs, upsertSongs } from "../features/songs.slice";
@@ -69,6 +69,23 @@ export default function createFileMiddleware({ extra }: Options) {
 					}),
 				),
 			]);
+		},
+	});
+	instance.startListening({
+		actionCreator: updateSong,
+		effect: (action, api) => {
+			const { songId, changes } = action.payload;
+
+			const state = api.getState();
+			const bpm = selectBpm(api.getOriginalState(), songId);
+			const editorOffset = selectEditorOffset(api.getOriginalState(), songId);
+
+			if (changes.bpm !== undefined && changes.bpm !== bpm) {
+				api.dispatch(loadAudioDataContents({ songId, options: { bpm: changes.bpm } }));
+			}
+			if (changes.offset !== undefined && changes.offset !== editorOffset) {
+				api.dispatch(loadBeatmapContents({ songId, beatmapId: selectSelectedBeatmap(state, songId), options: { editorOffsetInBeats: selectEditorOffsetInBeats(state, songId) } }));
+			}
 		},
 	});
 	instance.startListening({
@@ -138,11 +155,11 @@ export default function createFileMiddleware({ extra }: Options) {
 			const { songId, beatmapId, changes } = action.payload;
 
 			const state = api.getState();
+			const lightshowId = selectLightshowIdForBeatmap(api.getOriginalState(), songId, beatmapId);
 
-			if ("lightshowId" in changes) {
-				const lightshowId = selectLightshowIdForBeatmap(state, songId, beatmapId);
+			if (changes.lightshowId !== undefined && changes.lightshowId !== lightshowId) {
 				// reference a beatmap that has the same lightshow id as the one provided via form data
-				const derivedBeatmapId = selectBeatmapIdsWithLightshowId(state, songId, lightshowId)[0];
+				const derivedBeatmapId = selectBeatmapIdsWithLightshowId(api.getOriginalState(), songId, changes.lightshowId)[0];
 
 				const filestore = api.extra.getFilestore();
 				// extract the lightshow data from the derived beatmap file
@@ -151,8 +168,12 @@ export default function createFileMiddleware({ extra }: Options) {
 				await filestore.updateBeatmapContents(songId, beatmapId, {
 					lightshow,
 					// override the lightshow filename with the new id
-					lightshowFilename: `${lightshowId}.lightshow.dat`,
+					lightshowFilename: `${changes.lightshowId}.lightshow.dat`,
 				});
+
+				if (selectSelectedBeatmap(state, songId) === beatmapId) {
+					api.dispatch(loadBeatmapContents({ songId, beatmapId, options: { editorOffsetInBeats: selectEditorOffsetInBeats(state, songId) } }));
+				}
 			}
 		},
 	});

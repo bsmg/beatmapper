@@ -101,21 +101,21 @@ export async function importMapArchive(archive: Uint8Array, audioContext: AudioC
 
 	const beatmaps = await Promise.all(
 		info.difficulties.map(async (infoBeatmap) => {
+			let beatmapId = "Unnamed";
+			let lightshowId = "Unnamed";
+
 			const [difficultyContents, lightshowContents] = await Promise.all([
 				await yieldValue(getFileFromArchive(unzipped, [infoBeatmap.filename])).then(({ data }) => {
-					const beatmapId = resolveBeatmapIdFromFilename(infoBeatmap.filename);
-					infoBeatmap.filename = `${beatmapId}.beatmap.dat`;
+					beatmapId = resolveBeatmapIdFromFilename(infoBeatmap.filename);
 					return loadDifficulty(JSON.parse(decoder.decode(data)), null, loadOptions);
 				}),
 				await yieldValue(getFileFromArchive(unzipped, [infoBeatmap.lightshowFilename]))
 					.then(({ data }) => {
-						const lightshowId = resolveBeatmapIdFromFilename(infoBeatmap.lightshowFilename);
-						infoBeatmap.lightshowFilename = `${lightshowId}.lightshow.dat`;
+						lightshowId = resolveBeatmapIdFromFilename(infoBeatmap.lightshowFilename);
 						return loadLightshow(JSON.parse(decoder.decode(data)), null, loadOptions);
 					})
 					.catch(() => {
-						const beatmapId = resolveBeatmapIdFromFilename(infoBeatmap.filename);
-						infoBeatmap.lightshowFilename = `${beatmapId}.lightshow.dat`;
+						lightshowId = beatmapId;
 						return { lightshow: null };
 					}),
 			]);
@@ -138,9 +138,9 @@ export async function importMapArchive(archive: Uint8Array, audioContext: AudioC
 
 			return createBeatmap({
 				version: difficultyContents.version,
+				filename: `${beatmapId}.beatmap.dat`,
 				difficulty: difficultyContents.difficulty,
-				filename: infoBeatmap.filename,
-				lightshowFilename: infoBeatmap.lightshowFilename,
+				lightshowFilename: `${lightshowId}.lightshow.dat`,
 				lightshow: lightshowContents.lightshow ?? difficultyContents.lightshow,
 				customData: difficultyContents.customData,
 			});

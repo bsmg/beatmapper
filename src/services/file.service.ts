@@ -132,6 +132,7 @@ export class BeatmapFilestore extends Filestore {
 		const patchContents = omit(newContents, ["version", "filename"]);
 		patchContents.difficulty = this.#patchContents({ ...patchContents.difficulty }, ["colorNotes", "bombNotes", "obstacles", "arcs", "chains", "njsEvents"]);
 		patchContents.lightshow = this.#patchContents({ ...patchContents.lightshow }, ["basicEvents", "colorBoostEvents"]);
+		patchContents.customData = this.#patchContents({ ...patchContents.customData }, ["bookmarks"]);
 		return await this.saveBeatmapContents(songId, beatmapId, createBeatmap(deepAssign(savedContents, patchContents)));
 	}
 

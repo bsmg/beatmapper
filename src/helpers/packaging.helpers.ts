@@ -12,6 +12,8 @@ import {
 	type IV2CustomDataDifficulty,
 	type IV2CustomDataInfoDifficulty,
 	type IV2EditorInfo,
+	type IWrapBaseObject,
+	type IWrapBaseSlider,
 	type IWrapBeatmap,
 	type IWrapInfo,
 	type IWrapInfoColorScheme,
@@ -255,8 +257,11 @@ export const { serialize: serializeInfoContents, deserialize: deserializeInfoCon
 	},
 });
 
-function shiftByOffset<T extends { time: number }>(options: { editorOffsetInBeats: number }) {
-	return (item: T) => ({ ...item, time: item.time + options.editorOffsetInBeats }) as T;
+function shiftByOffset<T extends Pick<IWrapBaseObject, "time"> | Pick<IWrapBaseSlider, "time" | "tailTime">>(options: { editorOffsetInBeats: number }) {
+	return (item: T) => {
+		if ("tailTime" in item) return { ...item, time: item.time + options.editorOffsetInBeats, tailTime: item.tailTime + options.editorOffsetInBeats } as T;
+		return { ...item, time: item.time + options.editorOffsetInBeats } as T;
+	};
 }
 
 export const { serialize: serializeBeatmapContents, deserialize: deserializeBeatmapContents } = createDataFactory({

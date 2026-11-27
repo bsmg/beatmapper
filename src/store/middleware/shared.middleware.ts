@@ -1,6 +1,6 @@
 import { createListenerMiddleware, isAnyOf } from "@reduxjs/toolkit";
 
-import { addSong, addSongFromFile, loadAudioDataContents, updateBeatmap, updateNew, updateProcessingImport, updateSong, updateUsername } from "$/store/actions";
+import { addSong, addSongFromFile, updateBeatmap, updateNew, updateProcessingImport, updateUsername } from "$/store/actions";
 import type { AppDispatch, AppExtraArgs, RootState } from "$/store/types";
 
 interface Options {
@@ -21,14 +21,6 @@ export default function createSharedMiddleware({ extra }: Options) {
 		matcher: isAnyOf(addSong, addSongFromFile.fulfilled),
 		effect: (_, api) => {
 			api.dispatch(updateNew(false));
-		},
-	});
-	instance.startListening({
-		actionCreator: updateSong,
-		effect: (action, api) => {
-			if (action.payload.changes.bpm) {
-				api.dispatch(loadAudioDataContents({ songId: action.payload.songId, options: { bpm: action.payload.changes.bpm } }));
-			}
 		},
 	});
 	instance.startListening({

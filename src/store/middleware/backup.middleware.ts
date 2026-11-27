@@ -33,20 +33,20 @@ export const saveBeatmapContents = createAsyncThunk("saveBeatmapContents", async
 	const state = api.getState();
 	const filestore = api.extra.getFilestore();
 
-	const beatmap = serializeBeatmapContents(args.entities, {
+	const { difficulty, lightshow, customData } = serializeBeatmapContents(args.entities, {
 		version: await filestore.loadImplicitVersion(args.songId, args.beatmapId),
 		editorOffsetInBeats: selectEditorOffsetInBeats(state, args.songId),
 	});
 
-	await filestore.updateBeatmapContents(args.songId, args.beatmapId, beatmap);
+	await filestore.updateBeatmapContents(args.songId, args.beatmapId, { difficulty, lightshow, customData });
 
 	// copy custom data across all beatmaps
 	for (const targetBeatmapId of selectBeatmapIds(state, args.songId)) {
-		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { difficulty: { customData: beatmap.difficulty.customData }, lightshow: { customData: beatmap.lightshow.customData }, customData: beatmap.customData });
+		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { difficulty: { customData: difficulty.customData }, lightshow: { customData: lightshow.customData }, customData: customData });
 	}
 	// copy lightshow data across beatmaps that share the same lightshow
 	for (const targetBeatmapId of selectBeatmapIdsWithLightshowId(state, args.songId, selectLightshowIdForBeatmap(state, args.songId, args.beatmapId))) {
-		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { lightshow: beatmap.lightshow });
+		await filestore.updateBeatmapContents(args.songId, targetBeatmapId, { lightshow });
 	}
 });
 
@@ -75,7 +75,7 @@ export default function createBackupMiddleware({ extra }: Options) {
 		matcher: isAnyOf(saveInfoContents.fulfilled, saveBeatmapContents.fulfilled),
 		effect: async (action: PayloadAction<unknown, string, { arg: { songId: SongId; beatmapId?: BeatmapId } }>, api) => {
 			const toaster = api.extra.getToaster();
-			const id = `${action.meta.arg.beatmapId ? `${action.meta.arg.songId}/${action.meta.arg.beatmapId}` : action.meta.arg.songId}`;
+			const id = `${saveBeatmapContents.fulfilled.match(action) ? `${action.meta.arg.songId}/${action.meta.arg.beatmapId}` : action.meta.arg.songId}`;
 			toaster.success({ id: `save/${action.meta.arg.songId}`, description: `Contents for "${id}" has been saved.` });
 		},
 	});
