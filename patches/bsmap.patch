@@ -1,44 +1,3 @@
-diff --git a/esm/beatmap/helpers/core/arc.js b/esm/beatmap/helpers/core/arc.js
-index e4fa9400543849866d56b3597d54399b0645b58a..23b557a2f63460321cb16696ec5ace75287b84db 100755
---- a/esm/beatmap/helpers/core/arc.js
-+++ b/esm/beatmap/helpers/core/arc.js
-@@ -7,8 +7,13 @@ export function mirrorArcMidAnchor(midAnchor) {
-     return cycle([SliderMidAnchorMode.CLOCKWISE, SliderMidAnchorMode.COUNTER_CLOCKWISE], midAnchor);
- }
- export function midAnchorCondition(arc) {
--    return (arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
--        arc.direction !== NoteDirection.ANY &&
--        arc.posX === arc.posX &&
--        nearEqual(lowestDifferenceMod(resolveNoteAngle(arc.direction), resolveNoteAngle(arc.tailDirection), 360), 180));
-+	return (
-+		arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
-+		arc.direction !== NoteDirection.ANY &&
-+		(arc.posX === arc.tailPosX || arc.posY === arc.tailPosY) &&
-+		(
-+			arc.direction === arc.tailDirection ||
-+			nearEqual(lowestDifferenceMod(resolveNoteAngle(arc.direction), resolveNoteAngle(arc.tailDirection), 360), 180)
-+		)
-+  );
- }
-diff --git a/esm/beatmap/misc/remaps.js b/esm/beatmap/misc/remaps.js
-index 68976df20ed5f0e33f59e14f729a44a0b5280695..3672b9aac8c300a098a73d0f4dbda4ae4be0afe7 100755
---- a/esm/beatmap/misc/remaps.js
-+++ b/esm/beatmap/misc/remaps.js
-@@ -81,10 +81,10 @@ export const NoteDirectionSpace = {
-     [1]: [0, -1],
-     [2]: [-1, 0],
-     [3]: [1, 0],
--    [4]: [-1, 1],
--    [5]: [1, 1],
--    [6]: [-1, -1],
--    [7]: [1, -1],
-+    [4]: [-0.70710678, 0.70710678],
-+    [5]: [0.70710678, 0.70710678],
-+    [6]: [-0.70710678, -0.70710678],
-+    [7]: [0.70710678, -0.70710678],
-     [8]: [0, 0],
- };
- /** Unused as of beatmap v3, useful for conversion reason. */
 diff --git a/esm/beatmap/converter/_rotation.js b/esm/beatmap/converter/_rotation.js
 index f2de040537bb9d9560ced1a4d9ef2c61f6d6fd14..0724e166c3a44bf5fd4696528e9c9394548331a1 100644
 --- a/esm/beatmap/converter/_rotation.js
@@ -265,6 +224,29 @@ index 3848630b7d25964bc62978e152ce189b9620d482..47f3de49a3a2a2ad04f815dc22a0d8dc
 -    }
      return data;
  }
+diff --git a/esm/beatmap/helpers/core/arc.js b/esm/beatmap/helpers/core/arc.js
+index e4fa9400543849866d56b3597d54399b0645b58a..135bd4a209154f67370caf90b2959c053a1db18f 100755
+--- a/esm/beatmap/helpers/core/arc.js
++++ b/esm/beatmap/helpers/core/arc.js
+@@ -7,8 +7,15 @@ export function mirrorArcMidAnchor(midAnchor) {
+     return cycle([SliderMidAnchorMode.CLOCKWISE, SliderMidAnchorMode.COUNTER_CLOCKWISE], midAnchor);
+ }
+ export function midAnchorCondition(arc) {
+-    return (arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
++    const angleDifference = lowestDifferenceMod(
++        resolveNoteAngle(arc.direction),
++        resolveNoteAngle(arc.tailDirection),
++        360,
++    );
++    return (
++        arc.midAnchor !== SliderMidAnchorMode.STRAIGHT &&
+         arc.direction !== NoteDirection.ANY &&
+-        arc.posX === arc.posX &&
+-        nearEqual(lowestDifferenceMod(resolveNoteAngle(arc.direction), resolveNoteAngle(arc.tailDirection), 360), 180));
++        (arc.posX === arc.tailPosX || arc.posY === arc.tailPosY) &&
++        (nearEqual(angleDifference, 0) || nearEqual(angleDifference, 180))
++ );
+ }
 diff --git a/esm/beatmap/helpers/mod.js b/esm/beatmap/helpers/mod.js
 index 80c854832e87e70f1126347f6a2ec0009daac07a..13c648a1ef180adc5cc9b1dada11eaa0724a36cd 100755
 --- a/esm/beatmap/helpers/mod.js
@@ -385,6 +367,19 @@ index 0000000000000000000000000000000000000000..0ed05851a6f418c131e9014754baafca
 +            obj.tailLaneRotation = 0;
 +    }
 +}
+diff --git a/esm/beatmap/schema/v1/compat/difficulty.js b/esm/beatmap/schema/v1/compat/difficulty.js
+index d47b1e0c83e4e257108a8afa4f571a5dbf57feb4..e91efc0dd50027d4de600e8c42a661193f22a6c1 100755
+--- a/esm/beatmap/schema/v1/compat/difficulty.js
++++ b/esm/beatmap/schema/v1/compat/difficulty.js
+@@ -28,7 +28,7 @@ export function compatDifficulty(bm, options) {
+         !!bm.lightshow.lightTranslationEventBoxGroups.length ||
+         !!bm.lightshow.fxEventBoxGroups.length ||
+         !!bm.lightshow.basicEventTypesWithKeywords.list.length;
+-    if (hasIncompat && !hasME) {
++    if (hasIncompat) {
+         if (options.throwOn.incompatibleObject) {
+             throw new Error('Beatmap is not compatible with v1');
+         }
 diff --git a/esm/beatmap/schema/v2/rotationEvent.js b/esm/beatmap/schema/v2/rotationEvent.js
 index e55b2fd751dc98627217ae562737a9851126c1c0..0831cd746572d12cbc82eaf32694b9195c04639f 100644
 --- a/esm/beatmap/schema/v2/rotationEvent.js
@@ -424,6 +419,19 @@ index e55b2fd751dc98627217ae562737a9851126c1c0..0831cd746572d12cbc82eaf32694b919
          customData: data._customData,
      }, options);
  }
+diff --git a/esm/beatmap/schema/v3/compat/difficulty.js b/esm/beatmap/schema/v3/compat/difficulty.js
+index 0496adc3d4d347016a1501486cd3963fe28f3044..fd793945e84cc6a4def66750c231e6069748a09b 100755
+--- a/esm/beatmap/schema/v3/compat/difficulty.js
++++ b/esm/beatmap/schema/v3/compat/difficulty.js
+@@ -20,7 +20,7 @@ export function compatDifficulty(bm, options) {
+         }
+     }
+     const hasIncompat = !!bm.difficulty.njsEvents.length;
+-    if (hasIncompat && !hasME) {
++    if (hasIncompat) {
+         if (options.throwOn.incompatibleObject) {
+             throw new Error('Beatmap is not compatible with v3');
+         }
 diff --git a/esm/beatmap/schema/v4/_legacyRotation.js b/esm/beatmap/schema/v4/_legacyRotation.js
 index b350017cb4b7317ac5b1406b437456903155d941..0ae667de81933d495bdb37fc6b949b7824edac45 100644
 --- a/esm/beatmap/schema/v4/_legacyRotation.js

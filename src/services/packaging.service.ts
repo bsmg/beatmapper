@@ -230,9 +230,6 @@ export async function exportMapArchive({ songFile, coverArtFile, info, audioData
 			...saveOptions,
 			preprocess: [
 				(data, version) => {
-					if (version && version < 3) {
-						data.arcs = [];
-					}
 					if (version && version < 4) {
 						data.bpmEvents = createBpmEventsFromAudioData(audioData);
 						convertV4Rotation({ ...beatmap, difficulty: data });

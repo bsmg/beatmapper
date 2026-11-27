@@ -163,7 +163,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  bsmap: 5a7f17b0c37b2e989663ba4e5ffc1ffef6d5db7b14a3c7f4bea566746129b320
+  bsmap: 058de0817451253ba6fd8673fc82e6f0f36268286071ee3a8cbbbb6f5925e903
 
 importers:
 
@@ -255,7 +255,7 @@ importers:
         version: 1.47.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       bsmap:
         specifier: ^3.1.4
-        version: 3.1.4(patch_hash=5a7f17b0c37b2e989663ba4e5ffc1ffef6d5db7b14a3c7f4bea566746129b320)(typescript@7.0.2)
+        version: 3.1.4(patch_hash=058de0817451253ba6fd8673fc82e6f0f36268286071ee3a8cbbbb6f5925e903)(typescript@7.0.2)
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -9197,7 +9197,7 @@ snapshots:
       node-releases: 2.0.60
       update-browserslist-db: 1.3.4(browserslist@4.29.5)
 
-  bsmap@3.1.4(patch_hash=5a7f17b0c37b2e989663ba4e5ffc1ffef6d5db7b14a3c7f4bea566746129b320)(typescript@7.0.2):
+  bsmap@3.1.4(patch_hash=058de0817451253ba6fd8673fc82e6f0f36268286071ee3a8cbbbb6f5925e903)(typescript@7.0.2):
     dependencies:
       '@standard-schema/spec': 1.1.0
       valibot: 1.5.0(typescript@7.0.2)
