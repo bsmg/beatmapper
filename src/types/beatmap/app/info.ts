@@ -19,7 +19,7 @@ export interface IBeatmap {
 	colorSchemeName: string | null;
 	mappers: string[];
 	lighters: string[];
-	customLabel?: string;
+	customLabel: string | null;
 }
 
 export interface ISong {

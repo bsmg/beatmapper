@@ -28,7 +28,7 @@ const SCHEMA = object({
 	lighters: array(string()),
 	customLabel: pipe(
 		string(),
-		transform((input) => (input === "" ? undefined : input)),
+		transform((input) => (input === "" ? null : input)),
 	),
 });
 
@@ -78,7 +78,7 @@ function UpdateBeatmapForm({ bid }: Props) {
 						beatmapId: bid,
 						changes: {
 							...value,
-							customLabel: value.customLabel === "" ? undefined : value.customLabel,
+							customLabel: value.customLabel === "" ? null : value.customLabel,
 						},
 					}),
 				);

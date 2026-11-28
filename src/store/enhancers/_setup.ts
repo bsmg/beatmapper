@@ -126,7 +126,7 @@ const createAppEntityStorageDriver = createDriver<LegacyStorageSchema & { songs:
 										colorSchemeName: null,
 										mappers: song.mapAuthorName ? song.mapAuthorName.split(", ") : [],
 										lighters: [],
-										customLabel: beatmap.customLabel !== "" ? beatmap.customLabel : undefined,
+										customLabel: beatmap.customLabel !== "" ? beatmap.customLabel : null,
 									};
 									return acc;
 								},
