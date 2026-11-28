@@ -58,7 +58,7 @@ const Wrapper = styled("div", {
 	base: stack.raw({
 		position: "absolute",
 		width: "100%",
-		top: "82px",
+		top: "110px",
 		bottom: "calc({sizes.statusBar} + {sizes.navigationPanel} - 6px)",
 		justify: "flex-end",
 		gap: 0,

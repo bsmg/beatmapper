@@ -57,7 +57,6 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 	const basicTracks = useAppSelector((state) => selectEventTracksForEnvironment(state, sid, bid));
 	const environment = useAppSelector((state) => selectEnvironment(state, sid, bid));
 	const cursorPositionInBeats = useAppSelector((state) => selectCursorPositionInBeats(state, sid));
-	const durationInBeats = useAppSelector((state) => selectDurationInBeats(state, sid));
 	const selectedBeat = useAppSelector((state) => {
 		const selectedBeat = selectEventsEditorCursor(state);
 		const offsetInBeats = -selectEditorOffsetInBeats(state, sid);
@@ -195,12 +194,12 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 		(event: MouseEvent<HTMLDivElement>, index: number) => {
 			dispatch(
 				drawEventSelectionBox({
-					window: { startBeat: 0, endBeat: durationInBeats ?? 0 },
+					window: { startBeat, endBeat },
 					environment: environment,
 					tracks: filteredTracks,
 					selectionBoxInBeats: {
-						startBeat: 0,
-						endBeat: durationInBeats ?? 0,
+						startBeat,
+						endBeat: endBeat - 0.001,
 						startTrackIndex: index >= 0 ? index : 0,
 						endTrackIndex: index >= 0 ? index : 0,
 						withPrevious: isModKeyPressed(event.nativeEvent),
@@ -208,7 +207,7 @@ function EventGridEditor({ ...rest }: Omit<ComponentProps<typeof EventGrid.Root>
 				}),
 			);
 		},
-		[dispatch, filteredTracks, environment, durationInBeats],
+		[dispatch, filteredTracks, environment, startBeat, endBeat],
 	);
 
 	return (
